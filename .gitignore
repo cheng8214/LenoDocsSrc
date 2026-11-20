@@ -1,0 +1,9 @@
+# markdown 依赖的隔离安装目录（用 `python -m pip install --target _build_vendor markdown` 生成）
+_build_vendor/
+# Python 缓存
+__pycache__/
+*.pyc
+# 系统杂项
+Thumbs.db
+.DS_Store
+desktop.ini

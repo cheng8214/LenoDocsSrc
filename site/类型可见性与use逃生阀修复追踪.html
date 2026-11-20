@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>类型可见性与 use 逃生阀修复追踪 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="类型可见性与use逃生阀修复追踪.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0">0. 为什么开这张表（一次设计评估的落点）</a></li><li><a href="#1">1. 现状事实（全部核对过，不靠记忆）</a></li><li><a href="#2">2. 台账</a></li><li><a href="#3-us1-p0-2026-10-12">3. US1 详述（P0）—— ✅ 已修（2026-10-12，工作区未提交）</a></li><ul class="lv3"><li><a href="#8">落地（改了哪 8 处）</a></li><li><a href="#_1">⚠ 实施中踩到的两个坑（都很隐蔽，值得记住）</a></li><li><a href="#_2">症状</a></li><li><a href="#_3">根因</a></li><li><a href="#_4">可用的地基（为什么现在成本可控）</a></li><li><a href="#_5">方案（两步，都在"入口"上）</a></li><li><a href="#_6">实施前必须先回答（别猜）</a></li><li><a href="#us1">验收判据（按位置矩阵钉全，这是 US1 的核心风险）</a></li><li><a href="#2026-10-12">验收（实测，2026-10-12）</a></li><li><a href="#_7">顺带收益</a></li></ul><li><a href="#3-us2p2-use-2026-10-12">3-US2（P2）复核：漏列 use 的报错定位 —— ✅ 症状不复现（2026-10-12）</a></li><li><a href="#4">4. 明确不做（想清楚了，不再反复）</a></li><li><a href="#5">5. 变更记录</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="use">类型可见性与 use 逃生阀修复追踪</h1>
+<blockquote>
+<p><strong>最后更新</strong>：2026-10-12（建档 + <strong>US1 完成</strong> + <strong>US2 复核收口</strong> ⇒ 全表关闭：US1✅ US2✅ US3❌不做 US4✅ US5✅）。
+<strong>关联</strong>：<code>docs/import使用指南.md</code>（§0.2 漏列 / §8.2 规则表）、
+<code>docs/语言摩擦与隐式契约清单.md</code> 的 <strong>M9</strong>、<code>docs/语言陷阱速查.md</code> 的 <strong>㉝</strong>。
+<strong>本文定位</strong>：不是"use 怎么用"（那是 <code>import使用指南</code>），而是<strong>这套类型可见性设计缺的那一环</strong>——
+「<strong>不用 <code>use</code> 也能写对</strong>」的能力（逃生阀）。</p>
+</blockquote>
+<hr>
+<h2 id="0">0. 为什么开这张表（一次设计评估的落点）</h2>
+<p>评估结论：<strong>机制选对了，规则的完备性差一环。</strong></p>
+<p>对的部分（有证据，不是客套）：</p>
+<ul>
+<li>「<code>import</code> 管值/模块命名空间（带别名）+ <code>use</code> 管类型命名空间（可扁平化）」与
+  Java <code>import</code> / C# <code>using</code> / Rust <code>use</code> 同谱系，比 Go（不给扁平化）友好；</li>
+<li><code>use m.(A, B)</code> <strong>批量</strong> + <strong>支持尾逗号</strong>（Java/C# 都没有）；</li>
+<li><code>use</code> <strong>只收类型、明确不收 func/var</strong> ⇒ 规则边界干净（<code>import使用指南</code> §8.2 规则表）；</li>
+<li>报错<strong>自带处方</strong>（<code>未定义的类型: Pt（它其实是模块 'm' 导出的 struct ⇒ 请补一句 use m.Pt）</code>）。</li>
+</ul>
+<p><strong>真缺陷（本表要修的那一环）</strong>：<strong>限定名只在表达式位置合法</strong>。</p>
+<pre><code class="language-leno">var p = new m.Pt()      // ✓ 表达式位置（parser_expr.c:732 专门支持）
+m.Pt p = m.mk()         // ✗ 类型位置（parser_func.c:662 / parser.c:225 明确拒绝）
+</code></pre>
+<p>这一个不对称，把 <code>use</code> 从「便利」变成了「<strong>义务</strong>」，并派生三笔次生负担：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>次生负担</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td><strong>§0.2 那类 bug</strong>：<code>use</code> 必须列全本文件真正用到的类型，漏一个<strong>报错点在 <code>use</code> 那一行</strong>，与缺的类型毫无关系；且类型名只出现在 <code>use</code> 里 ⇒ <strong>静态检查 / lint 抓不到，必须真编译</strong></td>
+<td><code>import使用指南</code> §0.2</td>
+</tr>
+<tr>
+<td>②</td>
+<td><strong>传导型类型</strong>：中间层为了把类型传下去，得 <code>use</code> 一个自己根本不用的类型 ⇒ 同一行 <code>use</code> 承载两种意图（自用 / 转出口），<strong>语法上无法区分</strong>（Rust 为此专门有 <code>pub use</code>）</td>
+<td><code>import使用指南</code> §8.3 链式传导</td>
+</tr>
+<tr>
+<td>③</td>
+<td><strong>没有通配兜底</strong>：上面两条没有退路（<code>parse_use_stmt</code> 无 <code>*</code> 分支 ✓ 实测）</td>
+<td>本文 §1-⑨</td>
+</tr>
+</tbody>
+</table>
+<p><strong>主流对照（凡是给扁平化的语言，都留了至少一个逃生阀）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>语言</th>
+<th>逃生阀</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java / C#</td>
+<td><code>import java.util.*</code> / <code>using System.Collections.Generic</code>（<strong>通配</strong>）</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td><code>std::collections::HashMap</code> 在<strong>类型位置合法</strong> + <code>use x::{a,b}</code></td>
+</tr>
+<tr>
+<td>Go</td>
+<td>压根不扁平化 ⇒ 全限定（没有"必须 import 类型"这回事）</td>
+</tr>
+<tr>
+<td><strong>Leno（现状）</strong></td>
+<td><strong>两个都没有</strong> ⇒ 唯一的路是"显式列全"</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ 本表的目标：<strong>把"不用 <code>use</code> 也能写对"补上</strong>（US1），其余条目围绕它收口。</p>
+<hr>
+<h2 id="1">1. 现状事实（全部核对过，不靠记忆）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>证据位置</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td><strong>类型位置拒绝是有意设计，不是漏做</strong></td>
+<td><code>src/parser/parser_func.c:662</code> <code>parser_reject_module_qualified_type()</code>，由 <code>parse_type_internal</code> 收尾调用（<code>:641</code>）；文案：<code>不支持带模块前缀的类型名（如 'a.Point'）：请先 use a.Point，然后直接写 'Point'</code></td>
+<td>改它是<strong>改设计决定</strong>，不是补 bug ⇒ 必须把"为什么原来拒"写下来（见 US1 §方案）</td>
+</tr>
+<tr>
+<td>②</td>
+<td><strong>声明位置另有一处拒绝</strong>（<code>Module.Type varName = …</code>）</td>
+<td><code>src/parser/parser.c:225-231</code>（注释自称 <code>Leno 不支持此写法</code>，报友好错误避免级联误导）</td>
+<td>US1 要动<strong>两处</strong>，只改一处会"参数位置能过、声明位置报错"</td>
+</tr>
+<tr>
+<td>③</td>
+<td><strong>表达式位置早就支持</strong>（这是不对称的来源）</td>
+<td><code>src/parser/parser_expr.c:732</code>（<code>new module.StructName(...)</code>；<code>:41</code> 的 <code>TOK_DOT → parse_dot</code>）</td>
+<td>表达式的解析/查名链路<strong>可复用</strong>（M8/M9 已证实能做到"指到真因"）</td>
+</tr>
+<tr>
+<td>④</td>
+<td><strong>类型解析有单一入口</strong></td>
+<td><code>parse_type_internal()</code>（<code>parser_func.c</code>）；对外 <code>parse_type()</code> 23 个调用点，parser 内部 <code>parse_type_internal</code> 16 处</td>
+<td>解析侧改动面<strong>收敛在一个函数</strong>（加"点号 + 模块名"分支即可）</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td><strong>类型名归一化有单一入口（本表最关键的一条）</strong></td>
+<td><code>src/semantic/semantic_visit_func.c</code> 的 <code>resolve_alias_in_type(s, TypeInfo**, line)</code> —— <strong>递归</strong>覆盖 <code>generic_args</code> / <code>element_type</code> / <code>key_type</code> / <code>value_type</code> / <code>return_type</code> / <code>param_types</code>；调用点覆盖 <strong>var 声明 / 函数形参与返回 / struct 字段 / destruct 槽</strong></td>
+<td>⇒ <strong>在这里做限定名解析，下游那些"未定义类型"校验点一行都不用改</strong> ✓（含泛型实参，天然一起解决）</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td><strong><code>TypeInfo</code> 没有模块限定字段</strong></td>
+<td><code>src/include/leno_types.h:285-308</code>（只有 <code>struct_name</code> / <code>type_param_name</code> / <code>constraint_name</code> / <code>generic_args</code> …）</td>
+<td>解析侧要把"模块前缀"带下来 ⇒ 需要新字段（或把 <code>a.Point</code> 塞进 <code>struct_name</code>，见 US1 的两个备选）</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td><strong><code>use</code> 只收 6 类类型</strong></td>
+<td><code>import使用指南</code> §8.2 规则表：<code>struct</code> / <code>cstruct</code> / <code>clib</code> / <code>face</code> / <code>enum</code> / <code>alias</code>；<code>use module.func</code> / <code>use module.var</code> ❌</td>
+<td>边界正确，<strong>不要动</strong>（见 §4 明确不做）</td>
+</tr>
+<tr>
+<td>⑧</td>
+<td><strong>native 类型规格全局可见</strong>（共 <strong>5</strong> 个）</td>
+<td><code>native_register_struct_spec()</code> 调用点：<code>DirEntry</code>（<code>dirs.walk</code>）/ <code>DirInfo</code>（<code>dirs.stat</code>）/ <code>RegexMatch</code>（<code>regexs.find_all</code>）/ <code>ExecResult</code>（<code>_exec</code>）/ <code>DictEntry</code>（<code>dicts.items</code>）；兜底在 <code>src/semantic/semantic_type.c:553</code></td>
+<td>实践无害，但它是<strong>第三套可见性规则</strong>，用户<strong>看不见分界线</strong>（见 US5）</td>
+</tr>
+<tr>
+<td>⑨</td>
+<td><strong>没有通配 <code>use m.*</code></strong></td>
+<td><code>parse_use_stmt()</code>（<code>parser_module.c</code>）无 <code>TOK_STAR</code> 分支；全仓 <code>TOK_STAR</code> 只出现在乘法/<code>*=</code></td>
+<td>上面①②的负担因此没有退路</td>
+</tr>
+<tr>
+<td>⑩</td>
+<td><strong>没有"use 了没用"的诊断</strong></td>
+<td>全仓搜 <code>未使用</code> 无相关检查</td>
+<td>⇒ 传导型 <code>use</code>（②）<strong>无法与自用 <code>use</code> 区分</strong>，也没有 lint 兜</td>
+</tr>
+<tr>
+<td>⑪</td>
+<td><strong>"未定义类型"的处方是共享实现</strong></td>
+<td><code>semantic_undefined_type_hint()</code>（2026-10-10 收敛：原本<strong>八处</strong>拷贝各自 if/else，现共用）；调用点含 <code>visit_var.inc</code>、<code>visit_type_def.inc</code>、<code>check_undefined_type</code> 等</td>
+<td>US1 的新错误文案<strong>必须走它</strong>，否则又开一处拷贝 ✓</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2">2. 台账</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>优先级</th>
+<th>事项</th>
+<th>判据（做完怎么算对）</th>
+<th>成本</th>
+<th>风险</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>US1</strong></td>
+<td><strong>P0</strong></td>
+<td>~~<strong>类型位置支持模块限定名 <code>m.Pt</code></strong>（<code>m.Pt p</code> / <code>func f(m.Pt x)</code> / <code>: m.Pt</code> / 字段 / <code>Array[m.Pt]</code> / <code>is</code> / <code>as</code> / <code>new</code> 全位置）~~ ⇒ <strong>已修</strong>（2026-10-12，工作区未提交）：解析器记前缀 + 语义层<strong>复用 <code>use</code> 的唯一实现</strong>做隐式 use</td>
+<td>已完成 ✓（10 位置矩阵用例 + 3 条负例 + 模块模式）</td>
+<td>—</td>
+<td>—</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>US2</strong></td>
+<td>~~P1~~ P2 → <strong>已收口</strong></td>
+<td>~~<strong>报错定位</strong>：漏 <code>use</code>（或用 <code>use m.(A,B)</code> 漏了 C）时，报错<strong>指到真正使用它的那一行</strong>，而不是 <code>use</code> 那一行~~ ⇒ <strong>复核：症状不复现</strong>（2026-10-12，五个声明位置全在使用处，见 §3-US2）</td>
+<td>已完成 ✓（<code>assert/test_use_missing_diag.leno</code>，含<strong>行号</strong>断言 ✓）</td>
+<td>—</td>
+<td>—</td>
+<td>✅ <strong>补钉防回退</strong></td>
+</tr>
+<tr>
+<td><strong>US3</strong></td>
+<td>—</td>
+<td>~~<code>use m.*</code> <strong>通配</strong>逃生阀~~ ⇒ <strong>决定不做</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>❌ <strong>不做</strong>（2026-10-12 决定，理由见 §4）</td>
+</tr>
+<tr>
+<td><strong>US4</strong></td>
+<td>P2</td>
+<td><strong>传导型 <code>use</code> 正式化</strong>：区分"自用 use" vs "转出口 use"（<code>export use</code>?），或至少把它写成一条<strong>正式纪律</strong></td>
+<td>中间层为了传递而 <code>use</code> 一个自己不用的类型时，<strong>意图是可表达的</strong>（或文档里明确命名这条纪律）</td>
+<td>低（文档）/ 中（真做 <code>export use</code>）</td>
+<td>低</td>
+<td>✅ <strong>只做文档那一半</strong>（2026-10-12）：纪律命名 + 明确<strong>不引入 <code>export use</code></strong>（理由见下）</td>
+</tr>
+<tr>
+<td><strong>US5</strong></td>
+<td>P2</td>
+<td><strong>概念收敛</strong>：把 native 规格并进"<strong>编译器内置类型</strong>"（与 <code>int</code> / <code>DirEntry</code> 同性质），或至少在文档里写明这条分界</td>
+<td>文档里"哪些类型不用 use"只剩<strong>两类</strong>（内置类型 / 源码模块类型），不是一个悬空的第三类</td>
+<td>低（文档）</td>
+<td>低</td>
+<td>✅ <strong>已做</strong>（2026-10-12，文档口径：② 并入 ① 表述为"编译器内置类型"，并写明分界线）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-us1-p0-2026-10-12">3. US1 详述（P0）—— ✅ 已修（2026-10-12，工作区未提交）</h2>
+<h3 id="8">落地（改了哪 8 处）</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/include/leno_types.h</code></td>
+<td><code>TypeInfo</code> 新增 <code>module_qualifier</code>（<strong>只解析阶段有意义</strong>；<strong>不参与 <code>type_equals</code></strong> ✓）</td>
+</tr>
+<tr>
+<td><code>src/type.c</code></td>
+<td><code>type_free</code> / <code>type_copy</code> 带上该字段；<code>type_equals</code> 处写明<strong>为什么不比较</strong> ✓</td>
+</tr>
+<tr>
+<td><code>src/parser/parser_func.c</code></td>
+<td><code>parse_base_type</code> 认 <code>IDENT . IDENT</code>（<strong>两 token 都确认才消费</strong> ✓）；限定名一律先记 TYPE_STRUCT（<code>face_def_find</code> 会猜歪 ✗）；<code>parser_reject_module_qualified_type</code> 降级为<strong>多级限定</strong>兜底</td>
+</tr>
+<tr>
+<td><code>src/parser/parser.c</code></td>
+<td>声明处的 <code>qualified_decl</code> 从"报错"改成"走普通声明路径"；前瞻<strong>多吞一段 <code>.</code> 链</strong> ⇒ 多级限定能被当成类型位置、报出正确那句 ✓</td>
+</tr>
+<tr>
+<td><code>src/semantic/semantic_visit_ast.c</code></td>
+<td><strong>把 <code>case AST_USE</code> 的 390 行分派体抽成 <code>semantic_import_use_symbol()</code></strong>（逐字搬 + 定点变换：13 处 case 级 <code>break</code> → <code>return</code>）</td>
+</tr>
+<tr>
+<td><code>src/semantic/semantic_visit_func.c</code></td>
+<td><code>resolve_alias_in_type</code> 新增限定名分支：<strong>隐式 use</strong> + 成功后清空前缀（幂等 ✓）+ 失败毒化成 <code>any</code>（抑噪 ✓）</td>
+</tr>
+<tr>
+<td><code>src/semantic/semantic.c</code> + <code>src/include/leno_semantic.h</code></td>
+<td>新增 <code>in_type_prepass</code> 阶段标志（预归一化阶段跳过）</td>
+</tr>
+<tr>
+<td>用例/文档</td>
+<td>新增 <code>assert/test_qualified_type_positions.leno</code>（10 位置矩阵）+ <code>assert/qualified_type_mod.leno</code>；<code>test_qualified_type_hint.leno</code> <strong>整体重写</strong>（4 条负例翻案 + 新增多级/未导入/无此类型 3 条负例）；<code>test_diag_static_errors.leno</code> 的 M9 三条翻案；<code>test_diag_error_batteries.leno</code> 的声明处判据翻案（并删除负例 fixture）；3 篇文档同步</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_1">⚠ 实施中踩到的两个坑（都很隐蔽，值得记住）</h3>
+<ol>
+<li><strong>预注册阶段早于 <code>import</code></strong> —— 语义分析开头会先把所有函数签名归一化一遍，那一遍<strong>跑在 <code>AST_IMPORT</code> / <code>AST_USE</code> 之前</strong> ⇒ 那时模块别名还没登记，动手只会得到假错误「模块 'm' 未导入」（实测一个探针里 3 个位置全报）。
+   修法：加显式阶段标志 <code>in_type_prepass</code>，那一遍<strong>原样留着</strong>，主阶段再解析 ✓
+   （<strong>不猜</strong>"是不是预注册"—— 猜错就是假报错或漏报 ✓）。</li>
+<li><strong>两个"静默错"</strong>（都靠套件才暴露，光看输出看不出来）：
+   - <strong>抽取时把 native 成功出口改成了失败</strong>：原 case 里那一句 <code>break;</code> 位于 <code>if (!semantic_import_native_type(…))</code> <strong>之外</strong>（= 成功出口 ✓），我按行号映射时当成失败分支 ⇒ <strong>所有 native 限定名（<code>d.DirEntry</code>）静默变成 <code>any</code></strong> ✗。
+     为什么难发现：局部变量 / 形参 / 顶层变量的 <code>any</code> 是<strong>合法</strong>的 ⇒ 那几格"看起来正常"，只有 <strong>struct 字段</strong>位置报「字段不能使用 any」才把它顶出来 ✓。
+     ⇒ 教训：<strong>搬代码必须按语法层级看，不能只按行号映射</strong> ✓。
+   - <strong><code>semantic_init</code> 不是整体 memset</strong>（本仓注释里专门警告过 ✓）：新加的 <code>in_type_prepass</code> 漏了显式清零 ⇒ <strong>模块模式</strong>下读到栈上垃圾（非零）⇒ 归一化整段被跳过 ⇒ 模块里写 <code>m.Pt</code> 报"未定义的类型" ✗（入口脚本模式恰好是 0，所以只有模块模式红 ✓）。</li>
+</ol>
+<h3 id="_2">症状</h3>
+<pre><code class="language-leno">import &quot;./_mod.leno&quot; as m
+m.Pt p = m.mk()          // ✗ error: 不支持带模块前缀的类型名（如 'a.Point'）：请先 use a.Point…
+func show(m.Pt x) { }    // ✗ 同上（parse_type_internal 收尾拒绝）
+var q = new m.Pt()       // ✓ 表达式位置一直合法
+</code></pre>
+<p>⇒ 用户被迫给<strong>每个用到类型的文件</strong>都写 <code>use</code>，且必须<strong>列全</strong>（§0.2）；库的中间层还得替下游 <code>use</code>（§8.3）。</p>
+<h3 id="_3">根因</h3>
+<ul>
+<li><strong>类型位置</strong>：<code>parse_type_internal</code> 只吃一个标识符，收尾调
+  <code>parser_reject_module_qualified_type()</code> <strong>主动报错</strong>（<code>parser_func.c:662</code>）。
+  注释交代了动机（<code>parser_func.c:653-661</code> 的 2026-09-16 实测）：
+  <strong>不支持时如果不管，会静默 misparse</strong> —— <code>if v is a.Point {</code> 报"if 语句体必须用大括号"、
+  <code>v as a.Point</code> <strong>语法通过、运行期才炸</strong>。⇒ 当年的选择是"友好拒绝"而不是"支持" ✓ <strong>这个决定本身是对的</strong>
+  （比静默错好），本表要做的只是<strong>把"拒绝"升级成"支持"</strong>。</li>
+<li><strong>声明位置</strong>：<code>parser.c:225-231</code> 同款友好拒绝。</li>
+<li><strong>表达式位置</strong>：<code>parser_expr.c:732</code> 已支持 ⇒ 三处口径不一致才是问题的本质。</li>
+</ul>
+<h3 id="_4">可用的地基（为什么现在成本可控）</h3>
+<ol>
+<li><strong>归一化单一入口</strong>：<code>resolve_alias_in_type</code> 是<strong>递归</strong>的，且已被<strong>所有</strong>类型位置调用
+   （var 声明 / 函数形参与返回 / struct 字段 / destruct 槽 ✓ 见 §1-⑤）
+   ⇒ 在它里面做"限定名 → 本地类型名"的解析，<strong>下游校验点（<code>check_undefined_type</code>、
+   <code>semantic_check_undefined_subtypes</code>、<code>visit_var.inc</code>、<code>visit_type_def.inc</code>）全都不用动</strong> ✓。</li>
+<li><strong>解析单一入口</strong>：<code>parse_type_internal</code> 一处加分支即可覆盖全部类型位置 ✓。</li>
+<li><strong>查名链路已存在</strong>：表达式位置早就靠模块符号表查 <code>m.X</code>（M8/M9 的报错即由它产出）
+   ⇒ 复用同一条链路，不另造一套 ✓。</li>
+<li><strong>诊断有共享实现</strong>：<code>semantic_undefined_type_hint</code> ✓（新文案走它，不再开拷贝 ✓）。</li>
+</ol>
+<h3 id="_5">方案（两步，都在"入口"上）</h3>
+<ol>
+<li><strong>解析侧</strong>（<code>parser_func.c</code> + <code>parser.c</code>）
+   - <code>parse_type_internal</code>：识别 <code>IDENT . IDENT</code> ⇒ 把模块前缀与类型名一起存进 <code>TypeInfo</code>
+     （备选 A：新增 <code>char* module_name</code> 字段；备选 B：<code>struct_name</code> 存 <code>"m.Pt"</code>）。
+     推荐 <strong>A</strong>：语义清楚、<code>type_to_string</code> 好写、不会与真正的嵌套名混淆。
+   - 撤掉/改写 <code>parser_reject_module_qualified_type</code>：<strong>保留</strong>它作为"其余非法点号"的兜底
+     （如 <code>m.Pt.Sub</code>），但不再拦 <code>IDENT.IDENT</code>。
+   - <code>parser.c:225-231</code> 的声明路径：从"报错"改为"交给类型解析"。</li>
+<li><strong>语义侧</strong>（<code>resolve_alias_in_type</code>）
+   - 遇到带模块前缀的类型 ⇒ 在该模块<strong>已导入</strong>的前提下，去它的符号表查导出类型：<ul>
+<li>命中 ⇒ 就地替换成<strong>不带前缀</strong>的 <code>TypeInfo</code>（后续流程完全不知情 ✓）；</li>
+<li>未 import / 未导出 / 名字错 ⇒ 走 <code>semantic_undefined_type_hint</code> 同口径处方 ✓。</li>
+<li>⚠ 替换后<strong>不要</strong>留着 <code>module_name</code>（否则 <code>type_equal</code> 会把 <code>m.Pt</code> 与 <code>Pt</code> 判成不同类型 ✗）。</li>
+</ul>
+</li>
+</ol>
+<h3 id="_6">实施前必须先回答（别猜）</h3>
+<ol>
+<li><code>TypeInfo</code> 加字段的<strong>连带面</strong>：<code>type_copy</code> / <code>type_free</code> / <code>type_equal</code> / <code>type_to_string</code>
+   全要跟着改（漏一个就是泄漏或误判）—— 先数清这四处。</li>
+<li><strong><code>is</code> / <code>as</code> / <code>case is</code> 的解析</strong>是不是也走 <code>parse_type</code>？（§1-① 的实测里它们曾经静默 misparse
+   ⇒ 必须确认它们现在都经过 <code>parse_type_internal</code>，否则 US1 覆盖不全、又留一个位置不一致 ✗）</li>
+<li><strong>前瞻冲突</strong>（唯一的真语法风险）：语句开头的 <code>IDENT . IDENT</code> 现在是<strong>表达式语句</strong>
+   （<code>m.func()</code>）⇒ 改成"也可能是类型声明"后，要看 <code>parser.c:225</code> 那段的前瞻够不够，
+   会不会把 <code>m.func()</code> 误判成类型声明。</li>
+<li><strong>模块解析的时机</strong>：<code>resolve_alias_in_type</code> 跑的时候，模块符号表<strong>一定已经加载</strong>了吗？
+   （<code>import</code> 是否总是先于类型解析？若不是，"限定名"就得两遍解析或推迟到查名阶段。）</li>
+</ol>
+<h3 id="us1">验收判据（<strong>按位置矩阵钉全</strong>，这是 US1 的核心风险）</h3>
+<p>一份用例覆盖<strong>每一个</strong>类型位置，每处一条正例 + 一条"未 import 的处方"：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>位置</th>
+<th>正例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>var 声明</td>
+<td><code>m.Pt p = m.mk()</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>函数形参</td>
+<td><code>func f(m.Pt x)</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>返回类型</td>
+<td><code>func g(): m.Pt</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>struct 字段</td>
+<td><code>struct S { m.Pt p }</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>泛型实参</td>
+<td><code>Array[m.Pt]</code>、<code>Dict[string, m.Pt]</code>、<code>m.Box[m.Pt]</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>is</code> / <code>case is</code></td>
+<td><code>if v is m.Pt =&gt; q { }</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>as</code></td>
+<td><code>var w = v as m.Pt</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>new</code></td>
+<td><code>new m.Pt()</code>（<strong>已合法 ✓ 回归不许破</strong>）</td>
+</tr>
+<tr>
+<td>9</td>
+<td>catch / destruct 槽</td>
+<td>各自一条（若支持）</td>
+</tr>
+<tr>
+<td>10</td>
+<td>负例</td>
+<td><code>m.Nope p</code>（未导出）⇒ 处方口径与 <code>use</code> 路线<strong>一致</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>套件：<code>.\\build\\leno.exe assert\\run_tests.leno build\\leno.exe assert</code> 全绿 ✓</li>
+<li>老判据翻案：<code>assert/test_diag_static_errors.leno</code> 里钉"不支持带模块前缀的类型名"的断言要<strong>改</strong>（M9 刚加的反例同理）✓</li>
+</ul>
+<h3 id="2026-10-12">验收（实测，2026-10-12）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>位置</th>
+<th>用例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>var 声明</td>
+<td><code>m.Pt p = m.mk(1,2)</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>2</td>
+<td>形参</td>
+<td><code>func area_of(m.Pt p): int</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>3</td>
+<td>返回</td>
+<td><code>func origin(): m.Pt</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>4</td>
+<td>struct 字段</td>
+<td><code>struct Holder { m.Pt p  m.Shape s }</code></td>
+<td>✓（含 face 字段）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>泛型实参</td>
+<td><code>Array[m.Pt]</code> / <code>Dict[string,m.Pt]</code> / <code>new m.Box[m.Pt]()</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>is</code> / <code>case is</code> / 守卫</td>
+<td>三种都跑通</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>as</code></td>
+<td><code>v as m.Pt</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>new m.Pt()</code></td>
+<td>回归（本来就合法）</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>9</td>
+<td>cstruct / enum / alias</td>
+<td><code>m.Raw.malloc()</code> / <code>m.Color.RED</code> / <code>m.Size</code></td>
+<td>✓（三条不同注册通道）</td>
+</tr>
+<tr>
+<td>10</td>
+<td>模块函数<strong>语句级</strong>调用</td>
+<td><code>m.hello()</code>（前瞻不许误判成声明）</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>顶层全局变量</strong>的限定类型</td>
+<td><code>m.Helper h = new m.Helper()</code></td>
+<td>✓（<code>test_diag_error_batteries</code> 钉）</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>模块模式</strong>（<code>semantic_analyze_module</code>）</td>
+<td>模块内部用 <code>m.Pt</code> 做字段/形参/返回</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>—</td>
+<td>native 类型（<code>dirs</code> 的 <code>DirEntry</code>）</td>
+<td>与源码模块<strong>不是同一条通道</strong>，单独钉 ✓ 且<strong>真类型</strong>（字段可访问、错字段会报）</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>—</td>
+<td>负例</td>
+<td>多级限定 / 模块未导入 / 模块里无此类型</td>
+<td>✓ 三条文案都点名真因</td>
+</tr>
+<tr>
+<td>—</td>
+<td>套件</td>
+<td><code>run_tests.leno</code></td>
+<td><strong>448 passed / 0 failed</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">顺带收益</h3>
+<ul>
+<li>§0.2 那类 bug（漏列 ⇒ 报错点错位）<strong>从"难查"变成"不会发生"</strong> ✓</li>
+<li>传导型 <code>use</code>（§1-②）<strong>不再需要</strong>（下游直接写 <code>m.Pt</code>）✓</li>
+<li>US3（通配）的必要性大幅下降 ⇒ 可以把"通配"与"显式"的风格之争长期搁置 ✓</li>
+</ul>
+<hr>
+<h2 id="3-us2p2-use-2026-10-12">3-US2（P2）复核：漏列 <code>use</code> 的报错定位 —— ✅ 症状不复现（2026-10-12）</h2>
+<p><strong>原判据</strong>（<code>import使用指南</code> §0.2 + 本表 US2）：报错<strong>行号 = 使用处</strong>（而不是 <code>use</code> 那一行）✓，
+且仍带 <code>use m.C</code> 的处方 ✓。</p>
+<p><strong>复核结果（实测 5 个声明位置，全部通过 ✓）</strong> —— 前言固定 <code>import … as m</code> + <code>use m.(A, B)</code>，
+<code>C</code> 一律漏列：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>位置</th>
+<th>报错落点</th>
+<th>文案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>局部变量 <code>C c = …</code></td>
+<td><strong>声明那一行</strong> ✓</td>
+<td><code>未定义的类型: C</code> + 处方</td>
+</tr>
+<tr>
+<td>②</td>
+<td>形参 <code>func take(C c)</code></td>
+<td><strong>形参那一行</strong> ✓</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>③</td>
+<td>返回 <code>func give(): C</code></td>
+<td><strong>返回类型那一行</strong> ✓</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>④</td>
+<td>struct 字段 <code>struct Holder { C c }</code></td>
+<td><strong>struct 那一行</strong> ✓（并点名<strong>字段</strong> <code>'c'</code> ✓）</td>
+<td><code>… 字段 'c' 使用了未定义的类型 'C' …</code></td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>泛型实参 <code>Array[C]</code></td>
+<td><strong>那一行</strong> ✓（没被拖到"类型不匹配"才炸 ✓）</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<p>处方文案（三处共用，由 <code>semantic_undefined_type_hint</code> 生成 ✓）：
+<code>未定义的类型: C（它其实是模块 'm' 导出的 struct ⇒ 请补一句</code>use m.C<code>✓；源码里**出现它的每一处**
+都要在 use 列表里 —— 泛型参数里（如 Array[C]）也算 ✓）</code></p>
+<p><strong>⇒ 结论</strong>：§0.2 记的"报在 <code>use</code> 那一行"这条<strong>已经不复现</strong>（大概率是 2026-10-10 那轮"处方共享实现
++ 八处拷贝收敛"顺带治好的 ✓ —— 没去二分是哪一轮，本条的价值转为<strong>钉住位置</strong> ✓）。</p>
+<p><strong>钉住的方式</strong>：新增 <code>assert/test_use_missing_diag.leno</code> —— ①–⑤ 各一条，
+<strong>断言里同时判行号</strong> ✓（只判文案不够：这次要防的正是"位置退化"那一半 ✓），
+外加 ⑥ 处方可用性（补 <code>use m.C</code> 就能编译并跑出 <code>F=3</code> ✓）。</p>
+<p><strong>⚠ 顺带查实（现状，不是 bug；要不要收紧请你定）</strong>：<code>if v is C =&gt; q</code>（<code>C</code> <strong>没</strong> use）
+<strong>不报错、能跑、能命中</strong> —— <code>is</code> / <code>as</code> 这类<strong>动态判据</strong>位置会去<strong>已导入模块</strong>里
+<strong>按名字</strong>找类型 ✓（与"声明位置必须 <code>use</code>"是两套口径：声明要不含糊，动态判据只需唯一命中）。
+本表的 ⑦ 已把它作为<strong>现状</strong>钉住；若决定收紧成"动态判据也要先用 <code>use</code> 引进名字"，
+把 ⑦ 反过来钉即可（代价：<code>is</code> 的写法变啰嗦；收益：一套口径）✓</p>
+<hr>
+<h2 id="4">4. 明确不做（想清楚了，不再反复）</h2>
+<table>
+<thead>
+<tr>
+<th>不做</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>给 <code>use</code> 加 func / var</strong></td>
+<td>运行期实体走模块名（<code>m.func()</code> / <code>m.var</code>）是<strong>正确的边界</strong>（否则名字冲突、初始化顺序都成问题）✓ 见 <code>import使用指南</code> §8.2</td>
+</tr>
+<tr>
+<td><strong>反向收紧</strong>（要求所有类型都 <code>use</code>，连 native 规格也强制）</td>
+<td>与 §1-⑧ 的既有兜底冲突，且<strong>增加</strong>摩擦、零收益 ✗</td>
+</tr>
+<tr>
+<td><strong>限制 <code>new m.Pt()</code> 这类表达式位置写法</strong></td>
+<td>它是<strong>正确的</strong>那一半 ✓ 要补的是类型位置，不是砍表达式位置</td>
+</tr>
+<tr>
+<td><strong><code>use m.*</code> 通配</strong>（原 US3）</td>
+<td>★ <strong>2026-10-12 定：不做</strong>（US1 落地后重估的结论）。三条理由：① <strong>逃生阀已经有了</strong> —— 类型位置直接写 <code>m.Pt</code> 即可，通配解决的那个痛点（"懒得列全"）已经有了<strong>更精确</strong>的解法 ✓；② <strong>通配是"收进一批看不见的名字"</strong> ⇒ 与"显式优先 / 少报不误报"的既有风格<strong>反向</strong> ✓；③ 它还会带来一条<strong>新的</strong>要回答的规则（通配进来的名字与 <code>use m.C</code> 同名时谁赢）⇒ 用<strong>多一条规则</strong>换<strong>更差的可见性</strong>，不划算 ✗（细节见 US1 的"顺带收益"：US3 的必要性被 US1 直接消掉了 ✓）</td>
+</tr>
+<tr>
+<td><strong>在解析器里做类型名解析</strong>（拿模块符号表）</td>
+<td>解析器不该知道模块加载状态 ⇒ 归一化放语义侧 <code>resolve_alias_in_type</code>（§1-⑤ 的单一入口）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5">5. 变更记录</h2>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>条目</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-12</td>
+<td>—</td>
+<td>建档；快照：设计评估结论（机制对 / 缺逃生阀）、现状事实 ⑪ 条、US1–US5 立项、"明确不做"五项</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>US1</td>
+<td><strong>已完成（工作区未提交）</strong>：解析器记模块前缀 + 语义层<strong>复用 <code>use</code> 的唯一实现</strong>（抽出 <code>semantic_import_use_symbol</code>）+ 新用例 <code>test_qualified_type_positions.leno</code>（10 位置矩阵）/ <code>test_qualified_type_hint.leno</code>（重写）/ <code>test_diag_*</code>（M9 三条翻案）+ 3 篇文档同步；套件 <strong>448/0</strong>。⚠ 顺带查实两个隐蔽坑：<strong>预注册阶段早于 import</strong>（要显式阶段标志）、<strong><code>semantic_init</code> 不是 memset</strong>（新字段漏清 ⇒ 模块模式读到栈垃圾）</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>US2</td>
+<td><strong>复核不复现 ⇒ 收口 + 补钉</strong>：五个声明位置（局部变量 / 形参 / 返回 / 字段 / 泛型实参）的漏列报错<strong>全在使用处</strong>并点名处方 ✓ ⇒ 新增 <code>assert/test_use_missing_diag.leno</code>（含<strong>行号</strong>断言 + 处方可用性）。⚠ 顺带查实：<code>is</code> / <code>as</code> 这类<strong>动态判据</strong>位置不要求 <code>use</code>（会跨已导入模块按名字找 ✓）—— 是否收紧留作待定</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="线程并发能力修复追踪.html">← 上一篇</a><a href="待修_2026-11-17_实测发现.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

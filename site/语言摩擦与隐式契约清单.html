@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语言摩擦与隐式契约清单 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="语言摩擦与隐式契约清单.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1threadsstart-module-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-any">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3this-self-this">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-struct">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-2026-10-12c-value-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-2026-10-12-enum">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-2026-10-12as">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-2026-10-12-us1-5">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-2026-10-13-export-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-2026-10-13struct-new-b-self">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#_2">与现有文档的分工</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="_1">语言摩擦与隐式契约清单</h1>
+<blockquote>
+<p><strong>出处</strong>：2026-10-11，把 LenoMusic（GUI 应用，~3000 行）拆成四个模块的实测产物——
+拆分会把"单文件时代无关紧要"的语言层契约全部翻出来，这份清单只收<strong>语言层</strong>的
+（框架层的坑见 <code>LenoSDL3_*.md</code> 那几篇；报错<strong>文案质量</strong>类见 <code>Leno报错提示改进计划.md</code>；
+"症状 → 怎么办"的实操版见 <code>语言陷阱速查.md</code>——本文聚焦<strong>隐式契约 / 类型洞 / 词法摩擦</strong>，
+每条都给<strong>最小复现 + 实测判据 + 修法建议</strong>，开工前请先重跑探针确认现状 ✓）。</p>
+<p>状态（2026-10-12 更新）：<strong>M1 / M2 / M3 / M4 / M5a / M5b / M6 / M7 已修完</strong> ✓；
+<strong>M8 已定口径</strong>（<code>as</code> 的位宽类型名保留为"转换指令"、文档化，<strong>不</strong>收口 ✓）；
+<strong>M5c 已决：不修</strong> ✓ —— <code>pri</code> 保持<strong>字段级</strong>边界，不加 <code>new T() { field: v, … }</code> 字面初始化；
+痛点改用<strong>本 struct 自己的方法</strong>（构造函数 / <code>init(Dict)</code> / 析构）解决（理由见 M5 节末的决定块 ✓）。
+M6 是 2026-10-12 由 <code>ffi.callback</code> 截断（LenoTrae 托盘崩溃）牵出的<strong>全仓审计</strong>产物 ✓；
+M7 按"既然 enum 能算，就全面支持"落地（含<strong>输出可回读</strong>这条硬理由 ✓）。
+<strong>M9 同日先修（诊断收口）后被 US1 翻案</strong>：限定名在类型位置<strong>从"拦"改成"支持"</strong> ✓
+（<code>m.Pt</code> = 隐式 <code>use m.Pt</code> ⇒ §0.2 那类"漏列 use、报错点错位"的坑整类消失 ✓，
+见 <code>docs/类型可见性与use逃生阀修复追踪.md</code> ✓）。M9 节与 <code>语言陷阱速查</code> ㉝ 均已同步 ✓。
+<strong>M10 已修（2026-10-13）</strong>：跨模块读<strong>没 export 的变量</strong>以前<strong>编译不报错、运行期静默 <code>null</code>
+（LenoTrae 的 PVZ 实测：138 个常量别名全 null，<code>ANIM_N - 1</code> 才崩）⇒ 现在</strong>编译期<strong>就报 ✓
+（<code>语言陷阱速查</code> ㉞ 是它的实操版 ✓）。
+<strong>M11 ✅ 已修（2026-10-13）</strong>：struct <strong>方法</strong>里 <code>new B(键 = 隐式自字段)</code> 以前报「未定义的变量」✗。
+真因是</strong>方法体改写器的 switch 白名单漏了 <code>AST_STRUCT_INIT</code>** ⇒ <code>new B(键 = 值)</code> 的<strong>值</strong>整段
+被静默跳过（<strong>不是</strong>"self 上下文"问题 ✗）⇒ 补一个 case、<strong>只递归 <code>field_values[]</code></strong> ✓。
+6 条边界全绿 + 全量套件 452/0 ✓（<code>语言陷阱速查</code> ㉟ 是它的实操版 ✓）。
+序号 M1…M11（M = 摩擦）。</p>
+</blockquote>
+<hr>
+<h2 id="m1threadsstart-module-2026-10-12">M1【高】<code>threads.start</code> 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</h2>
+<blockquote>
+<p><strong>结论：限制本身已撤（不是只改文案）</strong> —— 模块函数现在可以直接作线程入口 ✓。
+实施记录见 <code>docs/线程并发能力修复追踪.md</code> 的 TH2；下面的原文保留，用来记住<strong>两层坑</strong>
+（文案与判据不一致、契约查不到）是怎么来的。</p>
+</blockquote>
+<p><strong>隐式契约</strong>（原源码判据 <code>src/module/threads/threads.c</code> 的前置校验）：线程入口函数 <code>f</code> 必须
+<strong>不属于任何模块</strong>——子 VM 只继承<strong>调用方 VM</strong> 的 globals ⇒ <strong>模块函数进不了线程函数体</strong>。</p>
+<p><strong>实测复现</strong>（LenoMusic 拆分当天 ✓）：把 <code>bang_menu_worker</code> 搬进模块 <code>bang_page.leno</code> 后：</p>
+<pre><code>threads.start(): 线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'bangpg' 里的 'bang_menu_worker'
+</code></pre>
+<p>两层问题：
+- 文案说"<strong>当前文件</strong>"，实现判的是"<strong>入口脚本</strong>"——同一次运行里"当前文件"有好几个
+  （每个被 import 的模块都是当前文件之一）⇒ 照着文案改不出对的结果；
+- <code>threads使用指南.md</code> <strong>查不到这条契约</strong> ⇒ 模块化重构第一次起线程必撞，撞完还看不懂。</p>
+<p><strong>当时的可行解（已实测 ✓，现在仍然能用 ✓）</strong>：宿主把 worker <strong>当函数值</strong>传进模块，模块里存成
+<code>func(...):...</code> 字段再 <code>threads.start(字段, …)</code>——此时 <code>f</code> 仍是入口脚本的函数
+（module == NULL）✓，子线程 globals 正常 ✓（探针实测 join 回值正确 ✓）。
+LenoMusic 三个页面模块全部按此落地 ✓。</p>
+<p><strong>实际修法（2026-10-12 落地，比当年的三条建议更彻底）</strong>：
+1. <strong>治本</strong>：协程首帧漏设 <code>frame-&gt;module</code>（<code>src/vm/vm.c</code> 的 <code>vm_run_coroutine_with_vm</code>），
+   而模块字节码全走 <code>frame-&gt;module</code> 寻址 ⇒ 补上那一行，模块函数直接可用 ✓
+   （连带修好了<strong>主线程 async 协程里调模块函数</strong>的同一处缺口 ✓）；
+2. 文案/拦截：<code>threads.start</code> 撤掉那条硬拦，只保留"模块尚未初始化"这一种情况的明确报错 ✓；
+3. 文档：<code>threads使用指南.md</code> 的该节从"限制"改写成"模块函数也能用 + 两个仍然成立的注意点" ✓。</p>
+<hr>
+<h2 id="m2-any">M2【高】调用"函数类型字段"的返回值是 <code>any</code>（声明的返回类型没生效）</h2>
+<p><strong>实测复现</strong>（探针，2026-10-11 ✓）：</p>
+<pre><code class="language-leno">// 模块里
+pri func():string outdirOf
+pri func outdir(): string {
+    return outdirOf()        // ✗ error: [类型不匹配] 返回类型不匹配：期望 string，实际 any
+}
+</code></pre>
+<p>哪怕字段声明是 <code>func():string</code>，<strong>通过字段调用</strong>的返回值在类型系统里仍是 <code>any</code>
+⇒ 必须手动收窄：<code>var d = outdirOf()  return d as string</code> ✓（<code>as</code> 收窄后可用）。
+普通函数调用不受影响（返回类型正常）⇒ 洞只在"函数值当字段/变量再调"这一形态。</p>
+<p><strong>为什么疼</strong>：函数值是本语言"跨模块传行为"的正路（M1 的解法就靠它）⇒ 用得越多，
+这个洞越常撞；而且报错只说"实际 any"，看不出"明明声明了返回类型"。</p>
+<p><strong>修法建议</strong>：函数类型字段的调用按声明签名推返回类型（签名就在那，信息是现成的）；
+顺带把 M1 的解法场景跑一遍回归（函数值 → threads.start 不受影响 ✓）。</p>
+<hr>
+<h2 id="m3this-self-this">M3【中】<code>this</code> 不存在、自引用叫 <code>self</code>——但误用 <code>this</code> 的报错不提示</h2>
+<p><strong>实测</strong>（2026-10-11 ✓，两支探针）：
+- 方法里写 <code>return this</code> ⇒ <code>error: [未定义变量] 未定义的变量: this</code>（无任何提示）✗；
+- 方法里写 <code>return self</code> ⇒ <strong>完全可用</strong> ✓：经返回的引用写字段，原对象同步变
+  （引用语义，探针 <code>m.v = 42 ⇒ h.v == 42</code> ✓）——"返回自己"这件事<strong>做得到</strong> ✓。</p>
+<p>所以这条的本质是<strong>报错质量</strong>小项：<code>this</code> 是最常见的顺手词，报"未定义变量"却不带
+"是否想用 'self'？"（仓里已有同款先例：<code>contains()</code> 写错提示 <code>has()</code> ✓）。</p>
+<p><strong>修法建议</strong>：未定义变量报错对 <code>this</code> / <code>self</code> / <code>This</code> 这几个高频误拼给纠错提示；
+<code>Leno入门教程.md</code>（struct 一节）补一句"方法内自引用用 <code>self</code>"。</p>
+<hr>
+<h2 id="m4-struct">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</h2>
+<p><strong>实测复现</strong>（LenoMusic 拆分当天 ✓）：入口脚本里</p>
+<pre><code class="language-leno">import &quot;./bang_page.leno&quot; as bang      // 模块别名
+struct App { BangPage? bang = null }   // 恰好也有个字段叫 bang
+
+// 方法里：
+bang = bang.create_bang_page(...)      // ✗ 后一个 bang 被解析成&quot;字段&quot;
+</code></pre>
+<p>报错是"在字段 bang 上找不到方法 <code>create_bang_page</code>"之类——<strong>看不出是遮蔽</strong>
+（字段把模块名遮了）⇒ 排查烧掉好几轮编译循环。改名 <code>as bangpg</code> 后当场通过 ✓。</p>
+<p><strong>修法建议</strong>：语义阶段检测"模块别名 vs 同作用域字段/变量同名"并直接报错
+（哪怕只给 warning：「别名 'bang' 被同名字段遮蔽，模块成员将不可达」）——
+这种冲突几乎从不合法，报出来没有误伤成本。</p>
+<hr>
+<h2 id="m5">M5【低】三件小摩擦（每个都吃掉一次编译循环）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>摩擦</th>
+<th>实测</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5a</td>
+<td><strong>内建类型进不了 <code>use 模块.(…)</code> 批量导入</strong>：<code>use SDL3.(…, Thread)</code> 报"期望类型名"</td>
+<td>2026-10-11 ✓（<code>Thread</code> 是内建类型，不是 SDL3 导出的）</td>
+<td>报错说清"X 是内建类型，无需 use"即可（内建类型本来就不该放进来，但报错要指路）</td>
+</tr>
+<tr>
+<td>5b</td>
+<td><strong>保留字撞名无提示</strong>：<code>Outer alias = o</code>（<code>alias</code> 是关键字）报的是普通语法错，看不出"这是保留字"</td>
+<td>2026-10-11 探针 ✓</td>
+<td>保留字位置报错统一带一句"'alias' 是保留字，换个名字"</td>
+</tr>
+<tr>
+<td>5c</td>
+<td><strong><code>pri</code> 字段逼出成套 setter 样板</strong>：模块工厂没法直填 <code>pri</code> 字段 ⇒ 每个都写 <code>set_xxx</code>（LenoMusic 两个页面模块各 5+ 个）</td>
+<td>2026-10-11 ✓</td>
+<td><strong>已决：不修</strong>（2026-10-12 ✓）—— 理由与官方绕法见本节末的决定块；一句话：改用<strong>本 struct 自己的方法</strong>（构造函数 / <code>init(Dict)</code> / 析构）把 N 个 setter 收成 1 个 ✓</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="m5c-2026-10-12">✅ M5c 已决：<strong>不修</strong>（2026-10-12）</h4>
+<p><strong>结论</strong>：保持 <code>pri</code> 的<strong>字段级（struct 级）</strong>边界，<strong>不加</strong> <code>new T() { field: v, … }</code> 字面初始化。</p>
+<p><strong>为什么</strong>（按权重排序）：</p>
+<ol>
+<li><strong><code>pri</code> 是有实际作用的严格边界，不是多余</strong> —— 实测（2026-10-12）：
+   · <strong>同一模块</strong>里的普通函数碰它 ⇒ <code>'T.x' 是 pri 私有字段…</code> ✓
+   · <strong>兄弟 struct 的方法</strong>碰它 ⇒ 同样被拦 ✓（<code>struct U { func poke(T t) { t.x = 1 } }</code>）
+   ⇒ 它挡的是"同一模块内、<strong>除本 struct 方法以外</strong>的一切"。放宽成"同模块可见"是<strong>削弱既有封装保证</strong>，
+   而收益只是"少写几个 setter" —— 与本仓近两轮"把静默问题往编译期收"（<code>as</code> 恒失败报错、<code>--check</code> 自报范围、
+   M6 的截断审计）方向<strong>相反</strong> ✗</li>
+<li><strong>那套 setter 多数不是纯样板</strong>：GUI 控件里 <code>set_value</code> 常带 clamp / 标脏 / 重排（如 <code>Slider.set_value</code>）
+   ⇒ 创建式直填等于<strong>绕过不变量</strong>（<code>new T() { value: 999 }</code> 这种越界值最容易写出来 ✗）；
+   "可读性收益"与"绕过校验"是同一枚硬币 ✓</li>
+<li><strong>字面初始化是新增语法</strong>，且会造出<strong>第二条构造路径</strong>（与"工厂 + init"并存）⇒ 与《Leno语言改进建议》的
+   "不再追加特性"、以及本仓反复收敛的"单一事实来源"两条口径都冲突 ✗</li>
+<li><strong>关键：痛点有零语言改动的替代</strong> —— 走<strong>结构体自己的方法</strong>（这一族本来就允许直填 <code>pri</code> ✓）：</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>写法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固定初值</td>
+<td><code>func T() { x = 7 }</code></td>
+<td><strong>构造函数</strong>：<code>new T()</code> 后自动跑；<strong>不能有参数</strong> ✓</td>
+</tr>
+<tr>
+<td>参数化初值</td>
+<td><code>func init(Dict o) { x = o.get("x", 0) … }</code></td>
+<td>一次填完<strong>所有</strong> <code>pri</code> 字段 ⇒ 工厂只剩两行 ✓</td>
+</tr>
+<tr>
+<td>释放资源</td>
+<td><code>func ~T() { … }</code></td>
+<td><strong>析构函数</strong>：与上面成对（不能有参数/返回值 ✓）</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ <strong>N 个 setter → 1 个方法</strong>，而且校验/夹紧留在类型自己的代码里、构造入口唯一 ✓</p>
+<p><strong>实测</strong>（构造函数 + <code>init(Dict)</code> + 析构三件套，2026-10-12 ✓）：<code>make({x: 7, name: "abc"})</code> ⇒ <code>7/abc</code>；
+<code>new</code> 后 alive = 1、离开作用域回 0 ✓（探针临时文件，已删）。</p>
+<p><strong>落地</strong>：<code>Leno入门教程.md</code> 的「构造函数与析构函数」一节新增子节
+「<code>pri</code> 字段怎么填：工厂<strong>不必</strong>写一套 setter」（三行场景表 + 可跑例子 + 两条"不存在的写法"提示 ✓）；
+<code>语言陷阱速查.md</code> 新增 <strong>㉜</strong>（用户侧同款 + "struct 方法不需要 export"那条易混点 ✓）。</p>
+<hr>
+<h2 id="m6-2026-10-12c-value-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的<strong>截断面</strong>：<code>val_int</code> vs <code>val_int_safe</code></h2>
+<p><strong>隐式契约</strong>：<code>int</code> 是 <strong>48 位</strong>，而"把 C 的整数塞进 Leno Value"有两条路 ——</p>
+<pre><code class="language-c">// src/include/leno_value.h:183
+static inline Value val_int(int64_t n) { return … | ((uint64_t)n &amp; PAYLOAD_MASK); }   // 只留低 48 位，静默
+// src/bigint.c:253
+Value val_int_safe(int64_t v) { … int48 内给 int、超出给 BigInt … }
+</code></pre>
+<p>⇒ 凡是"值域可能超 int32"的地方写了 <code>val_int((int)…)</code>，就会<strong>静默截成低 32 位</strong>
+（不是 48 位—— <code>(int)</code> 先砍一刀 ✗）。它与 <code>val_int_safe</code> 的选择<strong>没有编译期护栏</strong>，
+所以只能一处一处审（语言层看不出差别：<code>type()</code> 一律报 <code>"int"</code> ✓）。</p>
+<p><strong>出处（同一天两次踩）</strong>：① LenoTrae 的托盘窗口过程 —— <code>ffi.callback</code> 的 64 位实参被截，
+lParam 转交回 SDL 后崩在 <code>SDL3.dll</code>（10-03~10-11 共 5 次，见 <code>assert/test_ffi_callback_i64.leno</code>）；
+② 由①引起的全仓审计（2026-10-12）。</p>
+<p><strong>审计结果（本轮修的 6 处）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>位置</th>
+<th>症结</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td><code>src/vm/vm.c</code> <code>as i64</code>/<code>as u64</code> 四分支</td>
+<td>64 位目标却 <code>(int)</code>：<code>4294967296.0 as i64</code> = <strong>0</strong>、<code>281474976710657 as i64</code> = <strong>1</strong></td>
+</tr>
+<tr>
+<td>A2</td>
+<td><code>src/module/ffi/ffi.c</code> <code>ffi.sizeof</code></td>
+<td><code>ptr-&gt;size</code> 是 <code>size_t</code> ⇒ &gt;2GB 缓冲给错值</td>
+</tr>
+<tr>
+<td>A3</td>
+<td><code>src/module/files/files.c</code> <code>f.tell()</code> / <code>f.len()</code></td>
+<td><code>long</code> 在 LP64 是 64 位 ⇒ &gt;2GB 文件错值（Windows 上 <code>long</code> 本就 32 位）</td>
+</tr>
+<tr>
+<td>A4</td>
+<td><code>src/module/types/types.c</code> <code>_int(FFI 指针)</code></td>
+<td>走 <code>val_int</code>（静默截 48 位），与 <code>ffi.ptr_to_int</code> 的 <code>val_int_safe</code> 口径不一</td>
+</tr>
+<tr>
+<td>B1</td>
+<td><code>src/module/ffi/ffi.c</code> <code>read_uint64</code> / <code>read_at(u64)</code></td>
+<td>按 INT32 判界 ⇒ 2^32 出来是内部 BigInt，而 <code>read_int64</code> 同值给 int（同值不同型 ✗）</td>
+</tr>
+<tr>
+<td>B2</td>
+<td><code>src/module/types/types.c</code> <code>_int(bigint)</code> 单 limb</td>
+<td>同上按 INT32 判界（该值 &lt; 2^32 ⊂ int48，本来就该给 int）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>回归</strong>：<code>assert/test_wide_int_convert.leno</code>（<code>as i64/u64</code> × 6、<code>as i32</code> 截断不许变宽 × 3、
+高地址 <code>_int(ptr)</code>、<code>read_uint64</code>/<code>read_int64</code> 同值同型）。</p>
+<p><strong>没纳入自动套件的三处</strong>（要 &gt;2GB 的缓冲/文件、或语言层造不出的中间态）：A2 / A3 / B2 ——
+只靠改动注释与本表钉住 ✓。<strong>未改的</strong>：<code>as i8/i16/i32/u8/u16/u32</code> 的截断是<strong>语义本身</strong> ✓。</p>
+<p><strong>建议护城河</strong>：给这类转换加一条 lint/脚本（grep <code>val_int((int)</code> 与 <code>val_int((int64_t)</code> 白名单），
+或在 <code>val_int</code> 上加 <code>__attribute__((deprecated))</code> 风格的口径提示 —— 不然下次照样漏 ✗。</p>
+<hr>
+<h2 id="m7-2026-10-12-enum">M7【中，✅ 已修 2026-10-12】指数字面量曾<strong>只有 enum 成员值那条路能用</strong>（两条路两种结果 ✗）</h2>
+<p><strong>实测矩阵</strong>（2026-10-12 ✓）：</p>
+<table>
+<thead>
+<tr>
+<th>上下文</th>
+<th><code>1e10</code> / <code>1.0e10</code> / <code>1.5e-3</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>float a = 1e10</code>、<code>var c = 1e10</code>、<code>export const float K = 1e10</code></td>
+<td>✗ 报「声明语句后期望换行或 ';'，但同一行出现标识符」</td>
+</tr>
+<tr>
+<td>表达式 / 实参 / 数组字面量（<code>_str(1.5e3)</code>、<code>[1e3, 2.5e2]</code>）</td>
+<td>✗ 同上（或「期望 ')'」「期望 ',' 或 ']'」）</td>
+</tr>
+<tr>
+<td><strong><code>enum E { X = 1e10 }</code></strong>（同模块 / 跨模块都试过）</td>
+<td><strong>✓ = 10000000000</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么两条路不一样</strong>：普通表达式走<strong>词法</strong>（<code>src/lexer.c</code> 的 <code>read_number</code> 只吃
+"整数 + 可选小数部分"，没有指数那一段 ✗）；而 enum 成员值走 <strong>const 文本求值器</strong>，
+它拿原始文本交给 <code>strtod</code>（<code>strtod</code> 本来就会吃指数 ✓）⇒ 同一份源码、同一种字面量，
+<strong>换个位置结果就不同</strong>：一处报语法错、一处静默算对 ✓。</p>
+<p>⚠ 所以这<strong>不是"语言没有这个特性"</strong>（值本身完全可表示），而是<strong>保真度漏洞</strong> ——
+与"不再追加特性"那条口径无关（那条管的是<strong>语言特性/语法能力</strong>）。</p>
+<p><strong>建议：支持（补词法）</strong>，理由与成本：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成本</td>
+<td><code>read_number</code> 里约 10 行：整数/小数部分之后，若 <code>peek</code> 是 <code>e/E</code>，<strong>且其后（可带一个 <code>+/-</code>）紧跟数字</strong> ⇒ 吃掉整段并置 <code>is_float = 1</code>（<code>strtod</code> 已在用，无需新解析）</td>
+</tr>
+<tr>
+<td>下游早就写好了</td>
+<td><code>codegen_expr.c</code> 判"是不是浮点"时<strong>已经</strong>在查 <code>'.' / 'e' / 'E'</code>，注释也写着"带符号/小数/<strong>科学计数</strong>" ⇒ 只有词法没接上</td>
+</tr>
+<tr>
+<td>必须排除</td>
+<td><code>0x1e10</code> 仍是十六进制（十六进制数字里本来就有 <code>e</code>）⇒ 靠 <code>is_hex/is_bin</code> 分流；<code>1efoo</code> 必须仍报错 ⇒ 要求"<code>e</code> 后必须真跟数字"</td>
+</tr>
+<tr>
+<td>不顺手放开</td>
+<td><code>1.</code>（尾点）、<code>.5</code>（前导点）、<code>1_000</code>（分隔符）<strong>都不动</strong> ⇒ 保持最小面</td>
+</tr>
+<tr>
+<td>反面（不支持）的代价</td>
+<td>要么把 enum 那条路也改成报错（把能用的地方也弄坏，一致性更差 ✗），要么留着"同字面量两种结果"的洞 ✗；<strong>至少</strong>也得给 <code>1e10</code> 一句像样的报错（"不支持指数写法，请写 10000000000.0"），而不是"同一行出现标识符" ✗</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>状态：<strong>待你定</strong>（2026-10-12）。选"支持"⇒ 我按上表补词法 + 加断言（<code>1e10/1.0e10/1.5e-3/2E+8</code>
+与 <code>0x1e10</code> 不被误吃）；选"不支持"⇒ 我把报错文案改准，并<strong>同步把 enum 那条路也收掉</strong>
+（否则洞还在 ✓）。</p>
+</blockquote>
+<h4 id="2026-10-12">✅ 已修（2026-10-12，按"全面支持"落地）</h4>
+<p><strong>还多了一条</strong>支持理由（比"别的语言都有"硬）：<strong>输出本来就是科学计数法，输入却读不回来</strong> ——
+<code>print(_str(123456789123456789 as float))</code> 打印 <code>1.2345678912345679e+17</code>（教程 §float 输出规则
+写着"大数/极小数自动使用科学计数法 ✓"），可这个<strong>打印出来的形式粘回源码会报语法错</strong> ✗
+⇒ 输出不可回读（<code>_str(x)</code> 的往返性在同一份文档里被当作卖点，这里却是断的 ✓）。</p>
+<p><strong>改动</strong>：<code>src/lexer.c</code> 的 <code>read_number</code> 里补"指数段"（约 20 行含注释；<code>strtod</code> 本来就会解析，
+所以只是把 token 的范围吃全 ✓），三条护栏：</p>
+<table>
+<thead>
+<tr>
+<th>护栏</th>
+<th>内容</th>
+<th>回归</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 只认十进制</td>
+<td><code>0x1E10</code> 的 <code>E</code> 是十六进制数字 ⇒ 必须仍是整数 <strong>7696</strong>；<code>0b1e10</code> 也不吃指数</td>
+<td><code>assert/test_exp_literal.leno</code> ②⑤</td>
+</tr>
+<tr>
+<td>② <code>e/E</code> 后必须<strong>真跟数字</strong>（可带一个 <code>+/-</code>）</td>
+<td><code>1efoo</code> / <code>1e</code> / <code>1e+</code> 保持报错（不把标识符悄悄吞掉 ✓）</td>
+<td>该文件 ④ 的五个负例</td>
+</tr>
+<tr>
+<td>③ 只吃<strong>一次</strong>指数</td>
+<td><code>1e1e1</code> = <code>1e1</code> + 标识符 <code>e1</code> ⇒ 报错 ✓</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<p><strong>语义口径</strong>：<code>1e10</code> 是 <strong>float</strong>（与 C/JS 一致 ✓，<code>type()</code> 报 <code>"float"</code>）；而 <strong>enum 成员值</strong>
+仍按整数求值（<code>type(E.X)</code> = <code>"int"</code> ✓，与"枚举成员是整数"的既有口径一致 ✓）——两条路<strong>同值</strong>。</p>
+<p><strong>回归</strong>：<code>assert/test_exp_literal.leno</code>（普通上下文 6 个字面量 + 十六进制护栏 + enum 同值 +
+五个负例 + 极大/极小量级）。套件 441/441 ✓。文档同步：<code>Leno入门教程.md</code> 的 float 输出规则处
+补了"字面量也支持指数写法"✓。</p>
+<hr>
+<h2 id="m8-2026-10-12as">M8【中，✅ 已定口径 2026-10-12】<code>as</code> 里的位宽类型名是「转换指令」，不是「可声明的类型」</h2>
+<p><strong>疑点从哪来</strong>：审计 M6 时自己踩到 —— <code>i64/u64/…</code> 明明是 <strong>C 布局类型</strong>
+（<code>i64 x = 5</code> 明确报「C 布局类型 'i64' 不能用于变量声明…」），可 <code>as i64</code> / <code>as u8</code> / <code>as i32</code>
+<strong>却能编译</strong> ⇒ 看着像"闸门漏了一处"（当时的结论就是"收口它"✗）。</p>
+<p><strong>查证后的事实</strong>（推翻了"收口"这个结论）：</p>
+<table>
+<thead>
+<tr>
+<th>事实</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>as u8 / as i32</code> 是<strong>早就文档化</strong>的用法</td>
+<td><code>Leno入门教程.md</code> 的「C 窄类型截断（显式丢弃高位）」一节，4 个例子（<code>255 as u8</code>、<code>-1 as u8</code>、<code>0x123456789 as i32</code>…）</td>
+</tr>
+<tr>
+<td>一族里只有 <code>as i64/u64</code> 没写进文档，且它当时<strong>有 bug</strong></td>
+<td><code>vm_as_cast</code> 写 <code>(int)</code> ⇒ 静默截 32 位（已修，见 M6 的 A1 ✓）</td>
+</tr>
+<tr>
+<td><code>as</code> 的<strong>结果</strong>是 Leno <code>int</code>，没把 C 布局类型引进语言层</td>
+<td><code>type(4294967296.0 as i64)</code> = <code>"int"</code> ✓ ⇒ "不能用于声明"与"能用于 as"<strong>并不矛盾</strong></td>
+</tr>
+<tr>
+<td>函数式替代<strong>不完整</strong></td>
+<td>只有 <code>_int32 / _uint32 / _int64 / _uint64 / _uint8 / _byte</code>；<code>_int8 / _int16 / _uint16</code> <strong>没有</strong> ⇒ 收口会让"8 位有符号 / 16 位截断"彻底没入口 ✗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论（2026-10-12 拍板"按我的想法来"）</strong>：<strong>保留这一族 <code>as</code> 指令</strong>，把它<strong>文档化</strong>（教程那节补
+<code>as i64/u64</code> + "指令 vs 声明"边界说明 ✓），<strong>不做收口</strong>。理由按权重：
+① 收口要砍掉现有能力（<code>as i8/i16/u16</code> 无替代）；② 收口要改教程里已文档化的例子（破坏文档面）；
+③ 保留的代价只是"教程补几行"。</p>
+<p><strong>回归</strong>：<code>assert/test_wide_int_convert.leno</code> 的第 ⑤ 组 —— 钉住这条边界："<code>as i64</code> 能用 ✓ +
+结果 <code>type</code> 仍是 <code>int</code> ✓ + <code>i64 x = 5</code> 仍报错 ✓"，两边都不许被后来者"顺手统一"掉 ✗。</p>
+<hr>
+<h2 id="m9-2026-10-12-us1-5">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（<code>模块.类型</code>）不能做类型标注 —— 但<strong>只有 5 个位置</strong>会这么报，其余位置喷一串看不懂的语法错误</h2>
+<blockquote>
+<p>★ <strong>2026-10-12（US1）翻案：这条限制本身</strong>撤掉了** ✓** —— 类型位置<strong>支持</strong>写 <code>m.Pt</code>（等价于隐式
+<code>use m.Pt</code>），见 <code>docs/类型可见性与use逃生阀修复追踪.md</code> 的 US1 ✓。
+于是本节的诊断<strong>不再会出现</strong>（原来的三条判据已改成正向："三处都必须能跑" ✓）；
+下面的原文保留，用来记住<strong>两次</strong>教训：① 限制只在 5 个位置报 ⇒ 其余位置喷一串看不懂的语法错
+（M9 修的）；② 支持它时"预注册阶段早于 import"与"native 类型不幂等"两个坑（US1 踩的 ✓）。</p>
+</blockquote>
+<p><strong>摩擦本体</strong>：类型名只有两个来源 —— <strong>内置</strong>与 <strong><code>use</code> 导入</strong> ✓。<code>d.DirEntry</code> 这种<strong>限定名</strong>
+在<strong>表达式</strong>位置合法（<code>new d.DirEntry()</code> / <code>d.walk()</code> ✓），在<strong>类型</strong>位置<strong>一律不合法</strong> ✓。</p>
+<p><strong>实测复现（2026-10-12，用户问 <code>import dirs as d</code> 要不要 <code>use d.DirEntry</code> 时顺出来的）</strong>：</p>
+<pre><code class="language-leno">import dirs as d
+
+func show(d.DirEntry e): string {     // ← 形参类型位置
+    return e.root
+}
+</code></pre>
+<p>报 <strong>8 条 7 种</strong>语法错误，第一条是 <code>期望参数名</code> ✗ —— 全都在指向标点：</p>
+<pre><code>error: [语法错误] 期望参数名
+error: [语法错误] 期望 ')'
+error: [语法错误] 期望 '{'
+error: [语法错误] 期望表达式（重复 2 次）
+error: [语法错误] 字典解构期望字符串键名
+error: [语法错误] 期望 '}' 结束字典解构形状
+error: [语法错误] 解构声明期望 '(' 开始变量名列表
+</code></pre>
+<p><strong>没有一条</strong>指向真因（"这里不能写限定名"）✗ ⇒ 写的人会去查参数名 / 括号（实测就是这样 ✓）。</p>
+<p><strong>根因</strong>：这道检查<strong>早就存在</strong> —— <code>parser_reject_module_qualified_type()</code>
+（<code>src/parser/parser_func.c</code>，2026-09-16 为 <code>is</code> / <code>as</code> 的<strong>静默 misparse</strong> 加的 ✓），
+文案本来就是"不支持带模块前缀的类型名（如 <code>a.Point</code>）：请先 <code>use a.Point</code>，然后直接写 <code>Point</code>" ✓
+—— <strong>但只在 5 个位置显式调用</strong> ✗（<code>is</code> / <code>as</code> 两处 + 局部声明三处）⇒
+<strong>函数形参 / 返回类型 / struct 字段 / 泛型实参</strong>这些位置全都漏了 ✗。</p>
+<p><strong>修法（单一收口）</strong>：把这道检查挪进 <strong><code>parse_type_internal()</code> 的出口</strong>
+（<code>src/parser/parser_func.c</code>）—— 凡走类型解析的位置一次覆盖 ✓（含 <code>Ptr[T]</code> / <code>Array[T]</code>
+的元素、泛型实参 ✓）。返回 NULL = 解析失败（既有调用点都有 NULL 分支 ✓）；
+错误由该函数报出、<code>t</code> 也由它释放 ✓（别在调用点再 free ✗）。原有的 5 处显式调用<strong>保留</strong>
+（第二道保险：收到 NULL 会立刻返回 0，<strong>不会重复报</strong>✓）。</p>
+<p><strong>判据（<code>assert/test_diag_static_errors.leno</code> 的 M9 组，三条）</strong>：限定名分别做
+<strong>形参类型 / struct 字段类型 / 返回类型</strong> ⇒ 首条报错都是「不支持带模块前缀的类型名」✓。</p>
+<p><strong>⚠ 收口当天踩的坑（值得记住 —— 单一收口会撞上"猜测式解析"）</strong></p>
+<p>把检查放进 <code>parse_type_internal</code> 之后，<strong>套件立刻红了 4 个用例</strong> ✗：
+<code>test_enum_int_compat</code> / <code>test_plane_war_headless</code> / <code>test_popup_capture</code> / <code>test_sdl_capture</code>。
+根因不在这些用例，而在<strong>解析器有一处会"先猜后回退"</strong>：</p>
+<pre><code class="language-leno">a[Slot.ONE]        // 下标访问 —— 但解析器会先在 `[` 处**试着按泛型类型参数解析** ✗
+colors[SDL3.X]     // 同理
+</code></pre>
+<p><code>src/parser/parser_expr.c</code> 的泛型调用候选路径（<code>is_generic_call_candidate</code> 那段）会
+<strong>保存 <code>saved_lex</code>、试着 <code>parse_type</code>、失败就回退词法器</strong>——<strong>它回滚了词法器，却没回滚已报的诊断</strong> ✗
+⇒ 我新加的检查在"猜测"里报了错，而这次猜测最后被判定"不是类型"（真身是下标）⇒ 假报错 ✗。</p>
+<p><strong>修法（用现成机制，口径对齐枚举求值器）</strong>：给这段猜测包上<strong>静默段</strong>
+（<code>error_silence_begin()</code> / <code>error_silence_end()</code>，<code>src/error.c</code> ✓ 本来是给符号表扫描器
+"借真解析器求值 enum 表达式"用的 ✓），并照同一条口径判定：
+<strong>静默段内只要报过任何错 ⇒ 这次猜测不可信</strong>（<code>if (silenced &gt; 0) parse_ok = 0;</code>）⇒ 走回退 ✓。</p>
+<blockquote>
+<p>教训：<strong>任何"先猜后回退"的解析路径，都必须连诊断一起回滚</strong> ✗。
+这是本仓的既有陷阱（不只影响 M9）：以前只有"返回 NULL"被当作猜测失败，
+而"报错后仍返回可用值"的检查一旦加进来，就会从猜测里漏出假报错 ✓。</p>
+</blockquote>
+<p><strong>有意不改的（留档）</strong>：紧跟其后的<strong>级联</strong>仍是既有的"签名解析失败后继续跑"的恢复噪声 ✓
+（改之前同样是 8 条，只是第一条是 <code>期望参数名</code> ✗）。要把级联也收敛，得让<strong>函数签名解析</strong>
+在失败后 resync 到 <code>)</code> / <code>{</code> —— 那是<strong>通用错误恢复</strong>的改动（影响面覆盖所有畸形签名 ✓），
+列为独立议题，不塞进本条 ✓。</p>
+<p><strong>同题的另一半（用户最初的问题）—— ⚠ 本节初版写错过一次，以这里为准</strong></p>
+<p>用户问"<code>import dirs as d</code> 是不是要 <code>use d.DirEntry</code> 才能用 <code>DirEntry</code>"。
+初版答"要在标注里写类型名就得 <code>use</code>" ✗ —— <strong>错了</strong>（当时只测了带 <code>use</code> 的写法 ✓）。
+<strong>补测三类之后的事实（全部实测 2026-10-12 ✓）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型来源</th>
+<th>具体有哪些（源码核对 ✓）</th>
+<th>要 <code>use</code> 吗</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 编译器内置类型</strong></td>
+<td>(a) 词法关键字：<code>int</code> <code>float</code> <code>string</code> <code>bool</code> <code>any</code> <code>Array</code> <code>Dict</code>、<code>File</code> <code>Socket</code> <code>Channel</code> <code>Thread</code> <code>Future</code> <code>Ptr</code>、C 布局 <code>i8…u64</code> <code>f32</code> <code>f64</code> <code>c_*</code> <code>str8</code> <code>str16</code>；(b) native 规格（5 个）：<code>DirEntry</code> / <code>DirInfo</code> / <code>RegexMatch</code> / <code>ExecResult</code> / <code>DictEntry</code></td>
+<td>❌</td>
+<td>(a) 在<strong>词法关键字表</strong>里（<code>src/lexer.c</code> ✓）；(b) 编译器<strong>全局兜底</strong>认得（<code>semantic_type.c</code> ✓，v3.2.5 ✓）。<strong>两类同性质</strong>（都是"编译器内置"）⇒ 2026-10-12 收敛成一行写成 ✓（原 US5；分界线是"是不是<strong>内置</strong>的"，不是"是不是 native 实现"✓）</td>
+</tr>
+<tr>
+<td><strong>② 源码模块声明的类型</strong>（<strong>6 类</strong>）</td>
+<td><code>struct</code> / <code>cstruct</code> / <code>clib</code> / <code>face</code> / <code>enum</code> / <code>alias</code></td>
+<td>✅ <strong>必须 <code>use</code></strong>（<strong>或用限定名 <code>m.Pt</code></strong> —— US1 ✓）</td>
+<td>类型名归<strong>各模块的符号表</strong>管 ⇒ 不 <code>use</code> 也不写限定名就是「未定义的类型: Pt（它其实是模块 'm' 导出的 struct ⇒ 请补一句 <code>use m.Pt</code>）」✓（报错自带处方 ✓）</td>
+</tr>
+<tr>
+<td><strong>③ 函数 / 变量</strong></td>
+<td>别的 <code>.leno</code> 的 <code>func</code> / <code>var</code></td>
+<td>— <strong>不支持 <code>use</code></strong></td>
+<td>运行期实体，一律走模块名（<code>m.func()</code> / <code>m.var</code> ✓）—— 见 <code>docs/import使用指南.md</code> §8.2 的规则表 ✓</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ 所以：<code>Socket</code> / <code>Thread</code> 这些<strong>不需要</strong>任何"收拢/use"（它们是关键字 ✓）；
+<code>DirEntry</code> 这种 native 规格<strong>也不必须</strong> <code>use</code>（写了更好：出处明确、冲突有出口 ✓
+—— <code>docs/module_dirs.md</code> 本来就这么写的 ✓）；<strong>只有源码模块声明的 struct</strong> 才需要 <code>use</code> ✓。</p>
+<p><strong>附</strong>：<code>use d.(DirEntry)</code> 与 <code>use dirs.DirEntry</code>（带括号 / 不带括号）<strong>都实测通过</strong> ✓
+—— 即 native 规格<strong>既能不 <code>use</code> 直接用、也能被 <code>use</code> 引进来</strong> ✓（内部走的是哪张表未逐行核过，
+以实测为准 ✓；文档面见 <code>docs/module_dirs.md</code> 的"推荐写法 + 也可以不写 use" ✓）。</p>
+<hr>
+<h2 id="m10-2026-10-13-export-null">M10【高，✅ 已修 2026-10-13】跨模块读<strong>没 export 的变量</strong>：编译不报错、运行期静默变 <code>null</code></h2>
+<p><strong>症状（LenoTrae 的 PVZ 游戏实测揪出来的）</strong>：模块 <code>pvz2_art.leno</code> 里 138 个常量写成了
+普通 <code>var</code>（<strong>没 <code>export</code></strong>），主文件里 138 条别名 <code>var ANIM_N = art.ANIM_N</code> ⇒
+<strong>编译 0 错</strong>，运行期 138 个别名<strong>全是 <code>null</code></strong>，直到 <code>newGame()</code> 里 <code>ANIM_N - 1</code>
+才炸「加法运算: null 不能参与运算」✗ —— 报错点<strong>离病因十万八千里</strong>（谁会想到是"少个 export"）。</p>
+<p><strong>根因（两件事被混为一谈）</strong>：模块符号表<strong>收录了未导出的 var</strong> ——
+它服务<strong>模块内部</strong>与 <code>use</code> 传导，本来就该收录 ✓；
+但"跨模块可读"的判据是<strong>另一个</strong>（该名字必须是模块顶层 <code>export</code> 声明的）⇒
+<code>module_symbol_table_find_var</code> <strong>查得到</strong> ≠ <strong>跨模块可读</strong> ✗。
+<code>visit_module.inc</code> 的模块成员访问处只做了前者、后者<strong>没人判</strong> ⇒ 静默给 <code>TYPE_ANY</code>，
+运行期从模块 exports 字典里取不到 ⇒ <code>null</code> ✓。</p>
+<p><strong>修法（不另立第二套口径）</strong>：在模块成员访问处补一次<strong>导出名判断</strong>，用的是
+<strong>与 <code>use</code> / <code>m.foo()</code> 同一份</strong> export 名清单（新增 <code>module_has_export</code>，
+实现 = <code>module_has_method</code>、走同一个 provider ✓）⇒ 三条口径<strong>不可能漂移</strong> ✓。
+（给它单独起名只是为了<strong>读起来对</strong>：变量侧写 <code>module_has_method</code> 会被误读成"在查同名函数"✗）</p>
+<p><strong>判据</strong>（<code>assert/test_diag_static_errors.leno</code> 的 <strong>U1</strong> 组，正反两条）：</p>
+<ul>
+<li><strong>反例</strong>：模块 <code>var SECRET = 42</code> + 别处 <code>m.SECRET</code> ⇒ 编译期
+  「模块 'm' 里的变量 'SECRET' 没有 export —— 跨模块读不到（请在模块里写成
+  <code>export var SECRET = ...</code> 或 <code>export const SECRET = ...</code>）」✓，报错落点 = <strong>使用处</strong> ✓</li>
+<li><strong>正例</strong>：<code>export var SHARED</code> / <code>export const K</code> 跨模块照常可读 ✓
+  （钉住它是为了防止后来者把这条检查做成一刀切 ✗）</li>
+</ul>
+<p><strong>⚠ 只判 <code>mv</code> 命中那一路（不许扩大）</strong>：enum 成员<strong>不在</strong> vars 表里（它走 enum 兜底）
+⇒ <code>m.Color.RED</code> 不受影响 ✓（<code>module_has_export("RED")</code> 会返回 0，不分路就会<strong>误伤</strong> ✗）。</p>
+<p><strong>⚠ 不改的部分</strong>：模块符号表<strong>照旧收录</strong>未导出的 var —— 那是它的既有职责
+（模块内部 + <code>use</code> 传导），过滤掉会砸出别的问题 ✗（改的是"<strong>读的时候判一次</strong>"，
+不是"表里不留" ✓）。</p>
+<p><strong>为什么值得修</strong>：这类失败的<strong>报错点与病因之间的距离 = 一次运行</strong>，
+而静态检查<strong>完全有能力</strong>在编译期说清 ✓。同族的活儿见
+<code>docs/类型可见性与use逃生阀修复追踪.md</code> ✓。</p>
+<hr>
+<h2 id="m11-2026-10-13struct-new-b-self">M11【中，✅ 已修 2026-10-13】struct <strong>方法</strong>里 <code>new B(键 = 本结构体字段)</code>：隐式 <code>self</code> 在<strong>构造参数</strong>里失效</h2>
+<blockquote>
+<p><strong>✅ 已修（2026-10-13）—— 真因不是"self 上下文"，而是"方法体改写器的白名单漏了一个节点" ✗</strong></p>
+<p><code>transform_method_body</code>（<code>src/semantic/semantic_visit_method.c</code>）负责把方法体里的裸字段名
+改写成 <code>self.字段</code>，靠的是一个 <strong>switch 白名单</strong> —— 它<strong>没有 <code>AST_STRUCT_INIT</code></strong>
+⇒ <code>new B(键 = 值)</code> 的<strong>值</strong>整段落进 <code>default:</code> 被<strong>静默跳过</strong> ✗
+⇒ 值里的裸名没被改写 ⇒ 后面按<strong>变量</strong>解析 ⇒ 报「未定义的变量」✗。</p>
+<p><strong>这一条正好逐行解释了 M11 边界表</strong>（下面那 6 行）：
+· 方法体<strong>其余语句</strong>正常 —— 它们在别的 case 里被递归到了 ✓；
+· <strong>普通函数</strong>正常 —— 没有"隐式 self"这回事 ✓；
+· B 有<strong>同名字段</strong>也照样报错 —— 裸名根本没被改写，谈不上"self 被切成 B" ✓。</p>
+<p><strong>修法</strong>：给改写器补 <code>case AST_STRUCT_INIT:</code>，<strong>只递归 <code>field_values[]</code></strong> ✓。
+⚠ <strong>不碰 <code>field_names[]</code></strong>：那是<strong>构造目标 B</strong> 的字段名（不是本结构体的字段），
+把它当裸名改写会造出 <code>self.k</code> 这种<strong>假字段</strong> ✗。</p>
+<p><strong>验收</strong>：6 条边界<strong>全绿</strong>；正式用例 <code>assert/test_method_new_implicit_self.leno</code>
+（6 条逐条对应，含 ⑥「B 有同名字段 ⇒ 取<strong>外层</strong>的 7、不是 99」这条防<strong>静默错值</strong>的钉子 ✓）；
+全量套件 <strong>452 passed / 0 failed</strong> ✓。</p>
+<p><strong>同族排查（顺手做完了）</strong>：把这个 switch 与 <code>leno_ast.h</code> 的 AST 枚举<strong>逐项对了一遍</strong> ——
+剩下未处理的只有：字面量（<code>NUM/STRING/BOOL/NULL</code>，无子节点 ✓）、<code>BREAK/CONTINUE</code>（无子节点 ✓）、
+顶层声明（<code>IMPORT/EXPORT/USE/ALIAS/STRUCT_DEF/…</code>，不会出现在方法体里 ✓），以及
+<strong><code>AST_RANGE</code></strong>（有 <code>start/end</code> 子节点 ⚠）—— 但<strong>没能构造出可复现的失败用例</strong>
+（范围字面量在值位置不是合法语法；切片走的是 <strong><code>AST_SLICE</code></strong>，它已被处理 ✓）
+⇒ <strong>不当作 bug 修</strong>，只在此登记"它是白名单里唯一没被递归的带子节点项" ✓。</p>
+<p><strong>教训（值得写死）</strong>：<strong>这种"白名单遍历器"漏一个节点 = 一次静默的行为差异</strong> ✗。
+新增 AST 节点时，<strong>这里必须同步</strong> —— 与"任何先猜后回退的解析路径都必须连诊断一起回滚"
+（M9 那条）是<strong>同族纪律</strong> ✓。</p>
+</blockquote>
+<p><strong>症状（写 LenoSDL3 的 <code>Card</code> 控件时撞上）</strong>：在 A 的方法里用<strong>键值形式</strong>建 B，值里直接写
+A 的字段（靠隐式 <code>self</code>）⇒ 编译<strong>响亮报错</strong>，但报的是<strong>"未定义的变量"</strong>（不是"字段"），
+提示还会滑到别的名字上去 ✗：</p>
+<pre><code>M11.leno(12,30): error: [未定义变量] 未定义的变量: id
+  提示: 是否想输入 '_pid'？
+</code></pre>
+<p><strong>最小复现</strong>（真机 <code>leno --check</code> 实测；探针当时放在 <code>build/_probe_new_*.leno</code> —— 那是<strong>本机临时件</strong>、
+被 <code>.gitignore</code> 排除 ⇒ <strong>仓库里没有</strong>，重跑照下面的代码现建即可 ✓）：</p>
+<pre><code class="language-leno">struct Inner { int k = 0 }
+struct Outer {
+    int id = 7
+    func make(): Inner { return new Inner(k = id) }   // ← 报「未定义的变量: id」
+}
+</code></pre>
+<p><strong>实测边界</strong>（6 个探针 <code>build/_probe_new_*.leno</code>，2026-10-13）：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方法里 <code>new B(k = 隐式自字段)</code></td>
+<td>✗ <code>未定义的变量</code></td>
+</tr>
+<tr>
+<td>方法里 <code>new B(k = self.id)</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>方法里 <code>new B(k = 局部变量)</code> / <code>new B(k = 外层函数())</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td>方法里 <code>new B(k = 1)</code>，<strong>之后</strong>的语句再读 <code>id</code></td>
+<td>✓（<strong>只坏在参数那一段</strong>，self 没被永久切走）</td>
+</tr>
+<tr>
+<td><strong>普通函数</strong>里 <code>new B(k = 参数)</code></td>
+<td>✓（<strong>只在 struct 方法里犯</strong>）</td>
+</tr>
+<tr>
+<td>B 有<strong>同名字段</strong>（<code>Inner.id = 99</code>）</td>
+<td>✗ 仍响亮报错，<strong>不会静默取到 99</strong></td>
+</tr>
+</tbody>
+</table>
+<p>⚠ 最后一行把严重度钉住了：<strong>不是</strong>"self 被切成 B"（那样同名字段会静默错值，性质完全不同 ✗），
+而是"<strong>参数值那一段看不见隐式 self</strong>" ⇒ 裸名只按<strong>变量</strong>解析（所以同名字段也不会被误取 ✓）。</p>
+<p><strong>疑似病因（⏳ 未钉死，动手前先按探针确认现状）</strong>：<code>src/semantic/visitinc/visit_struct_init.inc:137</code>
+对每个字段值调 <code>visit(s, field_value)</code> —— 该 <code>case AST_STRUCT_INIT</code> 整段<strong>不压/不弹作用域</strong>
+（<code>scope_resolve(s-&gt;current, struct_name)</code> 只是查找，不是切换点）⇒ 嫌疑落在<strong>隐式 self 字段的
+解析判据</strong>上：它在"构造参数"这条路径下拿不到外层方法的 self 上下文。
+建议的排查入口：<code>semantic_type.c</code> 里 <code>scope_resolve(s-&gt;current, "self")</code> 那几处（639 / 2555）
+与裸名分支（831 / 1221），对比"方法体语句"与"构造参数"两条路径传进去的上下文差异。</p>
+<p><strong>临时绕法（零成本，两条都行 ⇒ 所以它只值"中"）</strong>：</p>
+<ol>
+<li>值里写<strong>显式</strong> <code>self.</code>：<code>new Inner(k = self.id)</code> ✓；</li>
+<li>先建空壳再逐字段赋值（<code>LenoSDL3</code> 的 <code>sdl_card.leno:237</code> 就照这条写的 ✓）：</li>
+</ol>
+<pre><code class="language-leno">BadgeSpec b0 = new BadgeSpec()
+b0.text = badge          // 这里读本结构体的字段完全正常 ✓
+</code></pre>
+<p><strong>为什么值得修</strong>：这是"<strong>代码看着像自己写错了，其实是编译器看不见 self</strong>"那一类 ——
+人会先怀疑名字写错 / 字段私有 / 漏了 <code>use</code>，一次编译循环就这么没了 ✗；
+而判据明明现成（外层方法的 self 就在上下文里）⇒ 参数值应当按"<strong>在调用方上下文里求值</strong>"处理 ✓。
+同族的隐式契约见 <strong>M4</strong>（模块别名 vs 同名字段）。</p>
+<p><strong>修好之后的判据</strong>：6 个探针（<code>build/_probe_new_*.leno</code>）应<strong>全绿</strong>；
+建议同时补一颗 <code>assert/</code> 用例（"方法里构造 + 参数用隐式自字段"），
+因为 walk 语料里这类写法<strong>本来就该是常态</strong>，只是大家一直在默默写 <code>self.</code> 绕它 ✓。</p>
+<hr>
+<h2 id="_2">与现有文档的分工</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>管什么</th>
+<th>本文管什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>语言陷阱速查.md</code></td>
+<td>症状 → 病因 → <strong>用户侧怎么办</strong></td>
+<td>隐式契约本体 + <strong>语言/编译器侧怎么修</strong></td>
+</tr>
+<tr>
+<td><code>Leno报错提示改进计划.md</code></td>
+<td>报错文案逐条改进（B 类）</td>
+<td>作为素材源（M1/M3/M4/M5a/5b 都含报错项，可拆成 B 条目）</td>
+</tr>
+<tr>
+<td><code>Leno语言改进建议.md</code></td>
+<td>特性去留（结论：不再追加）</td>
+<td>不冲突：本清单都是"修契约/修报错"，<strong>不新增特性</strong>（M5c 的字面初始化除外，需另行评估）</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="语言与框架问题_Aria实战_2026-10-31.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

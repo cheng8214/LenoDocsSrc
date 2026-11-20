@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语言与框架问题清单（Aria 实战，2026-10-31） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="语言与框架问题_Aria实战_2026-10-31.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#l1p1as-arrayarraystring-null">L1【P1】as Array[Array[string]] 遇到混合类型，整块静默返回 null</a></li><ul class="lv3"><li><a href="#_1">现象</a></li><li><a href="#_2">最小复现（已实测）</a></li><li><a href="#_3">根因落点</a></li><li><a href="#_4">建议修法</a></li><li><a href="#2026-10-31">★ 已修（2026-10-31）：应用侧改用"两段式宽松解析"</a></li><li><a href="#_5">附：一条存疑记录（未能复现，供参考）</a></li></ul><li><a href="#l2p1">L2【P1】单槽回调重复注册会静默覆盖</a></li><ul class="lv3"><li><a href="#_6">现象</a></li><li><a href="#_7">根因落点</a></li><li><a href="#_8">建议修法（二选一，按代价排）</a></li><li><a href="#2026-10-314">★ 已修（2026-10-31）：4 处单槽注册补上"重复即警告"</a></li></ul><li><a href="#l3p1threadsstart">L3【P1】threads.start 不校验参数个数（默认参数也不补齐）</a></li><ul class="lv3"><li><a href="#_9">现象</a></li><li><a href="#_10">根因落点</a></li><li><a href="#_11">建议修法</a></li><li><a href="#2026-10-31_1">⏸ 结论（2026-10-31）：不做编译期检查</a></li></ul><li><a href="#l4-api">L4 ❌ 判断有误 —— 并不存在"两套下标并存"，API 是自洽的</a></li><ul class="lv3"><li><a href="#srcmodulestringsstringsc22">实现（src/module/strings/strings.c:22）</a></li><li><a href="#abc3-3-ascii-12">实测（"周杰伦abc"，3 中文 + 3 ASCII = 12 字节）</a></li><li><a href="#_12">结论：不需要统一</a></li><li><a href="#_13">唯一真实风险：跨套误用</a></li></ul><li><a href="#l5p2-set-print">L5【P2】控件 set() 的未知选项只 print</a></li><ul class="lv3"><li><a href="#_14">现象</a></li><li><a href="#_15">建议</a></li><li><a href="#2026-10-31_2">⏸ 结论（2026-10-31）：维持现状</a></li></ul><li><a href="#_16">已修复（本轮，供对照提交）</a></li><ul class="lv3"><li><a href="#f1-tableset_cell">F1 Table.set_cell 改数据不请求重绘</a></li><li><a href="#f2-tablerecompute_cols-compute_sb">F2 Table.recompute_cols 与 compute_sb 扣减口径不一致</a></li><li><a href="#f3-toastsdl_toastleno">F3 通用 Toast（sdl_toast.leno）</a></li></ul><li><a href="#bug">给应用的「防身规则」（不是语言 bug，但会被反复踩）</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="aria-2026-10-31">语言与框架问题清单（Aria 实战，2026-10-31）</h1>
+<blockquote>
+<p><strong>出处</strong>：连续几天用 Leno + LenoSDL3 开发 Aria（音乐播放器，<code>aria.leno</code> 约 5400 行 +
+<code>lib/</code> 十余个模块）时，<strong>真实踩到并定位</strong>的问题。每条都写清：现象 → 最小复现 →
+根因落点 → 建议修法。</p>
+<p>口径：只收<strong>语言层 + LenoSDL3 框架层</strong>；纯应用 bug 不在此列。已在本轮顺手修掉的
+放在文末「已修复」，供你对照提交记录。</p>
+<p>严重度：<strong>P0</strong> = 静默数据损坏；<strong>P1</strong> = 静默失效 / 运行时崩；<strong>P2</strong> = 语义不一致，持续摩擦。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>严重度</th>
+<th>一句话</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>P1</td>
+<td><code>as Array[Array[string]]</code> 遇到混合类型<strong>整块静默返回 null</strong></td>
+<td>✅ 已修（应用侧宽松解析，2026-10-31）</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>P1</td>
+<td>单槽回调（<code>on_change</code> / <code>setOverlay</code>）重复注册静默覆盖</td>
+<td>✅ 已修（4 处加警告，2026-10-31）</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>P1</td>
+<td><code>threads.start</code> 不校验参数个数，默认参数不补齐</td>
+<td>⏸ 不做编译期检查（受 VARARG 限制，见节末）</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>—</td>
+<td>~~<code>len()</code> 字节 / <code>slice()</code> 字符~~</td>
+<td>❌ <strong>判断有误</strong>（<code>len()</code> 就是字符数，两套 API 自洽，已撤销）</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>P2</td>
+<td>控件 <code>set()</code> 的未知选项只 print，不阻断</td>
+<td>⏸ 维持现状（缺"当前位置"内建，见节末）</td>
+</tr>
+<tr>
+<td>F1</td>
+<td>—</td>
+<td><code>Table.set_cell</code> 改数据不请求重绘</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>—</td>
+<td><code>Table.recompute_cols</code> 与 <code>compute_sb</code> 扣减口径差 8px</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>—</td>
+<td>缺通用 Toast（<code>setOverlay</code> 单槽的连带问题）</td>
+<td>✅ 已修（新增 <code>sdl_toast.leno</code>）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="l1p1as-arrayarraystring-null">L1【P1】<code>as Array[Array[string]]</code> 遇到混合类型，整块静默返回 null</h2>
+<h3 id="_1">现象</h3>
+<p>Aria 的 <code>library.json</code> 里有一条「最近播放」记录的第 6 项是<strong>数字</strong> <code>0</code>（本该是空串或
+<code>"ff"</code>）：</p>
+<pre><code class="language-json">{&quot;recent&quot;: [[&quot;2668005064&quot;,&quot;童话镇&quot;,&quot;梁玖希&quot;,&quot;4:17&quot;,&quot;…ff_2668005064.jpg&quot;,0]]}
+</code></pre>
+<p><code>library.load</code> 是这么读的：</p>
+<pre><code class="language-leno">var rows = rv as Array[Array[string]]
+if rows != null {
+    for rows to r { … }        // ← 整个列表都不进来了
+}
+</code></pre>
+<p><strong>一行脏数据 ⇒ 整块 recent 被丢弃</strong>，而且<strong>一句日志都没有</strong>。用户看到的是「继续收听」
+空空如也，只会以为数据丢了或自己清空了。</p>
+<h3 id="_2">最小复现（已实测）</h3>
+<pre><code class="language-leno">import jsons as jsons
+
+main() {
+    var d = jsons.decode(&quot;{\&quot;recent\&quot;:[[\&quot;id\&quot;,\&quot;歌名\&quot;,\&quot;艺人\&quot;,\&quot;4:17\&quot;,\&quot;cover.jpg\&quot;,0]]}&quot;)
+    if d is Dict[string, any] =&gt; m {
+        var rows = m[&quot;recent&quot;] as Array[Array[string]]
+        if rows == null { print(&quot;null：整块丢弃\n&quot;) }
+        else { print(&quot;成功，第6项='&quot; + rows[0][5] + &quot;'\n&quot;) }
+    }
+}
+</code></pre>
+<p>实测输出：</p>
+<pre><code>null：整块丢弃
+</code></pre>
+<p>对照：同一份数据<strong>编码</strong>这边是正常的（int 原样输出 <code>0</code>），问题只在<strong>反序列化的类型断言</strong>。</p>
+<h3 id="_3">根因落点</h3>
+<p><code>as</code> 的数组转换是"整组严格匹配"：只要有一个元素类型不符，整个 <code>Array</code> 转换失败返回
+<code>null</code>，而调用方通常写成 <code>if rows != null { … }</code>（合理防御）⇒ 失败路径就是<strong>静默丢数据</strong>。</p>
+<h3 id="_4">建议修法</h3>
+<ol>
+<li><strong>逐元素宽松转换</strong>：目标是 <code>Array[Array[string]]</code> 时，元素能转就转（<code>0</code> → <code>"0"</code>、
+   <code>true</code> → <code>"true"</code>），转不了再整块失败；</li>
+<li>或者提供显式宽松函数（<code>jsons.str_rows(v)</code>) 供持久化读取使用，<code>as</code> 保持严格；</li>
+<li>无论哪种，<strong>失败时至少 <code>print</code> 一行</strong>（带键名与原因）。当前 <code>null</code> 完全无声。</li>
+</ol>
+<h3 id="2026-10-31">★ 已修（2026-10-31）：应用侧改用"两段式宽松解析"</h3>
+<p>关键技巧：<strong>先 <code>as Array[any]</code>（任何元素都装得下，必成功），再逐元素 <code>_str()</code></strong>。
+<code>_str()</code> 对任何类型都能转（数字 → <code>"0"</code>），永不失败 ⇒ 一条脏数据只影响它自己那一格。</p>
+<pre><code class="language-leno">// lib/library.leno —— 原来：var rows = rv as Array[Array[string]]   ← 一粒老鼠屎坏一锅汤
+var arr = rv as Array[any]
+if arr != null {
+    for arr to it {
+        var row = it as Array[any]
+        if row == null or row.len() &lt; 5 { continue }
+        Song sg = new Song()
+        sg.sid   = _str(row[0])
+        sg.title = _str(row[1])
+        sg.dur   = _str(row[3])
+        sg.cover = _str(row[4])
+        if row.len() &gt; 5 and _str(row[5]) == &quot;ff&quot; { sg.src = &quot;ff&quot; }
+        out.recent.add(sg)
+    }
+}
+</code></pre>
+<p>同样的写法也用在 <code>lib/store.leno</code> 的 <code>str_list()</code>（<code>likes</code> 数组）。</p>
+<p><strong>验证</strong>（故意写脏数据：第 6 项是数字 <code>0</code>，两条记录）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>修复前</th>
+<th>修复后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>as Array[Array[string]]</code> 的返回值</td>
+<td><code>null</code>（探针实测）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>「继续收听」显示条数</td>
+<td>0（由上面的 null 推得，未单独跑一遍）</td>
+<td><strong>2 条都在</strong>（截图实测 ✓）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ 诚实标注：修复前的"0 条"是从 <code>as</code> 探针结果（返回 <code>null</code>）推出来的，没有单独回滚代码再跑一遍界面。</p>
+<p>框架层仍建议改成"逐元素宽松转换"，但那是 <code>as</code> 的全局语义变更，风险和收益要单独评估。
+本文档记录的应用侧写法<strong>无需框架改动</strong>即可彻底规避 ✓</p>
+</blockquote>
+<h3 id="_5">附：一条<strong>存疑</strong>记录（未能复现，供参考）</h3>
+<p>同一条记录最初出现时，第 6 项是<strong>不带引号的</strong> <code>0</code>。我试过三种路径都没能复现出这个
+编码结果：</p>
+<pre><code class="language-leno">Array[Array[string]] rows = [[&quot;id&quot;,&quot;歌名&quot;,&quot;艺人&quot;,&quot;4:17&quot;,&quot;cover.jpg&quot;,&quot;&quot;]]
+print(jsons.encode(rows))                 // ⇒ [...,&quot;&quot;]   ✓ 正常
+
+Dict[string, any] d = {}
+d[&quot;recent&quot;] = rows
+print(jsons.encode(d))                    // ⇒ {&quot;recent&quot;:[[...,&quot;&quot;]]}   ✓ 正常
+
+var back = jsons.decode(jsons.encode(d))  // 往返第 6 项 = '' 长度 0   ✓ 正常
+</code></pre>
+<p>⇒ <strong>"空串被编码成 0"这个猜测不成立</strong>，真实来源未查明（可能是某次历史版本的写入，
+或其它我未覆盖的装箱路径）。这条只作线索留档，别照着它去改 <code>jsons.c</code> 的 string 分支。</p>
+<hr>
+<h2 id="l2p1">L2【P1】单槽回调重复注册会静默覆盖</h2>
+<h3 id="_6">现象</h3>
+<p>设置窗的「蒙版透明度」滑块，注册了<strong>两处</strong> <code>on_change</code>：</p>
+<pre><code class="language-leno">veilS.on_change(func(float v) { … onVeil(v) … })    // ① 带实时预览
+veilS.on_change(func(float v) { … note.set_text(…) }) // ② 旧的那份，写在后头
+</code></pre>
+<p>后注册的整段顶掉前一个 ⇒ 拖动时主窗口<strong>完全没反应</strong>，只有点「保存」才生效。
+用户侧表现是"我拖动看不到窗口变化"，排查成本很高（两处代码隔了 40 行，肉眼看不出冲突）。</p>
+<h3 id="_7">根因落点</h3>
+<pre><code class="language-leno">// build/leno_module/LenoSDL3/lib/sdl_slider.leno:113
+func on_change(func(float):void cb) { onChange = cb }
+</code></pre>
+<p>同类单槽（都在 <code>lib/</code> 里，<code>xxx = cb</code> 的写法）：</p>
+<table>
+<thead>
+<tr>
+<th>控件</th>
+<th>方法</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slider</td>
+<td><code>on_change</code></td>
+<td><code>sdl_slider.leno:113</code></td>
+</tr>
+<tr>
+<td>Window</td>
+<td><code>setOverlay</code></td>
+<td><code>sdl_window.leno</code>（全局唯一渲染回调槽）</td>
+</tr>
+<tr>
+<td>Table</td>
+<td><code>set_cell_builder</code></td>
+<td><code>sdl_table.leno:1032</code></td>
+</tr>
+<tr>
+<td>多个控件</td>
+<td><code>on_click</code> / <code>on_select</code> / <code>on_dbl_click</code> …</td>
+<td>各自文件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">建议修法（二选一，按代价排）</h3>
+<ol>
+<li><strong>最小改动</strong>：重复注册时 <code>print("[warn] Slider.on_change 被重复注册，前一个回调已丢弃")</code>。
+   保留"后覆盖前"的语义，但让人看得见。成本几乎为 0。</li>
+<li><strong>更彻底</strong>：改成 <code>add_change(cb)</code> 累加语义（数组存回调），<code>on_change</code> 保留为"清空后设一个"。
+   注意这会改变现有调用方的语义，需要审计。</li>
+</ol>
+<p><code>setOverlay</code> 建议单独看：它是<strong>全局唯一槽位</strong>，Aria 的 <code>ARIA_SHOT</code> 截图钩子和 toast 曾经
+互相顶掉（截图模式下 toast 不显示）。本轮通过"toast 上升为框架浮层"绕开了，但槽位本身
+仍是 1 ⇒ 建议文档里明确写"一个窗口只能有一个 overlay 回调"，或改成数组。</p>
+<h3 id="2026-10-314">★ 已修（2026-10-31）：4 处单槽注册补上"重复即警告"</h3>
+<p>按上面的<strong>方案 1</strong>（最小改动，保留"后覆盖前"语义，只让它可见）：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lib/sdl_slider.leno</code></td>
+<td><code>Slider.on_change</code></td>
+</tr>
+<tr>
+<td><code>lib/sdl_window.leno</code></td>
+<td><code>Window.setOverlay</code></td>
+</tr>
+<tr>
+<td><code>lib/sdl_table.leno</code></td>
+<td><code>Table.set_cell_builder</code></td>
+</tr>
+<tr>
+<td><code>lib/sdl_table.leno</code></td>
+<td><code>Table.on_cell_draw</code></td>
+</tr>
+</tbody>
+</table>
+<p>统一写法（以 Slider 为例）：</p>
+<pre><code class="language-leno">func on_change(func(float):void cb) {
+    if onChange != null and cb != null {
+        print(&quot;[warn] Slider.on_change 被重复注册：前一个回调已丢弃（同一控件只有一个槽位）\n&quot;)
+    }
+    onChange = cb
+}
+</code></pre>
+<p>⚠ 只在"<strong>原来已有值</strong>且新值非 null"时才警告 —— <code>clear_*</code>（传 null 清空）是正常操作，不该吵。</p>
+<p><code>Button.on_click</code> 这一类<strong>没加</strong>：应用里按钮都是建好即用、极少在同一实例上二次注册，
+加了只会给 <code>sdl_*.leno</code> 里那几十个控件各添三行噪音。真踩到了再按同一模式补 ✓</p>
+<hr>
+<h2 id="l3p1threadsstart">L3【P1】<code>threads.start</code> 不校验参数个数（默认参数也不补齐）</h2>
+<h3 id="_9">现象</h3>
+<pre><code class="language-leno">// 工作线程入口：后加了一个可空控制通道，给了默认值
+export func fetch_url(string url, string path, Channel ch, Channel? ctl = null) { … }
+
+// 调用点（改签名时漏改的那一处）
+threads.start(workers.fetch_url, sg.url, f, urlCh)        // ← 3 个参数
+</code></pre>
+<p>编译 <code>--check</code> <strong>通过</strong>，运行到这条路径直接抛：</p>
+<pre><code>[错误] threads.start(): 入口函数期望 4 个参数，实际传了 3 个
+（线程入口由 VM 直接调用，默认参数不会被补齐）
+</code></pre>
+<p>错误信息本身写得非常好（直接给了根因），问题是<strong>发现得太晚</strong>——只有真实播放/下载到那条
+分支才炸，而它藏在 5000 行代码的一个播放回调里。</p>
+<h3 id="_10">根因落点</h3>
+<p><code>src/module/threads/threads.c</code>：<code>threads.start</code> 在运行期才按函数签名比对实参个数。</p>
+<h3 id="_11">建议修法</h3>
+<p><code>threads.start</code> 的第一个参数在<strong>编译期</strong>就能解析到具体函数（<code>workers.fetch_url</code> 是模块
+符号）⇒ 参数个数不符在编译期报错，成本远低于运行期。</p>
+<p>如果编译期做不到（比如目标可能是函数变量），退一步：</p>
+<ul>
+<li>保留运行期检查，但在 <code>--check</code> 模式下也<strong>静态扫描</strong> <code>threads.start(函数名, ...)</code> 这种
+  字面量形式，报"参数个数不符"；</li>
+<li>或者在文档/<code>threads使用指南.md</code> 里显著标注：<strong>线程入口禁止使用默认参数</strong>。</li>
+</ul>
+<h3 id="2026-10-31_1">⏸ 结论（2026-10-31）：<strong>不做</strong>编译期检查</h3>
+<p>查过注册方式了，编译期这条路被堵死：</p>
+<pre><code class="language-c">// src/module/threads/threads.c:573
+native_register_module_method(&quot;threads&quot;, &quot;start&quot;, threads_start,
+    &amp;NATIVE_T_THREAD_CB_RET0, NATIVE_VARARG(1, NATIVE_ARITY_ANY, 1, start_params, TYPE_ANY));
+</code></pre>
+<p><code>threads.start</code> 是 <strong>VARARG</strong>（可变参数），native 签名层面"传几个都对"——参数个数是否合法
+取决于<strong>第一个实参指向哪个函数</strong>，而这个函数在编译期可能是：</p>
+<ul>
+<li>模块函数引用（<code>workers.fetch_url</code>）⇒ 可静态解析 ✓</li>
+<li>局部变量 / 闭包 / 数组元素（<code>threads.start(f, ...)</code>）⇒ 静态不可知 ✗</li>
+</ul>
+<p>要覆盖前者就得在 semantic 里给 <code>threads.start</code> 开一个特判（查函数声明表、比对 arity），
+而后者一律漏掉 ⇒ <strong>"有时能查、有时查不到"比"统一不查"更容易误判</strong>。</p>
+<p><strong>更划算的做法</strong>（不需要改编译器）：线程入口<strong>约定不用默认参数</strong>，全实参显式给。
+错误信息本身已经足够定位：</p>
+<pre><code>threads.start(): 入口函数期望 4 个参数，实际传了 3 个
+（线程入口由 VM 直接调用，默认参数不会被补齐）
+  [位置] aria.leno:3096 (func: play_ff_start)
+</code></pre>
+<p>带函数名 + 行号，一眼能改 ✓。本条真正的教训写进本文末的「防身规则」第 1 条。</p>
+<hr>
+<h2 id="l4-api">L4 ❌ <strong>判断有误</strong> —— 并不存在"两套下标并存"，API 是自洽的</h2>
+<blockquote>
+<p>本文档最初写的是「<code>len()</code> 是字节数、<code>slice()</code> 是字符下标 ⇒ 两套口径混用」。
+<strong>这是错的</strong>，2026-10-31 经源码 + 实测双重确认后撤销。</p>
+</blockquote>
+<h3 id="srcmodulestringsstringsc22">实现（<code>src/module/strings/strings.c:22</code>）</h3>
+<pre><code class="language-c">static Value str_len(int argc, Value* args) {
+    ObjString* str = (ObjString*)val_as_obj(args[0]);
+    return val_int(str-&gt;char_len);      // ← 字符数，不是字节数
+}
+static Value str_byte_len(int argc, Value* args) {
+    return val_int(str-&gt;len);           // ← 这才是字节数
+}
+</code></pre>
+<p><code>str_slice</code> 的注释里也写死了口径：</p>
+<pre><code class="language-c">//   · 索引按 **Unicode 字符**（不是字节）计算
+//   · end &gt;= char_len ⇒ 钳到 char_len-1（所以 `slice(0, x.len())` 仍是&quot;到末尾&quot; ✓）
+</code></pre>
+<h3 id="abc3-3-ascii-12">实测（<code>"周杰伦abc"</code>，3 中文 + 3 ASCII = 12 字节）</h3>
+<table>
+<thead>
+<tr>
+<th>表达式</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>s.len()</code></td>
+<td><code>6</code></td>
+<td><strong>字符数</strong></td>
+</tr>
+<tr>
+<td><code>s.byte_len()</code></td>
+<td><code>12</code></td>
+<td>字节数</td>
+</tr>
+<tr>
+<td><code>s.slice(0, 2)</code></td>
+<td><code>周杰伦</code></td>
+<td>字符下标（闭区间）</td>
+</tr>
+<tr>
+<td><code>s.slice(0, s.len() - 1)</code></td>
+<td><code>周杰伦abc</code></td>
+<td><strong>与 <code>len()</code> 完全配套</strong> ✓</td>
+</tr>
+<tr>
+<td><code>s.take(0, 3)</code></td>
+<td><code>周杰伦</code></td>
+<td>字符，取 n 个</td>
+</tr>
+<tr>
+<td><code>s.byte_slice(0, 2)</code></td>
+<td><code>周</code></td>
+<td>按字节切，中文被切断</td>
+</tr>
+<tr>
+<td><code>s.byte_slice(0, s.len() - 1)</code></td>
+<td><code>周杰</code></td>
+<td>把字符数喂给字节 API ⇒ <strong>静默切坏</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_12">结论：<strong>不需要统一</strong></h3>
+<p>两套 API <strong>各自内部自洽</strong>，而且用前缀区分得清清楚楚：</p>
+<table>
+<thead>
+<tr>
+<th>文本语义（默认）</th>
+<th>字节语义（显式）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>len()</code> / <code>slice()</code> / <code>take()</code> / <code>[]</code> 切片语法</td>
+<td><code>byte_len()</code> / <code>byte_slice()</code></td>
+</tr>
+</tbody>
+</table>
+<p>全仓用量也印证了分工是对的：</p>
+<pre><code>.len()        3675 次（含数组/Dict，静态分不出，但字符串用法占多数）
+.slice(        242 次
+byte_* 系列    733 次 —— 集中在 crypto/、LenoWeb/、LenoZip/ 这些**二进制**场景
+</code></pre>
+<h3 id="_13">唯一真实风险：<strong>跨套误用</strong></h3>
+<pre><code class="language-leno">// ✗ 错：把字符数当字节偏移
+string t = s.byte_slice(0, s.len() - 1)     // &quot;周杰&quot; —— 少了两字，还会切坏 UTF-8
+
+// ✓ 对：字节语义就配字节长度
+string t = s.byte_slice(0, s.byte_len() - 1)
+
+// ✓ 对：文本语义（绝大多数场景）直接用 slice
+string t = s.slice(0, s.len() - 1)
+</code></pre>
+<p>这类误用<strong>不会报错</strong>、只是结果悄悄变短/变乱，所以 Aria 里那句注释
+（「别用 <code>byte_slice</code> 切文件名，中文会被切断」）是<strong>对的</strong>——但它说的是<strong>误用</strong>，
+不是在说 API 设计有矛盾。</p>
+<blockquote>
+<p>原始诱因：Aria 的 <code>downloads.scan</code> 里曾想用 <code>byte_slice</code> 去掉文件扩展名，实测把
+中文文件名切坏了 ⇒ 改成 <code>strings.split(base, ".")</code>。问题出在"选错了 API"，不在语言。</p>
+</blockquote>
+<hr>
+<h2 id="l5p2-set-print">L5【P2】控件 <code>set()</code> 的未知选项只 print</h2>
+<h3 id="_14">现象</h3>
+<pre><code class="language-leno">HBox box = SDL3.createHBox({w: 30, h: 14, tip: &quot;来自小易&quot;})   // HBox 没有 tip
+</code></pre>
+<p>运行日志：</p>
+<pre><code>[ui] HBox.set()：不认识的选项 'tip' —— 你是不是想要 'clip'？
+</code></pre>
+<p>程序继续跑，该属性静默丢弃。</p>
+<p><strong>这个"did you mean"做得很好</strong>，比大多数框架强。但因为它不阻断，问题只能在日志里发现
+（我的截图验证跑了两轮才注意到这行）。</p>
+<h3 id="_15">建议</h3>
+<ul>
+<li>保持 GUI 场景不崩（合理）；</li>
+<li>但可以在 <code>--check</code> / 严格模式下把"未知选项"升级为编译期错误或非零退出码；</li>
+<li>至少让这类日志带上文件:行号（现在只有选项名，一眼看不出是哪个 <code>createHBox</code>）。</li>
+</ul>
+<h3 id="2026-10-31_2">⏸ 结论（2026-10-31）：<strong>维持现状</strong></h3>
+<p>"带文件:行号"看起来是一行改动，实际做不到：告警走的是 <code>sdl_opts.leno</code> 里的 <code>warn_once()</code>
+（纯 Leno），而<strong>拿"当前脚本位置"是 C 层的能力</strong>（<code>GET_CURRENT_LINE()</code> 只在 VM 的
+<code>throw_runtime_error*</code> 里用）。Leno 层既没有 <code>_line()</code> 也没有 <code>_file()</code> 内建 ⇒
+要么给语言加两个内建（新特性，得单独评估），要么把 <code>dochk.check</code> 下沉到 C 层（同样是大改）。</p>
+<p><strong>现状其实够用</strong>：<code>warn_once</code> 对同一个 <code>(控件, 键)</code> <strong>只报一次</strong>，且带"你是不是想要 <code>pad_x</code>？"。
+排查时在输出里搜一次 <code>[ui]</code> 就能看到全部，再按选项名对回代码，成本可接受 ✓</p>
+<p>真正该补的是<strong>运行期升级开关</strong>（<code>--check</code> 模式下未知选项直接失败），但那是构建期行为，
+和这次的运行时告警是两件事，留作独立需求。</p>
+<hr>
+<h2 id="_16">已修复（本轮，供对照提交）</h2>
+<h3 id="f1-tableset_cell">F1 <code>Table.set_cell</code> 改数据不请求重绘</h3>
+<pre><code class="language-leno">// 修之前：只改数组，画面不动 ⇒ 调用方漏了 markFrameRedraw 就&quot;进度条卡住&quot;
+func set_cell(int r, int c, string v) { _rows[r][c] = v; invalidate_fitted() }
+</code></pre>
+<p>修法：值真变了就 <code>core.markFrameRedraw()</code>，值没变直接返回（省一次重绘请求）。
+副作用收益：下载进度可以只 <code>set_cell</code> 三格，不必整页重建 ⇒ <strong>hover / 滚动位置不再丢失</strong>。</p>
+<h3 id="f2-tablerecompute_cols-compute_sb">F2 <code>Table.recompute_cols</code> 与 <code>compute_sb</code> 扣减口径不一致</h3>
+<p><code>recompute_cols</code> 用 <code>avail = w - iconW - gx()</code>，<code>compute_sb</code> 用 <code>bodyW0 = w - 8 - fw - gx()</code>
+——差一个右边距 8px。后果：应用把 <code>col_ratios</code> 写成合计 <strong>1.00</strong>（最自然的写法）就必然
+溢出 8px ⇒ 底部常驻横向滚动条，<strong>放大窗口也不消失</strong>（差值固定）。</p>
+<p>修法：<code>avail</code> 改成与 <code>bodyW0</code> 同口径（减 8 / 冻结列 / 行号槽）。</p>
+<h3 id="f3-toastsdl_toastleno">F3 通用 Toast（<code>sdl_toast.leno</code>）</h3>
+<ul>
+<li>与 <code>tooltip</code> 同构的全局浮层，不占布局、不吃事件、绝对时刻算淡入淡出；</li>
+<li>停留期挂起，只在动画区间唤醒（替代应用侧 33ms 定时器空转）；</li>
+<li>顺带解决 <code>setOverlay</code> 单槽被截图钩子顶掉的问题。</li>
+</ul>
+<hr>
+<h2 id="bug">给应用的「防身规则」（不是语言 bug，但会被反复踩）</h2>
+<ol>
+<li><strong>线程入口函数不要用默认参数</strong>，所有实参显式给全（见 L3）。</li>
+<li><strong>单槽回调先判空再注册</strong>，且全项目搜一遍同一个控件有没有第二处注册（见 L2）。</li>
+<li><strong>持久化的数组元素类型要统一</strong>（全 string 或全 int），脏一个元素就会让
+   <code>as Array[Array[string]]</code> 整块返回 null、数据静默消失（见 L1）。</li>
+<li><strong>回调里读 struct 字段前先确认捕获语义</strong>：闭包拿到的是创建时的副本，可变状态放
+   <code>Array[T]</code> 单元素数组（Aria 的 <code>toastTxt[0]</code> / <code>dlLyric[0]</code> 就是这个原因）。</li>
+<li><strong>表格宽度别自己猜</strong>：布局会按容器宽 <code>set_size</code> 重算，<code>col_ratios</code> 合计留 2% 余量最稳。</li>
+<li><strong>字符串切分默认用 <code>slice</code> / <code>take</code>（字符语义）</strong>；只有处理<strong>二进制</strong>（编码、协议、压缩）
+   才用 <code>byte_slice</code>，而且长度必须来自 <code>byte_len()</code> —— 两套混用不报错、只是结果悄悄变短 ✗</li>
+</ol></main>
+</div>
+<nav class="pager"><a href="语言摩擦与隐式契约清单.html">← 上一篇</a><a href="注解系统与optkeys设计草案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

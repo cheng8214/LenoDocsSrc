@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>注解系统 & @optkeys 设计草案 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="注解系统与optkeys设计草案.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 目标与非目标</a></li><ul class="lv3"><li><a href="#_1">目标</a></li><li><a href="#_2">非目标（一期不做）</a></li></ul><li><a href="#2">2. 语法设计</a></li><ul class="lv3"><li><a href="#21">2.1 注解的基本形态</a></li><li><a href="#22">2.2 多个注解可叠加</a></li><li><a href="#23-optkeys">2.3 @optkeys 挂在函数上，不是类型</a></li><li><a href="#24">2.4 并集语义</a></li><li><a href="#25">2.5 未知注解直接报错</a></li></ul><li><a href="#3-ast">3. 词法与 AST</a></li><ul class="lv3"><li><a href="#31">3.1 词法</a></li><li><a href="#32-ast">3.2 AST</a></li></ul><li><a href="#4-parser">4. parser 落点</a></li><li><a href="#5-semantic">5. semantic 检查</a></li><ul class="lv3"><li><a href="#51">5.1 收集</a></li><li><a href="#52">5.2 检查</a></li><li><a href="#53">5.3 为什么只查字面量</a></li></ul><li><a href="#6-codegen">6. codegen</a></li><li><a href="#7">7. 诊断文案</a></li><li><a href="#8">8. 迁移路径</a></li><li><a href="#9">9. 对账用例（必须做）</a></li><li><a href="#10">10. 一期范围</a></li><ul class="lv3"><li><a href="#_3">做</a></li><li><a href="#_4">不做（留给后续）</a></li></ul><li><a href="#11">11. 风险与取舍</a></li><li><a href="#12-2026-10-31">12. 实现踩坑记录（2026-10-31，都实测过）</a></li><ul class="lv3"><li><a href="#131">13.1 注解必须加在门面层，不是实现层</a></li><li><a href="#132">13.2 检查落点：挂在"参数个数检查"旁边</a></li><li><a href="#133">13.3 符号表缓存会丢键表</a></li><li><a href="#134-2026-10-31">13.4 ✅ 运行时白名单已整套删除（2026-10-31 收尾）</a></li><li><a href="#135">13.5 补注解时的两种来源</a></li><li><a href="#136-48-createxxx">13.6 覆盖现状：全部 48 个 createXxx 都有注解，运行时检查清零</a></li></ul><li><a href="#13">13. 验收清单</a></li><li><a href="#14-2026-11-01">14. 键值类型检查（2026-11-01）</a></li><ul class="lv3"><li><a href="#141">14.1 目标</a></li><li><a href="#142">14.2 语法</a></li><li><a href="#143">14.3 类型词表</a></li><li><a href="#144">14.4 检查口径：复用现有类型系统，不另立规则</a></li><li><a href="#145">14.5 落点与改动面</a></li><li><a href="#146">14.6 已知限制（明确不做）</a></li><li><a href="#147">14.7 验收清单</a></li><li><a href="#148">14.8 实现检查清单（防漏）</a></li></ul><li><a href="#_5">附：与现有方案的关系</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="optkeys">注解系统 &amp; <code>@optkeys</code> 设计草案</h1>
+<blockquote>
+<p><strong>状态：草案（未实现）</strong> · 2026-10-31</p>
+<p><strong>起因</strong>：<code>docs/语言与框架问题_Aria实战_2026-10-31.md</code> 的 <strong>L5</strong> ——
+LenoSDL3 各控件用 <code>dochk.check(who, opts, _opts_keys())</code> 在<strong>运行时</strong>对账选项键，
+传错键只 <code>print</code> 一行警告：</p>
+<ul>
+<li>没有文件:行号（<code>who</code> 只有控件名，看不出是哪个 <code>createHBox</code>）；</li>
+<li><strong>打包后完全看不见</strong>（单文件 exe 走 <code>-mwindows</code>，没有控制台，<code>print</code> 丢进虚空）；</li>
+<li>每个控件创建都要遍历一遍 opts，纯浪费。</li>
+</ul>
+<p><strong>本方案</strong>：给语言加一套<strong>注解</strong>语法，让框架把"这个构造函数接受哪些键"声明成
+编译器可消费的元数据，把检查<strong>提前到编译期</strong>。</p>
+<p>⚠ 核心约束：<strong>编译器不需要知道 LenoSDL3 的存在</strong>。注解是语言特性，框架只是使用者。</p>
+</blockquote>
+<hr>
+<h2 id="1">1. 目标与非目标</h2>
+<h3 id="_1">目标</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>传错选项键在 <strong><code>--check</code> / 编译期</strong>就报出来，带文件:行号与"你是不是想要 X"</td>
+</tr>
+<tr>
+<td>G2</td>
+<td>打包后的应用同样受检（不依赖控制台）</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>运行时零开销（<code>dochk.check</code> 可整套删掉）</td>
+</tr>
+<tr>
+<td>G4</td>
+<td>编译器与框架解耦：注解机制通用，<code>@optkeys</code> 只是第一个使用者</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>实现状态（2026-10-31）</strong>：G1~G4 已落地。同模块与<strong>跨模块</strong>检查均已验证：
+</p>
+</blockquote>
+<pre><code>_tmp.leno:7: [警告] createHBox 的 opts 不认识键 'tip'
+        提示: 你是不是想要 'clip'？
+        提示: 接受的键见 …\LenoSDL3\lib\SDL3.leno 里该函数的 @optkeys
+</code></pre>
+<blockquote>
+<p>全量套件 533 passed / 0 failed、<strong>0 条误报</strong>；Aria（5000+ 行、大量控件调用）同样零误报。
+第 13 节记录了实现过程中踩到的三个坑（注解该加在哪一层、检查落点、缓存）。</p>
+</blockquote>
+<h3 id="_2">非目标（一期不做）</h3>
+<ul>
+<li>注解参数引用 <code>const</code> 常量（只允许字面量）</li>
+<li>自定义注解注册（注解表由编译器维护）</li>
+<li>注解继承 / 组合 / 展开</li>
+<li>把既有的 <code>@deprecated</code> 之类<strong>一起</strong>实现（但语法要为它们留位）</li>
+</ul>
+<hr>
+<h2 id="2">2. 语法设计</h2>
+<h3 id="21">2.1 注解的基本形态</h3>
+<pre><code>注解 := '@' 标识符 [ '(' 参数字面量 ')' ]
+</code></pre>
+<pre><code class="language-leno">@deprecated                                  // 无参
+export func old_api() { ... }
+
+@deprecated(&quot;改用 createBox&quot;)                 // 一个字符串
+export func old_api() { ... }
+
+@optkeys([&quot;w&quot;, &quot;h&quot;, &quot;pad_x&quot;, &quot;spacing&quot;])     // 字符串数组
+export func createHBox(Dict opts): HBox { ... }
+
+@optkeys(&quot;*&quot;)                                // 通配：接受任意键，不检查
+export func createCustom(Dict opts): HBox { ... }
+</code></pre>
+<p><strong>参数只允许字面量</strong>：<code>string</code> / <code>int</code> / <code>float</code> / <code>bool</code> / 由它们组成的数组。
+不允许表达式、不允许 identifier、不允许跨行。</p>
+<blockquote>
+<p>理由：注解是<strong>编译期数据</strong>，一旦允许表达式就要引入"注解求值"，失败语义、
+循环依赖、求值顺序全得设计。一期把口子收死，报错文案写"注解参数必须是字面量"即可。</p>
+</blockquote>
+<h3 id="22">2.2 多个注解可叠加</h3>
+<pre><code class="language-leno">@optkeys([&quot;w&quot;, &quot;h&quot;, &quot;pad_x&quot;])
+@deprecated(&quot;改用 createBox&quot;)
+export func createHBox(Dict opts): HBox { ... }
+</code></pre>
+<p>收集成有序列表挂在声明上。同名注解出现多次 ⇒ <strong>参数并集</strong>（见 2.4）。</p>
+<h3 id="23-optkeys">2.3 <code>@optkeys</code> 挂在<strong>函数</strong>上，不是类型</h3>
+<pre><code class="language-leno">// LenoSDL3/lib/sdl_layout.leno
+@optkeys([&quot;w&quot;, &quot;h&quot;, &quot;pad_x&quot;, &quot;pad_y&quot;, &quot;spacing&quot;, &quot;bg_color&quot;, &quot;bg_radius&quot;,
+          &quot;clip&quot;, &quot;justify&quot;, &quot;align&quot;, &quot;visible&quot;])
+export func createHBox(Dict opts): HBox {
+    // dochk.check(&quot;HBox&quot;, opts, _opts_keys())   ← 一期之后再删
+    ...
+}
+</code></pre>
+<p><strong>为什么不挂在 <code>struct HBox</code> 上</strong>：</p>
+<ol>
+<li><code>HBox</code> 是 struct，但 opts <strong>不是它的字段</strong>，而是构造参数 —— 语义上属于构造函数；</li>
+<li>同一类型可能有多个构造函数（<code>createHBox</code> / <code>createHBoxFrom</code>），键表可以不同；</li>
+<li>挂在函数上，检查时不需要"从返回类型反查类型表"，直接看 callee 的注解即可（实现更简单）。</li>
+</ol>
+<p>语义定义为：<strong>"本函数的 Dict 参数接受这些键"</strong>。函数有多个 Dict 参数时，一期只认<strong>第一个</strong>，并在文档里写明。</p>
+<h3 id="24">2.4 并集语义</h3>
+<pre><code class="language-leno">@optkeys([&quot;w&quot;, &quot;h&quot;])
+export func createHBox(Dict opts): HBox { ... }
+
+@optkeys([&quot;justify&quot;])            // 同一个函数上的第二个 optkeys ⇒ 并集
+@optkeys([&quot;w&quot;, &quot;h&quot;])
+export func createHBox(Dict opts): HBox { ... }
+</code></pre>
+<p>为什么需要并集：框架里"基础布局键"和"主题相关键"可能由不同模块/不同作者追加，
+合并比"后覆盖前"更符合直觉（也不会因为声明顺序不同产生不同结果）。</p>
+<h3 id="25">2.5 未知注解直接报错</h3>
+<p>编译器维护一张已知注解表（一期只有 <code>optkeys</code>）：</p>
+<pre><code>[错误] aria.leno:42: 不认识的注解 '@optkey'
+  [提示] 你是不是想要 '@optkeys'？
+</code></pre>
+<p>比"静默忽略"好：注解拼错等于没写，而且<strong>最难发现</strong>（代码看着是对的）。</p>
+<hr>
+<h2 id="3-ast">3. 词法与 AST</h2>
+<h3 id="31">3.1 词法</h3>
+<p>新增一个 token：</p>
+<pre><code class="language-c">TOK_AT        // '@'
+</code></pre>
+<p><code>@</code> 在 Leno 里当前未被占用（字符串插值 <code>$"..."</code>、可切片 <code>arr[a:b]</code>、可空 <code>T?</code>、
+空合并 <code>??</code> 都不冲突），不会引入歧义。</p>
+<h3 id="32-ast">3.2 AST</h3>
+<pre><code class="language-c">// 注解节点（挂在任意声明上的链）
+typedef struct {
+    char*  name;          // &quot;optkeys&quot; / &quot;deprecated&quot;
+    int    line;          // 注解所在行（诊断用）
+    // 参数：一期只支持 0 或 1 个字面量
+    int    arg_kind;      // 0=无参 / 1=string / 2=int / 3=float / 4=bool / 5=字符串数组
+    char*  arg_str;
+    double arg_num;
+    int    arg_bool;
+    char** arg_list;      // 字符串数组
+    int    arg_list_len;
+} AstAnno;
+
+// 声明侧挂链（不新建声明节点，只在现有节点的 u.xxx 里加两个字段）
+AstAnno* annos;           // 注解数组
+int      anno_count;
+</code></pre>
+<p>挂在 <code>AST_FUNC_DECL</code> / <code>AST_STRUCT_DECL</code> / <code>AST_VAR_DECL</code> 上。</p>
+<blockquote>
+<p>为什么不做一个 <code>AST_ANNOTATED { annos, decl }</code> 包装节点：那会让所有消费声明的
+地方（semantic / codegen / 模块符号表）都要多拆一层。直接给声明加字段，改动面最小。</p>
+</blockquote>
+<hr>
+<h2 id="4-parser">4. parser 落点</h2>
+<p><strong>主入口</strong>：<code>src/parser/parser.c</code> 的模块级 <code>declaration()</code>（当前 switch 在 <code>:160</code> 起）。</p>
+<p>在 <strong>switch 之前</strong> 插入注解收集：</p>
+<pre><code class="language-c">// 伪代码
+static Ast* declaration(Parser* p) {
+    AstAnno* annos = NULL;
+    int anno_n = 0;
+
+    // ① 先把所有 @xxx 收完
+    while (p-&gt;lex.current.type == TOK_AT) {
+        lexer_next(&amp;p-&gt;lex);                       // 吃掉 '@'
+        if (p-&gt;lex.current.type != TOK_IDENT) {
+            error_add_at_fmt(ERR_SYNTAX, line, col, &quot;'@' 后面必须跟注解名&quot;);
+            return NULL;
+        }
+        AstAnno a = parse_anno_args(p);            // 名字 + 可选 (字面量)
+        annos = realloc_add(annos, &amp;anno_n, &amp;a);
+    }
+
+    Ast* stmt = parse_decl_core(p);                // 原来的 switch
+
+    // ② 挂到声明上（允许挂的声明类型有限）
+    if (anno_n &gt; 0) {
+        if (!decl_can_be_annotated(stmt)) {
+            error_add_at_fmt(ERR_SYNTAX, ...,
+                &quot;注解只能用在模块级声明（func / struct / var / const）之前&quot;);
+        } else {
+            attach_annos(stmt, annos, anno_n);
+        }
+    }
+    return stmt;
+}
+</code></pre>
+<p><strong>注意 <code>export</code> 的顺序</strong>：现在的写法是 <code>export func ...</code>。注解要在最外层：</p>
+<pre><code class="language-leno">@optkeys([...])
+export func createHBox(...) { }        // ✓ 注解在最前
+export @optkeys([...]) func ...        // ✗ 不支持（不给自己挖坑）
+</code></pre>
+<p>因为 <code>parser_module.c:414</code> 的 <code>TOK_EXPORT</code> 分支会递归调回 <code>declaration()</code>，
+所以只要注解收集在 <code>declaration()</code> 顶部，<code>@x export func ...</code> 天然可用 ✓</p>
+<p><strong>参数解析</strong>：</p>
+<pre><code class="language-c">static AstAnno parse_anno_args(Parser* p) {
+    // 名字
+    // 可选 '('
+    //   TOK_STRING → 一个字符串
+    //   TOK_LBRACKET → 字符串数组（只允许 string 元素）
+    //   TOK_INT/FLOAT/TRUE/FALSE → 标量
+    // ')'
+    // 其它 token ⇒ &quot;注解参数必须是字面量&quot;
+}
+</code></pre>
+<hr>
+<h2 id="5-semantic">5. semantic 检查</h2>
+<h3 id="51">5.1 收集</h3>
+<p>在遍历声明时把 <code>@optkeys</code> 记到函数符号上：</p>
+<pre><code class="language-c">// 全局（每编译单元一份）
+typedef struct {
+    const char* func_name;     // 全限定或模块内唯一名
+    char** keys; int n;        // 已合并（并集）
+    bool wildcard;             // '*' ⇒ 不检查
+    int decl_line, decl_file;  // 诊断里指&quot;去哪看&quot;
+} OptKeySet;
+</code></pre>
+<h3 id="52">5.2 检查</h3>
+<p>在 <code>AST_CALL</code> 的处理里（<code>src/semantic/visitinc/visit_expr.inc</code>）：</p>
+<pre><code class="language-c">// ① callee 解析到具体函数符号，且它带 @optkeys
+// ② 排除 wildcard
+// ③ 找到&quot;第一个 Dict 参数&quot;对应的实参
+// ④ 该实参必须是 AST_DICT_LITERAL（字面量）—— 否则放行
+// ⑤ 逐个键：不在集合里 ⇒ 报
+</code></pre>
+<pre><code class="language-c">for (每个键 k in dict_literal) {
+    if (key_in_set(k)) continue;
+    const char* hint = nearest_key(k, set.keys, set.n);   // 编辑距离 ≤2
+    if (hint)
+        error_add_at_fmt(ERR_*_UNKNOWN_OPT, call_line, col,
+            &quot;%s 的 opts 不认识键 '%s'\n&quot;
+            &quot;  提示: 你是不是想要 '%s'？\n&quot;
+            &quot;  提示: 接受的键见 %s:%d 的 @optkeys&quot;,
+            func_name, k, hint, set.decl_file, set.decl_line);
+    else
+        error_add_at_fmt(... 同上，无&quot;是不是想要&quot;一行 ...);
+}
+</code></pre>
+<p><strong>编辑距离工具</strong>：<code>semantic_method_hint</code> 那套（<code>semantic_type_utils.c:1439</code> 附近）
+已经有"相似名"的实现，可以直接复用/抽出通用版本。</p>
+<h3 id="53">5.3 为什么只查字面量</h3>
+<pre><code class="language-leno">createHBox({w: 30, tip: &quot;x&quot;})     // ✓ 查
+var o = {w: 30, tip: &quot;x&quot;}
+createHBox(o)                      // ✗ 放行（静态不可知）
+createHBox(buildOpts())            // ✗ 放行
+</code></pre>
+<p>这是 <code>threads.start</code> 那条教训的直接应用（见
+<code>docs/语言与框架问题_Aria实战_2026-10-31.md</code> L3）：<strong>宁漏勿误报</strong>。
+"有时查得到、有时查不到"如果还伴随误报，用户会直接关掉这个特性。</p>
+<hr>
+<h2 id="6-codegen">6. codegen</h2>
+<p>注解<strong>不产生任何字节码</strong>。<code>AST_*</code> 上的 <code>annos</code> 字段在 codegen 里被忽略即可。</p>
+<blockquote>
+<p>一期不需要 <code>AST_ANNO</code> 这个独立节点（见 3.2），所以 codegen 甚至不用改。</p>
+</blockquote>
+<hr>
+<h2 id="7">7. 诊断文案</h2>
+<p>三种：</p>
+<pre><code>// ① 键写错（有相近的）
+[错误] aria.leno:1090: createHBox 的 opts 不认识键 'tip'
+  [提示] 你是不是想要 'clip'？（编辑距离 2）
+  [提示] 接受的键见 LenoSDL3/lib/sdl_layout.leno:42 的 @optkeys
+
+// ② 键写错（没有相近的）
+[错误] aria.leno:1090: createHBox 的 opts 不认识键 'title_size'
+  [提示] 接受的键见 LenoSDL3/lib/sdl_layout.leno:42 的 @optkeys
+
+// ③ 注解名拼错
+[错误] aria.leno:42: 不认识的注解 '@optkey'
+  [提示] 你是不是想要 '@optkeys'？
+</code></pre>
+<p>第三行（"见 xxx:42"）是本方案相对现状最大的改进 —— 它把"去哪改"直接指出来，
+而且<strong>不需要 <code>_line()</code> 内建</strong>，因为位置是注解的声明处，编译器本来就知道。</p>
+<hr>
+<h2 id="8">8. 迁移路径</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>行为</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>编译<strong>警告</strong>，不中断</td>
+<td>存量的错键不至于升级即编不过</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><code>--check --strict</code> 下是<strong>错误</strong></td>
+<td>CI 用 strict 拦住新增</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>默认错误</td>
+<td>存量清干净后切换</td>
+</tr>
+</tbody>
+</table>
+<p>在 P3 之后删掉 <code>LenoSDL3/lib/sdl_opts.leno</code> 的 <code>check()</code> 运行时路径，
+<code>@optkeys</code> 成为唯一事实来源。</p>
+<hr>
+<h2 id="9">9. 对账用例（必须做）</h2>
+<p>风险最高的地方不是检查逻辑，而是<strong>声明和实现不同步</strong>：</p>
+<pre><code class="language-leno">export func createHBox(Dict opts): HBox {
+    float w = opts.get(&quot;w&quot;, 0.0)          // ← 实现读了 &quot;w&quot;
+    ...
+}
+@optkeys([&quot;w&quot;, &quot;h&quot;])                      // ← 声明漏了 &quot;h&quot;？
+</code></pre>
+<p>一旦声明漏键，<strong>正常代码编译不过</strong> —— 比运行时静默更让人恼火。</p>
+<p><strong>兜底用例</strong>（放 <code>assert/</code>，CI 跑）：</p>
+<pre><code>扫描 LenoSDL3/lib/sdl_*.leno 里所有
+    opts.get(&quot;X&quot;) / opts.has(&quot;X&quot;) / opts[&quot;X&quot;]
+与同文件的 @optkeys 声明比对：
+    实现读到的键 ⊆ 声明集合      （漏声明 ⇒ 失败）
+    声明集合 ⊆ 实现读到的键 + 白名单（多声明 ⇒ 警告，不算失败）
+</code></pre>
+<p>这条用例是整套机制能不能长期用的关键，一期就要带上。</p>
+<hr>
+<h2 id="10">10. 一期范围</h2>
+<h3 id="_3">做</h3>
+<ul>
+<li><code>TOK_AT</code> 词法</li>
+<li><code>declaration()</code> 上的注解收集 + 3 种参数形态（无参 / 单字面量 / 字符串数组）</li>
+<li>注解挂到 <code>AST_FUNC_DECL</code> 上</li>
+<li>已知注解表（<code>optkeys</code>）+ 拼错提示</li>
+<li><code>@optkeys</code> 检查：只查字面量 Dict、只查第一个 Dict 参数、warning 级</li>
+<li>对账用例</li>
+<li><code>LenoSDL3</code> 各 <code>createXxx</code> 补 <code>@optkeys</code>（约 20 个控件）</li>
+</ul>
+<h3 id="_4">不做（留给后续）</h3>
+<ul>
+<li><code>@deprecated</code> / <code>@arity</code> / <code>@default</code> 等其它注解的<strong>语义</strong></li>
+<li>注解参数引用 const</li>
+<li>对 struct 字段级注解</li>
+<li>注解的反射（运行期读到注解）</li>
+</ul>
+<hr>
+<h2 id="11">11. 风险与取舍</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>影响</th>
+<th>对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>声明漏键导致误报</td>
+<td>正常代码编不过</td>
+<td>第 9 节对账用例 + P1 先只警告</td>
+</tr>
+<tr>
+<td><strong>只在实现层加注解</strong></td>
+<td>应用侧完全查不到（见 13.1）</td>
+<td>门面层必须同样加</td>
+</tr>
+<tr>
+<td>检查放错语义阶段</td>
+<td>一次都命中不了（见 13.2）</td>
+<td>挂在"参数个数检查"旁</td>
+</tr>
+<tr>
+<td>符号表缓存丢键表</td>
+<td>缓存命中时跨模块失效（见 13.3）</td>
+<td><code>.lenosymc</code> 升版本 + 写缓存前先填充</td>
+</tr>
+<tr>
+<td>注解参数要表达式</td>
+<td>一期不支持，用户觉得受限</td>
+<td>报错文案明确写"注解参数必须是字面量"，后续再放开</td>
+</tr>
+<tr>
+<td>挂错位置（挂到类型上）</td>
+<td>一个类型多构造时键表冲突</td>
+<td>文档写明"挂函数"，并在 parser 里对挂在不支持的声明上报错</td>
+</tr>
+<tr>
+<td>多个 Dict 参数</td>
+<td>只查第一个可能漏</td>
+<td>一期文档写明；后续可加 <code>@optkeys(arg = "opts", ...)</code></td>
+</tr>
+<tr>
+<td>编译器与框架耦合</td>
+<td>——</td>
+<td><strong>不存在</strong>：编译器只认注解名 <code>optkeys</code>，不认 <code>LenoSDL3</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="12-2026-10-31">12. 实现踩坑记录（2026-10-31，都实测过）</h2>
+<h3 id="131">13.1 注解必须加在<strong>门面层</strong>，不是实现层</h3>
+<p>LenoSDL3 是"门面 + 实现"两层：</p>
+<pre><code class="language-leno">// SDL3.leno（门面，应用 import 的是这个）
+export func createHBox(Dict opts): HBox { return lay.createHBox(opts) }
+
+// sdl_layout.leno（实现）
+export func createHBox(Dict opts): HBox { HBox b = new HBox(); b.set(opts); return b }
+</code></pre>
+<p>把 <code>@optkeys</code> 加到<strong>实现层</strong>时，应用里的 <code>SDL3.createHBox({...})</code> 一个都不报——因为符号表里
+它看到的是<strong>门面那个函数</strong>（无注解），门面转发给实现时传的是 <code>opts</code> 变量（非字面量 ⇒ 按规则放行）。</p>
+<p>⇒ <strong>门面与实现两处都要加</strong>（实现层那份覆盖"模块内部互相调用"）。</p>
+<h3 id="132">13.2 检查落点：挂在"参数个数检查"旁边</h3>
+<p>先后试过三个位置，都收不到控件构造调用：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>visit_expr.inc</code> 的 <code>case AST_CALL</code> 开头</td>
+<td>调用是 <code>AST_MODULE_CALL</code>，不进这个分支 ✗</td>
+</tr>
+<tr>
+<td><code>infer_expr_type</code> 的 <code>case AST_MODULE_CALL</code></td>
+<td>该分支只处理 native 模块，用户模块的构造调用不来 ✗</td>
+</tr>
+<tr>
+<td><code>visit_module.inc</code> 的 <code>case AST_MODULE_CALL</code> 开头</td>
+<td>实测只收到模块<strong>内部</strong>的转发调用（<code>mod=lay fn=createHBox</code>）✗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>可行的位置</strong>：<code>visit_expr.inc</code> 里 <code>func_def</code> 已解析出来、正要报"参数数量不足"的那一处——
+那里跨模块也能拿到被调函数的 AST（否则报不出参数个数）⇒ 直接读 <code>func_def-&gt;annos</code>，
+连符号表都不需要 ✓</p>
+<h3 id="133">13.3 符号表缓存会丢键表</h3>
+<p><code>ModuleFuncSymbol.optkeys</code> 是 v39 新增字段。注意两点：</p>
+<ul>
+<li><code>add_func</code> 里<strong>必须显式置空</strong> <code>func-&gt;optkeys</code>（<code>table-&gt;funcs</code> 是 realloc 扩容的，
+  新槽位是垃圾值，不置空会读野指针 ✗ —— 与 <code>param_types</code> 那几条注释同一个坑）</li>
+<li>写缓存的顺序是「读源码 → <strong>AST 填充</strong> → 写缓存」（<code>sym_table_entry.inc:351/376</code>）⇒
+  optkeys 能进缓存 ✓；升版本号（v38 → v39）让旧缓存失效重扫 ✓</li>
+</ul>
+<p>实测：连续两次 <code>--check</code>（第二次命中缓存）都能正常报出，说明缓存往返是通的。</p>
+<h3 id="134-2026-10-31">13.4 ✅ 运行时白名单已整套删除（2026-10-31 收尾）</h3>
+<p>补齐注解后，<code>_opts_keys()</code> 那套已删（提交 <code>8f6d523</code>，41 个文件、-326 行）：</p>
+<table>
+<thead>
+<tr>
+<th>删掉</th>
+<th>保留</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>41 处 <code>dochk.check(..., _opts_keys()/_set_keys()/label_keys()/alert_keys())</code></td>
+<td><code>add(c, opts)</code> 的 <code>dochk.check(..., _add_keys())</code></td>
+</tr>
+<tr>
+<td>39 个白名单函数定义</td>
+<td><code>popmenu</code> / <code>tray</code> / <code>window</code> 三处（内部控件，未加注解）</td>
+</tr>
+<tr>
+<td></td>
+<td><code>sdl_opts.leno</code> 本体（<code>add</code> 与 <code>warn_once</code> 还在用）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么要删</strong>——不只是"重复"，而是<strong>已经实际漂移过</strong>：</p>
+<blockquote>
+<p><code>sdl_gridlayout.leno</code> 的 <code>set()</code> 读了 <code>min_col_width</code>，但它的 <code>_opts_keys()</code> 白名单里<strong>没有</strong>
+⇒ 影视海报墙传 <code>min_col_width</code> 一直被运行时误报"不认识的选项"（全量扫 <code>--check</code> 才发现）。</p>
+</blockquote>
+<p>这正是"两份数据"的必然后果。删完只剩注解一份，改选项时只改一个地方。</p>
+<p><strong>踩坑</strong>：<code>label_keys</code> / <code>alert_keys</code> 原本是 <code>pri func XXX()</code> 形式，批量删除时正则只匹配 <code>func</code> 那段，
+留下孤立的 <code>pri</code> —— 它把后面的 <code>func set(Dict opts)</code> 变成了私有方法，<code>createLabel</code> 在 struct 外面
+调 <code>lbl.set(opts)</code> 直接编译失败（<code>'Label.set' 是 pri 私有方法</code>）。修法：删掉那行孤立的 <code>pri</code>。</p>
+<p><strong>验证</strong>：533 passed / 0 failed；47 个 GUI 主程序 <code>--check</code> 零误报；Aria 实跑界面正常、运行时零 <code>[ui]</code> 告警。</p>
+<h3 id="135">13.5 补注解时的两种来源</h3>
+<ul>
+<li><strong>有 <code>_opts_keys()</code> 的</strong>（36 个）：逐字抄白名单 —— 但注意上面 gridlayout 那种漂移，
+  遇到"这个键不认识"的误报时，先查实现里是不是真的读了它；</li>
+<li><strong>没有白名单的</strong>（<code>Label</code> / <code>Alert</code> / <code>VirtualGrid</code>）：扫描实现里的 <code>opts.get("…")</code> / <code>opts.has("…")</code>
+  反推键表，再补通用几何键（<code>w</code>/<code>h</code>）。这类最容易漏，<strong>必须靠全量应用验证</strong>兜底。</li>
+</ul>
+<h3 id="136-48-createxxx">13.6 覆盖现状：<strong>全部 48 个</strong> <code>createXxx</code> 都有注解，运行时检查清零</h3>
+<p>最后一轮（提交 <code>4f4c218</code>）补了 5 个内部控件：<code>createWindow</code> / <code>createTitleBar</code> / <code>createTray</code> /
+<code>createDragHint</code> / <code>createPopMenu</code>。</p>
+<blockquote>
+<p>⚠ 这里踩了个顺序坑：<code>popmenu/tray/drag/titlebar</code> 的运行时检查在批量删除那轮（<code>8f6d523</code>）
+<strong>已经被一并删掉</strong>了，但注解是后补的 ⇒ 中间有一段时间<strong>这 4 个控件完全没检查</strong>。
+教训：<strong>删之前先确认每个控件的注解都在</strong>，否则"删得比补得快"就是功能退化。</p>
+</blockquote>
+<p>现在全仓只剩 <strong>3 处</strong> <code>dochk.check</code>，都是 <code>HBox/VBox/AnchorBox</code> 的 <code>add(c, opts)</code>：</p>
+<pre><code class="language-leno">dochk.check(&quot;add()&quot;, opts, _add_keys())     // ← 注解不覆盖这条路径，必须保留
+</code></pre>
+<p><code>add()</code> 的参数是<strong>往容器里塞子项时的布局约束</strong>（<code>grow</code>/<code>basis</code>/<code>align</code>…），不是构造函数参数，
+和 <code>@optkeys</code> 不是一回事。<code>sdl_opts.leno</code> 本体也保留（<code>add</code> 与 <code>warn_once</code> 还在用）。
+其余控件可按同一模式增量补（键表直接抄 <code>_opts_keys()</code>）。</p>
+<h2 id="13">13. 验收清单</h2>
+<ul>
+<li>[ ] <code>@optkeys(["w"])</code> + <code>createHBox({w: 1, tip: "x"})</code> ⇒ 编译期报 <code>tip</code>，带"见 xxx:行"</li>
+<li>[ ] <code>@optkeys("*")</code> ⇒ 不报</li>
+<li>[ ] <code>createHBox(o)</code>（非字面量）⇒ 不报</li>
+<li>[ ] <code>@optkey</code>（拼错注解）⇒ 报"不认识的注解 + 是不是想要 @optkeys"</li>
+<li>[ ] <code>@optkeys</code> 挂到 <code>var</code> 上 ⇒ 报"注解只能用在……"</li>
+<li>[ ] <code>--check</code> 全量套件零误报（存量 532 个用例）</li>
+<li>[ ] 对账用例通过（声明 ⊇ 实现读到的键）</li>
+<li>[ ] 删掉 <code>dochk.check</code> 后 Aria 全功能回归正常</li>
+</ul>
+<hr>
+<h2 id="14-2026-11-01">14. 键值类型检查（2026-11-01）</h2>
+<h3 id="141">14.1 目标</h3>
+<p>键名检查只能抓"选项不生效"，<strong>值类型写错是逻辑静默走反</strong>：</p>
+<pre><code class="language-leno">createXxx({visible: &quot;false&quot;})    // 多了一对引号
+</code></pre>
+<p>实测：编译通过；<code>bool v = opts["visible"] ?? false</code> 里 <code>v</code> 装的是<strong>字符串</strong>（<code>??</code> 只做空值兜底，
+不转换类型）；运行时非空字符串判定为<strong>真</strong> ⇒ 界面行为反了，却没有任何报错。</p>
+<p>目标：<strong>只对声明了类型的键</strong>，在编译期把这类错误报出来；没写类型的键行为完全不变。</p>
+<h3 id="142">14.2 语法</h3>
+<p>类型跟在键名后面，用冒号分隔，仍在<strong>同一个</strong> <code>@optkeys</code> 里（不新增 <code>@opttypes</code>——
+键名与类型本来就该在一起，改键名时类型跟着走；多一个注解只会多一套"漏写/对不上"）：</p>
+<pre><code class="language-leno">@optkeys([&quot;visible:bool&quot;, &quot;enabled:bool&quot;, &quot;w:float&quot;, &quot;h:float&quot;,
+          &quot;tip:string&quot;, &quot;headers:Array&quot;,
+          &quot;align&quot;, &quot;label&quot;])          // 后两个不写类型 = 不查
+</code></pre>
+<h3 id="143">14.3 类型词表</h3>
+<p><strong>只用 Leno 自己的类型名</strong>，不发明缩写（曾经想过 <code>fn</code> / <code>arr</code> / <code>dict</code> / <code>num</code>，全部废弃）：</p>
+<table>
+<thead>
+<tr>
+<th>词</th>
+<th>接受的实参</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code></td>
+<td>整数（<code>bigint</code> 也算整数，走 <code>type_is_integer_kind</code>）</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>浮点 <strong>和整数</strong>（int→float 是本语言允许的隐式转换）</td>
+</tr>
+<tr>
+<td><code>num</code></td>
+<td><strong>数字</strong>：int 或 float 都收（<strong>注解专用记号</strong>，语言里没有这个类型名）</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td><code>true</code> / <code>false</code></td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td>字符串</td>
+</tr>
+<tr>
+<td><code>Array</code></td>
+<td>数组</td>
+</tr>
+<tr>
+<td><code>color</code></td>
+<td><strong>颜色字面量</strong> <code>#RRGGBBAA</code>（<code>#RGB</code> / <code>#RRGGBB</code> 也收）—— 见下面的精度说明</td>
+</tr>
+<tr>
+<td>不写</td>
+<td>不查（默认，占绝大多数）</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>color</code> 的特殊之处（2026-11-17 加）</strong>：它不按"类型兼容"判，因为颜色在语言里<strong>仍然是 int</strong>
+（运行期零开销），与 int 的差别在<strong>写法</strong>而不在类型 ⇒ 判据是"这个字面量是不是颜色字面量"
+（<code>AST_NUM.is_color</code>，lexer 的 <code>read_color</code> 置位）。
+精度刻意收窄（<strong>宁漏勿误报</strong>）：只有 <code>alpha 字节 == 0 且颜色分量 != 0</code> 的裸 int 才告警 ——
+<code>bg_color: 0</code>（要透明底色）与 <code>hover_color: 0xCCFFFFFF</code>（本来就写对的 ARGB）一律不报；
+变量 / 函数调用 / props 也不报（判不出用法）。</p>
+<pre><code class="language-leno">@optkeys([&quot;border_color:color&quot;, &quot;bg_color:color&quot;])
+func box(Dict opts) { }
+
+box({border_color: #00000088})    // ✅ 53% 黑
+box({border_color: 0x00000088})   // ⚠️ 这是&quot;全透明 + 0x88 的蓝&quot;，不是半透明黑
+box({bg_color: 0})                // ✅ 既有&quot;不要底色&quot;写法，不报
+</code></pre>
+<ul>
+<li>大小写不敏感（<code>Bool</code> / <code>BOOL</code> 都认），文档写规范形式</li>
+<li><strong><code>num</code> 与 <code>float</code> 的检查行为完全一样</strong>（float 本来就收 int），差别只在语义表达：
+  控件的 <code>x / y / w / h / item_h</code> 这类尺寸键内部有时按 float 取、有时按 int 取，
+  标 <code>num</code> 比标 <code>float</code> 准确，也不会让人误以为"这里必须写 <code>0.5</code> 这种浮点字面量"。
+  报错文案显示用户写的<strong>原词</strong>（写 <code>num</code> 就报"期望 num"，不会擅自改成 float）</li>
+<li><code>Array[...]</code> 只认<strong>外层</strong>：<code>Array[int]</code>、<code>Array[Array[int]]</code> 都等价于 <code>Array</code>（见 14.6）</li>
+<li>认不出的词（拼错成 <code>bolean</code>）⇒ 退化成"不查"，<strong>不报错</strong>（宁漏勿误报）</li>
+</ul>
+<h3 id="144">14.4 检查口径：复用现有类型系统，不另立规则</h3>
+<p>不自己写"AST 形状 → 类型"的映射，全部复用语义分析现有的两个入口：</p>
+<pre><code class="language-c">TypeInfo* got = infer_expr_type(s, value);                       // semantic_type.c:1071
+if (got &amp;&amp; got-&gt;kind != TYPE_ANY &amp;&amp; !type_is_compatible(&amp;want, got))
+    警告;                                                        // leno_types.h:513
+if (got) type_free(got);                                         // 返回值是新分配 ⇒ 必须 free
+</code></pre>
+<p><code>want</code> 由类型词构造（<code>TYPE_INT</code> / <code>TYPE_FLOAT</code> / <code>TYPE_BOOL</code> / <code>TYPE_STRING</code> / <code>TYPE_ARRAY</code>）。</p>
+<p>这样做的好处：</p>
+<ol>
+<li><strong>兼容规则与语言一致</strong>（int→float、bigint 当整数、null 可给 any…），不存在"两套规则各说各话"</li>
+<li>覆盖范围从"只有字面量"扩展到<strong>任何类型可推断的值</strong>（变量也算）：
+   <code>createXxx({visible: flag})</code> 里 <code>flag</code> 是 string 也能抓到</li>
+<li>改动量小</li>
+</ol>
+<h3 id="145">14.5 落点与改动面</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/semantic/semantic_annotations.c</code></td>
+<td>类型词解析、声明解析、键名比较忽略冒号、值检查、警告文案</td>
+</tr>
+<tr>
+<td><code>src/semantic/visitinc/visit_expr.inc</code></td>
+<td>调用点传 <code>s</code>（<code>annos_check_call_def</code> 加 <code>Semantic*</code> 参数）</td>
+</tr>
+<tr>
+<td><code>src/semantic/semantic_visit_ast.c</code></td>
+<td>同上，<code>extern</code> 声明同步</td>
+</tr>
+<tr>
+<td><code>build/leno_module/LenoSDL3/lib/SDL3.leno</code></td>
+<td>48 个 <code>createXxx</code> 的 <code>@optkeys</code> 补类型（约 249 个键，由工具扫 <code>opts.get("k", 默认值)</code> 生成后人工复核）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>不动</strong>：parser、VM、codegen、序列化（注解本来就是字符串，<code>.lenosymc</code> 不用升版本）。</p>
+<h3 id="146">14.6 已知限制（明确不做）</h3>
+<table>
+<thead>
+<tr>
+<th>限制</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>不查数组<strong>元素</strong>类型</td>
+<td>需要递归解析 + 递归检查 + 空数组/混合数组规则；收益低（17 个数组键，元素多是 string）</td>
+</tr>
+<tr>
+<td><code>Dict[...]</code> 带参数不支持</td>
+<td>逗号与注解的 CSV 分隔符冲突（<code>Dict[string, int]</code> 会被裂成两段）</td>
+</tr>
+<tr>
+<td>非字面量实参（<code>createXxx(o)</code>）放行</td>
+<td>沿用 5.3 的口径，静态不可知</td>
+</tr>
+<tr>
+<td>自定义 struct / face 类型暂不支持</td>
+<td>opts 里没有这种值；要支持得先解决"跨模块名字比对"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="147">14.7 验收清单</h3>
+<ul>
+<li>[ ] <code>@optkeys(["visible:bool"])</code> + <code>createXxx({visible: "yes"})</code> ⇒ 编译期警告（期望 bool，实际 string）</li>
+<li>[ ] <code>{visible: flag}</code>（flag 是 string 变量）⇒ 同样报</li>
+<li>[ ] <code>{w: 30}</code> 对着 <code>"w:float"</code> ⇒ <strong>不报</strong>（int→float 合法）</li>
+<li>[ ] <code>{padding: 0}</code> 对着 <code>"padding:int"</code> ⇒ 不报；<code>{padding: 0.5}</code> 对着 <code>"padding:int"</code> ⇒ 报</li>
+<li>[ ] 不写类型的键（<code>"align"</code>）⇒ 传什么都不报</li>
+<li>[ ] <code>"headers:Array"</code> + <code>{headers: ["a"]}</code> ⇒ 不报；<code>{headers: "a,b"}</code> ⇒ 报</li>
+<li>[ ] 拼错类型词（<code>"visible:bolean"</code>）⇒ 不报错、退化成不查</li>
+<li>[ ] <code>--check</code> 全量套件零误报；Aria（5000+ 行、大量控件调用）零误报</li>
+<li>[ ] 断言用例 <code>assert/test_anno_optkeys_type.leno</code></li>
+</ul>
+<h3 id="148">14.8 实现检查清单（防漏）</h3>
+<ol>
+<li>类型词解析：<code>anno_type_of_word()</code>（裸词 → 枚举）</li>
+<li>声明解析：<code>anno_key_type_of("visible:bool")</code>、<code>anno_csv_type(csv, key)</code>（CSV 项不以 <code>\0</code> 结尾，不能直接复用前者）</li>
+<li><strong>键名比较要忽略冒号</strong>：<code>anno_csv_has</code> / <code>anno_csv_nearest</code> / <code>anno_has_key</code> / <code>anno_nearest</code>
+   四处都要改——只改一处会出现"键名拼错时提示 <code>align:int</code>"这种怪现象 ✗</li>
+<li>值检查接入<strong>两条路径</strong>：同模块（<code>AnnoOptKeys</code> 表）与跨模块（CSV 串）</li>
+<li><code>annos_check_call_def</code> 加 <code>Semantic*</code>，两个调用点同步</li>
+<li><code>type_free()</code> 不能漏（<code>infer_expr_type</code> 返回新分配）</li>
+<li>断言用例 + 全量 <code>--check</code> + Aria 零误报</li>
+</ol>
+<hr>
+<h2 id="_5">附：与现有方案的关系</h2>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>现状</th>
+<th>本方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>检查时机</td>
+<td>运行到那一行</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td>打包后可见</td>
+<td>✗（无控制台）</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>运行时开销</td>
+<td>每次建控件遍历 opts</td>
+<td>零（可删整套运行时对账）</td>
+</tr>
+<tr>
+<td>能否进 CI</td>
+<td>✗</td>
+<td>✓（<code>--check --strict</code>）</td>
+</tr>
+<tr>
+<td>声明维护</td>
+<td>手写 <code>_opts_keys()</code> 数组</td>
+<td>手写 <code>@optkeys</code>（同一份工作量，但有对账用例兜着）</td>
+</tr>
+<tr>
+<td>编译器是否知道框架</td>
+<td>——</td>
+<td><strong>不知道</strong>（只认注解名）</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="语言与框架问题_Aria实战_2026-10-31.html">← 上一篇</a><a href="cstruct_packed_align_设计文档.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

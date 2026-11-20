@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>threads 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_threads_api.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">模块函数</a></li><ul class="lv3"><li><a href="#threadsstartfunc-args">threads.start(func, ...args)</a></li><li><a href="#threadschannelcapacity">threads.channel(capacity)</a></li><li><a href="#threadssleepms">threads.sleep(ms)</a></li><li><a href="#threadscurrent_id">threads.current_id()</a></li><li><a href="#threadsjoin_allarraythread">threads.join_all(Array[Thread])</a></li><li><a href="#threadsparallel_forn-f">threads.parallel_for(n, f)</a></li><li><a href="#threadsmaparr-f">threads.map(arr, f)</a></li><li><a href="#threadslocal_getkey-default-threadslocal_haskey-threadslocal_setkey-value">threads.local_get(key, default) / threads.local_has(key) / threads.local_set(key, value)</a></li></ul><li><a href="#thread">Thread 对象方法</a></li><ul class="lv3"><li><a href="#threadjoin">thread.join()</a></li><li><a href="#threadjoin_fortimeout_ms">thread.join_for(timeout_ms)</a></li><li><a href="#threaderror">thread.error()</a></li><li><a href="#threadstate">thread.state()</a></li></ul><li><a href="#channel">Channel 对象方法</a></li><ul class="lv3"><li><a href="#channelsendvalue">channel.send(value)</a></li><li><a href="#2026-10-09-2026-10-12">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</a></li><li><a href="#channelsend_forvalue-timeout_ms">channel.send_for(value, timeout_ms)</a></li><li><a href="#threadsselectarraychannel-timeout_ms-0">threads.select(Array[Channel], timeout_ms = 0)</a></li><li><a href="#channelreceive">channel.receive()</a></li><li><a href="#channelt-2026-10-12">Channel[T] —— 通道的元素类型（★ 2026-10-12 起）</a></li><li><a href="#channeltry_sendvalue">channel.try_send(value)</a></li><li><a href="#channeltry_receive">channel.try_receive()</a></li><li><a href="#channelclose">channel.close()</a></li><li><a href="#channelis_closed">channel.is_closed()</a></li><li><a href="#channellen">channel.len()</a></li></ul><li><a href="#_2">完整示例</a></li><ul class="lv3"><li><a href="#channel_1">闭包捕获 + Channel 通信</a></li><li><a href="#-">生产者-消费者模式</a></li></ul><li><a href="#_3">注意事项</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="threads">threads 模块</h1>
+<p>线程模块提供多线程编程支持，包括线程创建、闭包捕获和通道（Channel）通信。</p>
+<h2 id="_1">模块函数</h2>
+<h3 id="threadsstartfunc-args"><code>threads.start(func, ...args)</code></h3>
+<p>创建并启动一个新线程，执行指定的函数。</p>
+<p><strong>参数:</strong>
+- <code>func</code>: 要执行的函数（闭包），支持捕获外部变量
+- <code>...args</code>: 传递给函数的参数（可选）</p>
+<p><strong>返回值:</strong>
+- 返回 Thread 对象</p>
+<blockquote>
+<p>⚠ <strong>入口函数的三条规则</strong>（2026-10-07 实测矩阵 / <strong>2026-10-12 第③条翻案</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>入口形态</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 本文件的<strong>具名全局函数</strong> <code>threads.start(named, 21)</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>② <strong>闭包</strong>（无参 / 有参、有捕获 / 无捕获，四种形态）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>③ <strong>别的 <code>.leno</code> 模块里的函数</strong> <code>threads.start(mod.fetch, …)</code></td>
+<td>✅ <strong>2026-10-12 起可用</strong>（TH2）</td>
+</tr>
+</tbody>
+</table>
+<p>③ 原先被硬拦，根因只有一处：协程首帧漏设 <code>frame-&gt;module</code>（<code>src/vm/vm.c</code> 的
+<code>vm_run_coroutine_with_vm</code>），而模块字节码全走 <code>frame-&gt;module</code> 寻址 ⇒ 进函数体后第一条
+模块符号指令就报「不在模块上下文中」（症状是 <code>join()</code> 只给 <code>Thread error: unknown error</code>）。
+补上后模块函数直接可用 ✓ ⇒ <strong>库可以自己封装并发</strong>（模块内 <code>threads.start(自己的函数)</code> ✓）。
+⚠ 唯一仍然会拦的情况：该模块<strong>此刻还没初始化</strong>（不在入口脚本的 import 链上 ⇒ 模块的 <code>var</code>
+全是空的）⇒ 报「入口函数所属的模块尚未初始化」。详见 <code>docs/threads使用指南.md</code>
+的「线程入口：模块函数也能用」与 <code>docs/线程并发能力修复追踪.md</code> 的 TH2。</p>
+<p>⚠ <strong>实参个数会被校验</strong>（2026-10-07 起）：<code>threads.start(f, a, b)</code> 的实参个数必须<strong>恰好</strong>等于
+<code>f</code> 的形参个数 —— 线程入口由 VM 直接调用，<strong>默认参数不会被补齐</strong>。少传 / 多传会在
+<code>threads.start(...)</code> 这一行直接报 <code>入口函数期望 N 个参数，实际传了 M 个</code>。
+（此前少传只会在 <code>join()</code> 时给出「非字符串异常…常见于<strong>进入函数体之前</strong>就失败」这种
+把人引向"模块没加载"的误导文案；在 GUI 的定时器回调里还会被 try/catch 吞成<strong>静默失败</strong>。）</p>
+</blockquote>
+<p><strong>闭包捕获:</strong>
+- 支持捕获外部变量，捕获的值会深拷贝到子线程
+- 每个线程拥有独立的变量副本，互不影响
+- 修改捕获变量不会影响主线程或其他线程</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">import threads
+
+// 顶层函数
+func worker(var x, var y) {
+    return x + y
+}
+
+// 闭包捕获
+var name = &quot;Leno&quot;
+var t1 = threads.start(func(){
+    print(&quot;hello &quot; + name)  // 捕获外部变量
+})
+
+// 闭包捕获 + 参数传递
+var prefix = &quot;result&quot;
+var t2 = threads.start(func(int n){
+    return prefix + &quot;_&quot; + n
+}, 42)
+
+main() {
+    t1.join()
+    var r = t2.join()
+    print(r)  // 输出: result_42
+}
+</code></pre>
+<h3 id="threadschannelcapacity"><code>threads.channel(capacity)</code></h3>
+<p>创建一个通道用于线程间通信。</p>
+<p><strong>参数:</strong>
+- <code>capacity</code>: 通道缓冲区大小（0 表示无缓冲）</p>
+<p><strong>返回值:</strong>
+- 返回 Channel 对象</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">import threads
+
+func producer(var ch) {
+    ch.send(&quot;hello&quot;)
+    ch.close()
+}
+
+main() {
+    var ch = threads.channel(10)
+    var t = threads.start(producer, ch)
+    var msg = ch.receive()
+    print(msg)  // 输出: hello
+    t.join()
+}
+</code></pre>
+<h3 id="threadssleepms"><code>threads.sleep(ms)</code></h3>
+<p>当前线程休眠指定毫秒数。</p>
+<p><strong>参数:</strong>
+- <code>ms</code>: 休眠时间（毫秒），必须为整数</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">import threads
+
+main() {
+    print(&quot;start&quot;)
+    threads.sleep(1000)
+    print(&quot;1 second later&quot;)
+}
+</code></pre>
+<h3 id="threadscurrent_id"><code>threads.current_id()</code></h3>
+<p>当前 OS 线程 id（<code>int</code>）。<strong>只用于诊断/日志</strong>（分清是哪条 worker 打的行）——OS 会复用线程 id，
+不要拿它做业务判断。TH11（2026-10-20）。</p>
+<pre><code class="language-leno">print(&quot;[worker &quot; + _str(threads.current_id()) + &quot;] start&quot;)
+</code></pre>
+<h3 id="threadsjoin_allarraythread"><code>threads.join_all(Array[Thread])</code></h3>
+<p>等一组线程结束（“WaitGroup”的等价物 —— <strong>没有引入新对象类型</strong>，见 TH3）。</p>
+<p><strong>参数:</strong> 线程数组（非 <code>Thread</code> 元素会被跳过）
+<strong>返回值:</strong> <code>int</code> —— 真正等完的线程数</p>
+<blockquote>
+<p>某个线程出错时会<strong>把剩下的也等完</strong>，再让异常浮出来（不会留下没人 join 的活线程 ✓）。</p>
+</blockquote>
+<h3 id="threadsparallel_forn-f"><code>threads.parallel_for(n, f)</code></h3>
+<p>分 n 份并行：<code>f(index)</code> 在 n 个线程上各跑一次（<code>index</code> = <code>0..n-1</code>），等全部结束。</p>
+<p><strong>参数:</strong> <code>n</code>（份数，<code>&lt;= 0</code> ⇒ 空操作）、<code>f</code>（必须是 <code>func(int):…</code>，<strong>恰好一个形参</strong>）
+<strong>返回值:</strong> <code>int</code> —— 真正起来的线程数</p>
+<pre><code class="language-leno">import threads
+
+main() {
+    var ch = threads.channel(8)
+    // 回调是闭包 ⇒ 可以用捕获的 channel 把结果带回来
+    threads.parallel_for(4, func(int i) { ch.send(i * 10) })
+    var sum = 0
+    for 0 : 3 to var k { sum = sum + _int(ch.receive()) }
+    print(sum)   // 60
+}
+</code></pre>
+<blockquote>
+<p>⚠ <code>n</code> 不会自动按核数分（说几份就几份）；回调形参个数是<strong>硬校验</strong>（默认参数不补齐）。</p>
+</blockquote>
+<h3 id="threadsmaparr-f"><code>threads.map(arr, f)</code></h3>
+<p>并行 map：每个元素起一个线程跑 <code>f(item, index)</code>，结果<strong>按输入顺序</strong>收回。</p>
+<p><strong>参数:</strong> <code>arr</code>（<code>Array</code>）、<code>f</code>（必须是 <code>func(item, index):…</code>，<strong>恰好两个形参</strong> —— 与 <code>arrays.map</code> 同口径）
+<strong>返回值:</strong> <code>Array[回调返回类型]</code>（由原生返回规格推断 ✓ 可直接当 <code>Array[int]</code> 用）</p>
+<pre><code class="language-leno">Array[int] doubled = threads.map([1, 2, 3, 4], func(int x, int idx): int {
+    return x * 10 + idx
+})
+print(doubled[3])   // 43（4*10+3）
+</code></pre>
+<blockquote>
+<p>⚠ <strong>线程数 = 元素数</strong>（每个元素一个线程）⇒ 元素多时线程开销会盖过收益；重活请用
+<code>parallel_for</code> 自己分块 ✓。元素可以是 <code>struct</code>（走 TH1 的深克隆 ✓）。</p>
+</blockquote>
+<h3 id="threadslocal_getkey-default-threadslocal_haskey-threadslocal_setkey-value"><code>threads.local_get(key, default)</code> / <code>threads.local_has(key)</code> / <code>threads.local_set(key, value)</code></h3>
+<p><strong>线程局部存储</strong>（★ 2026-10-12 起）：按<strong>线程</strong>隔离的键值存储，专门用来放"每个线程一份"的状态
+（模块级可变 <code>var</code> 是所有线程<strong>共享</strong>的 ⇒ 并发写就是数据竞争；这三个函数给了显式的替代手段）。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>行为</th>
+<th>返回</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>local_get(key, default)</code></td>
+<td>本线程存过 <code>key</code> ⇒ 给它；没存过 ⇒ 给 <code>default</code>（<strong>不写</strong>）</td>
+<td><code>any</code></td>
+</tr>
+<tr>
+<td><code>local_has(key)</code></td>
+<td>本线程是否存过 <code>key</code>（"存过 null" 与 "没存过" 是两回事 ✓）</td>
+<td><code>bool</code></td>
+</tr>
+<tr>
+<td><code>local_set(key, value)</code></td>
+<td>只写<strong>本线程</strong>那份（其它线程读不到）</td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">main() {
+    threads.local_set(&quot;n&quot;, 1)
+    print(_int(threads.local_get(&quot;n&quot;, 0)))     // 1
+    print(threads.local_has(&quot;nope&quot;))           // false
+    print(_int(threads.local_get(&quot;nope&quot;, 42))) // 42（默认值）
+}
+</code></pre>
+<p><strong>实现口径</strong>：存储挂在 <strong>VM 结构体</strong>上（<code>vm-&gt;thread_local_store</code>，懒创建的 dict）——
+子线程用的是自己的 VM ⇒ <strong>天然每线程一份</strong> ✓ 不需要 TLS、也不需要锁 ✓。
+值不需要跨线程克隆（只在<strong>同一个线程</strong>里存取）⇒ 放 struct 实例也行 ✓。
+<code>key</code> 必须是 <code>string</code>；值类型不限（<code>local_get</code> 的返回是 <code>any</code> —— 存进去的与默认值可能不同型）。</p>
+<h2 id="thread">Thread 对象方法</h2>
+<h3 id="threadjoin"><code>thread.join()</code></h3>
+<p>等待线程执行完成，并返回线程函数的返回值。</p>
+<p><strong>返回值:</strong>
+- 线程函数的返回值</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var t = threads.start(func() {
+    return 42
+})
+var result = t.join()
+print(result)  // 输出: 42
+</code></pre>
+<h3 id="threadjoin_fortimeout_ms"><code>thread.join_for(timeout_ms)</code></h3>
+<p><strong>带超时的等待</strong>（TH9，2026-10-20）。<code>join()</code> 是无限等；线程卡在阻塞 IO（<code>recv</code> / 文件 / FFI 调用）时
+主线程只能干等 ⇒ 用这个给等待设上限。</p>
+<p><strong>参数:</strong> <code>timeout_ms</code>（<code>int</code>；<strong>负数 = 无限等</strong>，等价 <code>join()</code> 但只给 bool）
+<strong>返回值:</strong> <code>bool</code>
+- <code>true</code> = 线程已结束，并且已收尾（result 已克隆、子线程堆已释放；之后 <code>join()</code> 仍能拿到返回值）
+- <code>false</code> = <strong>超时</strong>，线程仍在跑、状态不变（之后还能再 <code>join_for()</code> / <code>join()</code> 等）</p>
+<blockquote>
+<p>⚠ 线程出错时与 <code>join()</code> 一样<strong>抛异常</strong>（<code>"Thread error: …"</code>）—— 布尔值表示不了"结束了但失败了"。
+⚠ 超时是"最多等约 <code>timeout_ms</code>"：被唤醒但状态还没变（spurious wakeup）时会重新计一次。
+用例：<code>assert\test_threads_join_for.leno</code>。</p>
+</blockquote>
+<pre><code class="language-leno">var t = threads.start(worker)          // worker 里 sleep(300)
+print(t.join_for(50))                  // false —— 还在跑
+print(t.state())                        // running
+print(t.join_for(5000))                 // true
+print(t.join())                         // 线程的返回值（收尾只做一次）
+</code></pre>
+<h3 id="threaderror"><code>thread.error()</code></h3>
+<p>取线程的错误信息（<code>string</code>；没出错 ⇒ 空串）。TH11（2026-10-20）。</p>
+<p><strong>为什么需要</strong>：fire-and-forget 的线程抛异常时，错误只存在线程对象里，<strong>没人 <code>join</code> 就永远看不到</strong>
+（症状是"任务静默没结果"）。有了它可以先看 <code>error()</code> 再决定要不要 <code>join</code>。</p>
+<pre><code class="language-leno">var t = threads.start(work)
+if t.state() == &quot;error&quot; {
+    print(&quot;线程失败：&quot; + t.error())     // 不必 join（join 会抛异常）
+} else {
+    t.join()
+}
+</code></pre>
+<blockquote>
+<p><code>throw "xxx"</code> 的错误文案现在能正确透传（旧版会报成「非字符串异常（对象类型 2）」——
+因为 <code>throw</code> 的异常值其实是 <code>{msg, line, file, stack}</code> 的 Dict，见 TH11）。</p>
+</blockquote>
+<h3 id="threadstate"><code>thread.state()</code></h3>
+<p>获取线程当前状态。</p>
+<p><strong>返回值:</strong>
+- <code>"running"</code>: 线程正在运行
+- <code>"done"</code>: 线程已完成
+- <code>"error"</code>: 线程发生错误</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var t = threads.start(func() {
+    threads.sleep(100)
+})
+print(t.state())  // 输出: running
+t.join()
+print(t.state())  // 输出: done
+</code></pre>
+<h2 id="channel">Channel 对象方法</h2>
+<h3 id="channelsendvalue"><code>channel.send(value)</code></h3>
+<p>向通道发送一个值。</p>
+<p><strong>参数:</strong>
+- <code>value</code>: 要发送的值（可以是任意类型）</p>
+<p><strong>注意:</strong>
+- 如果通道已关闭，会报错
+- 如果通道缓冲区已满，会阻塞等待</p>
+<h3 id="2026-10-09-2026-10-12">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</h3>
+<p>上面的"可以是任意类型"要打折扣 ⚠ <strong>子线程有自己的 GC 堆</strong>，跨线程的值必须能被
+安全克隆，否则会出现堆损坏 / 静默错误：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>能否跨线程</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code> / <code>float</code> / <code>bool</code> / <code>string</code></td>
+<td>✅</td>
+<td>直接克隆</td>
+</tr>
+<tr>
+<td><code>Array[T]</code> / <code>Dict[K,V]</code></td>
+<td>✅</td>
+<td>逐元素克隆（<strong>键也要克隆</strong>，见 <code>object_thread.c</code> 的历史坑）</td>
+</tr>
+<tr>
+<td><strong>struct 实例</strong></td>
+<td>✅</td>
+<td><strong>2026-10-12 起</strong>：深克隆 + 接收侧按定义重建（含嵌套 struct、face 声明、泛型实参）。见下文</td>
+</tr>
+<tr>
+<td><strong>闭包 / 函数</strong></td>
+<td>✅</td>
+<td><strong>2026-10-20 起（TH10）</strong>：<code>function</code>（只读字节码）共享，<code>upvalue</code> 递归克隆成 closed upvalue ⇒ 子线程调用时拿到的是<strong>捕获值的副本</strong>。环形捕获（闭包↔容器）超 64 层报错</td>
+</tr>
+<tr>
+<td><strong>cstruct 实例</strong>（以及字段里装了 cstruct / <code>Ptr</code> 的 struct）</td>
+<td>❌</td>
+<td>裸 C 内存 / 假句柄 ⇒ 报「不能跨线程传递此类型（来自 结构体.字段）」，<strong>编译期</strong>先拦静态可判定的 cstruct</td>
+</tr>
+<tr>
+<td><strong>多返回值 tuple</strong></td>
+<td>⚠ 能 send，但<strong>收回来用不了</strong></td>
+<td>见下</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>struct 的语义是深拷贝</strong>：接收线程拿到的是<strong>独立副本</strong>，改它不影响发送方
+（与 <code>Array</code> / <code>Dict</code> 同口径 ✓）。所以 <code>threads.start(work, p)</code> 里子线程改 <code>p</code> 的字段，
+主线程看不见 —— 想把结果带回来请用 <code>join()</code> 的返回值或 <code>Channel</code> ✓
+（改动与判据见 <code>docs/线程并发能力修复追踪.md</code> 的 TH1 ✓，用例 <code>assert\test_channel_struct.leno</code>）。</p>
+<p>⚠ <strong>自引用（环形）struct 会被拒</strong>：克隆上限 64 层，超限报「嵌套层数超过 64」而不是挂死 ✓</p>
+<p><strong>为什么 cstruct 不行</strong>：cstruct 是<strong>裸 C 内存</strong>（<code>Ptr</code> / <code>ffi</code> 句柄 / SDL 纹理 / socket fd /
+文件句柄），拷出来是<strong>假句柄</strong>（比当场报错难查一百倍）；子线程分配的对象还挂在子线程的堆上，
+子线程退出后该堆被遗弃，主线程 GC 若扫到它就会访问已释放内存。要跨线程就传<strong>纯数据</strong>
+（标量 / <code>string</code> / <code>Array</code> / <code>Dict</code> / <strong>struct</strong> / <strong>闭包</strong>），在接收方重建 cstruct ——
+这也是很多框架约定"对外一律传字符串数组行"的原因 ✓</p>
+<p>⚠ <strong>多返回值（tuple）跨线程的两个坑</strong>（实测）：
+① <code>ch.send(多返回值函数())</code> <strong>能发出去</strong>（不报错），但接收端拿到的静态类型是 <code>any</code>
+  ⇒ <code>var[int,int](a,b) = ch.try_receive()</code> 被编译器拒绝：
+  「解构声明槽位 0 类型 int 与数组元素类型 any 不兼容」；
+② 想 <code>as Array[int]</code> 再解构也不行 —— <strong>tuple 的运行期表示不是 Array</strong>，
+  <code>as</code> 之后索引会抛「下标访问: 对象不支持索引」。
+⇒ <strong>跨线程要传结构化数据，用 <code>Array[T]</code>（元素类型一致的那种）</strong> ✓</p>
+</blockquote>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(10)
+ch.send(&quot;hello&quot;)
+ch.send(42)
+ch.send([1, 2, 3])
+</code></pre>
+<h3 id="channelsend_forvalue-timeout_ms"><code>channel.send_for(value, timeout_ms)</code></h3>
+<p>带超时的发送（TH13，2026-10-20）：通道满时最多等 <code>timeout_ms</code>，超时<strong>放弃发送</strong>。</p>
+<p><strong>返回值:</strong> <code>bool</code> —— <code>true</code> = 已发送；<code>false</code> = 超时或通道已关闭（<strong>值没写进去</strong>）
+<strong>负数</strong> = 无限等（等价 <code>send</code>）</p>
+<pre><code class="language-leno">var ch = threads.channel(1)       // 容量 1
+ch.send(&quot;a&quot;)
+print(ch.send_for(&quot;b&quot;, 50))        // false —— 满了，等了 50ms 后放弃
+print(ch.receive())                // a（&quot;b&quot; 没进通道）
+</code></pre>
+<blockquote>
+<p>用途：<code>send</code> 满了会<strong>无限阻塞</strong>，一个忘记取值的消费者就能把生产者永久卡死。
+用例：<code>assert\test_channel_send_for.leno</code>。</p>
+</blockquote>
+<h3 id="threadsselectarraychannel-timeout_ms-0"><code>threads.select(Array[Channel], timeout_ms = 0)</code></h3>
+<p>多路等待（TH13）：同时等多个通道，返回<strong>第一个有数据的</strong>那个。</p>
+<p><strong>返回值:</strong> <code>Dict|null</code> —— <code>{index: int, value: any}</code>；没有数据（超时）⇒ <code>null</code>
+<strong>timeout_ms:</strong> <code>0</code>（默认）= 只查一次；<code>&lt;0</code> = 无限等；<code>&gt;0</code> = 最多等这么多毫秒</p>
+<pre><code class="language-leno">var a = threads.channel(1)
+var b = threads.channel(1)
+b.send(42)
+var r = threads.select([a, b], 0) as Dict
+print(r[&quot;index&quot;])   // 1
+print(r[&quot;value&quot;])   // 42
+</code></pre>
+<blockquote>
+<p>实现是 <strong>1ms 粒度轮询</strong>（平台上没有"等待多个 channel"的现成原语）⇒ 延迟上限约 1ms。
+<strong>值是 <code>null</code> 也能选中</strong>（与"通道为空"区分，<code>try_receive</code> 做不到这一点）。
+用例：<code>assert\test_threads_select.leno</code>。</p>
+</blockquote>
+<h3 id="channelreceive"><code>channel.receive()</code></h3>
+<p>从通道接收一个值。</p>
+<p><strong>返回值:</strong>
+- 接收到的值 —— <strong>静态类型 = 接收者的元素类型</strong> ✓（★ 2026-10-12 起，见下面的 <code>Channel[T]</code>）</p>
+<p><strong>注意:</strong>
+- 如果通道为空且未关闭，会阻塞等待
+- 如果通道已关闭且为空，返回 <code>null</code></p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(10)
+ch.send(&quot;hello&quot;)
+var msg = ch.receive()
+print(msg)  // 输出: hello
+</code></pre>
+<h3 id="channelt-2026-10-12"><code>Channel[T]</code> —— 通道的元素类型（★ 2026-10-12 起）</h3>
+<p>写 <code>Channel[T]</code> 就把"元素类型"告诉编译器，<code>receive()</code> 直接得到 T，不用 <code>_int(...)</code> / 收窄：</p>
+<pre><code class="language-leno">Channel[int] ch = threads.channel(4)     // 工厂返回裸 Channel ⇒ 靠标注拿到元素类型
+ch.send(7)
+int v = ch.receive()                     // ✓ 直接是 int
+
+Channel[Pt] pc = threads.channel(4)      // Pt 是 struct
+Pt got = pc.receive()                    // ✓ 直接是 Pt（跨线程的 struct 是深拷贝）
+</code></pre>
+<p><strong>规则</strong>（与 <code>Ptr[T]</code> / <code>Thread[T]</code> 同口径 ✓）：</p>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Channel[int]</code> 的 <code>receive()</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td>裸 <code>Channel</code> 的 <code>receive()</code></td>
+<td><code>any</code>（回落 —— 仍可用，但要 <code>_int(...)</code> / 收窄）</td>
+</tr>
+<tr>
+<td><code>try_receive()</code></td>
+<td>恒为 <code>any</code> ✓（<strong>有意</strong>：空通道给 <code>null</code>，说它是 <code>T</code> 就是撒谎）</td>
+</tr>
+<tr>
+<td>裸 <code>Channel</code> 赋给 <code>Channel[int]</code></td>
+<td>✅ 允许（元素未知的一侧放行）</td>
+</tr>
+<tr>
+<td><code>Channel[int]</code> 传给形参 <code>Channel</code></td>
+<td>✅ 允许（同上）</td>
+</tr>
+<tr>
+<td><code>Channel[int]</code> 赋给 <code>Channel[string]</code></td>
+<td>❌ 报「期望类型: Channel[string]，实际类型: Channel[int]」</td>
+</tr>
+<tr>
+<td><code>threads.channel(n)</code></td>
+<td>返回<strong>裸 <code>Channel</code></strong>（工厂推不出 T）⇒ 要精确就写标注</td>
+</tr>
+</tbody>
+</table>
+<p>顺带：<code>Thread[T]</code> 标注现在也写得出来了 ✓（<code>Thread[int] t = threads.start(f, 1)</code>）。</p>
+<h3 id="channeltry_sendvalue"><code>channel.try_send(value)</code></h3>
+<p>非阻塞地向通道发送一个值。</p>
+<p><strong>参数:</strong>
+- <code>value</code>: 要发送的值</p>
+<p><strong>返回值:</strong>
+- <code>true</code>: 发送成功
+- <code>false</code>: 发送失败（通道已满或已关闭）</p>
+<p><strong>注意:</strong>
+- 与 <code>send()</code> 不同，<code>try_send()</code> 不会阻塞，也不会在通道关闭时抛异常</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(2)
+assert_eq(ch.try_send(&quot;A&quot;), true)
+assert_eq(ch.try_send(&quot;B&quot;), true)
+assert_eq(ch.try_send(&quot;C&quot;), false)  // 缓冲区已满
+ch.close()
+assert_eq(ch.try_send(&quot;D&quot;), false)  // 已关闭
+</code></pre>
+<h3 id="channeltry_receive"><code>channel.try_receive()</code></h3>
+<p>非阻塞地从通道接收一个值。</p>
+<p><strong>返回值:</strong>
+- 接收到的值（通道非空时）
+- <code>null</code>（通道为空时）</p>
+<p><strong>注意:</strong>
+- 与 <code>receive()</code> 不同，<code>try_receive()</code> 不会阻塞等待
+- 通道关闭且为空时同样返回 <code>null</code></p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(2)
+ch.send(&quot;hello&quot;)
+assert_eq(ch.try_receive(), &quot;hello&quot;)
+assert_eq(ch.try_receive(), null)   // 缓冲区已空
+</code></pre>
+<h3 id="channelclose"><code>channel.close()</code></h3>
+<p>关闭通道。</p>
+<p><strong>注意:</strong>
+- 关闭后不能再发送数据
+- 已缓冲的数据仍然可以接收</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(10)
+ch.send(&quot;data&quot;)
+ch.close()
+// ch.send(&quot;more&quot;)  // 错误：不能向已关闭的通道发送
+</code></pre>
+<h3 id="channelis_closed"><code>channel.is_closed()</code></h3>
+<p>检查通道是否已关闭。</p>
+<p><strong>返回值:</strong>
+- <code>true</code>: 通道已关闭
+- <code>false</code>: 通道未关闭</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(5)
+print(ch.is_closed())  // 输出: false
+ch.close()
+print(ch.is_closed())  // 输出: true
+</code></pre>
+<h3 id="channellen"><code>channel.len()</code></h3>
+<p>获取通道缓冲区中当前的消息数量（线程安全）。</p>
+<p><strong>返回值:</strong>
+- 缓冲区中的消息数量（整数）</p>
+<p><strong>示例:</strong></p>
+<pre><code class="language-leno">var ch = threads.channel(10)
+print(ch.len())  // 输出: 0
+ch.send(1)
+ch.send(2)
+print(ch.len())  // 输出: 2
+ch.receive()
+print(ch.len())  // 输出: 1
+</code></pre>
+<h2 id="_2">完整示例</h2>
+<h3 id="channel_1">闭包捕获 + Channel 通信</h3>
+<pre><code class="language-leno">import threads
+
+main() {
+    var ch = threads.channel(10)
+    var msg = &quot;hello&quot;
+
+    var producer = threads.start(func(){
+        for 5 to i {
+            ch.send(msg + &quot;_&quot; + i)
+        }
+        ch.close()
+    })
+
+    var consumer = threads.start(func(){
+        while true {
+            var val = ch.receive()
+            if val == null { break }
+            print(&quot;received: &quot; + val)
+        }
+    })
+
+    producer.join()
+    consumer.join()
+}
+</code></pre>
+<h3 id="-">生产者-消费者模式</h3>
+<pre><code class="language-leno">import threads
+
+func producer(var ch) {
+    for 5 to var i {
+        ch.send(i * i)
+    }
+    ch.close()
+}
+
+func consumer(var ch) {
+    while true {
+        var msg = ch.receive()
+        if msg == null { break }
+        print(&quot;收到: &quot; + msg)
+    }
+}
+
+main() {
+    var ch = threads.channel(10)
+    var t1 = threads.start(producer, ch)
+    var t2 = threads.start(consumer, ch)
+    t1.join()
+    t2.join()
+}
+</code></pre>
+<h2 id="_3">注意事项</h2>
+<ol>
+<li>
+<p><strong>闭包捕获变量是深拷贝</strong>
+   - 捕获的变量值会深拷贝到子线程，各线程拥有独立副本
+   - 修改捕获变量不会影响主线程或其他线程
+   <code>leno
+   var x = 10
+   var t = threads.start(func(){
+       print(x)  // ✅ 输出: 10（深拷贝）
+   })</code></p>
+</li>
+<li>
+<p><strong>线程安全</strong>
+   - 多个线程不能同时访问同一个可变对象
+   - 使用 Channel 进行线程间通信</p>
+</li>
+<li>
+<p><strong>错误处理</strong>
+   - 线程中的异常不会传播到主线程
+   - 使用 <code>thread.state()</code> 检查线程是否出错</p>
+</li>
+<li>
+<p><strong>print 是线程安全的</strong>
+   - 单次 <code>print()</code> 调用是原子的，不会与其他线程的输出交错
+   - 但多次 <code>print()</code> 调用之间可能被其他线程插入</p>
+</li>
+<li>
+<p><strong>避免忙等待</strong>
+   - 使用 <code>ch.receive()</code>（阻塞）而非 <code>ch.try_receive()</code> + 循环轮询
+   - <code>is_closed()</code> + <code>len()</code> + <code>try_receive()</code> 的组合会产生忙等待，浪费 CPU
+   - 推荐模式：<code>while true { var val = ch.receive(); if val == null { break } }</code></p>
+</li>
+<li>
+<p><strong>子线程异常与 join() 行为</strong>
+   - 子线程抛出异常时，<code>t.state()</code> 返回 <code>"error"</code>
+   - 调用 <code>t.join()</code> 会在主线程抛出异常，格式为 <code>"Thread error: &lt;子线程错误信息&gt;"</code>
+   - 可用 <code>try-catch</code> 包裹 <code>join()</code>，或先检查 <code>t.state()</code> 再 join
+   - <strong>不想无限等</strong>就用 <code>t.join_for(ms)</code>（<code>false</code> = 超时，线程继续跑）</p>
+</li>
+<li>
+<p><strong>threads 与 async 不应混用</strong>
+   - <code>threads.start()</code> 是 OS 线程 + 隔离 VM，真正并行
+   - <code>async func</code> 是协程 + 事件循环，协作式调度
+   - 不要在子线程中使用 <code>async</code>/<code>await</code>，也不要在 <code>async</code> 函数中调用 <code>threads.start()</code>
+   - CPU 并行用 threads，I/O 并发用 async</p>
+</li>
+<li>
+<p><strong>type() 返回运行时值的类型</strong>
+   - <code>type()</code> 反映运行时实际值的类型，而非变量声明类型
+   - <code>int? a = null</code> 时 <code>type(a)</code> 返回 <code>"null"</code>，不是 <code>"int?"</code>
+   - BigInt 和普通 int 的 <code>type()</code> 都返回 <code>"int"</code></p>
+</li>
+</ol></main>
+</div>
+<nav class="pager"><a href="module_cstructs.html">← 上一篇</a><a href="module_web.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

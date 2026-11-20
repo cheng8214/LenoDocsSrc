@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cstruct packed / align(N) 功能设计文档 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="cstruct_packed_align_设计文档.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 动机</a></li><ul class="lv3"><li><a href="#_1">当前状态</a></li><li><a href="#_2">问题</a></li></ul><li><a href="#2">2. 语法设计</a></li><ul class="lv3"><li><a href="#21-packed-padding">2.1 packed — 取消所有 padding</a></li><li><a href="#22-alignn">2.2 align(N) — 指定结构体对齐</a></li><li><a href="#23">2.3 组合使用</a></li><li><a href="#24">2.4 语法规则</a></li></ul><li><a href="#3">3. 语义分析变更</a></li><ul class="lv3"><li><a href="#31-ast">3.1 AST 扩展</a></li><li><a href="#32">3.2 布局计算逻辑变更</a></li><li><a href="#33">3.3 验证规则</a></li></ul><li><a href="#4">4. 全链路改动清单</a></li><ul class="lv3"><li><a href="#41-lexer">4.1 词法层（Lexer）</a></li><li><a href="#42-parser">4.2 语法层（Parser）</a></li><li><a href="#43-ast">4.3 AST 层</a></li><li><a href="#44">4.4 语义分析</a></li><li><a href="#45">4.5 符号表</a></li><li><a href="#46">4.6 代码生成</a></li><li><a href="#47">4.7 虚拟机</a></li><li><a href="#48">4.8 对象层</a></li><li><a href="#49">4.9 序列化</a></li><li><a href="#410">4.10 运行时方法</a></li><li><a href="#411">4.11 文档</a></li></ul><li><a href="#5">5. 实现优先级</a></li><li><a href="#6">6. 测试计划</a></li><ul class="lv3"><li><a href="#61">6.1 基本功能测试</a></li><li><a href="#62">6.2 嵌套测试</a></li><li><a href="#63-ffi">6.3 FFI 互操作测试</a></li><li><a href="#64">6.4 回归测试</a></li></ul><li><a href="#7">7. 向后兼容性</a></li><li><a href="#8">8. 风险评估</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="cstruct-packed-alignn">cstruct packed / align(N) 功能设计文档</h1>
+<blockquote>
+<p><strong>状态：已实现 ✅</strong> — 全部功能已编码、编译通过、245/245 测试通过</p>
+<p>为 Leno cstruct 引入 <code>packed</code> 和 <code>align(N)</code> 属性，使用户能够精确控制内存布局，
+对齐 C 编译器的 <code>#pragma pack</code> / <code>__attribute__((packed))</code> / <code>alignas</code> 行为。</p>
+</blockquote>
+<hr>
+<h2 id="1">1. 动机</h2>
+<h3 id="_1">当前状态</h3>
+<p>Leno cstruct 当前使用标准 C 对齐规则（<code>visit_ffi.inc:33-77</code>）：</p>
+<ol>
+<li>每个字段按其类型的自然对齐要求向上对齐 <code>current_offset</code></li>
+<li>结构体总大小按最大字段对齐要求向上对齐</li>
+</ol>
+<p>这意味着：</p>
+<pre><code class="language-leno">cstruct Demo {
+    u8  a     // offset 0, size 1
+    // 3 字节 padding
+    i32 b     // offset 4, size 4
+    u8  c     // offset 8, size 1
+    // 3 字节 padding
+}            // total_size = 12, alignment = 4
+</code></pre>
+<h3 id="_2">问题</h3>
+<p>许多 C 库（特别是网络协议、文件格式、Windows API 结构体）使用 <code>#pragma pack(1)</code> 或 <code>__attribute__((packed))</code>：
+- 网络协议头：字段紧挨，无 padding
+- Windows API 中某些结构体使用 <code>#pragma pack(push, 1)</code>
+- 跨平台二进制格式需要精确控制布局</p>
+<p><strong>当前 Leno 无法表达这些布局</strong>，用户只能手动计算偏移并逐字节写入，极易出错。</p>
+<hr>
+<h2 id="2">2. 语法设计</h2>
+<h3 id="21-packed-padding">2.1 <code>packed</code> — 取消所有 padding</h3>
+<pre><code class="language-leno">packed cstruct Demo {
+    u8  a     // offset 0
+    i32 b     // offset 1  (无 padding!)
+    u8  c     // offset 5
+}            // total_size = 6, alignment = 1
+</code></pre>
+<p><code>packed</code> 关键字放在 <code>cstruct</code> 之前，表示：
+- 所有字段按 1 字节对齐（即不对齐）
+- 结构体总对齐为 1
+- 等价于 C 的 <code>#pragma pack(1)</code> 或 <code>__attribute__((packed))</code></p>
+<h3 id="22-alignn">2.2 <code>align(N)</code> — 指定结构体对齐</h3>
+<pre><code class="language-leno">align(16) cstruct CacheLine {
+    i64 data[2]   // offset 0, size 16
+}                // total_size = 16, alignment = 16
+</code></pre>
+<p><code>align(N)</code> 放在 <code>cstruct</code> 之前，N 为正整数（1, 2, 4, 8, 16, 32...），表示：
+- 字段仍按自然对齐排列
+- 结构体总对齐要求 = max(自然对齐, N)
+- 总大小按 max(自然对齐, N) 向上对齐
+- 等价于 C 的 <code>alignas(N)</code> / <code>__declspec(align(N))</code></p>
+<h3 id="23">2.3 组合使用</h3>
+<pre><code class="language-leno">packed align(16) cstruct AlignedPacket {
+    u8  magic   // offset 0
+    u16 length  // offset 1
+    u8  data[]  // offset 3
+}               // total_size = 3, alignment = 16
+                // (packed 使字段紧挨，align(16) 使结构体对齐 16 字节边界)
+</code></pre>
+<p><code>packed align(16)</code> 语法：
+- <code>packed</code> 先生效：所有字段按 1 字节对齐（无 padding）
+- <code>align(16)</code> 后生效：结构体总对齐 = max(1, 16) = 16，总大小按 16 向上对齐</p>
+<h3 id="24">2.4 语法规则</h3>
+<pre><code>cstruct_decl := [packed] [align(NUM)] 'cstruct' IDENT '{' fields '}'
+              | [align(NUM)] [packed] 'cstruct' IDENT '{' fields '}'
+</code></pre>
+<ul>
+<li><code>packed</code> 和 <code>align(N)</code> 都是可选的</li>
+<li>两者顺序可互换</li>
+<li><code>align(N)</code> 的 N 必须是编译期正整数，且为 2 的幂（1, 2, 4, 8, 16, 32...）</li>
+</ul>
+<hr>
+<h2 id="3">3. 语义分析变更</h2>
+<h3 id="31-ast">3.1 AST 扩展</h3>
+<p>在 <code>cstruct_def</code> 结构体中新增两个字段（<code>leno_ast.h</code>）：</p>
+<pre><code class="language-c">struct {
+    // ... 现有字段 ...
+    bool is_packed;       // 是否 packed
+    int explicit_align;   // 显式对齐要求（0 表示未指定）
+} cstruct_def;
+</code></pre>
+<h3 id="32">3.2 布局计算逻辑变更</h3>
+<p>当前逻辑（<code>visit_ffi.inc:38-72</code>）：</p>
+<pre><code>for each field:
+    field_align = c_layout_type_align(field_type)
+    max_alignment = max(max_alignment, field_align)
+    current_offset = align_up(current_offset, field_align)
+    field_offset[i] = current_offset
+    current_offset += field_total_size
+total_size = align_up(current_offset, max_alignment)
+</code></pre>
+<p>新逻辑：</p>
+<pre><code>for each field:
+    if is_packed:
+        field_align = 1
+    else:
+        field_align = c_layout_type_align(field_type)
+
+    // 嵌套 cstruct 的对齐也受 packed 影响
+    if field_type == TYPE_CSTRUCT:
+        nested_align = nested_cstruct.cstruct_alignment
+        if is_packed:
+            field_align = 1
+        else:
+            field_align = nested_align
+
+    max_alignment = max(max_alignment, field_align)
+    current_offset = align_up(current_offset, field_align)
+    field_offset[i] = current_offset
+    current_offset += field_total_size
+
+// 应用显式对齐
+int final_align = max(max_alignment, explicit_align)
+total_size = align_up(current_offset, final_align)
+</code></pre>
+<p><strong>关键点</strong>：
+- <code>packed</code> 使每个字段的对齐变为 1，相当于字段紧挨
+- <code>align(N)</code> 只影响结构体的最终对齐和总大小，不影响字段间 padding
+- 嵌套 cstruct 在 packed 模式下也按 1 对齐</p>
+<h3 id="33">3.3 验证规则</h3>
+<ul>
+<li><code>align(N)</code> 的 N 必须是 2 的幂（N &amp; (N-1) == 0）</li>
+<li><code>align(N)</code> 的 N 范围：1 ≤ N ≤ 64（覆盖所有主流平台）</li>
+<li><code>align(0)</code> 或负值报错</li>
+<li>如果不指定 <code>packed</code> 也不指定 <code>align(N)</code>，行为与当前完全一致（向后兼容）</li>
+</ul>
+<hr>
+<h2 id="4">4. 全链路改动清单</h2>
+<h3 id="41-lexer">4.1 词法层（Lexer）</h3>
+<p><strong>文件</strong>：<code>src/lexer.c</code></p>
+<p>新增两个关键字到关键字表：</p>
+<pre><code class="language-c">{&quot;packed&quot;, TOK_PACKED},
+{&quot;align&quot;,  TOK_ALIGN},
+</code></pre>
+<p><strong>文件</strong>：<code>src/include/leno_types.h</code></p>
+<p>新增两个 token 类型：</p>
+<pre><code class="language-c">TOK_PACKED,     // packed 关键字
+TOK_ALIGN,      // align 关键字
+</code></pre>
+<h3 id="42-parser">4.2 语法层（Parser）</h3>
+<p><strong>文件</strong>：<code>src/parser/parser_func.c</code> — <code>parse_cstruct_stmt()</code></p>
+<p>在消费 <code>cstruct</code> 关键字之前，先检查可选的 <code>packed</code> 和 <code>align(N)</code> 前缀：</p>
+<pre><code>parse_cstruct_stmt():
+    is_packed = false
+    explicit_align = 0
+
+    if current == TOK_PACKED:
+        is_packed = true
+        consume(TOK_PACKED)
+
+    if current == TOK_ALIGN:
+        consume(TOK_ALIGN)
+        consume(TOK_LPAREN)
+        expect(TOK_NUM) → read N
+        consume(TOK_RPAREN)
+        explicit_align = N
+        // 验证 N 是 2 的幂
+
+    if current == TOK_PACKED:  // 处理互换顺序
+        is_packed = true
+        consume(TOK_PACKED)
+
+    // 原有逻辑：consume(TOK_CSTRUCT) ...
+    ast-&gt;u.cstruct_def.is_packed = is_packed
+    ast-&gt;u.cstruct_def.explicit_align = explicit_align
+</code></pre>
+<h3 id="43-ast">4.3 AST 层</h3>
+<p><strong>文件</strong>：<code>src/include/leno_ast.h</code></p>
+<p>在 <code>cstruct_def</code> 结构体中新增：</p>
+<pre><code class="language-c">bool is_packed;         // 是否 packed（取消所有 padding）
+int  explicit_align;    // 显式对齐要求（0 表示未指定，否则必须是 2 的幂）
+</code></pre>
+<h3 id="44">4.4 语义分析</h3>
+<p><strong>文件</strong>：<code>src/semantic/visitinc/visit_ffi.inc</code></p>
+<p>修改 <code>AST_CSTRUCT_DEF</code> case 中的布局计算逻辑：
+- 读取 <code>is_packed</code> 和 <code>explicit_align</code>
+- packed 模式下 field_align = 1
+- 最终对齐 = max(max_alignment, explicit_align)</p>
+<h3 id="45">4.5 符号表</h3>
+<p><strong>文件</strong>：<code>src/include/leno_vm.h</code></p>
+<p>在 <code>Symbol</code> 中新增（紧挨现有 cstruct 字段）：</p>
+<pre><code class="language-c">bool cstruct_is_packed;       // cstruct 是否 packed
+int  cstruct_explicit_align;  // cstruct 显式对齐（0 = 未指定）
+</code></pre>
+<p>语义分析阶段将 AST 中的值复制到 Symbol。</p>
+<h3 id="46">4.6 代码生成</h3>
+<p><strong>文件</strong>：<code>src/codegen/codegen_stmt.c</code> — <code>AST_CSTRUCT_DEF</code> case</p>
+<p>在 <code>OP_CSTRUCT_DEF</code> 指令中新增两个字节：
+- 1 字节：<code>is_packed</code>（0 或 1）
+- 1 字节：<code>explicit_align</code></p>
+<p>指令格式变更：</p>
+<pre><code>OP_CSTRUCT_DEF:
+  2 bytes: name constant index
+  1 byte:  field_count
+  2 bytes: total_size
+  1 byte:  alignment
+  1 byte:  is_packed        ← 新增
+  1 byte:  explicit_align   ← 新增
+  ... 字段信息不变 ...
+</code></pre>
+<h3 id="47">4.7 虚拟机</h3>
+<p><strong>文件</strong>：<code>src/vm/vminc/op_cstruct.inc</code> — <code>OP_CSTRUCT_DEF</code></p>
+<p>读取新增的两个字节，传递给 <code>cstruct_def_new</code>。</p>
+<h3 id="48">4.8 对象层</h3>
+<p><strong>文件</strong>：<code>src/include/leno_value.h</code> — <code>ObjCStructDef</code></p>
+<p>新增两个字段：</p>
+<pre><code class="language-c">bool is_packed;         // 是否 packed
+int  explicit_align;    // 显式对齐（0 = 未指定）
+</code></pre>
+<p><strong>文件</strong>：<code>src/object/object_cstruct.c</code> — <code>cstruct_def_new()</code></p>
+<p>新增参数 <code>is_packed</code> 和 <code>explicit_align</code>，设置到 <code>ObjCStructDef</code> 中。</p>
+<h3 id="49">4.9 序列化</h3>
+<p><strong>文件</strong>：<code>src/serialize/serialize.c</code></p>
+<ul>
+<li>序列化：在 <code>ObjCStructDef</code> 写入时追加 <code>is_packed</code> + <code>explicit_align</code></li>
+<li>反序列化：读取时追加解析这两个字段</li>
+</ul>
+<h3 id="410">4.10 运行时方法</h3>
+<p><strong>文件</strong>：<code>src/module/cstructs/cstructs.c</code></p>
+<p><code>to_str()</code> / <code>debug()</code> 方法输出中包含 <code>packed</code> / <code>align(N)</code> 标记，让用户能看到布局属性。</p>
+<h3 id="411">4.11 文档</h3>
+<ul>
+<li><code>docs/module_cstructs.md</code>：新增 packed/align 语法说明和示例</li>
+<li><code>docs/FFI使用指南.md</code>：在 cstruct 对齐章节补充 packed/align 说明</li>
+</ul>
+<hr>
+<h2 id="5">5. 实现优先级</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>内容</th>
+<th>预计改动量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Lexer + Token：新增 <code>packed</code> / <code>align</code> 关键字</td>
+<td>小</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Parser：解析 <code>packed</code> / <code>align(N)</code> 前缀</td>
+<td>中</td>
+</tr>
+<tr>
+<td>3</td>
+<td>AST + 语义分析：布局计算逻辑</td>
+<td>中</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Codegen + VM：指令格式扩展</td>
+<td>小</td>
+</tr>
+<tr>
+<td>5</td>
+<td>对象 + 序列化：字段持久化</td>
+<td>小</td>
+</tr>
+<tr>
+<td>6</td>
+<td>运行时方法：debug 输出增强</td>
+<td>小</td>
+</tr>
+<tr>
+<td>7</td>
+<td>测试：编写测试用例 + 编译验证</td>
+<td>中</td>
+</tr>
+<tr>
+<td>8</td>
+<td>文档更新</td>
+<td>小</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6">6. 测试计划</h2>
+<h3 id="61">6.1 基本功能测试</h3>
+<pre><code class="language-leno">// 测试 packed 布局
+packed cstruct PackedDemo {
+    u8  a
+    i32 b
+    u8  c
+}
+// 预期: total_size=6, alignment=1
+// a@0, b@1, c@5
+
+// 测试 align(16)
+align(16) cstruct AlignedDemo {
+    i64 x
+}
+// 预期: total_size=16, alignment=16
+
+// 测试组合
+packed align(16) cstruct ComboDemo {
+    u8  magic
+    u16 length
+}
+// 预期: total_size=16 (packed 后 3 字节, align(16) 后 16), alignment=16
+</code></pre>
+<h3 id="62">6.2 嵌套测试</h3>
+<pre><code class="language-leno">packed cstruct Inner {
+    u8  a
+    i32 b
+}
+
+cstruct Outer {   // 非 packed
+    Inner inner    // 嵌套 packed cstruct
+    i64  data
+}
+</code></pre>
+<h3 id="63-ffi">6.3 FFI 互操作测试</h3>
+<p>验证 packed cstruct 与 C 库函数交互时的内存布局正确性。</p>
+<h3 id="64">6.4 回归测试</h3>
+<p>运行 <code>assert</code> 目录下全部 244 个测试，确保零回归。</p>
+<hr>
+<h2 id="7">7. 向后兼容性</h2>
+<ul>
+<li>不指定 <code>packed</code> 和 <code>align(N)</code> 时，布局计算逻辑与当前完全一致</li>
+<li>现有所有 cstruct 代码无需修改</li>
+<li>序列化格式向后兼容（新字段追加在末尾，旧格式读取时默认为 0/false）</li>
+</ul>
+<hr>
+<h2 id="8">8. 风险评估</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>严重性</th>
+<th>缓解措施</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>嵌套 cstruct 在 packed 模式下的对齐传播</td>
+<td>中</td>
+<td>明确规则：packed 只影响当前结构体，嵌套 cstruct 的对齐由其自身属性决定</td>
+</tr>
+<tr>
+<td>非对齐内存访问在某些平台上可能触发硬件异常</td>
+<td>低</td>
+<td>x86/x64 支持非对齐访问；ARM 默认不支持但 OS 可配置。文档中标注注意事项</td>
+</tr>
+<tr>
+<td>序列化格式变更</td>
+<td>低</td>
+<td>新字段追加在末尾，旧文件读取时默认 0/false</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="注解系统与optkeys设计草案.html">← 上一篇</a><a href="VM字节码校验与崩溃防护设计方案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

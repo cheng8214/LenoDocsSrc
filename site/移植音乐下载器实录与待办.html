@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>移植音乐下载器实录与待办 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="移植音乐下载器实录与待办.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">九、索引未收录（近期新增）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_2">〇、本次范围与跑法</a></li><li><a href="#a-leno">一、A 类：不是 Leno 的问题（记录即可）</a></li><ul class="lv3"><li><a href="#a1-mobikuwocn-user-agent-chrome-ua-http-200-body">A1 ★ mobi.kuwo.cn 按 User-Agent 风控 —— 桌面 Chrome UA 会拿到「HTTP 200 + 空 body」</a></li><li><a href="#a2-api">A2 第三方取链 API 会给"降档"结果</a></li><li><a href="#a3-minfo-n_minfo">A3 酷我 MINFO / N_MINFO 的档位顺序不固定</a></li><li><a href="#a4-newlyrickuwocn">A4 酷我歌词接口（newlyric.kuwo.cn）的三个服务端事实</a></li><li><a href="#a5-minfo-size">A5 ★ 酷我 MINFO 的 size 有四种形态 —— 粗糙解析会让整个搜索失败（"青衣"事故）</a></li><li><a href="#a6-weapi-2026-10-08">A6 ★ 网易 weapi 的六个服务端事实（2026-10-08 加网易源时逐条实测）</a></li><li><a href="#a7-2026-10-08">A7 ★ 酷狗的六个服务端事实（2026-10-08 加酷狗源时实测）</a></li><li><a href="#a8-2026-10-08-flac">A8 ★ 第三方聚合接口的八个事实（2026-10-08 修"拿不到 flac"时逐条实测）</a></li></ul><li><a href="#b">二、B 类：值得改（按建议优先级排序）</a></li><ul class="lv3"><li><a href="#2026-10-07">状态总表（2026-10-07 收尾更新）</a></li><li><a href="#b1lenocache-entry_lenb">B1【高】.lenocache 的 entry_.lenb 缓存键只含入口文件哈希，不含依赖模块</a></li><li><a href="#b2lenowebdownloadresume">B2【中】LenoWeb.downloadResume 的实现与文档口径不一致</a></li><li><a href="#b3new-x">B3【低】new X(...) 与数组字面量不允许尾随逗号，且报错指不到逗号</a></li><li><a href="#b4_str-object-e-printe">B4【中】_str(异常/容器) 给 &lt;object&gt;，而 $"{e}" / print(e) 正常 —— 两个"转字符串"口径不一致</a></li><li><a href="#b5lenocrypto-readme">B5【中】LenoCrypto README 里的导入路径在「应用目录」下解析不到</a></li><li><a href="#b6">B6【中】标准库缺口（本次实际卡到的）</a></li><li><a href="#b7threadsstart-gui">B7【中】threads.start 的入口只能是本文件的函数（GUI 版踩到，报错很清楚）</a></li><li><a href="#b8lenoweb-web_gzip-gunzip-inflateraw-zlib">B8【低】LenoWeb 的 web_gzip 有 gunzip / inflateRaw，没有 zlib 入口</a></li><li><a href="#b9_float-_int">B9【高】_float() / _int() 遇到脏串抛异常，而标准库自己在绕开它</a></li><li><a href="#b10var-c-x-c-any">B10【中】类型收窄不穿过局部别名（var c = x 之后 c 还是 any）</a></li><li><a href="#b11-pri-export">B11【中】模块级 pri 是语法错误，而"文件私有"只能靠"没写 export"隐式表达</a></li><li><a href="#b12-check">B12【低】没有 --check（只做语法 + 语义检查、不产出）</a></li><li><a href="#b13threadsstart">B13【中】threads.start 的入口规则：文档口径与运行时不一致，且两种失败给的信息量天差地别</a></li><li><a href="#b14">B14【低】数值转换的报错不带坏值，与同运行时的文件报错风格不一致（诊断的一致性）</a></li><li><a href="#b15-weapi">B15【低】十六进制 ↔ 大整数没有直接入口（写 weapi 时卡到）</a></li><li><a href="#b16-b17-2026-10-11-check">B16 / B17【高 / 中】2026-10-11 新登记：嵌套字段赋值的误导报错 + --check 的检查范围</a></li></ul><li><a href="#_3">三、交付物（当前状态）</a></li><li><a href="#_4">四、下一步（未做）</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="_1">移植音乐下载器实录与待办</h1>
+<blockquote>
+<p><strong>用途</strong>：把"用 Leno 移植 Python 版 musicdl（先打通酷我）"过程中<strong>实测到</strong>的问题集中记在这里，
+一件事一条，带<strong>现象 / 最小复现 / 判据 / 建议改法 / 成本</strong>，方便以后一条条捡起来做。</p>
+<p><strong>记法沿用本仓库惯例</strong>：
+- <strong>A 类 = 不是 Leno 的问题</strong>（服务端策略 / 上游行为 / 我自己写错）—— 只做记录，<strong>避免以后重复排查</strong>。
+- <strong>B 类 = 值得改</strong>（编译器 / 标准库 / 模块）—— 带判据与成本，可直接开工。</p>
+<p>最后更新：2026-10-07。全部结论均为<strong>本次实跑</strong>得出；凡未实测的一律标注"未验证"。</p>
+<p><strong>覆盖面（2026-10-07 扩容）</strong>：本文件已从"移植酷我"扩到<strong>整个音乐下载器（CLI + GUI + 歌词）</strong>
+以及过程中撞到的<strong>语言 / 工具链层面</strong>问题（B9~B14：<code>_float</code> 抛异常、收窄不穿别名、模块级 <code>pri</code>、
+缺 <code>--check</code>、<code>threads.start</code> 文档与运行时口径不一致、<code>_str(异常)</code> 与插值口径不一致、
+数值报错不带坏值）。语言层面的条目<strong>同样带实测判据</strong>，可直接当优化清单开工。</p>
+<p>★ <strong>2026-10-12 后记（两处已作废的"硬约束"）</strong>：本文件里凡是讲
+"<strong>线程入口必须是本文件/主脚本的函数</strong>"与"<strong>struct 实例不能跨线程传递</strong>"的段落，
+<strong>约束本身都已撤掉</strong>（分别是 TH2 与 TH1，见 <code>docs/线程并发能力修复追踪.md</code>）：
+- 模块函数现在<strong>可以</strong>直接作线程入口 ⇒ 那层"具名包装"写法变成<strong>可选</strong>（仍然正确、无害）；
+- struct 现在<strong>可以</strong>跨线程（深克隆 + 接收侧按定义重建）⇒ "对外一律传纯字符串数组"从
+  <strong>硬约束</strong>降级为<strong>一种仍然好用的风格选择</strong>（字符串数组免收窄、跨版本最稳）。
+下面各段的<strong>现象/复现记录保持原样不动</strong>（那是当时的实测 ✓），只在相应位置加 ⚠ 指回来。</p>
+</blockquote>
+<hr>
+<h2 id="_2">〇、本次范围与跑法</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标</td>
+<td>用 Leno 实现"搜索 → 取直链 → 下载落盘"，<strong>先打通酷我</strong>；对标 <code>D:\Leno工程\musicdl-master</code></td>
+</tr>
+<tr>
+<td>交付位置</td>
+<td><code>D:\CLeno\Leno\leno_gui\应用\音乐下载器\</code></td>
+</tr>
+<tr>
+<td>运行</td>
+<td><code>cd D:\CLeno\Leno</code> 后 <code>build\leno.exe leno_gui\应用\音乐下载器\musicdl.leno [选项] &lt;关键词...&gt;</code></td>
+</tr>
+<tr>
+<td>编译器</td>
+<td><code>D:\CLeno\Leno\build\leno.exe</code>（未做任何改动）</td>
+</tr>
+<tr>
+<td>外部依赖</td>
+<td><code>LenoWeb</code>（HTTP）、<code>LenoCrypto</code>（base64）—— 均走 <code>exe_dir/leno_module/</code> 解析，<strong>无需 <code>--install</code></strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="a-leno">一、A 类：不是 Leno 的问题（记录即可）</h2>
+<h3 id="a1-mobikuwocn-user-agent-chrome-ua-http-200-body">A1 ★ <code>mobi.kuwo.cn</code> 按 User-Agent 风控 —— 桌面 Chrome UA 会拿到「HTTP 200 + 空 body」</h3>
+<p><strong>现象</strong>：同一个 URL、同一时刻，只换 UA，响应正文长度差别巨大：</p>
+<table>
+<thead>
+<tr>
+<th>UA</th>
+<th>响应正文</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>不设（curl 默认 <code>curl/8.21.0</code>）</td>
+<td><strong>292 字节</strong>（正常，含 <code>url=</code> 行）✓</td>
+</tr>
+<tr>
+<td><code>okhttp/3.10.0</code></td>
+<td>292 字节 ✓</td>
+</tr>
+<tr>
+<td><code>test/1.0</code></td>
+<td>292 字节 ✓</td>
+</tr>
+<tr>
+<td><code>Mozilla/5.0</code></td>
+<td>292 字节 ✓</td>
+</tr>
+<tr>
+<td>桌面 Chrome 完整 UA（<code>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36</code>）</td>
+<td><strong>0 字节</strong>（HTTP 仍 200）✗</td>
+</tr>
+<tr>
+<td>同上，把空格全删掉</td>
+<td>292 字节 ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键对照</strong>：<code>Python(requests)</code> 用<strong>同一个 Chrome UA</strong> 也是 <strong>0 字节</strong>，无 UA / <code>okhttp</code> 则 292 字节
+⇒ <strong>与 Leno / LenoWeb 无关</strong>，是服务端按 UA 做的策略（musicdl 用 <code>okhttp/3.10.0</code> 正是这个原因）。</p>
+<p><strong>判据（可复跑）</strong>：同一 <code>mobi.s?...&amp;q=&lt;加密串&gt;</code>，逐个 UA 请求比 <code>len(resp.body)</code>。</p>
+<p><strong>本轮处置</strong>：<code>kuwo_core.leno</code> 里官方取链<strong>单独起一个 client 并设 <code>okhttp/3.10.0</code></strong>，不改调用方（搜索用）的 UA。
+⇒ 也是"顺手排掉一个误判"：一开始我以为是 LenoWeb 的 <code>setUserAgent</code> 把请求头写坏了
+（用 httpbin 验过：<strong>发出的 UA 干净且完整，只有一条</strong>），后来并排复测 Python 才定位到真因。
+<strong>另一个误判</strong>：曾怀疑 <code>officialurl</code> 的参数名 <code>format</code> 遮蔽了内置 <code>format()</code>（改名后仍失败）——<strong>不成立</strong>，注释已改回。</p>
+<h3 id="a2-api">A2 第三方取链 API 会给"降档"结果</h3>
+<p><strong>现象</strong>：搜索列表标注 <code>mp3 7.73 MB</code>，<code>music.nxinxz.com</code> 实际返回 <code>m4a</code>、3,085,464 字节（≈2.94 MB）。
+<strong>判据</strong>：下载后比 <code>实际字节数</code> 与搜索列表的 <code>size</code>。musicdl 的判据是
+<code>file_size_bytes * 8 &lt; 320000 * duration_s</code> ⇒ 判为低质并丢弃。
+<strong>本轮处置</strong>：<code>musicdl.leno</code> 在下载后打印对照，明显偏低时warning：
+<code>! 实际体积低于列表标注（列表 7.73 MB）⇒ 直链只给了低档，非无损</code>。</p>
+<h3 id="a3-minfo-n_minfo">A3 酷我 <code>MINFO</code> / <code>N_MINFO</code> 的档位顺序<strong>不固定</strong></h3>
+<p><strong>现象</strong>：同一首歌，<code>MINFO</code> 与 <code>N_MINFO</code> 的档位先后相反（实测都出现过）。
+⇒ "取最后一段即最高档"是错的。
+<strong>判据</strong>：按 <code>;</code> 切段后逐个解析 <code>size:</code>，<strong>按数值比大小</strong>取最大那档。
+<strong>本轮处置</strong>：<code>kuwo_core.leno</code> 的 <code>bestfield()</code> 按 size 比大小。</p>
+<h3 id="a4-newlyrickuwocn">A4 酷我歌词接口（<code>newlyric.kuwo.cn</code>）的三个服务端事实</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>现象 / 判据</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>必须带 <code>Referer</code></strong></td>
+<td>不带 Referer 时回 15 字节 <code>TP=DENY REQUEST</code>（HTTP 仍是 <strong>200</strong>，不是 4xx！）；只带 Referer、不带 UA 也能拿到正文 ⇒ 这个接口看 Referer，不看 UA（与 A1 的 UA 风控是两回事）</td>
+<td><code>kuwo_lyric.leno</code> 的 <code>fetchlyric()</code> 自己起 client 并加 <code>Referer: http://www.kuwo.cn/</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>正文是 <strong>zlib + gb18030</strong>，且<strong>不是</strong> <code>Content-Encoding</code></td>
+<td>响应用 <code>Content-Type: text/html</code> 直接吐二进制：<code>"tp=content\r\npath=…\r\nscore=…\r\n\r\n"</code> + zlib（前两字节恒为 <code>78 9C</code>）</td>
+<td>头体分隔按 <code>CRLFCRLF</code> 定位（兼容 <code>LFLF</code>），<strong>剥掉 2 字节 zlib 头</strong>再用 <code>web_gzip.inflateRaw</code>（详见 B8），最后 <code>web_charset.decode(…, "gb18030")</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>&amp;lrcx=1</code>（逐字时间轴）与不加<strong>是两种打包</strong></td>
+<td>不加：<code>gb18030( 标准 LRC )</code>（带 <code>[ti:]/[ar:]</code> 头、<strong>译文行已是独立的 <code>[时间]行</code></strong>）；加了：<code>base64+xor(gb18030( 带</code><mm,dd><code>逐字标签的 LRC ))</code>，且译文行要自己并</td>
+<td><strong>本实现选"不加"</strong> ⇒ 少一层解密、省掉上游那条 <code>convertrawlrc</code> 正则转换链；两种都实测过，内容质量对播放器等价</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>另：同一首歌、同一 <code>rid</code>，两次请求的 <code>path=</code> 字段会变（服务端分配），不影响正文。</p>
+</blockquote>
+<h3 id="a5-minfo-size">A5 ★ 酷我 <code>MINFO</code> 的 <code>size</code> 有四种形态 —— 粗糙解析会让<strong>整个搜索</strong>失败（"青衣"事故）</h3>
+<p><strong>现象</strong>：搜 <code>青衣</code> 时 Leno 端<strong>一条都搜不出来</strong>，GUI 只显示"没搜到结果"；同一时刻 Python/浏览器打同一个接口命中 10 条。</p>
+<p><strong>真因</strong>：<code>MINFO</code> 的 <code>size</code> 实测有 4 种写法，而 <code>kuwo_core.bestfield()</code> 原来只做
+<code>to_lower().replace("mb","")</code> 就 <code>_float()</code>：</p>
+<table>
+<thead>
+<tr>
+<th>原文</th>
+<th>剥 "mb" 后</th>
+<th><code>_float()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>size:43.64Mb</code></td>
+<td><code>43.64</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>size:999.06Kb</code></td>
+<td><code>999.06kb</code>（<strong>单位是千字节，且 "mb" 不匹配 "kb"</strong>）</td>
+<td>✗ <strong>抛异常</strong></td>
+</tr>
+<tr>
+<td><code>size:365.84Kb</code></td>
+<td><code>365.84kb</code></td>
+<td>✗ <strong>抛异常</strong></td>
+</tr>
+<tr>
+<td><code>size:zpMb</code>（臻品档的假尺寸）</td>
+<td><code>zp</code></td>
+<td>✗ <strong>抛异常</strong></td>
+</tr>
+</tbody>
+</table>
+<p>异常在 <code>search()</code> 里抛出 ⇒ 整次搜索空手而归。<strong>"青衣"只是第一首带 <code>Kb</code>/<code>zpMb</code> 档的歌</strong>
+（<code>晴天</code> 的全是 <code>Mb</code>，所以之前一直没暴露）。</p>
+<p><strong>判据（可复跑）</strong>：<code>-s 青衣</code> vs <code>-s 周杰伦 晴天</code>——前者崩、后者正常。</p>
+<p><strong>本轮处置</strong>（<code>kuwo_core.leno</code>）：</p>
+<ol>
+<li>新增 <code>parsecellsize()</code>：按 <strong>Kb/Mb/Gb/B</strong> 选 1024/1048576/1073741824/1 的系数，
+   并且<strong>先 <code>isnumber()</code> 判数字再转</strong>（认不出 ⇒ -1，绝不抛异常）；</li>
+<li><code>bestfield()</code> 改用 <code>parsecellsize</code> 比大小 ⇒ 认不出的档位（<code>zp</code>）自动不参与比较；</li>
+<li><code>normalizeSize()</code> 原样保留单位（<code>999.06Kb</code> → <code>999.06 KB</code>，不再一律贴 MB）；</li>
+<li><code>parsesongs()</code> 里<strong>每条结果各自 try</strong>：单条脏数据只丢这一条，不再让一个畸形字段毁掉整次搜索。</li>
+</ol>
+<p><strong>教训（两条，都值得复用到别的源）</strong>：</p>
+<ul>
+<li>服务端 JSON 里"看起来是数字"的字段，<strong>必须"先判再转"</strong>；<code>_float()</code>/<code>_int()</code> 遇到脏串是<strong>抛异常</strong>不是返回 0。</li>
+<li><strong>别把异常翻译成"没搜到结果"</strong>：GUI 的 <code>finishSearch()</code> 原来无条件用"没搜到结果（接口可能被限流…）"
+  覆盖状态栏，把真因（<code>kuwo_core.leno:104 无法将字符串转换为浮点数</code>）盖掉了 ⇒ 用户只能看到"搜不到"，
+  排查从"看一行日志"变成"猜"。现已改成 <code>searchErr</code> 记下 worker 报的错，收尾时优先显示 <code>搜索失败：&lt;原因&gt;</code>。</li>
+</ul>
+<h3 id="a6-weapi-2026-10-08">A6 ★ 网易 <code>weapi</code> 的六个服务端事实（2026-10-08 加网易源时逐条实测）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>判据 / 对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>新版搜索端点 <code>/weapi/cloudsearch/get/web</code> 对本客户端<strong>一律回 <code>{"code":50000005}</code></strong></td>
+<td>加 Cookie、加 <code>X-Real-IP</code>、csrf 前后一致、去掉 <code>Content-Type</code> 全试过，无效 ✗；老路径 <code>/weapi/search/get</code> 正常 <code>code=200</code> ✓ ⇒ 用老路径</td>
+</tr>
+<tr>
+<td>②</td>
+<td><strong>端点返回真数据 = 加密正确的反证</strong></td>
+<td>服务端要先用 <code>encSecKey</code> 解出 <code>params</code> 才会给结果 ⇒ 修加密前它一直回同一个错误码，"换端点后突然有数据"就是加密已通的信号 ✓</td>
+</tr>
+<tr>
+<td>③</td>
+<td>form 体里 base64 的 <code>+</code> <strong>必须转义成 <code>%2B</code></strong></td>
+<td>不转义 ⇒ 响应体 <strong>0 字节</strong>（不报错、也不是 4xx）⇒ 最容易被误判成"接口下线了" ✗</td>
+</tr>
+<tr>
+<td>④</td>
+<td>未登录请求 <code>lossless</code> 会被<strong>降级</strong>成 320k mp3（<code>br</code> 仍回 320000）</td>
+<td>⇒ "档位"字段不可信，要按 <code>type</code> / <code>size</code> 判实际格式 ✓</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td><strong>付费/原唱曲没有直链</strong>（实测 id=186016 原唱「晴天」⇒ <code>code=404</code>、<code>url=null</code>）</td>
+<td>对策：搜索后紧跟<strong>一次批量</strong>取直链（<code>ids</code> 支持逗号分隔的 JSON 数组）⇒ 体积 / 格式 / 可下性一次补齐，列表里就能标"下不了" ✓</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>批量返回的<strong>顺序与请求顺序不一致</strong></td>
+<td>必须按 <code>id</code> 归位，不能按下标对齐 ✗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>教训</strong>：③ 与 ⑥ 都是"不报错但结果错"的坑 —— 遇到"响应体为空/结构不对"时，
+先怀疑<strong>自己的参数编码</strong>，别先怀疑接口下线 ✓</p>
+<h3 id="a7-2026-10-08">A7 ★ 酷狗的六个服务端事实（2026-10-08 加酷狗源时实测）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>判据 / 对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td><strong>取链不必签名</strong>：<code>trackercdn.kugou.com/i/v2/</code> 只认 <code>key = md5(hash + "kgcloudv2")</code></td>
+<td>上游那套 android 签名 + 设备注册（AES+RSA）是给 <code>gateway.kugou.com/v5/url</code> 用的；这条 CDN 路更短 ✓（实测通）</td>
+</tr>
+<tr>
+<td>②</td>
+<td><strong>hash 大小写敏感</strong></td>
+<td>小写去问 CDN ⇒ <code>status=0 / Hash not found</code>；<strong>按搜索给的形态原样</strong>用才 <code>status=1</code> ✓ ⇒ 别 to_lower ✗</td>
+</tr>
+<tr>
+<td>③</td>
+<td>CDN 的 <code>status=2</code> = <strong>这首歌要付费/无权限</strong></td>
+<td>与"hash 不对"是<strong>两种</strong>失败（后者带 <code>Hash not found</code>）⇒ 前者如实报"下不了"即可 ✓</td>
+</tr>
+<tr>
+<td>④</td>
+<td>直链字段叫 <strong><code>mp3Url</code></strong>（数组：主链 + 备用 CDN），<strong>没有 <code>url</code></strong></td>
+<td>只看 <code>url</code> 会得到"永远拿不到链"的假象 ✗（上游写 <code>['url'] or ['backup_url'] or ['mp3Url']</code> 正为此）</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>移动端搜索<strong>一次带回三档体积 + 付费标记</strong></td>
+<td><code>filesize</code>/<code>320filesize</code>/<code>sqfilesize</code> + <code>pay_type*</code>/<code>price*</code>/<code>*privilege</code> ⇒ 列表体积与"能不能下"<strong>不用额外请求</strong> ✓（比网易省一次往返 ✓）</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td><strong>PowerShell 会误判</strong>：<code>mobilecdn.kugou.com</code> 的证书 .NET 不认（TLS 报错）</td>
+<td>同机 libcurl（关校验）正常 ⇒ <strong>别拿 PS 的失败结论宣布接口挂了</strong> ✗</td>
+</tr>
+</tbody>
+</table>
+<p><strong>教训</strong>：② 与 ④ 都是"看着像接口死了、其实是自己没对齐约定"的坑 ——
+先把<strong>上游代码读哪个字段、用什么大小写</strong>照抄一遍，再谈优化 ✓</p>
+<h3 id="a8-2026-10-08-flac">A8 ★ 第三方聚合接口的八个事实（2026-10-08 修"拿不到 flac"时逐条实测）</h3>
+<p><strong>背景</strong>：用户在上游 musicdl 上真跑了一轮（无任何 cookie），结论很干脆 ——
+<strong>上游能拿到 flac，靠的全是第三方聚合接口</strong>（上游源码里的 <code>_parsewiththirdpartapis</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>源</th>
+<th>上游给出的最高档</th>
+<th>抓 1 KB 验魔数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网易云</td>
+<td>flac 113 / 59 / 86 MB（含付费原唱「晴天 (原唱 周杰伦)」113 MB）</td>
+<td>真 flac ✓</td>
+</tr>
+<tr>
+<td>酷狗</td>
+<td>flac 30 / 29 MB</td>
+<td>真 flac ✓</td>
+</tr>
+<tr>
+<td>QQ</td>
+<td>flac 178 / 205 / 151 MB</td>
+<td>真 flac ✓</td>
+</tr>
+<tr>
+<td>对照组</td>
+<td>网易 mp3 8.7 MB、QQ ogg 12.4 MB</td>
+<td>真 mp3 / 真 ogg ✓</td>
+</tr>
+</tbody>
+</table>
+<p>而 Leno 这边的官方面（未登录/未开会员）<strong>一档无损都拿不到</strong> ⇒ 本次补齐 <code>thirdparty.leno</code>。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>判据 / 对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>官方三类接口在免登录态下都拿不到无损：网易 <code>lossless</code> 被降级 320k、QQ <code>F000</code> 的 <code>purl</code> 为空、酷狗付费曲 <code>status=2</code></td>
+<td>无损只能走第三方 ⇒ 三条源各接一条通路（网易 <code>music.qinglvai.top</code> / QQ <code>api.vkeys.cn</code> / 酷狗 <code>api.baka.plus/meting</code>）✓</td>
+</tr>
+<tr>
+<td>②</td>
+<td>三条通路的直链都<strong>验过魔数</strong></td>
+<td>抓前 1 KB ⇒ <code>fLaC</code>（102,76,97,67）✓；QQ 那首 4:29 的曲子拿到 <strong>178 MB ≈ 5.5 Mbps</strong>（上游 <code>kbps: 5549kbps</code> 一致）⇒ 是臻品母带级，比标准无损还高一档 ✓</td>
+</tr>
+<tr>
+<td>③</td>
+<td>网易那条的档位是<strong>字符串</strong>（<code>jymaster/hires/lossless/exhigh/standard</code>）</td>
+<td>上游那套 <code>level=999</code> 会回 <code>{"code":40012,"当前音源不支持所选音质"}</code> ✗（实测）；另：<strong>游客每日只给 3 首</strong>（<code>code=42903</code>）⇒ 用尽后退 mp3 兜底</td>
+</tr>
+<tr>
+<td>④</td>
+<td><code>musicapi.haitangw.net/music/wy.php</code> <strong>会降档</strong>：<code>quality</code> 写「超清母带」、直链却是 <code>.mp3</code>（10.33 MB / 320k）</td>
+<td>与 A2 同款 ⇒ ext 一律按<strong>直链后缀</strong>回填，绝不信标签 ✓（酷我那支 <code>kw.php</code> 仍正常给 flac ✓）</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>302 类接口<strong>不能开重定向跟随</strong>（跟随就会把整个 flac 拉进内存）</td>
+<td>关跟随读 <code>Location</code>、读完立刻恢复；且<strong>读不到 <code>Location</code> 必须认输</strong> —— 关着跟随时 <code>effectiveUrl</code> 就是<strong>接口地址本身</strong>，拿它当直链会把接口地址写成直链 ✗（实测：baka 的 <code>br=2000</code> 回 502 正好触发这条）</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>同一接口会<strong>按档位单独失败</strong>：同一个 hash，baka <code>br=2000</code> 回 502、<code>br=999000</code> 正常 302</td>
+<td>⇒ 逐档降着重试（QQ 的 vkeys 同理，14→9 六档）</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td>第三方直链<strong>必须随行带着走</strong>：网易那条的游客配额在<strong>搜索时</strong>就用掉了</td>
+<td>落盘时再取一次必然 42903 ✗ ⇒ 行里加第 10 项 = 直链（<code>dl_engine.F_URL</code>），下载与试听都用它 ✓</td>
+</tr>
+<tr>
+<td>⑧</td>
+<td>酷狗 CDN 证书 Windows 侧不认（<strong>A7-⑥ 的翻版</strong>）</td>
+<td>第三方给的是 <code>fs.youthandroid2.kugou.com</code>：schannel 报 <code>SEC_E_WRONG_PRINCIPAL</code> ⇒ curl/PS 一律测不通，而 libcurl（关校验）照拿 <code>206</code> ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>教训</strong>：这批接口的共同特征是「<strong>不报错但给假结果</strong>」（标签与直链格式不符 / 502 时 <code>effectiveUrl</code> 回接口地址 /
+配额用尽只回业务码）⇒ 判据一律落到<strong>直链本身</strong>（后缀 + 抓 1 KB 验魔数）；
+并且<strong>任何一环失败都保持官方结果</strong>（有 mp3 的行照旧可下）⇒ 第三方全挂也不会比以前差 ✓</p>
+<hr>
+<h2 id="b">二、B 类：值得改（按建议优先级排序）</h2>
+<h3 id="2026-10-07">状态总表（2026-10-07 收尾更新）</h3>
+<blockquote>
+<p>方法：逐条<strong>实测现状</strong>后再开工（避免改已经修好的）。下表是各条最终状态与落点；
+原文各节的"现象 / 判据 / 建议"<strong>保留不动</strong>，作为历史记录 —— 也方便对照"当时为什么这么判"。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>结论</th>
+<th>依据 / 落点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>✅ <strong>已修</strong>（本仓早于本文档就有）</td>
+<td><code>entry_&lt;hash&gt;.lenb.deps</code> 依赖清单（<code>src/main.c</code>）。实测：入口一字不改、只改依赖模块 ⇒ 第二次跑即生效（<code>v1</code> → <code>v2</code>）</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>✅ 已修</td>
+<td><code>web_net.downloadResume</code> 开头 <code>dirs.mkdir_p(父目录)</code>；<code>test_download_resume</code> 新增"父目录不存在也能落盘"判据</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>✅ 已修（<strong>支持</strong>尾随逗号，而非只改文案）</td>
+<td><code>parser_expr.c</code> 四处：数组 / 字典 / <code>new</code> 字段表 / 调用实参；<code>assert/test_trailing_comma.leno</code></td>
+</tr>
+<tr>
+<td>B4</td>
+<td>✅ 已修</td>
+<td><code>_str(x)</code> 改走<strong>插值口径</strong> <code>value_to_string</code>（<code>types.c</code>）；<code>assert/test_str_object.leno</code></td>
+</tr>
+<tr>
+<td>B5</td>
+<td>✅ 文档已修</td>
+<td>LenoCrypto README 改为裸名导入（<code>import "Crypto"</code>）</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>✅ 已修</td>
+<td>① <code>strings.pad_end/pad_start</code> <strong>本来就存在</strong>（不是缺口）；② base64 已进<strong>核心标准库</strong>：<code>strings.to_base64</code> / <code>from_base64</code>（<code>web_ws</code> 的 51 行私有实现已改薄封装；<code>assert/test_base64.leno</code>）</td>
+</tr>
+<tr>
+<td>B7</td>
+<td>✅ 文档已补</td>
+<td><code>module_threads_api.md</code> 新增"入口函数三条规则"</td>
+</tr>
+<tr>
+<td>B8</td>
+<td>✅ 已修</td>
+<td><code>web_gzip.inflateZlib()</code>；<code>test_gzip</code> 新增 zlib 用例（46 → 51 项断言）</td>
+</tr>
+<tr>
+<td>B9</td>
+<td>✅ 已修</td>
+<td>新增 <code>_int_or</code> / <code>_float_or</code>（<strong>不动</strong> <code>_int</code>/<code>_float</code> 旧语义）；<code>assert/test_num_convert.leno</code></td>
+</tr>
+<tr>
+<td>B10</td>
+<td>⚠ <strong>Array 形态已不成立</strong>；<code>Channel</code> 形态未复测</td>
+<td><code>if x is Array[int] { var c = x; c.len() }</code> 编译通过（实测）</td>
+</tr>
+<tr>
+<td>B11</td>
+<td>✅ <strong>已修</strong>（早于本文档）</td>
+<td><code>parser.c</code>：顶层 <code>pri</code> 报「pri 只能用于 struct 成员；模块级不加 'export' 就是文件私有，请去掉 'pri'」</td>
+</tr>
+<tr>
+<td>B12</td>
+<td>✅ 已修</td>
+<td>新增 <code>--check</code>（parse + 语义，有错非零退出、<strong>不产出 .lenb</strong>）；<code>assert/test_check_flag.leno</code></td>
+</tr>
+<tr>
+<td>B13</td>
+<td>🟡 部分</td>
+<td>①文档已补（三条规则）；②<strong>实参个数</strong>已校验（<code>threads.c</code> + <code>assert/test_threads_start_args.leno</code>）；③<strong>类型</strong>不匹配未做（见下）</td>
+</tr>
+<tr>
+<td>B14</td>
+<td>✅ 已修</td>
+<td>报错带坏值：<code>无法将字符串转换为浮点数："999.06Kb"</code>；<code>assert/test_num_convert.leno</code></td>
+</tr>
+<tr>
+<td>B15</td>
+<td>🟡 待改（有绕法）</td>
+<td>十六进制 ↔ 大整数<strong>没有直接入口</strong>：<code>_int(s, 16)</code> / <code>_str(v, 16)</code> 都不收第二参 ⇒ 只能 <code>Crypto.hex_to_bytes</code> + 循环（本次网易 RSA 就是这么绕的）</td>
+</tr>
+<tr>
+<td>B16</td>
+<td>✅ <strong>已修</strong>（2026-10-11 当天）</td>
+<td>给"<strong>本 struct 的 struct 型字段</strong>"嵌套赋值 ⇒ 报错<strong>指错靶子</strong>（<code>字段 'inner' 类型不匹配: 期望 'struct Inner'，实际 'float'</code>）；<strong>看着像编译器 bug</strong>（同写法经局部量/参数却正常）⇒ 已按修法 ① 支持它（真因在 <code>semantic_visit_method.c</code> 的整句重写，<strong>不在</strong>原先定位的报错点）；详条见 <code>Leno报错提示改进计划.md</code> <strong>B6 / 改进 5</strong> 末的 ✅ 块 ✓</td>
+</tr>
+<tr>
+<td>B17</td>
+<td>✅ <strong>已修（2026-10-20）</strong></td>
+<td><strong><code>--check</code> 不检查被 import 的模块里的函数体</strong> —— 根因是旧实现早退在"语义之后"，而模块是在 <strong>codegen 遇到 import 时</strong>才编译的 ⇒ 模块体一条没查。现在早退点挪到 codegen 之后（<code>main.c</code>），模块里的类型错误会点名报出；代价是多跑 codegen（39 → 38~45ms，<code>-c</code> 是 63ms），仍无 <code>.lenb</code> 产物。详条见 <code>Leno报错提示改进计划.md</code> <strong>B7 / 改进 6</strong> 的 ①-2026-10-20 块；回归 <code>assert/test_check_flag.leno</code> ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>B13 未做的那一半（留档）</strong>：<code>threads.start(named, [21])</code>（形参 <code>int</code>、实参给 <code>Array</code>）<strong>不报错</strong>，
+<code>join()</code> 返回垃圾值 <code>4307135132608</code>。根因不在 threads 而在<strong>参数转换路径</strong>（<code>vm_call.inc</code> 的
+<code>no_convert</code> 分支让实参原样落进形参槽 ⇒ 按 int 读出来就是垃圾）。
+修它要动调用帧的参数转换，影响面比本批所有改动加起来都大 ⇒ 单独列一条，不混在这批里。</p>
+<h3 id="b1lenocache-entry_lenb">B1【高】<code>.lenocache</code> 的 <code>entry_*.lenb</code> 缓存键<strong>只含入口文件哈希，不含依赖模块</strong></h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td>只改 <code>import</code> 进来的模块、<strong>入口文件未变</strong>时，命中旧字节码 ⇒ "代码明明改了、行为一点没变"</td>
+</tr>
+<tr>
+<td>危害</td>
+<td>直接制造"工具链不可信"的印象，比性能问题严重得多</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>把依赖模块的内容哈希（或其 <code>.lenosymc</code> 指纹）并入 key —— <code>.lenosymc</code> 已带 exe 指纹，<strong>机制现成</strong></td>
+</tr>
+<tr>
+<td>临时规避</td>
+<td>改完依赖模块后删 <code>.lenocache</code>（本次最终验证前就是这么做的）</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（改缓存 key 计算）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>诚实标注</strong>：本次<strong>并未确证踩到</strong>。中途有一次"删缓存后行为变正常"的现象，
+但后续定位到真因是 <strong>A1 的 UA 风控</strong> ⇒ 那次不算证据。此条按<strong>机制风险</strong>记录，不当作已复现 bug。</p>
+<p><strong>但规避成本是可测的</strong>：本轮（GUI + 歌词 + "青衣"修复）因为无法判断缓存是否失效，
+<strong>每个验证轮次前都手删一次 <code>.lenocache</code>（本会话约 15 次）</strong>。这不构成"踩到了"的证据，
+却说明一件事：一旦用户无法确认缓存是否可信，规避动作就变成<strong>每轮都付的固定开销</strong>，
+而且只要漏掉一次，就可能反过来怀疑自己的代码 ✗。</p>
+</blockquote>
+<h3 id="b2lenowebdownloadresume">B2【中】<code>LenoWeb.downloadResume</code> 的实现与文档口径不一致</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档</td>
+<td><code>web_net.leno</code> 注释/文档写"返回字节数或 <strong>-1</strong>"</td>
+</tr>
+<tr>
+<td>实际</td>
+<td>目标目录不存在时<strong>抛异常</strong>并打栈、<strong>中断整个程序</strong></td>
+</tr>
+<tr>
+<td>复现</td>
+<td>先删掉输出目录，再 <code>downloadResume(url, "不存在的目录/x.flac")</code></td>
+</tr>
+<tr>
+<td>实测报错</td>
+<td><code>[错误] ...\LenoWeb\lib\web_net.leno:657: 无法创建文件 '...'</code> + <code>[位置]</code> + <code>[调用栈]</code>（栈本身很好用）</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>二选一：① 内部 <code>mkdir -p</code> 父目录；② 捕获后按文档返回 -1</td>
+</tr>
+<tr>
+<td>规避</td>
+<td>调用方先 <code>dirs.mkdir_p(outdir)</code>（已在本应用里做）</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b3new-x">B3【低】<code>new X(...)</code> 与数组字面量<strong>不允许尾随逗号</strong>，且报错指不到逗号</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象 1</td>
+<td><code>new SongInfo(a = 1,)</code> → <code>(行,列): [语法错误] 期望字段名</code>，列号指向 <strong><code>)</code></strong></td>
+</tr>
+<tr>
+<td>现象 2</td>
+<td><code>[a, b,]</code> → <code>期望表达式</code>（指向 <code>]</code>），紧接一条 <code>期望 ',' 或 ']'</code></td>
+</tr>
+<tr>
+<td>危害</td>
+<td>新手第一分钟就会撞上，然后盯着"字段名"找半天；真正的病因是那个逗号</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>① 支持尾随逗号（多数语言都允许）；② 至少把文案改成"此处不允许尾随逗号"</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>② <strong>几乎为零</strong>；① 需改解析器</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b4_str-object-e-printe">B4【中】<code>_str(异常/容器)</code> 给 <code>&lt;object&gt;</code>，而 <code>$"{e}"</code> / <code>print(e)</code> 正常 —— <strong>两个"转字符串"口径不一致</strong></h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>print(_str(_args()))</code> → <code>&lt;object&gt;</code>（<code>_args()</code> 是 <code>Array</code>）</td>
+</tr>
+<tr>
+<td>危害</td>
+<td>调试时完全看不出内容；还会让人怀疑"参数没传进来"</td>
+</tr>
+<tr>
+<td>★ 实测更正（2026-10-07，作者指正后重测）</td>
+<td><strong>异常对象本身很好读，是我用错了写法。</strong> 四种读法实测：<code>print(e)</code> → <code>{msg: "…", line: 8, file: "…", stack: […]}</code> 可读 ✓；<strong><code>$"{e}"</code> → msg 全文</strong>（多行：首行原因 + <code>[位置]</code> + <code>[调用栈]</code>）✓；<code>e.msg</code> / <code>e.line</code> / <code>e.file</code> → <strong>字段可直接取</strong> ✓（异常对象带这四个字段，文档里从没写过）；而 <strong><code>_str(e)</code> → <code>&lt;object&gt;</code></strong> ✗</td>
+</tr>
+<tr>
+<td>更正前的错误结论（留档）</td>
+<td>我先前据此写下"捕获到异常却看不到任何原因"，<strong>这是错的</strong>——真相是"只有 <code>_str(e)</code> 这一种写法看不到"。教训：一个语言里"换个等价写法结论就翻转"的现象，必须换写法复测后才能下笔</td>
+</tr>
+<tr>
+<td>★ 这次口径不一致的<strong>真实代价</strong>（本轮实证）</td>
+<td>① 我因此得出了<strong>错误结论</strong>（上一条），还写进了本文档；② 我的代码里留了 <strong>3 处 <code>_str(e)</code></strong>——<code>dl_engine</code> 的搜索报错回传、GUI 的"刷新出错"、下载线程异常。其中<strong>搜索报错那处正好是"青衣"事故要走的路径</strong> ⇒ 就算修好 A5，界面也只会显示 <code>搜索失败：&lt;object&gt;</code>，等于白修 ✗。已全部换成 <code>errmsg()</code>（取 <code>$"{e}"</code> 首行）并实测验证 ✓</td>
+</tr>
+<tr>
+<td>为什么它比"不好看"严重</td>
+<td><code>_str(x)</code> 是"把任意东西转成字符串"的<strong>通用入口</strong>，却偏偏是唯一读不出异常的写法 ⇒ 越是"顺手转一下塞进日志/状态栏/channel"的人越中招。插值 <code>$"{e}"</code> 能读、<code>_str(e)</code> 不能读，两者<strong>看不出该用哪个</strong></td>
+</tr>
+<tr>
+<td>建议</td>
+<td>① 让 <code>_str(x)</code> 对<strong>有 to_string 的对象走 to_string</strong>（与插值口径统一）——这是本条的根因；② 顺带把"异常对象 = <code>{msg, line, file, stack}</code>、拼文案用 <code>$"{e}"</code>、<strong>别用 <code>_str(e)</code></strong>"写进 <code>module_io.md</code> 或教程；③ <code>Array</code> → <code>&lt;Array(len=3)&gt;</code>、<code>Dict</code> → <code>&lt;Dict(len=5)&gt;</code></td>
+</tr>
+<tr>
+<td>成本</td>
+<td>① 低（转换函数加分支）；② 文档：低；③ 低</td>
+</tr>
+<tr>
+<td>★ 状态（2026-11-16 复核）</td>
+<td><strong>① 已落地</strong>：<code>_str</code> 的 OBJ 分支现在统一走 <code>value_to_string</code> ⇒ <code>_str([1,2,3])</code> = <code>"[1, 2, 3]"</code>、<code>_str(e)</code> 给 msg 文本（不再是 <code>&lt;object&gt;</code>）。③ 未采纳 —— 容器现在给<strong>完整内容</strong>（<code>[1, 2, 3]</code>），比 <code>&lt;Array(len=3)&gt;</code> 信息量大。文档侧：<code>module_types.md</code> / <code>module_io.md</code> 已订正</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b5lenocrypto-readme">B5【中】<code>LenoCrypto</code> README 里的导入路径在「应用目录」下解析不到</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档写法</td>
+<td><code>import "leno_module/LenoCrypto/lib/Crypto.leno" as crypto</code>（<code>README.md</code> 用法段）</td>
+</tr>
+<tr>
+<td>实际</td>
+<td>在 <code>leno_gui/应用/音乐下载器/</code> 下编译报 <code>[语义错误] 找不到模块文件: leno_module/LenoCrypto/lib/Crypto.leno</code>（相对路径按<strong>入口文件目录</strong>解析）</td>
+</tr>
+<tr>
+<td>可用写法</td>
+<td><code>import "Crypto" as crypto</code>（经 <code>exe_dir/leno_module/*/lib/</code> 解析）</td>
+</tr>
+<tr>
+<td>矛盾点</td>
+<td><code>LenoWeb</code> 的示例/文档用的是裸名 <code>import "web_net"</code>（可用）⇒ 同仓库两个包口径不一致</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>修 README 采用裸名；或让该相对路径同时尝试相对 <code>exe_dir</code></td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（改文档即可）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b6">B6【中】标准库缺口（本次实际卡到的）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>缺口</th>
+<th>本轮绕法</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>没有内置的<strong>表格 / 列宽格式化</strong></td>
+<td>手写 <code>twodigits</code> + 拼接定宽字符串</td>
+<td><code>module_strings.md</code> 列了 <code>pad_end/pad_start</code>（<strong>本次未实测</strong>），若可用应优先用它</td>
+</tr>
+<tr>
+<td>2</td>
+<td>没有标准库 <strong>base64</strong></td>
+<td>用 <code>LenoCrypto</code> 的 <code>bytes_to_b64</code> / <code>str_to_bytes</code></td>
+<td>功能没问题，但等于"官方接口取链"要额外依赖一个包；<code>base64</code> 作为基础设施放标准库更合适 ⇒ <strong>已收口（2026-10-07）</strong>：<code>strings.to_base64</code> / <code>from_base64</code> 进核心标准库，<code>LenoCrypto</code> 那 6 个转发已删、本应用调用点全部改走 <code>strings.*</code>（连 <code>import "Crypto"</code> 都不再需要）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>附：本次<strong>曾以为</strong>缺 <code>strings.join</code>，自己写了个 <code>joinwords</code>；实测 <code>strings.join(["a","b"], "-")</code> → <code>"a-b"</code> <strong>本来就存在</strong> ⇒ 已删掉自造函数。教训：<strong>先查再自造</strong>。</p>
+</blockquote>
+<h3 id="b7threadsstart-gui">B7【中】<code>threads.start</code> 的入口<strong>只能是本文件的函数</strong>（GUI 版踩到，报错很清楚）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>threads.start(eng.search_entry, ...)</code> 当场抛错：<code>线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'dl_engine' 里的 'search_entry'（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code> <br>⚠ <strong>2026-10-12：这条硬拦已撤（TH2）</strong> ⇒ 模块函数现在可以直接作入口 ✓（下面的绕法仍可用、已非必需）</td>
+</tr>
+<tr>
+<td>后果</td>
+<td>报错发生在 <code>threads.start()</code> 那一行 ⇒ 若调用点在 <code>try/catch</code> 里（GUI 的定时器回调就是），会表现为<strong>静默失败</strong>：搜索永远返回空、状态栏只闪一条"刷新出错"</td>
+</tr>
+<tr>
+<td>绕法</td>
+<td>在本文件写一层具名包装 <code>func search_worker(...) { return eng.search_entry(...) }</code>，<code>threads.start(search_worker, ...)</code>（<code>cleaner_master</code> 的 <code>scan_entry</code>/<code>delete_entry</code> 就是这个套路 ⇒ 建议在 <code>module_threads_api.md</code> 里写明）</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>文档补一句"入口必须同文件"；或让 <code>threads.start</code> 接受模块函数（需要子线程能加载模块全局）</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>文档：几乎为零</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>更正（同日实测，见 B13）</strong>：早前我在这里写过"入口<strong>不能是闭包</strong>"——<strong>这句是错的</strong>。
+实测闭包（含参数、含捕获）四种形态<strong>全部能启动、能跑完</strong>；只有"别的模块的函数"被拒。
+另一条仍然成立：跨线程参数只能是纯数据（struct 实例传不过去 ✗）。</p>
+</blockquote>
+<h3 id="b8lenoweb-web_gzip-gunzip-inflateraw-zlib">B8【低】<code>LenoWeb</code> 的 <code>web_gzip</code> 有 <code>gunzip</code> / <code>inflateRaw</code>，<strong>没有 zlib 入口</strong></h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td>zlib 流 = 2 字节头（<code>78 9C</code>…）+ deflate + 4 字节 adler32：<code>gunzip</code> 认 gzip 头（10 字节），<code>inflateRaw</code> 认裸 deflate，<strong>两个都对不上 zlib</strong></td>
+</tr>
+<tr>
+<td>影响面</td>
+<td>不止酷我歌词：HTTP <code>Content-Encoding: deflate</code>、PNG 的 IDAT、任何 <code>.zlib</code> 体都是这个格式</td>
+</tr>
+<tr>
+<td>本轮绕法</td>
+<td><code>inflateRaw(raw.byte_slice(2, raw.byte_len()))</code>（剥头；尾部 adler32 不参与解压，<code>inflate</code> 遇到 BFINAL 自然停）</td>
+</tr>
+<tr>
+<td>建议</td>
+<td><code>web_gzip</code> 补一个 <code>export func inflateZlib(string raw): GzipResult</code>（顺手校一下 adler32 更好），或让 <code>gunzip</code> 自动按魔数分流</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（现有 <code>_State</code>/<code>_inflateAll</code> 直接复用，只多两行剥头）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b9_float-_int">B9【高】<code>_float()</code> / <code>_int()</code> 遇到脏串<strong>抛异常</strong>，而标准库自己在绕开它</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>_float("999.06kb")</code>、<code>_float("zp")</code> 是<strong>抛异常</strong>（<code>[错误] …: 无法将字符串转换为浮点数</code>），<strong>不是</strong>返回 0/null。一次就能把整条功能变成"不存在"：搜索崩 ⇒ 界面只剩"没搜到结果"（完整事故见 <strong>A5「青衣」</strong>）</td>
+</tr>
+<tr>
+<td>最小复现</td>
+<td>冷启动三行：<code>print(_float("zp"))</code> / <code>print(_float(""))</code> / <code>print(_int("abc"))</code></td>
+</tr>
+<tr>
+<td>旁证（最硬）</td>
+<td><code>LenoWeb\lib\web_net.leno</code> 自己手写了 <code>_digitsToInt()</code>（脏值返回 -1）并注释"响应头里什么脏值都可能有" ⇒ <strong>标准库作者在用私有函数绕开自己的运行时原语</strong>；本轮 <code>kuwo_core</code> 也不得不手写 <code>isnumber()</code> + <code>parsecellsize()</code> 做"先判再转"</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>① 加 <code>float.try_parse(s): float?</code> / <code>int.try_parse(s): int?</code>（脏串给 null）；② 或让 <code>_float</code> 宽容（脏串→0）+ 另给 <code>_float_strict</code>；③ 无论选哪种，<strong>让 <code>_int</code>/<code>_float</code> 语义一致</strong>（现在都是抛）</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（原生函数加一个分支）；文档补一行"<code>_float</code> 会抛，脏值请先判"≈ 0</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>这条与 B2 是同一类毛病：<strong>失败路径把"调用方必须处理的事"变成了"整个调用栈的爆炸"</strong>。
+本轮一共撞了三次（B2 目录不存在、B9 脏数字、A5 搜索崩），值得作为一条统一原则来收：<em>库函数要么返回哨兵值，要么抛"能被局部 catch 的具名异常"，不要中途打死程序</em>。</p>
+<p>配套的另一半见 <strong>B14</strong>：既然它要抛，抛出来的那句话就得<strong>带上坏值</strong>（<code>无法转换为 float："999.06kb"</code>），
+否则调用方既拿不到哨兵值、也看不出是哪个值坏了。</p>
+</blockquote>
+<h3 id="b10var-c-x-c-any">B10【中】类型收窄<strong>不穿过局部别名</strong>（<code>var c = x</code> 之后 <code>c</code> 还是 <code>any</code>）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td>形参声明为 <code>any</code>，写 <code>if cmd is Channel { var c = cmd; c.try_receive() }</code> ⇒ 一次报三条：<code>不能在 any 类型上调用方法 'try_receive'</code> / <code>不能对未初始化的变量 'c' 调用方法</code> / <code>不能在 any 类型 'c' 上直接访问字段</code>；<strong>而同一个块里直接写 <code>cmd.try_receive()</code> 是对的</strong> ✓</td>
+</tr>
+<tr>
+<td>复现</td>
+<td>同一函数里把 <code>if x is T { var c = x; c.m() }</code> 与 <code>if x is T { x.m() }</code> 各写一遍对比（本轮在 <code>dl_engine.waitcmd()</code> 上撞到，见文件内注释）</td>
+</tr>
+<tr>
+<td>更难受的地方</td>
+<td><strong>规则不一致</strong>：<code>Channel?</code> 这类<strong>字段</strong>走 <code>var c = x</code> 是能收窄的，只有 <code>any</code> 形参不行 ⇒ 同样写法两种结果，最容易记错</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>让收窄结果流进 <code>var c = x</code> 这类新绑定（错误提示里已给的替代方案"或把参数声明为具体类型"要求改签名，代价比修收窄大）</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>中（类型检查器把收窄信息带进赋值处的推断）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b11-pri-export">B11【中】模块级 <code>pri</code> 是<strong>语法错误</strong>，而"文件私有"只能靠"没写 export"隐式表达</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td>文件顶层写 <code>pri func foo() {}</code> ⇒ <code>[语法错误] 期望表达式</code>，<strong>指不到真正病因</strong>（<code>pri</code> 只在结构体成员上合法）</td>
+</tr>
+<tr>
+<td>危害</td>
+<td>① 最直觉的写法直接撞墙，且报错文不对题；② 更麻烦的是"读"——顶层 <code>func foo()</code> 与 <code>export func foo()</code> 的可见性差异<strong>只能靠有没有 <code>export</code> 反推</strong>，一眼看不出哪些是本文件私有</td>
+</tr>
+<tr>
+<td>溯源</td>
+<td><strong>上一轮会话实测</strong>（本轮为避免踩坑，一开始就按"顶层不写 pri"写，未再复现）</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>① 支持顶层 <code>pri func</code>（与结构体成员口径一致）；② 或至少把文案改成"模块级函数不支持 pri；不写 export 即为文件私有"</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>② 几乎为零；① 改解析器 + 可见性判定</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b12-check">B12【低】没有 <code>--check</code>（只做语法 + 语义检查、不产出）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>--help</code> 里只有 <code>-c/--compile</code>（编译成 <code>.lenb</code>）与 <code>-p/--pack</code>；想"只验证能不能过编译"只能借用 <code>-c</code></td>
+</tr>
+<tr>
+<td>实际代价</td>
+<td>本轮 5 个文件 × 多轮验证都用 <code>-c</code> 代替，之后还要手动删 <code>*.lenb</code>（否则目录堆产物）；脚本化时也得额外处理</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>加 <code>--check</code>：跑完 parse + semantic，有错非零退出，<strong>不写 <code>.lenb</code></strong>（符号缓存若需要可保留）</td>
+</tr>
+<tr>
+<td>收益</td>
+<td>编辑器 / CI / 预提交钩子的标准入口；把"这次改动是否破坏语义"变成一条无副作用的命令</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（在现成的"编译但不执行"路径上加一个早退分支）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b13threadsstart">B13【中】<code>threads.start</code> 的入口规则：<strong>文档口径与运行时不一致</strong>，且两种失败给的信息量天差地别</h3>
+<blockquote>
+<p>与 <strong>B7</strong> 同源：B7 记的是"别的模块的函数不行（报错很清楚）"，本条补上两条 B7 没记的：
+<strong>闭包其实是可以的</strong>（更正 B7 早前那句"入口不能是闭包"）、以及<strong>文档口径缺失</strong>与<strong>参数校验缺口</strong>。</p>
+</blockquote>
+<p><strong>实测矩阵（2026-10-07，单文件 5 个用例，直接调用、参数个数写对）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>入口形态</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 本文件具名全局函数 <code>threads.start(named, 21)</code></td>
+<td>✅ OK，<code>join=42</code></td>
+</tr>
+<tr>
+<td>②a 闭包 无参/无捕获 <code>threads.start(func(): int { return 7 })</code></td>
+<td>✅ OK，<code>join=7</code></td>
+</tr>
+<tr>
+<td>②b 闭包 有参/无捕获 <code>…(func(int n): int { return n+1 }, 7)</code></td>
+<td>✅ OK，<code>join=8</code></td>
+</tr>
+<tr>
+<td>②c 闭包 无参/<strong>有捕获</strong>（捕获 main 里的 <code>base</code>）</td>
+<td>✅ OK，<code>join=5</code></td>
+</tr>
+<tr>
+<td>②d 闭包 有参/<strong>有捕获</strong></td>
+<td>✅ OK，<code>join=12</code></td>
+</tr>
+<tr>
+<td>③ 别的 <code>.leno</code> 模块里的函数 <code>threads.start(lyric.fetchlyric, "228908")</code></td>
+<td>❌ 明确报错（文案满分，见下）</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档现状</td>
+<td><code>module_threads_api.md</code> 写着 <code>func</code> 是"要执行的函数（闭包），<strong>支持捕获外部变量</strong>"，示例也全是 <code>threads.start(func(){…})</code> ⇒ <strong>这一条是对的</strong> ✓</td>
+</tr>
+<tr>
+<td>但文档<strong>没写</strong>的</td>
+<td>"<strong>入口必须是当前文件的函数</strong>——别的模块的函数不行"。这条只存在于编译器的报错文案里；<code>cleaner_master</code> 的源码注释里也记着同一个坑（"worker 必须具名全局函数"） <br>⚠ <strong>2026-10-12：该限制已撤（TH2）</strong>，<code>threads使用指南.md</code> 相应小节也已改写为"模块函数也能用" ✓</td>
+</tr>
+<tr>
+<td>代价</td>
+<td>每个 GUI 应用都得为此写一层样板包装（<code>search_worker</code> / <code>dl_worker</code> / <code>scan_entry</code> / <code>delete_entry</code> …），而新用户第一次写必然撞一次</td>
+</tr>
+<tr>
+<td>③ 的报错文案（值得表扬）</td>
+<td><code>threads.start(): 线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'kuwo_lyric' 里的 'fetchlyric'。请在本文件写一个具名包装函数再 threads.start（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>两个副发现（同一轮里撞到的坑，都是"没说清"型）</strong>：</p>
+<ol>
+<li><strong>参数个数不足 ⇒ 报错指向完全错误的方向</strong>：
+   <code>threads.start(func(int n): int { return n * base })</code>（<strong>忘了传实参</strong>）报的是
+   <code>Thread error: 非字符串异常（对象类型 2）—— 常见于**进入函数体之前**就失败（如入口函数所属模块未加载）</code>
+   ——真实原因是<strong>参数个数不对</strong>，文案却把人往"模块没加载"上引。</li>
+<li><strong>参数类型不对时不报错，跑出垃圾结果</strong>：
+   <code>named(int n)</code> 被 <code>threads.start(named, [21])</code> 调用（收到的是 <code>Array</code> 而不是 <code>int</code>）<strong>没有报类型错误</strong>，
+   线程照常跑完，<code>join()</code> 返回 <code>4307135132608</code>（垃圾值）。
+   ⇒ 本轮我正是据此先得出了"闭包/具名函数都不行"的<strong>错误结论</strong>，直到把参数写对才看清真相。
+   （标注：这是"实测现象"，是否算类型检查缺口<strong>未进一步确认</strong>。）</li>
+</ol>
+<p>| 建议 | ① 文档把入口规则写成明确三条：<strong>本文件具名函数 ✅ / 闭包 ✅ / 别的模块的函数 ❌</strong>；② <code>threads.start</code> 启动时校验实参个数与类型，报错直接写"期望 N 个参数，实际 M 个"；③ 顺带把"闭包长时间运行可能被 GC"这条<strong>只在源码注释里流传</strong>的警示写进文档（若属实） |
+| 成本 | ① 为零；② 中（入口处加一层校验）；③ 低 |</p>
+<blockquote>
+<p><strong>教训（给文档整理者）</strong>：<code>threads.start</code> 这一处的文档、运行时、示例源码注释三者口径<strong>并不一致</strong>，
+而且不一致的方向恰好是"注释比文档更接近真相"。凡是这类"规则只活在错误文案和别人源码注释里"的知识，
+都应该第一时间搬进正式文档——否则下一个人会像我一样先得出一个错误结论再花十几分钟推翻它。</p>
+</blockquote>
+<h3 id="b14">B14【低】数值转换的报错<strong>不带坏值</strong>，与同运行时的文件报错风格不一致（诊断的一致性）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>_float("zp")</code> 的消息是 <code>无法将字符串转换为浮点数</code> —— <strong>不带坏值、不带类型名</strong>（<code>_int("abc")</code> 同理：<code>无法将字符串转换为整数</code>）</td>
+</tr>
+<tr>
+<td>内部对照（同一轮实测）</td>
+<td><code>files.open("D:\\不存在的目录\\x.txt", "rb")</code> 的消息是 <code>无法打开文件 'D:\\不存在的目录\\x.txt'</code> —— <strong>带值</strong> ✓</td>
+</tr>
+<tr>
+<td>所以问题不在"能力"</td>
+<td>不是"Leno 不会带值"，而是<strong>同一个运行时内部风格不统一</strong>：文件/路径类带值，数值转换类不带值</td>
+</tr>
+<tr>
+<td>为什么这条值得修（成本/收益最划算）</td>
+<td>排查时"<strong>哪个值坏了</strong>"就是核心线索。<code>青衣</code> 事故（A5）里，我是靠<strong>回到接口原始 JSON</strong> 才看出 <code>size:999.06Kb</code> / <code>size:zpMb</code> 的；如果消息直接写 <code>无法转换为 float："999.06kb"</code>，至少省一轮试错。而这条信息<strong>在抛出的那一刻就在手上</strong>，取不到是纯浪费</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>文案统一成 <code>无法转换为 float："&lt;原值&gt;"</code>（Python 的对照口径：<code>could not convert string to float: 'zp'</code>）；<code>_int</code> 同理；若原值很长，截断到 N 字符即可</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（原生函数里把入参拼进消息）；文档零</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="b15-weapi">B15【低】十六进制 ↔ 大整数没有直接入口（写 <code>weapi</code> 时卡到）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现象</td>
+<td><code>_int("e0b5…", 16)</code> ⇒ <code>_int 参数数量不匹配: 期望 1, 实际 2</code>；<code>_str(v, 16)</code> 同理（<code>_str</code> 也只收 1 个）</td>
+</tr>
+<tr>
+<td>后果</td>
+<td>从十六进制串建大整数、或把大整数打回十六进制，都得自己写循环 —— 而网易 <code>encSecKey</code> 要求<strong>恰好 256 位十六进制（左补零）</strong>，两头都要写</td>
+</tr>
+<tr>
+<td>现有绕法</td>
+<td><code>Crypto.hex_to_bytes(s)</code> → 循环 <code>acc = acc * 256 + b</code>；反向 <code>Crypto.bytes_to_hex()</code> + 左补零 ✓（本次就这么做的，已过金标）</td>
+</tr>
+<tr>
+<td>建议</td>
+<td>给 <code>_int(s, 进制)</code> / <code>_str(v, 进制)</code> 各加一个<strong>可选</strong>进制参（默认 10 ⇒ 向后兼容）；或补 <code>_hex()</code> / <code>_unhex()</code> 内建</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低（<code>num_parse</code> / <code>value_to_string</code> 各一个分支）</td>
+</tr>
+<tr>
+<td>备注</td>
+<td>顺带发现：<code>string</code> 的方法叫 <code>has()</code> 不叫 <code>contains()</code> —— 报错本身给得很好（"是否想用 'has'？"），文档补一句即可</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b16-b17-2026-10-11-check">B16 / B17【高 / 中】2026-10-11 新登记：嵌套字段赋值的<strong>误导报错</strong> + <code>--check</code> 的<strong>检查范围</strong></h3>
+<blockquote>
+<p>⚠ <strong>正文不在这里重复</strong>（单一事实来源 ✓）：完整条目（现象 / 最小复现 / <strong>边界表</strong> /
+两种修法 / 实施位置 / 未逐行走查的说明）在 <strong><code>Leno报错提示改进计划.md</code> 的 B6·改进 5
+与 B7·改进 6</strong> ✓；"怎么避开/怎么复核"的实操版在 <strong><code>语言陷阱速查.md</code> §三 ㉙ 与 §四</strong> ✓。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>怎么撞上的</td>
+<td>移植 LenoMusic 时给播放条加"记住音量"：在 <code>PlayerBar.set_volume_pct()</code> 里写了 <code>volSld.value = _float(v)</code>（<code>volSld</code> 是本 struct 的<strong>值类型</strong>字段）⇒ 真编译报「字段 'volSld' 类型不匹配: 期望 'struct Slider'，实际 'float'」✗</td>
+</tr>
+<tr>
+<td>被误导在哪</td>
+<td>① 报的字段是<strong>外层</strong>那个（源码里并没有"给它赋值"这回事）⇒ 顺着查 RHS / 字段声明，查不出真因；<strong>我一度还误判成"<code>value</code> 是关键字"</strong> ✗（实测 <code>value</code> 当字段名/读/写都正常 ✓ 换个名字一样报 ✓）② 它<strong>先混过了 <code>--check</code></strong>（那句 <code>--check</code> 打印"检查通过" ✗）⇒ 差点当成"能编译"</td>
+</tr>
+<tr>
+<td>判据 / 边界</td>
+<td>只差"<strong>基座是自己的字段</strong>"这一格 ✗：<code>o.inner.value = v</code>（局部量）/ 参数 / 取出来改再放回 ⇒ <strong>都正常</strong> ✓；<code>inner.value = v</code>（本 struct 字段）⇒ 报 ✓ ⇒ 更像<strong>编译器 bug</strong>（struct 是引用语义，两者语义相同 ✓）</td>
+</tr>
+<tr>
+<td>绕法（本仓已按此落地 ✓）</td>
+<td>对"别人的 struct"（控件）：<strong>调它自己的方法</strong>（<code>volSld.set_value(v)</code> ✓）；对自己的字段：取出来改再放回（<code>Inner c = inner; c.value = v; inner = c</code> ✓）</td>
+</tr>
+<tr>
+<td>附带教训</td>
+<td><strong><code>--check</code> 不能替代"真编译/真跑"</strong> ✓（本文档 B1 那条讲的是缓存，这条讲的是<strong>检查范围</strong> —— 两个方向都要防 ✓）</td>
+</tr>
+<tr>
+<td>✅ 销账（2026-10-11 当天）</td>
+<td><strong>B16 已修</strong>：按修法 ① 把它支持起来（<code>inner.value = v</code> / <code>+=</code> 正常，与经局部量同一条路 ✓），并顺带补了"内层成员不存在"的编译期诊断；回归 <code>assert/test_nested_field_assign.leno</code> ✓。<strong>B17 已修一半</strong>：<code>--check</code> 的输出自报范围（② 落地 ✓），① 未做（代价与风险见详条 ✓）。两处的完整改动/验证/回归都在 <code>Leno报错提示改进计划.md</code> 的 ✅ 块里（<strong>本文不重复</strong> ✓）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_3">三、交付物（当前状态）</h2>
+<pre><code>D:\CLeno\Leno\leno_gui\应用\音乐下载器\
+├─ kuwo_core.leno   酷我核心：搜索 / 取直链 / 下载（不 print、无 main ⇒ GUI 直接复用）
+├─ kuwo_des.leno    酷我官方接口用的 DES 变体（encryptquery），金标向量写在文件注释里
+├─ kuwo_lyric.leno  酷我歌词：参数异或+base64 → zlib → gb18030 → 标准 LRC 落盘
+├─ netease_core.leno    网易核心：weapi/search/get 搜索 + 批量取直链（顺带补齐体积与&quot;能不能下&quot;）
+├─ netease_crypto.leno  网易 weapi 加密：AES-128-CBC 两轮 + 1024 位 RSA（任意精度 int 直接模幂）
+├─ netease_lyric.leno   网易歌词：weapi/song/lyric + 译文按时间戳并回原文 + 落盘补 BOM
+├─ kugou_core.leno      酷狗核心：移动端搜索（三档体积 + 付费标记一次带回）+ CDN 取链（kgcloudv2，免签名）
+├─ kugou_lyric.leno     酷狗歌词：krcs 搜 ID → lyrics.kugou.com/download（base64 LRC）；入口收**整行**（命中要歌名+时长）
+├─ thirdparty.leno  第三方聚合接口取直链（**无损的唯一通路**，见 A8）：网易 qinglvai / QQ vkeys / 酷狗 baka meting
+│                   + 体积探测（HEAD ⇒ Range 0-0）+ 302 只读 Location；对外只有 `resolve(client, src, id)` ✓
+├─ dl_engine.leno   引擎层（不加 GUI 也能单跑）：音源注册表 + 分片下载（进度/续传/暂停取消）
+│                   + **按音源分发**（取直链 / 抓歌词）+ worker 入口；对外一律传&quot;纯字符串数组行&quot;
+│                   （行第 9 项 = 音源 id，缺项一律当 kuwo；第 10 项 = 搜索时取回的直链，空则现取
+│                     ⇒ 两项都向后兼容 ✓ 见 dl_engine.F_SRC / F_URL）
+├─ musicdl_gui.leno GUI：主窗口（搜索 / 多源勾选 / 结果表 / 右键菜单）+ 下载对话框（任务表 + 进度 + 歌词）
+└─ musicdl.leno     CLI（参数解析 / 列表 / 下载前 N 首，默认连 .lrc 一起下）
+</code></pre>
+<p><strong>网易源实测（2026-10-08）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>weapi 金标</td>
+<td><code>test/test_netease_crypto.leno</code> <strong>8 项断言全过</strong>（AES 单轮 / 两轮 / RSA 256 字符 / 反转 / base64 转义 / 可复现）✓</td>
+</tr>
+<tr>
+<td>搜索</td>
+<td><code>告白气球 周杰伦</code> 命中 5 首；批量补体积后 4 首显示 <code>mp3 3.20~8.72 MB</code>、1 首原唱/付费显示空白（不可下）✓</td>
+</tr>
+<tr>
+<td>下载 + 歌词</td>
+<td>下第一首可下的：<code>成功=1 失败=0 歌词=1</code>；落盘 <code>告白气球（原版） - 沈幼楚.mp3</code> 3,363,885 B + 同名 <code>.lrc</code> 926 B（<strong>UTF-8 BOM</strong> ✓）</td>
+</tr>
+<tr>
+<td>GUI</td>
+<td>离屏 60 帧无错；多音源勾选与结果混排由注册表 + 行内音源标记驱动（<strong>GUI 布局一处未改</strong> ✓）</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>一次 1024 位模幂 ≈ <strong>11 ms</strong>（5 次 82.6 ms）⇒ 每请求现算即可，不需缓存或常量 ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>酷狗源实测（2026-10-08）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>搜索</td>
+<td>「晴天」命中 5 首，<strong>付费判定全对</strong>：原唱周杰伦 / Live / DJ版 标"下不了"，两个翻唱标 <code>flac 13.66 MB</code> / <code>15.75 MB</code> ✓</td>
+</tr>
+<tr>
+<td>下载 + 歌词</td>
+<td>下第一个可下的：<code>成功=1 失败=0 歌词=1</code>；落盘 <code>晴天 - 蓝心羽.flac</code> <strong>14,324,496 B</strong>（与列表标注的 <code>sqfilesize</code> <strong>逐字节一致</strong> ✓）+ <code>.lrc</code> 1651 B（带 BOM，<code>[00:00.46]</code> 形态）</td>
+</tr>
+<tr>
+<td>回归测试</td>
+<td>新增 <code>test/test_kugou_cdn.leno</code> <strong>6 项全过</strong>（key 算式 / URL 整串 / 大小写敏感）✓</td>
+</tr>
+<tr>
+<td>免费曲给无损</td>
+<td>无需账号 —— 免费翻唱直接拿到 <strong>flac 648 kbps</strong> ✓</td>
+</tr>
+<tr>
+<td>GUI</td>
+<td>离屏 60 帧无错；三源勾选与混排由注册表 + 行内音源标记驱动（<strong>GUI 布局仍未改一行</strong> ✓）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第三方聚合接口实测（2026-10-08，接上三条通路后）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QQ 搜索列表</td>
+<td>「周杰伦 晴天」3 首全部标成 <strong>flac 178 / 161 / 205 MB</strong>（上游同轮 178 / 205 一致 ✓），行里带直链</td>
+</tr>
+<tr>
+<td>抓 1 KB 验魔数</td>
+<td>从<strong>行里的直链</strong>拉 4 KB ⇒ <code>102,76,97,67</code> = <code>fLaC</code> ✓（真无损，不是改后缀的 mp3）</td>
+</tr>
+<tr>
+<td>落盘走行内直链</td>
+<td><code>dl_entry</code> 用行第 10 项（而不是再问一次接口）⇒ 探针行 <code>成功 1 / 失败 0</code> ✓（若忽略该项，免登录的 F000 必然 "取直链失败" ⇒ 这条断言能真正区分两条路 ✓）</td>
+</tr>
+<tr>
+<td>网易</td>
+<td>配额当天已用尽 ⇒ 如实回退 <code>haitangw</code> 的 <strong>mp3 10.32 MB</strong>（ext 按直链后缀 = mp3，<strong>不冒充 flac</strong> ✓）；付费原唱曲从前"列表空白下不了"，现在<strong>至少可下</strong> ✓</td>
+</tr>
+<tr>
+<td>酷狗</td>
+<td>免费曲仍走官方（flac 52.83 MB ✓ 未变）；付费曲走 baka ⇒ 也拿到 flac 51.87 MB ✓（该档回 502 时如实留空 ✓）</td>
+</tr>
+<tr>
+<td>离线回归</td>
+<td>新增 <code>test/test_thirdparty.leno</code> <strong>25 项全过</strong>（URL 配方整串 / 档位顺序 / 四类响应解析，含 <code>42903</code>、<code>40012</code>、<code>"None"</code> 占位三个真实坑 ✓）</td>
+</tr>
+<tr>
+<td>既有回归</td>
+<td>应用全部 8 个脚本（含新增那个）<strong>全过</strong> ✓；GUI <code>DAUTO=30</code> 无头跑完无错 ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>搜索并行化（2026-10-08，同轮）</strong>：第三方逐首请求是搜索耗时大头（单源 10 条 ≈ 7~11 s）⇒
+把搜索拆成<strong>两阶段并行</strong>（<code>dl_engine.search_source</code> / <code>probe_rows</code> / <code>keep_downloadable</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>阶段 A</td>
+<td><strong>每个音源一条线程</strong>（官方搜索，1~2 次请求/源）</td>
+</tr>
+<tr>
+<td>阶段 B</td>
+<td>无损直链按行<strong>轮转切片</strong>、<code>PROBE_THREADS=8</code> 路并行（<code>dl_engine.slice_rows</code>，切法锁进 <code>test/test_parallel_dl.leno</code> ②.5）</td>
+</tr>
+<tr>
+<td>提速</td>
+<td>4 源 × 10 条：<strong>串行 ~26 s → 并行 ~6 s</strong>（阶段 B 6.5s@8路 vs 5路 9.0s vs 连续切 8.1s ⇒ 轮转+8路是甜的）</td>
+</tr>
+<tr>
+<td>正确性</td>
+<td>阶段 A 行<strong>先不过滤</strong>（付费曲没官方体积，得靠阶段 B 补 ✓）；切片/join 不重不漏（对拍 40 首全过 ✓）</td>
+</tr>
+<tr>
+<td>自检钩子</td>
+<td>新增 <code>DSEARCH=&lt;关键词&gt;</code>：无头真搜一次、打印 <code>[dsearch] 命中 X / 隐藏 Y / 耗时 Z ms</code> 后正常退出 ✓</td>
+</tr>
+<tr>
+<td>约束</td>
+<td>线程入口必须是<strong>主脚本文件</strong>的具名全局函数（语言硬约束，见 <code>threads.c</code> 的前置校验）⇒ 起线程全在 <code>musicdl_gui.leno</code>，引擎只出"能被线程调的纯函数" ✓ <br>⚠ <strong>2026-10-12：约束已撤（TH2）</strong> ⇒ 引擎以后可以直接自己起线程 ✓（现有分层仍然成立、不必改）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GUI 版实测（2026-10-07）</strong>：搜索「周杰伦 晴天」命中 5 首 → 下载对话框下第 2 首
+（8.10 MB mp3）→ 表格状态/进度实时更新、文件落到 <code>downloads/</code>；
+<code>dl_engine</code> 侧另测：55.4 MB flac 分片下载成功、重复下载走 416 <strong>秒回</strong>（断点续传快路径）、
+暂停期间进度消息为 <strong>0 条</strong>（确实停住）、resume 后继续、取消后不计为失败。</p>
+<p><strong>歌词实测（2026-10-07，同轮）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>入口</th>
+<th>用例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI <code>--lyric-only -n 3</code></td>
+<td>周杰伦 晴天</td>
+<td>3/3 首拿到 <code>.lrc</code>（2548 / 3975 / 1673 字节），文件名与音频同名同目录 ✓</td>
+</tr>
+<tr>
+<td>CLI <code>-n 1</code>（默认带歌词）</td>
+<td>周杰伦 晴天</td>
+<td>音频 55,397,039 字节 + <code>晴天 - 周杰伦.lrc</code> 2548 字节 ✓</td>
+</tr>
+<tr>
+<td>CLI <code>--no-lyric -n 1</code></td>
+<td>同上</td>
+<td>只出音频，<strong>没有</strong> <code>.lrc</code> ✓</td>
+</tr>
+<tr>
+<td>GUI（勾选「同时下载歌词」）</td>
+<td>晴天+告白气球 (Live)</td>
+<td>状态行 <code>完成 7 MB +歌词</code>、摘要 <code>成功 1 首，失败 0 首，歌词 1 首</code> ✓</td>
+</tr>
+<tr>
+<td>GUI 右键「只下勾选的歌词」</td>
+<td>晴天</td>
+<td>对话框标题/按钮变「下载歌词」、状态 <code>完成 2 KB +歌词</code>、进度条按<strong>任务条数</strong>推进 ✓</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>歌词正确性对照：<code>晴天</code>（无译文）与 <code>Love Story</code>（<strong>含译文行</strong>，如 <code>[00:19.93]当我第一次看见你的时候 我们都还年轻</code>）都与服务端一致；
+  不存在的 rid ⇒ 返回空串、不写盘、不抛异常；落盘行尾是 <strong>LF</strong>、只有个别歌带 BOM（都原样保留）。</li>
+<li>歌词与音频<strong>成败解耦</strong>：取直链失败时仍会去抓歌词（用户反而更需要它 ✓）。</li>
+</ul>
+<p><strong>搜索健壮性回归（2026-10-07，A5 修复后）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>关键词</th>
+<th>CLI</th>
+<th>GUI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>青衣</code>（事故用例）</td>
+<td>命中 10 首（含 <code>mp3 365.84 KB</code> 这种千字节档 ⇒ 单位分支正确）</td>
+<td>命中 5 首，列表/格式/大小正常 ✓</td>
+</tr>
+<tr>
+<td><code>周杰伦 晴天</code></td>
+<td>命中 3 首（回归 ✓）</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Taylor Swift</code></td>
+<td>命中 3 首（非中文关键词 ✓）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>取直链优先级</strong>：① 官方 <code>mobi.s</code>（需 DES 加密查询串，<strong>不依赖任何第三方</strong>）→ ② 第三方兜底（<code>nxinxz</code> → <code>haitangw</code>）。</p>
+<p><strong>DES 移植的正确性判据</strong>（已通过）：
+对 5 组输入 + 1 个真实查询串，Leno 的 <code>encryptquery</code> 与 Python <code>kuwoutils.py</code> 的 base64 输出<strong>逐字符一致</strong>
+（例：<code>"A"</code> → <code>lRB6F4cFq24=</code>；真实 113 字符查询串 → 160 字符 base64，全同）。</p>
+<p><strong>端到端实测</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>歌</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>稻香 (flac)</td>
+<td>26,012,257 B = 24.81 MB（<strong>与列表标注一致</strong>）；FLAC 44100Hz/2ch/16bit；223.45s</td>
+</tr>
+<tr>
+<td>稻香 3D环绕版 (mp3)</td>
+<td>8,798,168 B = 8.39 MB（一致）；320 kbps；219.92s</td>
+</tr>
+</tbody>
+</table>
+<p>（两首都走<strong>官方</strong> <code>kw-er.kuwo.cn</code> 直链 ⇒ 音质档位正确，不像第三方那条降档。）</p>
+<hr>
+<h2 id="_4">四、下一步（未做）</h2>
+<ol>
+<li>~~<strong>加网易源</strong>~~ ✅ <strong>已完成（2026-10-08）</strong>：<code>netease_core.leno</code> + <code>netease_crypto.leno</code>（weapi：AES×2 + 1024 位 RSA，
+   用 Leno 的<strong>任意精度 <code>int</code></strong> 直接做模幂，不需要任何大数库 ✓）+ <code>netease_lyric.leno</code>（译文按时间戳并回原文）。
+   端点坑与六条服务端事实见 A6；金标回归在 <code>test/test_netease_crypto.leno</code> ✓
+   <strong>下一步（可选）</strong>：接登录态（<code>MUSIC_U</code> Cookie）⇒ 才能拿 flac 与付费曲直链（现在是未登录态：只有 320k mp3，付费曲无直链）。
+   ⚠ 实测过：<strong>账号非会员时 cookie 也没用</strong>（<code>profile.vipType=0</code> ⇒ 五档仍全降级 320k、付费曲仍 404）——
+   无损的真正开关是<strong>会员</strong>，不是 cookie ✓
+   （2026-10-08 补充：无损现在<strong>不走官方了</strong> —— 改走第三方聚合接口，见 A8 ✓）</li>
+<li>~~<strong>加酷狗源</strong>~~ ✅ <strong>已完成（2026-10-08）</strong>：<code>kugou_core.leno</code> + <code>kugou_lyric.leno</code>，
+   走"移动端搜索 + CDN <code>kgcloudv2</code>"（<strong>免签名、免设备注册、免账号</strong>，免费曲直接给 flac）。
+   端点坑与六条服务端事实见 A7；配方回归在 <code>test/test_kugou_cdn.leno</code> ✓
+   <strong>顺带</strong>：为它给 <code>LenoCrypto</code> 收录了 <strong>MD5</strong>（<code>crypto_md5.leno</code>，RFC 1321 + 金标回归 ✓）——
+   酷狗的 <code>key</code>/签名都是 md5，而库里原先只有 sha256/sha512 ✓</li>
+<li>⏳ <strong>CLI（<code>musicdl.leno</code>）仍只支持酷我</strong>：它直接调 <code>kuwo.search</code> / <code>kuwo.resolveurl</code>，没走引擎的按音源分发
+   ⇒ 要一致得加个 <code>--src</code> 参数并把三处调用改成按源分支（约 5 处）。GUI 侧已完整支持三源 ✓</li>
+<li><strong>并发下载</strong>：目前是单 worker 顺序下（进度 / 暂停 / 取消都已打通）；并发要压 <code>threads</code>，是本次唯一没碰过的薄弱面。</li>
+<li><strong>给 LenoWeb 加字节进度回调</strong>：<code>downloadResume</code> 内部 <code>NOPROGRESS=1</code> ⇒ 拿不到任何字节进度
+   （本应用改用自建分片 <code>Range</code> 下载绕开 ✓）。若以后加 <code>CURLOPT_XFERINFOFUNCTION</code>，分片逻辑可以再简化。</li>
+<li><strong>网易那条通路的配额是"游客每日 3 首"</strong>（qinglvai 回 <code>code=42903</code>）：用尽后当天只能退到 320k mp3。
+   要提高上限就得给该站带账号，或<strong>照 <code>thirdparty.resolve</code> 的形状多接几条通路</strong> ✓
+   ⚠ 别把"多接几条"做成搜索时的<strong>串行长链</strong>：每条通路 1 次请求 × 每条搜索结果 ⇒ 搜索会明显变慢
+   （上游就是这个毛病：一次搜索要串 40 个接口）——真要接多路，应该<strong>只在拿不到时才逐条试</strong> ✓</li>
+<li><strong>歌词再往前一步</strong>（可选）：① 把 <code>.lrc</code> 写进音频标签（FLAC <code>VORBIS_COMMENT</code> / MP3 <code>USLT</code>+<code>SYLT</code>），
+   播放器就不必找同名文件；② 用 <code>lrcx=1</code> 的<strong>逐字时间轴</strong>做卡拉OK式高亮（那就得把 A4-③ 的
+   base64+异或第二层与 <code>convertrawlrc</code> 补齐，本次有意跳过了）。</li>
+</ol></main>
+</div>
+<nav class="pager"><a href="易用性痛点（TraeSign 移植实录）.html">← 上一篇</a><a href="编译器崩溃排查手册.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>分支分派性能：if 链 / switch / enum / 带载荷 enum（2026-11-10 实测） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="性能_分支与枚举.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">九、索引未收录（近期新增）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 结论先说</a></li><li><a href="#2-ms300k">2. 优化前后对照（单位 ms，300k 次调用）</a></li><li><a href="#3-codegen_stmtc-gen_switch">3. 改了什么（codegen_stmt.c 的 gen_switch）</a></li><li><a href="#4-2026-11-10">4. 已落地：大分支的二叉比较树（2026-11-10）</a></li><ul class="lv3"><li><a href="#300k-ms">实测（300k 次调用，ms）</a></li><li><a href="#_1">判据（任何一条不满足就退回线性链，语义永远不变）</a></li></ul><li><a href="#5">5. 还没做的</a></li><ul class="lv3"><li><a href="#o1">稠密：跳转表（O(1)，但要动字节码格式）</a></li><li><a href="#_2">用户侧：先粗分档再细判（现在仍然有用）</a></li></ul><li><a href="#6">6. 一句话建议</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="if-switch-enum-enum2026-11-10">分支分派性能：<code>if</code> 链 / <code>switch</code> / enum / 带载荷 enum（2026-11-10 实测）</h1>
+<blockquote>
+<p>复现：<code>powershell -NoProfile -ExecutionPolicy Bypass -File tools\bench_branch.ps1</code>
+生成 <code>tmp_bench.leno</code> 后 <code>leno tmp_bench.leno</code>。每组 <strong>300,000 次调用</strong>，
+计时用 <code>times.us()</code>；<code>baseline_loop</code> 是"同样循环、不调被测函数"的底噪（≈1ms）。</p>
+</blockquote>
+<h2 id="1">1. 结论先说</h2>
+<table>
+<thead>
+<tr>
+<th>结论</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>优化前 <strong><code>switch</code> 比 <code>if</code> 链慢 15%~20%</strong></td>
+<td>同一个线性链，但 <code>switch</code> 每个 case 是 <code>LOADK + EQ + JMP_IF_TRUE</code>（3 条 12 字节），而 <code>if v == 3</code> 早就用融合的 <code>OP_CMPJMP_EQ</code>（1 条 8 字节）</td>
+</tr>
+<tr>
+<td>优化后 <strong><code>switch</code> 比 <code>if</code> 链快 35%~40%</strong></td>
+<td>现在两者都走融合比较，但 <code>if</code> 链还要为每个分支生成"不成立则跳到下一个"的额外结构</td>
+</tr>
+<tr>
+<td><strong>带载荷 enum 与普通 enum 几乎同价</strong></td>
+<td>命中最后一个 case 时：普通 enum 12ms、带载荷 14ms（300k 次）—— 多出来的是 <code>tag</code> 字段读 + 绑定变量</td>
+</tr>
+<tr>
+<td><strong>两者都还是 O(n)</strong></td>
+<td>命中位置越靠后越慢：30 个 case 命中最后一个 23ms，命中第一个 7ms</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-ms300k">2. 优化前后对照（单位 ms，300k 次调用）</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>优化前</th>
+<th>优化后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>baseline（纯循环）</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>if3</code> 命中第 1 个 / 最后一个</td>
+<td>6 / 8</td>
+<td>6 / 8</td>
+</tr>
+<tr>
+<td><code>switch3</code> 第 1 个 / 最后一个 / 混合</td>
+<td>8 / 10 / 10</td>
+<td><strong>7 / 8 / 9</strong></td>
+</tr>
+<tr>
+<td><code>if10</code> 第 1 个 / 最后一个</td>
+<td>7 / 22</td>
+<td>6 / 18</td>
+</tr>
+<tr>
+<td><code>switch10</code> 第 1 个 / 最后一个 / 混合</td>
+<td>9 / 24 / 16</td>
+<td><strong>7 / 12 / 11</strong></td>
+</tr>
+<tr>
+<td><code>if30</code> 第 1 个 / 最后一个</td>
+<td>7 / 42</td>
+<td>6 / 39</td>
+</tr>
+<tr>
+<td><code>switch30</code> 第 1 个 / 最后一个 / 混合</td>
+<td>8 / 50 / 31</td>
+<td><strong>7 / 23 / 16</strong></td>
+</tr>
+<tr>
+<td>enum <code>if</code> 10 成员 第 1 个 / 最后一个</td>
+<td>8 / 27</td>
+<td>9 / 26</td>
+</tr>
+<tr>
+<td>enum <code>switch</code> 10 成员 第 1 个 / 最后一个 / 混合</td>
+<td>9 / 24 / 18</td>
+<td><strong>8 / 12 / 13</strong></td>
+</tr>
+<tr>
+<td><strong>带载荷</strong> enum <code>switch</code> 10 成员 第 1 个 / 最后一个 / 混合</td>
+<td>10 / 25 / 19</td>
+<td><strong>9 / 14 / 14</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>if</code> 那几行的抖动 ±2~3ms 属正常（同一台机器、同一进程内连续测）；<code>switch</code> 的改善是稳定可复现的。</p>
+</blockquote>
+<h2 id="3-codegen_stmtc-gen_switch">3. 改了什么（<code>codegen_stmt.c</code> 的 <code>gen_switch</code>）</h2>
+<pre><code class="language-c">// 老路径：每 case 3 条指令
+LOADK  vr, &lt;字面量&gt;
+OP_EQ  cr, tmp, vr
+OP_JMP_IF_TRUE cr, → 跳板[i]
+
+// 新路径：整数字面量 case 且主题静态类型是 int/enum ⇒ 1 条
+OP_CMPJMP_EQ tmp, &lt;int16 立即数&gt;, 真则跳 → 跳板[i]
+</code></pre>
+<ul>
+<li>直接复用既有的 <code>OP_CMPJMP_EQ</code>（T31，<code>if a == 3</code> 早就在用）⇒ <strong>没有新 opcode、没有字节码版本 bump</strong>。</li>
+<li>判据收紧：只有"字面量落在 int16 内 + 主题静态类型是 <code>int</code>/<code>enum</code>"才走融合；<code>string</code> / <code>float</code> / <code>any</code> 主题仍走原路径（字符串比较是内容比较，没法立即数化）。</li>
+<li>反汇编可自证：<code>OP_CMPJMP_EQ A=1 B=0 C=192 | 为真则跳 +12（比较 R[1] 与立即数 0）</code>。</li>
+</ul>
+<h2 id="4-2026-11-10">4. 已落地：大分支的<strong>二叉比较树</strong>（2026-11-10）</h2>
+<p>线性链是 O(n)：100 个 case 命中最后一个要 66ms（300k 次）。现在 <code>case 数 ≥ 16</code> 且
+<strong>全是互不相同的整数字面量</strong>时，codegen 把"N 条平铺"换成<strong>按值排序的二分树</strong>，判定次数降到
+log₂N。<strong>没有新指令、不动字节码格式</strong>：每个节点仍是既有的 <code>OP_CMPJMP_EQ</code>（相等 ⇒ 跳跳板）
++ <code>OP_CMPJMP_LT</code>（小于 ⇒ 左子树），落空自然落到原来的 miss 跳转 ⇒ default / 出口逻辑零改动。</p>
+<h3 id="300k-ms">实测（300k 次调用，ms）</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>线性链（改前）</th>
+<th>二叉比较树（改后）</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>switch</code> 10 case 命中最后一个</td>
+<td>12~13</td>
+<td>12~13（<strong>低于阈值，仍是线性</strong>）</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>switch</code> 30 case 命中最后一个</td>
+<td>27</td>
+<td><strong>13</strong></td>
+<td>−52%</td>
+</tr>
+<tr>
+<td><code>switch</code> 30 case 混合</td>
+<td>18</td>
+<td><strong>13</strong></td>
+<td>−28%</td>
+</tr>
+<tr>
+<td><code>switch</code> 100 case 命中最后一个</td>
+<td>66</td>
+<td><strong>21</strong></td>
+<td><strong>−68%</strong></td>
+</tr>
+<tr>
+<td><code>switch</code> 100 case 混合</td>
+<td>38</td>
+<td><strong>17</strong></td>
+<td>−55%</td>
+</tr>
+<tr>
+<td><code>switch</code> 100 case 命中第一个</td>
+<td>8</td>
+<td>15</td>
+<td>+7（树的固定代价）</td>
+</tr>
+<tr>
+<td><code>if</code> 100 链 命中最后一个（对照）</td>
+<td>101~113</td>
+<td>101（<code>if</code> 链不走树）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>取舍写清楚</strong>：如果热路径<strong>总是命中第一个 case</strong>，树会比线性链慢 7ms（100 case）；
+但只要命中位置不是恒定的第一个，树就赢，且分支越多赢得越多。阈值取 <strong>16</strong> 是这个交叉点量出来的
+（10 个 case 时两者打平、命中靠前时树还更慢）。</p>
+<h3 id="_1">判据（任何一条不满足就退回线性链，语义永远不变）</h3>
+<ol>
+<li>主题静态类型是 <code>int</code> / <code>enum</code>（树用整数立即数比较）</li>
+<li>每个 case <strong>恰好一个</strong>值（<code>case 1, 2</code> 多值、<code>case 1 to 3</code> 区间都不进树）</li>
+<li>值都是整数字面量且落在 int32（int16 之外的大值<strong>照样进树</strong> —— 比较时先把常量装进寄存器，
+   只是每个节点多一条 <code>LOADK</code>；超过 int32 才退回线性链）</li>
+<li>值<strong>互不相同</strong> —— 有重复时"第一个命中"是可观测语义，排序会改掉它</li>
+<li>case 数 ≥ 16</li>
+</ol>
+<p>回归钉子：<code>assert/test_switch_tree.leno</code>（20 case 逐值 / 负数区间 / enum 20 成员 / 稀疏值 +
+空洞 / 多值 case 退回线性，五组）。</p>
+<h2 id="5">5. 还没做的</h2>
+<h3 id="o1">稠密：跳转表（O(1)，但要动字节码格式）</h3>
+<p>值域连续（如 <code>0..N</code> 的枚举/状态码）时可以发一张跳转表，<code>OP_SWITCH_TABLE idx</code> 一次间接跳转。
+代价比二叉比较树大得多：新 opcode + 常量池存表 + VM 间接跳转 + 序列化/校验器/反汇编三处同步 +
+版本 bump（就是"新增 opcode 必做清单"那套）。<strong>当前基准下收益有限</strong>：树已经把 100 case 压到
+21ms，而跳转表最多再省一半左右 ⇒ 优先级低于"继续把真实项目跑稳"。</p>
+<h3 id="_2">用户侧：先粗分档再细判（现在仍然有用）</h3>
+<p>值域大且分支多、又恰好<strong>总是命中靠前</strong>时，先粗分档比树更划算（教程 §switch 性能那段已写）：</p>
+<pre><code class="language-leno">if v &lt; 100 { switch v { … } }
+eif v &lt; 200 { switch v { … } }
+else { … }
+</code></pre>
+<p>把 100 个 case 拆成 10×10，等效 20 次比较而不是 100 次。</p>
+<h2 id="6">6. 一句话建议</h2>
+<ul>
+<li><strong>冷路径 / 分支 ≤ 十来个</strong>：随便用 <code>switch</code>（比 <code>if</code> 链快，可读性更好）。</li>
+<li><strong>热路径 + 几十上百分支</strong>：不用特殊写法了 —— 树已经自动接管（≥16 个整数字面量 case）。
+  只有在"永远命中第一个"这种极端分布下，手写 <code>if</code> 才会快几毫秒。</li>
+<li><strong>带载荷 enum 的分派不要有心理负担</strong>：比普通 enum 只贵 1~2ms/300k 次，换来的是类型安全。</li>
+</ul></main>
+</div>
+<nav class="pager"><a href="待修_编译与语义问题.html">← 上一篇</a><a href="易用性痛点（TraeSign 移植实录）.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

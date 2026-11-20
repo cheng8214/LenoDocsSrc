@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 随机数模块 (rands) · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_rands.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">使用方式</a></li><li><a href="#_3">基础随机数</a></li><ul class="lv3"><li><a href="#om">om()</a></li></ul><li><a href="#_4">范围随机数</a></li><ul class="lv3"><li><a href="#intsmin-max">ints(min, max)</a></li><li><a href="#floatsmin-max">floats(min, max)</a></li></ul><li><a href="#_5">布尔与选择</a></li><ul class="lv3"><li><a href="#boolsprobability">bools(probability)</a></li><li><a href="#choicearray">choice(array)</a></li></ul><li><a href="#_6">数组操作</a></li><ul class="lv3"><li><a href="#arrayn-min-max">array(n, min, max)</a></li><li><a href="#int_arraymin-max">int_array(min, max)</a></li><li><a href="#samplearray-count">sample(array, count)</a></li><li><a href="#shufflearray">shuffle(array)</a></li></ul><li><a href="#_7">字符串生成</a></li><ul class="lv3"><li><a href="#strlength-chars">str(length, chars)</a></li></ul><li><a href="#_8">统计分布</a></li><ul class="lv3"><li><a href="#gaussmean-std">gauss(mean, std)</a></li></ul><li><a href="#_9">种子控制</a></li><ul class="lv3"><li><a href="#seedseed">seed(seed)</a></li></ul><li><a href="#_10">算法说明</a></li><ul class="lv3"><li><a href="#pcg32">PCG32 随机数生成器</a></li><li><a href="#fisher-yates">Fisher-Yates 洗牌算法</a></li><li><a href="#box-muller">Box-Muller 变换</a></li></ul><li><a href="#_11">示例代码</a></li><li><a href="#_12">注意事项</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-rands">Leno 随机数模块 (rands)</h1>
+<p>本文档详细说明 <code>rands</code> 模块提供的所有随机数生成方法。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#基础随机数">基础随机数</a></li>
+<li><a href="#范围随机数">范围随机数</a></li>
+<li><a href="#布尔与选择">布尔与选择</a></li>
+<li><a href="#数组操作">数组操作</a></li>
+<li><a href="#字符串生成">字符串生成</a></li>
+<li><a href="#统计分布">统计分布</a></li>
+<li><a href="#种子控制">种子控制</a></li>
+<li><a href="#算法说明">算法说明</a></li>
+</ul>
+<hr>
+<h2 id="_2">使用方式</h2>
+<pre><code class="language-leno">import rands
+
+main() {
+    // 生成 0-1 之间的随机小数
+    var num = rands.om()
+    print(num)
+
+    // 生成 1-100 之间的随机整数
+    var dice = rands.ints(1, 100)
+    print(dice)
+}
+</code></pre>
+<hr>
+<h2 id="_3">基础随机数</h2>
+<h3 id="om"><code>om()</code></h3>
+<p>生成 0 到 1 之间的随机浮点数（包含 0，不包含 1）。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>float</code> - [0, 1) 范围内的随机数</p>
+<pre><code class="language-leno">rands.om()  // 0.234567890123
+rands.om()  // 0.876543210987
+</code></pre>
+<hr>
+<h2 id="_4">范围随机数</h2>
+<h3 id="intsmin-max"><code>ints(min, max)</code></h3>
+<p>生成指定范围内的随机整数（包含 min 和 max）。</p>
+<p><strong>参数</strong>:
+- <code>min</code> (int): 最小值
+- <code>max</code> (int): 最大值</p>
+<p><strong>返回</strong>: <code>int</code> - [min, max] 范围内的随机整数</p>
+<pre><code class="language-leno">rands.ints(1, 6)     // 模拟骰子: 1-6
+rands.ints(0, 100)   // 0-100 的随机整数
+rands.ints(-10, 10)  // 负数范围也支持
+rands.ints(7, 7)     // 恒为 7（min == max 合法）
+</code></pre>
+<blockquote>
+<p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起；此前<strong>静默对调</strong>两个参数 ——
+<code>rands.ints(10, 3)</code> 会"正常"返回 3~10 的数，排查时完全看不出参数写反了）。</p>
+</blockquote>
+<h3 id="floatsmin-max"><code>floats(min, max)</code></h3>
+<p>生成指定范围内的随机浮点数 —— 按全语言的<strong>闭区间</strong>口径写作 <code>[min, max]</code>。</p>
+<p><strong>参数</strong>:
+- <code>min</code> (float): 最小值（含）
+- <code>max</code> (float): 最大值（含）</p>
+<p><strong>返回</strong>: <code>float</code> - <code>min ≤ v ≤ max</code> 的随机浮点数</p>
+<blockquote>
+<p>⚠ 实现是 <code>min + r * (max - min)</code>，其中 <code>r ∈ [0, 1)</code>（53 位精度）⇒ 严格来说
+<strong><code>max</code> 恰好被命中的概率是 0</strong>。这在连续分布上与闭区间 <code>[min, max]</code> <strong>等价</strong>
+（端点概率本来就为 0），所以口径统一写成闭区间 —— 别据此以为 <code>max</code> 会以
+"某个小概率"出现，它是<strong>取不到</strong>的。要"一定能取到端点"的离散语义请用 <code>ints</code> ✓</p>
+</blockquote>
+<pre><code class="language-leno">rands.floats(0.0, 10.0)    // 0.0-10.0 的随机小数
+rands.floats(-5.5, 5.5)    // 负数范围也支持
+rands.floats(0.0, 1.0)     // 等同于 om()
+</code></pre>
+<blockquote>
+<p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起）。此前<strong>不检查</strong>：<code>floats(4.0, 2.0)</code> 走
+<code>min + r*(max-min)</code>，结果落在 [2,4) 却<strong>小于 min</strong> ⇒ 静默给出与参数名相反的值。</p>
+</blockquote>
+<hr>
+<h2 id="_5">布尔与选择</h2>
+<h3 id="boolsprobability"><code>bools(probability)</code></h3>
+<p>生成随机布尔值，按给定概率返回 true。</p>
+<blockquote>
+<p>⚠ <strong><code>probability</code> 是必填的</strong>（2026-10-10 实测修正 ✗）：本文档此前写 <code>bools(probability?)</code>
+并给了 <code>rands.bools()</code> 的例子 —— 但<strong>实际编译不过</strong>：
+<code>rands.bools()</code> ⇒ 编译期 <code>rands.bools 参数数量不匹配: 期望 1, 实际 0</code> ✓。
+想要"50% 概率"就显式写 <code>0.5</code> ✓。</p>
+</blockquote>
+<p><strong>参数</strong>:
+- <code>probability</code> (float, <strong>必填</strong>): true 的概率，0.0-1.0</p>
+<p><strong>返回</strong>: <code>bool</code> - 随机布尔值</p>
+<pre><code class="language-leno">rands.bools(0.5)        // 50% 概率 true
+rands.bools(0.7)        // 70% 概率 true
+rands.bools(0.1)        // 10% 概率 true
+rands.bools(1.0)        // 总是 true
+rands.bools(0.0)        // 总是 false
+</code></pre>
+<h3 id="choicearray"><code>choice(array)</code></h3>
+<p>从数组中随机选择一个元素。</p>
+<p><strong>参数</strong>:
+- <code>array</code> (array): 源数组</p>
+<p><strong>返回</strong>: <code>T</code> - 数组中的随机一个元素（<strong>T = 入参的元素类型</strong>，v3.2.6 起）</p>
+<pre><code class="language-leno">var fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;orange&quot;]
+rands.choice(fruits)    // &quot;banana&quot;
+
+var nums = [1, 2, 3, 4, 5]
+rands.choice(nums)      // 3（推断类型是 int ⇒ 能直接做运算）
+
+// 元素类型跟着入参走（关系型规格）⇒ 取出来不必收窄
+string pick = rands.choice(fruits)
+</code></pre>
+<blockquote>
+<p>⚠ v3.2.6 前返回类型是 <code>any</code>（<code>var x = rands.choice(nums)</code> 推出 any）；
+现在按"<strong>返回类型跟第 0 个实参走</strong>"的关系型规格声明 ⇒ 与入参元素类型一致。</p>
+</blockquote>
+<hr>
+<h2 id="_6">数组操作</h2>
+<h3 id="arrayn-min-max"><code>array(n, min, max)</code></h3>
+<p>生成 n 个随机整数的数组（可重复）。</p>
+<p><strong>参数</strong>:
+- <code>n</code> (int): 数组长度
+- <code>min</code> (int): 最小值
+- <code>max</code> (int): 最大值</p>
+<p><strong>返回</strong>: <code>array</code> - 随机整数数组</p>
+<pre><code class="language-leno">rands.array(5, 1, 10)       // [3, 7, 2, 9, 5]
+rands.array(10, 0, 100)     // 生成 10 个 0-100 的随机数
+</code></pre>
+<blockquote>
+<p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起；此前<strong>静默对调</strong>两个参数）。</p>
+</blockquote>
+<h3 id="int_arraymin-max"><code>int_array(min, max)</code></h3>
+<p>生成 min 到 max 所有整数的随机排列（不重复）。</p>
+<p><strong>参数</strong>:
+- <code>min</code> (int): 最小值
+- <code>max</code> (int): 最大值</p>
+<p><strong>返回</strong>: <code>array</code> - 不重复的随机排列数组</p>
+<pre><code class="language-leno">rands.int_array(1, 5)       // [3, 1, 4, 2, 5] - 1-5 各出现一次
+rands.int_array(1, 52)      // 洗好的 52 张扑克牌
+</code></pre>
+<p><strong>与 array 的区别</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>结果示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int_array(1, 5)</code></td>
+<td><code>[3, 1, 4, 2, 5]</code></td>
+<td>1-5 各出现一次</td>
+</tr>
+<tr>
+<td><code>array(5, 1, 5)</code></td>
+<td><code>[5, 2, 3, 1, 4]</code></td>
+<td>可能重复，如 <code>[2, 2, 3, 1, 2]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起；此前<strong>静默对调</strong>）。</p>
+</blockquote>
+<h3 id="samplearray-count"><code>sample(array, count)</code></h3>
+<p>从数组中随机采样指定数量的不重复元素。</p>
+<p><strong>参数</strong>:
+- <code>array</code> (array): 源数组
+- <code>count</code> (int): 采样数量</p>
+<p><strong>返回</strong>: <code>Array[T]</code> - 采样的元素数组（<strong>T = 入参的元素类型</strong>，v3.2.6 起；此前是裸 <code>Array</code>，元素 any）</p>
+<pre><code class="language-leno">var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+rands.sample(nums, 3)       // [7, 2, 9] - 不重复
+
+var cards = rands.int_array(1, 52)
+rands.sample(cards, 5)      // 随机抽 5 张牌
+</code></pre>
+<blockquote>
+<p>⚠ <code>count &gt; 数组长度</code> ⇒ <strong>报错</strong>（2026-11-16 起）。此前<strong>静默截断成全部元素</strong>：
+<code>sample([1,2,3], 5)</code> 静默返回 3 个，调用方以为拿到了 5 个样本。
+<code>count == 0</code> 合法（空数组）、<code>count == 数组长度</code> 合法（就是打乱后的全量）。</p>
+</blockquote>
+<h3 id="shufflearray"><code>shuffle(array)</code></h3>
+<p>随机打乱数组，返回新的打乱后的数组（原数组不变）。</p>
+<p><strong>参数</strong>:
+- <code>array</code> (array): 源数组</p>
+<p><strong>返回</strong>: <code>Array[T]</code> - 打乱后的新数组（<strong>T = 入参的元素类型</strong>，v3.2.6 起；此前是裸 <code>Array</code>，元素 any）</p>
+<pre><code class="language-leno">var arr = [1, 2, 3, 4, 5]
+var shuffled = rands.shuffle(arr)
+print(shuffled)             // [3, 1, 5, 2, 4]
+print(arr)                  // [1, 2, 3, 4, 5] - 原数组不变
+</code></pre>
+<hr>
+<h2 id="_7">字符串生成</h2>
+<h3 id="strlength-chars"><code>str(length, chars)</code></h3>
+<p>生成指定长度的随机字符串。</p>
+<blockquote>
+<p>⚠ <strong><code>chars</code> 也是必填的</strong>（2026-10-10 实测修正 ✗）：本文档此前写 <code>str(length, chars?)</code>
+并给了 <code>rands.str(8)</code> 的例子 —— 但<strong>实际编译不过</strong>：
+<code>rands.str(8)</code> ⇒ 编译期 <code>rands.str 参数数量不匹配: 期望 2, 实际 1</code> ✓。
+想要"默认字母数字"就自己把那个字符集传进去 ✓。</p>
+</blockquote>
+<p><strong>参数</strong>:
+- <code>length</code> (int): 字符串长度
+- <code>chars</code> (string, <strong>必填</strong>): 字符集（<strong>没有</strong>"默认字母数字"这回事 ✗）</p>
+<p><strong>返回</strong>: <code>string</code> - 随机字符串</p>
+<pre><code class="language-leno">// 想要字母数字混合就自己传（这就是文档里旧例子想表达的&quot;默认&quot; ✓）
+rands.str(8, &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&quot;)
+rands.str(6, &quot;0123456789&quot;)  // &quot;384729&quot; - 纯数字
+rands.str(10, &quot;abcdef&quot;)     // &quot;bacdfaebfc&quot; - 十六进制字符
+rands.str(16, &quot;abcdefghijklmnopqrstuvwxyz&quot;)  // 纯小写字母
+</code></pre>
+<hr>
+<h2 id="_8">统计分布</h2>
+<h3 id="gaussmean-std"><code>gauss(mean, std)</code></h3>
+<p>生成符合正态分布（高斯分布）的随机数。</p>
+<p><strong>参数</strong>:
+- <code>mean</code> (float): 均值（期望值）
+- <code>std</code> (float): 标准差</p>
+<p><strong>返回</strong>: <code>float</code> - 正态分布随机数</p>
+<pre><code class="language-leno">// 标准正态分布 N(0, 1)
+rands.gauss(0, 1)           // -0.543210...
+rands.gauss(0, 1)           // 1.234567...
+
+// 模拟身高：均值 170cm，标准差 10cm
+rands.gauss(170, 10)        // 173.45...
+rands.gauss(170, 10)        // 165.23...
+
+// 模拟考试成绩：均值 75，标准差 15
+rands.gauss(75, 15)         // 82.34...
+</code></pre>
+<p><strong>正态分布特性</strong>:
+- 约 68% 的值落在 [mean-std, mean+std] 区间
+- 约 95% 的值落在 [mean-2<em>std, mean+2</em>std] 区间
+- 约 99.7% 的值落在 [mean-3<em>std, mean+3</em>std] 区间</p>
+<hr>
+<h2 id="_9">种子控制</h2>
+<h3 id="seedseed"><code>seed(seed)</code></h3>
+<p>设置随机数种子，用于复现随机序列。</p>
+<blockquote>
+<p>★ 2026-11-15：RNG 状态是<strong>每线程一份</strong>（<code>_Thread_local</code>）⇒ <code>seed(n)</code> 只影响<strong>当前线程</strong>。
+并行程序里要"每个线程各自可复现"，请在该线程入口分别 <code>rands.seed(n)</code>。
+未调 <code>seed</code> 时每线程用 <code>时间 ⊕ 时钟 ⊕ 线程相关地址</code> 作种子 —— 同瞬启动的线程<strong>不会</strong>
+拿到同一条序列（此前是普通 static + 只有时间/时钟 ⇒ 多线程撞同种子、序列一模一样 ✗）。</p>
+</blockquote>
+<p><strong>参数</strong>:
+- <code>seed</code> (int): 种子值</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">// 设置相同的种子，生成相同的序列
+rands.seed(12345)
+print(rands.ints(1, 100))   // 73
+print(rands.ints(1, 100))   // 42
+
+rands.seed(12345)           // 重新设置相同种子
+print(rands.ints(1, 100))   // 73 - 与第一次相同
+print(rands.ints(1, 100))   // 42 - 与第二次相同
+</code></pre>
+<p><strong>应用场景</strong>:
+- 测试代码中的随机行为
+- 需要可复现的游戏地图生成
+- 科学实验的重复验证</p>
+<hr>
+<h2 id="_10">算法说明</h2>
+<h3 id="pcg32">PCG32 随机数生成器</h3>
+<p>本模块使用 <strong>PCG32</strong> (Permuted Congruential Generator) 算法，相比传统的 <code>rand()</code> 有以下优势：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>PCG32</th>
+<th>传统 rand()</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>周期</td>
+<td>2^64</td>
+<td>通常 2^32</td>
+</tr>
+<tr>
+<td>统计质量</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>支持种子</td>
+<td>是</td>
+<td>有限</td>
+</tr>
+<tr>
+<td>线程安全</td>
+<td>可设计</td>
+<td>否</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fisher-yates">Fisher-Yates 洗牌算法</h3>
+<p><code>shuffle</code> 和 <code>sample</code> 使用 Fisher-Yates 算法，保证每个排列的概率完全相等。</p>
+<h3 id="box-muller">Box-Muller 变换</h3>
+<p><code>gauss</code> 使用 Box-Muller 算法将均匀分布转换为正态分布。</p>
+<hr>
+<h2 id="_11">示例代码</h2>
+<pre><code class="language-leno">import rands
+
+main() {
+    // 模拟掷骰子
+    print(&quot;掷骰子:&quot;)
+    for 1:5 to i {
+        print(&quot;  第&quot; + i + &quot;次: &quot; + rands.ints(1, 6))
+    }
+
+    // 生成随机密码
+    print(&quot;\n随机密码:&quot;)
+    var password = rands.str(12, &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&amp;*&quot;)
+    print(&quot;  &quot; + password)
+
+    // 抽奖程序
+    print(&quot;\n抽奖结果:&quot;)
+    var participants = [&quot;张三&quot;, &quot;李四&quot;, &quot;王五&quot;, &quot;赵六&quot;, &quot;钱七&quot;]
+    var winners = rands.sample(participants, 3)
+    print(&quot;  获奖者: &quot; + winners)
+
+    // 生成符合正态分布的学生成绩
+    print(&quot;\n模拟成绩:&quot;)
+    for 1:10 to i {
+        var score = rands.gauss(75, 15)
+        // 限制在 0-100 之间
+        if (score &lt; 0) score = 0
+        if (score &gt; 100) score = 100
+        print(&quot;  学生&quot; + i + &quot;: &quot; + score)
+    }
+
+    // 可复现的随机序列
+    print(&quot;\n可复现序列:&quot;)
+    rands.seed(42)
+    print(&quot;  &quot; + rands.array(5, 1, 100))
+}
+</code></pre>
+<hr>
+<h2 id="_12">注意事项</h2>
+<ol>
+<li><strong>随机性</strong>: 本模块生成的是伪随机数，通过 <code>seed()</code> 可以复现序列</li>
+<li><strong>范围</strong>: 全语言的整数 / 下标区间一律<strong>闭区间</strong>（<code>ints</code> 含 <code>max</code>）；<code>floats</code> 按闭区间
+   表述，但连续分布下 <code>max</code> 的命中概率为 0（见上面的说明）—— 不是两套口径 ✓</li>
+<li><strong>性能</strong>: <code>gauss</code> 计算开销比普通随机数大，大量生成时需注意性能</li>
+<li><strong>线程安全</strong>: 当前实现使用全局状态，多线程环境下需要额外处理</li>
+</ol>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-05-01</em></p></main>
+</div>
+<nav class="pager"><a href="module_times.html">← 上一篇</a><a href="module_regexs.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

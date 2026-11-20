@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>错误与空值契约（P2） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="错误与空值契约.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">九、索引未收录（近期新增）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 修前是什么样（问题）</a></li><li><a href="#2">2. 修后：一套形态</a></li><ul class="lv3"><li><a href="#21-resultt">2.1 Result[T]</a></li><li><a href="#22-optiont">2.2 Option[T]</a></li><li><a href="#23">2.3 严格解析</a></li></ul><li><a href="#3">3. 迁移对照（旧写法 → 新写法）</a></li><li><a href="#4-sqlite-null-2026-11-09">4. SQLite NULL 语义（2026-11-09 起）</a></li><li><a href="#5-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</a></li><li><a href="#6">6. 还没做的（诚实清单）</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="p2">错误与空值契约（P2）</h1>
+<blockquote>
+<p>面向"这段代码该返回什么"的决策文档。依据：<code>docs/Leno真实项目可用性评估_2026-11-08.md</code>
+§2.8 / §4.5.1 的统计（<strong>8 种错误表达、4 类空值哨兵</strong>），以及 2026-11-09 的落地
+（<code>import "Result"</code> 模块 + SQLite NULL 语义）。</p>
+<p>一句话：<strong>失败用 <code>Result[T]</code>，缺值用 <code>Option[T]</code>，进程内判空继续用 <code>T?</code>；SQL 的 NULL 永远是 <code>null</code>。</strong></p>
+</blockquote>
+<hr>
+<h2 id="1">1. 修前是什么样（问题）</h2>
+<table>
+<thead>
+<tr>
+<th>错误表达</th>
+<th>出处</th>
+<th>调用方要做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict{ok, err}</code></td>
+<td>LenoSqlite <code>execWithErr</code></td>
+<td>取 <code>_str(d["err"])</code> 判空</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td>LenoFS / LenoCsv 若干</td>
+<td>拿不到<strong>原因</strong></td>
+</tr>
+<tr>
+<td><code>int -1</code> / <code>rc</code></td>
+<td>LenoSqlite <code>exec/step</code>、LenoDir</td>
+<td>要背 SQLite 常量</td>
+</tr>
+<tr>
+<td>typed <code>Result</code> struct</td>
+<td>LenoWeb <code>web_generic</code>（<strong>已删</strong>）</td>
+<td>只在 Web 里有，别处没有</td>
+</tr>
+<tr>
+<td><code>error</code> 字段</td>
+<td>LenoHTTP <code>Response</code></td>
+<td>与 <code>ok()</code> 配合，各自实现</td>
+</tr>
+<tr>
+<td><code>throw</code></td>
+<td>Aria / LenoWorkBuddy</td>
+<td><code>catch e</code> 只能打日志</td>
+</tr>
+<tr>
+<td><code>Result[T]</code>（自制）</td>
+<td>各项目</td>
+<td>字段名 / 成功判据各不同</td>
+</tr>
+<tr>
+<td><code>Response.ok()</code></td>
+<td>LenoHTTP</td>
+<td>只适用 HTTP</td>
+</tr>
+</tbody>
+</table>
+<p>空值同理：<code>null</code>、<code>""</code>、<code>0</code>、<code>[]</code> 四种哨兵混用，最典型的是 <strong>SQLite 把 NULL 压成
+<code>""</code> / <code>0</code></strong>（<code>column_text(NULL)</code> ⇒ <code>""</code>），于是"这列没有值"和"这列的值就是空串"永久分不清。</p>
+<h2 id="2">2. 修后：一套形态</h2>
+<pre><code class="language-leno">import &quot;Result&quot; as res
+use res.(Result, Option)
+</code></pre>
+<h3 id="21-resultt">2.1 <code>Result[T]</code></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bool ok</code></td>
+<td><strong>唯一</strong>成功判据（不要用 <code>code == 0</code>）</td>
+</tr>
+<tr>
+<td><code>int code</code></td>
+<td><code>ErrCode</code> 之一：<code>INVALID_ARG / NOT_FOUND / PARSE / IO / NET / DB / AUTH / CONFLICT / UNSUPPORTED / INTERNAL</code></td>
+</tr>
+<tr>
+<td><code>string msg</code></td>
+<td>给人看的一句话（成功时为空）</td>
+</tr>
+<tr>
+<td><code>T val</code></td>
+<td>成功时的值（<strong>失败时无意义，不要读</strong>）</td>
+</tr>
+</tbody>
+</table>
+<p>方法：<code>isOk / isErr / get / unwrap / orElse / errName / errText</code>。
+函数：<code>ok / err / errText / mapResult / flatMap</code>。</p>
+<blockquote>
+<p><strong>跨模块时 <code>.val</code> 也是精确类型</strong>（2026-11-11 修）：<code>Result[Pay] r = m.make()</code> 之后
+<code>r.val.token.len()</code> 直接可用，不需要 <code>as Pay</code> 或中间变量标注。
+修前跨模块读泛型字段会把类型退化成 <code>any</code>（<code>Box[Pay].v</code> 同样中招）——
+同模块内测不出来，只在"库 + 应用"分仓时暴露；回归见
+<code>assert/test_generic_field_cross_module.leno</code>。</p>
+<p><strong>为什么是 struct 而不是载荷 enum</strong>（2026-11-10 两次实测复核）：
+· enum 现在<strong>能带载荷</strong>（<code>enum Msg { progress(int done, int total) }</code>）；
+· <strong>泛型载荷 enum 现在完整可用</strong>（2026-11-10，步 1~3）：声明 / 构造（类型实参从上下文
+  推断）/ 匹配都通；
+· 但 <strong>enum 不能挂方法</strong>（<code>extend</code> 只接受 struct）—— 而 <code>Result</code> 的价值全在方法上
+  （<code>isOk / orElse / unwrap / errText</code>）⇒ 换 enum 等于让所有调用点改成 <code>switch</code>，
+  是破坏性变更，还丢掉 <code>orElse(默认值)</code> 的显式性。
+⇒ 结论：<code>Result[T]</code> / <code>Option[T]</code> 保持 struct —— <strong>不是"语言不支持泛型 enum"</strong>（已经支持了），
+而是"enum 是值、不能有方法"这条更有意的限制。
+<strong>反过来</strong>：不需要泛型的结果形态<strong>应当</strong>写成载荷 enum（可读性更好，还能吃到 <code>switch</code>
+穷尽性检查），例如 <code>enum Fetch { ok(string body), fail(int code, string msg) }</code>。</p>
+</blockquote>
+<h3 id="22-optiont">2.2 <code>Option[T]</code></h3>
+<p><code>some / val</code> + <code>isSome / isNone / get / unwrap / orElse</code>；函数 <code>some / none / mapOption</code>。</p>
+<p><strong>与 <code>T?</code> 的分工</strong>：函数内部的临时判空继续用 <code>T?</code>（零成本）；<strong>跨模块边界</strong>要表达
+"可能没有值"就用 <code>Option[T]</code> —— 它能放进 <code>Result</code>、数组、<code>Dict</code>，且不会与 <code>null</code> 混成一体。</p>
+<h3 id="23">2.3 严格解析</h3>
+<p><code>res.parseInt</code> / <code>res.parseFloat</code> 取代 <code>_int</code> / <code>_int_or</code> / <code>as int</code> 三套不一致语义：</p>
+<pre><code class="language-leno">res.parseInt(&quot;42&quot;).val        // 42
+res.parseInt(&quot; 42&quot;).isErr()   // true —— 严格，不替你去空格
+res.parseInt(&quot;12a&quot;).errText() // &quot;PARSE: 不是整数（含非数字字符）：12a&quot;
+</code></pre>
+<h2 id="3">3. 迁移对照（旧写法 → 新写法）</h2>
+<table>
+<thead>
+<tr>
+<th>旧写法</th>
+<th>新写法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict d = f(); if _str(d["err"]) != "" { ... }</code></td>
+<td><code>Result[T] r = f(); if r.isErr() { ... r.code ... }</code></td>
+</tr>
+<tr>
+<td><code>bool ok = f(); if not ok { ... }</code></td>
+<td><code>Result[T]</code>，<code>code</code> 说明原因</td>
+</tr>
+<tr>
+<td><code>int rc = ...; if rc != SQLITE_OK</code></td>
+<td>保留（SQLite 原生码），但<strong>新 API 不许再返回裸 rc</strong></td>
+</tr>
+<tr>
+<td><code>if x == "" { 缺值 }</code></td>
+<td><code>Option[T]</code> 或 <code>x is null</code> 判</td>
+</tr>
+<tr>
+<td><code>int n = _int_or(s, 0)</code></td>
+<td><code>res.parseInt(s).orElse(0)</code>（默认值写在调用点）</td>
+</tr>
+<tr>
+<td><code>throw "INVALID_FORMAT"</code></td>
+<td><code>res.err[T](res.ErrCode.PARSE, "...")</code>；<code>throw</code> 只留给"程序 bug"</td>
+</tr>
+<tr>
+<td>SQLite <code>column_text(NULL)</code> ⇒ <code>""</code></td>
+<td><code>column_is_null(i)</code> / <code>column_value(i)</code> ⇒ <code>null</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-sqlite-null-2026-11-09">4. SQLite NULL 语义（2026-11-09 起）</h2>
+<pre><code class="language-leno">stmt.forEach(func(Statement s): bool {
+    if s.column_is_null(2) { /* 这一格就是 NULL */ }
+    var v = s.column_value(2)      // null / int / float / string / Ptr(BLOB)
+    return true
+})
+</code></pre>
+<p><code>queryAll(path, sql)</code> 同步改了：INTEGER ⇒ <code>int</code>（不再是 <code>"123"</code>）、FLOAT ⇒ <code>float</code>、
+NULL ⇒ <code>null</code>（不再是 <code>""</code>）、BLOB ⇒ 字节数。<strong>仓库内零调用方</strong>，改语义不打断任何项目。</p>
+<blockquote>
+<p><code>column_text</code> / <code>column_int</code> / <code>column_double</code> <strong>保留</strong>：给"已确认非空"的热路径省一次分支，
+但<strong>新代码应优先 <code>column_value</code></strong> —— 否则 NULL 又会悄悄变成 <code>0</code>。</p>
+</blockquote>
+<h2 id="5-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</h2>
+<p>判断标准：<strong>这条路径真的会失败吗</strong>？会 → <code>Result</code>；不会 → 直接返回数据（别造"永远 ok 的 Result"）。</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>旧口径</th>
+<th>新口径</th>
+<th>调用点影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LenoFS</td>
+<td><code>Dict{ok,files,dirs,err}</code></td>
+<td><code>Result[FsCount]</code>（<code>NOT_FOUND</code>/<code>INVALID_ARG</code>/<code>CONFLICT</code>/<code>IO</code>）</td>
+<td>只有自己测试</td>
+</tr>
+<tr>
+<td>LenoCSV</td>
+<td><code>parseTable/load</code> ⇒ <code>Dict{ok,header,rows,err}</code>；<code>save</code> ⇒ <code>bool</code></td>
+<td><code>parseTable</code> ⇒ <code>CsvTable</code>（不会失败）；<code>load</code> ⇒ <code>Result[CsvTable]</code>；<code>save</code> ⇒ <code>Result[int]</code>（字节数）</td>
+<td>只有自己测试 + 开发工具</td>
+</tr>
+<tr>
+<td>LenoSqlite</td>
+<td><code>execWithErr</code> ⇒ <code>Dict{rc,err}</code>；<code>prepare</code> 只给 <code>isOk()==false</code></td>
+<td><code>execResult</code> ⇒ <code>Result[int]</code>（受影响行数）；<code>prepareResult</code> ⇒ <code>Result[Statement]</code>；NULL 用 <code>column_value</code>/<code>column_is_null</code></td>
+<td>只有自己测试</td>
+</tr>
+<tr>
+<td>LenoCompress</td>
+<td><code>gunzip/inflateZlib/inflateRaw</code> ⇒ <code>GzipResult{ok,data,error,…}</code></td>
+<td><code>Result[Inflated]</code>（<code>Inflated{data,inBytes,outBytes}</code>，失败 <code>ErrCode.PARSE</code>）</td>
+<td>LenoZip / LenoHTTP 测试 / LenoWeb（web_gzip、Web、WebHtml）已同步</td>
+</tr>
+<tr>
+<td>LenoStats</td>
+<td>空数组 ⇒ <code>0.0</code>；<code>money</code> ⇒ <code>Dict{ok,cents,err}</code></td>
+<td><code>mean/median/percentile/stdev*/minInt/maxInt</code> ⇒ <code>Option[T]</code>；<code>money</code> ⇒ <code>Result[int]</code></td>
+<td>4 个项目 0 引用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>应用侧自造 Result 的迁移（2026-11-10）</strong></p>
+<table>
+<thead>
+<tr>
+<th>仓库</th>
+<th>原来</th>
+<th>现在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aria</td>
+<td><code>AuthResult{ok,msg,token,uid,…}</code>（9 字段混装）</td>
+<td><code>Result[AuthOk]</code>（<code>AuthOk</code> 只装成功载荷；失败带 <code>INVALID_ARG/AUTH/NET/PARSE</code>）</td>
+</tr>
+<tr>
+<td>LenoMusic</td>
+<td><code>parse_uint: [int, bool]</code> / <code>parse_word_span: [float, float, bool]</code></td>
+<td><code>Result[int]</code> / <code>Result[WordSpan{start,dur}]</code>（失败 <code>PARSE</code>）</td>
+</tr>
+<tr>
+<td>LenoWorkBuddy</td>
+<td><code>Num{ok,value}</code></td>
+<td><code>Option[float]</code>（解析失败 = "没有值"）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 还没做的（诚实清单）</h2>
+<ul>
+<li>其余模块的老 API 没逐个改：<code>LenoWeb</code> 的若干 <code>bool</code>、<code>LenoHTTP</code> 的 <code>Response.ok()</code>、
+  <code>LenoQR</code>/<code>LenoCompress</code> 的 <code>Dict</code>。按上面的标准逐条迁移，<strong>不做一次性推平</strong>。</li>
+<li>HTTP <code>Response.ok()</code> 与 <code>Result</code> 并存：HTTP 那条是<strong>协议层</strong>结果（含状态码/头），
+  不是"操作失败"，短期不动。</li>
+<li>四个应用里自造的 <code>Result</code> / <code>parse_uint</code> / <code>Num</code> 仍在（跨仓改动，等各仓自己轮到）。</li>
+<li>错误码的穷尽检查只覆盖 <strong>enum 主题</strong>（<code>switch code</code>，<code>code</code> 是 enum 类型时）：
+  漏 case 且无 <code>default</code> ⇒ <code>WARN_SWITCH_NOT_EXHAUSTIVE</code> 并列缺失成员（2026-11-10，P4）。
+  <code>int</code> 错误码（如 <code>Result.code</code>）仍然不报 —— 它不是 enum，成员集合编译期不可知。</li>
+<li><code>Result[T]</code> 目前不能带"多值成功"（要两个值就包一层 struct）。</li>
+<li><strong>enum 不能挂方法</strong>（<code>extend</code> 只接受 struct）⇒ <code>Result[T]</code> / <code>Option[T]</code> 只能是 struct
+  （泛型载荷 enum 本身 2026-11-10 起已完整支持，理由见 §2.1 的引用块）。</li>
+</ul></main>
+</div>
+<nav class="pager"><a href="语法改进建议_2026-11-02.html">← 上一篇</a><span></span></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

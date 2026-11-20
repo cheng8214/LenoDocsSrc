@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno JSON 模块 (jsons) · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_jsons.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">使用方式</a></li><li><a href="#json">JSON 解码</a></li><ul class="lv3"><li><a href="#decodejson_string">decode(json_string)</a></li></ul><li><a href="#t21">取值助手（T21）</a></li><ul class="lv3"><li><a href="#get_strobj-key-default-get_int-get_float-get_bool">get_str(obj, key, default) / get_int / get_float / get_bool</a></li><li><a href="#get_objobj-key">get_obj(obj, key)</a></li><li><a href="#digobj-path2026-11-03">dig(obj, path)（2026-11-03 新增）</a></li><li><a href="#keysobj">keys(obj)</a></li></ul><li><a href="#json_1">JSON 编码</a></li><ul class="lv3"><li><a href="#encodevalue">encode(value)</a></li><li><a href="#filltarget-json2026-11-09-p1">fill(target, json)（2026-11-09 新增，P1 记录类型）</a></li><li><a href="#encode_prettyvalue">encode_pretty(value)</a></li></ul><li><a href="#_3">文件操作</a></li><ul class="lv3"><li><a href="#read_filepath">read_file(path)</a></li><li><a href="#write_filepath-value">write_file(path, value)</a></li><li><a href="#write_textpath-text">write_text(path, text)</a></li></ul><li><a href="#_4">数据类型映射</a></li><ul class="lv3"><li><a href="#json-leno">JSON → Leno</a></li><li><a href="#leno-json">Leno → JSON</a></li></ul><li><a href="#_5">示例代码</a></li><ul class="lv3"><li><a href="#1">1. 配置文件读写</a></li><li><a href="#2-json-api">2. 处理 JSON API 响应</a></li><li><a href="#3">3. 数据导出工具</a></li><li><a href="#4-json">4. JSON 数据转换</a></li><li><a href="#5-json">5. 读取唐诗 JSON 文件</a></li><li><a href="#6-json">6. 验证 JSON 格式</a></li></ul><li><a href="#_6">注意事项</a></li><li><a href="#_7">性能提示</a></li><li><a href="#api">完整 API 速查表</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-json-jsons">Leno JSON 模块 (jsons)</h1>
+<p>本文档详细说明 <code>jsons</code> 模块提供的 JSON 解析和序列化功能。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#json-解码">JSON 解码</a></li>
+<li><a href="#取值助手t21">取值助手（T21）</a>（含 <code>dig</code> 路径取值）</li>
+<li><a href="#json-编码">JSON 编码</a></li>
+<li><a href="#文件操作">文件操作</a></li>
+<li><a href="#数据类型映射">数据类型映射</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="_2">使用方式</h2>
+<pre><code class="language-leno">import jsons
+import io
+
+main() {
+    // 解析 JSON 字符串
+    var obj = jsons.decode('{&quot;name&quot;: &quot;Leno&quot;, &quot;version&quot;: 1.0}')
+    io.print(obj.name)  // &quot;Leno&quot;
+
+    // 编码为 JSON
+    var json_str = jsons.encode(obj)
+    io.print(json_str)  // {&quot;name&quot;:&quot;Leno&quot;,&quot;version&quot;:1}
+}
+</code></pre>
+<hr>
+<h2 id="json">JSON 解码</h2>
+<h3 id="decodejson_string"><code>decode(json_string)</code></h3>
+<p>将 JSON 字符串解析为 Leno 对象。</p>
+<p><strong>参数</strong>:
+- <code>json_string</code> (string): 要解析的 JSON 字符串</p>
+<p><strong>返回</strong>: 
+- 解析成功: 对应的 Leno 值（字典、数组、字符串、数字、布尔值或 null）
+- 解析失败: <code>null</code></p>
+<blockquote>
+<p><strong>数字精度口径（2026-11-15 起）</strong> —— 分三档，别猜：</p>
+<table>
+<thead>
+<tr>
+<th>JSON 里的写法</th>
+<th>解析成</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整数，在 int64 内</td>
+<td><code>int</code>（精确）</td>
+<td><code>decode("9007199254740993")</code> ⇒ <code>9007199254740993</code>（2^53+1 不丢位）</td>
+</tr>
+<tr>
+<td>整数，<strong>超出 int64</strong></td>
+<td><strong><code>bigint</code>（精确）</strong></td>
+<td><code>decode("12345678901234567890")</code> ⇒ <code>12345678901234567890</code></td>
+</tr>
+<tr>
+<td>带 <code>.</code> / <code>e</code> 的小数</td>
+<td><code>float</code>（double，本就有精度上限）</td>
+<td><code>decode("1.5")</code> ⇒ <code>1.5</code></td>
+</tr>
+</tbody>
+</table>
+<p>雪花 ID / 大时间戳这类值可以放心走 JSON 往返（<code>encode(decode(x)) == x</code>）；
+⚠ 但 <code>decode</code> 的<strong>静态类型是 <code>any</code></strong>，要参与大小比较得先给出具体类型，
+否则编译期直接拦「any 类型不能参与大小比较」。</p>
+<p>⚠ <strong>类型提示（2026-09-18 补，实测踩过）</strong>：<code>decode</code> 的<strong>静态返回类型是 <code>any</code></strong> ⇒ 直接写
+<code>obj.field</code> / <code>arr[0]</code> 会被类型检查拒绝（「不能在 any 类型上直接访问字段 / 进行索引访问」）。</p>
+<p><strong>最省事的写法（推荐）</strong>：用 <code>as</code> —— <strong>安全类型转换</strong>：一步给出目标静态类型，
+<strong>不匹配返回 <code>null</code></strong>（不抛错）；嵌套结构逐层 <code>as</code> 即可：
+</p>
+</blockquote>
+<pre><code class="language-leno">var obj = jsons.decode(text) as Dict[string, any]
+var name = _str(obj[&quot;name&quot;])                  // 元素本身仍是 any ⇒ 需 _str 或再 as
+var inner = obj[&quot;nested&quot;] as Dict[string, any]  // 嵌套：逐层 as
+</code></pre>
+<blockquote>
+<p>也可以<strong>收窄到带泛型参数的容器</strong>（效果等同，写法稍长）：
+</p>
+</blockquote>
+<pre><code class="language-leno">var obj = jsons.decode(text)
+if obj is Dict[string, any] {
+    var name = obj[&quot;name&quot;]        // 取出来仍是 any ⇒ 嵌套结构要逐层收窄
+}
+</code></pre>
+<blockquote>
+<p>注意：<strong>收窄到裸 <code>Dict</code> 是没有用的</strong> —— 取出的元素仍是 <code>any</code>（见
+<code>docs/类型收窄与绑定语法改进.md</code>）。多层自由取值建议包一层小工具
+（如 <code>json_get</code> / <code>json_obj</code>，实物见 <code>leno_gui/应用/Trae签到/trae_core.leno</code>）。
+<strong>2026-09-26 起：那层小工具已做进标准库</strong> ⇒ 直接用下一节的
+<code>jsons.get_str/get_int/get_float/get_bool/get_obj/keys</code>（调用点零收窄 ✓）。</p>
+</blockquote>
+<pre><code class="language-leno">// 解析对象
+var obj = jsons.decode('{&quot;name&quot;: &quot;张三&quot;, &quot;age&quot;: 25}')
+io.print(obj.name)   // &quot;张三&quot;
+io.print(obj.age)    // 25
+
+// 解析数组
+var arr = jsons.decode('[1, 2, 3, &quot;hello&quot;]')
+io.print(arr[0])     // 1
+io.print(arr[3])     // &quot;hello&quot;
+
+// 解析嵌套结构
+var nested = jsons.decode('{&quot;user&quot;: {&quot;id&quot;: 1, &quot;name&quot;: &quot;李四&quot;}, &quot;tags&quot;: [&quot;a&quot;, &quot;b&quot;]}')
+io.print(nested.user.name)   // &quot;李四&quot;
+io.print(nested.tags[0])     // &quot;a&quot;
+
+// 解析基本类型
+var str = jsons.decode('&quot;hello world&quot;')   // &quot;hello world&quot;
+var num = jsons.decode('42')               // 42
+var flt = jsons.decode('3.14')             // 3.14
+var bool = jsons.decode('true')            // true
+var nil = jsons.decode('null')             // null
+</code></pre>
+<hr>
+<h2 id="t21">取值助手（T21）</h2>
+<blockquote>
+<p><strong>为什么有这一节</strong>：<code>decode</code> / <code>read_file</code> 的静态返回类型<strong>只能是 <code>any</code></strong>（JSON 顶层可能是
+对象/数组/标量，硬改成 <code>Dict</code> 是错语义）⇒ 每个消费点都要手写收窄
+（<code>if x is Dict =&gt; d and d.has(k)</code>），于是每个项目都自造一层 <code>json_get/json_obj/json_keys</code>
+（实物见 <code>leno_gui/应用/Trae签到/trae_core.leno</code>）。这组助手把那一层<strong>做进标准库</strong>：
+收窄只发生在实现里，<strong>调用点零样板</strong> ✓（2026-09-26 新增；实现见 <code>src/module/jsons/jsons.c</code>）。</p>
+</blockquote>
+<h3 id="get_strobj-key-default-get_int-get_float-get_bool"><code>get_str(obj, key, default)</code> / <code>get_int</code> / <code>get_float</code> / <code>get_bool</code></h3>
+<p>从（可能来自 <code>decode</code> 的）<code>any</code> 里按 key 取一个<strong>标量</strong>；取不到或转不过去 ⇒ <code>default</code>。</p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obj</code> 不是字典 / 没有该键 / 值是 <code>null</code></td>
+<td><code>default</code></td>
+</tr>
+<tr>
+<td>标量之间互转</td>
+<td>字符串数字也能取成 <code>int</code>（<strong>整串</strong>都得是数字才认 ✓）；数字/布尔也能取成字符串</td>
+</tr>
+<tr>
+<td>值是字典/数组（容器）</td>
+<td><code>default</code>（要容器本身请用 <code>get_obj</code> ✓）</td>
+</tr>
+<tr>
+<td>字符串转 bool</td>
+<td>只认 <code>"true"</code> / <code>"false"</code> / <code>"1"</code> / <code>"0"</code>，其它 ⇒ <code>default</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>不抛异常</strong>；<code>default</code> 本身也会走一遍转换（所以 <code>get_int(obj, "h", "21")</code> 也成立 ✓）。</p>
+<pre><code class="language-leno">var acc = jsons.decode(text)                 // any —— **不需要**先收窄 ✓
+var token   = jsons.get_str(acc, &quot;token&quot;, &quot;&quot;)
+var credits = jsons.get_int(acc, &quot;credits&quot;, 0)
+var ratio   = jsons.get_float(acc, &quot;ratio&quot;, 0.0)
+var ok      = jsons.get_bool(acc, &quot;ok&quot;, false)
+</code></pre>
+<h3 id="get_objobj-key"><code>get_obj(obj, key)</code></h3>
+<p>取<strong>原始值</strong>（<code>any</code>）继续往下钻；非字典/缺键 ⇒ <code>null</code>。</p>
+<pre><code class="language-leno">var user = jsons.get_obj(acc, &quot;user&quot;)        // 嵌套对象（any）
+var name = jsons.get_str(user, &quot;name&quot;, &quot;&quot;)   // 再取一层，仍是零收窄 ✓
+</code></pre>
+<h3 id="digobj-path2026-11-03"><code>dig(obj, path)</code>（2026-11-03 新增）</h3>
+<p>按路径<strong>逐层</strong>取值，任一层缺失 / 不是字典 / 中途是 null ⇒ 返回 <code>null</code>。
+返回的是 <code>any</code>，调用点照旧用 <code>_str()</code> / <code>_int()</code> 收窄 —— <strong>不放松任何类型检查</strong>。</p>
+<pre><code class="language-leno">var data = jsons.decode(json_text)
+
+// ① 点分字符串（键名不含点时最省事）
+var name = jsons.dig(data, &quot;user.name&quot;)
+var age  = jsons.dig(data, &quot;user.profile.age&quot;)
+
+// ② 数组路径（键名本身含点、或要按下标穿过 JSON 数组时用它）
+var v = jsons.dig(data, [&quot;cfg&quot;, &quot;app.name&quot;])
+
+// ③ 穿过 JSON 数组：数组路径写 int 下标；点分路径写&quot;整串数字&quot;的段
+var first = jsons.dig(data, [&quot;user&quot;, &quot;tags&quot;, 0])   // 等价于：
+var first2 = jsons.dig(data, &quot;user.tags.0&quot;)
+assert_eq(first, first2)
+
+// ④ 缺失 / 越界一律 null，不会崩
+assert_eq(jsons.dig(data, &quot;user.nope&quot;), null)
+assert_eq(jsons.dig(data, [&quot;user&quot;, &quot;tags&quot;, 9]), null)   // 下标越界
+assert_eq(jsons.dig(data, &quot;&quot;), null)      // 空路径也返回 null
+</code></pre>
+<blockquote>
+<p>每层按<strong>当前值</strong>的类型分派：字典查字符串键、数组查下标（<code>int</code>，或点分段里的整串数字）。
+在标量上继续下钻、非数字段用在数组上 ⇒ 一律 <code>null</code>（不抛异常）。</p>
+<p><strong>为什么需要它</strong>：<code>decode</code> 返回 <code>any</code>，而 Leno <strong>不允许</strong>在 <code>any</code> 上直接下标/取字段
+（编译期就拦，这是有意的安全设计）⇒ 取 <code>data["user"]["name"]</code> 得先
+<code>var u = data["user"] as Dict[string, any]</code>，每层来一遍。
+<code>dig</code> 把这个套路收成一行；如果要从根上"直接 <code>data["a"]["b"]</code>"，请把解码结果
+收窄成 <code>Dict[string, Dict[string, …]]</code>（结构固定时更推荐，能拿到精确类型）。</p>
+</blockquote>
+<h3 id="keysobj"><code>keys(obj)</code></h3>
+<p>字典的键列表（<strong>插入序</strong>）；非字符串键转成文本；非字典 ⇒ 空数组。</p>
+<pre><code class="language-leno">for jsons.keys(acc) to k {
+    print(k + &quot; = &quot; + jsons.get_str(acc, k, &quot;&quot;))
+}
+</code></pre>
+<hr>
+<h2 id="json_1">JSON 编码</h2>
+<h3 id="encodevalue"><code>encode(value)</code></h3>
+<p>将 Leno 值编码为紧凑格式的 JSON 字符串。</p>
+<p><strong>参数</strong>:
+- <code>value</code>: 要编码的值（字典、数组、字符串、数字、布尔值、null，<strong>或 struct 实例</strong>）</p>
+<p><strong>返回</strong>: <code>string</code> - JSON 字符串</p>
+<pre><code class="language-leno">// 编码对象
+var obj = {name: &quot;Leno&quot;, version: 1.0}
+var json = jsons.encode(obj)
+// json = &quot;{\&quot;name\&quot;:\&quot;Leno\&quot;,\&quot;version\&quot;:1}&quot;
+
+// 编码数组
+var arr = [1, 2, 3, &quot;hello&quot;]
+var json = jsons.encode(arr)
+// json = &quot;[1,2,3,\&quot;hello\&quot;]&quot;
+
+// 编码嵌套结构
+var nested = {
+    user: {id: 1, name: &quot;李四&quot;},
+    tags: [&quot;a&quot;, &quot;b&quot;]
+}
+var json = jsons.encode(nested)
+// json = &quot;{\&quot;user\&quot;:{\&quot;id\&quot;:1,\&quot;name\&quot;:\&quot;李四\&quot;},\&quot;tags\&quot;:[\&quot;a\&quot;,\&quot;b\&quot;]}&quot;
+
+// ★ struct 实例（2026-11-09 起）：字段名 = 字段声明名，顺序 = 声明顺序
+struct Song { string name = &quot;&quot;; int dur = 0 }
+Song s = new Song()
+s.name = &quot;晴天&quot;
+s.dur = 269
+jsons.encode(s)          // {&quot;name&quot;:&quot;晴天&quot;,&quot;dur&quot;:269}
+jsons.encode([s])        // [{&quot;name&quot;:&quot;晴天&quot;,&quot;dur&quot;:269}]
+</code></pre>
+<blockquote>
+<p>⚠ <strong>2026-11-09 之前 <code>encode(struct)</code> 会静默返回字符串 <code>"null"</code></strong>（编码器的 default
+分支），调用方以为成功、数据其实全丢了。嵌套 struct、<code>Array[struct]</code> 同样受影响。
+现在按字段名写成 JSON 对象；转义走的是同一条 <code>json_encode_string</code>，
+所以字段里含 <code>"</code> / 换行也是合法 JSON。</p>
+<p>⚠ <strong>不支持的运行期类型会抛错（2026-11-14 起）</strong>：<code>Socket</code> / <code>File</code> / <code>Thread</code> /
+<code>Channel</code> / <code>Future</code> / 函数 / native 等<strong>没有 JSON 表示</strong>。此前落到 default 分支⇒
+<code>encode(socket)</code> 静默返回字符串 <code>"null"</code>（与"值就是 null"分不开）✗；现在明确报错。
+要序列化就自己挑字段拼成 <code>Dict</code> / <code>struct</code> 再 encode。</p>
+<p>⚠ <strong>NaN / ±Infinity 会抛错（2026-11-11 起）</strong>：JSON 没有这三个字面量。此前直接走
+<code>val_format_float</code> ⇒ 输出裸 <code>nan</code> / <code>inf</code> / <code>-inf</code>（<strong>非法 JSON</strong>，本库 <code>decode</code> 也读不回来）。
+现在 <code>encode</code> 明确抛「编码失败：浮点值是 NaN 或 Infinity…」——编码前先把非有限值
+替换成有限数或 <code>null</code>。对应地，<code>decode</code> 的非法数字统一走"解析失败 ⇒ <code>null</code>"
+（此前 <code>decode("-inf")</code> 会被 <code>strtod</code> 静默读成 <code>0.0</code>）。</p>
+</blockquote>
+<hr>
+<h3 id="filltarget-json2026-11-09-p1"><code>fill(target, json)</code>（2026-11-09 新增，P1 记录类型）</h3>
+<p>把 JSON <strong>对象</strong>按字段的<strong>声明类型</strong>填进一个<strong>已存在的 struct 实例</strong>。返回 <code>bool</code>（是否成功填充）。</p>
+<pre><code class="language-leno">struct Song {
+    string name = &quot;&quot;
+    int    dur  = 0
+    float  score = 0.0
+    bool   ok   = false
+}
+struct Job {
+    string id = &quot;&quot;
+    int    status = 0
+    Song?  song = null          // 嵌套 struct 必须是可空字段
+}
+
+Song s = new Song()
+bool ok = jsons.fill(s, &quot;{\&quot;name\&quot;:\&quot;七里香\&quot;,\&quot;dur\&quot;:299,\&quot;score\&quot;:8,\&quot;ok\&quot;:true}&quot;)
+// ok = true；s.name=&quot;七里香&quot;、s.dur=299、s.score=8.0、s.ok=true
+
+Job j = new Job()
+jsons.fill(j, &quot;{\&quot;id\&quot;:\&quot;a1\&quot;,\&quot;song\&quot;:{\&quot;name\&quot;:\&quot;夜曲\&quot;,\&quot;dur\&quot;:227}}&quot;)
+// j.song 被**自动创建**并填好（不用自己 new）
+</code></pre>
+<p><strong>为什么不叫 <code>decode(Song, json)</code></strong>：调用点保持静态类型 —— <code>Song s = new Song(); jsons.fill(s, t)</code>
+不需要 <code>as Song</code> 强转，也不吃"按名字找类型"的全局表（同名 struct 跨模块不会有歧义）。</p>
+<p><strong>四条转换规则（都很关键）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>源里<strong>没有</strong>这个字段</td>
+<td>保留字段<strong>默认值</strong>（不改成空/null）</td>
+</tr>
+<tr>
+<td>源里有<strong>未知</strong>字段</td>
+<td><strong>忽略</strong>（服务端加字段，老客户端不炸）</td>
+</tr>
+<tr>
+<td>源里是 <code>null</code></td>
+<td>保留默认值（不覆盖）</td>
+</tr>
+<tr>
+<td>类型对不上</td>
+<td>见下表，<strong>只做"有解析意义"的转换</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>类型转换表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段类型</th>
+<th>接受</th>
+<th>不接受（保留默认值）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code></td>
+<td>int / bigint / float（截断）/ bool / <strong>数字字符串</strong> <code>"269"</code></td>
+<td><code>"abc"</code>、空串</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>float / int / bool / <strong>数字字符串</strong> <code>"8.5"</code></td>
+<td><code>"abc"</code></td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td>bool / int（非 0）/ <code>"1"</code> / <code>"0"</code> / <code>"true"</code> / <code>"false"</code></td>
+<td>其它</td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td>string</td>
+<td><strong>数字</strong>（<code>123</code> 不会变成 <code>"123"</code>）</td>
+</tr>
+<tr>
+<td><code>Array</code> / <code>Dict</code></td>
+<td>同类型</td>
+<td>其它</td>
+</tr>
+<tr>
+<td><code>Array[int]</code> / <code>Array[float]</code> / <code>Array[bool]</code> / <code>Array[string]</code></td>
+<td><strong>逐元素</strong>按上表同口径转换（<code>["1",2.9,true]</code> 填 <code>Array[int]</code> ⇒ <code>[1,2,1]</code>）</td>
+<td>转换失败的元素 ⇒ <code>null</code>（占位、长度不变；参与运算时当场报错）</td>
+</tr>
+<tr>
+<td><code>Array[any]</code> / 裸 <code>Array</code></td>
+<td><strong>原样</strong>（不转换）</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Dict[K, V]</code></td>
+<td><strong>逐项</strong>按上表转换 K 与 V（<code>{"a":1,"b":"ok"}</code> 填 <code>Dict[string,string]</code> ⇒ <code>{a: null, b: "ok"}</code>）；V 是 struct ⇒ 自动 <code>new</code> 并递归填</td>
+<td>值转不了 ⇒ <code>null</code>（键保留、对齐不变）；<strong>键</strong>转不了 ⇒ 丢掉该项（如 <code>"abc"</code> 填 <code>Dict[int,…]</code>）</td>
+</tr>
+<tr>
+<td><code>Dict[K, any]</code> / 裸 <code>Dict</code></td>
+<td><strong>原样</strong>（不转换）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>嵌套 struct</td>
+<td>Dict（<strong>自动 <code>new</code></strong> 并递归填）</td>
+<td>其它</td>
+</tr>
+<tr>
+<td><strong>容器套容器</strong>（<code>Array[Array[int]]</code> / <code>Dict[K, Array[T]]</code> / <code>Array[Dict[K,V]]</code> / <code>Dict[K, Dict[K2,V2]]</code> …）</td>
+<td><strong>逐层</strong>按本表同一口径递归转换（<code>[["1"]]</code> 填 <code>Array[Array[int]]</code> ⇒ <code>[[1]]</code>；<code>{"a":{"k":"7"}}</code> 填 <code>Dict[string,Dict[string,int]]</code> ⇒ <code>{a:{k:7}}</code>）</td>
+<td>某层类型对不上 ⇒ 该层 <code>null</code> / 丢项（口径同上）；内层是 <code>any</code> ⇒ 原样</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ <strong>数组元素以前是"原样塞进去"</strong>（2026-11-11 前）：<code>{"tags":[1,"2"]}</code> 填 <code>Array[int]</code>
+会让 <code>"2"</code> 真的躺在 int 数组里 —— 静态类型说 int、运行期却是字符串 ⇒
+<code>tags[0]+tags[1]</code> 按 int48 读字符串指针，得到 <code>1391279286993</code> 这种<strong>静默错值</strong> ✗。
+现在运行时字段元数据带着元素类型（字节码 v3.2.32 起），逐元素按上面的表转换。</p>
+<p>⚠ <strong>字典以前也是"整份原样赋"</strong>（2026-11-15 前）：<code>Dict[string, string]</code> 被 <code>{"a": 1}</code> 填成
+"值是 int"的字典，字段静态类型却说是 string —— 打印/拼接时看着正常，直到
+<code>meta["a"].len()</code> 才在很远的地方报「类型 object 上不存在方法」✗。现在按 <code>Dict[K,V]</code> 的
+K/V 逐项转换（口径与数组元素完全相同，运行时字段元数据带着字典键值类型）。</p>
+<p>⚠ <strong>容器套容器以前只有一层</strong>（2026-11-15 起修好）：元数据原来只记"外层容器的直接元素"，
+内层类型在运行时没有记录 ⇒ 实测 <code>Dict[string,Array[int]]</code> 里 <code>["1"]</code> 的 <code>"1"</code> 不会转、
+<code>Dict[string,Dict[string,int]]</code> 连"值是不是字典"都不校验（<code>{"x":5}</code> 的 5 留在 Dict 位置）✗
+—— 静态类型说谎、运行期静默错值。现在 <code>OP_STRUCT_DEF</code> 的 ARRAY / DICT 字段带
+<strong>完整声明类型树</strong>（自定界类型规格，字节码 v3.2.42 起）⇒ 递归逐层转换；
+序列化（模块缓存 / <code>.lenb</code>）同步带上这棵树。内层写 <code>any</code>（<code>Array[Dict[string,any]]</code>）
+仍按 any 原样，不误转。</p>
+<p><strong>递归示例</strong>（<code>{"m":{"a":["1",2]},"n":{"x":{"k":"7"}},"arr":[{"k":"3"}]}</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>字段声明</th>
+<th>填完的实际值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict[string, Array[int]] m</code></td>
+<td><code>m["a"]</code> = <code>[1, 2]</code>（元素都是 int）</td>
+</tr>
+<tr>
+<td><code>Dict[string, Dict[string,int]] n</code></td>
+<td><code>n["x"]["k"]</code> = <code>7</code></td>
+</tr>
+<tr>
+<td><code>Array[Dict[string,int]] arr</code></td>
+<td><code>arr[0]["k"]</code> = <code>3</code></td>
+</tr>
+</tbody>
+</table>
+<p>⚠ <strong>泛型 struct 的容器字段是例外</strong>：<code>struct Gen[T] { Array[T] items }</code> 里 <code>items</code> 的声明类型
+在运行时仍是类型参数 <code>T</code>（没有具体类型）⇒ fill 对 <code>items</code> <strong>原样</strong>（<code>["1"]</code> 的 <code>"1"</code> 不会转）。
+需要转换时改用具体类型的 struct，或填完自己 <code>_int</code>（<code>assert/test_jsons_fill_nested.leno</code> ⑫ 钉住了这条）。</p>
+<p><strong>为什么字符串能转数字、但数字不能转字符串</strong>：JSON 本身能区分类型，而
+<strong>SQLite 的 <code>column_text</code> / CSV 的每一列都是字符串</strong> —— 不让字符串转数字，
+<code>fill</code> 在 DB 场景就完全失效（而 DB 行恰恰是"行数组"最大的来源）。
+反过来 <code>{"id": 123}</code> 填 <code>string id</code> 若静默变 <code>"123"</code>，类型错误就被藏起来了，
+所以那个方向<strong>不做</strong>。</p>
+<p><strong>大整数不丢精度</strong>：<code>{"id":153282510146394112}</code> 填 <code>int</code> 字段是<strong>逐位保留</strong>的
+（不会先转 double 再转回来）；超长数字串会走 bigint。</p>
+</blockquote>
+<p><strong>第二个参数可以是 <code>Dict</code></strong>（DB 行 / CSV 行本来就是 Dict，不必再拼成字符串解析一遍）：</p>
+<pre><code class="language-leno">Array[User] out = rows.map(func(Dict r) {
+    User u = new User()
+    jsons.fill(u, r)          // 直接吃 Dict
+    return u
+})
+</code></pre>
+<blockquote>
+<p>⚠ 字段名<strong>必须与列名一致</strong>（<code>fill</code> 不做蛇形/驼峰自动映射 —— 那种"看起来能对上"
+的隐式约定出问题时最难查）。列名不同就在源里改键：
+<code>if row.has("last_login") { row.set("lastLogin", row.get("last_login")) }</code></p>
+</blockquote>
+<p><strong>返回值</strong>：顶层不是对象（数组/字符串/坏 JSON）⇒ 返回 <code>false</code>，且<strong>不改动</strong>目标实例。</p>
+<h4 id="enum-2026-11-10">带载荷 enum 的往返（2026-11-10 补）</h4>
+<p><code>encode(载荷 enum)</code> 输出 <code>{"成员":{"参数名":值,…}}</code>，<code>fill</code> <strong>按同一份成员/参数签名解码</strong>
+（<code>ObjStructDef.enum_sig</code>），所以 <code>encode → fill</code> 是对称的：</p>
+<pre><code class="language-leno">enum Msg { a(int x); b(string s, float f); c() }
+
+Msg m = Msg.b(&quot;hi&quot;, 2.5)
+string js = jsons.encode(m)          // {&quot;b&quot;:{&quot;s&quot;:&quot;hi&quot;,&quot;f&quot;:2.5}}
+
+Msg got = Msg.a(0)                   // 先有一个实例（enum 不能用 new 造）
+jsons.fill(got, js)                  // tag=1、p1=&quot;hi&quot;、p2=2.5  ← 按参数名落槽
+</code></pre>
+<ul>
+<li>目标实例<strong>必须已经存在</strong>（enum 没有 <code>new</code>）；<code>fill</code> 只改 <code>tag</code> 与该成员的载荷槽</li>
+<li>顶层键（成员名）对不上任何成员 ⇒ 退回原来的"按<strong>隐藏字段名</strong>填"
+  （兼容 <code>{"tag":1,"p0":3}</code> 这类老 JSON），不会静默写坏</li>
+<li>载荷里的嵌套 struct / <code>Array[struct]</code> 照常按声明类型递归转换（见上表）</li>
+<li>⚠ 载荷 enum 的 <code>==</code> / <code>Array.has</code> 是<strong>按值</strong>的，但<strong>普通 struct 仍是引用语义</strong>：
+  <code>Msg.point(new Pt(1,2)) == Msg.point(new Pt(1,2))</code> 为 <code>false</code>（两个不同 <code>Pt</code> 实例）</li>
+</ul>
+<hr>
+<h3 id="encode_prettyvalue"><code>encode_pretty(value)</code></h3>
+<p>将 Leno 值编码为格式化（美化）的 JSON 字符串。</p>
+<p><strong>参数</strong>:
+- <code>value</code>: 要编码的值</p>
+<p><strong>返回</strong>: <code>string</code> - 格式化后的 JSON 字符串</p>
+<pre><code class="language-leno">var obj = {name: &quot;Leno&quot;, version: 1.0, tags: [&quot;a&quot;, &quot;b&quot;]}
+var pretty = jsons.encode_pretty(obj)
+io.print(pretty)
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Leno&quot;,
+  &quot;version&quot;: 1,
+  &quot;tags&quot;: [
+    &quot;a&quot;,
+    &quot;b&quot;
+  ]
+}
+</code></pre>
+<hr>
+<h2 id="_3">文件操作</h2>
+<h3 id="read_filepath"><code>read_file(path)</code></h3>
+<p>从文件读取 JSON 内容并解析。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): JSON 文件路径</p>
+<p><strong>返回</strong>: 
+- 成功: 解析后的 Leno 值
+- 失败: <code>null</code>（文件不存在或解析错误）</p>
+<pre><code class="language-leno">var data = jsons.read_file(&quot;config.json&quot;)
+if data != null {
+    io.print(&quot;服务器: &quot; + data.host)
+    io.print(&quot;端口: &quot; + data.port)
+} else {
+    io.print(&quot;读取配置文件失败&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="write_filepath-value"><code>write_file(path, value)</code></h3>
+<p>将 Leno 值编码为 JSON 并写入文件（美化格式）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目标文件路径
+- <code>value</code>: 要写入的值</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否写入成功</p>
+<pre><code class="language-leno">var config = {
+    host: &quot;localhost&quot;,
+    port: 8080,
+    debug: true
+}
+
+if jsons.write_file(&quot;config.json&quot;, config) {
+    io.print(&quot;配置已保存&quot;)
+} else {
+    io.print(&quot;保存失败&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="write_textpath-text"><code>write_text(path, text)</code></h3>
+<p><strong>原样</strong>写文本，<strong>不做</strong> JSON 编码 —— 想写"已经编码好的 JSON 文本"就用它 ✓。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目标文件路径
+- <code>text</code> (string): 要原样写入的文本</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否写入成功</p>
+<blockquote>
+<p>⚠ <code>write_file(path, "{}")</code> 会把入参<strong>再编码一次</strong> ⇒ 落盘成带引号的 <code>"{}"</code>（读回来是
+<code>string</code> 而不是对象 ✗；2026-09-18 实测踩过）。「我已经有 JSON 文本了，只想落盘」
+一律用 <code>write_text</code> ✓（2026-09-26 新增）。</p>
+</blockquote>
+<pre><code class="language-leno">var text = jsons.encode_pretty(data)   // 已经有文本
+jsons.write_text(&quot;out.json&quot;, text)     // 原样落盘 ✓
+</code></pre>
+<hr>
+<h2 id="_4">数据类型映射</h2>
+<h3 id="json-leno">JSON → Leno</h3>
+<table>
+<thead>
+<tr>
+<th>JSON 类型</th>
+<th>Leno 类型</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>object</td>
+<td><code>dict</code></td>
+<td><code>{"a": 1}</code> → 字典</td>
+</tr>
+<tr>
+<td>array</td>
+<td><code>array</code></td>
+<td><code>[1, 2, 3]</code> → 数组</td>
+</tr>
+<tr>
+<td>string</td>
+<td><code>string</code></td>
+<td><code>"hello"</code> → 字符串</td>
+</tr>
+<tr>
+<td>number (整数)</td>
+<td><code>int</code></td>
+<td><code>42</code> → 整数</td>
+</tr>
+<tr>
+<td>number (小数)</td>
+<td><code>float</code></td>
+<td><code>3.14</code> → 浮点数</td>
+</tr>
+<tr>
+<td>boolean</td>
+<td><code>bool</code></td>
+<td><code>true</code> → 布尔值</td>
+</tr>
+<tr>
+<td>null</td>
+<td><code>null</code></td>
+<td><code>null</code> → null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="leno-json">Leno → JSON</h3>
+<table>
+<thead>
+<tr>
+<th>Leno 类型</th>
+<th>JSON 类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dict</code></td>
+<td>object</td>
+<td>字典键必须是字符串</td>
+</tr>
+<tr>
+<td><code>array</code></td>
+<td>array</td>
+<td>数组元素可以是任意类型</td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td>string</td>
+<td>自动处理转义字符</td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td>number</td>
+<td>整数</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>number</td>
+<td>浮点数</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td>boolean</td>
+<td><code>true</code> / <code>false</code></td>
+</tr>
+<tr>
+<td><code>null</code></td>
+<td>null</td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_5">示例代码</h2>
+<h3 id="1">1. 配置文件读写</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+main() {
+    // 读取配置
+    var config = jsons.read_file(&quot;app.json&quot;)
+
+    if config == null {
+        // 使用默认配置
+        config = {
+            app_name: &quot;MyApp&quot;,
+            version: &quot;1.0.0&quot;,
+            debug: false,
+            database: {
+                host: &quot;localhost&quot;,
+                port: 3306,
+                name: &quot;mydb&quot;
+            }
+        }
+
+        // 保存默认配置
+        jsons.write_file(&quot;app.json&quot;, config)
+        io.print(&quot;已创建默认配置文件&quot;)
+    }
+
+    // 使用配置
+    io.print(&quot;应用: &quot; + config.app_name)
+    io.print(&quot;数据库: &quot; + config.database.host + &quot;:&quot; + config.database.port)
+}
+</code></pre>
+<hr>
+<h3 id="2-json-api">2. 处理 JSON API 响应</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+// 模拟 API 响应处理
+func parse_user_list(var json_text) {
+    var data = jsons.decode(json_text)
+
+    if data == null {
+        io.print(&quot;解析失败&quot;)
+        return []
+    }
+
+    var users = []
+
+    for data.users to user {
+        users.add({
+            id: user.id,
+            name: user.name,
+            email: user.email
+        })
+    }
+
+    return users
+}
+
+main() {
+    var api_response = '{
+        &quot;total&quot;: 2,
+        &quot;users&quot;: [
+            {&quot;id&quot;: 1, &quot;name&quot;: &quot;张三&quot;, &quot;email&quot;: &quot;zhangsan@example.com&quot;},
+            {&quot;id&quot;: 2, &quot;name&quot;: &quot;李四&quot;, &quot;email&quot;: &quot;lisi@example.com&quot;}
+        ]
+    }'
+
+    var users = parse_user_list(api_response)
+
+    io.print(&quot;共 &quot; + users.len() + &quot; 个用户:&quot;)
+    for users to u {
+        io.print(&quot;  - &quot; + u.name + &quot; (&quot; + u.email + &quot;)&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h3 id="3">3. 数据导出工具</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+// 导出用户数据为 JSON
+func export_users(var users, var filename) {
+    var data = {
+        export_time: &quot;2026-01-01&quot;,
+        total: users.len(),
+        users: users
+    }
+
+    if jsons.write_file(filename, data) {
+        io.print(&quot;导出成功: &quot; + filename)
+        return true
+    } else {
+        io.print(&quot;导出失败&quot;)
+        return false
+    }
+}
+
+main() {
+    var users = [
+        {id: 1, name: &quot;张三&quot;, age: 25},
+        {id: 2, name: &quot;李四&quot;, age: 30},
+        {id: 3, name: &quot;王五&quot;, age: 28}
+    ]
+
+    export_users(users, &quot;users_export.json&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="4-json">4. JSON 数据转换</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+// 将 CSV 风格数据转换为 JSON
+func csv_to_json(var headers, var rows) {
+    var result = []
+
+    for rows to row {
+        var obj = {}
+        for 0:(headers.len() - 1) to i {
+            obj[headers[i]] = row[i]
+        }
+        result.add(obj)
+    }
+
+    return result
+}
+
+main() {
+    var headers = [&quot;name&quot;, &quot;age&quot;, &quot;city&quot;]
+    var rows = [
+        [&quot;张三&quot;, &quot;25&quot;, &quot;北京&quot;],
+        [&quot;李四&quot;, &quot;30&quot;, &quot;上海&quot;],
+        [&quot;王五&quot;, &quot;28&quot;, &quot;广州&quot;]
+    ]
+
+    var json_data = csv_to_json(headers, rows)
+    var json_text = jsons.encode_pretty(json_data)
+
+    io.print(json_text)
+}
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-json">[
+  {
+    &quot;name&quot;: &quot;张三&quot;,
+    &quot;age&quot;: &quot;25&quot;,
+    &quot;city&quot;: &quot;北京&quot;
+  },
+  {
+    &quot;name&quot;: &quot;李四&quot;,
+    &quot;age&quot;: &quot;30&quot;,
+    &quot;city&quot;: &quot;上海&quot;
+  },
+  {
+    &quot;name&quot;: &quot;王五&quot;,
+    &quot;age&quot;: &quot;28&quot;,
+    &quot;city&quot;: &quot;广州&quot;
+  }
+]
+</code></pre>
+<hr>
+<h3 id="5-json">5. 读取唐诗 JSON 文件</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+main() {
+    var data = jsons.read_file(&quot;cs.json&quot;)
+
+    if data == null {
+        io.print(&quot;无法读取文件&quot;)
+        return
+    }
+
+    // 显示诗集信息
+    io.print(&quot;【&quot; + data.collection.name + &quot;】&quot;)
+    io.print(&quot;描述: &quot; + data.collection.description)
+    io.print(&quot;共收录 &quot; + data.collection.total + &quot; 首&quot;)
+    io.print(&quot;&quot;)
+
+    // 遍历所有诗歌
+    for data.poems to poem {
+        io.print(&quot;═══════════════════════&quot;)
+        io.print(&quot;【&quot; + poem.title + &quot;】&quot;)
+        io.print(&quot;作者: &quot; + poem.author.name + &quot; (&quot; + poem.author.dynasty + &quot;)&quot;)
+
+        // 显示诗句
+        io.print(&quot;\n原文:&quot;)
+        for poem.content to line {
+            io.print(&quot;  &quot; + line.text)
+        }
+
+        io.print(&quot;&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h3 id="6-json">6. 验证 JSON 格式</h3>
+<pre><code class="language-leno">import jsons
+import io
+
+// 检查字符串是否是有效的 JSON
+func is_valid_json(var text) -&gt; bool {
+    var result = jsons.decode(text)
+    return result != null
+}
+
+main() {
+    var tests = [
+        '{&quot;name&quot;: &quot;test&quot;}',
+        '[1, 2, 3]',
+        '&quot;hello&quot;',
+        'invalid json',
+        '{&quot;unclosed&quot;: &quot;string}',
+        ''
+    ]
+
+    for tests to test {
+        var valid = is_valid_json(test)
+        io.print(test + &quot; -&gt; &quot; + (valid ? &quot;有效&quot; : &quot;无效&quot;))
+    }
+}
+</code></pre>
+<hr>
+<h2 id="_6">注意事项</h2>
+<ol>
+<li>
+<p><strong>编码问题</strong>
+   - JSON 文件应使用 UTF-8 编码
+   - 支持中文、emoji 等 Unicode 字符</p>
+</li>
+<li>
+<p><strong>数字精度</strong>
+   - <strong>整数按精确的 int64 解析</strong> ✓（<strong>2026-10-10 起</strong>；超出 int48 会自动升 bigint ✓）
+     ⇒ <strong>雪花 ID / 大时间戳</strong>（&gt; 2^53 但在 int64 内）现在<strong>不再失真</strong> ✓：
+     <code>jsons.get_int(jsons.decode("{\"id\":153282510146394112}"), "id", -1)</code> ⇒ <code>153282510146394112</code> ✓
+     （原来一律过 <code>strtod</code> ✗ ⇒ 精度丢失 ✓ 实测过 ✓）
+   - ⚠ 超过 int64 的整数文本（&gt;19 位左右）<strong>仍退回 double</strong> ✗（这一档尚未接大整数串入口 ✓）
+   - 浮点数（含 <code>42.0</code> / <code>1e3</code> 这种写法）按 double ✓，可能有精度损失 ✓
+   - ⚠ 回写（<code>encode</code>）会<strong>按十进制原样写出</strong>大整数 ✓（不写科学计数法 ✓ 也不写 <code>null</code> ✓）</p>
+</li>
+<li>
+<p><strong>对象键名</strong>
+   - JSON 对象键必须是字符串
+   - 使用点号或方括号访问: <code>obj.key</code> 或 <code>obj["key"]</code></p>
+</li>
+<li>
+<p><strong>数组越界</strong>
+   - 访问不存在的索引返回 <code>null</code>，不会报错
+   - 建议先检查数组长度</p>
+</li>
+<li>
+<p><strong>循环引用</strong>（2026-11-16 复核更正 —— 下面两条旧说法已过期 ✗）
+   - ~~"当前版本不支持处理循环引用 / 编码可能导致无限递归"~~ ⇒ <strong>不会无限递归</strong>：
+     编解码都有 <strong>512 层</strong>深度上限，超限<strong>明确报错</strong>
+     （<code>编码失败：嵌套超过 512 层（结构可能存在循环引用）</code>），不崩、不静默截断
+   - <strong>语义</strong>上仍然不支持：环本身无法表示为 JSON ⇒ 要"还原成树"必须先断开环
+     （<code>node.parent = parent</code> 这类反向指针在编码前要置 <code>null</code>）
+   - 同一族保护现在都在（2026-11-16）：<code>.copy()</code> 深拷贝（512 层）、<code>type()</code>（512 层）、
+     <code>print()</code> / <code>_str()</code>（<strong>地址栈</strong>环检测，命中同一个对象在自己的路径上 ⇒ 立即报错）</p>
+</li>
+<li>
+<p><strong>文件权限</strong>
+   - <code>read_file</code> 需要读权限
+   - <code>write_file</code> 需要写权限，会自动创建父目录</p>
+</li>
+<li>
+<p><strong>错误处理</strong>
+   - 解析错误返回 <code>null</code>，不会抛出异常
+   - 建议始终检查返回值</p>
+</li>
+<li>
+<p><strong>数组可以直接存、也可以直接收窄</strong>（2026-10-08 实测更正 ✓）
+   - 字面量字段里直接放数组：<code>jsons.write_file(p, {version: 1, arr: ["x","y"]})</code> ✓ 落盘就是 JSON 数组
+   - <code>Dict[string, any] d = {}</code> 再 <code>d["arr"] = ["x","y"]</code> ✓ <strong>内存与落盘都正常，不会被丢掉</strong>
+   - <code>jsons.decode(...)</code> 解出来的数组，<code>is Array[string]</code> <strong>成立</strong> ✓（库返回的数组如 <code>jsons.keys</code> 同样成立）
+   - ⇒ 「几个字符串」这类配置项<strong>直接存数组</strong>即可 ✓，不必为了"绕开收窄"把结构拍扁成裸串 ✗
+     （本仓例：音乐下载器 <code>dl_settings.sources</code> 直接存 <code>Array[string]</code> ✓）
+   - ⚠ 仍然要在意的一条：<code>write_file</code> 会把参数<strong>再编码一次</strong> ⇒ 要写"已编码好的 JSON 文本"用
+     <code>write_text</code> ✓（见上文 <code>write_text</code> ✓）
+   - ⚠ 空数组字面量 <code>var a = []</code> 的元素类型是 <code>any</code> ⇒ 想当 <code>Array[string]</code> 用要<strong>显式标注</strong>
+     <code>Array[string] a = []</code> ✓</p>
+</li>
+</ol>
+<hr>
+<h2 id="_7">性能提示</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大文件读取</td>
+<td>使用 <code>read_file</code> 代替手动读取+解析</td>
+</tr>
+<tr>
+<td>频繁编码</td>
+<td>对静态数据缓存编码结果</td>
+</tr>
+<tr>
+<td>配置存储</td>
+<td>使用 <code>write_file</code> 美化格式便于调试</td>
+</tr>
+<tr>
+<td>网络传输</td>
+<td>使用 <code>encode</code> 紧凑格式减少数据量</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="api">完整 API 速查表</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>参数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>decode(str)</code></td>
+<td>JSON 字符串</td>
+<td>解析后的值</td>
+<td>解析 JSON</td>
+</tr>
+<tr>
+<td><code>encode(val)</code></td>
+<td>任意值</td>
+<td>JSON 字符串</td>
+<td>紧凑编码</td>
+</tr>
+<tr>
+<td><code>encode_pretty(val)</code></td>
+<td>任意值</td>
+<td>JSON 字符串</td>
+<td>美化编码</td>
+</tr>
+<tr>
+<td><code>read_file(path)</code></td>
+<td>文件路径</td>
+<td>解析后的值</td>
+<td>读取并解析</td>
+</tr>
+<tr>
+<td><code>write_file(path, val)</code></td>
+<td>路径, 值</td>
+<td>bool</td>
+<td>写入文件（<strong>会再编码一次</strong>）</td>
+</tr>
+<tr>
+<td><code>write_text(path, text)</code></td>
+<td>路径, 文本</td>
+<td>bool</td>
+<td><strong>原样</strong>写文本（不编码）</td>
+</tr>
+<tr>
+<td><code>get_str(obj, key, def)</code></td>
+<td>任意, 键, 默认</td>
+<td>string</td>
+<td>取字符串（数字也能取成串）</td>
+</tr>
+<tr>
+<td><code>get_int(obj, key, def)</code></td>
+<td>任意, 键, 默认</td>
+<td>int</td>
+<td>取整数（字符串数字也认）</td>
+</tr>
+<tr>
+<td><code>get_float(obj, key, def)</code></td>
+<td>任意, 键, 默认</td>
+<td>float</td>
+<td>取浮点</td>
+</tr>
+<tr>
+<td><code>get_bool(obj, key, def)</code></td>
+<td>任意, 键, 默认</td>
+<td>bool</td>
+<td>取布尔（认 "1"/"0"/"true"/"false"）</td>
+</tr>
+<tr>
+<td><code>get_obj(obj, key)</code></td>
+<td>任意, 键</td>
+<td>任意</td>
+<td>取原始值往下钻（缺 ⇒ null）</td>
+</tr>
+<tr>
+<td><code>keys(obj)</code></td>
+<td>任意</td>
+<td>Array[string]</td>
+<td>字典键列表（非字典 ⇒ 空数组）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>文档版本: 1.1</em><br>
+<em>最后更新: 2026-09-26（新增 T21 取值助手 + write_text）</em></p></main>
+</div>
+<nav class="pager"><a href="module_regexs.html">← 上一篇</a><a href="module_sockets.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

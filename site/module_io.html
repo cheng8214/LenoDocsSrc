@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno IO 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_io.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">概述</a></li><ul class="lv3"><li><a href="#_3">特性</a></li></ul><li><a href="#_4">全局函数</a></li><li><a href="#_5">模块方法</a></li><li><a href="#_6">输出函数</a></li><ul class="lv3"><li><a href="#print">print(...)</a></li><li><a href="#printf">printf(...)</a></li></ul><li><a href="#_7">输入函数</a></li><ul class="lv3"><li><a href="#inputprompt">input(prompt)</a></li></ul><li><a href="#_8">输出格式</a></li><ul class="lv3"><li><a href="#_9">基本类型输出格式</a></li><li><a href="#_10">复合类型输出格式</a></li><li><a href="#_11">特殊对象输出</a></li></ul><li><a href="#_12">示例代码</a></li><ul class="lv3"><li><a href="#1">示例1：简单的交互式程序</a></li><li><a href="#2">示例2：简单的计算器</a></li><li><a href="#3">示例3：进度显示</a></li><li><a href="#4">示例4：调试信息输出</a></li><li><a href="#5">示例5：跨平台路径处理</a></li></ul><li><a href="#_13">注意事项</a></li><ul class="lv3"><li><a href="#1-print-vs-printf">1. print vs printf</a></li><li><a href="#2_1">2. 输入处理</a></li><li><a href="#3_1">3. 输出大对象</a></li></ul><li><a href="#_14">最佳实践</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-io">Leno IO 模块</h1>
+<p>本文档详细说明 <code>io</code> 模块提供的基础输入输出功能。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#概述">概述</a></li>
+<li><a href="#全局函数">全局函数</a></li>
+<li><a href="#模块方法">模块方法</a></li>
+<li><a href="#输出函数">输出函数</a></li>
+<li><a href="#输入函数">输入函数</a></li>
+<li><a href="#系统函数">系统函数</a></li>
+<li><a href="#输出格式">输出格式</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="_2">概述</h2>
+<p>IO 模块是 Leno 语言中用于基础输入输出的核心模块，提供了控制台打印、用户输入、系统信息查询等功能。</p>
+<h3 id="_3">特性</h3>
+<ul>
+<li><strong>全局可用</strong>：<code>print</code>、<code>input</code> 等函数无需导入即可使用</li>
+<li><strong>模块方式</strong>：也可以通过 <code>import io</code> 使用模块方式调用</li>
+<li><strong>多类型支持</strong>：支持任意类型的输出</li>
+<li><strong>格式化输出</strong>：自动处理各种数据类型的显示格式</li>
+</ul>
+<hr>
+<h2 id="_4">全局函数</h2>
+<p>以下函数无需导入，直接在代码中使用：</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>print(...)</code></td>
+<td>打印并换行</td>
+<td><code>print("Hello")</code></td>
+</tr>
+<tr>
+<td><code>printf(...)</code></td>
+<td>打印不换行</td>
+<td><code>printf("Loading...")</code></td>
+</tr>
+<tr>
+<td><code>input(prompt)</code></td>
+<td>获取用户输入</td>
+<td><code>input("Name: ")</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_5">模块方法</h2>
+<p>通过 <code>import io</code> 可以使用模块方式调用：</p>
+<pre><code class="language-leno">import io
+
+io.print(&quot;Hello World&quot;)
+var name = io.input(&quot;Your name: &quot;)
+</code></pre>
+<p>模块方法与全局函数功能完全相同。</p>
+<hr>
+<h2 id="_6">输出函数</h2>
+<h3 id="print"><code>print(...)</code></h3>
+<p>打印一个或多个值，末尾自动添加换行。</p>
+<p><strong>参数</strong>:
+- 可变参数，支持任意类型</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<p><strong>嵌套 / 环（2026-11-16）</strong>:
+- 容器按<strong>插入序</strong>完整展开：<code>print({"123": 1, "a": 2})</code> ⇒ <code>{123: 1, a: 2}</code>。
+  ⚠ 2026-11-16 前这里会<strong>静默丢掉"纯数字字符串"键和空串键</strong>（<code>{"123":1}</code> ⇒ <code>{}</code>），
+  而 <code>len()</code> / <code>keys()</code> / <code>_str()</code> 都完整 —— 只有 print 一条路丢数据；现已修
+- 深度上限 <strong>512 层</strong>（与 <code>jsons.encode</code> / 深拷贝 / <code>type()</code> 同口径）
+- <strong>环检测</strong>：同一个对象出现在自己的打印路径上 ⇒ 立刻停止并抛错
+  （<code>打印失败：检测到循环引用…</code>），输出里该位置是 <code>&lt;循环&gt;</code>：
+  <code>struct Node { int v = 0; Node? next = null }</code> 且 <code>a.next = a</code> ⇒ <code>Node{v=1, next=&lt;循环&gt;}</code>
+- <strong>共享子对象不算环</strong>（同一对象出现在两条<strong>不相交</strong>路径上是正常的，会各打印一次）</p>
+<pre><code class="language-leno">// 打印字符串
+print(&quot;Hello World&quot;)
+
+// 打印数字
+print(42)
+print(3.14)
+
+// 打印多个值（用空格分隔）
+print(&quot;Name:&quot;, &quot;Alice&quot;, &quot;Age:&quot;, 25)
+// 输出: Name: Alice Age: 25
+
+// 打印变量
+var name = &quot;Bob&quot;
+var age = 30
+print(name, &quot;is&quot;, age, &quot;years old&quot;)
+// 输出: Bob is 30 years old
+
+// 打印数组
+var arr = [1, 2, 3]
+print(arr)
+// 输出: [1, 2, 3]
+
+// 打印字典
+var dict = {&quot;a&quot;: 1, &quot;b&quot;: 2}
+print(dict)
+// 输出: {a: 1, b: 2}
+
+// 打印结构体
+cstruct Point { i32 x, i32 y }
+var p = Point.malloc()
+p.x = 10; p.y = 20
+print(p)
+// 输出: cstruct Point{x=10, y=20}
+p.free()
+</code></pre>
+<hr>
+<h3 id="printf"><code>printf(...)</code></h3>
+<p>打印一个或多个值，<strong>不</strong>添加换行。</p>
+<p><strong>参数</strong>:
+- 可变参数，支持任意类型</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">// 不换行输出
+printf(&quot;Loading&quot;)
+printf(&quot;...&quot;)
+print(&quot; Done!&quot;)
+// 输出: Loading... Done!
+
+// 制作进度条效果
+for 0 : 10 to i {
+    printf(&quot;#&quot;)
+}
+print()  // 最后换行
+// 输出: ##########
+
+// 同一行输出多个部分
+printf(&quot;[&quot;)
+printf(&quot;INFO&quot;)
+printf(&quot;] &quot;)
+print(&quot;Message here&quot;)
+// 输出: [INFO] Message here
+</code></pre>
+<hr>
+<h2 id="_7">输入函数</h2>
+<h3 id="inputprompt"><code>input(prompt)</code></h3>
+<p>获取用户输入，可选显示提示信息。</p>
+<p><strong>参数</strong>:
+- <code>prompt</code> (string, 可选): 提示信息</p>
+<p><strong>返回</strong>: <code>string</code> - 用户输入的字符串（不含换行符）</p>
+<pre><code class="language-leno">// 简单输入
+print(&quot;请输入你的名字:&quot;)
+var name = input()
+print(&quot;你好, &quot; + name + &quot;!&quot;)
+
+// 带提示的输入
+var age = input(&quot;请输入年龄: &quot;)
+print(&quot;你输入了: &quot; + age)
+
+// 转换为数字
+var num_str = input(&quot;输入一个数字: &quot;)
+var num = num_str.to_int()
+print(&quot;平方是: &quot; + (num * num))
+
+// 多行输入示例
+print(&quot;请输入三行文字:&quot;)
+var line1 = input(&quot;1&gt; &quot;)
+var line2 = input(&quot;2&gt; &quot;)
+var line3 = input(&quot;3&gt; &quot;)
+print(&quot;你输入了:&quot;)
+print(line1)
+print(line2)
+print(line3)
+</code></pre>
+<hr>
+<h2 id="_8">输出格式</h2>
+<h3 id="_9">基本类型输出格式</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>输出示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>null</code></td>
+<td><code>null</code></td>
+<td>小写</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td><code>true</code> / <code>false</code></td>
+<td>小写</td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>42</code></td>
+<td>十进制整数</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td><code>3.14</code> / <code>2.0</code></td>
+<td>总是显示小数部分</td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td><code>Hello</code></td>
+<td>普通输出不加引号</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">复合类型输出格式</h3>
+<pre><code class="language-leno">// 数组 - 方括号包裹，逗号分隔
+var arr = [1, 2, 3]
+print(arr)  // [1, 2, 3]
+
+// 嵌套数组
+var nested = [[1, 2], [3, 4]]
+print(nested)  // [[1, 2], [3, 4]]
+
+// 字典 - 花括号包裹，键值对格式
+var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}
+print(dict)  // {name: Alice, age: 25}
+
+// 字符串在数组/字典中加引号
+var arr_with_str = [&quot;a&quot;, &quot;b&quot;]
+print(arr_with_str)  // [&quot;a&quot;, &quot;b&quot;]
+
+var dict_with_str = {&quot;key&quot;: &quot;value&quot;}
+print(dict_with_str)  // {key: &quot;value&quot;}
+</code></pre>
+<h3 id="_11">特殊对象输出</h3>
+<pre><code class="language-leno">// FFI 指针
+import ffi
+var ptr = ffi.malloc(100)
+print(ptr)  // &lt;ptr 0x...&gt;
+ffi.free(ptr)
+
+// 文件对象
+import files
+var f = files.open(&quot;test.txt&quot;, &quot;w&quot;)
+print(f)  // &lt;file&gt;
+f.close()
+
+// cstruct 定义
+cstruct Point { i32 x, i32 y }
+print(Point)  // cstruct Point{i32 x, i32 y}
+
+// cstruct 实例
+var p = Point.malloc()
+print(p)  // cstruct Point{x=0, y=0}
+p.free()
+
+// BigInt
+var big = 12345678901234567890
+print(big)  // 12345678901234567890
+</code></pre>
+<hr>
+<h2 id="_12">示例代码</h2>
+<h3 id="1">示例1：简单的交互式程序</h3>
+<pre><code class="language-leno">main() {
+    print(&quot;========== 用户注册 ==========&quot;)
+
+    // 获取用户输入
+    var name = input(&quot;请输入用户名: &quot;)
+    var age_str = input(&quot;请输入年龄: &quot;)
+    var email = input(&quot;请输入邮箱: &quot;)
+
+    // 转换年龄为数字
+    var age = _int(age_str)
+
+    // 显示注册信息
+    print(&quot;\n========== 注册信息 ==========&quot;)
+    print(&quot;用户名:&quot;, name)
+    print(&quot;年龄:&quot;, age)
+    print(&quot;邮箱:&quot;, email)
+
+    // 确认
+    var confirm = input(&quot;\n信息正确吗? (y/n): &quot;)
+    if confirm == &quot;y&quot; or confirm == &quot;Y&quot; {
+        print(&quot;注册成功!&quot;)
+    } else {
+        print(&quot;请重新注册&quot;)
+    }
+}
+</code></pre>
+<h3 id="2">示例2：简单的计算器</h3>
+<pre><code class="language-leno">main() {
+    print(&quot;========== 简单计算器 ==========&quot;)
+
+    // 获取第一个数字
+    var num1_str = input(&quot;输入第一个数字: &quot;)
+    var num1 = _float(num1_str)
+
+    // 获取运算符
+    var op = input(&quot;输入运算符 (+, -, *, /): &quot;)
+
+    // 获取第二个数字
+    var num2_str = input(&quot;输入第二个数字: &quot;)
+    var num2 = _float(num2_str)
+
+    // 计算结果
+    var result = 0
+    if op == &quot;+&quot; {
+        result = num1 + num2
+    } else if op == &quot;-&quot; {
+        result = num1 - num2
+    } else if op == &quot;*&quot; {
+        result = num1 * num2
+    } else if op == &quot;/&quot; {
+        if num2 != 0 {
+            result = num1 / num2
+        } else {
+            print(&quot;错误: 不能除以零&quot;)
+            return
+        }
+    } else {
+        print(&quot;错误: 无效的运算符&quot;)
+        return
+    }
+
+    // 显示结果
+    print(&quot;结果:&quot;, num1, op, num2, &quot;=&quot;, result)
+}
+</code></pre>
+<h3 id="3">示例3：进度显示</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    print(&quot;========== 处理中 ==========&quot;)
+
+    var total = 20
+
+    for 0 : total to i {
+        // 计算进度百分比
+        var percent = (i * 100) / total
+
+        // 显示进度条
+        printf(&quot;\r[&quot;)
+        for 0 : i to j {
+            printf(&quot;=&quot;)
+        }
+        for i : total - 1 to j {
+            printf(&quot; &quot;)
+        }
+        printf(&quot;] %d%%&quot;, percent)
+
+        // 模拟处理时间
+        times.sleep(100)
+    }
+
+    print(&quot;\n处理完成!&quot;)
+}
+</code></pre>
+<h3 id="4">示例4：调试信息输出</h3>
+<pre><code class="language-leno">// 调试级别
+var DEBUG = true
+
+func debug_print(msg) {
+    if DEBUG {
+        print(&quot;[DEBUG]&quot;, msg)
+    }
+}
+
+func info_print(msg) {
+    print(&quot;[INFO]&quot;, msg)
+}
+
+func error_print(msg) {
+    print(&quot;[ERROR]&quot;, msg)
+}
+
+main() {
+    info_print(&quot;程序启动&quot;)
+
+    debug_print(&quot;初始化变量...&quot;)
+    var data = [1, 2, 3, 4, 5]
+    debug_print(&quot;数据:&quot;, data)
+
+    debug_print(&quot;处理数据...&quot;)
+    var sum = 0
+    for data to item {
+        sum = sum + item
+    }
+
+    info_print(&quot;总和:&quot;, sum)
+
+    if sum &gt; 100 {
+        error_print(&quot;总和超出预期&quot;)
+    } else {
+        info_print(&quot;结果正常&quot;)
+    }
+
+    info_print(&quot;程序结束&quot;)
+}
+</code></pre>
+<h3 id="5">示例5：跨平台路径处理</h3>
+<pre><code class="language-leno">import files
+import dirs
+
+main() {
+    // 获取操作系统
+    var os = _os()
+    print(&quot;操作系统:&quot;, os)
+
+    // 根据系统选择路径格式
+    var path
+    if os == &quot;windows&quot; {
+        path = &quot;C:\\Users\\Admin\\Documents&quot;
+    } else {
+        path = &quot;/home/user/documents&quot;
+    }
+
+    // 更好的方式：使用 dirs 模块
+    var better_path = dirs.join(&quot;folder&quot;, &quot;subfolder&quot;, &quot;file.txt&quot;)
+    print(&quot;路径:&quot;, better_path)
+
+    // 检查文件是否存在
+    var test_file = &quot;test.txt&quot;
+    if files.exists(test_file) {
+        print(&quot;文件存在:&quot;, test_file)
+    } else {
+        print(&quot;文件不存在:&quot;, test_file)
+    }
+}
+</code></pre>
+<hr>
+<h2 id="_13">注意事项</h2>
+<h3 id="1-print-vs-printf">1. print vs printf</h3>
+<ul>
+<li><code>print</code> 自动添加换行，适合大多数场景</li>
+<li><code>printf</code> 不添加换行，适合需要连续输出的场景</li>
+</ul>
+<pre><code class="language-leno">// print 自动换行
+print(&quot;Line 1&quot;)
+print(&quot;Line 2&quot;)
+// 输出:
+// Line 1
+// Line 2
+
+// printf 需要手动换行
+printf(&quot;Line 1\n&quot;)
+printf(&quot;Line 2\n&quot;)
+</code></pre>
+<h3 id="2_1">2. 输入处理</h3>
+<p><code>input()</code> 返回的是字符串，需要进行类型转换：</p>
+<pre><code class="language-leno">// 获取数字输入
+var num_str = input(&quot;输入数字: &quot;)
+var num = _int(num_str)      // 转为整数
+var float_num = _float(num_str)  // 转为浮点数
+
+// 安全转换
+if num_str.is_numeric() {
+    var num = _int(num_str)
+} else {
+    print(&quot;输入不是有效的数字&quot;)
+}
+</code></pre>
+<h3 id="3_1">3. 输出大对象</h3>
+<p>输出大型数组或字典可能会产生大量输出：</p>
+<pre><code class="language-leno">// 大数组
+var big_arr = []
+for 0 : 10000 to i {
+    big_arr.add(i)
+}
+// 不要直接打印大数组
+// print(big_arr)  // 会产生10000行输出
+
+// 只打印部分信息
+print(&quot;数组长度:&quot;, big_arr.len())
+print(&quot;前5个元素:&quot;, big_arr[0:4])
+</code></pre>
+<h2 id="_14">最佳实践</h2>
+<ol>
+<li>
+<p><strong>使用 print 进行调试</strong>
+   <code>leno
+   // 在关键位置打印变量值
+   print("DEBUG: x =", x, "y =", y)</code></p>
+</li>
+<li>
+<p><strong>格式化输出信息</strong>
+   <code>leno
+   // 使用前缀区分信息类型
+   print("[INFO] 操作成功")
+   print("[WARN] 参数可能不正确")
+   print("[ERROR] 发生错误:", error_msg)</code></p>
+</li>
+<li>
+<p><strong>处理用户输入</strong>
+   <code>leno
+   // 始终验证输入
+   var input_str = input("请输入: ")
+   if input_str == "" {
+       print("输入不能为空")
+   }</code></p>
+</li>
+<li>
+<p><strong>避免频繁输出</strong>
+   <code>leno
+   // 批量收集输出
+   var logs = []
+   for data to item {
+       logs.add("处理: " + item)
+   }
+   // 一次性输出
+   for logs to log {
+       print(log)
+   }</code></p>
+</li>
+<li>
+<p><strong>使用 printf 制作动态效果</strong>
+   <code>leno
+   // 进度显示
+   printf("\r进度: %d%%", percent)
+   // 注意：最后要换行
+   print()  // 结束进度显示</code></p>
+</li>
+</ol>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-05-17</em></p></main>
+</div>
+<nav class="pager"><a href="Leno跨模块clib开发经验.html">← 上一篇</a><a href="module_files.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

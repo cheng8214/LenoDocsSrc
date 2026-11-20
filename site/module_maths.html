@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>maths 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_maths.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">基本运算</a></li><ul class="lv3"><li><a href="#_2">数值实例方法</a></li></ul><li><a href="#_3">取整函数</a></li><li><a href="#_4">三角函数（弧度制）</a></li><ul class="lv3"><li><a href="#_5">快速近似三角函数</a></li></ul><li><a href="#_6">对数和指数</a></li><li><a href="#_7">工具函数</a></li><li><a href="#gui">整数版工具（GUI 首选）</a></li><li><a href="#pow_modbase-exp-m2026-11-09">模幂：pow_mod(base, exp, m)（2026-11-09 新增）</a></li><li><a href="#_8">归一化与区间映射</a></li><li><a href="#_9">缓动曲线（动画）</a></li><li><a href="#_10">角度工具</a></li><li><a href="#_11">数值小工具</a></li><li><a href="#vs-maths">手写 vs 调用 maths：实测开销</a></li><ul class="lv3"><li><a href="#_12">为什么现在反而更快</a></li></ul><li><a href="#_13">常量</a></li><li><a href="#_14">性能场景使用示例</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="maths">maths 模块</h1>
+<p>数学运算模块，提供基本运算、三角函数、对数指数、工具函数和常量。</p>
+<h2 id="_1">基本运算</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>签名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.sqrt(x)</code></td>
+<td><code>(float) -&gt; float</code></td>
+<td>平方根，参数不能为负</td>
+</tr>
+<tr>
+<td><code>maths.abs(x)</code></td>
+<td><code>(float) -&gt; float</code></td>
+<td>绝对值</td>
+</tr>
+<tr>
+<td><code>maths.pow(base, exp)</code></td>
+<td><code>(float, float) -&gt; float</code></td>
+<td>幂运算 base^exp</td>
+</tr>
+<tr>
+<td><code>maths.fmod(a, b)</code></td>
+<td><code>(float, float) -&gt; float</code></td>
+<td>浮点取模 a mod b（除数不能为0）</td>
+</tr>
+<tr>
+<td><code>maths.clamp(v, lo, hi)</code></td>
+<td><code>(float, float, float) -&gt; float</code></td>
+<td>限幅：将 v 限制在 [lo, hi] 范围内</td>
+</tr>
+<tr>
+<td><code>maths.lerp(a, b, t)</code></td>
+<td><code>(float, float, float) -&gt; float</code></td>
+<td>线性插值：a + (b-a)*t</td>
+</tr>
+<tr>
+<td><code>maths.smoothstep(t)</code></td>
+<td><code>(float) -&gt; float</code></td>
+<td>平滑缓动 3t²-2t³（t 自动夹到 [0,1]）；动画"起手慢/收尾慢"用它</td>
+</tr>
+<tr>
+<td><code>maths.rsqrt(x)</code></td>
+<td><code>(float) -&gt; float</code></td>
+<td>快速反平方根 1/√x（参数必须 &gt;0）</td>
+</tr>
+<tr>
+<td><code>maths.hypot(x, y)</code></td>
+<td><code>(float, float) -&gt; float</code></td>
+<td>直角三角形斜边 √(x²+y²)，避免溢出</td>
+</tr>
+<tr>
+<td><code>maths.sign(x)</code></td>
+<td><code>(float) -&gt; float</code></td>
+<td>符号函数：正数返回1，负数返回-1，零返回0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_2">数值实例方法</h3>
+<p>以上函数也可作为数值的实例方法调用：</p>
+<pre><code class="language-leno">float v = 3.14
+float r = v.clamp(0.0, 1.0)   // 等价于 maths.clamp(3.14, 0.0, 1.0)
+float h = 3.0.hypot(4.0)      // 等价于 maths.hypot(3.0, 4.0) = 5.0
+float e = 0.3.smoothstep()    // 等价于 maths.smoothstep(0.3) = 0.216
+</code></pre>
+<h2 id="_3">取整函数</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.round(x)</code></td>
+<td>四舍五入到最近整数</td>
+</tr>
+<tr>
+<td><code>maths.ceil(x)</code></td>
+<td>向上取整</td>
+</tr>
+<tr>
+<td><code>maths.floor(x)</code></td>
+<td>向下取整</td>
+</tr>
+<tr>
+<td><code>maths.trunc(x)</code></td>
+<td>截断小数部分（向零取整）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_4">三角函数（弧度制）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.sin(x)</code></td>
+<td>正弦（标准精度）</td>
+</tr>
+<tr>
+<td><code>maths.cos(x)</code></td>
+<td>余弦（标准精度）</td>
+</tr>
+<tr>
+<td><code>maths.tan(x)</code></td>
+<td>正切</td>
+</tr>
+<tr>
+<td><code>maths.asin(x)</code></td>
+<td>反正弦，参数 [-1, 1]</td>
+</tr>
+<tr>
+<td><code>maths.acos(x)</code></td>
+<td>反余弦，参数 [-1, 1]</td>
+</tr>
+<tr>
+<td><code>maths.atan(x)</code></td>
+<td>反正切</td>
+</tr>
+<tr>
+<td><code>maths.atan2(y, x)</code></td>
+<td>双参数反正切，可确定象限</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">快速近似三角函数</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.sin_fast(x)</code></td>
+<td>快速正弦近似（Bhaskara I 公式，精度 &lt;0.001，比标准 sin 快约 3-5x）</td>
+</tr>
+<tr>
+<td><code>maths.cos_fast(x)</code></td>
+<td>快速余弦近似（同上）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>使用建议</strong>：在逐像素渲染、物理模拟等高性能场景中使用 <code>sin_fast</code>/<code>cos_fast</code>，
+在需要精确计算的场景（如金融、科学计算）中使用标准 <code>sin</code>/<code>cos</code>。</p>
+</blockquote>
+<h2 id="_6">对数和指数</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.log(x)</code></td>
+<td>自然对数 ln(x)（x &gt; 0）</td>
+</tr>
+<tr>
+<td><code>maths.log2(x)</code></td>
+<td>以2为底的对数（x &gt; 0）</td>
+</tr>
+<tr>
+<td><code>maths.log10(x)</code></td>
+<td>以10为底的对数（x &gt; 0）</td>
+</tr>
+<tr>
+<td><code>maths.exp(x)</code></td>
+<td>自然指数 e^x</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">工具函数</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.max(a, b, ...)</code></td>
+<td>取最大值（可变参数，返回 float）</td>
+</tr>
+<tr>
+<td><code>maths.min(a, b, ...)</code></td>
+<td>取最小值（可变参数，返回 float）</td>
+</tr>
+<tr>
+<td><code>maths.clamp(v, lo, hi)</code></td>
+<td>夹到 <code>[lo, hi]</code>（返回 float）</td>
+</tr>
+<tr>
+<td><code>maths.lerp(a, b, t)</code></td>
+<td>线性插值 <code>a + (b-a)*t</code>（<strong>不</strong>夹 t）</td>
+</tr>
+<tr>
+<td><code>maths.smoothstep(t)</code></td>
+<td>3t²-2t³，t 先夹到 0..1</td>
+</tr>
+<tr>
+<td><code>maths.fmod(a, b)</code></td>
+<td>浮点取模（余数符号跟被除数）</td>
+</tr>
+<tr>
+<td><code>maths.hypot(x, y)</code></td>
+<td>√(x²+y²)，比手动 sqrt 更安全（防上溢）</td>
+</tr>
+<tr>
+<td><code>maths.deg(rad)</code></td>
+<td>弧度转角度</td>
+</tr>
+<tr>
+<td><code>maths.rad(deg)</code></td>
+<td>角度转弧度</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gui">整数版工具（GUI 首选）</h2>
+<p>控件里的尺寸、行列号、像素坐标全是 <code>int</code>，而上面那些返回 <code>float</code> ⇒ 调用点还得 <code>_int(...)</code>
+转回去，比手写 <code>if</code> 还长。下面这组是<strong>同语义的 int 版</strong>；小数实参会<strong>四舍五入</strong>取整
+（与 <code>roundi</code> 一致，符合"像素边界"直觉）。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.roundi(x)</code></td>
+<td>四舍五入到 int（<code>round</code> 的 int 版，替代 <code>_int(x + 0.5)</code>）</td>
+</tr>
+<tr>
+<td><code>maths.absi(x)</code></td>
+<td>int 版绝对值（<code>abs</code> 返回 float，<code>abs(pct-50)/5</code> 这类 int 语义必须要它）</td>
+</tr>
+<tr>
+<td><code>maths.mini(a, b, ...)</code> / <code>maths.maxi(...)</code></td>
+<td>int 版 min/max（可变参数）</td>
+</tr>
+<tr>
+<td><code>maths.clampi(v, lo, hi)</code></td>
+<td>int 版 clamp；<code>hi &lt; lo</code> 时收成 <code>lo</code>（不抛异常）</td>
+</tr>
+<tr>
+<td><code>maths.mod(a, b)</code></td>
+<td><strong>正取模</strong>：结余符号跟除数走，<code>mod(-1, 7) == 6</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>maths.mod</code> 存在的理由：<code>%</code> 是 C 语义，负数得负余数。日历取星期、环形索引都要自己补
+<code>+7</code> 之类的偏移（LenoSDL3 的 <code>sdl_calendar.leno</code> 就是 <code>(firstDow - weekStart + 7) % 7</code>）。</p>
+</blockquote>
+<h2 id="pow_modbase-exp-m2026-11-09">模幂：<code>pow_mod(base, exp, m)</code>（2026-11-09 新增）</h2>
+<p><code>base^exp mod m</code>。RSA / DH / LCG 伪随机 / 哈希校验都要它 —— 之前 <code>pow</code>（浮点）与
+<code>mod</code>（int）各有一个却没有二者的结合，于是每个项目自己抄一份（LenoMusic 那份在
+<code>crypto_math.leno</code>，用来算网易/QQ 的 <code>encSecKey</code>）。</p>
+<pre><code class="language-leno">maths.pow_mod(2, 10, 1000)                 // 24
+maths.pow_mod(3, 1000, 1000000007)         // 56888193
+maths.pow_mod(-7, 3, 5)                    // 2   ← 负底数先归一化到 [0, m)
+
+// RSA：c = m^e mod n（1024 位模数照算，见下）
+int c = maths.pow_mod(m, 65537, mod)
+</code></pre>
+<p><strong>语义</strong></p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m &lt;= 0</code></td>
+<td>抛错（<code>mod()</code> 对 0 也是抛错；负模数没有意义）</td>
+</tr>
+<tr>
+<td><code>exp &lt; 0</code></td>
+<td>抛错（没有模逆，不做隐式求逆）</td>
+</tr>
+<tr>
+<td><code>base &lt; 0</code></td>
+<td>先归一化到 <code>[0, m)</code>（数学惯例；C 的 <code>%</code> 会给负余数）</td>
+</tr>
+<tr>
+<td>任意精度</td>
+<td><code>int</code> 是 bignum ⇒ 1024 位模数也能算（实测金标对齐 Python）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>两条实现路径</strong>（性能差别很大，值得知道）</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>走哪条</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>base</code> / <code>exp</code> / <code>m</code> <strong>都 ≤ int64</strong></td>
+<td><strong>int64 快路径</strong>（<code>unsigned __int128</code> 做 mulmod）</td>
+<td>全程零分配、纯 C 循环</td>
+</tr>
+<tr>
+<td>任一参数超出 int64（如 1024 位 RSA 模数）</td>
+<td><strong>bignum 路径</strong>（<code>bigint_mul</code> + <code>bigint_mod</code>）</td>
+<td>大数乘除本身是瓶颈</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实测（2026-11-09，本机，与 <code>crypto_math.leno</code> 的手写版对比）</strong></p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原生</th>
+<th>手写 Leno</th>
+<th>加速</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>全 int64，<code>3^1000000 mod 1e9+7</code></td>
+<td>0.23 µs/次</td>
+<td>2.67 µs/次</td>
+<td><strong>11.6×</strong></td>
+</tr>
+<tr>
+<td>全 int64，<code>7^65537 mod 1e9+7</code></td>
+<td>0.18 µs/次</td>
+<td>1.61 µs/次</td>
+<td><strong>8.6×</strong></td>
+</tr>
+<tr>
+<td>64 位模数 + 128 位底数</td>
+<td>234 µs/次</td>
+<td>246 µs/次</td>
+<td>1.05×</td>
+</tr>
+<tr>
+<td>1024 位模数（RSA 真场景）</td>
+<td>4.9 ms/次</td>
+<td>5.2 ms/次</td>
+<td>1.05×</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>结论</strong>：小模数（什么都装得进 int64）快 8–12 倍；真要算 1024 位时，瓶颈是
+大数乘除本身，两边几乎一样——但至少现在不用每个项目自己写一份，也不会写错。</p>
+</blockquote>
+<h2 id="_8">归一化与区间映射</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.saturate(v)</code></td>
+<td>夹到 <code>0..1</code>（透明度、进度、归一化值的最高频操作）</td>
+</tr>
+<tr>
+<td><code>maths.inverse_lerp(a, b, v)</code></td>
+<td><code>(v-a)/(b-a)</code>；<code>a == b</code> 返回 0，不抛</td>
+</tr>
+<tr>
+<td><code>maths.remap(v, inLo, inHi, outLo, outHi)</code></td>
+<td>把 v 在 <code>[inLo,inHi]</code> 的比例（<strong>先夹到 0..1</strong>）映射到 <code>[outLo,outHi]</code></td>
+</tr>
+<tr>
+<td><code>maths.wrap(v, lo, hi)</code></td>
+<td>环形夹取到 <code>[lo, hi)</code>（轮播、色相环、环形索引）</td>
+</tr>
+</tbody>
+</table>
+<p><code>remap</code> 会夹输入，因为 UI 侧几乎都是"内容长度 → 滑块长度"，越界时必须夹住，
+否则滑块会长出轨道。典型用法：</p>
+<pre><code class="language-leno">// 内容 5000px、视口 300px ⇒ 滑块长度（最少 20px）
+float thumb = maths.remap(300.0, 0.0, 5000.0, 0.0, 300.0)   // → 18.0
+thumb = maths.max(20.0, thumb)
+</code></pre>
+<h2 id="_9">缓动曲线（动画）</h2>
+<p>入口 <code>t</code> 一律<strong>先夹到 0..1</strong>（动画进度越界是常态，不该由调用方每次自己夹）。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>曲线</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.smootherstep(t)</code></td>
+<td>5t⁴-6t⁵</td>
+<td>比 smoothstep 更平滑的起收</td>
+</tr>
+<tr>
+<td><code>maths.ease_in_quad(t)</code></td>
+<td>t²</td>
+<td>退场（越走越快）</td>
+</tr>
+<tr>
+<td><code>maths.ease_out_quad(t)</code></td>
+<td>1-(1-t)²</td>
+<td>进场（冲进来再减速）</td>
+</tr>
+<tr>
+<td><code>maths.ease_in_out_quad(t)</code></td>
+<td>两头慢</td>
+<td>展开/切换</td>
+</tr>
+<tr>
+<td><code>maths.ease_in_cubic(t)</code></td>
+<td>t³</td>
+<td>同上，更陡</td>
+</tr>
+<tr>
+<td><code>maths.ease_out_cubic(t)</code></td>
+<td>1-(1-t)³</td>
+<td><strong>UI 最常用</strong>的进场曲线</td>
+</tr>
+<tr>
+<td><code>maths.ease_in_out_cubic(t)</code></td>
+<td>两头慢</td>
+<td>页面切换</td>
+</tr>
+<tr>
+<td><code>maths.ease_out_back(t)</code> / <code>(t, k)</code></td>
+<td>越过 1 再回弹</td>
+<td>弹窗、卡片出现；<code>k</code> 是回弹幅度（默认 1.70158）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_10">角度工具</h2>
+<p>角度的"最短路径"不是普通减法：341° → 19° 应该走 +38°，直接相减是 -322°，按后者插值会转一大圈。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.angle_delta(from, to)</code></td>
+<td>最短角差，落在 <code>[-π, π)</code></td>
+</tr>
+<tr>
+<td><code>maths.lerp_angle(from, to, t)</code></td>
+<td>按最短路径插值（from/to 无需先归一化）</td>
+</tr>
+<tr>
+<td><code>maths.wrap_angle(a)</code></td>
+<td>任意弧度绕回 <code>[-π, π)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_11">数值小工具</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.fract(v)</code></td>
+<td>小数部分，负数也落在 <code>[0,1)</code></td>
+</tr>
+<tr>
+<td><code>maths.step(edge, x)</code></td>
+<td>GLSL 语义：<code>x &lt; edge</code> ⇒ 0，否则 1</td>
+</tr>
+<tr>
+<td><code>maths.snap(v, step)</code></td>
+<td>吸附到步长网格；<code>step &lt;= 0</code> 原样返回</td>
+</tr>
+<tr>
+<td><code>maths.approx_eq(a, b[, eps])</code></td>
+<td>浮点近似相等（默认 eps = 1e-6），布局/动画断言别用 <code>==</code></td>
+</tr>
+<tr>
+<td><code>maths.dist(x1, y1, x2, y2)</code></td>
+<td>两点距离</td>
+</tr>
+<tr>
+<td><code>maths.is_pow2(n)</code> / <code>maths.next_pow2(n)</code></td>
+<td>2 的幂判断 / 向上取到 2 的幂（扩容、网格分块）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="vs-maths">手写 vs 调用 maths：实测开销</h2>
+<p>口径：<code>tools/bench_maths_native.leno</code>，300 万次 × 3 轮取最小值，再减掉空转基线
+（取值 + 累加的固定开销），得到<strong>单次调用的净开销</strong>。<strong>负数 = maths 更快</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>内联前</th>
+<th>内联后（现状）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clamp</code></td>
+<td>+2.1 ns</td>
+<td><strong>−5.4 ns</strong></td>
+</tr>
+<tr>
+<td><code>abs</code></td>
+<td>+0.6 ns</td>
+<td><strong>−4.3 ns</strong></td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td>+3.9 ns</td>
+<td><strong>−0.3 ns</strong></td>
+</tr>
+<tr>
+<td><code>lerp</code></td>
+<td>+4.4 ns</td>
+<td><strong>−0.9 ns</strong></td>
+</tr>
+<tr>
+<td><code>smoothstep</code></td>
+<td>−13.1 ns</td>
+<td><strong>−19.0 ns</strong></td>
+</tr>
+<tr>
+<td><code>clampi</code> / <code>roundi</code>（int 版）</td>
+<td>+6 ~ +10 ns</td>
+<td>同左（未内联前的那批数据）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_12">为什么现在反而更快</h3>
+<p><code>maths.abs/clamp/min/max/lerp/smoothstep/saturate/fract/roundi/clampi/mini/maxi/mod</code>
+这 13 个函数被<strong>编译期内联</strong>成一条 <code>OP_MATH_FAST</code> 指令（见 <code>leno_vm.h</code> 的说明）：
+不再需要「取模块对象 → 常量装方法名 → <code>OP_INDEX</code> 查表 → native 调用协议」四步，
+实参也仍然只求值一次。所以现在<strong>调用 maths 比自己手写还快</strong>，代码却更好读。</p>
+<p>几条结论：</p>
+<ol>
+<li><strong>这些函数可以无脑用</strong>：全部 ≤ 手写开销，<code>clamp</code> 快 5 ns、<code>smoothstep</code> 快 19 ns。</li>
+<li>表达式越复杂，收益越大（<code>smoothstep</code> 手写要先夹取再算多项式）。</li>
+<li>「封个 Leno 函数复用」仍然最贵（+16~23 ns/次，见基准脚本里的"函数"档）——
+   想复用就直接用 maths，不要自己包一层。</li>
+<li>没内联的那批（<code>ease_*</code> / <code>remap</code> / <code>inverse_lerp</code> / <code>approx_eq</code> / <code>dist</code> / 角度工具）
+   仍走 native 路径，单次比手写贵 1~5 ns；GUI 一帧几百次 ⇒ 每帧 1 µs 级，可以忽略。</li>
+<li><strong>每像素内循环</strong>（<code>sdl_renderer</code> 的采样循环，每帧几十万次）继续手写——那里的瓶颈
+   不是调用开销而是算法本身。</li>
+<li>⚠ 内联只认 <code>import maths</code>（别名保持 <code>maths</code>）。写成 <code>import maths as m</code> 后调
+   <code>m.abs(x)</code> 走的是常规 native 路径——<strong>结果一样正确</strong>，只是没被内联（少一次优化而已）。
+   实参个数与内联表不匹配时同理，自动回落到常规路径。</li>
+</ol>
+<h2 id="_13">常量</h2>
+<table>
+<thead>
+<tr>
+<th>常量</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maths.pi()</code></td>
+<td>3.14159265358979...</td>
+<td>圆周率 π（<strong>函数</strong>，要写括号）</td>
+</tr>
+<tr>
+<td><code>maths.e()</code></td>
+<td>2.71828182845904...</td>
+<td>自然底数 e（<strong>函数</strong>，要写括号）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_14">性能场景使用示例</h2>
+<pre><code class="language-leno">import maths
+
+// 逐像素距离计算（高性能场景）
+float dx = fx - cx
+float dy = fy - cy
+float dist = maths.hypot(dx, dy)        // 比 sqrt(dx*dx+dy*dy) 更安全
+float invDist = maths.rsqrt(dx*dx + dy*dy) // 一步得到 1/dist，省掉除法
+
+// 快速正弦波
+float wave = maths.sin_fast(t * 6.28)
+
+// 像素值限幅
+int r = maths.clamp(rawR, 0, 255)
+int g = maths.clamp(rawG, 0, 255)
+int b = maths.clamp(rawB, 0, 255)
+
+// 浮点取模（周期性动画）
+float phase = maths.fmod(t, 2.0)  // 0.0 ~ 2.0 循环
+
+// 线性插值（颜色渐变、动画过渡）
+float val = maths.lerp(startVal, endVal, progress)
+</code></pre></main>
+</div>
+<nav class="pager"><a href="module_types.html">← 上一篇</a><a href="module_times.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

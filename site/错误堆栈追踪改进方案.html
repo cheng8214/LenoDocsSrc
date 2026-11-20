@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>错误堆栈追踪改进方案 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="错误堆栈追踪改进方案.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_2">现状分析</a></li><ul class="lv3"><li><a href="#_3">已有能力</a></li><li><a href="#_4">存在的差距</a></li></ul><li><a href="#_5">改进目标</a></li><ul class="lv3"><li><a href="#1-estack">1. 丰富 e.stack 内容：每帧包含 函数名 (文件:行号)</a></li><li><a href="#2-throw">2. throw 语句也捕获调用栈</a></li><li><a href="#3">3. 未捕获异常打印完整调用栈</a></li></ul><li><a href="#_6">实现方案</a></li><ul class="lv3"><li><a href="#_7">涉及文件</a></li><li><a href="#31-build_stack_trace">3.1 新增 build_stack_trace() 辅助函数</a></li><li><a href="#32-throw_runtime_error">3.2 改进 throw_runtime_error()</a></li><li><a href="#33">3.3 未捕获异常打印调用栈</a></li><li><a href="#34-op_throw">3.4 OP_THROW 包装字符串异常</a></li><li><a href="#35-op_throw">3.5 未捕获异常在 OP_THROW 中也打印调用栈</a></li></ul><li><a href="#_8">使用示例</a></li><ul class="lv3"><li><a href="#_9">改进后的效果</a></li><li><a href="#throw-stack">throw 字符串也支持 stack</a></li><li><a href="#throw">未捕获 throw 也打印调用栈</a></li></ul><li><a href="#_10">实际实现说明</a></li><ul class="lv3"><li><a href="#_11">已实现的改进</a></li><li><a href="#_12">内联优化对调用栈的影响</a></li></ul><li><a href="#2026-10-02">2026-10-02 更新：报错文案统一（引擎错误一律自带位置）</a></li><ul class="lv3"><li><a href="#_13">第二批（同日）：异常跨边界不再被"重造"</a></li><li><a href="#line-0">第三批（同日）：回调调用点不再传 line = 0</a></li><li><a href="#f6">第四批（同日）：宿主回调边界的异常展开下界（f6，修崩溃）</a></li><li><a href="#try-finally-catchf7">第五批（同日）：try { … } finally { … }（无 catch）静默吞掉异常（f7）</a></li><li><a href="#_14">涉及文件</a></li><li><a href="#_15">性能影响</a></li></ul></ul></aside>
+  <main class="content" id="top"><h1 id="_1">错误堆栈追踪改进方案</h1>
+<blockquote>
+<p>⚠ <strong>局部过时（2026-10-02 注）—— 正文其余部分仍属现行，只有下面三点请按现状重读：</strong>
+① §「内联优化对调用栈的影响」说"Leno 编译器实现了函数内联优化（<code>codegen_inline.c</code>）"——
+   该文件<strong>已随寄存器式改造删除</strong>（<code>0f0cf52</code>，621 行）且<strong>尚未移植</strong> ⇒ "被内联的函数不会出现在
+   调用栈中"这条<strong>当前不成立</strong>（所有脚本函数调用都是真帧，调用栈里都能看到）；
+② 文中 <code>LENO_BIN_VERSION</code> v3.2.10 / v3.2.11 是当时值，现为 <strong>v3.2.12</strong>（<code>src/include/leno_serialize.h:157</code>）；
+③ 文中断言数「412/0」是当时值 —— 本仓库<strong>不再在文档里钉断言总数</strong>，一律以实跑
+   <code>.\build\leno.exe assert\run_tests.leno build\leno.exe assert</code> 为准。</p>
+</blockquote>
+<h2 id="_2">现状分析</h2>
+<p>Leno 的异常系统<strong>已有</strong>基础的调用链支持：</p>
+<h3 id="_3">已有能力</h3>
+<p><code>throw_runtime_error()</code> 在创建异常对象时，已将调用栈信息存入 <code>e.stack</code>：</p>
+<pre><code class="language-leno">try {
+    var a = 1 / 0
+} catch e {
+    print(e.msg)     // &quot;除零错误&quot;
+    print(e.file)    // &quot;script.leno&quot;
+    print(e.line)    // 2
+    print(e.stack)   // [&quot;&lt;main&gt;&quot;, &quot;inner&quot;, &quot;middle&quot;, &quot;outer&quot;]
+}
+</code></pre>
+<p>异常对象是一个 Dict，包含：
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| <code>msg</code> | string | 错误消息 |
+| <code>line</code> | int | 错误发生的行号 |
+| <code>file</code> | string | 错误发生的文件名 |
+| <code>stack</code> | array | 调用栈（函数名数组） |</p>
+<h3 id="_4">存在的差距</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>影响</th>
+<th>位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>e.stack</code> 只有函数名，缺少行号</strong></td>
+<td>无法定位每层调用的具体位置</td>
+<td><code>vm_exception.inc</code> → <code>throw_runtime_error()</code></td>
+</tr>
+<tr>
+<td><strong><code>throw "string"</code> 不捕获调用栈</strong></td>
+<td>用户手动 throw 的异常无 stack 信息</td>
+<td><code>op_exception.inc</code> → <code>OP_THROW</code></td>
+</tr>
+<tr>
+<td><strong>未捕获异常不打印调用栈</strong></td>
+<td>程序崩溃时只显示一行错误，无法追踪调用链</td>
+<td><code>vm_exception.inc</code> → <code>throw_runtime_error()</code> 末尾 + <code>op_exception.inc</code> → <code>OP_THROW</code> 末尾</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_5">改进目标</h2>
+<h3 id="1-estack">1. 丰富 <code>e.stack</code> 内容：每帧包含 <code>函数名 (文件:行号)</code></h3>
+<p><strong>当前</strong>：<code>e.stack</code> = <code>["&lt;main&gt;", "inner", "middle", "outer"]</code></p>
+<p><strong>改进后</strong>：<code>e.stack</code> = <code>["&lt;main&gt; (script.leno:10)", "inner (script.leno:5)", "middle (script.leno:3)", "outer (script.leno:2)"]</code></p>
+<h3 id="2-throw">2. <code>throw</code> 语句也捕获调用栈</h3>
+<p><strong>当前</strong>：<code>throw "error"</code> 抛出的是裸字符串，<code>catch e</code> 拿到的 <code>e</code> 就是字符串本身，无 <code>.msg</code>/<code>.stack</code> 等属性。</p>
+<p><strong>改进后</strong>：<code>throw "error"</code> 自动包装为异常对象，包含完整的 <code>.msg</code>/<code>.file</code>/<code>.line</code>/<code>.stack</code>。</p>
+<blockquote>
+<p><strong>兼容性</strong>：<code>catch e</code> 中 <code>e</code> 仍然是字符串可用的（通过 <code>e.msg</code> 或直接 <code>print(e)</code> 打印消息）。检查 <code>e</code> 是否为 Dict 来决定如何访问属性。</p>
+</blockquote>
+<h3 id="3">3. 未捕获异常打印完整调用栈</h3>
+<p><strong>当前输出</strong>：</p>
+<pre><code>[错误] script.leno:5: 除零错误
+</code></pre>
+<p><strong>改进后输出</strong>：</p>
+<pre><code>[错误] script.leno:5: 除零错误
+    at inner (script.leno:5)
+    at middle (script.leno:3)
+    at outer (script.leno:2)
+    at &lt;main&gt; (script.leno:10)
+</code></pre>
+<hr>
+<h2 id="_6">实现方案</h2>
+<h3 id="_7">涉及文件</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/vm/vminc/vm_exception.inc</code></td>
+<td>改进 <code>throw_runtime_error()</code> 的 stack 构建；新增 <code>build_stack_trace()</code> 辅助函数；未捕获异常打印调用栈</td>
+</tr>
+<tr>
+<td><code>src/vm/vminc/op_exception.inc</code></td>
+<td><code>OP_THROW</code> 中对字符串异常包装为异常对象</td>
+</tr>
+</tbody>
+</table>
+<h3 id="31-build_stack_trace">3.1 新增 <code>build_stack_trace()</code> 辅助函数</h3>
+<p>在 <code>vm_exception.inc</code> 中新增，用于构建包含文件名和行号的调用栈数组：</p>
+<pre><code class="language-c">// 构建调用栈数组，每帧格式: &quot;func_name (file:line)&quot;
+static ObjArray* build_stack_trace(void) {
+    ObjArray* stack_arr = arr_new(vm.frame_cnt);
+    if (!stack_arr) return NULL;
+
+    for (int i = vm.frame_cnt - 1; i &gt;= 0; i--) {
+        CallFrame* f = &amp;vm.frames[i];
+
+        // 获取函数名
+        const char* func_name = NULL;
+        if (f-&gt;closure &amp;&amp; f-&gt;closure-&gt;function &amp;&amp; f-&gt;closure-&gt;function-&gt;name) {
+            func_name = f-&gt;closure-&gt;function-&gt;name;
+        } else if (i == 0) {
+            func_name = &quot;&lt;main&gt;&quot;;
+        } else {
+            func_name = &quot;&lt;anonymous&gt;&quot;;
+        }
+
+        // 获取文件名
+        const char* filename = &quot;unknown&quot;;
+        if (f-&gt;chunk &amp;&amp; f-&gt;chunk-&gt;filename) {
+            filename = f-&gt;chunk-&gt;filename;
+        }
+
+        // 获取行号（当前 IP 对应的行）
+        int line = 0;
+        if (f-&gt;chunk &amp;&amp; f-&gt;chunk-&gt;lines &amp;&amp; f-&gt;ip) {
+            int offset = (int)(f-&gt;ip - f-&gt;chunk-&gt;code);
+            if (offset &gt;= 0 &amp;&amp; offset &lt; f-&gt;chunk-&gt;len) {
+                line = f-&gt;chunk-&gt;lines[offset];
+            }
+        }
+
+        // 拼接 &quot;func_name (file:line)&quot;
+        char frame_desc[BUFFER_XLARGE];
+        snprintf(frame_desc, sizeof(frame_desc), &quot;%s (%s:%d)&quot;, func_name, filename, line);
+        ObjString* frame_str = str_copy(frame_desc, strlen(frame_desc));
+        if (frame_str) {
+            arr_write(stack_arr, stack_arr-&gt;count, val_obj((Object*)frame_str));
+        }
+    }
+    return stack_arr;
+}
+</code></pre>
+<h3 id="32-throw_runtime_error">3.2 改进 <code>throw_runtime_error()</code></h3>
+<p>将现有的 stack 构建逻辑替换为调用 <code>build_stack_trace()</code>：</p>
+<pre><code class="language-c">// 替换原来的 for 循环构建 stack
+ObjArray* stack_arr = build_stack_trace();
+if (stack_arr) {
+    ObjString* stack_key = str_copy(&quot;stack&quot;, 5);
+    if (stack_key) {
+        dict_set(err_dict, val_obj((Object*)stack_key), val_obj((Object*)stack_arr));
+    }
+}
+</code></pre>
+<h3 id="33">3.3 未捕获异常打印调用栈</h3>
+<p>在 <code>throw_runtime_error()</code> 末尾，当没有找到 catch/finally 时：</p>
+<pre><code class="language-c">// 没有找到任何异常处理
+// 打印完整调用栈
+fprintf(stderr, &quot;[错误] %s:%d: %s\n&quot;, filename, line, msg);
+if (stack_arr &amp;&amp; stack_arr-&gt;count &gt; 1) {
+    fprintf(stderr, &quot;调用栈:\n&quot;);
+    for (int i = 0; i &lt; stack_arr-&gt;count; i++) {
+        Value frame_val = stack_arr-&gt;elements[i];
+        if (val_is_string(frame_val)) {
+            fprintf(stderr, &quot;    at %s\n&quot;, ((ObjString*)val_as_obj(frame_val))-&gt;chars);
+        }
+    }
+}
+runtime_error(msg, line);
+vm.has_exception = 1;
+</code></pre>
+<h3 id="34-op_throw">3.4 <code>OP_THROW</code> 包装字符串异常</h3>
+<p>在 <code>op_exception.inc</code> 的 <code>OP_THROW</code> 中，当异常是字符串时，自动包装为异常对象：</p>
+<pre><code class="language-c">OPCODE(OP_THROW) {
+    frame = &amp;vm.frames[vm.frame_cnt - 1];
+    Value exception = vm_stack_pop(&amp;vm);
+    if (val_is_null(exception)) {
+        exception = vm.exception;
+    }
+
+    // 如果 throw 的是字符串，包装为异常对象（含 stack 信息）
+    if (val_is_string(exception)) {
+        ObjString* str = (ObjString*)val_as_obj(exception);
+        ObjDict* err_dict = dict_new(8);
+        if (err_dict) {
+            // msg
+            dict_set(err_dict, val_obj((Object*)str_copy(&quot;msg&quot;, 3)), exception);
+            // line
+            dict_set(err_dict, val_obj((Object*)str_copy(&quot;line&quot;, 4)), val_int(GET_CURRENT_LINE()));
+            // file
+            const char* filename = frame-&gt;chunk-&gt;filename ? frame-&gt;chunk-&gt;filename : &quot;unknown&quot;;
+            dict_set(err_dict, val_obj((Object*)str_copy(&quot;file&quot;, 4)),
+                     val_obj((Object*)str_copy(filename, strlen(filename))));
+            // stack
+            ObjArray* stack_arr = build_stack_trace();
+            if (stack_arr) {
+                dict_set(err_dict, val_obj((Object*)str_copy(&quot;stack&quot;, 5)),
+                         val_obj((Object*)stack_arr));
+            }
+            exception = val_obj((Object*)err_dict);
+        }
+    }
+
+    // ... 后续逻辑不变
+}
+</code></pre>
+<h3 id="35-op_throw">3.5 未捕获异常在 <code>OP_THROW</code> 中也打印调用栈</h3>
+<p><code>OP_THROW</code> 末尾，当没有找到 catch/finally 时：</p>
+<pre><code class="language-c">if (vm.has_exception) {
+    if (vm.current_coroutine) {
+        return -1;
+    }
+    // 打印调用栈
+    if (val_is_obj(vm.exception) &amp;&amp; val_as_obj(vm.exception)-&gt;type == OBJ_DICT) {
+        ObjDict* err = (ObjDict*)val_as_obj(vm.exception);
+        // 获取 msg
+        Value msg_val = dict_get(err, val_obj((Object*)str_copy(&quot;msg&quot;, 3)));
+        char* msg = val_is_string(msg_val) ? strdup(((ObjString*)val_as_obj(msg_val))-&gt;chars) : strdup(&quot;未知错误&quot;);
+        // 获取 file/line
+        Value file_val = dict_get(err, val_obj((Object*)str_copy(&quot;file&quot;, 4)));
+        Value line_val = dict_get(err, val_obj((Object*)str_copy(&quot;line&quot;, 4)));
+        const char* fname = val_is_string(file_val) ? ((ObjString*)val_as_obj(file_val))-&gt;chars : &quot;unknown&quot;;
+        int ln = val_is_int(line_val) ? (int)val_as_int(line_val) : 0;
+
+        fprintf(stderr, &quot;[错误] %s:%d: %s\n&quot;, fname, ln, msg);
+        // 打印 stack
+        Value stack_val = dict_get(err, val_obj((Object*)str_copy(&quot;stack&quot;, 5)));
+        if (val_is_obj(stack_val) &amp;&amp; val_as_obj(stack_val)-&gt;type == OBJ_ARRAY) {
+            ObjArray* stack_arr = (ObjArray*)val_as_obj(stack_val);
+            fprintf(stderr, &quot;调用栈:\n&quot;);
+            for (int i = 0; i &lt; stack_arr-&gt;count; i++) {
+                if (val_is_string(stack_arr-&gt;elements[i])) {
+                    fprintf(stderr, &quot;    at %s\n&quot;, ((ObjString*)val_as_obj(stack_arr-&gt;elements[i]))-&gt;chars);
+                }
+            }
+        }
+        free(msg);
+    } else {
+        char* msg = value_to_string(exception);
+        runtime_error(msg, GET_CURRENT_LINE());
+        free(msg);
+    }
+    return -1;
+}
+</code></pre>
+<hr>
+<h2 id="_8">使用示例</h2>
+<h3 id="_9">改进后的效果</h3>
+<pre><code class="language-leno">func inner() {
+    var arr = [1, 2, 3]
+    var x = arr[10]    // 数组越界
+}
+
+func middle() {
+    inner()
+}
+
+func outer() {
+    middle()
+}
+
+main() {
+    outer()    // 未捕获异常
+}
+</code></pre>
+<p><strong>改进前输出</strong>：</p>
+<pre><code>[错误] script.leno:3: 数组索引越界
+</code></pre>
+<p><strong>改进后输出</strong>：</p>
+<pre><code>[错误] script.leno:3: 数组索引越界
+调用栈:
+    at inner (script.leno:3)
+    at middle (script.leno:6)
+    at outer (script.leno:10)
+    at &lt;main&gt; (script.leno:14)
+</code></pre>
+<h3 id="throw-stack"><code>throw</code> 字符串也支持 stack</h3>
+<pre><code class="language-leno">func validate(int x) {
+    if x &lt; 0 {
+        throw &quot;x 不能为负数&quot;
+    }
+}
+
+main() {
+    try {
+        validate(-1)
+    } catch e {
+        print(e.msg)    // &quot;x 不能为负数&quot;
+        print(e.line)   // 3
+        print(e.stack)  // [&quot;validate (script.leno:3)&quot;, &quot;&lt;main&gt; (script.leno:8)&quot;]
+    }
+}
+</code></pre>
+<h3 id="throw">未捕获 <code>throw</code> 也打印调用栈</h3>
+<pre><code class="language-leno">func check(int x) {
+    if x &lt; 0 {
+        throw &quot;invalid input&quot;
+    }
+}
+
+main() {
+    check(-1)   // 未捕获
+}
+</code></pre>
+<p><strong>输出</strong>：</p>
+<pre><code>[错误] script.leno:3: invalid input
+调用栈:
+    at check (script.leno:3)
+    at &lt;main&gt; (script.leno:7)
+</code></pre>
+<hr>
+<h2 id="_10">实际实现说明</h2>
+<h3 id="_11">已实现的改进</h3>
+<ol>
+<li>
+<p><strong><code>e.stack</code> 格式升级</strong>：从纯函数名数组 <code>["inner", "middle", "&lt;main&gt;"]</code> 变为 <code>"func (file:line)"</code> 格式 <code>["inner (script.leno:3)", "middle (script.leno:6)", "&lt;main&gt; (script.leno:10)"]</code>。仍是字符串数组，不影响遍历。</p>
+</li>
+<li>
+<p><strong>未捕获异常打印调用栈</strong>：所有未捕获异常路径（<code>throw_runtime_error</code>、<code>OP_THROW</code>、<code>OP_END_TRY</code>）现在都会通过 <code>print_unhandled_exception()</code> 打印完整的调用栈到 stderr。</p>
+</li>
+<li>
+<p><strong><code>throw</code> 字符串向后兼容</strong>：<code>throw "string"</code> 保持原行为，<code>catch e</code> 拿到的 <code>e</code> 仍然是字符串本身。但未捕获时也会实时构建并打印调用栈。</p>
+</li>
+<li>
+<p><strong>未捕获异常消息提取</strong>：当异常是 Dict 时，从 <code>e.msg</code> 提取消息字符串传给 <code>runtime_error</code>，避免打印整个 Dict 表示。</p>
+</li>
+</ol>
+<h3 id="_12">内联优化对调用栈的影响</h3>
+<p>Leno 编译器实现了函数内联优化（<code>codegen_inline.c</code>），满足以下条件的函数会被内联到调用点：
+- 函数体 ≤ 8 条语句
+- 不含 try-catch、switch、循环
+- 无 upvalue（闭包捕获）
+- 非 async、非构造/析构函数
+- 无泛型类型参数
+- 无默认参数
+- 内联深度 ≤ 3 层</p>
+<p><strong>被内联的函数不会出现在调用栈中</strong>，因为它们没有独立的 CallFrame。这与 C/C++ 的 <code>-O2</code> 内联行为一致。</p>
+<hr>
+<h2 id="2026-10-02">2026-10-02 更新：报错文案统一（引擎错误一律自带位置）</h2>
+<p><strong>触发</strong>：PvZ 的 <code>_int("12\r")</code> 抛 <code>无法将字符串转换为整数</code>，窗外层 catch 打出来的那行
+<strong>完全没有位置</strong>。查下来不是"位置丢了"，而是两个口径：</p>
+<table>
+<thead>
+<tr>
+<th>来源</th>
+<th>异常值</th>
+<th><code>e.msg</code> 里带位置吗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原生模块 <code>native_throw_error()</code>（<code>_int</code>、越界…）</td>
+<td>Dict{msg,line,file,stack}</td>
+<td>✗ 只有一句裸消息</td>
+</tr>
+<tr>
+<td>VM 操作码错误（除零等，走 <code>_with_operand(s)</code>）</td>
+<td>Dict</td>
+<td>✓ 自带 <code>[操作]/[内部]/[位置]/[操作数]/[调用栈]</code></td>
+</tr>
+<tr>
+<td>用户 <code>throw "x"</code>（<code>wrap_string_exception</code>）</td>
+<td>Dict</td>
+<td>✗（msg 就是用户那句话，本就不该改写）</td>
+</tr>
+</tbody>
+</table>
+<p>而 <code>print(e)</code> / <code>"…" + e</code> <strong>只渲染 <code>e.msg</code></strong> ⇒ 前两类看着"有位置"、后两类看着"凭空"。</p>
+<p><strong>改法</strong>（<code>src/vm/vminc/vm_exception.inc</code>）：</p>
+<ol>
+<li><code>throw_runtime_error()</code> 在 <code>msg</code> 里<strong>没有</strong> <code>[位置]</code> 时，补
+   <code>[位置] file:line (func: 名)</code> + <code>[调用栈] …</code>（有则原样保留 ⇒ 富文案不会被二次追加）。
+   行号取调用方传入的 <code>line</code>（即 <code>GET_CURRENT_LINE()</code>），保证与 <code>e.line</code> 同源。
+   覆盖：原生模块错误 + 所有裸 <code>throw_runtime_error("…")</code> 的操作码错误。</li>
+<li><strong>行号 off-by-one 修复</strong>：<code>get_current_context()</code> / <code>append_stack_trace()</code> /
+   <code>build_stack_trace()</code> 原先按 <code>lines[ip]</code> 取行，而 ip 指向<strong>下一条</strong>指令
+   （约定见 <code>run/01_prologue.inc</code>）⇒ <code>[位置]</code> 与栈帧行号整体偏一行，与 <code>e.line</code> 自相矛盾
+   （实测：<code>var q = 1 / z</code> 在第 20 行，<code>[位置]</code>/<code>#0</code> 却报 21）。现统一按 <code>ip-4</code> 取。</li>
+<li><strong>用户 <code>throw "x"</code> 不改写</strong>：那是用户数据（也有一批断言在比 <code>e.msg</code> 原文）；位置照旧从
+   <code>e.file</code> / <code>e.line</code> / <code>e.stack</code> 读。</li>
+<li><strong>未捕获路径去重</strong>：<code>print_unhandled_exception()</code> 原先无条件再列一遍 <code>调用栈:</code>，
+   而 msg 现在自带 <code>[调用栈]</code> ⇒ 同一份帧会打两遍。现加守卫 <code>!strstr(msg, "[调用栈]")</code>
+   ⇒ 未捕获输出恰好一份位置 + 一份调用栈。</li>
+</ol>
+<p><strong>影响面</strong>：<code>e.msg</code> 的<strong>正文</strong>不变，只是尾部多了位置块 —— 业务代码里 <code>_dlog("… " + e.msg)</code>
+这类日志因此自动带上位置（更好）。精确比 <code>e.msg</code> 的两个断言改了口径（改比首行）：
+<code>assert/test_array_bounds.leno</code>（两条越界路径本来就在不同行）、
+<code>assert/test_async_exception_barrier.leno</code>。
+新增护栏 <code>assert/test_error_msg_position.leno</code>（引擎错误带位置、行号与 <code>e.line</code> 同源、
+只补一次、用户 throw 原文不动）。全套断言 410/0。</p>
+<p><strong>不 bump <code>LENO_BIN_VERSION</code></strong>：只改运行期文案，不涉及常量折叠/指令发射/产物布局
+（与登记表 v3.2.9 那条"native 求值语义变化"判据不同）。</p>
+<h3 id="_13">第二批（同日）：异常跨边界不再被"重造"</h3>
+<p><strong>问题</strong>：原生调用返回处那几段 <code>if (vm.has_exception)</code> 一律把异常
+<code>value_to_string()</code> 成字符串，再按"原生调用点"造一个新异常 ⇒ <strong>已经是异常对象</strong>的异常
+（协程的失败经 <code>asyncs.run()</code> 抛回、FFI 回调带回来的）被降级成字符串，原始
+<code>msg</code>/<code>line</code>/<code>file</code>/<code>stack</code> 全丢。实测：协程里 <code>throw "inner-boom"</code>（第 6 行）经
+<code>asyncs.run()</code> 抛回，<code>e.line</code> 变成 <code>asyncs.run()</code> 那一行（27），<code>e.msg</code> 还被追加了
+一个"位置块"。同类分叉共 <strong>7 处</strong>（<code>06_call.inc</code> ×3、<code>10_vars_module.inc</code>（模块方法，
+<code>asyncs.run()</code> 走这里）、<code>12_fields_object.inc</code>、<code>13_async_ffi.inc</code> ×2（clib / cfunc）、
+<code>vm_call.inc</code> ×2）—— 同一条规则写了 9 遍，正是"不统一"的温床。</p>
+<p><strong>改法</strong>：</p>
+<ol>
+<li>把 <code>throw_runtime_error()</code> 里"向上找 catch/finally + 未捕获报告"整段抽成
+   <code>dispatch_exception(line)</code>（<strong>只此一份</strong>走法；⚠ 这段以前分叉过就导致过死循环，
+   所以是"先抽再扩展"，不是"复制一份改改"）。</li>
+<li>新增 <code>throw_existing_exception(Value, line)</code>：<strong>已是异常对象就原样派发</strong>（位置听
+   它自己的 <code>line</code> 字段），字符串/裸值才按统一文案处理。</li>
+<li>新增 <code>throw_pending_exception(line)</code>：原生边界的<strong>唯一入口</strong>，上面 9 处一律改成
+   <code>if (!throw_pending_exception(line)) return -1;</code>；<code>vm_call.inc</code> 两处保持原来的
+   <code>return 0</code>（那两处是"回到调用方重新派发"的语义）。</li>
+<li><code>OP_AWAIT</code> 遇<strong>已完成但失败</strong>的 Future：原来包成
+   <code>await: 异步任务失败</code> + <code>[操作数]</code>（其实是被 <code>value_to_short_str</code> 截到 32 字符的原文），
+   而"未完成 → 挂起 → 恢复"那条路（<code>vm.c</code> 恢复分支）走的是<strong>原样抛出</strong> ⇒ 同一件事两种
+   文案、命中哪条看调度时机。现在两条都走"原样抛出"（<code>assert/test_async.leno</code> 的
+   <code>await risky(-1)</code> 断言 <code>e.msg == "negative"</code> 顺便把这条锁住了）。</li>
+<li><code>vm.c</code> 协程恢复路径"没人接"时：原来写死 <code>未捕获的异步异常</code>（位置取协程首行、原文
+   全丢，而且这条记录基本从不打印）；现在登记<strong>原始异常</strong>的 <code>msg</code> + 它自己的行号，
+   仍然<strong>只登记不即时打印</strong>（保持"谁捕获谁报"，避免与调用方 catch 形成双重报告）。</li>
+<li><code>OP_THROW</code> 的未捕获报告改用 <code>report_unhandled_exception()</code>（与 <code>dispatch_exception</code>
+   同一份实现，删掉重复的 14 行）。</li>
+</ol>
+<p><strong>实测（探针 <code>.probe_pvz/probe_async.leno</code>）</strong>：协程内 <code>throw</code>（第 6 行）经 <code>asyncs.run()</code>
+抛回 ⇒ <code>e.msg == "inner-boom"</code>（一字不改）、<code>e.line == 6</code>（<strong>错误发生地</strong>，不再是 run() 那行）；
+<code>await</code> 一个已失败 Future 同理（<code>e.line == 15</code>）。</p>
+<p><strong>护栏</strong>：<code>assert/test_error_msg_position.leno</code> 加 ④ 场景（跨原生边界必须原样保留：
+<code>e.msg</code> 一字不改 + 行号指向 <code>throw</code> 处）。全套断言 410/0。</p>
+<h3 id="line-0">第三批（同日）：回调调用点不再传 <code>line = 0</code></h3>
+<p>全仓只有两处 <code>vm_call_value(callee, argc, 0)</code>（<code>arrays.c</code> 的数组回调、<code>ffi.c</code> 的 FFI 回调），
+写死 0 ⇒ 回调里 <code>native_throw_error</code> 抛出的<strong>裸消息</strong>异常会带上 <code>line=0</code>，报错打成
+<code>file:0:</code>，而 msg 里的 <code>[位置]</code> 块退回"当前指令行" ⇒ 同一条报错里两个位置对不上：</p>
+<pre><code>[错误] …probe_swallow3.leno:0: 闭包 upvalue 索引越界      ← 记录前缀（line=0）
+  [位置] …probe_swallow3.leno:2 (func: &lt;main&gt;)            ← msg 内（退回上下文行）
+</code></pre>
+<p>现在两处都传 <code>native_get_current_line()</code>（= 触发回调的那一行脚本）⇒ 两处都是 <code>:4</code>（脚本行），
+位置口径真正一致。</p>
+<h3 id="f6">第四批（同日）：宿主回调边界的<strong>异常展开下界</strong>（f6，修崩溃）</h3>
+<p><strong>症状</strong>：原生回调里抛异常，外层 <code>try/catch</code> 能正确接住并打印，<strong>随后进程崩</strong>
+（<code>0xC0000409</code> / <code>0xC0000005</code>，非确定性 —— 同一脚本连跑 3 次崩 2 次）。最小复现：</p>
+<pre><code class="language-leno">var a = [1, 2, 3]
+try {
+    var c = a.filter(func(int x, int y): bool { if x == 3 { throw &quot;filter-boom&quot; } return true })
+} catch e { print(&quot;抛了: &quot; + e.msg) }
+print(&quot;收尾正常&quot;)        // ← 先打印成功，然后进程崩
+</code></pre>
+<p><strong>根因</strong>：回调经 <code>vm_call_value → vm_run_with_vm</code> <strong>嵌套</strong>进解释器；异常派发只认
+"协程边界"，一路扫到<strong>调用方</strong>（主脚本）的 catch 就跳过去 ⇒ catch 在<strong>内层</strong>循环里执行完，
+内层返回后外层又在同一批帧上继续跑，<code>arr_filter</code> 还接着用已经失效的帧/返回值 ⇒ 状态写坏。
+（<code>arrays.c</code> 里那句 <code>has_exception = 0; exception = null;</code> 正是给这个现象"擦屁股"，
+顺带把异常也吞了。）</p>
+<p><strong>改法</strong>：</p>
+<ol>
+<li><code>VM.host_floor</code>（新字段）：<code>vm_call_value</code> 在跑嵌套解释器期间设成"调用前的帧数"
+   （与 <code>stop_frame_cnt</code> 同值、但语义是"异常展开下界"，保存/恢复 ⇒ 支持嵌套回调）。</li>
+<li><code>dispatch_exception()</code> / <code>OP_THROW</code> 的下界取 <code>max(协程边界, host_floor)</code>；
+   <strong>撞界时不派发、也不报"未捕获"</strong>，只保持 <code>has_exception</code> 返回 0/<code>-1</code> —— 接它的人在外层。</li>
+<li>C 侧宿主（<code>arrays.c</code> 的 <code>call_closure</code>、<code>ffi.c</code> 的 FFI 回调）失败时<strong>不再清异常</strong>：
+   恢复帧数/栈后立刻 <code>return</code>，异常沿 C 栈回到原生边界；<code>OP_MODULE_CALL</code> / <code>OP_CLIB_CALL</code>
+   调 <code>throw_pending_exception</code> 重新派发（那时 <code>host_floor</code> 已恢复，就能找到调用方的 catch ✓）。</li>
+<li><code>arrays.c</code> 的 <code>call_closure</code> 改成返回状态码 + 出参（map/filter/reduce 拿到 0 立刻上抛），
+   不再"失败就给个 null 接着跑"。</li>
+</ol>
+<p><strong>验证</strong>：<code>filter</code>/<code>map</code>/<code>reduce</code> 回调抛异常 + 组合场景，各连跑 5 次全部 exit 0
+（修前 5 次里崩 3~4 次）；新增护栏 <code>assert/test_callback_throw_unwind.leno</code>（<strong>退出码即判据</strong>）
+与 <code>assert/test_ffi_abi.leno</code> 的 G3/G4（C→Leno 回调里 throw ⇒ 必须在 ffi 调用点抛出、
+不许吞、不许崩；抛过之后 FFI 仍可用）。全套断言 411/0；PvZ 冒烟正常。</p>
+<h3 id="try-finally-catchf7">第五批（同日）：<code>try { … } finally { … }</code>（无 catch）<strong>静默吞掉异常</strong>（f7）</h3>
+<p><strong>症状</strong>（比崩溃更隐蔽：报错<strong>整条消失</strong>）：</p>
+<pre><code class="language-leno">func f(): int {
+    try {
+        throw &quot;boom&quot;
+    } finally {
+        print(&quot;finally 跑了&quot;)
+    }
+    return 0
+}
+main() {
+    try { f() } catch e { print(&quot;catch: &quot; + e.msg) }   // ← 修前**根本不进**这里
+    print(&quot;程序照常往下跑&quot;)
+}
+</code></pre>
+<p>修前：只打 <code>finally 跑了</code> + <code>程序照常往下跑</code>，没有 catch、没有报错、退出码 0 ✗
+（旧二进制 aacb70b 同样如此 ⇒ 老 bug。）</p>
+<p><strong>根因</strong>：<code>gen_try</code> 一律发 <code>OP_TRY A=0 Bx→catch_pos</code>。没有 catch 体时 <code>catch_pos</code> 指向的
+其实是 finally 区（准确说是指向那条为 catch 体准备的 <code>OP_END_TRY A=1</code>）⇒ VM 把 <strong>finally
+块登记成了 catch handler</strong> ⇒ 异常派发按"被 catch 住了"处理（<code>has_exception = 0</code>、<strong>不</strong>标
+pending）跳进 finally，<code>OP_FINALLY</code> 又按"非 pending"把 <code>vm.exception</code> 清成 null ⇒ 异常蒸发。
+另一个帮凶：<code>OP_END_TRY</code> 收尾处原本 <code>throw_runtime_error("未捕获的异常", …)</code>，即使能抛出来
+也会<strong>换掉</strong>原文案。</p>
+<p><strong>改法</strong>：</p>
+<ol>
+<li><code>gen_try</code>：无 catch 体、有 finally 时发 <code>OP_TRY **A=1**</code>（Bx 指向 finally 块）；并且<strong>不再
+   发</strong>那条"catch 块入口"的 <code>OP_END_TRY</code>（无 catch 体时它是死代码，还会把 <code>catch_pos</code> 顶到
+   finally 前面 ⇒ 跳进去先撞上它、finally 体被跳过）。</li>
+<li><code>OP_TRY</code>：<code>A=1</code> ⇒ 登记成 <strong>finally handler</strong>（<code>finally_ip = try_start + bx</code>、<code>catch_ip = NULL</code>）。
+   于是异常派发走既有的"有 finally、无 catch ⇒ <code>pending_exception = 1</code> 先跑 finally"那一支 ✓</li>
+<li><code>OP_END_TRY</code> 收尾的 else 分支：把<strong>当前异常原样</strong>继续向外抛（<code>dispatch_exception</code>），
+   不再换成"未捕获的异常" ⇒ 调用方 catch 到的是真正的 <code>msg</code> / <code>line</code> / <code>file</code> / <code>stack</code> ✓</li>
+<li><code>LENO_BIN_VERSION</code> <strong>v3.2.10 → v3.2.11</strong>、<code>LENO_MODCACHE_VERSION</code> <strong>v26 → v27</strong>
+   （同源码发射的 <code>A</code> 字节不同 ⇒ 按登记表判据整体失效重编译）。</li>
+</ol>
+<p><strong>验证</strong>：形状探针 4 种写法（单层 / 双层 finally / catch 内 rethrow / 无 finally 对照）全部
+正确；回调里的 <code>try/finally</code>（f6 叠加）也正常上抛；正常 <code>return</code> 路径不受影响
+（finally 照跑、返回值不变）。新增护栏 <code>assert/test_try_finally_rethrow.leno</code>。全套断言 <strong>412/0</strong>；
+PvZ 冒烟正常。</p>
+<p><strong>第五批补充：<code>finally</code> 里 <code>return</code> 的"覆盖"语义与泄漏</strong></p>
+<p>改完上面 4 条之后，边角探针发现一个<strong>新引入</strong>的问题：<code>try { throw "x" } finally { return 5 }</code>
+里 <code>return</code> 本该<strong>覆盖</strong>在飞异常（JS/Python 同语义，旧行为也正是"返回 5、无异常"），但
+pending 标记会<strong>泄漏到调用方</strong> —— 在调用方自己的 <code>END_TRY</code> 处被重新抛出，于是变成
+"未捕获的 x"直接终止程序（连调用方的 <code>catch</code> 都进不去 ✗）。</p>
+<p>修法：<code>OP_RETURN</code>（<code>06_call.inc</code>）与 <code>REG_FINISH_RETURN</code>（<code>run/01_prologue.inc</code>）在
+<code>frame-&gt;in_finally</code> 时清掉 <code>vm.pending_exception</code> / <code>vm.exception</code> —— "return 覆盖在飞异常"，
+且不再跨帧泄漏。</p>
+<p><strong>第五批补充之二：<code>finally</code> 体内的 <code>break</code>/<code>continue</code> 跳出</strong></p>
+<p>同一条"pending 泄漏"的路子还有一处：<code>while { try { throw } finally { break } }</code> ——
+<code>break</code>/<code>continue</code> 都只是 <code>OP_JMP</code>，跳出时既不丢在飞异常、也不注销 try 注册 ⇒ 异常会
+<strong>泄漏到别处</strong>（在不相干的 <code>END_TRY</code> 处被重新抛出，甚至跳回已经跑完的 finally 块 ✗）。
+JS/Python 的语义是：<code>break</code>/<code>continue</code> <strong>覆盖</strong>在飞异常（丢弃它）。</p>
+<p>改法：</p>
+<ol>
+<li><code>CodeGen.finally_depth</code>（生成 finally 体期间 <code>++</code>/<code>--</code>）+ <code>LoopContext.finally_depth</code>
+   （建循环/switch 时登记的深度）⇒ <code>break</code>/<code>continue</code> 时算出"要跨出几层 finally"，
+   每层补发一条 <strong><code>OP_END_TRY A=2</code></strong>。</li>
+<li><code>OP_END_TRY</code> 新增 <code>A=2</code> 分支（在原有 A=0/A=1 之前处理）：<strong>注销本层 try 注册 +
+   丢弃在飞异常，不做任何跳转</strong>（控制流交给紧随其后的 <code>OP_JMP</code>）。</li>
+<li><code>LENO_BIN_VERSION</code> v3.2.11 → <strong>v3.2.12</strong>、<code>LENO_MODCACHE_VERSION</code> v27 → <strong>v28</strong>。</li>
+</ol>
+<p>实测（探针）：<code>break</code> 丢弃异常并跳出（返回 0、finally 只跑一次）；<code>continue</code> 每轮都丢弃
+异常（finally 跑三轮、循环靠 continue 推进、循环体后半段不执行）；跳出后再抛一次<strong>只上抛
+新异常</strong>且行号指向新 throw（证明注册确实注销了）。护栏用例扩到 10 组断言；
+全套断言 <strong>412/0</strong>（JIT 开 / <code>LENO_NO_JIT=1</code> 各一轮）。</p>
+<p>如果需要完整的调用栈信息用于调试，可以：
+- 在函数中添加 <code>try-catch</code>（会使函数不被内联）
+- 或使用 <code>--no-inline</code> 编译选项（如已实现）</p>
+<h3 id="_14">涉及文件</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/vm/vminc/vm_exception.inc</code></td>
+<td>新增 <code>build_stack_trace()</code> 和 <code>print_unhandled_exception()</code>；改进 <code>throw_runtime_error()</code></td>
+</tr>
+<tr>
+<td><code>src/vm/vminc/op_exception.inc</code></td>
+<td><code>OP_THROW</code> 和 <code>OP_END_TRY</code> 未捕获路径打印调用栈并提取消息</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">性能影响</h3>
+<ul>
+<li><code>build_stack_trace()</code> 只在异常发生时调用，不在热路径上</li>
+<li><code>print_unhandled_exception()</code> 只在未捕获异常时调用</li>
+<li>正常执行流程零开销</li>
+</ul></main>
+</div>
+<nav class="pager"><a href="GC与分配优化.html">← 上一篇</a><a href="Leno报错提示改进计划.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

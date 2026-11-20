@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoSDL3 像素直写渲染优化 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="LenoSDL3像素直写渲染优化.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">三、GUI / LenoSDL3</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">背景</a></li><li><a href="#_2">问题定位</a></li><li><a href="#_3">优化方案：像素直写 + 整帧一次上传</a></li><li><a href="#_4">关键坑：像素格式字节序</a></li><li><a href="#_5">性能结果</a></li><li><a href="#pixelbuffer-struct">封装：PixelBuffer struct</a></li><li><a href="#matrix_rain-18-51-fps">案例二：matrix_rain 矩阵字符雨（18 → 51 fps）</a></li><li><a href="#_6">对比版本</a></li><li><a href="#_7">经验总结</a></li><li><a href="#_8">涉及文件</a></li><li><a href="#_9">记录时间</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="lenosdl3">LenoSDL3 像素直写渲染优化</h1>
+<h2 id="_1">背景</h2>
+<p><code>fireworks.leno</code>（烟花动画）用 Leno 实现时，<strong>性能反而比 Python 版慢</strong>，与"Leno 整体应比 Python 快"的预期相悖。本文记录问题定位、优化方案与最终结果。</p>
+<h2 id="_2">问题定位</h2>
+<p>原始实现用 <code>Renderer.setColor(r,g,b,a)</code> + <code>Renderer.drawPoint(x,y)</code> 逐点绘制粒子：</p>
+<ul>
+<li><strong><code>drawPoint</code> 每次调用内部都执行 <code>_flushBatches()</code> + <code>SDL_RenderPoint</code></strong>，每次都是一次 SDL 渲染管线状态刷新。</li>
+<li>单帧最多 <strong>6000 个粒子</strong> = 6000 次 <code>SDL_RenderPoint</code> + 大量 <code>SDL_SetRenderDrawColor</code>，CPU 被渲染调用开销绑死。</li>
+<li>而 Python 的 <code>pygame.Surface.set_at</code> 是<strong>直接写帧缓冲内存</strong>（无状态切换、无 SDL 调用），所以 Python 反而快。</li>
+</ul>
+<p><strong>根因</strong>：不是 Leno 慢，而是 <code>drawPoint</code> 的逐点渲染走的是"每次 flush + 进 SDL 管线"的最慢路径。</p>
+<h2 id="_3">优化方案：像素直写 + 整帧一次上传</h2>
+<p>对标 Python <code>set_at</code>，改为<strong>自己管理一块像素缓冲，逐点写内存，整帧只上传一次纹理</strong>：</p>
+<ol>
+<li><code>ffi.malloc</code> 分配 <code>W*H*4</code> 字节像素缓冲 <code>pixBuf</code>（全程复用，零分配）。</li>
+<li>预生成静态背景缓冲 <code>bgBuf</code>，每帧用 <code>ffi.memcpy(pixBuf, bgBuf, W*H*4)</code> 整块清屏（C 级 memcpy，约 0.1ms）。</li>
+<li>星空/火箭/粒子全部 <code>ffi.write_int(pixBuf, (y*W+x)*4, color)</code> 直写像素（纯内存写，无 SDL 调用）。</li>
+<li>整帧用流式纹理一次上传绘制：<code>ren.createTexture(RGBA8888, STREAMING, W, H)</code> → <code>ren.updateTexture(tex, null, pixBuf, pitch)</code> → <code>ren.drawTextureAt(tex, 0, 0, W, H)</code>。</li>
+</ol>
+<h2 id="_4">关键坑：像素格式字节序</h2>
+<p>SDL3 的 <code>SDL_PIXELFORMAT_RGBA8888</code> 在 <strong>little-endian（x86）上内存字节序是 <code>[A,B,G,R]</code></strong>，即一个像素的 u32 = <code>(r&lt;&lt;24)|(g&lt;&lt;16)|(b&lt;&lt;8)|a</code>。</p>
+<blockquote>
+<p>⚠️ 曾误用 <code>(a&lt;&lt;24)|(b&lt;&lt;16)|(g&lt;&lt;8)|r</code>（对应 [R,G,B,A]），导致整屏偏红；改成 <code>BGRA8888</code> 又变蓝。<strong>正确编码必须是 <code>(r&lt;&lt;24)|(g&lt;&lt;16)|(b&lt;&lt;8)|a</code></strong>。</p>
+</blockquote>
+<h2 id="_5">性能结果</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>原 drawPoint 版</th>
+<th>像素直写内联版</th>
+<th>像素直写封装版</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整体平均 FPS</td>
+<td>~25</td>
+<td><strong>155.5</strong></td>
+<td>137.4</td>
+</tr>
+<tr>
+<td>最高 FPS</td>
+<td>—</td>
+<td><strong>414</strong></td>
+<td>465</td>
+</tr>
+<tr>
+<td>5000+ 粒子 FPS</td>
+<td>~23</td>
+<td>~88</td>
+<td>~85</td>
+</tr>
+<tr>
+<td>单帧耗时</td>
+<td>~40ms</td>
+<td><strong>6.4ms</strong></td>
+<td>7.3ms</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>像素直写相对 drawPoint 提升约 6 倍</strong>。</li>
+<li>对比 Python 版（30~60 fps），Leno 提升约 <strong>2.5~4 倍</strong>。</li>
+</ul>
+<h2 id="pixelbuffer-struct">封装：PixelBuffer struct</h2>
+<p>将像素直写封装为 <code>PixelBuffer</code>，收口内存管理与字节序，避免再次踩坑：</p>
+<p><code>leno_module/LenoSDL3/lib/sdl_renderer.leno</code></p>
+<pre><code>export struct PixelBuffer {
+    Ptr[i32] pixels; int w, h, pitch; bool ok   // 一个像素 = 一个 u32（可 p[i] = color 直写）
+    init(w, h)          // 分配像素内存
+    setPixel(x,y,r,g,b,a) // 单点写入（越界安全，自动字节序）
+    fillSpan(x,y,len,r,g,b,a)   // 横向填一段（越界自动裁剪）
+    fillRect(x,y,bw,bh,r,g,b,a) // 填矩形块（画布笔刷/背景块/掩码块）
+    getR(x,y)           // 读回 R 通道（常用于读亮度掩码）
+    fill(r,g,b,a)       // 整块填充（全 0 走 memset 快路径）
+    clear()             // 整块清零（memset，极快）
+    fillCopy(src)       // 整块拷贝（memcpy）
+    free()              // 释放内存
+}
+</code></pre>
+<blockquote>
+<p><strong>批量写别逐点调 <code>setPixel</code></strong>（2026-11-13 实测，512×512 = 26.2 万像素，连跑 3 次）：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>总耗时</th>
+<th>每像素</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setPixel</code> ×262144</td>
+<td>18.2 ms</td>
+<td>~70 ns</td>
+</tr>
+<tr>
+<td><code>fillSpan</code> ×512 行</td>
+<td>1.44 ms</td>
+<td>5.50 ns</td>
+</tr>
+<tr>
+<td><code>fillRect</code> 整屏</td>
+<td>1.40 ms</td>
+<td>5.36 ns</td>
+</tr>
+<tr>
+<td><code>fill</code></td>
+<td>1.36 ms</td>
+<td>5.19 ns</td>
+</tr>
+</tbody>
+</table>
+<p><code>setPixel</code> 的 70 ns 里九成是<strong>方法调用 + 4 个边界比较</strong>（裸 <code>p[i] = color</code> 只要 5 ns）⇒
+只要是「连续一片同色」（笔刷 / 扫描线圆 / 渐变 / 掩码块）就走 <code>fillSpan</code> / <code>fillRect</code>，<strong>约快 13 倍</strong>。
+越界语义与 <code>setPixel</code> 一致（自动裁剪、不抛）。</p>
+</blockquote>
+<p><code>Renderer</code> 新增方法 <code>blitBuffer(PixelBuffer buf, dx, dy, dw, dh)</code>：
+- 内部懒创建/复用流式纹理（尺寸匹配时零分配）
+- 一次 <code>updateTexture</code> + <code>drawTextureAt</code> 上传绘制
+- <strong>纹理设为 BLEND</strong>：透明像素可透出底下内容，支持"字符/特效缓冲叠加"场景</p>
+<h2 id="matrix_rain-18-51-fps">案例二：matrix_rain 矩阵字符雨（18 → 51 fps）</h2>
+<p><code>matrix_rain.leno</code> 原本每帧用 <code>drawText</code> 画 3×N 列个<strong>随机字符</strong>（约 333 次），每次触发 <code>TTF_RenderText_Blended</code> CPU 栅格化 + 纹理创建，仅 18fps。</p>
+<p>优化（利用 PixelBuffer 像素直写）：</p>
+<ol>
+<li><strong>字符掩码预渲染</strong>：字符集（ASCII/KANA 共 ~97 个）初始化时用 <code>renderTextBlended</code> 栅格化<strong>一次</strong>，把每个字符的 alpha 提成灰度掩码存进 PixelBuffer（R 通道）。之后每帧不再触发任何 TTF 栅格化。</li>
+<li><strong>拖尾走 GPU</strong>：全屏逐像素 FFI 衰减（420 万次调用/帧）→ <code>ren.fillRect</code> 半透明黑（1 次 GPU 调用）。</li>
+<li><strong>字符缓冲透明叠加</strong>：字符画进透明 PixelBuffer（<code>clear()</code> memset 清零），<code>blitBuffer</code> 叠加在 fillRect 拖尾之上。</li>
+<li><strong>字符写入改直接 ffi 字节操作</strong>：从 <code>getR</code>+<code>setPixel</code> 方法调用 → 直接 <code>ffi.read_byte</code> 读亮度 + <code>ffi.write_byte</code> 写 G/A 字节（绿色只需写 G 通道），绕过方法调用开销。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做法</th>
+<th>FPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原始</td>
+<td>每帧 333 次 <code>drawText</code> 随机字符</td>
+<td>18</td>
+</tr>
+<tr>
+<td>### 完整的逐步优化历程（每一步的教训）</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>做法</th>
+<th>FPS</th>
+<th>关键教训</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v0 原始</td>
+<td>每帧 333 次 <code>drawText</code> 随机字符（TTF 栅格化+纹理创建）</td>
+<td>18</td>
+<td>实时栅格化是灾难</td>
+</tr>
+<tr>
+<td>v1</td>
+<td>像素直写 + <strong>全屏逐像素 FFI 衰减</strong>拖尾</td>
+<td>更卡（误伤）</td>
+<td>700000 像素逐像素 <code>read_byte/write_byte</code> 是 420 万次 FFI/帧，比 drawText 还慢</td>
+</tr>
+<tr>
+<td>v2</td>
+<td>GPU <code>fillRect</code> 半透明黑拖尾 + 透明字符缓冲叠加</td>
+<td>38</td>
+<td>拖尾必须交给 GPU，不能 CPU 逐像素衰减</td>
+</tr>
+<tr>
+<td>v3</td>
+<td><code>blitGlyph</code> 改<strong>直接 ffi 字节操作</strong>（只写 G/A 字节）</td>
+<td>51</td>
+<td>热点路径避免 <code>setPixel/getR</code> 方法调用开销</td>
+</tr>
+<tr>
+<td>v4</td>
+<td><strong><code>setVSync(0)</code> 关闭垂直同步</strong></td>
+<td>51→<strong>172</strong></td>
+<td><strong>vsync 锁帧把帧率锁死到 ~50</strong>，是最大隐藏瓶颈</td>
+</tr>
+<tr>
+<td>v5</td>
+<td><strong>整行 <code>ffi.memcpy</code></strong> 拷贝字符掩码（替代逐像素字节操作）+ 右边界越界裁剪</td>
+<td><strong>175</strong></td>
+<td>memcpy 一次 FFI 拷整行，FFI 调用从 ~10 万降到 ~3000 次</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最终结果</strong>：</p>
+<pre><code>总帧数: 2051  峰值绘制字符数: 311
+整体平均 FPS: 175.5  平均 5.6ms/帧
+高负载（250-299字符）: 173 fps
+</code></pre>
+<p><strong>对比 Python</strong>：Python（实时 <code>font.render</code> + GPU <code>blit</code>）约 131fps，Leno 优化后 <strong>175fps，反超 ~1.3 倍</strong>。</p>
+<p><strong>经验</strong>：
+- <strong><code>setVSync(1)</code> 是最大隐藏瓶颈</strong>——垂直同步把帧率锁死到显示器刷新率（约 50-60fps），无论绘制多快都上不去。<strong>性能测试/特效场景务必 <code>setVSync(0)</code></strong>。
+- <strong>矩阵雨/拖尾类特效不适合"纯像素直写全屏衰减"</strong>（700000 像素逐像素衰减太慢），应把拖尾交给 GPU <code>fillRect</code> 半透明黑。
+- 字符类特效应<strong>预渲染字符集为掩码</strong>，运行时只做内存拷贝/字节写入，绝不实时栅格化。
+- 热点路径应<strong>直接 ffi 字节操作</strong>，避免 <code>setPixel</code> 等方法的参数绑定+越界检查开销。
+- <strong>批量操作优先于逐点</strong>：整行 <code>ffi.memcpy</code> 拷贝字符掩码，比逐像素 <code>read_byte/write_byte</code> 快一个量级（FFI 调用数下降 30 倍以上）。
+- <strong><code>ffi.memcpy</code> 的指针偏移用 <code>ffi.offset(ptr, byteOffset)</code></strong>，不能用 <code>ptr + int</code>（Leno 的 Ptr 不支持直接算术）。
+- <strong>memcpy 必须做边界裁剪</strong>（右边缘字符可能超出窗口，memcpy 越界写会破坏堆，触发"堆缓冲区溢出"运行时错误）。</p>
+<h2 id="_6">对比版本</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>版本</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fireworks.leno</code></td>
+<td>内联 ffi 版</td>
+<td>手写 <code>ffi.write_int</code>，性能最高（155 fps）</td>
+</tr>
+<tr>
+<td><code>fireworks_pixelbuf.leno</code></td>
+<td>PixelBuffer 封装版</td>
+<td>代码清晰、可复用（137 fps），方法调用有少量开销</td>
+</tr>
+</tbody>
+</table>
+<p><strong>取舍</strong>：封装版引入方法调用开销（~13%），但换来清晰 API 与零字节序风险。需要极致性能用内联版，需要可维护性用封装版。</p>
+<h2 id="_7">经验总结</h2>
+<ol>
+<li><strong><code>Renderer.drawPoint</code> 是逐点立即提交</strong>（<code>_flushBatches()</code> + <code>SDL_RenderPoint</code>），海量逐点绘制时是性能瓶颈，绝不能用它画粒子/分形/画板。</li>
+<li><strong>逐点异色绘制的正确路径是"像素缓冲直写 + 整帧一次上传"</strong>，对标 Python 的 <code>Surface.set_at</code>。</li>
+<li><strong>SDL3 像素格式字节序反直觉</strong>：<code>RGBA8888</code> 在 little-endian 内存里是 <code>[A,B,G,R]</code>（u32 = <code>(r&lt;&lt;24)|(g&lt;&lt;16)|(b&lt;&lt;8)|a</code>），易踩坑，建议封装成 <code>PixelBuffer.setPixel</code> 收口。</li>
+<li><strong>静态背景用 memcpy 清屏</strong>，比逐点循环填充快一个量级。</li>
+<li><strong>流式纹理全程复用</strong>（<code>createTexture</code> 一次 + 每帧 <code>updateTexture</code>），避免每帧创建/销毁纹理的分配开销。</li>
+</ol>
+<h2 id="_8">涉及文件</h2>
+<ul>
+<li><code>leno_module/LenoSDL3/lib/sdl_renderer.leno</code> — 新增 <code>PixelBuffer</code> struct、<code>Renderer.blitBuffer</code> 方法</li>
+<li><code>leno_module/LenoSDL3/examples/特效动画/fireworks.leno</code> — 烟花内联 ffi 版</li>
+<li><code>leno_module/LenoSDL3/examples/特效动画/fireworks_pixelbuf.leno</code> — 烟花 PixelBuffer 封装版</li>
+<li><code>leno_module/LenoSDL3/examples/特效动画/matrix_rain.leno</code> — 矩阵字符雨（像素直写优化）</li>
+<li><code>leno_module/LenoSDL3/examples/特效动画/fireworks_run.leno</code> — 烟花 win.run 回调版</li>
+</ul>
+<h2 id="_9">记录时间</h2>
+<p>2026-08-10</p></main>
+</div>
+<nav class="pager"><a href="module_web.html">← 上一篇</a><a href="LenoSDL3_Card卡片控件设计文档.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

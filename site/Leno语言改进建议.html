@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 语言特性评估总结 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="Leno语言改进建议.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">四、设计 · 台账（仍在推进）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">已实现的特性</a></li><ul class="lv3"><li><a href="#1-struct-type">1. struct 可空类型 Type? ✅</a></li><li><a href="#2-struct">2. struct 构造函数 / 析构函数 / 命名参数初始化 ✅</a></li><li><a href="#3">3. 字符串插值 $"..." ✅</a></li><li><a href="#4-switch-case-is">4. switch case is 类型匹配与收窄 ✅</a></li><li><a href="#5-func-ft-face">5. 泛型约束 func f[T: Face](...) ✅</a></li><li><a href="#6-try-catch-finally">6. try-catch-finally 异常安全 ✅</a></li><li><a href="#7-gc">7. GC 兜底机制 ✅</a></li><li><a href="#8-format">8. format 全局函数 ✅</a></li><li><a href="#9">9. ?. 安全访问 / ?? 空值合并 ✅</a></li><li><a href="#10-for-in">10. for-in 遍历 / 泛型数组字典 / 数组切片 / 原始字符串 ✅</a></li></ul><li><a href="#_2">经评估后不实现的特性</a></li><ul class="lv3"><li><a href="#defer">defer 延迟执行 — 已回退</a></li><li><a href="#_3">运算符重载 — 暂不实现</a></li><li><a href="#match">match 表达式 — 不需要</a></li><li><a href="#_4">访问控制关键字 — 暂不实现</a></li><li><a href="#_5">数组解构 — 暂不实现</a></li><li><a href="#case-is">case is 逗号合并 — ✅ 已实现</a></li><li><a href="#dict">Dict 解构初始化 — 暂不实现</a></li></ul><li><a href="#_6">待斟酌（有争议，暂缓决定）</a></li><ul class="lv3"><li><a href="#1-return">① 漏写 return 是否升级为编译错误</a></li><li><a href="#2-48-2026-10-24">② &gt;&gt;&gt; 对负数按 48 位语义（已决定：不改，2026-10-24）</a></li><li><a href="#3-2026-10-24">③ 无初值变量在赋值前使用 —— 暂不做（2026-10-24 评估）</a></li><li><a href="#4-t-2026-10-24">④ 泛型函数返回类型与 T 不符 —— 暂不做（2026-10-24 评估）</a></li><li><a href="#5-face-2026-10-24">⑤ face 方法签名 —— 不是缺口（已核实，2026-10-24）</a></li></ul><li><a href="#_7">优先级总结</a></li><li><a href="#lenosdl32026-09-25">附：外部使用者实录（LenoSDL3「数据看板」示例，2026-09-25）</a></li><ul class="lv3"><li><a href="#_8">一、真正的棱角（建议动，成本都极小）</a></li><li><a href="#_9">二、我没发现的既有特性（说明"可发现性"比"有没有"更关键）</a></li><li><a href="#_10">三、运行期提示（库/工具层，供参考）</a></li></ul></ul></aside>
+  <main class="content" id="top"><h1 id="leno">Leno 语言特性评估总结</h1>
+<blockquote>
+<p><strong>结论：Leno 语法和特性已足够且稳定。</strong> 以下是对各项建议的评估结果，大部分已实现或经评估后决定不实现。语言层面不再追加新特性，重心放在库生态和稳定性上。</p>
+</blockquote>
+<hr>
+<h2 id="_1">已实现的特性</h2>
+<h3 id="1-struct-type">1. struct 可空类型 <code>Type?</code> ✅</h3>
+<p><code>Type?</code> 可空类型已完整实现，支持 <code>int?</code>、<code>string?</code>、<code>Point?</code> 等所有类型。可空 struct 字段初始为 null，无需 bool 伴生字段。</p>
+<pre><code class="language-leno">Font? _font                    // 可空 Font，初始为 null
+
+func _ensure_font() {
+    if _font == null or not _font.ok {
+        if _font != null { fnt.releaseFont(_font) }
+        _font = fnt.acquireFontAuto(_fontSize)
+    }
+}
+</code></pre>
+<h3 id="2-struct">2. struct 构造函数 / 析构函数 / 命名参数初始化 ✅</h3>
+<p>已完整支持：</p>
+<pre><code class="language-leno">struct cs {
+    int x
+    int y
+
+    func cs() {       // 构造函数，new 时自动调用
+        // 初始化逻辑
+    }
+
+    func ~cs() {       // 析构函数，GC 回收时自动调用
+        // 清理逻辑
+    }
+}
+
+// 命名参数初始化
+var c = new cs(x = 1, y = 2)
+
+// 也支持默认值 + 部分参数
+struct Point {
+    int x = 0
+    int y = 0
+}
+var p = new Point(x = 10)  // y 自动为 0
+</code></pre>
+<h3 id="3">3. 字符串插值 <code>$"..."</code> ✅</h3>
+<pre><code class="language-leno">var name = &quot;Leno&quot;
+print($&quot;Hello {name}!&quot;)   // 自动转换，无需 _str()
+</code></pre>
+<h3 id="4-switch-case-is">4. <code>switch case is</code> 类型匹配与收窄 ✅</h3>
+<pre><code class="language-leno">switch w {
+    case is Panel { w._bind_window(handle) }
+    case is Edit  { w.set_window(handle) }
+}
+</code></pre>
+<h3 id="5-func-ft-face">5. 泛型约束 <code>func f[T: Face](...)</code> ✅</h3>
+<h3 id="6-try-catch-finally">6. <code>try-catch-finally</code> 异常安全 ✅</h3>
+<h3 id="7-gc">7. GC 兜底机制 ✅</h3>
+<p>FFI 资源（<code>ffi.malloc</code>/<code>ffi.load</code>/<code>ffi.callback</code>）由 GC 自动追踪，忘记 <code>ffi.free()</code> 时 GC 自动回收不会泄漏。</p>
+<h3 id="8-format">8. <code>format</code> 全局函数 ✅</h3>
+<pre><code class="language-leno">format(&quot;%.2f&quot;, 3.14159)      // &quot;3.14&quot;
+format(&quot;%05d&quot;, 42)           // &quot;00042&quot;
+format(&quot;%s: %d&quot;, &quot;Leno&quot;, 5)  // &quot;Leno: 5&quot;
+</code></pre>
+<h3 id="9">9. <code>?.</code> 安全访问 / <code>??</code> 空值合并 ✅</h3>
+<pre><code class="language-leno">root?.set_size(w, h)
+var font = _font ?? defaultFont
+</code></pre>
+<h3 id="10-for-in">10. <code>for-in</code> 遍历 / 泛型数组字典 / 数组切片 / 原始字符串 ✅</h3>
+<hr>
+<h2 id="_2">经评估后不实现的特性</h2>
+<h3 id="defer">defer 延迟执行 — 已回退</h3>
+<p>defer 引入的 try-finally 包裹与内联优化的 <code>OP_CLEAR_LOCAL_RANGE</code> 有架构级冲突。去掉后零影响——FFI 手动内存管理 + GC 兜底 + <code>try-catch-finally</code> 功能等价。defer 引入太多不确定性和漏洞，得不偿失。</p>
+<p><strong>替代方案</strong>：<code>try-catch-finally</code> + GC 兜底。</p>
+<h3 id="_3">运算符重载 — 暂不实现</h3>
+<p>现有功能已足够：
+- struct 方法：<code>a.add(b)</code>
+- 普通函数：<code>vec_add(a, b)</code>
+- 直接字段运算：<code>a.x + b.x</code>（UI 库实际写法，最常见，性能最优）</p>
+<p>实现代价过高（parser/codegen/vm/semantic 四层 ~500-800 行改动），且破坏 <code>OP_ADD_INT</code>/<code>OP_ADD_FLOAT</code> 类型特化快速路径。收益有限——UI 库中不存在 <code>Vec2 + Vec2</code> 整体运算场景。</p>
+<h3 id="match">match 表达式 — 不需要</h3>
+<p><code>switch case is</code> 已具备类型匹配和收窄能力，功能等价。不需要额外引入 <code>match</code> 语法。</p>
+<h3 id="_4">访问控制关键字 — 暂不实现</h3>
+<p>当前用下划线前缀约定"私有"（如 <code>_font</code>、<code>_bind_window</code>），实际使用中已足够。编译器强制的 <code>private</code>/<code>public</code> 引入语义复杂度，收益不大。</p>
+<h3 id="_5">数组解构 — 暂不实现</h3>
+<pre><code class="language-leno">// 当前写法已经足够
+var arr = parseColor(...)
+r = arr[0]; g = arr[1]; b = arr[2]
+</code></pre>
+<p>收益太小，不值得增加语法复杂度。</p>
+<h3 id="case-is"><code>case is</code> 逗号合并 — ✅ 已实现</h3>
+<p><code>switch case is</code> 支持逗号合并多个类型共享同一个 body：</p>
+<pre><code class="language-leno">switch w {
+    case is Panel, ScrollView, HBox, VBox, AnchorBox, TabControl, SpinBox {
+        w._bind_window(hwnd)
+    }
+    case is Edit { w.set_window(hwnd) }
+}
+</code></pre>
+<h3 id="dict">Dict 解构初始化 — 暂不实现</h3>
+<p>当前 <code>opts.get("key", default)</code> 模式虽然重复，但清晰直观，且已在整个 UI 库中稳定使用。</p>
+<hr>
+<h2 id="_6">待斟酌（有争议，暂缓决定）</h2>
+<h3 id="1-return">① 漏写 <code>return</code> 是否升级为编译错误</h3>
+<p><strong>现状</strong>：声明返回 <code>int</code> 的函数漏写 <code>return</code> 只给<strong>警告</strong>，运行时静默返回 <code>null</code>、<code>exit=0</code>。</p>
+<p><strong>该管的理由</strong>：<code>null</code> 静默流向调用点 —— 报错要到"参与运算/调用方法"时才出现，
+而且指向的是症状（<code>null 不能参与运算</code>），不是病因（这个函数漏了 return）。</p>
+<p><strong>不能直接升级的三个顾虑</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>顾虑</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>存量代码</strong></td>
+<td>全仓有多少函数靠"隐式返回 null"在跑，<strong>没统计过</strong>；一升就一片红</td>
+</tr>
+<tr>
+<td><strong>返回 <code>any</code> / 无标注</strong></td>
+<td>它们本来就该返回 null，不能算错</td>
+</tr>
+<tr>
+<td><strong>有些"漏写"是故意的</strong></td>
+<td>比如某些提前退出的辅助函数，返回值根本没人用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>建议分三步，不要一步到位</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>做法</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>纯统计</strong>：扫全仓"声明了具体返回类型 + 函数体末尾可达"的函数，出清单</td>
+<td>零（不改编译器）</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>调用点运行时警告</strong>：拿到 <code>null</code> 而声明类型非 <code>T?</code> 时报一条（带函数名）</td>
+<td>低（只警告）</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>观察一段时间后，<strong>只对"显式声明具体返回类型 + 非 any + 非可空"</strong> 升级为 error</td>
+<td>中</td>
+</tr>
+</tbody>
+</table>
+<p><strong>还没定的关键点</strong>：<code>int</code> 和 <code>Dict</code> 要不要区别对待。
+<code>int</code> 漏写几乎必然出错；<code>Dict</code>/<code>Array</code> 漏写却可能是"空结果"的合法表达。
+真要升级，很可能得<strong>按返回类型分类</strong>，而不是一刀切。</p>
+<p><strong>结论</strong>：<strong>暂不动</strong>。等第 1 步的统计结果出来，再决定要不要走第 2、3 步。</p>
+<h3 id="2-48-2026-10-24">② <code>&gt;&gt;&gt;</code> 对负数按 48 位语义（<strong>已决定：不改</strong>，2026-10-24）</h3>
+<p><strong>现状</strong>（同一运算符两种口径）：</p>
+<pre><code class="language-leno">-16 &gt;&gt;&gt; 2   = 70368744177660          // 2^46-4，按 48 位
+-1  &gt;&gt;&gt; 1   = 140737488355327         // 2^47-1，按 48 位
+m   &gt;&gt;&gt; 1   = 4611686018427387903     // 正数大值，按 64 位
+</code></pre>
+<p><strong>为什么这不是 bug</strong>：Leno 的 <code>int</code> <strong>本身就是 48 位 payload</strong>（NaN-boxing），
+超出部分走 bigint。48 位正是它的真实位宽，与类型容量一致 —— 负数 <code>&gt;&gt;&gt;</code> 填 48 个 0，
+正是因为那个值只有 48 位有效数据。</p>
+<p><strong>已决定不改</strong>，理由：</p>
+<table>
+<thead>
+<tr>
+<th>理由</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>与类型容量一致</td>
+<td>强行 64 位反而和 <code>int</code> 的实际位宽脱节</td>
+</tr>
+<tr>
+<td><strong>真实使用者不受影响</strong></td>
+<td><code>examples/crypto/</code> 的 xxtea / speck / rc5 全部是 <code>(_int32(x) &amp; 0xFFFFFFFF) &gt;&gt;&gt; n</code> —— 32 位<strong>正数</strong>，两种语义结果完全相同</td>
+</tr>
+<tr>
+<td>改动有回归风险</td>
+<td><code>assert/test_ushr.leno</code> 有 4 条断言锁定 48 位（<code>-1 &gt;&gt;&gt; 0 == 0xFFFFFFFFFFFF</code> 等）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>如果将来真要改</strong>：先改 <code>test_ushr.leno</code> 那 4 条断言，并确认没有别处依赖负数的 <code>&gt;&gt;&gt;</code> 结果
+（比如哈希/序列化里对负数做逻辑右移）。改完必须重跑 <code>examples/crypto/</code> 的全套用例。</p>
+<blockquote>
+<p>顺带记一笔：这个“口径不一致”在第三轮扩展测试里被当成疑似 bug 提出来，
+但它是<strong>有意设计</strong>。已在此留档，避免重复讨论。</p>
+</blockquote>
+<h3 id="3-2026-10-24">③ 无初值变量在赋值前使用 —— <strong>暂不做</strong>（2026-10-24 评估）</h3>
+<p><strong>现象</strong>：<code>int x; print(x + 1)</code> 编译通过，运行时才报「加法运算: null 不能参与运算」。</p>
+<p><strong>容易混淆的一点</strong>：<code>var a, b, c = 1</code> <strong>有</strong>警告（<code>[部分初值声明]</code>），但那是
+"一次声明多个变量、只有部分带初值"的场景，<strong>和本条不是同一个问题</strong>。
+单变量无初值（<code>int x</code> / <code>var x</code>）<strong>两种写法都不警告</strong>。</p>
+<p><strong>为什么暂不做</strong>：要做对，必须跟踪"每个局部变量在当前控制流点是否已赋值"。
+但下面这种是合法的：</p>
+<pre><code class="language-leno">int x
+if cond { x = 1 } else { x = 2 }
+print(x + 1)          // 两条分支都赋值了，不该警告
+</code></pre>
+<p>⇒ 需要<strong>数据流分析</strong>（每个分支都要走完才能确认），误报率会很高。
+"没有警告"虽然不理想，但比"大量误报"好 —— 用户会直接关掉警告。</p>
+<p><strong>如果将来要做，前提是</strong>：
+1. 先有"局部变量赋值状态"的流分析框架（或者只做<strong>最保守</strong>的一种：
+   声明后<strong>同一条直线语句序列内</strong>、首次使用前就赋值 ⇒ 不警告，其余一律警告）
+2. 警告而非错误（<code>WARN_</code> 而非 <code>ERR_</code>），且 <code>--Wlevel</code> 可控</p>
+<p><strong>现状的可接受性</strong>：运行时错误信息已经带 <code>type=null, value=null</code>，
+加上 <code>defer</code>/<code>??</code>/字典解构默认值这些新特性，写"忘记初始化"的机会在减少。</p>
+<h3 id="4-t-2026-10-24">④ 泛型函数返回类型与 <code>T</code> 不符 —— <strong>暂不做</strong>（2026-10-24 评估）</h3>
+<p><strong>现象</strong>：</p>
+<pre><code class="language-leno">func id[T](T x): T {
+    return &quot;i am a string&quot;      // 不管 T 是什么都返回 string
+}
+
+int a = id(42)                   // 编译通过
+                                 // 运行时：类型转换 int: 操作数必须是数字
+</code></pre>
+<p><strong>为什么难修</strong>：定义处<strong>无法判断</strong> —— <code>T</code> 可以是 <code>string</code>，所以 <code>return "..."</code> 对
+<code>id[string]</code> 是合法的。只能在<strong>实例化时</strong>检查，而实例化时编译器认为返回类型就是
+<code>T</code>（= int），静态看没矛盾 ⇒ 要拦只能做<strong>泛型的运行时类型校验</strong>（每次返回都比对
+实际值与 T 的实参），这是个大工程，且会给所有泛型调用加开销。</p>
+<p><strong>现状的可接受性</strong>：错误<strong>不是静默的</strong> —— 运行时会在"把 string 当 int 用"的第一处
+报出来（带完整操作数类型和调用栈），只是位置离开了定义处。</p>
+<p><strong>如果将来要做</strong>：只对"<strong>返回类型标注为 <code>T</code>、且函数体 return 的字面量类型与 <code>T</code>
+不可能兼容</strong>"的极窄场景报错（如 <code>T: int</code> 约束下返回 string）。有约束的泛型可以判，
+无约束的不行。</p>
+<h3 id="5-face-2026-10-24">⑤ face 方法签名 —— <strong>不是缺口</strong>（已核实，2026-10-24）</h3>
+<p>第三轮报告说"face 方法签名不匹配静默通过"，实测<strong>不成立</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>参数数量</strong></td>
+<td>✅ 拦：<code>struct 'Circle' 的方法 'area' 参数数量与 face 'Shape' 不匹配: 期望 0, 实际 1</code></td>
+</tr>
+<tr>
+<td><strong>返回类型</strong></td>
+<td>✅ 拦：<code>返回类型与 face 'Shape' 不匹配: 期望 int, 实际 string</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>唯一会被放行的情况是 <code>int → float</code></strong>，这是语言<strong>有意允许的隐式加宽</strong>
+（<code>func f(int a): float { return a }</code> 也合法），不是 bug。</p>
+<blockquote>
+<p>报告之所以认为"静默通过"，很可能就是用 <code>float</code> face + <code>int</code> 实现测的。</p>
+</blockquote>
+<hr>
+<h2 id="_7">优先级总结</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Type?</code> 可空类型</td>
+<td>✅ 已实现</td>
+<td>消除 bool 伴生字段</td>
+</tr>
+<tr>
+<td>struct 构造/析构函数</td>
+<td>✅ 已实现</td>
+<td><code>func cs()</code> / <code>func ~cs()</code></td>
+</tr>
+<tr>
+<td><code>new cs(x=1)</code> 命名参数</td>
+<td>✅ 已实现</td>
+<td>字段默认值 + 命名参数</td>
+</tr>
+<tr>
+<td>字符串插值</td>
+<td>✅ 已实现</td>
+<td><code>$"Hello {name}"</code></td>
+</tr>
+<tr>
+<td><code>switch case is</code></td>
+<td>✅ 已实现</td>
+<td>类型匹配与收窄</td>
+</tr>
+<tr>
+<td><code>case is</code> 逗号合并</td>
+<td>✅ 已实现</td>
+<td><code>case is A, B, C</code> 多类型共享 body</td>
+</tr>
+<tr>
+<td>泛型约束</td>
+<td>✅ 已实现</td>
+<td><code>func f[T: Face](...)</code></td>
+</tr>
+<tr>
+<td><code>try-catch-finally</code></td>
+<td>✅ 已实现</td>
+<td>异常安全</td>
+</tr>
+<tr>
+<td>GC 兜底</td>
+<td>✅ 已实现</td>
+<td>FFI 资源自动回收</td>
+</tr>
+<tr>
+<td><code>format</code> 全局函数</td>
+<td>✅ 已实现</td>
+<td>printf 风格格式化</td>
+</tr>
+<tr>
+<td><code>?.</code> / <code>??</code></td>
+<td>✅ 已实现</td>
+<td>安全访问 / 空值合并</td>
+</tr>
+<tr>
+<td>defer</td>
+<td>❌ 已回退</td>
+<td>与内联优化架构冲突</td>
+</tr>
+<tr>
+<td>运算符重载</td>
+<td>❌ 暂不实现</td>
+<td>现有写法已足够</td>
+</tr>
+<tr>
+<td>match 表达式</td>
+<td>❌ 不需要</td>
+<td><code>switch case is</code> 已覆盖</td>
+</tr>
+<tr>
+<td>访问控制</td>
+<td>❌ 暂不实现</td>
+<td>下划线约定已足够</td>
+</tr>
+<tr>
+<td>数组解构</td>
+<td>❌ 暂不实现</td>
+<td>收益太小</td>
+</tr>
+<tr>
+<td>Dict 解构初始化</td>
+<td>❌ 暂不实现</td>
+<td><code>opts.get</code> 模式已稳定</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Leno 语言特性已足够且稳定。</strong> 重心放在库生态（LenoSDL3、LenoWin32、LenoMusic）和运行时稳定性上，不再追加新语法特性。</p>
+</blockquote>
+<hr>
+<h2 id="lenosdl32026-09-25">附：外部使用者实录（LenoSDL3「数据看板」示例，2026-09-25）</h2>
+<blockquote>
+<p>一次<strong>外部使用者（AI 代理）实写界面</strong>的踩坑记录：复刻 4 张 TraeTools 页面、给控件库补 3 个控件、修平滑滚动。
+结论与正文一致：<strong>没有一条需要新增语法</strong> ✓ —— 全都落在<strong>错误信息 / 文档可见度 / lint</strong> 三个层面 ✓。
+每条都带可复现证据（探针 / 报错原文 ✓）。</p>
+</blockquote>
+<h3 id="_8">一、真正的棱角（建议动，成本都极小）</h3>
+<h4 id="1-split-any-var">1. <code>split()</code> 的元素是 <code>any</code>，会污染 <code>var</code> 推断 ✗</h4>
+<pre><code class="language-leno">var raw = text.replace(&quot;\r&quot;, &quot;&quot;).split(&quot;\n&quot;)   // raw 的元素是 any ✗
+string ln = raw[i]                              // 编译报错：期望 string，实际 any
+</code></pre>
+<p>报错原文（提示本身很好，但这一行"看着明显能编译"✗）：</p>
+<pre><code>错误: [类型不匹配] 变量 'ln' 声明类型与初始化值类型不匹配
+  期望类型: string
+  实际类型: any
+  提示：使用 _str(value) 进行显式转换
+</code></pre>
+<p><strong>建议</strong>：<code>split()</code> 的返回类型静态已知 ⇒ 直接给 <code>Array[string]</code> ✓
+（与 <code>sdl_edit.leno</code> 中 <code>Array[string] _lines = text...split("\n")</code> 的写法对齐 ✓）。
+<strong>收益</strong>：消除"新手卡在门口"的一类报错 ✓。</p>
+<h4 id="2-for-a-b-arrlen-lint">2. <code>for A : B</code> 闭区间 + <code>arr.len()</code> 上界 ⇒ 建议加 lint ✗</h4>
+<pre><code class="language-leno">for 0 : 3 to ci { ... }   // 闭区间 ⇒ ci = 0,1,2,3（四个角 ✓ 有意为之）
+for 0 : 4 to ci { ... }   // 误以为左闭右开 ⇒ ci=4 不匹配任何 case ⇒ 空指针崩溃 ✗
+</code></pre>
+<p>（<code>sdl_renderer.leno</code> 里那条注释就是这个崩溃的现场记录 ✓）</p>
+<p><strong>建议</strong>：上界表达式形如 <code>xxx.len()</code> 时给一条<strong>编译期提示</strong>（"闭区间：这会多跑一轮" ✓）。
+<strong>收益</strong>：能编译、能跑、跑到崩 ✗ —— 这类默认值最值得编译器兜一手 ✓。</p>
+<h4 id="3-struct-new-x">3. struct 字段默认值不能是 <code>new X()</code> ⇒ 报错文案可以再补一句</h4>
+<pre><code class="language-leno">export struct Badge impl Widget {
+    Label _lbl = new Label()   // ✗ 报错
+}
+</code></pre>
+<p>报错原文：</p>
+<pre><code>error: [语义错误] struct 字段 '_lbl' 的默认值不是常量表达式，请使用构造器初始化
+</code></pre>
+<p><strong>实际正解</strong>（语法文档里有，但报错没给 ✓）：</p>
+<pre><code class="language-leno">    Label _lbl
+    func Badge() { _lbl = new Label() }   // 构造函数：new 时自动调用 ✓
+</code></pre>
+<p><strong>建议</strong>：在报错里直接附这 3 行 ✓（现在只说"请使用构造器初始化"，使用者得翻文档 ✗ —— 我就翻了 ✓）。
+<strong>收益</strong>：这是<strong>复合控件</strong>（持子控件）的必经之路 ✓，而 UI 库里复合控件遍地都是 ✓。</p>
+<h3 id="_9">二、我没发现的<strong>既有特性</strong>（说明"可发现性"比"有没有"更关键）</h3>
+<p>以下全在文档里 ✓，但我<strong>一个都没用上</strong> ✗，全程用最笨的写法硬拼：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>我的笨写法 ✗</th>
+<th>本该这么写 ✓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>字符串插值</td>
+<td><code>"y=" + _str(y) + " / " + _str(max)</code></td>
+<td><code>$"y={y} / {max}"</code></td>
+</tr>
+<tr>
+<td>空安全 / 空合并</td>
+<td><code>if _lbl != null { _lbl.set_text(t) }</code></td>
+<td><code>_lbl?.set_text(t)</code> / <code>??</code></td>
+</tr>
+<tr>
+<td>构造函数 + 命名参数</td>
+<td><code>X x = new X(); x.set(opts)</code></td>
+<td><code>new X(w = 10, h = 20)</code></td>
+</tr>
+<tr>
+<td>遍历</td>
+<td><code>for arr.len() to i { var a = arr[i] ... }</code></td>
+<td><code>for a in arr { ... }</code></td>
+</tr>
+<tr>
+<td>数字格式化</td>
+<td><code>_str(round(v*100)/100)</code></td>
+<td><code>format("%.2f", v)</code></td>
+</tr>
+<tr>
+<td>类型分派</td>
+<td>一长串 <code>is</code> 判断</td>
+<td><code>switch w { case is A, B, C { ... } }</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>建议（收益最大的一条）</strong>：文档加一份<strong>一页「语法速查表」</strong>，把上面并排 ✓。
+<strong>依据</strong>：我是在<strong>读完你这份评估文档</strong>之后才发现它们的 ✓ ⇒ 它们的可见度低于语言的实际能力 ✗。
+这不是语法问题，是<strong>入口问题</strong> ✓。</p>
+<h3 id="_10">三、运行期提示（库/工具层，供参考）</h3>
+<ul>
+<li><strong>孤儿控件静默不画</strong> ✗：<code>createPanel(...)</code> 后忘 <code>wt.add(...)</code> ⇒ 不报错、不提示、就是看不见 ✗（踩过一次：整块内容区全空 ✓）。
+  <strong>建议</strong>：dev 模式在帧末统计"已创建但从未挂载到父级"的控件并打印一次 ✓。</li>
+<li><strong>动画帧必须每帧请求重绘</strong>（框架约定，但没有任何地方提示 ✗）：动画控件若不每帧 <code>requestRedraw()</code>，
+  现象就是"画面不动、鼠标一动才更新" ✗（<code>sdl_scrollview.leno</code> 的平滑滚动就踩过 ✓，已修 ✓）。
+  <strong>建议</strong>：把这条约定写进 <code>Widget</code> 接口注释 ✓（一句话省一次排查 ✓）。</li>
+<li><strong>（自我更正）曾误判"帧率被 OS 计时器 15.6ms 量化"</strong> ✗ —— 实为<strong>测量方法</strong>问题，不是系统问题 ✓：
+  起先我用"外部秒表量 60 帧总耗时 ÷ 60"得到 ≈31.5ms/帧 ⇒ 误判成 tick 网格 ✗。
+  真相：<code>leno.exe</code> 的<strong>启动耗时 ~0.9s 被算进了帧时间</strong> ✗（每帧虚高约 15ms）。
+  <strong>同一次运行内对照</strong>（不受启动影响 ✓）：
+    · 60×<code>SDL_Delay(16)</code> = 995ms ⇒ <strong>16.6ms/次</strong> ✓（sleep 本来就准 ✓）
+    · 60×<code>SDL_DelayPrecise(16000us)</code> = 963ms ⇒ 16.05ms/次（略更准，可选 ✓）
+  <strong>两次 N 差值法</strong>（20 帧 vs 60 帧 ⇒ 启动耗时互相抵消 ✓）：
+    <code>(1847 − 1201) / 40 = 16.13 ms/帧</code> ⇒ <strong>62 fps</strong> ✓ ⇒ <strong>设 60 帧确实跑到了 60 帧</strong> ✓
+  另外实测 <code>timeBeginPeriod(1)</code>（winmm，调用成功 ✓）对本机 sleep <strong>没有收益</strong> ✗ ⇒ 模块里<strong>不做自动调用</strong> ✓。
+  <strong>方法论建议（最值得记的一条）</strong>：量 GUI 帧率/单次等待，一律用<strong>两次 N 的差值法</strong>或<strong>同运行内对照</strong> ✓，
+  绝不能把进程启动耗时算进去 ✗ —— 我据此误判过一次，写在这里以免后人重踩 ✓。</li>
+</ul></main>
+</div>
+<nav class="pager"><a href="Leno报错提示改进计划.html">← 上一篇</a><a href="语言摩擦与隐式契约清单.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

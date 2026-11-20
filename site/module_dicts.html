@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno Dicts 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_dicts.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">概述</a></li><ul class="lv3"><li><a href="#_3">特性</a></li></ul><li><a href="#_4">返回类型（跟接收者一致）</a></li><li><a href="#_5">使用方式</a></li><li><a href="#_6">字典创建</a></li><ul class="lv3"><li><a href="#_7">字面量创建</a></li><li><a href="#_8">动态创建</a></li></ul><li><a href="#_9">核心方法</a></li><ul class="lv3"><li><a href="#len">len()</a></li><li><a href="#haskey">has(key)</a></li><li><a href="#getkey-getkey-default">get(key) / get(key, default)</a></li><li><a href="#setkey-value">set(key, value)</a></li><li><a href="#removekey">remove(key)</a></li><li><a href="#setdefaultkey-default">setdefault(key, default)</a></li></ul><li><a href="#_10">遍历方法</a></li><ul class="lv3"><li><a href="#keys">keys()</a></li><li><a href="#values">values()</a></li><li><a href="#items">items()</a></li><li><a href="#clear">clear()</a></li><li><a href="#copy">copy()</a></li><li><a href="#_11">遍历键值对</a></li></ul><li><a href="#vs">实例方法 vs 模块方法</a></li><li><a href="#_12">示例代码</a></li><ul class="lv3"><li><a href="#1">示例1：用户信息管理</a></li><li><a href="#2">示例2：计数器</a></li><li><a href="#3">示例3：配置管理</a></li><li><a href="#4">示例4：缓存实现</a></li><li><a href="#5">示例5：与数组结合使用</a></li><li><a href="#6json">示例6：JSON 数据处理</a></li></ul><li><a href="#_13">性能说明</a></li><ul class="lv3"><li><a href="#_14">时间复杂度</a></li><li><a href="#_15">空间复杂度</a></li><li><a href="#_16">哈希冲突</a></li></ul><li><a href="#_17">注意事项</a></li><ul class="lv3"><li><a href="#1_1">1. 键类型限制</a></li><li><a href="#2_1">2. 键的唯一性</a></li><li><a href="#3_1">3. 值类型无限制</a></li><li><a href="#4_1">4. 遍历顺序</a></li><li><a href="#5_1">5. 空值处理</a></li></ul><li><a href="#_18">最佳实践</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-dicts">Leno Dicts 模块</h1>
+<p>本文档详细说明 <code>dicts</code> 模块提供的字典（哈希表）操作功能。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#概述">概述</a></li>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#字典创建">字典创建</a></li>
+<li><a href="#核心方法">核心方法</a></li>
+<li><a href="#遍历方法">遍历方法</a></li>
+<li><a href="#实例方法-vs-模块方法">实例方法 vs 模块方法</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#性能说明">性能说明</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="_2">概述</h2>
+<p>Dicts 模块是 Leno 语言中用于字典（键值对存储）操作的核心模块。字典使用<strong>字符串作为键</strong>，可以存储任意类型的值。</p>
+<h3 id="_3">特性</h3>
+<ul>
+<li><strong>字符串键</strong>：键必须是字符串类型</li>
+<li><strong>任意值</strong>：值可以是任意类型（数字、字符串、数组、字典等）</li>
+<li><strong>动态扩容</strong>：自动处理容量增长</li>
+<li><strong>哈希实现</strong>：基于哈希表，平均 O(1) 访问速度</li>
+<li><strong>双模式调用</strong>：实例方法或模块方法</li>
+</ul>
+<hr>
+<h2 id="_4">返回类型（跟接收者一致）</h2>
+<p><code>keys()</code> 返回 <code>Array[K]</code>、<code>values()</code> 返回 <code>Array[V]</code>，其中 <strong>K / V = 接收者 <code>Dict[K, V]</code> 的类型参数</strong>
+（声明式规格 <code>NTYPE_ARG0_KEY</code> / <code>NTYPE_ARG0_VALUE</code>，编译器在调用点用接收者的实际类型解析
+⇒ 调用点零收窄）：</p>
+<pre><code class="language-leno">Dict[string, int] m = {&quot;a&quot;: 1, &quot;b&quot;: 2}
+Array[string] ks = m.keys()      // 元素类型就是 string
+Array[int]    vs = m.values()    // 元素类型就是 int（可直接参与运算）
+</code></pre>
+<blockquote>
+<p>⚠ <code>get(k[, default])</code> <strong>故意不在此列</strong>：它的类型由<strong>默认值实参</strong>推出来 —— <code>get("x", 0)</code> → <code>int</code>、
+<code>get("y", 0.0)</code> → <code>float</code>、<code>get("z", false)</code> → <code>bool</code>（见 <code>assert/test_dict_get_infer.leno</code>）。
+那是另一条<strong>更精确</strong>的规则；把 <code>get</code> 标成"返回 V"会盖掉它（实测会让 4 个用例退化成 <code>any</code>）。
+无默认值时（<code>get(k)</code>）返回 <code>any</code>。</p>
+</blockquote>
+<hr>
+<h2 id="_5">使用方式</h2>
+<p>字典的方法<strong>只有实例方法这一种形式</strong>（<code>d.len()</code> / <code>d.set(k, v)</code> …）：</p>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}
+print(dict.len())
+dict.set(&quot;city&quot;, &quot;Beijing&quot;)
+</code></pre>
+<blockquote>
+<p>⚠ <strong>订正（2026-10-14）</strong>：本节此前还列了一条"方式2：模块方法"（<code>import dicts</code> +
+<code>dicts.len(dict)</code>）—— 实测<strong>不成立</strong> ✗：<code>dicts</code> 根本不是可导入的原生模块，写 <code>import dicts</code>
+直接报「未知的原生模块 'dicts'」（可用列表里没有它：io / times / arrays / strings / maths /
+rands / files / asyncs / dirs / jsons / sockets / ffi / threads / regexs / types / sys ✓）。
+有模块形式的是<strong>数组</strong>（<code>arrays.len(arr)</code> / <code>arrays.copy(arr)</code> ✓）；字典没有 ——
+下面「实例方法 vs 模块方法」那张对照表已按实情订正 ✓。</p>
+</blockquote>
+<hr>
+<h2 id="_6">字典创建</h2>
+<h3 id="_7">字面量创建</h3>
+<pre><code class="language-leno">// 空字典
+var empty = {}
+
+// 基础字典
+var person = {
+    &quot;name&quot;: &quot;Alice&quot;,
+    &quot;age&quot;: 25,
+    &quot;city&quot;: &quot;Beijing&quot;
+}
+
+// 嵌套字典
+var company = {
+    &quot;name&quot;: &quot;Tech Corp&quot;,
+    &quot;employees&quot;: [
+        {&quot;name&quot;: &quot;Alice&quot;, &quot;role&quot;: &quot;Engineer&quot;},
+        {&quot;name&quot;: &quot;Bob&quot;, &quot;role&quot;: &quot;Designer&quot;}
+    ],
+    &quot;address&quot;: {
+        &quot;city&quot;: &quot;Beijing&quot;,
+        &quot;zip&quot;: &quot;100000&quot;
+    }
+}
+
+// 混合类型值
+var mixed = {
+    &quot;number&quot;: 42,
+    &quot;string&quot;: &quot;hello&quot;,
+    &quot;bool&quot;: true,
+    &quot;null&quot;: null,
+    &quot;array&quot;: [1, 2, 3],
+    &quot;dict&quot;: {&quot;a&quot;: 1}
+}
+</code></pre>
+<h3 id="_8">动态创建</h3>
+<pre><code class="language-leno">var dict = {}
+dict[&quot;key1&quot;] = &quot;value1&quot;
+dict[&quot;key2&quot;] = 123
+</code></pre>
+<hr>
+<h2 id="_9">核心方法</h2>
+<h3 id="len"><code>len()</code></h3>
+<p>返回字典中键值对的数量。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - 键值对数量</p>
+<pre><code class="language-leno">var dict = {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3}
+print(dict.len())  // 3
+
+// 空字典
+var empty = {}
+print(empty.len())  // 0
+</code></pre>
+<hr>
+<h3 id="haskey"><code>has(key)</code></h3>
+<p>检查字典是否包含指定键。</p>
+<p><strong>参数</strong>:
+- <code>key</code> (string): 要检查的键</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否包含该键</p>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}
+print(dict.has(&quot;name&quot;))   // true
+print(dict.has(&quot;email&quot;))  // false
+
+// 嵌套检查
+var nested = {&quot;user&quot;: {&quot;name&quot;: &quot;Bob&quot;}}
+print(nested.has(&quot;user&quot;))        // true
+// 注意：has 不检查嵌套键
+// print(nested.has(&quot;user.name&quot;)) // false
+</code></pre>
+<hr>
+<h3 id="getkey-getkey-default"><code>get(key)</code> / <code>get(key, default)</code></h3>
+<p>获取指定键的值。</p>
+<p><strong>参数</strong>:
+- <code>key</code> (string): 要获取的键
+- <code>default</code> (可选): 键不存在时的默认值</p>
+<p><strong>返回</strong>:
+- 无默认值时返回 <code>any</code>，键不存在返回 <code>null</code>
+- <strong>带默认值时，返回类型由默认值类型推断</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>默认值类型</th>
+<th>推断返回类型</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code> (int)</td>
+<td><code>int</code></td>
+<td><code>opts.get("x", 0)</code></td>
+</tr>
+<tr>
+<td><code>0.0</code> (float)</td>
+<td><code>float</code></td>
+<td><code>opts.get("y", 0.0)</code></td>
+</tr>
+<tr>
+<td><code>true</code>/<code>false</code> (bool)</td>
+<td><code>bool</code></td>
+<td><code>opts.get("z", false)</code></td>
+</tr>
+<tr>
+<td><code>""</code> (string)</td>
+<td><code>string</code></td>
+<td><code>opts.get("name", "")</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}
+
+// 无默认值：返回 any
+print(dict.get(&quot;name&quot;))   // Alice
+print(dict.get(&quot;email&quot;))  // null
+
+// 带默认值：返回类型由默认值推断
+int age = dict.get(&quot;age&quot;, 0)         // 返回 int，无需 _int() 转换
+string name = dict.get(&quot;name&quot;, &quot;&quot;)   // 返回 string，无需 _str() 转换
+int missing = dict.get(&quot;email&quot;, -1)  // 键不存在，返回默认值 -1（int）
+
+// int → float 自动提升
+float f = dict.get(&quot;age&quot;, 0)   // int 默认值自动提升为 float
+
+// float → int 不允许（会截断小数）
+// int x = dict.get(&quot;score&quot;, 0.0)  // 编译报错：float 不能自动降级为 int
+
+// 使用 [] 语法等价
+print(dict[&quot;name&quot;])       // Alice
+</code></pre>
+<hr>
+<h3 id="setkey-value"><code>set(key, value)</code></h3>
+<p>设置键值对。如果键已存在则更新值，不存在则添加。</p>
+<p><strong>参数</strong>:
+- <code>key</code> (string): 键
+- <code>value</code> (any): 值</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">var dict = {}
+
+// 添加新键值对
+dict.set(&quot;name&quot;, &quot;Alice&quot;)
+dict.set(&quot;age&quot;, 25)
+print(dict)  // {name: Alice, age: 25}
+
+// 更新已有键
+dict.set(&quot;age&quot;, 26)
+print(dict)  // {name: Alice, age: 26}
+
+// 使用 [] 语法等价
+dict[&quot;city&quot;] = &quot;Beijing&quot;
+print(dict)  // {name: Alice, age: 26, city: Beijing}
+</code></pre>
+<hr>
+<h3 id="removekey"><code>remove(key)</code></h3>
+<p>删除指定键值对，<strong>返回被删掉的值</strong>。</p>
+<p><strong>参数</strong>:
+- <code>key</code> (string): 要删除的键</p>
+<p><strong>返回</strong>: 被删除的<strong>值</strong>；键不存在（或值本身就是 <code>null</code>）⇒ <code>null</code></p>
+<blockquote>
+<p>★ 2026-10-24 起返回被删的值（此前一律返回 <code>null</code>）—— 与 <code>array.remove(i)</code>
+返回被删元素的口径对齐，也让"取出即删"一步完成 ✓
+静态类型是 <code>any</code>（键可能不存在 ⇒ 不能承诺 <code>V</code>），需要具体类型时用 <code>_int()</code> / <code>_str()</code> 收窄，
+与 <code>get(key)</code> 同一口径。
+<code>d.remove("a")</code> 与 <code>d.remove("zz")</code> 都返回 <code>null</code> ⇒ 想区分"删掉了空值"和"键本来就没有"，
+先调 <code>has(key)</code>。</p>
+</blockquote>
+<pre><code class="language-leno">var dict = {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3}
+
+var old = dict.remove(&quot;b&quot;)     // old == 2（被删掉的值）
+print(dict)                    // {a: 1, c: 3}
+
+// 删除不存在的键（不报错，返回 null）
+var none = dict.remove(&quot;z&quot;)    // none == null
+print(dict)                    // {a: 1, c: 3}
+
+// 键存在但值是 null：返回 null，但确实删掉了 —— 想区分就先 has()
+var n = {&quot;k&quot;: null}
+print(n.has(&quot;k&quot;))              // true
+n.remove(&quot;k&quot;)
+print(n.has(&quot;k&quot;))              // false
+</code></pre>
+<hr>
+<h3 id="setdefaultkey-default"><code>setdefault(key, default)</code></h3>
+<p>键存在 ⇒ 返回<strong>现有值</strong>（不覆盖）；键不存在 ⇒ <strong>写入</strong> <code>default</code> 并返回它 ✓
+（与 Python 的 <code>dict.setdefault</code> 同语义 ✓）</p>
+<p><strong>参数</strong>:
+- <code>key</code> (any): 键
+- <code>default</code> (any): 键不存在时要写入并返回的值</p>
+<p><strong>返回</strong>: <code>any</code> - 键对应的值（已有的，或刚写入的 <code>default</code>）</p>
+<pre><code class="language-leno">var counts = {&quot;a&quot;: 1}
+print(counts.setdefault(&quot;a&quot;, 99))   // 1      （已存在 ⇒ **不覆盖** ✓）
+print(counts.setdefault(&quot;b&quot;, 7))    // 7      （不存在 ⇒ 写入并返回 ✓）
+print(counts.get(&quot;b&quot;))              // 7      （确实写进去了 ✓）
+
+// 典型用法：分组/计数（省掉&quot;先 has 再 set&quot;两步 ✓）
+var groups = {}
+var ks = [&quot;x&quot;, &quot;y&quot;, &quot;x&quot;, &quot;z&quot;, &quot;x&quot;]
+for ks to k {
+    groups.setdefault(k, 0)
+    groups.set(k, _int(groups.get(k)) + 1)
+}
+print(groups.get(&quot;x&quot;))              // 3
+</code></pre>
+<hr>
+<h2 id="_10">遍历方法</h2>
+<h3 id="keys"><code>keys()</code></h3>
+<p>获取所有键的数组。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array</code> - 键的数组</p>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25, &quot;city&quot;: &quot;Beijing&quot;}
+var keys = dict.keys()
+print(keys)  // [name, age, city]
+
+// 遍历键
+for keys to key {
+    print(&quot;键: &quot; + key)
+}
+</code></pre>
+<hr>
+<h3 id="values"><code>values()</code></h3>
+<p>获取所有值的数组。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array</code> - 值的数组</p>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25, &quot;city&quot;: &quot;Beijing&quot;}
+var values = dict.values()
+print(values)  // [Alice, 25, Beijing]
+
+// 遍历值
+for values to value {
+    print(&quot;值: &quot; + value)
+}
+</code></pre>
+<hr>
+<h3 id="items"><code>items()</code></h3>
+<p>把字典摊平成 <code>Array[DictEntry]</code> —— 每项是 <code>DictEntry{key, value}</code>（<strong>按插入序</strong> ✓）。</p>
+<p><strong>参数</strong>: 无</p>
+<p><strong>返回</strong>: <code>Array[DictEntry]</code> —— 字段 <code>key</code> / <code>value</code> <strong>编译期已知</strong>（native 结构体规格 ✓）；
+空字典 ⇒ 空数组（不是 <code>null</code>）。</p>
+<pre><code class="language-leno">var d = {&quot;x&quot;: 1, &quot;y&quot;: 2, &quot;z&quot;: 3}
+var its = d.items()
+print(its.len())          // 3
+print(its[0].key)         // &quot;x&quot;（插入序 ✓）
+print(its[0].value)       // 1
+
+// 遍历键值对（比 `keys()` + `get()` 两步更直白 ✓）
+for its to it {
+    print(_str(it.key) + &quot; = &quot; + _str(it.value))
+}
+</code></pre>
+<blockquote>
+<p>⚠ <strong>为什么不是 <code>Array[[k, v]]</code></strong>（每项一个小数组）：位置取值不可读，顺序一漂就<strong>静默错位</strong> ✗。
+用结构体规格让<strong>编译期字段表与运行期定义同源</strong> —— 与 <code>DirEntry</code>（dirs.walk）/ <code>RegexMatch</code>
+（regexs.find_all）同一套做法 ✓
+⚠ <code>key</code> / <code>value</code> 的静态类型是 <code>any</code>（字典的值类型常常不齐）⇒ 参与运算时显式 <code>_str()</code> / <code>_int()</code> ✓</p>
+</blockquote>
+<hr>
+<h3 id="clear"><code>clear()</code></h3>
+<p>清空字典中的所有键值对。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">var dict = {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3}
+dict.clear()
+print(dict.len())  // 0
+print(dict)        // {}
+</code></pre>
+<p><strong>注意</strong>: <code>clear()</code> 会移除所有键值对，但不会释放字典对象本身。清空后可以继续添加新的键值对。</p>
+<pre><code class="language-leno">var dict = {&quot;x&quot;: 10}
+dict.clear()
+dict.set(&quot;y&quot;, 20)
+print(dict)  // {y: 20}
+</code></pre>
+<hr>
+<h3 id="copy"><code>copy()</code></h3>
+<p><strong>深拷贝</strong>：返回一个内容相同、但<strong>完全独立</strong>的新字典（2026-10-14 新增）。
+嵌套的数组 / 字典 / 结构体<strong>递归拷贝</strong> ⇒ 改副本不影响原字典，反之亦然 ✓。</p>
+<p><strong>参数</strong>: 无
+<strong>返回</strong>: 与接收者<strong>同型</strong>的字典（<code>Dict[string, int].copy()</code> 仍是 <code>Dict[string, int]</code> ✓；
+裸 <code>Dict</code> 拷出来还是裸 <code>Dict</code>）；<strong>插入序保持</strong> ✓。</p>
+<pre><code class="language-leno">var d = {&quot;z&quot;: 1, &quot;a&quot;: 2}
+var c = d.copy()
+
+c.set(&quot;b&quot;, 3)
+print(d.len())      // 2（原字典不受影响）
+print(c.len())      // 3
+print(c.keys())     // z, a, b（插入序 ✓）
+
+// 嵌套容器也是深拷贝
+var src = {&quot;list&quot;: [1, 2]}
+var dup = src.copy()
+var arr = dup.get(&quot;list&quot;, null) as Array[int]
+arr.add(3)
+print((src.get(&quot;list&quot;, []) as Array[int]).len())   // 2（原字典的数组没被改到 ✓）
+print(arr.len())                                   // 3
+</code></pre>
+<blockquote>
+<p>⚠ <strong>代价</strong>：深拷贝要递归复制每个值。值里装着<strong>大块二进制</strong>（如 <code>Array[int]</code> 的信封 ——
+每个字节占一个 8 字节的 <code>Value</code>）时并不便宜 ⇒ <strong>只读场景直接传引用即可</strong>，别顺手 copy ✓。
+⚠ 口径与 <code>Array.copy()</code> 一致（那也是深拷贝 ✓）。<code>Dict</code> 此前<strong>一直没有</strong> <code>copy()</code>
+（Array / struct 都有）——这次补齐（来源：写 LenoWordBuddy 时的实录 ✓）。
+⚠ <strong>自引用有界</strong>（2026-11-16）：<code>Dict[string,any] d; d["self"] = d; d.copy()</code> 此前会
+<strong>栈溢出崩溃</strong>（0xC00000FD）。现在深拷贝有 <strong>512 层</strong>上限，超限抛
+<code>深拷贝失败：嵌套超过 512 层（结构可能存在循环引用）</code>（与 <code>jsons.encode</code> 同口径）。
+⚠ 语义由 <code>assert/test_dict_copy.leno</code> 钉住（长度 / 插入序 / 深拷贝 / 整数键 / 空字典，
+五组 ✓）；改实现时先跑它 ✓。</p>
+</blockquote>
+<hr>
+<h3 id="_11">遍历键值对</h3>
+<p>使用 <code>keys()</code> 和 <code>get()</code> 配合遍历：</p>
+<pre><code class="language-leno">var dict = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25, &quot;city&quot;: &quot;Beijing&quot;}
+
+// 方式1：遍历键，再获取值
+for dict.keys() to key {
+    var value = dict.get(key)
+    print(key + &quot;: &quot; + value)
+}
+
+// 方式2：直接遍历字典（如果语言支持）
+// for dict to key, value { ... }
+</code></pre>
+<hr>
+<h2 id="vs">实例方法 vs 模块方法</h2>
+<p>⚠ <strong>订正（2026-10-14）</strong>：本题此前写的是"所有字典方法都支持两种调用方式"并配了一张
+<code>dicts.xxx(dict, …)</code> 对照表 —— 实测<strong>第二种不成立</strong> ✗：<code>dicts</code> 不是可导入的原生模块
+（<code>import dicts</code> ⇒ 「未知的原生模块 'dicts'」），<code>dicts.len(d)</code> 这类写法从来跑不通。
+字典的方法<strong>只有实例方法一种形式</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>实例方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dict.len()</code></td>
+<td>获取键值对数量</td>
+</tr>
+<tr>
+<td><code>dict.has(key)</code></td>
+<td>检查键是否存在</td>
+</tr>
+<tr>
+<td><code>dict.get(key[, default])</code></td>
+<td>获取值（类型跟默认值实参走，见上）</td>
+</tr>
+<tr>
+<td><code>dict.set(key, val)</code></td>
+<td>设置键值对</td>
+</tr>
+<tr>
+<td><code>dict.remove(key)</code></td>
+<td>删除键值对，<strong>返回被删的值</strong>（键不存在 ⇒ <code>null</code>，<code>any</code> 类型）</td>
+</tr>
+<tr>
+<td><code>dict.setdefault(key, default)</code></td>
+<td>键在 ⇒ 返回现值；键不在 ⇒ 写入 default 并返回它</td>
+</tr>
+<tr>
+<td><code>dict.keys()</code></td>
+<td>获取所有键（<code>Array[K]</code>）</td>
+</tr>
+<tr>
+<td><code>dict.values()</code></td>
+<td>获取所有值（<code>Array[V]</code>）</td>
+</tr>
+<tr>
+<td><code>dict.items()</code></td>
+<td>摊平成 <code>Array[DictEntry]</code>（按插入序）</td>
+</tr>
+<tr>
+<td><code>dict.copy()</code></td>
+<td><strong>深拷贝</strong>（2026-10-14 新增，见下）</td>
+</tr>
+<tr>
+<td><code>dict.clear()</code></td>
+<td>清空所有键值对</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>对照：<strong>数组</strong>有 <code>arrays</code> 模块（<code>arrays.len(arr)</code> / <code>arrays.copy(arr)</code> ✓ 都能用），
+因为它在 <code>native_register_module_method("arrays", …)</code> 里注册过；字典没有对应的注册 ⇒
+没有模块形式。要"动态方法名"只能自己做一层分发（如用 <code>switch</code> 或嵌套字典存闭包 ✓）。</p>
+</blockquote>
+<hr>
+<h2 id="_12">示例代码</h2>
+<h3 id="1">示例1：用户信息管理</h3>
+<pre><code class="language-leno">main() {
+    // 创建用户字典
+    var user = {}
+
+    // 添加信息
+    user.set(&quot;name&quot;, &quot;张三&quot;)
+    user.set(&quot;age&quot;, 28)
+    user.set(&quot;email&quot;, &quot;zhangsan@example.com&quot;)
+
+    print(&quot;用户信息:&quot;)
+    for user.keys() to key {
+        print(&quot;  &quot; + key + &quot;: &quot; + user.get(key))
+    }
+
+    // 更新年龄
+    user.set(&quot;age&quot;, 29)
+    print(&quot;更新后年龄: &quot; + user.get(&quot;age&quot;))
+
+    // 检查字段
+    if user.has(&quot;phone&quot;) {
+        print(&quot;电话: &quot; + user.get(&quot;phone&quot;))
+    } else {
+        print(&quot;电话未设置&quot;)
+    }
+}
+</code></pre>
+<h3 id="2">示例2：计数器</h3>
+<pre><code class="language-leno">main() {
+    var words = [&quot;apple&quot;, &quot;banana&quot;, &quot;apple&quot;, &quot;cherry&quot;, &quot;banana&quot;, &quot;apple&quot;]
+    var counter = {}
+
+    // 统计词频
+    for words to word {
+        if counter.has(word) {
+            counter.set(word, counter.get(word) + 1)
+        } else {
+            counter.set(word, 1)
+        }
+    }
+
+    print(&quot;词频统计:&quot;)
+    for counter.keys() to word {
+        print(&quot;  &quot; + word + &quot;: &quot; + counter.get(word))
+    }
+}
+</code></pre>
+<h3 id="3">示例3：配置管理</h3>
+<pre><code class="language-leno">main() {
+    // 默认配置
+    var config = {
+        &quot;host&quot;: &quot;localhost&quot;,
+        &quot;port&quot;: 8080,
+        &quot;debug&quot;: false,
+        &quot;database&quot;: {
+            &quot;type&quot;: &quot;sqlite&quot;,
+            &quot;name&quot;: &quot;app.db&quot;
+        }
+    }
+
+    // 读取配置
+    print(&quot;服务器: &quot; + config.get(&quot;host&quot;) + &quot;:&quot; + config.get(&quot;port&quot;))
+
+    // 修改配置
+    config.set(&quot;port&quot;, 3000)
+    config.set(&quot;debug&quot;, true)
+
+    // 获取嵌套配置
+    var db = config.get(&quot;database&quot;)
+    print(&quot;数据库类型: &quot; + db.get(&quot;type&quot;))
+
+    print(&quot;最终配置:&quot;)
+    for config.keys() to key {
+        var value = config.get(key)
+        if value.type == &quot;dict&quot; {
+            print(&quot;  &quot; + key + &quot;: {...}&quot;)
+        } else {
+            print(&quot;  &quot; + key + &quot;: &quot; + value)
+        }
+    }
+}
+</code></pre>
+<h3 id="4">示例4：缓存实现</h3>
+<pre><code class="language-leno">// 简单的内存缓存
+var cache = {}
+var cache_stats = {&quot;hits&quot;: 0, &quot;misses&quot;: 0}
+
+func cache_get(key) {
+    if cache.has(key) {
+        cache_stats.set(&quot;hits&quot;, cache_stats.get(&quot;hits&quot;) + 1)
+        return cache.get(key)
+    }
+    cache_stats.set(&quot;misses&quot;, cache_stats.get(&quot;misses&quot;) + 1)
+    return null
+}
+
+func cache_set(key, value) {
+    cache.set(key, value)
+}
+
+func cache_remove(key) {
+    cache.remove(key)
+}
+
+func cache_clear() {
+    for cache.keys() to key {
+        cache.remove(key)
+    }
+}
+
+main() {
+    // 模拟缓存使用
+    cache_set(&quot;user:1&quot;, {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25})
+    cache_set(&quot;user:2&quot;, {&quot;name&quot;: &quot;Bob&quot;, &quot;age&quot;: 30})
+
+    // 命中
+    var user1 = cache_get(&quot;user:1&quot;)
+    print(&quot;获取 user:1 = &quot; + user1)
+
+    // 命中
+    var user1_again = cache_get(&quot;user:1&quot;)
+
+    // 未命中
+    var user3 = cache_get(&quot;user:3&quot;)
+    print(&quot;获取 user:3 = &quot; + user3)
+
+    print(&quot;缓存统计:&quot;)
+    print(&quot;  命中: &quot; + cache_stats.get(&quot;hits&quot;))
+    print(&quot;  未命中: &quot; + cache_stats.get(&quot;misses&quot;))
+    print(&quot;  缓存大小: &quot; + cache.len())
+}
+</code></pre>
+<h3 id="5">示例5：与数组结合使用</h3>
+<pre><code class="language-leno">main() {
+    // 数组嵌套字典
+    var users = [
+        {&quot;id&quot;: 1, &quot;name&quot;: &quot;Alice&quot;, &quot;active&quot;: true},
+        {&quot;id&quot;: 2, &quot;name&quot;: &quot;Bob&quot;, &quot;active&quot;: false},
+        {&quot;id&quot;: 3, &quot;name&quot;: &quot;Charlie&quot;, &quot;active&quot;: true}
+    ]
+
+    // 过滤活跃用户
+    var active_users = []
+    for users to user {
+        if user.get(&quot;active&quot;) {
+            active_users.add(user)
+        }
+    }
+
+    print(&quot;活跃用户:&quot;)
+    for active_users to user {
+        print(&quot;  - &quot; + user.get(&quot;name&quot;))
+    }
+
+    // 按 ID 索引
+    var user_by_id = {}
+    for users to user {
+        user_by_id.set(user.get(&quot;id&quot;).to_str(), user)
+    }
+
+    print(&quot;通过 ID 查找:&quot;)
+    print(&quot;  ID=2: &quot; + user_by_id.get(&quot;2&quot;).get(&quot;name&quot;))
+}
+</code></pre>
+<h3 id="6json">示例6：JSON 数据处理</h3>
+<pre><code class="language-leno">import jsons
+
+main() {
+    // JSON 字符串
+    var json_str = '{&quot;name&quot;: &quot;Product&quot;, &quot;price&quot;: 99.99, &quot;tags&quot;: [&quot;new&quot;, &quot;hot&quot;]}'
+
+    // 解析为字典
+    var data = jsons.parse(json_str)
+
+    print(&quot;产品信息:&quot;)
+    print(&quot;  名称: &quot; + data.get(&quot;name&quot;))
+    print(&quot;  价格: &quot; + data.get(&quot;price&quot;))
+
+    // 修改数据
+    data.set(&quot;price&quot;, 79.99)
+    data.set(&quot;stock&quot;, 100)
+
+    // 转回 JSON
+    var new_json = jsons.stringify(data)
+    print(&quot;更新后 JSON: &quot; + new_json)
+}
+</code></pre>
+<hr>
+<h2 id="_13">性能说明</h2>
+<h3 id="_14">时间复杂度</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>时间复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>len()</code></td>
+<td>O(1)</td>
+<td>直接读取计数器</td>
+</tr>
+<tr>
+<td><code>has()</code></td>
+<td>O(1) 平均</td>
+<td>哈希查找</td>
+</tr>
+<tr>
+<td><code>get()</code></td>
+<td>O(1) 平均</td>
+<td>哈希查找</td>
+</tr>
+<tr>
+<td><code>set()</code></td>
+<td>O(1) 平均</td>
+<td>哈希插入/更新</td>
+</tr>
+<tr>
+<td><code>remove()</code></td>
+<td>O(1) 平均</td>
+<td>哈希删除</td>
+</tr>
+<tr>
+<td><code>keys()</code></td>
+<td>O(n)</td>
+<td>遍历所有槽位</td>
+</tr>
+<tr>
+<td><code>values()</code></td>
+<td>O(n)</td>
+<td>遍历所有槽位</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">空间复杂度</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>空间复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>存储 n 个键值对</td>
+<td>O(n)</td>
+<td>哈希表存储</td>
+</tr>
+<tr>
+<td><code>keys()</code></td>
+<td>O(n)</td>
+<td>创建新数组</td>
+</tr>
+<tr>
+<td><code>values()</code></td>
+<td>O(n)</td>
+<td>创建新数组</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">哈希冲突</h3>
+<ul>
+<li>使用<strong>链地址法</strong>或<strong>开放寻址法</strong>处理冲突</li>
+<li>负载因子超过阈值时自动扩容</li>
+<li>扩容时重新哈希所有元素</li>
+</ul>
+<hr>
+<h2 id="_17">注意事项</h2>
+<h3 id="1_1">1. 键类型限制</h3>
+<p>字典的<strong>键必须是字符串</strong>：</p>
+<pre><code class="language-leno">var dict = {}
+
+// 正确
+dict[&quot;key&quot;] = &quot;value&quot;
+dict.set(&quot;name&quot;, &quot;Alice&quot;)
+
+// 错误：键必须是字符串
+// dict[123] = &quot;value&quot;  // 错误
+// dict.set(123, &quot;value&quot;)  // 错误
+
+// 如果需要数字键，转换为字符串
+dict[&quot;123&quot;] = &quot;value&quot;
+</code></pre>
+<h3 id="2_1">2. 键的唯一性</h3>
+<p>字典中键是唯一的，重复设置会覆盖：</p>
+<pre><code class="language-leno">var dict = {}
+dict.set(&quot;key&quot;, &quot;value1&quot;)
+dict.set(&quot;key&quot;, &quot;value2&quot;)
+print(dict.get(&quot;key&quot;))  // value2
+</code></pre>
+<h3 id="3_1">3. 值类型无限制</h3>
+<p>值可以是任意类型：</p>
+<pre><code class="language-leno">var dict = {}
+dict[&quot;number&quot;] = 42
+dict[&quot;string&quot;] = &quot;hello&quot;
+dict[&quot;bool&quot;] = true
+dict[&quot;null&quot;] = null
+dict[&quot;array&quot;] = [1, 2, 3]
+dict[&quot;dict&quot;] = {&quot;a&quot;: 1}
+</code></pre>
+<h3 id="4_1">4. 遍历顺序</h3>
+<p>字典遍历顺序<strong>不保证</strong>与插入顺序一致：</p>
+<pre><code class="language-leno">var dict = {}
+dict[&quot;a&quot;] = 1
+dict[&quot;b&quot;] = 2
+dict[&quot;c&quot;] = 3
+
+// 遍历顺序可能是 a,b,c 也可能是其他顺序
+for dict.keys() to key {
+    print(key)
+}
+</code></pre>
+<h3 id="5_1">5. 空值处理</h3>
+<ul>
+<li><code>get()</code> 不存在的键返回 <code>null</code></li>
+<li><code>remove()</code> 不存在的键静默处理（不报错），返回 <code>null</code>；键存在时返回<strong>被删掉的值</strong>
+  ⇒ 值与返回值都可能为 <code>null</code>，要区分"删掉了空值"和"键本来就没有"请先 <code>has()</code></li>
+<li><code>has()</code> 可以区分"不存在"和"值为 null"</li>
+</ul>
+<pre><code class="language-leno">var dict = {&quot;a&quot;: null}
+print(dict.has(&quot;a&quot;))      // true（键存在，值为 null）
+print(dict.get(&quot;a&quot;))      // null
+print(dict.has(&quot;b&quot;))      // false（键不存在）
+print(dict.get(&quot;b&quot;))      // null（键不存在）
+</code></pre>
+<hr>
+<h2 id="_18">最佳实践</h2>
+<ol>
+<li><strong>使用 [] 语法访问</strong>：代码更简洁
+   ```leno
+   // 推荐
+   dict["key"] = value
+   var val = dict["key"]</li>
+</ol>
+<p>// 不推荐（除非需要动态键名）
+   dict.set("key", value)
+   var val = dict.get("key")
+   ```</p>
+<ol start="2">
+<li>
+<p><strong>检查键存在性后再操作</strong>：
+   <code>leno
+   if dict.has("key") {
+       var value = dict["key"]
+       // 处理 value
+   }</code></p>
+</li>
+<li>
+<p><strong>使用 <code>keys()</code> 和 <code>values()</code> 遍历</strong>：
+   <code>leno
+   // 遍历键值对
+   for dict.keys() to key {
+       var value = dict[key]
+       print(key + ": " + value)
+   }</code></p>
+</li>
+<li>
+<p><strong>嵌套字典安全访问</strong>：
+   <code>leno
+   // 检查每一层
+   if dict.has("user") {
+       var user = dict["user"]
+       if user.has("name") {
+           print(user["name"])
+       }
+   }</code></p>
+</li>
+<li>
+<p><strong>避免在遍历时修改字典</strong>：
+   ```leno
+   // 错误：遍历时修改可能导致问题
+   for dict.keys() to key {
+       dict.remove(key)  // 危险！
+   }</p>
+</li>
+</ol>
+<p>// 正确：先收集要删除的键
+   var to_remove = []
+   for dict.keys() to key {
+       if should_remove(key) {
+           to_remove.add(key)
+       }
+   }
+   for to_remove to key {
+       dict.remove(key)
+   }
+   ```</p>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-05-17</em></p></main>
+</div>
+<nav class="pager"><a href="module_arrays.html">← 上一篇</a><a href="module_types.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>密集数据运算与 FFI 能力评估（2026-11-11） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="密集数据与FFI能力评估_2026-11-11.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">九、索引未收录（近期新增）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0">0. 实测数据（先看数）</a></li><li><a href="#1">1. 三条建议的判定</a></li><li><a href="#2">2. 真正该修的问题（按优先级，全部已修）</a></li><ul class="lv3"><li><a href="#p0-aifield">P0 — a[i].field 每次分配一个视图对象 ✅ 已修</a></li><li><a href="#p1-ptrt-pi">P1 — Ptr[T] 不支持 p[i] ✅ 已修</a></li><li><a href="#p2-defer">P2 — defer 的参数"退出时求值"是静默陷阱 ✅ 已加提示</a></li><li><a href="#p3-buffer">P3 — Buffer 门面（评估后不做）</a></li></ul><li><a href="#3">3. 为什么不做"打包数值数组"</a></li><li><a href="#4">4. 结论</a></li><li><a href="#5-2026-11-11p0p1p2">5. 压测记录（2026-11-11，P0/P1/P2 全量 + 奇葩用例）</a></li><li><a href="#6-2026-11-11">6. 第二轮压测（2026-11-11，奇葩组合）</a></li><li><a href="#7-ptrt-typekind2026-11-11">7. Ptr[T] 的元素类型：从"一层 TypeKind"到"完整规格"（2026-11-11）</a></li><ul class="lv3"><li><a href="#_1">问题</a></li><li><a href="#_2">方案</a></li><li><a href="#_3">效果</a></li><li><a href="#opcode-7">改动清单（新增 opcode 的 7 步全走了一遍）</a></li><li><a href="#_4">验收</a></li></ul><li><a href="#8-cstruct-ptr-2026-11-12">8. 并发与 cstruct / Ptr 的边界（2026-11-12 实测）</a></li><li><a href="#9-union-2026-11-12">9. 收尾三项：越界策略 / union / 位域（2026-11-12）</a></li><ul class="lv3"><li><a href="#91-ptrt-size">9.1 Ptr[T] 的越界策略：size 已知就查</a></li><li><a href="#92-unionc">9.2 union（C 布局联合体）</a></li><li><a href="#93-u32-flags-3">9.3 位域（u32 flags : 3）</a></li><li><a href="#94-3-ptr">9.4 深度 ≥3 的 Ptr（决定：不做，但把报错改成"指路"）</a></li><li><a href="#_5">验收</a></li></ul></ul></aside>
+  <main class="content" id="top"><h1 id="ffi-2026-11-11">密集数据运算与 FFI 能力评估（2026-11-11）</h1>
+<blockquote>
+<p>触发：外部评审看了 <code>LenoSDL3/lib/sdl_renderer.leno</code>（117 KB，大量 <code>ffi.malloc</code> + 手算
+<code>off</code> + <code>ffi.write_float</code>）后提出三条建议：① 内置 <code>std::vector</code> / <code>Span&lt;T&gt;</code>；
+② 支持 <code>#[repr(C)]</code> 的 struct 布局；③ 把 <code>defer</code> 普及成 Go 那样的强约束。</p>
+<p>本文结论<strong>全部基于本仓库源码与 <code>build\leno.exe</code> 实测</strong>，不依据"别的语言有什么"。
+文末的问题清单按 P0→P3 排，<strong>P0 / P1 / P2 本轮已修</strong>（状态与验收数据见各条）。</p>
+</blockquote>
+<hr>
+<h2 id="0">0. 实测数据（先看数）</h2>
+<p>基准：20 万个顶点 × 4 个 float（= 80 万次字段写；等价于一次 <code>SDL_RenderGeometry</code>
+的顶点缓冲重建）。单进程、<code>times.ms()</code>（1 ms 精度）、重复三次取稳定值。</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>修复前</th>
+<th><strong>修复后</strong></th>
+<th>内存形态</th>
+<th>能否直接喂 C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ffi.malloc</code> + <code>ffi.write_float</code>（sdl_renderer 现状）</td>
+<td>9 ms</td>
+<td>9~10 ms</td>
+<td>3.2 MB 连续</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>Ptr[f32]</code> + <code>ffi.write_at</code></td>
+<td>10 ms</td>
+<td>10 ms</td>
+<td>3.2 MB 连续</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>Vertex.malloc_array(N)</code> + <code>a[i].x = …</code></td>
+<td><strong>52 ms</strong></td>
+<td><strong>5 ms</strong></td>
+<td>3.2 MB 连续</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>Array[struct]</code> + <code>new</code> + <code>add</code></td>
+<td>68 ms</td>
+<td>62 ms</td>
+<td>20 万独立 GC 对象（约 20 MB）</td>
+<td>❌ 元素是 8 字节 <code>Value</code></td>
+</tr>
+</tbody>
+</table>
+<p>读侧（<code>acc += a[i].x</code>，20 万次）：<strong>4 ms</strong>（融合指令，零视图分配）。</p>
+<p>三条探针（<code>build\leno.exe</code> 实跑，修复前 → 修复后）：</p>
+<pre><code>p[0] = 1.0                 → [错误] 下标赋值: 对象不支持索引   → 正常读写 ✓
+ffi.write_at(q, 100, 1.0)  → [错误] 内存访问越界               → 不变 ✓
+q[-1] = 1.0                → 0xC0000005 崩溃（静默越界）        → [错误] 内存访问越界 ✓
+</code></pre>
+<hr>
+<h2 id="1">1. 三条建议的判定</h2>
+<table>
+<thead>
+<tr>
+<th>建议</th>
+<th>判定</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 内置 Buffer / Span</td>
+<td><strong>半个成立</strong>：容器已连续，卡的是元素表示</td>
+<td><code>ObjArray{ Value* elements }</code>（<code>leno_value.h:337</code>）+ <code>typedef uint64_t Value</code>（<code>:127</code>）⇒ <code>Array[float]</code> 每个元素 8 字节带标记，<strong>永远不能当 <code>float*</code></strong></td>
+</tr>
+<tr>
+<td>② <code>#[repr(C)]</code> 的 struct</td>
+<td><strong>已实现</strong>，名字叫 <code>cstruct</code></td>
+<td><code>packed</code> / <code>align(N)</code> / 嵌套 / <code>u8 data[1024]</code> / <code>&amp;c.field</code> / <code>malloc_array(n)</code> 连续数组 / <code>ffi.call_*</code> <strong>自动把实例转指针</strong>（<code>ffi.c:942</code>）</td>
+</tr>
+<tr>
+<td>③ <code>defer</code> / RAII</td>
+<td><strong>已实现且比 Go 强</strong>，但有一个比 Go 危险的语义</td>
+<td>块级作用域、逆序、<code>return/break/continue/throw</code> 全触发（<code>parser_stmt_other.c:22</code>）；<strong>参数在块退出时求值</strong>，不是注册时</td>
+</tr>
+</tbody>
+</table>
+<p>三条建议里唯一"确实缺"的是 ①：不是缺 <code>Span</code> 类型，而是缺<strong>打包数值数组</strong>（<code>Array[f32]</code>
+真正按 4 字节连续存）。这一改造要动 <code>arr_read/arr_write</code>（全热路径 inline）、GC、写屏障、
+类型检查与 <code>ObjArray</code> 序列化，收益却与 <code>Ptr[f32]</code> + 下标语法高度重合 ⇒ <strong>本轮不做</strong>，
+理由见 §3。</p>
+<hr>
+<h2 id="2">2. 真正该修的问题（按优先级，全部已修）</h2>
+<h3 id="p0-aifield">P0 — <code>a[i].field</code> 每次分配一个视图对象 ✅ 已修</h3>
+<p><strong>现象</strong>：<code>Vertex.malloc_array(n)</code> 的连续数组本该是顶点缓冲的默认写法，实测却比手写
+<code>ffi.write_float</code> <strong>慢 5.8 倍</strong>（52 ms vs 9 ms / 20 万顶点）。</p>
+<p><strong>根因</strong>：<code>object_cstruct.c:668</code></p>
+<pre><code class="language-c">ObjCStruct* cstruct_array_get(ObjCStructArray* array, int index) {
+    // 创建临时 cstruct 实例（不拥有内存）
+    ObjCStruct* obj = (ObjCStruct*)gc_alloc(sizeof(ObjCStruct), OBJ_CSTRUCT);
+</code></pre>
+<p>每一次 <code>a[i]</code> 都 <code>gc_alloc</code> 一个视图。<code>a[i].x = 1.0</code> 这一行 = 1 次索引（分配视图）
++ 1 次字段写；20 万顶点 × 4 条赋值 = <strong>80 万次 GC 分配</strong>。写路径还额外走
+<code>OP_INDEX_SET</code> 的字符串下标分支（<code>obj["x"]</code> 形态）⇒ 每次再做一次字段名比较。</p>
+<p><strong>修复</strong>：新增两条融合指令（追加在 opcode 枚举末尾，序列化版本 bump 到 v3.2.33）</p>
+<ul>
+<li><code>OP_CSTRUCT_ARR_GETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[A] = R[B][R[C]].field(fi)</code></li>
+<li>
+<p><code>OP_CSTRUCT_ARR_SETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[B][R[C]].field(fi) = R[A]</code></p>
+</li>
+<li>
+<p>codegen：<code>codegen_expr.c</code> 的 <code>AST_INDEX</code> 分支（读）、<code>codegen_stmt.c</code> 的 <code>gen_index_assign</code>
+  <strong>与 <code>gen_assign</code></strong>（写）三处发射 —— <strong>语句位置的赋值走 <code>gen_assign</code>，只改
+  <code>gen_index_assign</code> 时基准一点没变</strong>（踩过一次，注释已写明）。</p>
+</li>
+<li>VM：<code>12_fields_object.inc</code>。标量字段用 <strong>C 栈上临时 <code>ObjCStruct</code></strong> 直接算地址
+  （零 GC 分配）；"数组字段 / 嵌套 cstruct"仍走真视图对象（视图里存了父对象指针，
+  父对象必须在 GC 堆上）。<code>f32 / i32 / f64</code> 走 memcpy 快路径，其余类型回落
+  <code>cstruct_set_field_value</code>。</li>
+<li>校验：<code>bytecode_verify.c</code> 必须登记这两条（漏了就是"内存反序列化失败(6)"，
+  而 <code>--check</code> 全绿 —— 本次实测踩到）。</li>
+</ul>
+<p><strong>验收</strong>：52 ms → <strong>5 ms</strong>（10.4x），反超手写 <code>write_float</code>；<code>assert/test_cstruct_array_field.leno</code>
+覆盖读写/类型提升/数组字段视图/普通 struct 不受影响/越界。</p>
+<h3 id="p1-ptrt-pi">P1 — <code>Ptr[T]</code> 不支持 <code>p[i]</code> ✅ 已修</h3>
+<p><strong>现象</strong>（修复前）：</p>
+<pre><code>Ptr[f32] q = ffi.malloc(64)
+q[0] = 1.0        → [错误] 下标赋值: 对象不支持索引   ← 运行期才报
+</code></pre>
+<p><strong>根因</strong>：<code>OP_INDEX</code> / <code>OP_INDEX_SET</code> 没有 <code>OBJ_FFI_POINTER</code> 分支
+（<code>src/vm</code> 里 <code>OBJ_FFI_POINTER</code> 只出现在 <code>12_fields_object.inc</code> / <code>vm_exception.inc</code>）。</p>
+<p><strong>修复</strong>：VM 两条指令里补分支，语义<strong>复用</strong> <code>ffi.read_at / write_at</code>（<code>ffi.c</code> 的
+<code>ffi_vm_index_read / ffi_vm_index_write</code> 是薄包装）—— 元素宽度、越界口径、装箱拆箱
+只有一份实现。报错走 <code>throw_pending_exception</code>（与 <code>OP_CALL_NATIVE</code> 同口径）。</p>
+<p><strong>附带发现（真 bug，已修）</strong>：<code>CHECK_BOUNDS</code> 只有
+<code>(size_t)offset + access_size &gt; size</code>，<strong>负偏移会回绕</strong>：<code>q[-1]</code>（offset=-4、size=16）
+得到 <code>(size_t)(-4)+4 == 0</code>，<code>0 &gt; 16</code> 为假 ⇒ 检查静默放行 ⇒ 往 <code>ptr-4</code> 写 ⇒
+<strong>0xC0000005</strong>。现在 <code>offset &lt; 0</code> 与正向越界走同一条报错。
+⚠ 这条改动了 <code>assert/test_ffi_inline_widths.leno</code> 里一条旧契约（原注释写着"负偏移
+-1 必须回绕成 0，任何实现都必须如此，不许顺手加检查"）—— 那条契约本身就是内存破坏
+的口子（读路径 <code>-1</code> 读到 <code>p[0]</code> 只是运气），已在该测试里写明废除理由。</p>
+<p><strong>验收</strong>：<code>assert/test_ptr_index.leno</code>（f32/i32/u8 读写、与 <code>read_at/write_at</code> 逐值一致、
+越界/负下标/释放后使用/非整数下标全部抛异常）。</p>
+<h3 id="p2-defer">P2 — <code>defer</code> 的参数"退出时求值"是静默陷阱 ✅ 已加提示</h3>
+<p><strong>现象</strong>（<code>assert/test_defer.leno:58-61</code> 就是这么测的）：</p>
+<pre><code class="language-leno">var name = &quot;first&quot;
+defer order.add(name)
+name = &quot;second&quot;        // ⇒ 实际入队的是 &quot;second&quot;
+</code></pre>
+<p>Go 是<strong>注册时</strong>求值参数，Leno 是<strong>块退出时</strong>求值。对 <code>defer ffi.free(p)</code> 来说，
+中间若把 <code>p</code> 改指向新缓冲，释放的是<strong>新值 ⇒ 旧缓冲泄漏</strong>。</p>
+<p><strong>修复</strong>（只提示、不改语义）：parser 里新增 <code>WARN_DEFER_LATE_WRITE</code> —— 收集 defer
+表达式里能静态看到的变量名，扫<strong>本块顶层语句</strong>里是否有赋值把它改掉。判据极保守
+（宁漏勿误报），嵌套块里的赋值不追。</p>
+<p>实测踩到的三个坑（都在 parser 阶段，注释已写）：<code>ffi.free(p)</code> 是 <strong>AST_MODULE_CALL</strong>
+不是 <code>AST_CALL</code>；语句位置的赋值被包在 <strong>AST_EXPR_STMT</strong> 里；赋值的<strong>主数据是
+<code>assign.targets[]</code></strong>（<code>names[]</code> 可能没填）。</p>
+<p><strong>验收</strong>：</p>
+<pre><code>defer ffi.free(p) 之后 p = ffi.malloc(32)   → 警告 ✓
+defer ffi.free(q) 之后没有对 q 赋值         → 不报 ✓
+defer ffi.free(saved) 之后改 p              → 不报 ✓
+</code></pre>
+<h3 id="p3-buffer">P3 — Buffer 门面（评估后不做）</h3>
+<p><code>Ptr[f32]</code> + <code>p[i]</code>（P1）+ <code>ffi.memcpy / ffi.memset</code> 已经覆盖 <code>vector&lt;float&gt;</code> 的
+全部实际用法；再包一个 <code>Buffer</code> 只是应用层几十行代码，不值得占标准库命名空间。</p>
+<hr>
+<h2 id="3">3. 为什么不做"打包数值数组"</h2>
+<ul>
+<li><code>arr_read/arr_write</code> 是 <code>static inline</code> 且被 VM 所有数组指令内联调用，
+  改表示等于给全语言最热的路径加一次分支；</li>
+<li><code>Array[float]</code> 现在能与 <code>Array[int]</code> 互相赋值/切片/<code>map</code>/<code>filter</code>，打包后要处理
+  "打包数组 ↔ 装箱数组"的边界转换（每处容器操作都要问一句"对面是什么形态"）；</li>
+<li>真正需要 C 连续内存的场景<strong>已经</strong>由 <code>cstruct</code> 数组 + <code>Ptr[T]</code> 覆盖，
+  而且 P0 修完之后它们比手写 <code>write_float</code> 还快。</li>
+</ul>
+<h2 id="4">4. 结论</h2>
+<p>外部建议指出的<strong>症状</strong>（手算 offset、大量 <code>ffi.malloc</code>）是真的，但它推断的<strong>病因</strong>
+（缺 repr(C)、缺 Span、缺 defer）三条里有两条 Leno 早已实现。<code>sdl_renderer.leno</code>
+真正卡住的是 <code>a[i].field</code> 的视图分配（P0），其次是 <code>Ptr[T]</code> 缺下标糖（P1）。
+两者的共同点：<strong>都是"已经能写、但写法丑陋/悄悄变慢"，而不是"写不出来"</strong>。</p>
+<p>修复后 <code>sdl_renderer.leno</code> 这一类顶点缓冲代码可以放心写成
+<code>Vertex.malloc_array(n)</code> + <code>vs[i].x = …</code>（比手工偏移快），<code>Ptr[T]</code> 也可以直接 <code>p[i]</code>。</p>
+<hr>
+<h2 id="5-2026-11-11p0p1p2">5. 压测记录（2026-11-11，P0/P1/P2 全量 + 奇葩用例）</h2>
+<p>三套脚本（cstruct 数组 / Ptr 下标 / 语法混用）+ defer 警告命中表 + 编译期误写探针，
+跑完即删。<strong>压测本身又挖出 7 个既有 bug</strong>，全部已修：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>现象（实测）</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>a[0].bv = true</code> 读回 <strong>false</strong></td>
+<td><code>cstruct_set_field_value</code> 用 <code>val_as_num(true) != 0</code> —— bool 是 tagged value、不是数字 ⇒ 写 bool 字段<strong>永远 0</strong>（读侧是对的）</td>
+<td>先判 <code>val_is_bool</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>a[0].i64v = -9007199254740993</code> 读回 <strong>0</strong></td>
+<td>同上只用 <code>val_as_num</code>；9e15 超出 int48 ⇒ 自动装箱成 bigint ⇒ 转换得 0</td>
+<td>bigint 走 <code>bigint_to_int64</code>（与 <code>ffi.write_at</code> 同口径）</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>u64</code> 字段 &gt; INT64_MAX 读回<strong>负数</strong></td>
+<td><code>val_int_safe((int64_t)v)</code> 有符号截断</td>
+<td>超范围造 uint64 bigint（与 <code>ffi.read_at</code> 同口径）</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>X.malloc_array(0)</code> 得到 <strong>1 个</strong>可写元素</td>
+<td><code>count &lt;= 0</code> 一律改成 1 —— <strong>静默改写用户意图</strong>（上界算错成 0 的循环不会暴露）</td>
+<td>0 ⇒ 真空数组（任何下标越界）；负数 ⇒ 报错</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Ptr[u8] p = ffi.malloc(8)</code> 之后 <code>p = ffi.malloc(8)</code>，<code>p[0]</code> 报「需要 Ptr[T] 类型指针」</td>
+<td><code>OP_SET_PTR_ELEM_TYPE</code> 只在 <strong>var_decl</strong> 发射，赋值处不补 ⇒ 静态类型仍是 <code>Ptr[u8]</code>、运行期 element_type 丢了</td>
+<td>赋值处按 <code>SymRef.element_type_kind</code> 补发</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>func addv(V3 v): float { return v.x + v.y + v.z }</code>（V3 是 <strong>cstruct</strong>）<strong>必崩</strong>「字段访问需要结构体对象」</td>
+<td>优化器把多字段 float 累加融合成 <code>OP_ACC_FIELDS</code>（判据只看"字段静态类型都是 float"，不区分 struct/cstruct），而 VM 该指令<strong>只认 OBJ_STRUCT</strong></td>
+<td><code>OP_ACC_FIELDS</code> 增加 OBJ_CSTRUCT 分支（按 C 布局读 f32/f64，语义与逐字段 ADD_F 逐位等价）</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>m[0].cols[1].x = 7.5</code>（<strong>数组字段里的 cstruct</strong>）报「下标赋值: 对象不支持索引」</td>
+<td><strong>P0 自己的判据漏洞</strong>：<code>m[0].cols</code> 静态类型也是 <code>TYPE_CSTRUCT</code>，但运行期是 <code>OBJ_CSTRUCT_ARRAY_VIEW</code>（数组字段视图）⇒ 融合指令把 VIEW 当数组</td>
+<td>判据排除「a 本身是字段访问（<code>X.field</code>）」的形态；读写两个发射点都改</td>
+</tr>
+</tbody>
+</table>
+<p>顺带把文案补齐：<code>a["x"] = 1.0</code>（cstruct 数组整体赋值）原来报「对象不支持索引」，
+现在报「cstruct 数组不能整体赋值元素（写字段请用 <code>a[i].字段名 = 值</code>）」。</p>
+<p><strong>defer 警告命中表</strong>（7 个警告 / 5 种文本，无一条误报）：</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>期望</th>
+<th>实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>defer ffi.free(p)</code> 之后 <code>p = …</code></td>
+<td>报</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>之后 <code>n += 1</code></td>
+<td>报</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>之后 <code>a, b = 3, 4</code>（并行赋值）</td>
+<td>报 2 条</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>只改<strong>别的</strong>变量</td>
+<td>不报</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>defer <strong>之前</strong>改</td>
+<td>不报</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>用副本 <code>saved</code></td>
+<td>不报</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>循环内 defer</td>
+<td>报</td>
+<td>✅（文本与普通用例相同 ⇒ 显示时按"已合并重复"折叠）</td>
+</tr>
+<tr>
+<td><code>defer { if p != null { ffi.free(p) } }</code> 之后改 p</td>
+<td>报</td>
+<td>✅（补了 AST_IF / AST_TRY 的变量收集，原先<strong>漏报</strong>）</td>
+</tr>
+<tr>
+<td>嵌套块<strong>内部</strong>改</td>
+<td>漏报（判据保守）</td>
+<td>接受</td>
+</tr>
+</tbody>
+</table>
+<p><strong>诊断缺口（已修）</strong>：<code>a[0].nope = 1.0</code>（写不存在的 cstruct 字段）原先<strong>编译期静默通过</strong>，
+运行期才报「cstruct 不存在字段 'nope'」。根因：字段存在性检查只写在
+<code>AST_FIELD_ACCESS</code> 那条（<code>visit_field_access.inc</code> 的 cstruct 分支），而 <code>a[0].nope</code>
+走的是 <code>AST_INDEX</code> 那条 —— 那条只有字典键 / face / enum 检查。
+现在 <code>AST_INDEX</code> 也校验（判据保守：接收者类型确知是 cstruct + 下标是字符串字面量 +
+名字不是 cstruct 内置方法 —— <code>v.free()</code> 的 callee 也是 AST_INDEX，照字段报就是误报）。
+嵌套路径一并覆盖（<code>m[0].cols[1].nope</code> 报 <code>cstruct 'V3' 没有字段 'nope'</code>）。
+回归用例：<code>assert/test_diag_cstruct_field.leno</code>（3 条该报 + 2 条不该报）。</p>
+<p><strong>验收</strong>：断言 597/597；<code>examples</code> 的 cstruct / ffi / clib 全目录 <code>--check</code> 0 失败；
+三套压测脚本 <code>ALL PASS</code>。</p>
+<hr>
+<h2 id="6-2026-11-11">6. 第二轮压测（2026-11-11，奇葩组合）</h2>
+<p>五套脚本：融合指令 × 控制流（异常/finally/闭包/异步/break-continue）、Ptr × 闭包/异步/
+嵌套指针/链式、cstruct 视图生命周期、cstruct × 裸 FFI 指针同一块内存、Ptr 元素类型
+在字段/返回值/实参处是否存活。又挖出 4 个问题：</p>
+<table>
+<thead>
+<tr>
+<th>现象（实测）</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>var e = a[0]; a.free_all(); e.x</code> <strong>静默读到 1</strong></td>
+<td>元素视图 <code>owns_memory = 0</code>，<code>data</code> 指向数组那块内存；数组 free 后视图毫无察觉（内存没被覆盖时读到旧值，覆盖后就是垃圾）</td>
+<td><code>ObjCStruct</code> 回指父数组（<code>owner_arr</code>）+ GC mark；<code>free_all</code> 后 <code>data == NULL</code> ⇒ 字段读写报「cstruct 数组已释放」</td>
+</tr>
+<tr>
+<td><code>var b = makeBuf(8)</code>（<code>func makeBuf(): Ptr[u8]</code>）里 <code>b[0]</code> 报「需要 Ptr[T] 类型指针」</td>
+<td><code>OP_SET_PTR_ELEM_TYPE</code> 只在 <strong>var_decl</strong> 发射；<code>Ptr[T]</code> 的 T 不在裸 <code>void*</code> 里 ⇒ 函数返回值丢了标注（写成 <code>Ptr[u8] b = …</code> 就正常）</td>
+<td><code>return</code> 处按<strong>声明返回类型</strong>补发；并强制走临时寄存器（标注是就地改对象，落在变量槽会改掉那个变量本身的类型）</td>
+</tr>
+<tr>
+<td><code>useBuf(ffi.malloc(8))</code>（形参 <code>Ptr[u8]</code>）里 <code>p[0]</code> 报同样的错</td>
+<td>同上，<strong>实参</strong>位置也没标注</td>
+<td><code>gen_call_args_to</code> 按形参类型补发（方法调用跳过：形参表含 self、实参槽错开一位）</td>
+</tr>
+<tr>
+<td><code>V3.malloc_array(2000000000)</code> 分配失败时<strong>静默返回 null</strong></td>
+<td><code>cstruct_array_new</code> 返回 NULL 时没人报</td>
+<td>明确抛「malloc_array 分配失败（内存不足，或元素个数过大）」</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>Ptr[Ptr[T]]</code>（C 的 <code>char**</code>）现状</strong>：声明、写入、读回、传参、二级指针出参<strong>全部支持</strong>
+（类型树完整：<code>Ptr[Ptr[u8]]</code> 是 40/40/18，见 <code>type_copy</code> 对 PTR 的递归）；
+<code>assert/test_ptr_ptr_charpp.leno</code> 是 argv 风格的完整示例（造 char*[] → 遍历
+<code>ffi.read_string</code> → 显式标注后按字节访问 → <code>func(char**)</code> 形态的出参 → 逐层 free）。</p>
+<p><strong>元素类型的"第二层"已经补上（§7）</strong>：原先 <code>ObjFFIPointer.element_type</code> 只有一个
+<code>TypeKind</code>（一层），<code>Ptr[Ptr[u8]]</code> 的第二层在运行期丢失 ⇒ 只能靠 codegen 在 5 个
+"值落点"补标注，<code>var x = pp[0]</code> 这种纯推断拿不到。现在元素是复合类型时改发
+<code>OP_SET_PTR_SPEC</code>（带整棵子类型树），<code>ffi.read_at</code> 读 PTR 元素时<strong>剥一层</strong>给新对象
+⇒ 逐层自然正确，<code>var x = pp[0]; x[0]</code> 直接可用。</p>
+<p>仍存的边界（与本次改动无关）：<code>Ptr[cstruct]</code> 只能存取指针本身（传给 C 用），
+<code>p[0].v</code> 按元素解引用还不行 —— <code>ffi.read_at</code> 的元素类型表里没有 CSTRUCT。</p>
+<p><strong>验收</strong>：断言 600/600（新增 <code>test_cstruct_view_lifetime</code> / <code>test_ptr_elem_type</code>）；
+五套压测脚本 <code>ALL PASS</code>；<code>examples</code> 的 cstruct / ffi / clib + <code>LenoSDL3/lib</code> 全目录
+<code>--check</code> 0 失败。</p>
+<hr>
+<h2 id="7-ptrt-typekind2026-11-11">7. <code>Ptr[T]</code> 的元素类型：从"一层 TypeKind"到"完整规格"（2026-11-11）</h2>
+<h3 id="_1">问题</h3>
+<p><code>ObjFFIPointer.element_type</code> 是<strong>单个 TypeKind</strong>，只能表达一层。<code>Ptr[Ptr[u8]]</code> 在运行期
+只知道"指向某个指针"，第二层 <code>u8</code> 丢失 ⇒ <code>pp[0]</code> 读出来是"无元素 Ptr"。</p>
+<p>后果是<strong>标注点必须穷举</strong>：<code>OP_SET_PTR_ELEM_TYPE</code> 要散落在 var_decl / 变量赋值 /
+结构体字段 / 函数返回 / 调用实参 五处，漏一处就是"静默不可用"（<code>p[0]</code> 报
+「需要 Ptr[T] 类型指针」）。<code>var x = pp[0]</code> 这种纯推断更是直接拿不到。</p>
+<h3 id="_2">方案</h3>
+<p><strong>元素是复合类型时，把整棵子类型树写进对象</strong>：</p>
+<ul>
+<li>新 opcode <code>OP_SET_PTR_SPEC</code>（iABC 头 + <strong>自定界类型规格</strong>）—— 复用
+  <code>OP_TYPE_CHECK_SPEC</code> 的同一套规格格式与 <code>type_spec_size</code>（发射端 / 判定端 /
+  反汇编端只有一份长度实现）。标量元素仍走紧凑的 <code>OP_SET_PTR_ELEM_TYPE</code>
+  ⇒ 既有字节码逐位不变。</li>
+<li><code>ObjFFIPointer</code> 增加 <code>uint8_t* elem_spec</code>（malloc 拷贝，随对象释放；
+  <code>element_type</code> 仍记第一层，所有既有读 <code>element_type</code> 的代码零改动）。</li>
+<li><strong><code>ffi.read_at</code> 读 PTR 元素时剥一层</strong>：<code>pp</code> 的 <code>elem_spec</code> 描述"元素类型 = Ptr[u8]"，
+  读出来的指针<strong>本身就是那个 Ptr[u8]</strong> ⇒ 它的 <code>element_type</code> = spec 的第二层（u8），
+  更深的继续挂在自己的 <code>elem_spec</code> 上。三层 <code>Ptr[Ptr[Ptr[u8]]]</code> 也逐层正确。</li>
+<li>发射点收敛成一个 <code>emit_ptr_elem_annotation</code>（标量→紧凑版 / 复合→规格版），
+  var_decl / 返回 / 实参 三处都改调它。</li>
+</ul>
+<h3 id="_3">效果</h3>
+<pre><code class="language-leno">Ptr[Ptr[u8]] pp = ffi.malloc(8)
+Ptr[u8] inner = ffi.malloc(4); inner[0] = 65
+pp[0] = inner
+
+var auto = pp[0]        // ← 不写 Ptr[u8]
+auto[0]                 // 65 ✓（规格随指针传递，不再依赖落点标注）
+</code></pre>
+<p>三层同理：<code>ppp[0]</code> → <code>Ptr[Ptr[u8]]</code>、<code>[0]</code> → <code>Ptr[u8]</code>、<code>[0]</code> → 字节。</p>
+<h3 id="opcode-7">改动清单（新增 opcode 的 7 步全走了一遍）</h3>
+<p><code>leno_vm.h</code>（枚举末尾）/ <code>01_prologue.inc</code>（跳转表）/ <code>12_fields_object.inc</code>（handler）/
+<code>debug.c</code>（名字表，<strong>顺序必须与枚举一致</strong>）/ <code>bytecode_verify.c</code>（登记 + <code>spec_scan</code> 算长）/
+<code>leno_serialize.h</code>（v3.2.34 / modcache v49）/ <code>build_vm.bat</code>（打包运行时必须同步重建）。</p>
+<h3 id="_4">验收</h3>
+<p><code>assert/test_ptr_nested_spec.leno</code>：两层 <code>var</code> 推断、三层逐层剥、<code>Ptr[Node]</code> 字段存取、
+显式标注老写法不回归。断言 <strong>603/603</strong>；<code>examples</code> + <code>build/leno_module</code> 全量 <code>--check</code>
+只剩 2 个与本次无关的既存失败（LenoWeb 的 gen 模块类型导入）。</p>
+<hr>
+<h2 id="8-cstruct-ptr-2026-11-12">8. 并发与 cstruct / Ptr 的边界（2026-11-12 实测）</h2>
+<p><strong>结论先行</strong>：cstruct / <code>Ptr</code> 这类<strong>裸 C 内存</strong>在 Leno 里有三条不同的边界，
+必须分清，否则会以为"跨线程被禁了"或者"跨线程是安全的"。</p>
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>行为</th>
+<th>时机</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>threads.start(f, x)</code> 传参</td>
+<td><strong>拒绝</strong>（cstruct 是裸内存，没有可安全深克隆的语义）</td>
+<td><strong>编译期</strong>（静态类型确定为 cstruct）</td>
+</tr>
+<tr>
+<td><code>ch.send(x)</code> 通道</td>
+<td><strong>拒绝</strong> cstruct / Ptr / 闭包；被拒时<strong>不入队</strong>（不留幽灵槽）</td>
+<td>运行期（<code>channel_clone_reject</code>）</td>
+</tr>
+<tr>
+<td>全局变量里的 <code>Ptr[T]</code> / cstruct</td>
+<td><strong>共享</strong>（同一进程地址空间）—— 线程写、主线程立刻可见</td>
+<td>无任何检查</td>
+</tr>
+</tbody>
+</table>
+<p>第三条最容易踩：它不是"传递"，所以 clone 闸门根本不经过 —— 实测</p>
+<pre><code class="language-leno">cstruct V3 { f32 x  f32 y  f32 z }
+Ptr[V3] g_buf = null                      // 全局
+
+func worker(int n): int {
+    g_buf[0].x = 1.5                       // 直接写共享内存
+    return _int(g_buf[0].x * 10.0)
+}
+
+main() {
+    g_buf = ffi.malloc(12)
+    g_buf[0].x = 0.5
+    var t = threads.start(worker, 1)
+    print(_str(t.join()))                  // 15
+    print(_str(g_buf[0].x))                // 1.5 ← 主线程看到了子线程的写
+}
+</code></pre>
+<p>⇒ <strong>同一块裸内存被多个线程写就是数据竞争</strong>，Leno 不做检测（也不可能零成本检测）。
+可用做法：</p>
+<ol>
+<li><strong>一块内存只归一个线程写</strong>（最省事）：worker 各自 <code>ffi.malloc</code> 自己的缓冲，
+   结果用 <code>Channel</code> 传<strong>纯数据</strong>（标量 / string / Array / struct）回来；</li>
+<li>需要共享时<strong>自己做互斥</strong>（Leno 侧暂无 <code>Mutex</code>，把临界区交给 C 侧或串行化）；</li>
+<li>只读共享是安全的（多个线程同时读同一块内存没有竞争）。</li>
+</ol>
+<p>回归用例：<code>assert/test_thread_cstruct_boundary.leno</code>（①编译期拒绝、②通道拒绝且逐条对应、
+③全局 Ptr 共享可见）。</p>
+<hr>
+<h2 id="9-union-2026-11-12">9. 收尾三项：越界策略 / <code>union</code> / 位域（2026-11-12）</h2>
+<h3 id="91-ptrt-size">9.1 <code>Ptr[T]</code> 的越界策略：<strong>size 已知就查</strong></h3>
+<p>原判据是 <code>owned &amp;&amp; size &gt; 0</code>，而 <code>cstruct.to_ptr()</code> 早就把 size 填成"实例大小 / 数组总字节数"
+（owned = 0）⇒ <strong>这份已知大小被完全忽略</strong>：<code>Ptr[V3] p = arr.to_ptr(); p[999].x</code> 照样越界读。</p>
+<ul>
+<li><code>CHECK_BOUNDS</code> 改为 <strong><code>size &gt; 0</code> 就查</strong>（不再要求 owned）；</li>
+<li><code>size == 0</code>（C 侧返回的裸指针）<strong>无从可查</strong> ⇒ 维持裸指针语义；</li>
+<li>新增 <code>ffi.bind_size(ptr, n)</code>：把"已知字节数"挂到指针上，之后 <code>p[i]</code> / <code>read_at</code> / <code>write_at</code>
+  都走边界检查（返回同一个指针对象，可链式用）。负数被拒。</li>
+<li>⚠ 哨兵与 size 分离：<code>ObjFFIPointer</code> 新增 <code>alloc_size</code>（真实分配大小），<code>ffi.free</code> 的尾部
+  哨兵按它定位 —— 否则 <code>bind_size</code> 收紧 size 后，哨兵会读到缓冲区中间、误报「堆缓冲区溢出」。</li>
+</ul>
+<p>用例：<code>assert/test_ptr_bounds_policy.leno</code>。</p>
+<h3 id="92-unionc">9.2 <code>union</code>（C 布局联合体）</h3>
+<p>语法与 cstruct 一致，只是布局不同：<strong>所有字段偏移 0，总大小 = 最大字段</strong>（按最终对齐取整）。
+字段表 / 读写 / 数组字段 / 嵌套 / <code>to_ptr</code> / <code>size</code> / <code>offset_of</code> / <code>malloc_array</code> 全部复用
+cstruct 的实现 —— 只有布局那一段分叉。</p>
+<pre><code class="language-leno">union U { i32 i  f32 f  u8 bytes[4] }
+U.size()          // 4
+U.offset_of(&quot;f&quot;)  // 0
+u.i = 1065353216  // 0x3F800000
+u.f               // 1.0   ← 类型双关
+</code></pre>
+<p>⚠ <code>union</code> 现在是<strong>保留字</strong>（与 cstruct 同级）；把它当函数/变量名的代码会报
+「<code>union</code> 现在是<strong>保留字</strong>……请换一个」。仓库内 <code>examples/泛型系统/集合运算/test_set_ops.leno</code>
+的 <code>func union</code> 已改名 <code>setUnion</code>。</p>
+<p>限制：union 里<strong>不支持位域</strong>（C 的各编译器对 union 位域布局不一致，明确报错而不是给错布局）。</p>
+<p>用例：<code>assert/test_cstruct_union.leno</code>。</p>
+<h3 id="93-u32-flags-3">9.3 位域（<code>u32 flags : 3</code>）</h3>
+<p>布局按 C 的常见规则（<strong>小端</strong>）：</p>
+<ul>
+<li>同类型、能塞进当前存储单元 ⇒ 从 LSB 起接着排；</li>
+<li>类型变了 / 塞不下 ⇒ 按类型对齐开新单元；</li>
+<li>单元大小 = 声明类型大小；<code>field-&gt;offset</code> 是单元起始，<code>bit_offset</code> 是单元内位偏移。</li>
+</ul>
+<p>读：取单元 → 右移 → 掩码；<strong>有符号类型做符号扩展</strong>（<code>i32 s : 4</code> 写 -8 读回 -8）。
+写：读-改-写，只动自己那几位（邻居不受影响；写超宽按位截断）。</p>
+<p>实现要点：
+- <code>CStructFieldInfo</code> 增加 <code>bit_offset</code> / <code>bit_width</code>；
+- <code>OP_CSTRUCT_DEF</code> 的字段表<strong>每字段 +2 字节</strong>（bit_offset / bit_width）⇒ 写端（codegen）、
+  读端（VM handler）、反汇编（debug）、<strong>字节码校验（bytecode_verify 的 scan_cstruct_def）</strong>
+  四处必须同步，<code>LENO_BIN_VERSION</code> v3.2.37 / modcache v52 一并升；
+- <code>OP_CSTRUCT_ARR_SETF</code> 的 f32/i32/f64 <strong>快路径必须绕开位域</strong>（它们按整字段宽度 memcpy，
+  会把同一单元里的相邻位域一起冲掉）。</p>
+<p>限制：只支持小端；不支持 union 里的位域；宽度必须 ≤ 声明类型的位数、不能是数组。</p>
+<p><strong>大端护栏</strong>（2026-11-12）：位域按小端打包，大端平台上位序会反、且<strong>没有任何提示</strong>
+⇒ 语义层在<strong>定义位域时</strong>直接编译报错（<code>LENO_HOST_BIG_ENDIAN</code> 编译期宏，运行时零开销）。
+<code>LENO_FORCE_BE=1</code> 是测试钩子：小端机器上也能验证这条报错（否则这段代码在所有 CI 上
+都永不执行）。</p>
+<p>用例：<code>assert/test_cstruct_bitfield.leno</code>。</p>
+<h3 id="94-3-ptr">9.4 深度 ≥3 的 <code>Ptr</code>（决定：不做，但把报错改成"指路"）</h3>
+<p><strong>现状</strong>：<code>Ptr[Ptr[cstruct]]</code>（深度 2）完全可用（<code>var auto = pp[0]</code> 也行）；深度 3
+（<code>Ptr[Ptr[Ptr[V3]]]</code>）只有 <code>var x = ppp[0]</code> 这条<strong>纯推断</strong>路径拿不到最内层的 cstruct
+定义，得到的是<strong>可控报错</strong>，不是静默错值。显式标注后深度 3 照常工作：</p>
+<pre><code class="language-leno">Ptr[Ptr[V3]] mid  = ppp[0]     // ✅
+Ptr[V3]      leaf = mid[0]     // ✅
+</code></pre>
+<p><strong>为什么不做</strong>（评审结论）：</p>
+<ul>
+<li>C 里 <code>T***</code>（结构体三级指针）基本是"语言没有容器"的补偿写法；Leno 有
+  <code>Array[T]</code> / <code>Array[Array[T]]</code> / cstruct 数组，没有出现它的理由。真实边界上的
+  <code>char***</code> 是 <code>Ptr[Ptr[Ptr[u8]]]</code>，与 cstruct 无关，本来就能用。</li>
+<li>要做彻底，缺的是一层<strong>运行期类型链</strong>（<code>read_at</code> 在 ffi 层没有 chunk，解析不了规格里的
+  名字常量 ⇒ 得把"指针 → … → cstruct 定义"整条链在标注期预解析成 GC 节点），
+  还要动 <code>emit_type_spec</code> / <code>type_spec_size</code> / <code>spec_scan</code> / <code>type_spec_match</code> 四处
+  同构代码 —— 为一个几乎不存在的写法去改<strong>当前工作正常的两层路径</strong>，风险大于收益。</li>
+</ul>
+<p><strong>本轮只改报错</strong>（2026-11-12）：原来只说「Ptr[cstruct] 缺少元素类型信息（请写成
+<code>Ptr[类型名]</code>）」，用户不知道该标哪一级。现在：</p>
+<pre><code>Ptr[cstruct] 缺少元素类型信息：这一级指针不知道自己指向哪个 cstruct
+（常见于**深度 ≥3 的指针**，如 `ppp[0]` 的结果）——
+请显式标注一次元素类型：`Ptr[V3] x = ppp[0]`
+</code></pre>
+<p>同一手处理了「无类型 Ptr」那条（<code>read_at</code> / <code>write_at</code>）：
+「……当前是<strong>无类型 Ptr</strong> —— 常见于嵌套指针的下标（如 <code>pp[0]</code>）或 C 函数返回的裸指针；
+请显式标注一次元素类型：<code>Ptr[u8] x = pp[0]</code>」。</p>
+<p>用例钉住：<code>assert/test_ptr_ptr_cstruct.leno</code> 的 ④ 段（断言文案含「深度 ≥3」与
+<code>Ptr[V3] x = ppp[0]</code>，并验证显式标注后深度 3 可读）。</p>
+<h3 id="_5">验收</h3>
+<p>断言 <strong>615/615</strong>；<code>examples</code> + <code>build/leno_module</code> 全量 <code>--check</code> 只剩 2 个既存无关失败；
+<code>build.bat</code> + <code>build_vm.bat</code> 均已重建（<code>ObjFFIPointer</code> / <code>CStructFieldInfo</code> 布局与字节码格式都变了）。</p></main>
+</div>
+<nav class="pager"><a href="struct_extend_设计草案.html">← 上一篇</a><a href="布局配方.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

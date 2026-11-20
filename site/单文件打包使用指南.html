@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>单文件打包（-p --onefile）使用指南 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="单文件打包使用指南.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">一、指南（面向 <code>leno</code> 使用者）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 两种打包模式的区别</a></li><li><a href="#2">2. 快速上手（三步）</a></li><ul class="lv3"><li><a href="#1-resourcetoml">第 1 步：写 resource.toml（放在应用目录 / 包根）</a></li><li><a href="#2_1">第 2 步：打包</a></li><li><a href="#3">第 3 步：分发</a></li></ul><li><a href="#3_1">3. 命令与选项</a></li><ul class="lv3"><li><a href="#vs-windows">控制台 vs 无控制台（Windows）</a></li><li><a href="#2026-10-11">无控制台产物出错时，错误去哪了（★ 2026-10-11 起）</a></li></ul><li><a href="#4-resourcetoml">4. resource.toml 配置</a></li><ul class="lv3"><li><a href="#41-resources">4.1 resources 通配语法</a></li><li><a href="#42-icon">4.2 icon —— 每个应用自己的图标</a></li></ul><li><a href="#5-dll">5. 原生库（DLL）从哪来</a></li><ul class="lv3"><li><a href="#51-optional-true2026-10-21">5.1 可选原生库：optional = true（2026-10-21）</a></li></ul><li><a href="#6">6. 运行期：解包到哪里</a></li><ul class="lv3"><li><a href="#61">6.1 释放目录</a></li><li><a href="#62-hash">6.2 为什么按 hash 分目录</a></li><li><a href="#63">6.3 原子性与清理</a></li></ul><li><a href="#7-dirsres_dir-vs-dirsscript_dir">7. 代码里怎么读资源：dirs.res_dir() vs dirs.script_dir()</a></li><li><a href="#8-dll">8. 打包后 DLL 怎么被找到</a></li><li><a href="#9">9. 内嵌格式（维护者视角）</a></li><li><a href="#10-faq">10. 常见问题（FAQ）</a></li><li><a href="#11">11. 验证方法</a></li><ul class="lv3"><li><a href="#2026-09-24">实测记录（2026-09-24）</a></li></ul><li><a href="#12">12. 已知边界</a></li><ul class="lv3"><li><a href="#exe-5-1">自身 exe 路径已收敛（5 处 → 1 处）</a></li></ul></ul></aside>
+  <main class="content" id="top"><h1 id="-p-onefile">单文件打包（<code>-p --onefile</code>）使用指南</h1>
+<blockquote>
+<p>目标：<strong>一条命令产出一个 exe</strong>，拷到别的电脑就能跑 —— 原生库（DLL）和随包资源
+都内嵌在 exe 尾部，首次运行时自动解包到<strong>用户缓存目录</strong>，不会往桌面 / 下载目录倒文件。</p>
+<p>实现落在：<code>src/main.c</code>（打包侧）、<code>src/vm_main.c</code>（运行期解包）、
+<code>src/module/dirs/dirs.c</code>（<code>dirs.res_dir()</code>）、<code>src/module/ffi/ffi.c</code>（DLL 搜索链）、
+<code>src/vm/vm.c</code>（资源目录的存储与出口）、<code>src/platform/platform_path.c</code>（自身 exe 路径）。</p>
+</blockquote>
+<hr>
+<h2 id="1">1. 两种打包模式的区别</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>目录模式（<code>-p</code>）</th>
+<th>单文件模式（<code>-p --onefile</code>）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产物</td>
+<td><code>&lt;源码名&gt;.exe</code> + 原生库副本（放同一目录）</td>
+<td><strong>只有</strong> <code>&lt;源码名&gt;.exe</code></td>
+</tr>
+<tr>
+<td>原生库</td>
+<td>复制到 dist/ 旁</td>
+<td>内嵌进 exe</td>
+</tr>
+<tr>
+<td>随包资源</td>
+<td><strong>不带</strong>（会打印提示）</td>
+<td>内嵌进 exe（<code>resource.toml</code> 声明）</td>
+</tr>
+<tr>
+<td>分发方式</td>
+<td>整个 dist/ 目录一起拷</td>
+<td>只拷 exe</td>
+</tr>
+<tr>
+<td>首次运行</td>
+<td>无额外动作</td>
+<td>解包到用户缓存目录（约几十 MB，一次性）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>目录模式仍然是默认行为，两种模式可以随时切换。切换过模式后 dist/ 里可能留着上次
+目录模式拷进去的同名文件 —— 打包器<strong>只提示不删</strong>（输出目录是用户的，误删代价更大）。</p>
+</blockquote>
+<hr>
+<h2 id="2">2. 快速上手（三步）</h2>
+<h3 id="1-resourcetoml">第 1 步：写 <code>resource.toml</code>（放在应用目录 / 包根）</h3>
+<pre><code class="language-toml"># resource.toml — 打包资源配置（独立于 leno.toml，没有 leno.toml 也能用）
+[pack]
+onefile   = true
+resources = [&quot;anim/**&quot;, &quot;font/**&quot;, &quot;image/**&quot;, &quot;sound/**&quot;]
+</code></pre>
+<ul>
+<li><code>onefile = true</code> ⇒ 这个应用<strong>默认</strong>就是单文件打包，不用再敲 <code>--onefile</code>。</li>
+<li><code>resources</code> 是相对<strong>本文件所在目录</strong>（包根）的通配模式数组，声明什么就嵌什么。</li>
+<li>不加 <code>resource.toml</code> 也能用命令行 <code>--onefile</code> 临时开启（那就只嵌原生库，没有资源）。</li>
+</ul>
+<h3 id="2_1">第 2 步：打包</h3>
+<pre><code class="language-bash"># 用 resource.toml 的配置（onefile = true）
+build\leno.exe -p &quot;..\LenoGame\植物大战僵尸\pvz.leno&quot;
+
+# 或显式指定，并指定输出目录
+build\leno.exe -p --onefile -o &quot;..\LenoGame\植物大战僵尸\dist&quot; &quot;..\LenoGame\植物大战僵尸\pvz.leno&quot;
+</code></pre>
+<p>典型输出：</p>
+<pre><code>[pack] 检测到 _console(false)，使用无控制台版 leno_vm_gui.exe
+[pack] 内嵌资源: 151 个文件（来自 resource.toml [pack] resources）
+[pack] 单文件模式: 内嵌 4 个原生库 + 151 个资源文件（11.6 MB）
+[pack] 输出目录: ..\LenoGame\植物大战僵尸\dist
+[pack] 单文件: dist 内只产出 exe；库与资源在首次运行时解包到用户缓存目录
+打包成功: ... -&gt; ..\LenoGame\植物大战僵尸\dist\pvz.exe (14654.1 KB) [单文件]
+</code></pre>
+<h3 id="3">第 3 步：分发</h3>
+<p>只拷 <code>dist\&lt;源码名&gt;.exe</code> 一个文件。目标机器<strong>不需要装 Leno、不需要装那些 DLL</strong>，
+也不需要任何配置。</p>
+<hr>
+<h2 id="3_1">3. 命令与选项</h2>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-p</code> / <code>--pack</code></td>
+<td>编译并打包为独立可执行文件（嵌入 <code>leno_vm</code>）</td>
+</tr>
+<tr>
+<td><code>-o &lt;目录&gt;</code> / <code>--pack-dir &lt;目录&gt;</code></td>
+<td>打包输出目录，<strong>相对当前工作目录</strong>；默认 <code>&lt;源码目录&gt;/dist</code></td>
+</tr>
+<tr>
+<td><code>--onefile</code></td>
+<td>单文件模式：内嵌原生库 + <code>resource.toml</code> 声明的资源</td>
+</tr>
+<tr>
+<td><code>--console</code></td>
+<td>打包时<strong>强制</strong>用控制台版 <code>leno_vm.exe</code> 作基底</td>
+</tr>
+<tr>
+<td><code>--no-console</code></td>
+<td>打包时<strong>强制</strong>用无控制台版 <code>leno_vm_gui.exe</code> 作基底（Windows）</td>
+</tr>
+<tr>
+<td><code>-c</code> / <code>--compile</code></td>
+<td>只编译成 <code>.lenb</code>，不执行、不打包</td>
+</tr>
+<tr>
+<td><code>--no-cache</code></td>
+<td>关闭模块编译缓存（<code>import</code> 的 <code>.lenocache</code>）—— 做 A/B 对比时必加</td>
+</tr>
+</tbody>
+</table>
+<p>约定：</p>
+<ul>
+<li><strong>产物命名</strong>：<code>&lt;源码文件名去扩展名&gt;.exe</code>（<code>pvz.leno</code> → <code>pvz.exe</code>）。</li>
+<li>打包时会在源码旁留一个 <code>&lt;源码名&gt;.lenb</code>（编译产物，已在 <code>.gitignore</code> 里）。</li>
+<li><code>--console</code> 与 <code>--no-console</code> <strong>互斥</strong>（两个都给会直接报错退出）。</li>
+</ul>
+<h3 id="vs-windows">控制台 vs 无控制台（Windows）</h3>
+<p>产物 exe 是"控制台程序"还是"无控制台程序"，由<strong>prepend 进去的 VM 基底</strong>决定
+（PE 头的 Subsystem 字段：<code>3</code> = 控制台，<code>2</code> = 无控制台），<strong>打包后改不了</strong>。选择顺序：</p>
+<pre><code>显式开关（--console / --no-console）  &gt;  脚本里的 _console(false) 自动检测  &gt;  默认控制台
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-p app.leno</code></td>
+<td>脚本里有 <code>_console(false)</code> ⇒ 无控制台；否则控制台（<strong>原有行为不变</strong>）</td>
+</tr>
+<tr>
+<td><code>-p --no-console app.leno</code></td>
+<td>强制无控制台（双击不弹黑框）</td>
+</tr>
+<tr>
+<td><code>-p --console app.leno</code></td>
+<td>强制控制台（<strong>覆盖</strong> <code>_console(false)</code> 自动检测，便于排查问题）</td>
+</tr>
+</tbody>
+</table>
+<p>为什么要有显式开关：自动检测是"用运行期调用去猜链接期需求"的静态启发式，有三个坑 ——</p>
+<ol>
+<li>只认<strong>字面量</strong> <code>false</code> / <code>0</code>：<code>var v = false; _console(v)</code> 检测不到；</li>
+<li>写在<strong>永远不执行的分支</strong>里也会误判；</li>
+<li>打包后 PE 子系统已定型，<strong>猜错没法改</strong>，只能重新打包。</li>
+</ol>
+<blockquote>
+<p>⚠ 开关只决定"用哪个 VM 基底"；脚本里 <code>_console(false)</code> 的<strong>运行期</strong>语义不受影响
+—— 用 <code>--console</code> 打包 + 脚本调 <code>_console(false)</code>，运行时仍会隐藏控制台窗口
+（表现为黑框闪一下再消失）。</p>
+<p>非 Windows 平台只有 <code>leno_vm</code> 一个变体（<code>-mwindows</code> 是 Windows 专属），传开关会
+<strong>提示一句并忽略</strong>，不报错（免得跨平台构建脚本因为多个开关就失败）。</p>
+</blockquote>
+<h3 id="2026-10-11">无控制台产物出错时，错误去哪了（★ 2026-10-11 起）</h3>
+<p>无控制台产物<strong>双击</strong>运行时，Windows 上根本没有控制台 ⇒ 过去所有 <code>fprintf(stderr, …)</code>
+（包括<strong>带位置的调用栈</strong>）<strong>全部消失</strong> ✗ ⇒ 用户只看到"闪一下就没了"、作者一行线索都拿不到 ✗。</p>
+<p>现在的<strong>分工</strong>是（判据取<strong>保守方向</strong>：<strong>只有确认"输出确实没人接"才动手</strong> ✓）：</p>
+<table>
+<thead>
+<tr>
+<th>启动方式</th>
+<th>输出去哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>终端里跑（cmd / PowerShell / 终端 ✓）</td>
+<td><strong>接回父控制台</strong>（<code>AttachConsole</code>）⇒ 屏幕上照旧看得到 ✓</td>
+</tr>
+<tr>
+<td>被<strong>捕获</strong>（管道 / 重定向 / CI / <code>_exec</code> 子进程 ✓）</td>
+<td>原样走管道/文件 ✓，<strong>绝不插手</strong> ✓（不抢捕获、不冲重定向 ✓）</td>
+</tr>
+<tr>
+<td><strong>确实没人接</strong>（标准流句柄都没有 ✓）</td>
+<td><strong>出错/崩溃时</strong>才写日志 + 致命错误弹框 ✓（★ 见下"延迟创建" ✓）</td>
+</tr>
+<tr>
+<td><strong>你想强制留日志</strong>（推荐做法 ✓）</td>
+<td>设 <code>LENO_LOG=&lt;路径&gt;</code> ⇒ <strong>强制接管并写到你指定处</strong> ✓</td>
+</tr>
+</tbody>
+</table>
+<p>日志的默认位置<strong>三级回退</strong>（写不进去就换下一个 ✓，弹框里报的是<strong>最终</strong>落点 ✓）：</p>
+<pre><code>① 环境变量 LENO_LOG=&lt;路径&gt;                     （显式指定 ⇒ 强制接管 ✓）
+② exe 同目录 logs\leno_error.log               （便携场景 ✓）
+③ %LOCALAPPDATA%\Leno\logs\（Win）· $XDG_STATE_HOME|&lt;HOME&gt;/.local/state/leno/logs/（Linux/macOS）
+</code></pre>
+<p><strong>★ 延迟创建（2026-10-16 起）：正常跑完不会留下任何东西</strong></p>
+<p>日志文件与 <code>logs\</code> 目录<strong>都不在启动时创建</strong> —— 只有<strong>真要写的那一刻</strong>才建：</p>
+<table>
+<thead>
+<tr>
+<th>这一趟跑成什么样</th>
+<th><code>logs\</code> 目录</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>正常跑完</strong>（退出码 0）</td>
+<td><strong>完全不出现</strong> ✓（哪怕程序 <code>print</code> 过一堆东西也不会建）</td>
+</tr>
+<tr>
+<td>运行期出错</td>
+<td>在<strong>错误打印前</strong>建出来 ⇒ 里面有：头部 + <code>[错误] 位置</code> + <code>[调用栈]</code> ✓</td>
+</tr>
+<tr>
+<td>崩了（访问违例等）</td>
+<td>崩溃兜底在那一刻<strong>现建</strong>，写进 <code>[崩溃] …</code> 行 ✓</td>
+</tr>
+<tr>
+<td><code>LENO_LOG=&lt;路径&gt;</code></td>
+<td><strong>启动就接管</strong>（用户显式要 = 要全程捕获，含成功运行的那一份 ✓）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>为什么这么改：前两版分别是"启动就建 + 成功再删" ✗ —— 用户实测一眼就看出来了
+（"文件夹还是出现了，只是关闭软件后就自动删除，感觉很奇葩"）⇒ 现在<strong>根本不建</strong>，
+成功运行全程连目录都不存在 ✓。
+⚠ <strong>代价（如实说明）</strong>：既然文件是出错那一刻才建，<strong>出错之前</strong>那些 <code>print</code> 就不在日志里了
+（只保留错误本身与调用栈 ✓）。想要"从第一行就全都要" ⇒ 用 <code>LENO_LOG=&lt;路径&gt;</code> 显式指定 ✓。</p>
+</blockquote>
+<p>日志里出错的现场长这样（实测 ✓）：</p>
+<pre><code>[错误] D:\games\demo.leno:4: 除零错误：除数为 0
+  [操作] 除法 (/)    [位置] …（func: boom）    [调用栈] …
+[崩溃] 未处理的系统异常，异常码 0xC0000005      ← 真崩溃（访问违例等）也会留痕 ✓
+</code></pre>
+<p><strong>致命错误还会弹一个框</strong> ✓（<strong>只在"接管了输出"时弹</strong> ✓ 框里给日志路径 + "是否打开日志所在文件夹" ✓）；
+终端里跑 / 被捕获时<strong>永不弹框</strong> ✓（不会卡住 CI 与无人值守 ✓）；<code>LENO_NO_DIALOG=1</code> 强制关掉 ✓；
+日志超过 <strong>256KB</strong> 会自动重开一份 ✓（反复启动不会无限增长 ✓）。</p>
+<blockquote>
+<p>⚠ <strong>已知边界（如实记录 ✓）</strong>：自动判据只看"句柄是否有效" —— 实测发现<strong>打包产物在
+<code>app.exe &gt; out.txt</code> 重定向时，<code>GetFileType</code> 也报 <code>CHAR(0x2)</code></strong> ✗（同条件下普通 GUI 程序报
+<code>DISK</code> ✓）⇒ 平台层<strong>分不开</strong>"重定向"与"没人接" ✗。所以判据宁可<strong>少接管一次</strong>（输出照旧 ✓），
+也不冒险去动别人接好的输出 ✓。<strong>要稳定拿到日志，就用 <code>LENO_LOG=&lt;路径&gt;</code> 显式指定</strong> ✓。
+另外：只有 <strong>GUI 子系统</strong>的产物才可能接管 ✓（<code>leno.exe</code> / <code>leno_vm.exe</code> 这类控制台程序永不接管 ✓）。
+排查时想<strong>强制要控制台</strong>（错误直接打屏 ✓）：<code>-p --console</code> 重新打包 ✓。
+实现见 <code>src/error.c</code> 顶部说明与 <code>include/leno_error.h</code> ✓；回归用例
+<code>assert/test_no_console_capture.leno</code>（钉"不误伤捕获"+"显式开关真生效"两半 ✓）。</p>
+</blockquote>
+<hr>
+<h2 id="4-resourcetoml">4. <code>resource.toml</code> 配置</h2>
+<h3 id="41-resources">4.1 <code>resources</code> 通配语法</h3>
+<p>模式按 <code>/</code>（或 <code>\</code>）切段，<strong>逐段</strong>匹配整条相对路径：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*</code></td>
+<td>段内任意长（含空），<strong>不跨目录</strong></td>
+</tr>
+<tr>
+<td><code>?</code></td>
+<td>段内单个字符</td>
+</tr>
+<tr>
+<td><code>**</code>（<strong>必须单独成段</strong>）</td>
+<td>吃掉任意多层目录（含 0 层）</td>
+</tr>
+<tr>
+<td>普通段</td>
+<td>字面匹配，<strong>大小写敏感</strong></td>
+</tr>
+</tbody>
+</table>
+<p>示例：</p>
+<pre><code class="language-toml">resources = [
+  &quot;image/**&quot;,             # image 目录递归全部（** 在末尾：吃掉剩余全部）
+  &quot;font/*.ttf&quot;,           # font 下所有 ttf（不递归）
+  &quot;data/*.json&quot;,          # data 下所有 json
+  &quot;shaders/**/*.glsl&quot;,    # shaders 下**跨任意层**的所有 .glsl（** 单独成段）
+  &quot;config.ini&quot;,           # 单个文件（包根下）
+]
+</code></pre>
+<blockquote>
+<p>⚠ <code>**</code> 只有<strong>单独占一段</strong>才是"跨多层"。写成 <code>shaders/**.glsl</code> 时它落在段内，
+按 <code>*</code> 处理 ⇒ 只匹配 <code>shaders/&lt;一层&gt;/x.glsl</code>，不会递归。</p>
+</blockquote>
+<p>行为细节（照抄即可，不用猜）：</p>
+<ul>
+<li><strong>包根</strong>：有 <code>leno.toml</code> 用它所在目录；没有就退回入口 <code>.leno</code> 所在目录
+  ⇒ 纯应用目录（无 <code>leno.toml</code>）也能用 <code>resource.toml</code>。</li>
+<li><strong>跳过</strong>：<code>.</code> 开头的目录（<code>.git</code> / <code>.lenocache</code> / 隐藏目录）和 <code>dist</code> 目录，避免把产物打进去。</li>
+<li><strong>递归深度上限</strong> 16 层。</li>
+<li><strong>同一目标路径只收一次</strong>（多个模式重叠时自动去重）。</li>
+<li><strong>某个模式一个文件都没匹配到</strong> ⇒ 打印警告并跳过该模式，<strong>不中断打包</strong>。</li>
+<li><strong>内嵌时保留相对目录结构</strong>（<code>anim/xxx.txt</code> 解包后仍是 <code>anim/xxx.txt</code>）。</li>
+</ul>
+<h3 id="42-icon">4.2 <code>icon</code> —— 每个应用自己的图标</h3>
+<pre><code class="language-toml">[pack]
+icon = &quot;ico5.ico&quot;     # 相对本文件所在目录（写绝对路径也认）
+</code></pre>
+<p>打包产物的<strong>应用图标</strong>就换成这个文件。<strong>两种模式都生效</strong>（目录模式 / <code>--onefile</code>）；
+不写 ⇒ 用 VM 自带的默认图标（也就是 <code>leno.exe</code> 那个）。</p>
+<ul>
+<li>
+<p><strong>只认 <code>.ico</code></strong>：Windows 的图标是 PE 资源（<code>RT_GROUP_ICON</code> + <code>RT_ICON</code>），PNG/JPG
+  必须先转成 ICO 容器。ICO 里的图像数据<strong>原样搬运</strong>，所以 DIB 编码与 PNG 编码的条目都支持。</p>
+</li>
+<li>
+<p><strong>仓库自带的转换工具</strong>（不用装 ImageMagick ✓）：ICO 里的数据既然是原样搬运，
+  那就<strong>不需要解码/重新编码</strong> —— <code>tools\png_to_ico.leno</code> 只写 22 字节 ICO 头 + 原 PNG 数据：</p>
+</li>
+</ul>
+<p><code>bash
+  build\leno.exe tools\png_to_ico.leno leno_gui\应用\音乐下载器\images\index.png leno_gui\应用\音乐下载器\app.ico</code></p>
+<p>然后 <code>resource.toml</code>：<code>icon = "app.ico"</code>（放<strong>应用根目录</strong>，别放 <code>images/</code> 里 —— 否则会被
+  <code>resources</code> 当资源再嵌一遍 ✗）。边界：输入必须是 PNG；<strong>单条上限 256×256 且不缩放</strong>（超了直接报错 ✓）。
+  想要资源管理器"大图标"清晰，源图请给 <strong>256×256</strong>（48×48 会被系统放大 ⇒ 发虚 ✗）。
+- 一个 <code>.ico</code> 里可以放多张，<strong>建议放 16 / 24 / 32 / 48 / 256</strong>：
+  系统会按显示场景取用（列表 16、任务栏 32、中图标 48、超大图标 256）；
+  <strong>只放一张会被系统缩放</strong>，小尺寸发虚。
+- 惯例上 ≥256 才用 PNG 压缩条目（Vista+ 才认）；48 这种小尺寸用 DIB 编码兼容性最好。
+- <strong>指定的图标打不进去 ⇒ 响亮报错并中止打包</strong>（宁可打不出来，也不要静默给一个没图标的产物）。
+- 非 Windows 平台：提示一句并忽略（图标不是 PE 资源：macOS 用 <code>.icns</code>、Linux 靠 <code>.desktop</code>）。</p>
+<p>实现要点（改代码时别踩）：图标必须<strong>在 prepend 之前</strong>替换 —— 产物是
+<code>[VM 二进制][资源段][lenb]</code>，图标在文件最开头那段（VM 二进制）的 PE 资源段里，
+而 <code>EndUpdateResource</code> 会按 PE 结构重写整个文件，对<strong>最终 exe</strong> 调用会把尾部的资源段
+和 lenb 一起丢掉。所以流程是：VM 映像写临时文件 → <code>BeginUpdateResource</code> 换图标 →
+读回 → 再 prepend。详见 <a href="../../src/package/package_icon.c">package_icon.c</a>。</p>
+<hr>
+<h2 id="5-dll">5. 原生库（DLL）从哪来</h2>
+<p>不需要手写清单，打包器<strong>按实际 <code>import</code> 的模块反推</strong>：</p>
+<ol>
+<li>每个已加载模块的源路径向上找最近的 <code>leno.toml</code> ⇒ 那就是它所属的<strong>包</strong>；</li>
+<li>取该包的 <code>[native-libs.*]</code>，按当前平台展开（<code>win</code> / <code>linux</code> / <code>mac</code> 三键之一）；</li>
+<li>按<strong>目标文件名</strong>去重（同名视为同一个库，后到者忽略）。</li>
+</ol>
+<pre><code class="language-toml"># build/leno_module/LenoSDL3/leno.toml（示例）
+[native-libs.sdl3]
+win   = &quot;lib/SDL3.dll&quot;
+linux = &quot;lib/SDL3.so&quot;
+mac   = &quot;lib/SDL3.so&quot;
+
+[native-libs.sdl3_image]
+win   = &quot;lib/SDL3_image.dll&quot;
+...
+</code></pre>
+<p>为什么必须按包推导：原生库是<strong>包</strong>的属性，一个包可以需要多个库 —— 比如 <code>LenoSDL3</code>
+的 <code>sdl_core.leno</code> / <code>sdl_image.leno</code> / <code>sdl_font.leno</code> 分别 <code>ffi.load</code> 了
+<code>SDL3.dll</code> / <code>SDL3_image.dll</code> / <code>SDL3_ttf.dll</code>，手抄必漏。</p>
+<blockquote>
+<p>声明的库文件不存在，或通配没匹配到任何文件 ⇒ 打印错误并<strong>中止打包</strong>
+（宁可打不出来，也不要产出一个跑不起来的 exe）。</p>
+</blockquote>
+<h3 id="51-optional-true2026-10-21">5.1 可选原生库：<code>optional = true</code>（2026-10-21）</h3>
+<p>有些库只服务<strong>某一项可选能力</strong>（<code>LenoSDL3</code> 的 <code>libwebp</code> —— 不用 WebP 的应用不该为它多背 500KB）。
+声明粒度是<strong>包</strong>（<code>[native-libs]</code> 只能由模块自己写，应用改不了别人的包），所以给个开关：</p>
+<pre><code class="language-toml"># 模块 leno.toml（LenoSDL3 就是这么写的）
+[native-libs.libwebp]
+win      = &quot;lib/libwebp-7.dll&quot;
+linux    = &quot;lib/libwebp.so.7&quot;
+optional = true          # 默认不随打包分发
+</code></pre>
+<pre><code class="language-toml"># 应用 resource.toml（与 leno.toml 同在项目根）
+[pack]
+native = [&quot;libwebp&quot;, &quot;libwebpdemux&quot;, &quot;libwebpmux&quot;]   # 点名启用（按 [native-libs.&lt;别名&gt;] 的别名）
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>打包结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>应用不写 <code>native</code></td>
+<td><strong>不带</strong> —— 体积最小，不用的人零负担</td>
+</tr>
+<tr>
+<td>应用点名</td>
+<td>带上；依赖链要自己列全（<code>libwebp</code> → demux → mux）</td>
+</tr>
+<tr>
+<td>点名了但没有任何模块提供该别名</td>
+<td><strong>报错并中止打包</strong>（拼错要能发现，不静默少带）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>实测（<code>gif_demo</code> 打包两次）：不写 <code>native</code> ⇒ 3 个库；写了 ⇒ 6 个（多出 3 个 libwebp）。
+拼成 <code>libwebpx</code> ⇒ <code>[pack] 错误: resource.toml 的 [pack] native 点名了 'libwebpx'，
+但没有任何模块声明这个可选原生库</code>，打包中止。</p>
+</blockquote>
+<hr>
+<h2 id="6">6. 运行期：解包到哪里</h2>
+<h3 id="61">6.1 释放目录</h3>
+<pre><code>&lt;缓存根&gt;/&lt;exeStem&gt;/pack/&lt;hash16&gt;/
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>缓存根</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td><code>%LOCALAPPDATA%</code>（拿不到退 <code>%TEMP%</code>）</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>$XDG_CACHE_HOME</code>，未设置则 <code>$HOME/.cache</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>$HOME/Library/Caches</code></td>
+</tr>
+<tr>
+<td>兜底</td>
+<td><code>$TMPDIR</code> / <code>/tmp</code>；缓存目录不可用则退回 <strong>exe 所在目录</strong>（旧行为，至少还能跑）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>&lt;exeStem&gt;</code> = exe 文件名去扩展名（<code>pvz.exe</code> → <code>pvz</code>）。</li>
+<li><code>&lt;hash16&gt;</code> = <strong>资源段内容</strong>的 FNV-1a 64（16 位十六进制），<strong>打包时算好写进头部</strong>，
+  运行期零计算。</li>
+<li>实测：<code>C:\Users\&lt;user&gt;\AppData\Local\pvz\pack\2491acd1d41b936b\</code>，解包后 156 个文件
+  = 151 个资源 + 4 个 DLL + 1 个哨兵。</li>
+</ul>
+<h3 id="62-hash">6.2 为什么按 hash 分目录</h3>
+<ul>
+<li>两个不同构建（哪怕同时运行）<strong>互不覆盖</strong>；</li>
+<li>同一构建再次启动 ⇒ <strong>哨兵快路径</strong>：只读一个 <code>.leno_pack_ok</code>（内容 = hash16）就返回，
+  <strong>零写入</strong>（比"逐文件读一遍算哈希"更快）；</li>
+<li>代价：<strong>每次重新打包 hash 就变、目录就变</strong> —— 所以这个目录<strong>绝不能用来存用户数据</strong>
+  （详见 §7）。</li>
+</ul>
+<h3 id="63">6.3 原子性与清理</h3>
+<ul>
+<li>先释放到 <code>&lt;hash16&gt;.tmp.&lt;pid&gt;/</code>，全部写完（含哨兵）后<strong>原子改名</strong>成 <code>&lt;hash16&gt;/</code>
+  ⇒ 最终目录"要么不存在、要么完整"，并发启动的另一个实例不会读到半截目录。</li>
+<li>改名失败（别的实例先到）⇒ 校验对方哨兵，可用就直接用它的，丢掉自己的暂存。</li>
+<li>启动时<strong>惰性 GC</strong>：同层里非当前 hash 的目录超过 <strong>7 天</strong>就删，崩溃残留的
+  <code>*.tmp.*</code> 超过 <strong>1 天</strong>就删。</li>
+<li><strong>退出时绝不删</strong>：并发实例 + Windows 下 DLL 还被进程锁着，删了就是自找麻烦。</li>
+</ul>
+<hr>
+<h2 id="7-dirsres_dir-vs-dirsscript_dir">7. 代码里怎么读资源：<code>dirs.res_dir()</code> vs <code>dirs.script_dir()</code></h2>
+<p>这是使用单文件打包时<strong>唯一需要改代码</strong>的地方。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>未打包（脚本 / exe / <code>.lenb</code>）</th>
+<th>单文件打包后</th>
+<th>用来干什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dirs.script_dir()</code></td>
+<td>脚本 / exe 所在目录</td>
+<td><strong>同一个</strong>（exe 所在目录）</td>
+<td><strong>写</strong>用户数据：存档、书签、配置</td>
+</tr>
+<tr>
+<td><code>dirs.res_dir()</code></td>
+<td>与 <code>script_dir()</code> <strong>完全一致</strong></td>
+<td>内嵌资源的<strong>释放目录</strong>（hash 目录）</td>
+<td><strong>读</strong>随包资源：图片、音频、字体、DLL</td>
+</tr>
+</tbody>
+</table>
+<p>规则一句话：<strong>读随包资源用 <code>res_dir()</code>，写用户数据用 <code>script_dir()</code>。</strong></p>
+<p>为什么不能把 <code>script_dir()</code> 直接指向 hash 目录（曾经的备选方案，已否决）：
+<code>file_manager.leno</code> 的 <code>bookmarks.json</code> 是<strong>读 + 写</strong> <code>script_dir()</code>；一旦把它指到 hash 目录，
+<strong>每次重新打包 hash 一变目录就变</strong>，用户的书签会"凭空消失"，而且不会有任何报错。
+所以两个语义必须分开：<code>res_dir()</code> 只服务"读"，<code>script_dir()</code> 语义<strong>一行没动</strong>。</p>
+<p>典型写法：</p>
+<pre><code class="language-leno">import dirs
+import SDL3
+
+// 读随包资源
+var fontPath = dirs.res_dir() + &quot;/font/SmileySans-Oblique.ttf&quot;
+var tex = SDL3.loadImageTexture(renderer, dirs.res_dir() + &quot;/image/f1.png&quot;)
+
+// 写用户数据（必须用 script_dir）
+var saveFile = dirs.join(dirs.script_dir(), &quot;save.json&quot;)
+</code></pre>
+<p>已迁移到 <code>res_dir()</code> 的调用点（本仓库）：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>..\LenoGame\植物大战僵尸\pvz_art.leno</code></td>
+<td>image / anim</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\植物大战僵尸\pvz.leno</code></td>
+<td>sound / font</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\植物大战僵尸\anim_editor.leno</code></td>
+<td>anim / image</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\塔防\tower_defense.leno</code></td>
+<td>image / font</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\俄罗斯方块\tetris.leno</code></td>
+<td>music</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\扫雷\minesweeper.leno</code></td>
+<td>music</td>
+</tr>
+<tr>
+<td><code>..\LenoGame\飞机大战\plane_war.leno</code></td>
+<td>image</td>
+</tr>
+<tr>
+<td><code>leno_gui\应用\文件管理器\file_manager.leno</code></td>
+<td>images（图标）</td>
+</tr>
+<tr>
+<td><code>leno_gui\应用\电脑清理大师\cleaner_detail.leno</code></td>
+<td>images（图标，<code>icon()</code> 一处收口 ✓）</td>
+</tr>
+<tr>
+<td><code>leno_gui\应用\音乐下载器\musicdl_gui.leno</code></td>
+<td>images（标题栏两个动作图标 ✓）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>保持 <code>script_dir()</code> 不动</strong>的（写数据 / 写产物，动了会出问题）：</p>
+<ul>
+<li><code>file_manager.leno</code>：<code>bookmarks.json</code>（书签，读 + 写）、根目录定位</li>
+<li><code>file_search.leno</code>、<code>pe_analyzer.leno</code>：默认搜索位置（用户目录语义）</li>
+<li><code>gen_assets.leno</code>、<code>test_table_image.leno</code>：<strong>生成</strong>资源到脚本目录的开发工具（产物，不是读资源）</li>
+</ul>
+<hr>
+<h2 id="8-dll">8. 打包后 DLL 怎么被找到</h2>
+<p>库不再位于 exe 旁，所以 <code>ffi.load</code> 的自动搜索链补了一站（只对相对路径 / 纯文件名生效）：</p>
+<ol>
+<li>给定路径直接加载</li>
+<li>当前模块目录 <code>/bin/&lt;文件名&gt;</code></li>
+<li>当前模块目录 <code>/&lt;文件名&gt;</code></li>
+<li>所有已加载模块目录 <code>/&lt;文件名&gt;</code></li>
+<li><strong>单文件打包的资源释放目录 <code>/&lt;文件名&gt;</code></strong> ← 新增</li>
+<li>exe 所在目录 <code>/&lt;文件名&gt;</code></li>
+<li>系统 PATH（交给系统加载器）</li>
+</ol>
+<p><strong>兄弟依赖</strong>（<code>SDL3_image.dll</code> 的导入表里有 <code>SDL3.dll</code>）：Windows 解析"某个 DLL 自身的依赖"
+时<strong>不会去看那个 DLL 所在的目录</strong>，只搜主 exe 目录 / <code>SetDllDirectory</code> 指定的目录 / 系统目录 / PATH。
+所以打包模式下会调一次 <code>SetDllDirectoryW(释放目录)</code>，否则 <code>SDL3_image → SDL3</code> 这条链会断。
+未打包时该函数是空操作，<strong>不改变原有行为</strong>。</p>
+<hr>
+<h2 id="9">9. 内嵌格式（维护者视角）</h2>
+<p>exe 尾部布局（资源段在 <code>lenb</code> <strong>之前</strong> ⇒ 末尾 8 字节仍是 <code>LENB_MAGIC</code>，旧 VM 读新 exe 依然正常）：</p>
+<pre><code>[原始 exe][资源段][资源段大小:u32][RES_MAGIC][lenb][lenb大小:u32][LENB_MAGIC]
+</code></pre>
+<p>资源段内部（v2，索引在前、内容在后）：</p>
+<pre><code>&quot;LENOPACK&quot;(8) | version:u32(=2) | payload_hash:u64 | entry_count:u32
+entry_count × [ rel_len:u16 | size:u64 | hash:u32 | rel_path(rel_len) ]
+各文件内容按索引顺序紧随其后
+</code></pre>
+<ul>
+<li><code>payload_hash</code> = FNV-1a 64 over <code>[entry_count .. 末尾]</code>，<strong>打包时算好</strong>（运行期零计算），
+  同时充当<strong>释放目录的键</strong>。</li>
+<li><code>version</code> 只做<strong>格式自检</strong>：exe 与它内嵌的资源段永远出自同一次打包，不需要跨版本兼容，
+  对不上就响亮报错（宁可报错，也不要按错误布局解析、写出乱七八糟的文件）。</li>
+<li>运行期不再重算整段哈希；只有"兜底释放到 exe 目录"那条路径才用逐文件 FNV-1a 跳过已存在的文件。</li>
+</ul>
+<hr>
+<h2 id="10-faq">10. 常见问题（FAQ）</h2>
+<p><strong>Q：打包后 dist 里只有 exe，但里面有个上次目录模式留下的同名 DLL？</strong>
+只提示不删。确认只需要 exe 时自行删除即可。</p>
+<p><strong>Q：改了资源重新打包，旧目录还在？</strong>
+按 hash 分目录，旧目录与新目录并存；<strong>目录最后修改时间</strong>超过 <strong>7 天</strong>的，会在下次启动时被
+惰性 GC 清掉（快路径不写文件 ⇒ 时间戳不会因为"又跑了一次"而刷新）。</p>
+<p><strong>Q：为什么不能把存档写进 <code>res_dir()</code>？</strong>
+hash 目录随每次重新打包变化，写进去的数据会"凭空消失"（且无任何提示）。写数据一律用
+<code>script_dir()</code>。</p>
+<p><strong>Q：首次启动慢、磁盘写了几十 MB？</strong>
+正常，一次性解包；之后每次启动只读一个哨兵文件，零写入。</p>
+<p><strong>Q：双击 exe 没反应 / 一闪而过？</strong>
+看脚本里是否有 <code>win.ok</code> 之类的早退分支。打包时若用了<strong>无控制台</strong>基底，<code>print</code> 的输出看不到。
+排查手段：直接 <code>build\leno.exe &lt;脚本&gt;</code> 跑源码，或用 <code>-p --console</code> 重新打包一版带黑框的
+exe（<code>--console</code> 会覆盖 <code>_console(false)</code> 自动检测），就能看到完整输出。</p>
+<p><strong>Q：打包报错「即将内嵌的 VM 读不了本次编译产物」？（以前是打包"成功"、双击才闪退）</strong>
+含义：exe 里要内嵌的 <code>leno_vm*.exe</code> <strong>比编译器旧</strong> —— 编译器侧改过序列化格式 /
+<code>LENO_BIN_VERSION</code>（如"行号表 RLE"那次升到 v3.0.2），而 VM 二进制没重建，读不了新 <code>.lenb</code>
+（旧行为：产物照样"打包成功"，双击时才以 <code>内存反序列化失败: 5</code>（5 = <code>SERIALIZE_ERR_VERSION</code>）
+一闪而过）。
+处理：<strong>先 <code>build_vm.bat</code> 重建 VM，再重新打包</strong>（<code>build.bat</code> 只重建编译器）。
+现在打包前会自动握手：用即将内嵌的那个 VM 跑 <code>leno_vm --check-bin &lt;产物&gt;</code>（只校验、不执行），
+读不通就<strong>报错并放弃产出 exe</strong>（已编译出的 <code>.lenb</code> 会保留，重建 VM 后可直接复用）。</p>
+<p><strong>Q：脚本里没有 <code>_console(false)</code>，为什么打出来的 exe 还是没有黑框？</strong>
+说明打包时用了 <code>--no-console</code>，或 <code>resource.toml</code>/命令行里带着它。想确认用了哪个基底，
+看打包输出那一行（<code>[pack] ... 使用...版 leno_vm...</code>）；也可直接查 PE 头 Subsystem
+（3 = 控制台、2 = 无控制台）。</p>
+<p><strong>Q：目标机器要装什么？</strong>
+什么都不用。系统自带库（如 <code>kernel32</code>）除外。</p>
+<p><strong>Q：缓存目录不可写（权限 / 杀软）怎么办？</strong>
+会自动退回"释放到 exe 所在目录"（旧行为），至少还能跑，只是会污染 exe 旁边。</p>
+<hr>
+<h2 id="11">11. 验证方法</h2>
+<pre><code class="language-bash"># 1) 两个构建都要过（core 改动必须同时保证编译器和 VM 运行时都能链接）
+.\build.bat
+.\build_vm.bat
+
+# 2) 断言套件（基线 373 passed / 0 failed）
+.\build\leno.exe assert\run_tests.leno build\leno.exe assert
+
+# 3) 打包 + 实跑
+.\build\leno.exe -p --onefile -o &lt;输出目录&gt; &lt;入口.leno&gt;
+&lt;输出目录&gt;\&lt;源码名&gt;.exe     # 第一次：打印&quot;解包内嵌资源: 新写入 N 个&quot;
+&lt;输出目录&gt;\&lt;源码名&gt;.exe     # 第二次：应无任何&quot;解包&quot;输出（哨兵快路径）
+</code></pre>
+<p>实跑时应核对：</p>
+<ol>
+<li>exe 所在目录<strong>跑前跑后都只有 exe</strong>（零污染）；</li>
+<li><code>&lt;缓存根&gt;\&lt;exeStem&gt;\pack\&lt;hash16&gt;\</code> 里资源目录结构与相对路径一致；</li>
+<li>第二次启动<strong>无解包输出</strong>；</li>
+<li>脚本里 <code>dirs.res_dir()</code> 指向缓存目录，<code>dirs.script_dir()</code> 指向 exe 目录；</li>
+<li>声明了 <code>[pack] icon</code> 时，打包输出里会有一行 <code>[pack] 图标: &lt;绝对路径&gt;</code>，且产物图标
+   是应用自己的（不是 <code>leno.exe</code> 那个默认图标）。</li>
+</ol>
+<blockquote>
+<p>⚠ 同二进制 + 环境变量开关做 A/B 对比时，编译务必加 <code>--no-cache</code>，
+否则模块缓存会让第二次运行直接复用第一次的编译产物。</p>
+</blockquote>
+<h3 id="2026-09-24">实测记录（2026-09-24）</h3>
+<ul>
+<li><code>build.bat</code> / <code>build_vm.bat</code> 无警告；断言 <strong>373 passed / 0 failed</strong>。</li>
+<li>最小样例：exe 旁零污染；资源落在 <code>%LOCALAPPDATA%\main\pack\&lt;hash16&gt;\</code>；二次启动无写入。</li>
+<li>带 SDL3 的样例：<code>SDL3_image.dll</code> 从缓存目录加载成功（<code>imageVersion() = 3004004</code>）
+  ⇒ 兄弟依赖 <code>SDL3 → SDL3_image</code> 解析正常。</li>
+<li><code>pvz.leno</code>：单文件 exe 14.6 MB（4 个原生库 + 151 个资源），<strong>已在另一台电脑实测通过</strong>。</li>
+</ul>
+<hr>
+<h2 id="12">12. 已知边界</h2>
+<ul>
+<li><strong>Windows 为实机验证平台</strong>；Linux / macOS 的释放目录、原子改名、自身 exe 路径都已在
+  代码层面补齐，但<strong>尚未实机验证</strong>。</li>
+<li>单文件打包<strong>只影响打包产物</strong>；未打包运行时 <code>res_dir()</code> 与 <code>script_dir()</code> 完全等价，
+  行为与改造前一致。</li>
+<li>资源段<strong>不做压缩</strong>；体积 ≈ 原生库 + 资源原大小之和。</li>
+</ul>
+<h3 id="exe-5-1">自身 exe 路径已收敛（5 处 → 1 处）</h3>
+<p>"取当前进程 exe 的路径"原先在 5 个地方各写一份 <code>readlink("/proc/self/exe")</code>，
+其中一处漏了补 <code>'\0'</code>（readlink 不写结束符）⇒ 路径尾部是栈垃圾 ⇒ 单文件 exe 检测不到
+内嵌数据。现已全部收敛到 <a href="../../src/platform/platform_path.c"><code>src/platform/platform_path.c</code></a>：</p>
+<table>
+<thead>
+<tr>
+<th>调用点</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/vm_main.c</code></td>
+<td>解包内嵌资源段</td>
+</tr>
+<tr>
+<td><code>src/main.c</code></td>
+<td>打包时定位 <code>leno_vm</code> 运行时</td>
+</tr>
+<tr>
+<td><code>src/package/package_install.c</code></td>
+<td>内置模块搜索路径 <code>exe_dir/leno_module/</code></td>
+</tr>
+<tr>
+<td><code>src/serialize/serialize.c</code></td>
+<td>字节码缓存指纹（按自身 exe 失效）</td>
+</tr>
+<tr>
+<td><code>src/module/ffi/ffi.c</code></td>
+<td>DLL 搜索链的最后一站（exe 目录）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Linux：<code>/proc/self/exe</code> + 补 <code>'\0'</code> + 判长度；macOS：<code>_NSGetExecutablePath</code> + <code>realpath</code>。</li>
+<li>取不到时返回 0 并置空串，各调用点按 <strong>fail-closed</strong> 兜底（不假装知道自己在哪）。</li>
+<li>Windows：该函数<strong>不提供实现</strong>，调用点继续用 <code>GetModuleFileNameW</code>
+  —— 那是已验证工作的代码，不因"新增 macOS 支持"而改动（项目约定）。</li>
+</ul></main>
+</div>
+<nav class="pager"><a href="包管理与安装使用指南.html">← 上一篇</a><a href="async_await入门指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

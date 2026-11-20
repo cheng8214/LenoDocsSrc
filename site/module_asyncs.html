@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 异步协程模块 (asyncs) · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_asyncs.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">使用方式</a></li><li><a href="#_3">核心概念</a></li><ul class="lv3"><li><a href="#asyncawait">async/await</a></li><li><a href="#future">Future</a></li><li><a href="#_4">事件循环</a></li></ul><li><a href="#_5">模块函数</a></li><ul class="lv3"><li><a href="#sleepms">sleep(ms)</a></li><li><a href="#yield">yield()</a></li><li><a href="#run">run()</a></li><li><a href="#current">current()</a></li><li><a href="#is_donefuture">is_done(future)</a></li><li><a href="#get_resultfuture">get_result(future)</a></li></ul><li><a href="#_6">并发工具</a></li><ul class="lv3"><li><a href="#allfutures">all(futures)</a></li><li><a href="#timeoutfuture-ms">timeout(future, ms)</a></li></ul><li><a href="#_7">示例代码</a></li><ul class="lv3"><li><a href="#1">1. 基础异步任务</a></li><li><a href="#2">2. 并发请求</a></li><li><a href="#25-2026-10-20">2.5 并发上限与超时（2026-10-20 实战修正）</a></li><li><a href="#3">3. 超时处理</a></li><li><a href="#4">4. 协程间协作</a></li><li><a href="#5">5. 异步递归</a></li><li><a href="#6">6. 批量处理带进度</a></li></ul><li><a href="#_8">注意事项</a></li><li><a href="#_9">边界行为定义</a></li><ul class="lv3"><li><a href="#async">async 函数的返回值类型</a></li><li><a href="#await">不 await 时的行为</a></li><li><a href="#_10">异常传播路径</a></li><li><a href="#asyncsrun">asyncs.run() 的事件循环语义</a></li><li><a href="#async-threads">async 与 threads 的交互</a></li></ul><li><a href="#_12">性能提示</a></li><ul class="lv3"><li><a href="#2026-11-14toolsasync_benchleno">实测成本（2026-11-14，本机；复测：tools\async_bench.leno）</a></li><li><a href="#2026-11-14">事件循环的数据结构（2026-11-14 改）</a></li></ul><li><a href="#2026-11-14_1">实战：并发网络客户端（2026-11-14）</a></li><li><a href="#api">完整 API 速查表</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-asyncs">Leno 异步协程模块 (asyncs)</h1>
+<p>本文档详细说明 <code>asyncs</code> 模块提供的异步编程和协程功能。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#核心概念">核心概念</a></li>
+<li><a href="#模块函数">模块函数</a></li>
+<li><a href="#协程控制">协程控制</a></li>
+<li><a href="#并发工具">并发工具</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+<li><a href="#性能提示">性能提示</a></li>
+<li><a href="#实战并发网络客户端2026-11-14">实战：并发网络客户端</a></li>
+</ul>
+<hr>
+<h2 id="_2">使用方式</h2>
+<pre><code class="language-leno">import asyncs
+import io
+
+// 定义异步函数
+async func fetch_data():string {
+    await asyncs.sleep(100)  // 模拟异步操作
+    return &quot;数据获取完成&quot;
+}
+
+main() {
+    // 启动异步任务
+    var task = fetch_data()
+
+    // 运行事件循环，开始执行所有协程
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h2 id="_3">核心概念</h2>
+<h3 id="asyncawait">async/await</h3>
+<p>Leno 使用 <code>async</code> 和 <code>await</code> 关键字实现协程：</p>
+<ul>
+<li><strong><code>async func</code></strong> - 定义异步函数，返回一个 Future 对象</li>
+<li><strong><code>await</code></strong> - 等待异步操作完成，让出执行权</li>
+</ul>
+<pre><code class="language-leno">async func my_task():int {
+    io.print(&quot;任务开始&quot;)
+    await asyncs.sleep(100)  // 等待100ms，期间其他协程可以运行
+    io.print(&quot;任务结束&quot;)
+    return 42
+}
+</code></pre>
+<h3 id="future">Future</h3>
+<p>Future 是异步函数的返回值，代表一个尚未完成的计算：</p>
+<pre><code class="language-leno">var future = my_task()  // 创建 Future，但任务还未执行
+
+// 使用 await 等待 Future 完成
+var result = await future  // 阻塞直到任务完成，返回结果
+</code></pre>
+<h3 id="_4">事件循环</h3>
+<p>使用 <code>asyncs.run()</code> 启动事件循环，执行所有待处理的协程：</p>
+<pre><code class="language-leno">main() {
+    // 创建多个异步任务
+    task1()
+    task2()
+    task3()
+
+    // 启动事件循环
+    asyncs.run()  // 阻塞直到所有协程完成
+}
+</code></pre>
+<hr>
+<h2 id="_5">模块函数</h2>
+<h3 id="sleepms"><code>sleep(ms)</code></h3>
+<p>暂停当前协程指定毫秒数，让出执行权给其他协程。</p>
+<p><strong>参数</strong>:
+- <code>ms</code> (int): 休眠时间（毫秒）</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">async func task() {
+    io.print(&quot;开始&quot;)
+    await asyncs.sleep(500)  // 暂停500ms
+    io.print(&quot;500ms后继续&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="yield"><code>yield()</code></h3>
+<p>主动让出执行权，允许其他协程运行，但自身保持可执行状态。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">async func cooperative_task() {
+    for 0:5 to i {
+        io.print(&quot;步骤 &quot; + i)
+        await asyncs.yield()  // 让出执行权
+    }
+}
+</code></pre>
+<p><strong>与 sleep 的区别</strong>:
+- <code>sleep(ms)</code> - 暂停指定时间后才恢复
+- <code>yield()</code> - 立即让出，下次调度时恢复</p>
+<hr>
+<h3 id="run"><code>run()</code></h3>
+<p>启动事件循环，执行所有待处理的协程直到全部完成。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">main() {
+    // 创建协程
+    async_task1()
+    async_task2()
+
+    // 启动事件循环
+    asyncs.run()
+
+    io.print(&quot;所有协程完成&quot;)
+}
+</code></pre>
+<p><strong>注意</strong>: <code>run()</code> 会阻塞直到所有协程完成。</p>
+<blockquote>
+<p>⚠ <strong>不能在协程内部调用</strong>（2026-11-16 起<strong>明确拦下</strong>）。此前只是"跑坏"：
+在 <code>async func</code> 里调 <code>run()</code> 实测两种表现 —— ① 0xC0000005 访问违例崩溃；
+② 不崩，但 <code>run()</code> 返回后 <code>current_coroutine</code> 被清空 ⇒ 后续 <code>await</code> 报
+「await 只能在 async 函数中使用」（<strong>指错真因</strong>，代码明明在 async 函数里）。
+现在 <code>run()</code> / <code>run_for()</code> 都会抛
+<code>asyncs.run() 不能在协程内部调用：事件循环不能嵌套…</code>。
+正确做法：让协程先返回（需要结果就 <code>await</code>），再在 <code>main</code> 里驱动一次。</p>
+</blockquote>
+<hr>
+<blockquote>
+<p><strong>实现状态</strong>：下面这三个查询 API（<code>current()</code> / <code>is_done()</code> / <code>get_result()</code>）
+此前<strong>两个引擎都没实现</strong>（<code>asyncs</code> 注册表里只有 <code>sleep / run / yield / all / timeout</code>）。
+寄存器式已按本文档补齐（含协程 ID）；栈式侧尚未，详见
+<code>docs/寄存式与栈式的差异清单.md</code> 的 <strong>A6</strong>。</p>
+</blockquote>
+<h3 id="current"><code>current()</code></h3>
+<p>获取当前正在运行的协程 ID。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - 协程 ID</p>
+<pre><code class="language-leno">async func show_id() {
+    var id = asyncs.current()
+    io.print(&quot;当前协程 ID: &quot; + id)
+}
+</code></pre>
+<hr>
+<h3 id="is_donefuture"><code>is_done(future)</code></h3>
+<p>检查 Future 是否已完成。</p>
+<p><strong>参数</strong>:
+- <code>future</code>: 要检查的 Future 对象</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否已完成</p>
+<pre><code class="language-leno">async func check_status() {
+    var task = some_async_task()
+
+    // 做一些其他工作...
+    await asyncs.yield()
+
+    if (asyncs.is_done(task)) {
+        io.print(&quot;任务已完成&quot;)
+    } else {
+        io.print(&quot;任务仍在进行中&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h3 id="get_resultfuture"><code>get_result(future)</code></h3>
+<p>获取已完成 Future 的结果。如果未完成，返回 <code>null</code>。</p>
+<p><strong>参数</strong>:
+- <code>future</code>: 已完成的 Future 对象</p>
+<p><strong>返回</strong>: 异步函数的返回值，或 <code>null</code>（如果未完成）</p>
+<pre><code class="language-leno">async func get_result_demo() {
+    var task = fetch_data()
+
+    // 等待任务完成
+    await task
+
+    // 获取结果
+    var result = asyncs.get_result(task)
+    io.print(&quot;结果: &quot; + result)
+}
+</code></pre>
+<p><strong>注意</strong>: 必须先使用 <code>await</code> 确保 Future 完成，再调用 <code>get_result()</code>。</p>
+<hr>
+<h2 id="_6">并发工具</h2>
+<h3 id="allfutures"><code>all(futures)</code></h3>
+<p>收集多个<strong>已完成</strong> Future 的结果。</p>
+<p><strong>参数</strong>:
+- <code>futures</code> (array): Future 对象数组 —— ⚠ 里面<strong>非 Future 的元素原样带过</strong>（有意用法 ✓）</p>
+<p><strong>返回</strong>: <code>array</code> - 所有 Future 的结果数组</p>
+<blockquote>
+<p><strong>★ 失败与未完成：当场抛错，不给 <code>null</code></strong>（2026-10-12 收口，见 <code>待办与路线图.md</code> §T4）</p>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>某个 Future <strong>还没完成</strong></td>
+<td><strong>抛错</strong>（C10，2026-10-10 起）—— 文案里给两条正确做法 ✓</td>
+</tr>
+<tr>
+<td>某个 Future <strong>失败</strong></td>
+<td><strong>抛错</strong>（C8，2026-10-12 起）—— 不再是 <code>[null]</code> ✗</td>
+</tr>
+<tr>
+<td><strong>1 个</strong>失败</td>
+<td>抛<strong>原错误值</strong>（try-catch 拿到的就是原来那个值/类型 ✓，与 <code>asyncs.run()</code> 的单错分支同口径 ✓）</td>
+</tr>
+<tr>
+<td><strong>多个</strong>失败</td>
+<td>抛<strong>汇总串</strong>：<code>asyncs.all：N 个 Future 失败 ⇒ 第 2 个: …; 第 4 个: …</code> ✓</td>
+</tr>
+<tr>
+<td>想<strong>逐个</strong>处理失败</td>
+<td>改用 <code>is_done(f)</code> + <code>get_result(f)</code> 自己遍历 ✓</td>
+</tr>
+</tbody>
+</table>
+<p>为什么（C8 的由来）：失败的 Future 也是"已完成"（<code>is_done</code> 为 true）、<code>result</code> 是 <code>null</code>
+⇒ 过去 <code>all([失败f])</code> 返回 <code>[null]</code>，<strong>与"成功但值是 null"无法区分</strong> ✗，而错误要拖到
+<code>asyncs.run()</code> 才炸（甚至跑到别处才炸 ✗）—— 典型的静默错值 ✓ 已消灭 ✓</p>
+<p>⚠ <strong><code>all</code> 本身不会等待</strong>（native 调用没有协程挂起能力）：它只收<strong>已完成</strong>的结果 ⇒
+要等齐请先 <code>await</code> 或让 <code>asyncs.run()</code> 跑完（这也是"未完成就抛错"那条存在的原因 ✓）。
+判据：<code>assert/test_asyncs_all_errors.leno</code> ✓</p>
+</blockquote>
+<pre><code class="language-leno">async func fetch_user(id):dict {
+    await asyncs.sleep(100)
+    return {id: id, name: &quot;用户&quot; + id}
+}
+
+async func fetch_all_users() {
+    // 启动多个并发请求
+    var f1 = fetch_user(1)
+    var f2 = fetch_user(2)
+    var f3 = fetch_user(3)
+
+    // 等待所有 Future 完成
+    await f1
+    await f2
+    await f3
+
+    // 收集所有结果
+    var users = asyncs.all([f1, f2, f3])
+
+    for users to user {
+        io.print(user.name)
+    }
+}
+</code></pre>
+<p><strong>使用步骤</strong>:
+1. 启动多个异步任务，获取 Future
+2. 使用 <code>await</code> 等待每个 Future 完成
+3. 使用 <code>all()</code> 收集所有结果</p>
+<blockquote>
+<p>⚠ <strong>2026-10-10 起</strong>：数组里还有<strong>没完成</strong>的 Future ⇒ <code>all()</code> <strong>抛错</strong> ✓（不再静默给 <code>null</code> ✗）。
+原文案：<code>asyncs.all：第 N 个 Future **还没完成** ⇒ 拿到的会是 null，不是你要的值 ✗ …</code>
+（给出两种正确做法：先 <code>await</code> / 先 <code>asyncs.run()</code> 跑完；或改用
+<code>asyncs.is_done(f)</code> + <code>asyncs.get_result(f)</code> 逐个查 ✓）
+<strong>为什么改</strong>：原来那个 <code>null</code> 会被读成"协程没跑"✗，而真因是"没等它"✓ ——
+静默错值比报错难查得多 ✓。回归钉在 <code>assert/test_semantics_pins.leno</code> 的 <strong>P30</strong> ✓。</p>
+</blockquote>
+<hr>
+<h3 id="timeoutfuture-ms"><code>timeout(future, ms)</code></h3>
+<p>为 Future 设置超时。</p>
+<p><strong>参数</strong>:
+- <code>future</code>: 要等待的 Future
+- <code>ms</code> (int): 超时时间（毫秒）</p>
+<p><strong>返回</strong>: 
+- 成功: Future 的结果
+- 超时: <code>null</code></p>
+<pre><code class="language-leno">async func slow_operation():string {
+    await asyncs.sleep(2000)  // 2秒
+    return &quot;完成&quot;
+}
+
+async func with_timeout() {
+    var task = slow_operation()
+
+    // 设置1秒超时
+    var result = await asyncs.timeout(task, 1000)
+
+    if (result != null) {
+        io.print(&quot;任务成功: &quot; + result)
+    } else {
+        io.print(&quot;任务超时&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h2 id="_7">示例代码</h2>
+<h3 id="1">1. 基础异步任务</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+// 模拟网络请求
+async func fetch_url(string url):string {
+    io.print(&quot;请求: &quot; + url)
+    await asyncs.sleep(200)  // 模拟网络延迟
+    return &quot;响应: &quot; + url
+}
+
+main() {
+    // 顺序执行（会阻塞等待）
+    var result1 = fetch_url(&quot;api/users&quot;)
+    var result2 = fetch_url(&quot;api/posts&quot;)
+
+    io.print(await result1)
+    io.print(await result2)
+
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h3 id="2">2. 并发请求</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+async func fetch_user(int id):dict {
+    await asyncs.sleep(100)
+    return {id: id, name: &quot;用户&quot; + id}
+}
+
+async func fetch_concurrent() {
+    io.print(&quot;开始并发请求...&quot;)
+
+    // 同时启动多个请求
+    var f1 = fetch_user(1)
+    var f2 = fetch_user(2)
+    var f3 = fetch_user(3)
+
+    // 等待所有请求完成
+    await f1
+    await f2
+    await f3
+
+    // 收集结果
+    var users = asyncs.all([f1, f2, f3])
+
+    io.print(&quot;获取到 &quot; + users.len() + &quot; 个用户&quot;)
+    for users to user {
+        io.print(&quot;  - &quot; + user.name)
+    }
+}
+
+main() {
+    fetch_concurrent()
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h3 id="25-2026-10-20">2.5 并发上限与超时（2026-10-20 实战修正）</h3>
+<p><strong>并发上限</strong>：异步 I/O 表已从"固定 64 项"改为<strong>动态扩容</strong>；每轮 <code>select</code> 最多装
+<code>FD_SETSIZE</code>（已放宽到 <strong>1024</strong>）个 socket，超出的用<strong>环形游标</strong>排到下一轮
+（不会因为前 1024 个长期不可读而饿死后面的）。
+⇒ 单进程同时挂起的 <code>arecv</code>/<code>aaccept</code> 实测 <strong>70 个并发正常</strong>（<code>assert\test_async_io_limit.leno</code>）。</p>
+<p><strong>异步 connect</strong>：<code>sockets.aconnect(host, port)</code>（2026-10-20 起）—— 非阻塞 connect，
+在 async 函数里 <code>await</code> 得到 <code>Socket|null</code>。<code>sockets.connect</code> 是<strong>阻塞</strong>的，在协程里会卡住
+整个事件循环，高并发客户端请用它：</p>
+<pre><code class="language-leno">var raw = await sockets.aconnect(&quot;127.0.0.1&quot;, 8080)
+if raw != null {
+    var c = raw as Socket        // ⚠ 返回的 Future 未标注元素类型 ⇒ await 出来是 any
+    c.send(&quot;hello&quot;)
+    var r = await c.arecv(1024)
+}
+</code></pre>
+<p><strong>全局超时</strong>：<code>asyncs.run_for(ms) -&gt; bool</code>（2026-10-20 起）—— <code>run()</code> 会等<strong>所有</strong>协程结束，
+一个挂在永不完成 Future 上的协程就能让它永不返回。<code>run_for</code> 最多跑 <code>ms</code> 毫秒，
+超时返回 <code>false</code>，协程 / 定时器 / IO 状态<strong>全部保留</strong>（可再次 run），<code>ms &lt;= 0</code> 等价 <code>run()</code>。</p>
+<p><strong><code>timeout(future, ms)</code> 会取消底层 IO</strong>：超时后不仅 Future 变成 <code>null</code>，
+<code>sockets</code> 里对应的 <code>arecv</code>/<code>aaccept</code> 请求也会被取消并释放缓冲区。
+（修复前只是"假装完成"，请求还挂在事件循环里 ⇒ <code>run()</code> 永不返回，整个程序卡死。）</p>
+<p><strong>两条实战纪律</strong>：</p>
+<ol>
+<li><code>async func</code> 的函数体要等 <code>asyncs.run()</code> 才开始执行 ⇒ 想在主线程里用到它的结果
+   （比如"先 listen 再起客户端"），<strong>监听器要在主线程同步建好</strong>，再作为参数传进协程。
+   在主线程里 <code>ch.receive()</code> 等协程发信号会<strong>先死锁</strong>。</li>
+<li>协程里调用<strong>阻塞 API</strong>（<code>sockets.connect</code> / <code>sockets.recv</code> / 文件 IO）会卡住整个事件循环
+   —— 网络收发要么用 <code>aaccept</code>/<code>arecv</code>，要么放线程池里做。</li>
+</ol>
+<h3 id="3">3. 超时处理</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+async func unreliable_task():string {
+    // 随机延迟 50-300ms
+    await asyncs.sleep(200)
+    return &quot;任务完成&quot;
+}
+
+async func safe_task() {
+    var task = unreliable_task()
+
+    // 设置100ms超时
+    var result = await asyncs.timeout(task, 100)
+
+    if (result == null) {
+        io.print(&quot;操作超时，使用默认值&quot;)
+        result = &quot;默认值&quot;
+    }
+
+    return result
+}
+
+main() {
+    safe_task()
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h3 id="4">4. 协程间协作</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+var shared_counter = 0
+
+async func increment(string name) {
+    for 0:3 to i {
+        shared_counter = shared_counter + 1
+        io.print(name + &quot; 增加到: &quot; + shared_counter)
+        await asyncs.yield()  // 让出执行权
+    }
+}
+
+main() {
+    // 两个协程同时操作共享数据
+    increment(&quot;协程A&quot;)
+    increment(&quot;协程B&quot;)
+
+    asyncs.run()
+
+    io.print(&quot;最终结果: &quot; + shared_counter)
+}
+</code></pre>
+<hr>
+<h3 id="5">5. 异步递归</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+// 异步递归遍历
+async func async_walk(var items, int depth) {
+    for items to item {
+        var indent = &quot;  &quot;.rep(depth)
+        io.print(indent + item.name)
+
+        if (item.children.len() &gt; 0) {
+            await asyncs.yield()
+            await async_walk(item.children, depth + 1)
+        }
+    }
+}
+
+main() {
+    var tree = [
+        {name: &quot;A&quot;, children: [
+            {name: &quot;A1&quot;, children: []},
+            {name: &quot;A2&quot;, children: [
+                {name: &quot;A2-1&quot;, children: []}
+            ]}
+        ]},
+        {name: &quot;B&quot;, children: [
+            {name: &quot;B1&quot;, children: []}
+        ]}
+    ]
+
+    async_walk(tree, 0)
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h3 id="6">6. 批量处理带进度</h3>
+<pre><code class="language-leno">import asyncs
+import io
+
+async func process_item(var item, int index):string {
+    // 模拟处理
+    await asyncs.sleep(50)
+    return &quot;已处理: &quot; + item
+}
+
+async func batch_process(var items) {
+    var total = items.len()
+    var futures = []
+
+    io.print(&quot;开始批量处理 &quot; + total + &quot; 项...&quot;)
+
+    // 启动所有任务
+    for items to item {
+        futures.add(process_item(item, 0))
+    }
+
+    // 等待所有任务完成
+    for futures to f {
+        await f
+    }
+
+    // 收集结果
+    var results = asyncs.all(futures)
+
+    io.print(&quot;完成! 处理了 &quot; + results.len() + &quot; 项&quot;)
+    return results
+}
+
+main() {
+    var data = [&quot;任务1&quot;, &quot;任务2&quot;, &quot;任务3&quot;, &quot;任务4&quot;, &quot;任务5&quot;]
+    batch_process(data)
+    asyncs.run()
+}
+</code></pre>
+<hr>
+<h2 id="_8">注意事项</h2>
+<ol>
+<li>
+<p><strong>必须在 main 中调用 <code>run()</code></strong>
+   - 创建的所有协程都等待 <code>run()</code> 启动
+   - <code>run()</code> 会阻塞直到所有协程完成</p>
+</li>
+<li>
+<p><strong><code>await</code> 只能在 <code>async func</code> 中使用</strong>
+   ```leno
+   async func valid() {
+       await asyncs.sleep(100)  // ✅ 正确
+   }</p>
+</li>
+</ol>
+<p>func invalid() {
+       await asyncs.sleep(100)  // ❌ 错误，普通函数不能用 await
+   }
+   ```</p>
+<ol start="3">
+<li>
+<p><strong>Future 必须先 await 再获取结果</strong>
+   <code>leno
+   var f = async_task()
+   await f                    // 必须先等待
+   var result = asyncs.all([f])  // 然后才能收集结果</code></p>
+</li>
+<li>
+<p><strong>协程调度</strong>
+   - 协程是协作式调度，不会抢占
+   - 长时间运行的任务应主动 <code>yield()</code>
+   - <code>sleep()</code> 会自动让出执行权</p>
+</li>
+<li>
+<p><strong>异常处理</strong>
+   - 协程内异常有三种传播路径（见下方「异常传播路径」）
+   - 未被捕获的异常会被 <code>asyncs.run()</code> 收集并抛出</p>
+</li>
+<li>
+<p><strong>内存管理</strong>
+   - Future 对象会被自动回收
+   - 避免创建过多未完成的协程</p>
+</li>
+<li>
+<p><strong>与同步代码混用</strong>
+   - <code>asyncs.run()</code> 是同步阻塞的
+   - 可以在普通函数中调用 <code>run()</code></p>
+</li>
+</ol>
+<hr>
+<h2 id="_9">边界行为定义</h2>
+<h3 id="async">async 函数的返回值类型</h3>
+<p><code>async func</code> 调用后返回一个 <strong>Future 对象</strong>，不是直接返回函数结果：</p>
+<pre><code class="language-leno">async func compute():int {
+    await asyncs.sleep(100)
+    return 42
+}
+
+var f = compute()   // f 是 Future，不是 42
+print(type(f))      // &quot;object&quot;（Future 对象）
+
+var result = await f  // await 获取实际结果
+print(result)         // 42
+</code></pre>
+<ul>
+<li><code>async func</code> 的返回类型注解（如 <code>:int</code>）描述的是 Future 完成后的值类型</li>
+<li>不使用 <code>await</code> 时，Future 不会自动执行——它只是被注册到事件循环等待调度</li>
+</ul>
+<h3 id="await">不 await 时的行为</h3>
+<p>如果创建了 Future 但不 <code>await</code>，协程仍会在 <code>asyncs.run()</code> 时执行，但结果会被丢弃：</p>
+<pre><code class="language-leno">async func task() {
+    io.print(&quot;执行了&quot;)
+    return 42
+}
+
+main() {
+    task()          // 创建 Future，不 await
+    asyncs.run()    // 协程仍会执行，输出 &quot;执行了&quot;
+    // 但返回值 42 无法获取
+}
+</code></pre>
+<ul>
+<li>不 <code>await</code> 不会阻止协程执行，只是无法获取结果</li>
+<li>如果协程有副作用（如修改全局变量），即使不 <code>await</code> 也会生效</li>
+</ul>
+<h3 id="_10">异常传播路径</h3>
+<p>协程异常有三种传播路径，与线程模块的异常传播设计对齐：</p>
+<h4 id="1-try-catch">路径1：协程内部 try-catch 捕获</h4>
+<p>协程内使用 <code>try-catch</code> 直接捕获异常，最安全的方式：</p>
+<pre><code class="language-leno">async func safe_task() {
+    try {
+        await asyncs.sleep(100)
+        throw &quot;错误&quot;
+    } catch e {
+        io.print(&quot;协程内捕获: &quot; + e)
+        return null  // 返回默认值
+    }
+}
+</code></pre>
+<h4 id="2await-future">路径2：await 失败的 Future 时传播</h4>
+<p>当被 await 的协程抛出异常时，异常通过 Future 传播到 await 方：</p>
+<pre><code class="language-leno">async func risky() {
+    throw &quot;子协程出错&quot;
+}
+
+async func caller() {
+    try {
+        var result = await risky()  // await 检测到 Future 错误，抛出异常
+    } catch e {
+        io.print(&quot;await 捕获: &quot; + e)  // 输出: await 捕获: 子协程出错
+    }
+}
+</code></pre>
+<ul>
+<li>异常通过 <code>Future.error</code> 传播，<code>await</code> 检测到错误时在当前协程抛出异常</li>
+<li>已通过 await 传播的异常不会被 <code>asyncs.run()</code> 重复收集</li>
+<li>★ <strong>时序也要成立</strong>（2026-11-16 修）：协程如果是在"没人等的窗口"里失败的
+  （失败那一刻 <code>Future.waiter</code> 还是 NULL），错误会<strong>立刻</strong>进 <code>asyncs.run()</code> 的待抛列表；
+  之后调用方才 <code>await</code> 这个已完成的 Future ⇒ 那条错误已被消费，现在会从列表里<strong>移除</strong>
+  ⇒ <code>run()</code> 结尾不再重复抛同一错误。<code>asyncs.all</code> 抛出的错误同样会被消费。
+  （修前实测：<code>var bad = boom(); await ok; try { await bad } catch { }</code> 之后 <code>run()</code>
+  仍抛一次 <code>炸</code> ✗）</li>
+</ul>
+<h4 id="3asyncsrun">路径3：asyncs.run() 收集未捕获异常</h4>
+<p>没有被任何 try-catch 或 await 捕获的异常，会被 <code>asyncs.run()</code> 收集并在主线程抛出：</p>
+<pre><code class="language-leno">async func risky() {
+    throw &quot;未捕获异常&quot;
+}
+
+main() {
+    risky()          // 创建协程，不 await
+    try {
+        asyncs.run()  // 协程失败，run() 收集异常并抛出
+    } catch e {
+        io.print(&quot;run() 捕获: &quot; + e)  // 输出: run() 捕获: 未捕获异常
+    }
+}
+</code></pre>
+<ul>
+<li>单个协程失败：<code>run()</code> 抛出该协程的异常</li>
+<li>多个协程失败：<code>run()</code> 抛出汇总异常，格式为 <code>"N 个协程失败: 错误1; 错误2; ..."</code></li>
+<li>可以用 <code>try-catch</code> 包裹 <code>asyncs.run()</code> 来处理</li>
+</ul>
+<h4 id="_11">异常传播优先级</h4>
+<pre><code>协程内 try-catch &gt; await 传播 &gt; asyncs.run() 收集
+</code></pre>
+<ul>
+<li>如果协程内部有 try-catch，异常在内部处理，不传播</li>
+<li>如果协程被 await，异常通过 Future 传播给等待者，<code>run()</code> 不重复收集</li>
+<li>如果异常未被任何方式捕获，<code>run()</code> 统一收集并抛出</li>
+</ul>
+<h3 id="asyncsrun">asyncs.run() 的事件循环语义</h3>
+<p><code>asyncs.run()</code> 的行为：</p>
+<ul>
+<li><strong>单次运行</strong>：调用后阻塞，直到以下条件全部满足后返回：
+  1. 就绪队列为空（无待执行的协程）
+  2. 定时器队列为空（无待触发的定时器）
+  3. 无待处理的异步 I/O 请求（无 <code>arecv()</code>/<code>aaccept()</code> 在等待）</li>
+<li><strong>不能嵌套</strong>：在协程内部再次调用 <code>asyncs.run()</code> / <code>run_for()</code> ⇒ <strong>抛错</strong>
+  （2026-11-16 起拦下；此前是崩溃或错位报错，见上方的「注意」）</li>
+<li><strong>阻塞主线程</strong>：<code>run()</code> 返回前，主线程代码不会继续执行</li>
+</ul>
+<pre><code class="language-leno">main() {
+    task1()   // 注册协程
+    task2()   // 注册协程
+
+    asyncs.run()  // 阻塞，直到 task1 和 task2 都完成
+
+    io.print(&quot;所有协程完成&quot;)  // run() 返回后才执行
+}
+</code></pre>
+<p>事件循环的调度顺序：
+1. 检查并处理到期的定时器（将协程加入就绪队列）
+2. 从就绪队列取出协程执行，直到协程挂起（<code>await</code>）或完成
+3. 如果没有就绪协程但有定时器或待处理的异步 I/O，通过 <code>select()</code> 等待 I/O 就绪或定时器触发
+4. 就绪队列、定时器队列都为空且无待处理异步 I/O 时，退出循环</p>
+<blockquote>
+<p><strong>说明</strong>: 使用 <code>sock.arecv()</code> 或 <code>sock.aaccept()</code> 等异步 I/O 时，无需额外的"保活"协程。事件循环会自动检测待处理的 I/O 请求并保持活跃直到完成。</p>
+</blockquote>
+<h3 id="async-threads">async 与 threads 的交互</h3>
+<p><code>async</code> 和 <code>threads</code> 是两套<strong>各自独立的调度器</strong>，但可以<strong>分工协作</strong>：协程负责"等"，
+线程负责"算"，中间用 <code>Channel</code> 交接。</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>async 协程</th>
+<th>threads 线程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>执行模型</td>
+<td>协作式调度，单线程</td>
+<td>抢占式调度，OS 线程</td>
+</tr>
+<tr>
+<td>内存模型</td>
+<td>共享 VM 内存</td>
+<td>隔离 VM，Channel 通信</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>I/O 并发、异步等待</td>
+<td>CPU 并行、真正多线程</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>子线程里不能用 <code>async</code>/<code>await</code></strong>：<code>current_exec_vm</code> 为空，<code>asyncs.run()</code> 会直接报错
+  （「事件循环是每进程一个」）——这是硬约束。</li>
+<li><strong>协程里可以 <code>threads.start()</code></strong>（实测可用），但线程的<strong>阻塞操作</strong>（<code>join()</code> / 空的
+  <code>receive()</code>）会卡住整条事件循环 ⇒ 用 <code>try_receive()</code> + <code>await asyncs.sleep(1)</code> 轮询，
+  拿到结果再 <code>join()</code>：</li>
+</ul>
+<pre><code class="language-leno">func worker(any ch, int n) {
+    threads.sleep(30)                       // 模拟 CPU 活
+    if ch is Channel { ch.send(n * 2) }
+}
+
+async func await_channel(Channel ch) {
+    var got = null
+    while got == null {
+        got = ch.try_receive()              // 不阻塞
+        if got == null { await asyncs.sleep(1) }
+    }
+    return got
+}
+
+async func task(int n): int {
+    var ch = threads.channel(1)
+    var t = threads.start(worker, ch, n)
+    var v = await await_channel(ch)
+    t.join()                                 // 结果已到 ⇒ 立即返回
+    return _int(v)
+}
+</code></pre>
+<p>实测：10 个协程各开一个 30ms 的线程，总耗时 37ms（真并行）。轮询粒度 1ms，
+不适合微秒级同步。
+- 网络 I/O → 用 <code>socket.aconnect()</code> / <code>socket.arecv()</code> / <code>socket.aaccept()</code> 配合 await，
+  见 <a href="module_sockets.html#异步-io-arecv--aaccept">sockets 模块文档</a> 与
+  <a href="../../examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a>。</p>
+<hr>
+<h2 id="_12">性能提示</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O 操作</td>
+<td>使用 <code>sleep()</code> 模拟，适合网络/文件操作</td>
+</tr>
+<tr>
+<td>CPU 密集型</td>
+<td>分割任务，定期 <code>yield()</code></td>
+</tr>
+<tr>
+<td>大量并发</td>
+<td>控制并发数量，避免资源耗尽</td>
+</tr>
+<tr>
+<td>超时控制</td>
+<td>使用 <code>timeout()</code> 防止无限等待</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2026-11-14toolsasync_benchleno">实测成本（2026-11-14，本机；复测：<code>tools\async_bench.leno</code>）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同步函数调用（基线）</td>
+<td>~22 ns/次</td>
+</tr>
+<tr>
+<td>串行 <code>await</code>（含协程/Future 创建 + 调度 + 恢复）</td>
+<td><strong>~400 ns/次</strong></td>
+</tr>
+<tr>
+<td><code>yield()</code> 让出（500~2000 个协程同时跑）</td>
+<td><strong>~210~240 ns/次</strong></td>
+</tr>
+<tr>
+<td><code>sleep(1)</code> × 2000 个协程</td>
+<td><strong>~2.0 ms 总耗时</strong>（线性：500 个 ≈ 1.2 ms）</td>
+</tr>
+<tr>
+<td><code>asyncs.all()</code> 收集 2000 个 Future</td>
+<td>~0.15 ms</td>
+</tr>
+</tbody>
+</table>
+<p>结论：<code>await</code> 的固定成本约 <strong>0.4 µs</strong> ⇒ 一行一 await 的细粒度写法（一次 await 只做几十 ns 的活）
+不划算，批量/分块再 await 更合适；而并发量本身已经<strong>不随协程数二次增长</strong>（见下）。</p>
+<h3 id="2026-11-14">事件循环的数据结构（2026-11-14 改）</h3>
+<table>
+<thead>
+<tr>
+<th>结构</th>
+<th>原来</th>
+<th>现在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>就绪队列</td>
+<td>数组：入队线性扫去重 + 出队 <code>memmove</code> 全表 ⇒ N 个协程 O(N²)</td>
+<td><strong>环形缓冲 + 每条协程一个 <code>in_ready</code> 标志</strong> ⇒ 入队/出队/去重全 O(1)</td>
+</tr>
+<tr>
+<td>定时器</td>
+<td>有序数组：插入/到期都要搬数组 ⇒ O(N)</td>
+<td><strong>二叉最小堆</strong>（按 <code>(wake_time, seq)</code> 比较，同到期时间保 FIFO）⇒ O(log N)</td>
+</tr>
+</tbody>
+</table>
+<p>实测（同机、改前 → 改后）：2000 协程 ×100 次让出 <strong>854 ms → 45 ms</strong>（单次 4269 → 226 ns）、
+2000 个 <code>sleep(1)</code> <strong>13.5 ms → 2.0 ms</strong>、<code>all()</code> ×2000 <strong>3.56 ms → 0.13 ms</strong>。
+回归用例：<code>assert\test_async_fanout.leno</code>（1500 协程让出 + 1500 定时器，覆盖超过初始容量
+<code>MAX_COROUTINES/MAX_TIMERS = 1024</code> 后的扩容路径）。</p>
+<hr>
+<h2 id="2026-11-14_1">实战：并发网络客户端（2026-11-14）</h2>
+<p><a href="../../examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a> 演示了
+async 最有价值的用法：<strong>一个线程、一个事件循环</strong>里同时跑「1 个 <code>aaccept</code> 协程 + N 个
+连接处理协程 + N 个 <code>aconnect</code> 请求协程」。每个连接 99% 的时间在等，所以不需要 N 个线程。</p>
+<p>实测（Windows 10，本机回环）：</p>
+<table>
+<thead>
+<tr>
+<th>并发连接</th>
+<th>每个请求"处理"</th>
+<th>实际耗时</th>
+<th>逐个等</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>150</td>
+<td>30ms</td>
+<td><strong>65ms</strong></td>
+<td>4500ms</td>
+</tr>
+</tbody>
+</table>
+<p>哨兵用例：<code>assert/test_async_sockets.leno</code> —— 40 路 <code>aconnect</code> 扇出，并断言"总耗时远小于
+串行下界"（正确性用例全绿时，只有它能发现"被悄悄串行化"的退化）。</p>
+<p><strong>三个真实上限</strong>（是边界，不是 bug —— 文档别再按"上千长连接"宣传）：</p>
+<table>
+<thead>
+<tr>
+<th>上限</th>
+<th>数值 / 原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单轮 <code>select</code> 的 socket 数</td>
+<td><code>FD_SETSIZE = 1024</code>；更多靠 <code>g_async_scan_start</code> 游标轮转，正确但延迟上升。换 IOCP/epoll 见 <code>待办与路线图.md</code>（触发条件：常驻 &gt;2000 连接 / 挂起 IO 经常 &gt;1024）</td>
+</tr>
+<tr>
+<td>发送</td>
+<td>只有阻塞的 <code>sock.send</code>（无 <code>asend</code>）：非阻塞 socket 上会自旋重试（上限 10 万次）⇒ 大 body 上传放线程，别放协程</td>
+</tr>
+<tr>
+<td>本机回环握手</td>
+<td>Windows 的 listen 背压约 200：同一瞬间 &gt;200 个 SYN 会触发 TCP 重传（+~500ms）。实测 n=200 → 19ms、n=205 → 519ms（其中 5 个 connect 用了 508ms）——这是 TCP 行为，与 async 无关</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="api">完整 API 速查表</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>参数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sleep(ms)</code></td>
+<td>毫秒数</td>
+<td>null</td>
+<td>暂停协程</td>
+</tr>
+<tr>
+<td><code>yield()</code></td>
+<td>无</td>
+<td>null</td>
+<td>主动让出</td>
+</tr>
+<tr>
+<td><code>run()</code></td>
+<td>无</td>
+<td>null</td>
+<td>启动事件循环</td>
+</tr>
+<tr>
+<td><code>run_for(ms)</code></td>
+<td>毫秒数</td>
+<td>bool</td>
+<td>事件循环最多跑 ms：true=全部完成，false=超时（状态保留）</td>
+</tr>
+<tr>
+<td><code>current()</code></td>
+<td>无</td>
+<td>int</td>
+<td>获取协程 ID</td>
+</tr>
+<tr>
+<td><code>is_done(f)</code></td>
+<td>Future</td>
+<td>bool</td>
+<td>检查是否完成</td>
+</tr>
+<tr>
+<td><code>get_result(f)</code></td>
+<td>Future</td>
+<td>any</td>
+<td>获取结果</td>
+</tr>
+<tr>
+<td><code>all(fs)</code></td>
+<td>Future[]</td>
+<td>any[]</td>
+<td>收集结果</td>
+</tr>
+<tr>
+<td><code>timeout(f, ms)</code></td>
+<td>Future, int</td>
+<td>any</td>
+<td>超时等待</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>文档版本: 1.2</em><br>
+<em>最后更新: 2026-11-14</em></p></main>
+</div>
+<nav class="pager"><a href="module_sys.html">← 上一篇</a><a href="module_ffi_api.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

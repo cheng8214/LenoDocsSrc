@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoHtml 开发问题记录 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="LenoHtml_开发问题记录.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">六、排查记录（已完结，留档）</span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">概述</a></li><li><a href="#bug-1">Bug 1: 模块级全局变量在函数内访问不稳定（严重）✅ 已修复</a></li><li><a href="#bug-2-var">Bug 2: 函数参数不能使用 var 类型</a></li><li><a href="#bug-3-dict-any">Bug 3: Dict 索引返回 any 类型，不能直接赋值给具体类型变量</a></li><li><a href="#bug-4-var-dict-dictstring-string">Bug 4: var 声明的 Dict 字面量类型推断为 Dict[string, string]，无法存储异构类型</a></li><li><a href="#bug-5-array-arrayany">Bug 5: Array 返回类型与 Array[any] 不兼容</a></li><li><a href="#bug-6-for-0-to-n-to-i">Bug 6: for 0 to N to i 语法不被支持</a></li><li><a href="#bug-7">Bug 7: ! 运算符不支持逻辑非</a></li><li><a href="#bug-8-type-name-name-type">Bug 8: 函数参数声明顺序是 type name 而非 name: type</a></li><li><a href="#bug-9-bug-1">Bug 9: 字符串不能用 &gt;= 比较单字符 ✅ 已修复（Bug 1 副作用）</a></li><li><a href="#_2">测试结果</a></li><ul class="lv3"><li><a href="#bug">已知小问题（逻辑层面，非语言 bug）</a></li></ul><li><a href="#_3">总结</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="lenohtml">LenoHtml 开发问题记录</h1>
+<blockquote>
+<p>⚠ <strong>术语过时（2026-10-02 注）</strong>：文中"导致栈下溢（<code>sp &lt; stack_base</code>）"、<code>OP_SET_MODULE_VAR</code>、
+<code>OP_POP</code> 一类是<strong>栈式 VM</strong> 的表述；寄存器式改造（<code>0f0cf52</code>）后，操作数栈记账已不再是这套模型。
+Bug 结论（已修）与"其余为设计限制"的判断仍有效。</p>
+</blockquote>
+<h2 id="_1">概述</h2>
+<p>在开发纯 Leno 实现的 HTML 解析器（<code>leno_module/LenoWeb/lib/web_html.leno</code>）过程中，记录了以下 Leno 语言层面的 bug 和限制。</p>
+<p><strong>2026-08-15 更新</strong>: 经过逐条验证，Bug 1 已修复，Bug 9 确认为 Bug 1 的副作用（已修复），其余均为设计限制而非 bug。LenoHtml 全部 18 个测试通过。</p>
+<hr>
+<h2 id="bug-1">Bug 1: 模块级全局变量在函数内访问不稳定（严重）✅ 已修复</h2>
+<p><strong>严重程度</strong>: 高
+<strong>类型</strong>: 运行时崩溃
+<strong>状态</strong>: ✅ 已修复（2026-08-15）</p>
+<p><strong>描述</strong>: 模块级 <code>var</code> 全局变量（如 <code>var _g_pos = 0</code>、<code>var _g_html = ""</code>）在模块函数中被赋值后，跨函数调用时值不稳定，导致程序崩溃。</p>
+<p><strong>根因</strong>: 编译器在 <code>gen_assign</code> 和 <code>gen_compound_assign</code> 中为 <code>SYM_MODULE</code> 赋值生成了多余的 <code>OP_POP</code> 指令。<code>OP_SET_MODULE_VAR</code> 本身不修改栈（它只是设置模块变量），但后面的 <code>OP_POP</code> 会弹出一个本不存在的值，导致栈下溢（<code>sp &lt; stack_base</code>）。栈下溢后，后续操作读取到错误的操作数（表现为 <code>null</code> 类型值），触发"操作数必须是数字或字符串"等错误。</p>
+<p><strong>修复</strong>: 移除 <code>src/codegen/codegen_stmt.c</code> 中 <code>gen_assign</code> 和 <code>gen_compound_assign</code> 对 <code>SYM_MODULE</code> 赋值时的 3 处多余 <code>emit_byte(gen, OP_POP, ...)</code>。</p>
+<p><strong>验证</strong>: <code>assert/test_module_var_assign_caller.leno</code> 断言测试通过，LenoHtml 全部 18 个测试通过。</p>
+<hr>
+<h2 id="bug-2-var">Bug 2: 函数参数不能使用 <code>var</code> 类型</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: 函数参数声明为 <code>var</code> 类型时编译报错："参数 'xxx' 不能使用 var 类型，请改用 any"。</p>
+<p><strong>说明</strong>: 这是设计决策。<code>var</code> 用于局部类型推断，函数参数是外部传入的，类型由调用方决定，不适合用 <code>var</code>。用 <code>any</code> 替代即可。</p>
+<hr>
+<h2 id="bug-3-dict-any">Bug 3: Dict 索引返回 <code>any</code> 类型，不能直接赋值给具体类型变量</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: <code>Dict</code> 索引访问（如 <code>dict["key"]</code>）返回 <code>any</code> 类型，不能直接赋值给 <code>int</code>、<code>string</code> 等具体类型变量。</p>
+<p><strong>说明</strong>: Dict 的值可以是任意类型，索引访问返回 <code>any</code> 是合理的类型安全设计。用 <code>is</code> 类型收窄后即可使用。</p>
+<hr>
+<h2 id="bug-4-var-dict-dictstring-string">Bug 4: <code>var</code> 声明的 Dict 字面量类型推断为 <code>Dict[string, string]</code>，无法存储异构类型</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: <code>Dict r = {tag: "", classes: [], hasAttr: false}</code> 这种异构 Dict 字面量会报"字典值类型不匹配"。</p>
+<p><strong>说明</strong>: 显式声明 <code>Dict</code> 类型时，编译器会推断值类型为第一个值的类型。用 <code>var</code> 声明可自动推断为 <code>Dict[string, any]</code>。</p>
+<hr>
+<h2 id="bug-5-array-arrayany">Bug 5: <code>Array</code> 返回类型与 <code>Array[any]</code> 不兼容</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: 函数返回类型声明为 <code>Array</code>，但返回 <code>var current = [root]</code>（被推断为 <code>Array[any]</code>）时报"返回类型不匹配"。</p>
+<p><strong>说明</strong>: Leno 的数组类型是不变的（invariant），<code>Array[any]</code> 不能赋给 <code>Array</code>。返回类型改为 <code>any</code> 即可。</p>
+<hr>
+<h2 id="bug-6-for-0-to-n-to-i">Bug 6: <code>for 0 to N to i</code> 语法不被支持</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: Leno 的数字 for 循环语法是 <code>for 0:N to i</code>（用冒号），不是 <code>for 0 to N to i</code>。</p>
+<p><strong>说明</strong>: 这是语法设计选择，<code>for start:end to var</code> 更简洁。</p>
+<hr>
+<h2 id="bug-7">Bug 7: <code>!</code> 运算符不支持逻辑非</h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: Leno 不支持 <code>!</code> 作为逻辑非运算符，使用 <code>not</code> 关键字。</p>
+<p><strong>说明</strong>: <code>not</code> 关键字可读性更好，且避免了 <code>!</code> 与 <code>!=</code> 的歧义。</p>
+<hr>
+<h2 id="bug-8-type-name-name-type">Bug 8: 函数参数声明顺序是 <code>type name</code> 而非 <code>name: type</code></h2>
+<p><strong>严重程度</strong>: 低
+<strong>类型</strong>: 设计限制
+<strong>状态</strong>: ⚠️ 设计限制（非 bug）</p>
+<p><strong>描述</strong>: Leno 函数参数声明使用 <code>type name</code> 顺序（类似 C/Go），不是 <code>name: type</code>（类似 Python/Kotlin）。</p>
+<p><strong>说明</strong>: 这是语法风格选择，与 C/Go/Rust 一致。</p>
+<hr>
+<h2 id="bug-9-bug-1">Bug 9: 字符串不能用 <code>&gt;=</code> 比较单字符 ✅ 已修复（Bug 1 副作用）</h2>
+<p><strong>严重程度</strong>: —
+<strong>类型</strong>: 非独立 bug
+<strong>状态</strong>: ✅ 已修复（Bug 1 的副作用）</p>
+<p><strong>描述</strong>: 在模块函数中，对字符串做 <code>c &gt;= "a"</code> 这样的比较时，可能触发"操作数必须是数字或字符串"错误。</p>
+<p><strong>根因</strong>: 这不是字符串比较本身的 bug，而是 Bug 1（模块变量赋值栈下溢）的副作用。栈下溢后，后续操作的栈内容错乱，导致 <code>&gt;=</code> 运算读到的操作数不是字符串而是 <code>null</code>，从而触发类型错误。修复 Bug 1 后，字符串比较完全正常。</p>
+<p><strong>验证</strong>: <code>examples/测试/repro_global_var/test_bug9_strcompare.leno</code> 验证通过，模块函数中 <code>c &gt;= "a" and c &lt;= "z"</code> 正常工作。</p>
+<hr>
+<h2 id="_2">测试结果</h2>
+<p>全部 18 个测试用例通过（<code>html_test.leno</code>），覆盖：
+- 基本解析、多层嵌套
+- 标签选择器、ID 选择器、class 选择器、组合选择器
+- 后代选择器、直接子选择器
+- 属性选择器
+- allText、getLinks、children、attr
+- 自闭标签、注释、script/style 标签
+- 多 class 选择器、selectOne 返回 null</p>
+<h3 id="bug">已知小问题（逻辑层面，非语言 bug）</h3>
+<ol>
+<li><strong>allText 重复收集</strong>: <code>allText</code> 同时收集了父节点的 <code>text</code> 字段和文本子节点的 <code>text</code>，导致重复。应只收集子节点的 text 或只收集父节点的 text。</li>
+<li><strong>void 标签属性解析</strong>: <code>&lt;img src='pic.jpg' alt='picture'&gt;</code> 的属性可能未正确解析（因为 void 标签直接返回，没有继续解析后续属性）。</li>
+</ol>
+<hr>
+<h2 id="_3">总结</h2>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>严重程度</th>
+<th>类型</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模块级全局变量跨函数不稳定</td>
+<td>高</td>
+<td>运行时崩溃</td>
+<td>✅ 已修复</td>
+</tr>
+<tr>
+<td>函数参数不能用 var</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 any</td>
+</tr>
+<tr>
+<td>Dict 索引返回 any</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 is 收窄</td>
+</tr>
+<tr>
+<td>Dict 字面量异构类型推断</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 var 声明</td>
+</tr>
+<tr>
+<td>Array 返回类型不兼容</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 返回 any</td>
+</tr>
+<tr>
+<td>for 循环语法</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 0:N 语法</td>
+</tr>
+<tr>
+<td>! 不支持</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 not</td>
+</tr>
+<tr>
+<td>参数顺序</td>
+<td>低</td>
+<td>设计限制</td>
+<td>⚠️ 用 type name</td>
+</tr>
+<tr>
+<td>字符串比较</td>
+<td>—</td>
+<td>Bug 1 副作用</td>
+<td>✅ 随 Bug 1 修复</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="LenoNet开发问题记录.html">← 上一篇</a><a href="内联器崩溃排查记录.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

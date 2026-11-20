@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>区间口径约定（下标 / 整数一律闭区间） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="区间口径约定.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">一、指南（面向 <code>leno</code> 使用者）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_2">一、规则</a></li><ul class="lv3"><li><a href="#_3">负下标</a></li><li><a href="#_4">不是"区间"的长度参数（不参与本条规则）</a></li><li><a href="#_5">浮点随机：表述为闭区间</a></li></ul><li><a href="#2026-11-20-breaking">二、2026-11-20 的收尾（breaking）</a></li><ul class="lv3"><li><a href="#1-regexmatchend-regexmatchlast">1. RegexMatch.end（半开）⇒ RegexMatch.last（闭区间末位）</a></li><li><a href="#2-stringsrfindpattern-before-rfindpattern-last">2. strings.rfind(pattern, before?) ⇒ rfind(pattern, last?)</a></li><li><a href="#3">3. 编译器怎么兜</a></li></ul><li><a href="#_6">三、为什么要统一</a></li><li><a href="#_7">四、历史</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="_1">区间口径约定（下标 / 整数一律<strong>闭区间</strong>）</h1>
+<blockquote>
+<p>一句话：<strong>凡是"下标 / 整数区间"，两端都算</strong>（含 <code>b</code>）。
+这条规则 2026-10-10 在切片族上定下来，<strong>2026-11-20 收尾</strong>：把最后两处"半开"也改掉了
+（<code>RegexMatch.end</code> ⇒ <code>last</code>、<code>strings.rfind</code> 的 <code>before</code> ⇒ <code>last</code>）。
+本文是全仓唯一的口径来源；模块文档里各自重复的那一句只是为了就近可查。</p>
+</blockquote>
+<hr>
+<h2 id="_2">一、规则</h2>
+<table>
+<thead>
+<tr>
+<th>用法</th>
+<th>语义</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arr[a : b]</code> / <code>s[a : b]</code></td>
+<td>闭区间，含 <code>b</code></td>
+<td><code>[10,20,30,40][1:2]</code> ⇒ <code>[20, 30]</code></td>
+</tr>
+<tr>
+<td><code>strings.slice(s, a, b)</code> / <code>s.slice(a, b)</code></td>
+<td>闭区间（与语法切片同口径）</td>
+<td><code>"hello".slice(0, 2)</code> ⇒ <code>"hel"</code></td>
+</tr>
+<tr>
+<td><code>strings.byte_slice(s, a, b)</code></td>
+<td>闭区间（<strong>字节</strong>下标）</td>
+<td>——</td>
+</tr>
+<tr>
+<td><code>for a : b to i</code></td>
+<td>闭区间，<code>a</code>、<code>b</code> 都跑到</td>
+<td><code>for 0 : 3 to i</code> ⇒ 4 轮</td>
+</tr>
+<tr>
+<td><code>switch case a : b</code></td>
+<td>闭区间</td>
+<td><code>case 1:4</code> 命中 1..4</td>
+</tr>
+<tr>
+<td><code>rands.ints(min, max)</code> / <code>rands.int_array(...)</code></td>
+<td>闭区间</td>
+<td><code>rands.ints(1, 6)</code> ⇒ 1..6</td>
+</tr>
+<tr>
+<td><code>RegexMatch.start</code> / <code>.last</code></td>
+<td>闭区间两端（<code>last</code> = 末位）</td>
+<td><code>s[m.start : m.last]</code> ⇒ 整段</td>
+</tr>
+<tr>
+<td><code>strings.rfind(pat, last?)</code></td>
+<td><code>last</code> = <strong>允许的匹配起点上界（含）</strong></td>
+<td><code>"a.b.c".rfind(".", 2)</code> ⇒ 1</td>
+</tr>
+<tr>
+<td><code>rands.floats(min, max)</code></td>
+<td>按 <code>[min, max]</code> 表述</td>
+<td>⚠ 连续分布，<code>max</code> 命中概率为 0（见下）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">负下标</h3>
+<ul>
+<li><strong>起点</strong>负数 ⇒ 从末尾数（<code>arr[-3 : 2]</code> = 倒数第 3 个到下标 2）✓</li>
+<li><strong>终点</strong>负数 ⇒ <strong>结果恒为空</strong>（不是"从末尾数"✗）⇒ 编译器给 <code>[切片负终点]</code> 警告。
+  要"去掉最后 N 个"写 <code>arr[0 : arr.len() - N - 1]</code> ✓</li>
+</ul>
+<h3 id="_4">不是"区间"的长度参数（不参与本条规则）</h3>
+<p>参数名是 <code>n</code> / <code>len</code> 的，一律是<strong>长度</strong>，不是端点：</p>
+<pre><code class="language-leno">strings.take(s, start, n)        // 从 start 起取 n 个字符
+files.read(n)                    // 读 n 字节
+ffi.read_bytes(ptr, off, len)    // 从 off 起读 len 字节
+</code></pre>
+<p>判断方法：<strong>看参数名</strong> —— <code>end</code> / <code>last</code> 是端点，<code>len</code> / <code>n</code> / <code>count</code> 是长度。</p>
+<h3 id="_5">浮点随机：表述为闭区间</h3>
+<p><code>rands.floats(min, max)</code> 按 <code>[min, max]</code> 表述。实现是 <code>min + r*(max-min)</code>、<code>r ∈ [0,1)</code>
+⇒ <strong><code>max</code> 恰好取到的概率是 0</strong>；连续分布下这与闭区间等价，所以口径统一写成闭区间 ✓
+（别据此以为 <code>max</code> 会以某个小概率出现 —— 它取不到。要"一定含端点"的离散语义用 <code>ints</code> ✓）</p>
+<hr>
+<h2 id="2026-11-20-breaking">二、2026-11-20 的收尾（breaking）</h2>
+<h3 id="1-regexmatchend-regexmatchlast">1. <code>RegexMatch.end</code>（半开）⇒ <code>RegexMatch.last</code>（闭区间末位）</h3>
+<pre><code class="language-leno">// ❌ 旧（v3.2.43 及以前）
+&quot;abc123def&quot;[m.start : m.end - 1]     // 要记得 -1
+var n = m.end - m.start              // 长度
+
+// ✅ 新（v3.2.44 起）
+&quot;abc123def&quot;[m.start : m.last]        // 与切片同一口径，不用算术
+var n = m.last - m.start + 1         // 长度（或直接 m.text.len()）
+</code></pre>
+<ul>
+<li><strong>为什么删字段、而不是把 <code>end</code> 的语义改成"含"</strong>：改语义不报错 ⇒ 旧代码
+  <code>s[m.start : m.end - 1]</code> 会<strong>静默少取最后一个字符</strong>、<code>end - start</code> 算长度会<strong>静默差 1</strong> ✓
+  删掉 ⇒ 旧代码在<strong>编译期</strong>报错并给出改名提示（不会静默错一格）✓</li>
+<li>旧 <code>end</code> 的值 = 新 <code>last + 1</code>；<strong>空匹配</strong>时 <code>last = start - 1</code>（<code>s[a : a-1]</code> 得空串 ✓）</li>
+<li>字节码 <strong>v3.2.43 → v3.2.44</strong>、模块缓存 <strong>v58 → v59</strong>：字段号含义变了 ⇒
+  旧 <code>.lenb</code> / <code>.lenomc</code> 整体失效重编（旧的 1 号位会读到 <code>last</code>，静默差一格 ✗）</li>
+</ul>
+<h3 id="2-stringsrfindpattern-before-rfindpattern-last">2. <code>strings.rfind(pattern, before?)</code> ⇒ <code>rfind(pattern, last?)</code></h3>
+<pre><code class="language-leno">// ❌ 旧：before 不含 ⇒ 只在 [0, before) 里找
+&quot;a.b.c&quot;.rfind(&quot;.&quot;, 3)      // 1
+
+// ✅ 新：last 含 ⇒ 起点 ≤ last
+&quot;a.b.c&quot;.rfind(&quot;.&quot;, 3)      // 3     想保持旧结果写 2
+</code></pre>
+<ul>
+<li>换算：旧 <code>before = n</code> ⇔ 新 <code>last = n - 1</code> ✓</li>
+<li>负数照旧从末尾数（<code>-1</code> = 末位）✓</li>
+</ul>
+<h3 id="3">3. 编译器怎么兜</h3>
+<ul>
+<li><code>m.end</code> ⇒ <code>error: struct 'RegexMatch' 没有字段 'end' —— 它**改名**了…</code>（附新名字与换算）</li>
+<li><code>arr[i].end</code> / <code>arr[i].nope</code> 这种<strong>索引接收者</strong>形态也一起兜住了
+  （此前这条"索引路"只查脚本 struct 的字段表，native struct 整块跳过 ⇒ 运行期才炸 ✗）</li>
+<li>迁移提示表在 <code>src/semantic/semantic_type_utils.c</code> 的 <code>semantic_renamed_field_hint()</code>；
+  仓内 + 下游项目都迁移完后可以删（删前 grep 一遍 <code>\.end\b</code>）✓</li>
+</ul>
+<hr>
+<h2 id="_6">三、为什么要统一</h2>
+<ol>
+<li><strong>同一个符号 <code>a : b</code> 出现在切片、<code>for</code>、<code>switch case</code> 里</strong> —— 它们早就都是闭区间。
+   若某个字段/参数是半开，就会出现"同一个 <code>a : b</code> 写法，一处含、一处不含"，只能靠记忆 ✓</li>
+<li>半开的错法是<strong>静默差一格</strong>（多一个字符 / 少一个字符），结果"看着像对的"，
+   是排查成本最高的一类 ✗</li>
+<li><code>.len()</code>、<code>strings.find</code>、切片、<code>for</code> 全在一个口径上 ⇒ 一个偏移量可以<strong>直接</strong>用于另一处，
+   不需要 <code>-1</code>/<code>+1</code> 中转 ✓</li>
+</ol>
+<hr>
+<h2 id="_7">四、历史</h2>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-10</td>
+<td>切片族统一到<strong>闭区间</strong>（语法切片 / <code>strings.slice</code> / <code>byte_slice</code> 曾为"不含 end"；全仓 248 处调用点同步改写）</td>
+</tr>
+<tr>
+<td>2026-10-25</td>
+<td>负终点（<code>arr[:-1]</code> 恒空）出 <code>[切片负终点]</code> 警告</td>
+</tr>
+<tr>
+<td>2026-11-20</td>
+<td>收尾：<code>RegexMatch.end</code> ⇒ <code>last</code>、<code>strings.rfind</code> 的 <code>before</code> ⇒ <code>last</code>、<code>rands.floats</code> 表述改闭区间；字节码 v3.2.44 / 缓存 v59</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="类型收窄与绑定语法改进.html">← 上一篇</a><a href="FFI使用指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

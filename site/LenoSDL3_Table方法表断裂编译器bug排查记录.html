@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoSDL3 Table 方法表断裂编译器 bug 排查记录 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="LenoSDL3_Table方法表断裂编译器bug排查记录.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">三、GUI / LenoSDL3</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">背景</a></li><li><a href="#_2">结论（根因）</a></li><li><a href="#_3">排查过程（排除法）</a></li><li><a href="#_4">绕过方案</a></li><li><a href="#_5">相关提交</a></li><li><a href="#_6">建议</a></li><li><a href="#2026-09-01">修复记录（2026-09-01）</a></li><li><a href="#2026-09-01_1">后续加固（2026-09-01，三层防御）</a></li><li><a href="#2026-09-01_2">验证结果（2026-09-01，三层加固后）</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="lenosdl3-table-bug">LenoSDL3 Table 方法表断裂编译器 bug 排查记录</h1>
+<h2 id="_1">背景</h2>
+<p><code>leno_module/LenoSDL3</code> 的 <code>sdl_table.leno</code> 在提交 <code>2c86ea7b</code>（fix(SDL3): 修复 Table 滚动裁剪与表头排序问题）中新增了排序禁用 / 自动数值排序功能后，编译 <code>examples/应用示例/文件管理器/file_manager.leno</code> 报错：</p>
+<pre><code>file_manager.leno(1118,15): error: [语义错误] 类型 'struct Table' 没有方法 'on_dbl_click'
+file_manager.leno(1154,22): error: [语义错误] 类型 'struct Table' 没有方法 'contains'
+</code></pre>
+<p>但这两个方法<strong>确实存在于</strong> <code>sdl_table.leno</code> 中（<code>on_dbl_click</code>、<code>contains</code> 均为 <code>struct Table</code> 内方法），且 <code>file_manager.leno</code> 调用的其他 Table 方法（<code>on_select</code>、<code>set_editable</code> 等）均不报错。</p>
+<h2 id="_2">结论（根因）</h2>
+<p><strong>【2026-09-01 更新：编译器已修复，真实根因如下】</strong></p>
+<p><strong>编译器 bug：模块符号表文本扫描器（<code>src/module_symbol_table/inc/scan/scan_struct.inc</code>）使用固定栈数组 <code>methods[MOD_MAX_METHODS]</code> 收集 struct 方法，上限 128 个。<code>struct Table</code> 共有 149 个方法，超出 128 的方法被静默丢弃，导致跨模块调用 <code>contains</code>（第 132 个）、<code>on_dbl_click</code>（第 130 个）时报"没有方法"。</strong></p>
+<p>最初"<code>_to_float</code> 之后插入导致方法表断裂"是误判，实际机制：</p>
+<ul>
+<li>基线 <code>a1ff6efb</code> 有 143 个方法，<code>contains</code>@125、<code>on_dbl_click</code>@123，均在 128 以内 → 编译通过</li>
+<li><code>2c86ea7b</code> 在两者之前插入 6 个新方法，索引变为 131/129，<strong>被 128 上限截断</strong> → 编译失败</li>
+<li>把新方法挪到 struct <strong>末尾</strong>：<code>contains</code>/<code>on_dbl_click</code> 索引不变（仍 &lt;128），被丢弃的变成末尾的新方法（file_manager 未直接调用它们）→ 编译通过</li>
+<li>
+<p>这解释了所有"与内容无关、与位置强相关"的实验现象：本质是<strong>方法在 struct 内的序号</strong>是否 ≥128</p>
+</li>
+<li>
+<p>与新增方法的<strong>内容无关</strong>：极简方法体、改名、改返回类型、删注释、去掉双引号全部无效</p>
+</li>
+<li>与<strong>插入位置</strong>强相关：方法放在 <code>_to_float</code> 之后 → 失败；同一批方法放到 struct <strong>末尾</strong> → 编译通过</li>
+<li><code>2c86ea7b</code> 完整版因此同时丢了 <code>on_dbl_click</code> 与 <code>contains</code>；仅复现前部新增时先丢 <code>contains</code>（定义更靠后）</li>
+</ul>
+<h2 id="_3">排查过程（排除法）</h2>
+<ol>
+<li><strong>基线验证</strong>：把 <code>sdl_table.leno</code> 恢复成上一个版本 <code>a1ff6efb</code>（即删掉 <code>2c86ea7b</code> 全部新增）→ 编译通过</li>
+<li><strong>按新增块二分</strong>（<code>2c86ea7b</code> 仅改动 <code>sdl_table.leno</code> 一个文件）：
+   - 字段 <code>_sortDisabledCols</code> + 配置读取 + <code>_is_col_sort_disabled</code>（A/B/C）→ 通过
+   - 加入 <code>_is_number_str</code> / <code>_should_numeric_sort</code> / <code>sort_by</code> 改动（D）→ <strong>失败</strong>（<code>contains</code> 缺失）</li>
+<li><strong>细分 D 块</strong>，逐一排除：
+   - 只留 <code>_is_number_str</code> → 通过
+   - <code>_is_number_str</code> + <code>_should_numeric_sort</code>（任意简单体）→ 失败
+   - 删除可疑注释（含半角引号 <code>"9" &gt; "89"</code>）→ 仍失败
+   - <code>if s == ""</code> 改为 <code>if s.len() == 0</code> → 仍失败
+   - 去掉 <code>try/catch</code>、去掉 <code>_float(s)</code> 调用、方法改名为 <code>_xyz_test</code>、返回类型改 void → 全部仍失败</li>
+<li><strong>关键实验</strong>：在干净 <code>a1ff6efb</code> 上：
+   - 只加 D 块 → <strong>通过</strong>（说明 D 不独立触发）
+   - 加 A + D → 通过
+   - 加 A + C + D → 失败（<strong>定位到 C 与 D 组合</strong>）
+   - 加 A + C + <code>_is_number_str</code> → 通过
+   - 加 A + C + <code>_xyz_test</code> → 通过
+   - 加 A + C + <code>_xyz_test</code> + <code>_is_number_str</code> → 失败
+   - <strong>把 <code>_xyz_test</code> + <code>_is_number_str</code> 移到 struct 末尾 → 通过</strong> ✅（决定性证据）</li>
+</ol>
+<h2 id="_4">绕过方案</h2>
+<p>新增的 struct 方法<strong>统一放在 struct 定义的最末尾</strong>（最后一个方法之后、闭合 <code>}</code> 之前），避免在 <code>_to_float</code>（以及可能的其他 try/catch 方法）之后插入。</p>
+<p>已用该方法实测通过：<code>2c86ea7b</code> 的排序禁用 / 自动数值排序 / bodyClip 裁剪功能全部保留，且 <code>file_manager.leno</code> 编译成功。</p>
+<h2 id="_5">相关提交</h2>
+<table>
+<thead>
+<tr>
+<th>Commit</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a1ff6efb</code></td>
+<td>上一个可用版本，编译通过（无排序禁用功能）</td>
+</tr>
+<tr>
+<td><code>2c86ea7b</code></td>
+<td>Table 修复版，触发本 bug（编译失败）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_6">建议</h2>
+<ul>
+<li>~~此 bug 位于编译器方法表收集逻辑，建议后续修复编译器~~ <strong>已修复</strong>（见下）</li>
+<li>~~在修复编译器前，新写 <code>struct</code> 方法时若遇到"某方法明明存在却报没有该方法"，先尝试把方法挪到 struct 末尾验证是否为同一问题~~ 绕过方案不再需要</li>
+</ul>
+<h2 id="2026-09-01">修复记录（2026-09-01）</h2>
+<table>
+<thead>
+<tr>
+<th>修改文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_struct.inc</code></td>
+<td>struct 的 <code>fields</code>/<code>methods</code> 由固定栈数组（128 上限）改为按需翻倍增长的堆数组，去掉静默丢弃守卫与死代码报错</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_face.inc</code></td>
+<td>face 的 <code>methods</code> 同样改为动态增长数组</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_cstruct.inc</code></td>
+<td>cstruct 的 <code>fields</code> 动态化；删除从未使用的 <code>methods</code> 栈数组</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/module_symbol_table.c</code></td>
+<td>删除不再使用的 <code>MOD_MAX_FIELDS</code>/<code>MOD_MAX_METHODS</code> 宏</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/sym_table_cache.inc</code></td>
+<td><code>LENOSYMC_VERSION</code> v15→v16：旧缓存中的符号表含被截断的方法列表，必须失效重建</td>
+</tr>
+</tbody>
+</table>
+<p>验证：</p>
+<ul>
+<li><code>file_manager.leno</code>（<code>2c86ea7b</code> 原始布局，方法在 <code>_to_float</code> 之后）编译通过，无需绕过方案</li>
+<li>全量回归测试 256/256 通过</li>
+</ul>
+<h2 id="2026-09-01_1">后续加固（2026-09-01，三层防御）</h2>
+<p>为根除"符号被静默截断"这一类 bug（而非仅修 Table 个案），实施了三层防御：</p>
+<p><strong>第 1 层：数量型上限全部动态化</strong>（消除截断源头）</p>
+<table>
+<thead>
+<tr>
+<th>上限</th>
+<th>原值</th>
+<th>修改文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MOD_MAX_TYPES</code>（struct/cstruct/face 名称收集，且超限时<strong>整个扫描中断</strong>）</td>
+<td>128</td>
+<td><code>scan_pass1.inc</code></td>
+</tr>
+<tr>
+<td><code>MOD_MAX_CLIBS</code> / <code>MOD_MAX_ENUMS</code></td>
+<td>32</td>
+<td><code>scan_pass1.inc</code></td>
+</tr>
+<tr>
+<td><code>MOD_MAX_MEMBERS</code>（enum 成员）</td>
+<td>128</td>
+<td><code>scan_enum.inc</code></td>
+</tr>
+<tr>
+<td><code>MOD_MAX_CLIB_FUNCS</code>（clib 函数，主文件+子文件两处）</td>
+<td>512</td>
+<td><code>scan_pass1.inc</code></td>
+</tr>
+<tr>
+<td><code>MOD_MAX_ALIASES</code>（本地别名表）</td>
+<td>64</td>
+<td><code>scan_pass2_init.inc</code>、<code>scan_alias.inc</code>、<code>sym_table_import_alias.inc</code></td>
+</tr>
+<tr>
+<td><code>impl_names</code>（struct 实现的 face 列表）</td>
+<td>128/64</td>
+<td><code>scan_struct.inc</code></td>
+</tr>
+</tbody>
+</table>
+<p>统一使用 <code>module_symbol_table.c</code> 中新增的 <code>mod_names_push</code> / <code>mod_names_push_z</code> / <code>mod_alias_push</code> 辅助函数（按需翻倍增长）。
+顺带修复：<code>clib_names</code>/<code>enum_names</code> 从未释放的内存泄漏；<code>scan_cleanup.inc</code> 现在释放全部数组。</p>
+<p><strong>第 2 层：设计型上限改为响亮失败</strong>（保留上限，但必须报错）</p>
+<p>保留的语言设计型限制（防笔误、防病态代码，超限即报错）：
+<code>MOD_MAX_NAMES</code>（64）、<code>MOD_MAX_TYPE_STR</code>（256）、<code>MOD_MAX_PARAMS</code>（64）、<code>MOD_MAX_TYPE_PARAMS</code>（16）、<code>MOD_MAX_GENERIC_RET</code>（16）。</p>
+<p>其中 <code>MOD_MAX_PARAMS</code>（clib/cfunc 参数数）原本也是静默截断：超限时调用 <code>error_add(ERR_SEMANTIC, 行号, ...)</code> 报真正的编译错误（带位置，行号由新增的 <code>mod_source_line</code> 辅助函数计算），替换所有静默截断与 <code>fprintf(stderr)</code> 死代码（<code>scan_pass1.inc</code> 共 6 处，含 4 处 cfunc 参数循环条件中的上限）。</p>
+<p><strong>第 3 层：扫描后自校验断言</strong>（防未来复发，最关键）</p>
+<p><code>sym_table_scan.inc</code> 在扫描完成后，对每个 struct/face 符号重新在源码中定位其定义体，
+统计体内第一层的 <code>func</code> 关键字出现次数（跳过注释/字符串、排除方法体内的局部函数），与符号表 <code>method_count</code> 交叉验证。
+不一致立即报编译错误并定位到定义处——即使将来再次出现截断类 bug，错误也会在<strong>定义处</strong>当次暴露，而不是在远处的调用点报"没有方法 X"。</p>
+<p><strong>自校验的实战首秀</strong>：上线当次编译即报告 <code>HBox</code>（定义于 <code>sdl_layout.leno:53</code>）"源码 16 个 func，符号表 15 个"。
+排查确认是<strong>误报</strong>：<code>sdl_layout.leno:169</code> 存在方法体内的<strong>局部函数</strong> <code>func childMain</code>（Leno 支持 func 局部定义），
+被计数器误计为方法（符号表不收集局部函数是正确行为）。
+修复：计数时增加 <code>depth == 1</code> 约束，只统计 struct 体第一层的方法声明。
+这恰好证明断言真实在工作——任何方法表不一致都会被当场抓住。</p>
+<h2 id="2026-09-01_2">验证结果（2026-09-01，三层加固后）</h2>
+<ol>
+<li>编译器 <code>build.bat</code> 重新编译通过</li>
+<li><code>file_manager.leno</code>（<code>2c86ea7b</code> 原始布局，含 149 个方法的 <code>struct Table</code>）编译通过，<strong>无需任何绕过方案</strong></li>
+<li>全量回归测试 <code>assert/run_tests.leno</code>：<strong>256/256 通过</strong></li>
+<li><code>LENOSYMC_VERSION</code> 同步升级 v16→v17（旧缓存可能含被截断的符号，需失效重建）</li>
+</ol>
+<p>修改文件汇总（三层加固）：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/module_symbol_table/module_symbol_table.c</code></td>
+<td>新增 <code>mod_names_push</code>/<code>mod_names_push_z</code>/<code>mod_alias_push</code>/<code>mod_source_line</code> 动态数组辅助函数；删除全部数量型上限宏</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_pass1.inc</code></td>
+<td>类型/clib/enum 名称收集、clib 函数数组（主+子文件）动态化；cfunc 参数超限改响亮报错</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_pass2_init.inc</code></td>
+<td>本地别名表动态化；use 导入类型传导改动态追加</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_alias.inc</code></td>
+<td>别名写入改动态追加</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/sym_table_import_alias.inc</code></td>
+<td>签名改为传数组指针+容量，5 处依赖传导改动态追加</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_enum.inc</code></td>
+<td>enum 成员数组动态化；表达式求值快照改动态分配</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_struct.inc</code></td>
+<td><code>impl_names</code> 动态化</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/scan/scan_cleanup.inc</code></td>
+<td>释放全部动态数组（顺带修复 clib/enum 名称数组泄漏）</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/sym_table_scan.inc</code></td>
+<td>新增扫描后 struct/face 方法数自校验断言</td>
+</tr>
+<tr>
+<td><code>src/module_symbol_table/inc/sym_table_cache.inc</code></td>
+<td><code>LENOSYMC_VERSION</code> v16→v17</td>
+</tr>
+</tbody>
+</table></main>
+</div>
+<nav class="pager"><a href="LenoSDL3_裁剪过多导致闪烁排查记录.html">← 上一篇</a><a href="LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

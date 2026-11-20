@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno Arrays 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_arrays.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">概述</a></li><ul class="lv3"><li><a href="#_3">特性</a></li></ul><li><a href="#_4">返回类型（跟入参 / 接收者一致）</a></li><li><a href="#_5">使用方式</a></li><li><a href="#_6">数组创建</a></li><ul class="lv3"><li><a href="#_7">字面量创建</a></li><li><a href="#_8">类型注解</a></li></ul><li><a href="#_9">核心方法</a></li><ul class="lv3"><li><a href="#len">len()</a></li><li><a href="#addvalue">add(value)</a></li><li><a href="#pop">pop()</a></li><li><a href="#insertindex-value">insert(index, value)</a></li><li><a href="#removeindex">remove(index)</a></li><li><a href="#hasvalue">has(value)</a></li><li><a href="#copy">copy()</a></li><li><a href="#clear">clear()</a></li><li><a href="#sum">sum()</a></li></ul><li><a href="#_10">查找方法</a></li><ul class="lv3"><li><a href="#index_ofvalue">index_of(value)</a></li><li><a href="#last_index_ofvalue">last_index_of(value)</a></li></ul><li><a href="#_11">排序和反转</a></li><ul class="lv3"><li><a href="#sortcmp">sort(cmp?)</a></li><li><a href="#reverse">reverse()</a></li></ul><li><a href="#_12">字符串操作</a></li><ul class="lv3"><li><a href="#joinseparator">join(separator)</a></li></ul><li><a href="#_13">函数式方法</a></li><ul class="lv3"><li><a href="#mapcallback">map(callback)</a></li><li><a href="#filtercallback">filter(callback)</a></li><li><a href="#reducecallback-initial">reduce(callback, initial)</a></li><li><a href="#_14">链式调用</a></li></ul><li><a href="#_15">批量操作</a></li><ul class="lv3"><li><a href="#_16">数组切片（语法糖）</a></li></ul><li><a href="#vs">实例方法 vs 模块方法</a></li><ul class="lv3"><li><a href="#_17">选择建议</a></li></ul><li><a href="#_18">示例代码</a></li><ul class="lv3"><li><a href="#1">示例1：数据处理管道</a></li><li><a href="#2">示例2：去重（使用辅助数组）</a></li><li><a href="#3">示例3：栈的实现</a></li><li><a href="#4">示例4：队列的实现</a></li><li><a href="#5-cstruct">示例5：与 cstruct 结合使用</a></li></ul><li><a href="#_19">性能说明</a></li><ul class="lv3"><li><a href="#_20">时间复杂度</a></li><li><a href="#_21">空间复杂度</a></li></ul><li><a href="#_22">注意事项</a></li><ul class="lv3"><li><a href="#1_1">1. 索引越界</a></li><li><a href="#2_1">2. 原地操作</a></li><li><a href="#3-vs">3. 深拷贝 vs 浅拷贝</a></li><li><a href="#4_1">4. 类型混合</a></li></ul><li><a href="#_23">最佳实践</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-arrays">Leno Arrays 模块</h1>
+<p>本文档详细说明 <code>arrays</code> 模块提供的数组操作功能。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#概述">概述</a></li>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#数组创建">数组创建</a></li>
+<li><a href="#核心方法">核心方法</a></li>
+<li><a href="#查找方法">查找方法</a></li>
+<li><a href="#排序和反转">排序和反转</a></li>
+<li><a href="#字符串操作">字符串操作</a></li>
+<li><a href="#函数式方法">函数式方法</a></li>
+<li><a href="#批量操作">批量操作</a></li>
+<li><a href="#实例方法-vs-模块方法">实例方法 vs 模块方法</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#性能说明">性能说明</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="_2">概述</h2>
+<p>Arrays 模块是 Leno 语言中用于数组操作的核心模块，提供了丰富的数组操作方法。所有方法都支持<strong>双模式调用</strong>：既可以通过实例直接调用，也可以通过模块方式调用。</p>
+<h3 id="_3">特性</h3>
+<ul>
+<li><strong>双模式调用</strong>：实例方法 <code>arr.method()</code> 或模块方法 <code>arrays.method(arr)</code></li>
+<li><strong>原地操作</strong>：<code>sort()</code> 和 <code>reverse()</code> 直接修改原数组</li>
+<li><strong>类型安全</strong>：支持任意类型的数组操作</li>
+<li><strong>高性能</strong>：核心操作使用 C 语言实现</li>
+</ul>
+<hr>
+<h2 id="_4">返回类型（跟入参 / 接收者一致）</h2>
+<p><code>copy</code> / <code>clear</code> / <code>reverse</code> / <code>sort</code> / <code>filter</code> 返回 <code>Array[T]</code>、<code>pop</code> / <code>remove</code> 返回 <code>T</code>，
+其中 <strong>T = 入参的元素类型</strong>（实例形式下入参就是接收者）。这条关系是<strong>声明式</strong>的
+（native 类型规格里的 <code>NTYPE_ARG0_ELEM</code> 标签），编译器在调用点用<strong>实参的实际类型</strong>解析
+⇒ <strong>两种语法都精确，调用点零收窄</strong>：</p>
+<pre><code class="language-leno">Array[int] xs = [3, 1, 2]
+Array[int] a = arrays.copy(xs)     // 模块形式：元素类型 = xs 的元素类型
+Array[int] b = xs.copy()           // 实例形式：元素类型 = 接收者的元素类型
+int last    = arrays.pop(xs)       // 元素本身（不是 Array）
+int removed = xs.remove(0)
+</code></pre>
+<blockquote>
+<p>⚠ <code>map</code> / <code>reduce</code> <strong>不在此列</strong>：它们的类型取决于<strong>回调的返回类型</strong>（另一族规则）——
+<code>map</code> 走泛型推断得到 <code>Array[U]</code>；<code>reduce</code> 的返回类型与<strong>元素类型</strong>一致
+（<code>Array[int]</code> ⇒ <code>int</code>、<code>Array[string]</code> ⇒ <code>string</code>，<strong>不是 <code>any</code></strong> —— 实测 <code>type()</code> 也是
+<code>int</code> / <code>string</code>，可以直接赋给具体类型变量）。带初值时初值必须与元素同类型；
+想把 <code>Array[int]</code> 累积成字符串，请先 <code>map</code> 再 <code>reduce</code>。
+⚠ 入参元素<strong>未指定</strong>时（如 <code>var empty = []</code>），结果仍是"未指定"，<strong>不会</strong>被硬塞成 <code>Array[any]</code>
+—— 后者会拒绝 <code>Array[int]</code> 赋值（<code>assert/test_arrays_module.leno</code> 有这条回归）。</p>
+</blockquote>
+<hr>
+<h2 id="_5">使用方式</h2>
+<pre><code class="language-leno">// 方式1：实例方法（推荐）
+var arr = [1, 2, 3]
+arr.add(4)
+arr.sort()
+
+// 方式2：模块方法
+import arrays
+arrays.add(arr, 4)
+arrays.sort(arr)
+</code></pre>
+<hr>
+<h2 id="_6">数组创建</h2>
+<h3 id="_7">字面量创建</h3>
+<pre><code class="language-leno">// 空数组
+var empty = []
+
+// 数字数组
+var numbers = [1, 2, 3, 4, 5]
+
+// 字符串数组
+var fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
+
+// 混合类型数组
+var mixed = [1, &quot;hello&quot;, true, null]
+
+// 嵌套数组
+var matrix = [[1, 2], [3, 4], [5, 6]]
+</code></pre>
+<h3 id="_8">类型注解</h3>
+<pre><code class="language-leno">// 指定数组元素类型
+Array[int] numbers = [1, 2, 3]
+Array[string] names = [&quot;Alice&quot;, &quot;Bob&quot;]
+</code></pre>
+<hr>
+<h2 id="_9">核心方法</h2>
+<h3 id="len"><code>len()</code></h3>
+<p>返回数组元素个数。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - 数组长度</p>
+<pre><code class="language-leno">var arr = [1, 2, 3, 4, 5]
+print(arr.len())  // 5
+
+// 空数组
+var empty = []
+print(empty.len())  // 0
+</code></pre>
+<hr>
+<h3 id="addvalue"><code>add(value)</code></h3>
+<p>在数组末尾添加元素。</p>
+<p><strong>参数</strong>:
+- <code>value</code> (any): 要添加的元素</p>
+<p><strong>返回</strong>: <code>int</code> - 添加后的数组长度</p>
+<pre><code class="language-leno">var arr = [1, 2, 3]
+var new_len = arr.add(4)
+print(arr)      // [1, 2, 3, 4]
+print(new_len)  // 4
+
+// 添加不同类型
+arr.add(&quot;hello&quot;)
+print(arr)  // [1, 2, 3, 4, hello]
+</code></pre>
+<hr>
+<h3 id="pop"><code>pop()</code></h3>
+<p>移除并返回最后一个元素。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>any</code> - 被移除的元素，数组为空返回 <code>null</code></p>
+<pre><code class="language-leno">var arr = [1, 2, 3]
+var last = arr.pop()
+print(last)   // 3
+print(arr)    // [1, 2]
+
+// 空数组
+var empty = []
+var result = empty.pop()
+print(result)  // null
+</code></pre>
+<hr>
+<h3 id="insertindex-value"><code>insert(index, value)</code></h3>
+<p>在指定位置插入元素。</p>
+<p><strong>参数</strong>:
+- <code>index</code> (int): 插入位置（支持负索引，规则见下）
+- <code>value</code> (any): 要插入的元素</p>
+<p><strong>返回</strong>: <code>int</code> - 插入后的数组长度</p>
+<pre><code class="language-leno">var arr = [1, 2, 3]
+arr.insert(1, 99)
+print(arr)  // [1, 99, 2, 3]
+
+// 负索引：实现是 `pos = len + index + 1` ⇒ -1 是**末尾之后**（= append），
+// -2 才是&quot;最后一个元素之前&quot;（⚠ 与 Python 的 list.insert(-1, x) **差一位**）
+arr.insert(-1, 88)
+print(arr)  // [1, 99, 2, 3, 88]
+
+arr.insert(-2, 77)
+print(arr)  // [1, 99, 2, 77, 3, 88]
+
+// 越界（正 / 负）一律**夹到边界**、不抛错
+arr.insert(999, 66)   // 追加到末尾 ⇒ [..., 88, 66]
+arr.insert(-999, 55)  // 插到最前面 ⇒ [55, ...]
+</code></pre>
+<blockquote>
+<p>⚠ <strong><code>insert</code> 不抛错</strong>（与 <code>remove</code> / <code>a[i]</code> 的"越界抛错"不是一套口径）：
+正索引超界 ⇒ 追加，负索引小于 <code>-(len+1)</code> ⇒ 夹到 0。
+这条口径由 <code>assert/test_semantics_pins.leno</code> 的 <strong>P33</strong> 钉住（理由见
+<code>docs/语言陷阱速查.md</code> ⑲）；<strong>别按 Python 的 <code>insert(-1, x)</code> 理解</strong>。</p>
+</blockquote>
+<hr>
+<h3 id="removeindex"><code>remove(index)</code></h3>
+<p>移除并返回指定位置的元素。</p>
+<p><strong>参数</strong>:
+- <code>index</code> (int): 要移除的位置（支持负索引）</p>
+<p><strong>返回</strong>: <code>any</code> - 被移除的元素</p>
+<p><strong>错误</strong>: 索引越界时抛出错误</p>
+<pre><code class="language-leno">var arr = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]
+var removed = arr.remove(1)
+print(removed)  // b
+print(arr)      // [a, c, d]
+
+// 负索引
+arr.remove(-1)  // 移除最后一个
+print(arr)      // [a, c]
+
+// 越界错误
+// arr.remove(10)  // 错误：remove() 索引越界
+</code></pre>
+<hr>
+<h3 id="hasvalue"><code>has(value)</code></h3>
+<p>检查数组是否包含指定元素。</p>
+<p><strong>参数</strong>:
+- <code>value</code> (any): 要查找的元素</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否包含</p>
+<pre><code class="language-leno">var arr = [1, 2, 3, 4, 5]
+print(arr.has(3))   // true
+print(arr.has(10))  // false
+
+// 字符串数组
+var fruits = [&quot;apple&quot;, &quot;banana&quot;]
+print(fruits.has(&quot;apple&quot;))   // true
+print(fruits.has(&quot;grape&quot;))   // false
+</code></pre>
+<hr>
+<h3 id="copy"><code>copy()</code></h3>
+<p>创建数组的深拷贝。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array</code> - 新数组</p>
+<pre><code class="language-leno">var arr1 = [1, 2, [3, 4]]
+var arr2 = arr1.copy()
+
+// 修改原数组不影响拷贝
+arr1[0] = 99
+arr1[2][0] = 99
+print(arr1)  // [99, 2, [99, 4]]
+print(arr2)  // [1, 2, [3, 4]]  &lt;- 深拷贝，嵌套数组也被复制
+</code></pre>
+<blockquote>
+<p>⚠ <strong>自引用有界</strong>（2026-11-16）：<code>Array[any] a; a.add(a); a.copy()</code> 此前会<strong>栈溢出崩溃</strong>
+（0xC00000FD，try/catch 接不住）。现在深拷贝有 <strong>512 层</strong>上限，超限抛
+<code>深拷贝失败：嵌套超过 512 层（结构可能存在循环引用）</code>（口径与 <code>jsons.encode</code> 一致）。</p>
+</blockquote>
+<hr>
+<h3 id="clear"><code>clear()</code></h3>
+<p>清空数组所有元素。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array</code> - 原数组（支持链式调用）</p>
+<pre><code class="language-leno">var arr = [1, 2, 3]
+arr.clear()
+print(arr)      // []
+print(arr.len()) // 0
+
+// 链式调用
+var result = [1, 2, 3].clear().add(4)
+print(result)  // [4]
+</code></pre>
+<hr>
+<h3 id="sum"><code>sum()</code></h3>
+<p>数字数组求和 —— 等价于模块形态 <code>arrays.sum(arr)</code>。</p>
+<p><strong>参数</strong>: 无</p>
+<p><strong>返回</strong>: <code>float</code>（与 <code>maths.max/min</code> 同族）—— 要整数写 <code>_int(xs.sum())</code> ✓</p>
+<pre><code class="language-leno">var xs = [1, 2, 3, 4]
+print(xs.sum())                    // 10
+print([].sum())                    // 0       （空数组 ⇒ 0）
+print([1, 2.5].sum())              // 3.5
+print(_int(xs.sum()))              // 10      （显式转 int）
+print(_int([1, 2, 3].sum()) + 1)   // 7       （转 int 后可直接参与整数运算）
+
+// 元素不是数字 ⇒ **报错并指出第几个**，不会静默跳过：
+var bad = [1, &quot;a&quot;]
+// print(bad.sum())        // 运行时错误：sum 只能用于数字数组（第 1 个元素不是数字）
+</code></pre>
+<blockquote>
+<p>⚠ 为什么<strong>不</strong>做"全整数就返回 <code>int</code>"（曾这么设计，实测后改掉）：返回<strong>规格</strong>只能标一个类型 ——
+标 <code>ANY</code> 会让 <code>int t = xs.sum()</code> 编不过，标 <code>INT</code> 又对含小数的数组说谎 ⇒ 统一 <code>float</code>，
+把转换交给调用点，是唯一不撒谎的写法 ✓</p>
+<p>⚠ <strong>为什么不一起做 <code>sorted</code> / <code>enumerate</code> / 数组版 <code>min</code>/<code>max</code></strong>（2026-10-01 的决定）：
+- <code>sorted</code>：<code>arr.copy().sort()</code> 已经能表达 ⇒ 再加一个入口就是同一件事两种写法 ✗
+- <code>enumerate</code>：<strong>语言自带</strong> —— <code>for xs to x, i { ... }</code> 直接给元素与下标 ✓
+- <code>min</code>/<code>max</code>：已有 <code>maths.min(...)</code> / <code>maths.max(...)</code>（变参形态，返回 float）✓
+只补真正缺的那一个（<code>sum</code>），不加冗余 API ✓</p>
+</blockquote>
+<hr>
+<h2 id="_10">查找方法</h2>
+<h3 id="index_ofvalue"><code>index_of(value)</code></h3>
+<p>查找元素首次出现的索引。</p>
+<p><strong>参数</strong>:
+- <code>value</code> (any): 要查找的元素</p>
+<p><strong>返回</strong>: <code>int</code> - 索引位置，未找到返回 <code>-1</code></p>
+<pre><code class="language-leno">var arr = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;, &quot;banana&quot;]
+print(arr.index_of(&quot;banana&quot;))   // 1
+print(arr.index_of(&quot;cherry&quot;))   // 2
+print(arr.index_of(&quot;grape&quot;))    // -1
+
+// 数字数组
+var nums = [10, 20, 30, 20]
+print(nums.index_of(20))  // 1
+</code></pre>
+<hr>
+<h3 id="last_index_ofvalue"><code>last_index_of(value)</code></h3>
+<p>查找元素最后出现的索引。</p>
+<p><strong>参数</strong>:
+- <code>value</code> (any): 要查找的元素</p>
+<p><strong>返回</strong>: <code>int</code> - 索引位置，未找到返回 <code>-1</code></p>
+<pre><code class="language-leno">var arr = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;, &quot;banana&quot;]
+print(arr.last_index_of(&quot;banana&quot;))   // 3
+print(arr.last_index_of(&quot;apple&quot;))    // 0
+print(arr.last_index_of(&quot;grape&quot;))    // -1
+</code></pre>
+<hr>
+<h2 id="_11">排序和反转</h2>
+<h3 id="sortcmp"><code>sort(cmp?)</code></h3>
+<p>原地排序数组。<strong>不传比较器</strong>时使用内置规则（C 层 qsort）；<strong>传比较器</strong>时按回调排序。</p>
+<blockquote>
+<p>★ 2026-11-15：排序期间的比较器是<strong>每线程一份</strong>（<code>_Thread_local</code>）⇒ 多个线程同时
+<code>sort(比较器)</code> 互不干扰。此前是一个普通 static 槽：两线程同时排序时后一个会把前一个
+覆盖掉 ⇒ 前一个线程<strong>用别人的比较器排</strong>（静默错序，签名不同时还会崩）。</p>
+</blockquote>
+<p><strong>参数</strong>:
+- <code>cmp</code> (function, 可选): <code>cmp(a, b)</code> 返回 <strong>int</strong> —— 负数 ⇒ <code>a</code> 排在前面，
+  <code>0</code> ⇒ 相等，正数 ⇒ <code>b</code> 排在前面（与 C <code>qsort</code> / Java <code>Comparator</code> 同口径）。
+  返回 <code>float</code> 也可以（按正负判断）。</p>
+<p><strong>返回</strong>: <code>Array</code> - 原数组（支持链式调用）</p>
+<p><strong>内置规则</strong>（不传比较器）:
+- 数字：按数值大小
+- 字符串：按字典序
+- 不同类型：按类型排序</p>
+<blockquote>
+<p><strong>两个性质</strong>（2026-11-08 加比较器时一并保证）：
+① <strong>稳定</strong>：相等元素保持原有顺序（同长度字符串、同分数记录不会乱序）；
+② <strong>回调里改数组不会崩</strong>：排序前会把元素复制一份，回调中 <code>arr.add()</code> /
+<code>arr.clear()</code> 只会影响写回的元素个数，不会野指针。</p>
+<p>⚠ <strong>比较器必须返回数字</strong>（<code>int</code> / <code>float</code> / <code>bigint</code>）：返回 <code>bool</code> / <code>string</code> 等会让所有比较都
+变成"相等" ⇒ 排序<strong>整体静默失效</strong>。2026-11-15 起改成<strong>运行时错误</strong>（数组保持原样）：
+</p>
+</blockquote>
+<pre><code class="language-leno">// ✗ 返回 bool ⇒ 现在抛错（此前静默不排序）
+a.sort(func(int x, int y) { return x &lt; y })
+// ✓ Leno 的三元是 `if 条件 then A else B`（不是 C 的 `?:`）
+a.sort(func(int x, int y) { return if x &lt; y then -1 else (if x &gt; y then 1 else 0) })
+</code></pre>
+<blockquote>
+<p>⚠ 回调<strong>中途抛异常</strong>时，数组同样<strong>保持原样</strong>（2026-11-15 起；此前会留下排了一半的中间态）。
+⚠ "稳定"只对<strong>带比较器</strong>的排序成立；不传比较器走 C 的 <code>qsort</code>，相等元素的相对顺序不保证
+（同类型同值的元素本来就不可区分，实际观察不到差异）。</p>
+</blockquote>
+<pre><code class="language-leno">// 数字排序
+var nums = [64, 34, 25, 12, 22, 11, 90]
+nums.sort()
+print(nums)  // [11, 12, 22, 25, 34, 64, 90]
+
+// 字符串排序
+var fruits = [&quot;cherry&quot;, &quot;apple&quot;, &quot;banana&quot;]
+fruits.sort()
+print(fruits)  // [apple, banana, cherry]
+
+// 链式调用
+var result = [3, 1, 2].sort().reverse()
+print(result)  // [3, 2, 1]
+
+// ---- 自定义比较器（2026-11-08）----
+
+// 降序
+var desc = [3, 1, 2]
+desc.sort(func(int x, int y) { return y - x })      // [3, 2, 1]
+
+// 按字符串长度
+var byLen = [&quot;aaa&quot;, &quot;a&quot;, &quot;aa&quot;]
+byLen.sort(func(string x, string y) { return x.len() - y.len() })
+print(byLen)  // [a, aa, aaa]
+
+// 按 struct 字段（最常用：按时长 / 分数 / 时间排序）
+struct Song { string name; int dur }
+var songs = [/* ... */]
+songs.sort(func(Song x, Song y) { return x.dur - y.dur })
+
+// 多关键字：先按时长、时长相同再按歌名（字符串可直接用 &lt; / &gt; 比）
+songs.sort(func(Song x, Song y) {
+    if x.dur != y.dur { return x.dur - y.dur }
+    if x.name &lt; y.name { return -1 }
+    if x.name &gt; y.name { return 1 }
+    return 0
+})
+</code></pre>
+<hr>
+<h3 id="reverse"><code>reverse()</code></h3>
+<p>原地反转数组。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array</code> - 原数组（支持链式调用）</p>
+<pre><code class="language-leno">var arr = [1, 2, 3, 4, 5]
+arr.reverse()
+print(arr)  // [5, 4, 3, 2, 1]
+
+// 链式调用
+var result = [1, 2, 3].reverse().add(0)
+print(result)  // [3, 2, 1, 0]
+</code></pre>
+<hr>
+<h2 id="_12">字符串操作</h2>
+<h3 id="joinseparator"><code>join(separator)</code></h3>
+<p>将数组元素拼接为字符串。</p>
+<p><strong>参数</strong>:
+- <code>separator</code> (string): 分隔符</p>
+<p><strong>返回</strong>: <code>string</code> - 拼接后的字符串</p>
+<pre><code class="language-leno">// 字符串数组
+var words = [&quot;Hello&quot;, &quot;World&quot;, &quot;Leno&quot;]
+print(words.join(&quot; &quot;))    // Hello World Leno
+print(words.join(&quot;,&quot;))    // Hello,World,Leno
+print(words.join(&quot;&quot;))     // HelloWorldLeno
+
+// 数字数组（自动转换）
+var nums = [1, 2, 3, 4]
+print(nums.join(&quot;-&quot;))     // 1-2-3-4
+
+// 混合数组
+var mixed = [1, &quot;a&quot;, true]
+print(mixed.join(&quot; | &quot;))  // 1 | a | true
+</code></pre>
+<hr>
+<h2 id="_13">函数式方法</h2>
+<h3 id="mapcallback"><code>map(callback)</code></h3>
+<p>遍历数组，对每个元素执行回调函数，返回新数组。</p>
+<p><strong>参数</strong>:
+- <code>callback</code> (function): 回调函数，接收 <code>(item, index)</code> 两个参数，返回转换后的值</p>
+<blockquote>
+<p>⚠ 回调的<strong>形参必须写具体类型</strong>（如 <code>int</code>）——<code>var</code> 已不能作形参（会报
+「参数 'x' 不能使用 var 类型」）；不写类型时形参是 <code>any</code>，<code>x &gt; 5</code> 这类比较会被拒绝。
+也可以直接用带类型的箭头函数：<code>nums.map((int x, int i) =&gt; x * 2)</code>。</p>
+</blockquote>
+<p><strong>返回</strong>: <code>Array</code> - 新数组</p>
+<pre><code class="language-leno">var nums = [1, 2, 3, 4, 5]
+
+// 基本用法
+var doubled = nums.map(func(int x, int i) { return x * 2 })
+print(doubled)  // [2, 4, 6, 8, 10]
+
+// 使用索引
+var indexed = nums.map(func(int x, int i) { return x + i })
+print(indexed)  // [1, 3, 5, 7, 9]
+
+// 模块方法
+import arrays
+var tripled = arrays.map(nums, func(int x, int i) { return x * 3 })
+</code></pre>
+<hr>
+<h3 id="filtercallback"><code>filter(callback)</code></h3>
+<p>遍历数组，只保留回调函数返回 <code>true</code> 的元素，返回新数组。</p>
+<p><strong>参数</strong>:
+- <code>callback</code> (function): 回调函数，接收 <code>(item, index)</code> 两个参数，返回 <code>bool</code></p>
+<p><strong>返回</strong>: <code>Array</code> - 新数组</p>
+<pre><code class="language-leno">var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// 过滤偶数
+var evens = nums.filter(func(int x, int i) { return x % 2 == 0 })
+print(evens)  // [2, 4, 6, 8, 10]
+
+// 过滤大于5的数
+var big = nums.filter(func(int x, int i) { return x &gt; 5 })
+print(big)  // [6, 7, 8, 9, 10]
+</code></pre>
+<hr>
+<h3 id="reducecallback-initial"><code>reduce(callback, initial)</code></h3>
+<p>对数组进行累积计算，返回单个值。</p>
+<p><strong>参数</strong>:
+- <code>callback</code> (function): 回调函数，接收 <code>(accumulator, item, index)</code> 三个参数，返回新的累积值
+- <code>initial</code> (any, 可选): 初始值。如果不提供，使用数组第一个元素作为初始值，从第二个元素开始遍历</p>
+<p><strong>返回</strong>: 与<strong>元素类型</strong>相同（<code>Array[int]</code> ⇒ <code>int</code>、<code>Array[string]</code> ⇒ <code>string</code>）。
+不是 <code>any</code> —— 可以直接 <code>int s = nums.reduce(...)</code>。</p>
+<pre><code class="language-leno">var nums = [1, 2, 3, 4, 5]
+
+// 求和（带初始值）
+var sum = nums.reduce(func(int acc, int x, int i) { return acc + x }, 0)
+print(sum)  // 15
+
+// 求积（带初始值）
+var product = nums.reduce(func(int acc, int x, int i) { return acc * x }, 1)
+print(product)  // 120
+
+// 不带初始值（使用第一个元素）
+var sum2 = nums.reduce(func(int acc, int x, int i) { return acc + x })
+print(sum2)  // 15
+</code></pre>
+<hr>
+<h3 id="_14">链式调用</h3>
+<p><code>map</code> 和 <code>filter</code> 返回新数组，支持链式调用：</p>
+<pre><code class="language-leno">var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// 先过滤大于3的数，再乘以2
+var result = nums.filter(func(int x, int i) { return x &gt; 3 })
+                 .map(func(int x, int i) { return x * 2 })
+print(result)  // [8, 10, 12, 14, 16, 18, 20]
+
+// 复杂管道：过滤偶数 -&gt; 平方 -&gt; 求和
+var sum_of_squares = nums.filter(func(int x, int i) { return x % 2 == 0 })
+                         .map(func(int x, int i) { return x * x })
+                         .reduce(func(int acc, int x, int i) { return acc + x }, 0)
+print(sum_of_squares)  // 220 (4+16+36+64+100)
+</code></pre>
+<hr>
+<h2 id="_15">批量操作</h2>
+<h3 id="_16">数组切片（语法糖）</h3>
+<p>使用 <code>[start:end]</code> 语法获取数组子集（<code>end</code> <strong>包含</strong>在内；两端都可以省略，如 <code>arr[:3]</code> / <code>arr[5:]</code> / <code>arr[:]</code>）。</p>
+<blockquote>
+<p>✅ <code>arr[:]</code>（双侧全省略）是<strong>合法语法</strong>（2026-11-02 起），等价于对整段做一次浅拷贝
+（与 <code>arr[0:arr.len() - 1]</code> 等价，结果通常是新数组而不是原数组别名）。</p>
+</blockquote>
+<pre><code class="language-leno">var arr = [1, 2, 3, 4, 5, 6, 7, 8]
+
+// 基本切片
+print(arr[2:5])   // [3, 4, 5, 6]  索引 2 到 5（包含）
+
+// 从开头
+print(arr[:3])    // [1, 2, 3, 4]  开始到索引 3
+
+// 到结尾
+print(arr[5:])    // [6, 7, 8]     索引 5 到结尾
+</code></pre>
+<hr>
+<h2 id="vs">实例方法 vs 模块方法</h2>
+<p>所有数组方法都支持两种调用方式：</p>
+<table>
+<thead>
+<tr>
+<th>实例方法</th>
+<th>模块方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arr.len()</code></td>
+<td><code>arrays.len(arr)</code></td>
+<td>获取长度</td>
+</tr>
+<tr>
+<td><code>arr.add(x)</code></td>
+<td><code>arrays.add(arr, x)</code></td>
+<td>添加元素</td>
+</tr>
+<tr>
+<td><code>arr.pop()</code></td>
+<td><code>arrays.pop(arr)</code></td>
+<td>移除末尾</td>
+</tr>
+<tr>
+<td><code>arr.insert(i, x)</code></td>
+<td><code>arrays.insert(arr, i, x)</code></td>
+<td>插入元素</td>
+</tr>
+<tr>
+<td><code>arr.remove(i)</code></td>
+<td><code>arrays.remove(arr, i)</code></td>
+<td>移除指定位置</td>
+</tr>
+<tr>
+<td><code>arr.has(x)</code></td>
+<td><code>arrays.has(arr, x)</code></td>
+<td>检查包含</td>
+</tr>
+<tr>
+<td><code>arr.copy()</code></td>
+<td><code>arrays.copy(arr)</code></td>
+<td>深拷贝</td>
+</tr>
+<tr>
+<td><code>arr.clear()</code></td>
+<td><code>arrays.clear(arr)</code></td>
+<td>清空</td>
+</tr>
+<tr>
+<td><code>arr.index_of(x)</code></td>
+<td><code>arrays.index_of(arr, x)</code></td>
+<td>查找索引</td>
+</tr>
+<tr>
+<td><code>arr.last_index_of(x)</code></td>
+<td><code>arrays.last_index_of(arr, x)</code></td>
+<td>反向查找</td>
+</tr>
+<tr>
+<td><code>arr.reverse()</code></td>
+<td><code>arrays.reverse(arr)</code></td>
+<td>反转</td>
+</tr>
+<tr>
+<td><code>arr.sort()</code></td>
+<td><code>arrays.sort(arr)</code></td>
+<td>排序</td>
+</tr>
+<tr>
+<td><code>arr.join(s)</code></td>
+<td><code>arrays.join(arr, s)</code></td>
+<td>拼接字符串</td>
+</tr>
+<tr>
+<td><code>arr.map(fn)</code></td>
+<td><code>arrays.map(arr, fn)</code></td>
+<td>映射转换</td>
+</tr>
+<tr>
+<td><code>arr.filter(fn)</code></td>
+<td><code>arrays.filter(arr, fn)</code></td>
+<td>过滤元素</td>
+</tr>
+<tr>
+<td><code>arr.reduce(fn, init)</code></td>
+<td><code>arrays.reduce(arr, fn, init)</code></td>
+<td>累积计算</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_17">选择建议</h3>
+<ul>
+<li><strong>实例方法</strong>：代码更简洁，推荐日常使用</li>
+<li><strong>模块方法</strong>：需要动态方法名或函数式编程时使用</li>
+</ul>
+<pre><code class="language-leno">// 实例方法（推荐）
+var arr = [3, 1, 2]
+arr.sort().reverse()
+
+// 模块方法（特殊场景）
+import arrays
+var method = &quot;sort&quot;
+arrays[method](arr)  // 动态调用
+</code></pre>
+<hr>
+<h2 id="_18">示例代码</h2>
+<h3 id="1">示例1：数据处理管道</h3>
+<pre><code class="language-leno">main() {
+    var data = [64, 34, 25, 12, 22, 11, 90]
+
+    // 排序并过滤（模拟）
+    data.sort()
+    print(&quot;排序后: &quot; + data)
+
+    // 转换为字符串
+    var str = data.join(&quot;, &quot;)
+    print(&quot;字符串: &quot; + str)
+
+    // 查找位置
+    var idx = data.index_of(25)
+    print(&quot;25 的位置: &quot; + idx)
+}
+</code></pre>
+<h3 id="2">示例2：去重（使用辅助数组）</h3>
+<pre><code class="language-leno">func unique(arr) {
+    var result = []
+    for arr to item {
+        if not result.has(item) {
+            result.add(item)
+        }
+    }
+    return result
+}
+
+main() {
+    var arr = [1, 2, 2, 3, 3, 3, 4]
+    var unique_arr = unique(arr)
+    print(unique_arr)  // [1, 2, 3, 4]
+}
+</code></pre>
+<h3 id="3">示例3：栈的实现</h3>
+<pre><code class="language-leno">// 使用数组实现栈
+func stack_new() {
+    return []
+}
+
+func stack_push(stack, value) {
+    stack.add(value)
+}
+
+func stack_pop(stack) {
+    return stack.pop()
+}
+
+func stack_peek(stack) {
+    return stack[stack.len() - 1]
+}
+
+func stack_is_empty(stack) {
+    return stack.len() == 0
+}
+
+main() {
+    var stack = stack_new()
+
+    stack_push(stack, 1)
+    stack_push(stack, 2)
+    stack_push(stack, 3)
+
+    print(&quot;栈顶: &quot; + stack_peek(stack))  // 3
+
+    while not stack_is_empty(stack) {
+        print(&quot;弹出: &quot; + stack_pop(stack))
+    }
+}
+</code></pre>
+<h3 id="4">示例4：队列的实现</h3>
+<pre><code class="language-leno">// 使用数组实现队列
+func queue_new() {
+    return []
+}
+
+func queue_enqueue(queue, value) {
+    queue.add(value)
+}
+
+func queue_dequeue(queue) {
+    return queue.remove(0)
+}
+
+func queue_is_empty(queue) {
+    return queue.len() == 0
+}
+
+main() {
+    var queue = queue_new()
+
+    queue_enqueue(queue, &quot;A&quot;)
+    queue_enqueue(queue, &quot;B&quot;)
+    queue_enqueue(queue, &quot;C&quot;)
+
+    while not queue_is_empty(queue) {
+        print(&quot;出队: &quot; + queue_dequeue(queue))
+    }
+}
+</code></pre>
+<h3 id="5-cstruct">示例5：与 cstruct 结合使用</h3>
+<pre><code class="language-leno">import ffi
+
+cstruct Point {
+    i32 x
+    i32 y
+}
+
+main() {
+    // 创建点数组
+    var points = Point.malloc_array(3)
+    points[0].x = 0;  points[0].y = 0
+    points[1].x = 10; points[1].y = 20
+    points[2].x = 5;  points[2].y = 15
+
+    // 提取坐标到普通数组
+    var x_coords = []
+    for 0 : points.len() - 1 to i {
+        x_coords.add(points[i].x)
+    }
+
+    print(&quot;X 坐标: &quot; + x_coords)  // [0, 10, 5]
+    x_coords.sort()
+    print(&quot;排序后: &quot; + x_coords)  // [0, 5, 10]
+
+    points.free_all()
+}
+</code></pre>
+<hr>
+<h2 id="_19">性能说明</h2>
+<h3 id="_20">时间复杂度</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>时间复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>len()</code></td>
+<td>O(1)</td>
+<td>直接读取计数器</td>
+</tr>
+<tr>
+<td><code>add()</code></td>
+<td>O(1) 均摊</td>
+<td>动态扩容</td>
+</tr>
+<tr>
+<td><code>pop()</code></td>
+<td>O(1)</td>
+<td>移除末尾</td>
+</tr>
+<tr>
+<td><code>insert()</code></td>
+<td>O(n)</td>
+<td>需要移动元素</td>
+</tr>
+<tr>
+<td><code>remove()</code></td>
+<td>O(n)</td>
+<td>需要移动元素</td>
+</tr>
+<tr>
+<td><code>has()</code></td>
+<td>O(n)</td>
+<td>线性查找</td>
+</tr>
+<tr>
+<td><code>index_of()</code></td>
+<td>O(n)</td>
+<td>线性查找</td>
+</tr>
+<tr>
+<td><code>last_index_of()</code></td>
+<td>O(n)</td>
+<td>线性查找</td>
+</tr>
+<tr>
+<td><code>sort()</code></td>
+<td>O(n log n)</td>
+<td>C 层 qsort</td>
+</tr>
+<tr>
+<td><code>reverse()</code></td>
+<td>O(n)</td>
+<td>双指针交换</td>
+</tr>
+<tr>
+<td><code>join()</code></td>
+<td>O(n)</td>
+<td>创建新字符串</td>
+</tr>
+<tr>
+<td><code>copy()</code></td>
+<td>O(n)</td>
+<td>深拷贝</td>
+</tr>
+<tr>
+<td><code>map()</code></td>
+<td>O(n)</td>
+<td>创建新数组</td>
+</tr>
+<tr>
+<td><code>filter()</code></td>
+<td>O(n)</td>
+<td>创建新数组</td>
+</tr>
+<tr>
+<td><code>reduce()</code></td>
+<td>O(1)</td>
+<td>原地累积</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_21">空间复杂度</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>空间复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sort()</code></td>
+<td>O(1)</td>
+<td>原地排序</td>
+</tr>
+<tr>
+<td><code>reverse()</code></td>
+<td>O(1)</td>
+<td>原地反转</td>
+</tr>
+<tr>
+<td><code>copy()</code></td>
+<td>O(n)</td>
+<td>创建新数组</td>
+</tr>
+<tr>
+<td><code>join()</code></td>
+<td>O(n)</td>
+<td>创建新字符串</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_22">注意事项</h2>
+<h3 id="1_1">1. 索引越界</h3>
+<p>访问数组时索引必须在有效范围内：</p>
+<pre><code class="language-leno">var arr = [1, 2, 3]
+print(arr[0])   // OK: 1
+print(arr[2])   // OK: 3
+// print(arr[3]) // 错误：索引越界
+
+// 负索引（从末尾计算）
+print(arr[-1])  // OK: 3
+print(arr[-3])  // OK: 1
+// print(arr[-4]) // 错误：索引越界
+</code></pre>
+<h3 id="2_1">2. 原地操作</h3>
+<p><code>sort()</code> 和 <code>reverse()</code> 会修改原数组：</p>
+<pre><code class="language-leno">var arr = [3, 1, 2]
+var result = arr.sort()
+
+// arr 和 result 是同一个数组
+print(arr)     // [1, 2, 3]
+print(result)  // [1, 2, 3]
+print(arr == result)  // true
+
+// 如果需要保留原数组，先拷贝
+var original = [3, 1, 2]
+var sorted = original.copy().sort()
+print(original)  // [3, 1, 2]
+print(sorted)    // [1, 2, 3]
+</code></pre>
+<h3 id="3-vs">3. 深拷贝 vs 浅拷贝</h3>
+<p><code>copy()</code> 是深拷贝，嵌套数组也会被复制：</p>
+<pre><code class="language-leno">var arr1 = [[1, 2], [3, 4]]
+var arr2 = arr1.copy()
+
+arr1[0][0] = 99
+print(arr1)  // [[99, 2], [3, 4]]
+print(arr2)  // [[1, 2], [3, 4]]  &lt;- 不受影响
+</code></pre>
+<h3 id="4_1">4. 类型混合</h3>
+<p>数组可以包含任意类型，但某些操作可能需要相同类型：</p>
+<pre><code class="language-leno">var mixed = [1, &quot;a&quot;, 2, &quot;b&quot;]
+
+// sort() 可以处理混合类型（按类型分组排序）
+mixed.sort()
+// 结果可能是 [1, 2, a, b] 或类似
+
+// join() 可以处理混合类型（自动转字符串）
+print(mixed.join(&quot;-&quot;))  // 1-2-a-b
+</code></pre>
+<hr>
+<h2 id="_23">最佳实践</h2>
+<ol>
+<li><strong>使用实例方法</strong>：代码更简洁易读
+   ```leno
+   // 推荐
+   arr.sort().reverse()</li>
+</ol>
+<p>// 不推荐
+   arrays.reverse(arrays.sort(arr))
+   ```</p>
+<ol start="2">
+<li>
+<p><strong>链式操作</strong>：利用返回自身的特性
+   <code>leno
+   var result = arr.copy().sort().reverse()</code></p>
+</li>
+<li>
+<p><strong>预分配容量</strong>：如果知道大致大小，可以先添加再修改
+   <code>leno
+   var arr = []
+   for 0 : 1000 to i {
+       arr.add(0)  // 预分配
+   }
+   // 然后修改
+   for 0 : 999 to i {
+       arr[i] = i * 2
+   }</code></p>
+</li>
+<li>
+<p><strong>使用 <code>has()</code> 替代 <code>index_of()</code></strong>：如果只需要检查存在性
+   ```leno
+   // 推荐
+   if arr.has(value) { ... }</p>
+</li>
+</ol>
+<p>// 不推荐（如果不需要索引）
+   if arr.index_of(value) != -1 { ... }
+   ```</p>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-05-17</em></p></main>
+</div>
+<nav class="pager"><a href="module_strings.html">← 上一篇</a><a href="module_dicts.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

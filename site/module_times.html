@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 时间模块 (times) · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_times.html">
+<header class="topbar">
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb">二、模块 API 参考（18 篇）</span>
+</header>
+
+<div class="layout">
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">目录</a></li><li><a href="#_2">使用方式</a></li><li><a href="#_3">全局函数</a></li><ul class="lv3"><li><a href="#sleepms">sleep(ms)</a></li></ul><li><a href="#_4">时间戳获取</a></li><ul class="lv3"><li><a href="#ms">ms()</a></li><li><a href="#us">us()</a></li><li><a href="#ns">ns()</a></li><li><a href="#now">now()</a></li></ul><li><a href="#_5">时间格式化</a></li><ul class="lv3"><li><a href="#formattimestamp-fmt">format(timestamp, fmt)</a></li></ul><li><a href="#_6">日期时间操作</a></li><ul class="lv3"><li><a href="#datetime">datetime()</a></li></ul><li><a href="#_7">时间单位对比</a></li><li><a href="#_8">格式化说明符</a></li><li><a href="#_9">示例代码</a></li><ul class="lv3"><li><a href="#1">1. 性能测试</a></li><li><a href="#2">2. 倒计时程序</a></li><li><a href="#3">3. 定时任务</a></li><li><a href="#4">4. 获取当前日期信息</a></li><li><a href="#5">5. 格式化时间显示</a></li></ul><li><a href="#_10">注意事项</a></li></ul></aside>
+  <main class="content" id="top"><h1 id="leno-times">Leno 时间模块 (times)</h1>
+<p>本文档详细说明 <code>times</code> 模块提供的所有时间操作方法。</p>
+<h2 id="_1">目录</h2>
+<ul>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#全局函数">全局函数</a></li>
+<li><a href="#时间戳获取">时间戳获取</a></li>
+<li><a href="#时间格式化">时间格式化</a></li>
+<li><a href="#日期时间操作">日期时间操作</a></li>
+<li><a href="#时间单位对比">时间单位对比</a></li>
+<li><a href="#格式化说明符">格式化说明符</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="_2">使用方式</h2>
+<pre><code class="language-leno">import times
+
+main() {
+    // 获取当前时间戳
+    var now = times.now()
+    print(now)
+
+    // 休眠 1 秒
+    sleep(1000)
+}
+</code></pre>
+<hr>
+<h2 id="_3">全局函数</h2>
+<h3 id="sleepms"><code>sleep(ms)</code></h3>
+<p>休眠指定的毫秒数。</p>
+<p><strong>参数</strong>:
+- <code>ms</code> (int): 休眠时间，单位毫秒</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">print(&quot;开始&quot;)
+sleep(1000)     // 休眠 1 秒
+print(&quot;1 秒后&quot;)
+
+sleep(500)      // 休眠 0.5 秒
+sleep(2000)     // 休眠 2 秒
+</code></pre>
+<p><strong>注意</strong>: 
+- 如果传入负数，会自动转为 0
+- 在 Windows 和 Linux/macOS 上都有良好支持</p>
+<hr>
+<h2 id="_4">时间戳获取</h2>
+<h3 id="ms"><code>ms()</code></h3>
+<p>单调计时（毫秒，带小数）。与 <code>us()</code>/<code>ns()</code> 共用同一高精度时钟源（Windows QPC / POSIX CLOCK_MONOTONIC），<strong>精度由时钟源决定、与单位无关</strong>。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>float</code> - 单调毫秒计数（带小数；<code>int</code> 会把毫秒截断成 1ms 粒度，所以不返回 int）</p>
+<pre><code class="language-leno">var t1 = times.ms()
+// ... 执行一些操作
+var t2 = times.ms()
+print(&quot;耗时: &quot; + (t2 - t1) + &quot; ms&quot;)
+</code></pre>
+<h3 id="us"><code>us()</code></h3>
+<p>单调计时（微秒，带小数）。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>float</code> - 单调微秒计数</p>
+<pre><code class="language-leno">var t1 = times.us()
+// ... 执行一些操作  
+var t2 = times.us()
+print(&quot;耗时: &quot; + (t2 - t1) + &quot; us&quot;)
+</code></pre>
+<h3 id="ns"><code>ns()</code></h3>
+<p>单调计时（纳秒，带小数）。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>float</code> - 单调纳秒计数</p>
+<pre><code class="language-leno">var t1 = times.ns()
+// ... 执行一些操作
+var t2 = times.ns()
+print(&quot;耗时: &quot; + (t2 - t1) + &quot; ns&quot;)
+</code></pre>
+<h3 id="now"><code>now()</code></h3>
+<p>获取当前 Unix 时间戳（秒级精度）。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - Unix 时间戳（从 1970-01-01 00:00:00 UTC 开始的秒数）</p>
+<pre><code class="language-leno">var timestamp = times.now()
+print(timestamp)  // 例如: 1777650164
+
+// 配合 format 使用
+print(times.format(timestamp, &quot;%Y-%m-%d %H:%M:%S&quot;))
+</code></pre>
+<hr>
+<h2 id="_5">时间格式化</h2>
+<h3 id="formattimestamp-fmt"><code>format(timestamp, fmt)</code></h3>
+<p>将 Unix 时间戳格式化为可读的字符串。</p>
+<p><strong>参数</strong>:
+- <code>timestamp</code> (int): Unix 时间戳（秒）
+- <code>fmt</code> (string): 格式字符串</p>
+<p><strong>返回</strong>: <code>string</code> - 格式化后的时间字符串</p>
+<pre><code class="language-leno">var now = times.now()
+
+// 标准格式
+print(times.format(now, &quot;%Y-%m-%d %H:%M:%S&quot;))  // 2026-05-01 14:30:45
+
+// 日期格式
+print(times.format(now, &quot;%Y年%m月%d日&quot;))       // 2026年05月01日
+
+// 时间格式
+print(times.format(now, &quot;%H:%M:%S&quot;))           // 14:30:45
+
+// 自定义格式
+print(times.format(now, &quot;%Y/%m/%d %I:%M %p&quot;))  // 2026/05/01 02:30 PM
+</code></pre>
+<p><strong>口径（2026-11-11 起）</strong>：</p>
+<ul>
+<li>格式串里的<strong>字面量原样输出</strong>（含中文：<code>"%Y年%m月%d日"</code> ⇒ <code>2026年05月01日</code>）；
+  只有 <code>%X</code> 交给系统 strftime 渲。要输出百分号写 <code>%%</code>。</li>
+<li>输出长度<strong>不设上限</strong>（内部可增长缓冲；此前超过 256 字节会整串变成 <code>""</code>）。</li>
+<li><code>%Z</code>（时区名）/ <code>%A</code> / <code>%B</code> 等本地化文本会转成 <strong>UTF-8</strong>（Windows 上 strftime 给的是
+  本地代码页字节 ⇒ 以前会得到非法 UTF-8）。</li>
+<li><strong>出错就抛异常</strong>，不再静默返回空串：未知说明符（<code>%Q</code>）、格式串以 <code>%</code> 结尾、
+  以及<strong>时间戳超出本平台 <code>localtime</code> 范围</strong>（Windows 上只支持 1970 年之后、约 3001 年之前；
+  过大的正数与 1970 年之前的负数都会落到这里，报错文案会同时点名这两种可能）。</li>
+</ul>
+<hr>
+<h2 id="_6">日期时间操作</h2>
+<h3 id="datetime"><code>datetime()</code></h3>
+<p>获取当前日期时间的各个组成部分。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>array</code> - 包含 [年, 月, 日, 时, 分, 秒] 的数组</p>
+<pre><code class="language-leno">var dt = times.datetime()
+// dt = [2026, 5, 1, 14, 30, 45]
+
+print(&quot;年: &quot; + dt[0])   // 2026
+print(&quot;月: &quot; + dt[1])   // 5
+print(&quot;日: &quot; + dt[2])   // 1
+print(&quot;时: &quot; + dt[3])   // 14
+print(&quot;分: &quot; + dt[4])   // 30
+print(&quot;秒: &quot; + dt[5])   // 45
+
+// 组合输出
+print(&quot;现在是 &quot; + dt[0] + &quot;年&quot; + dt[1] + &quot;月&quot; + dt[2] + &quot;日 &quot; + 
+      dt[3] + &quot;:&quot; + dt[4] + &quot;:&quot; + dt[5])
+</code></pre>
+<hr>
+<h2 id="_7">时间单位对比</h2>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>精度</th>
+<th>用途</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ms()</code></td>
+<td>毫秒（带小数）</td>
+<td>一般计时</td>
+<td>123456.789</td>
+</tr>
+<tr>
+<td><code>us()</code></td>
+<td>微秒（带小数）</td>
+<td>高精度计时</td>
+<td>123456789.0</td>
+</tr>
+<tr>
+<td><code>ns()</code></td>
+<td>纳秒（带小数）</td>
+<td>超高精度计时</td>
+<td>123456789000.0</td>
+</tr>
+<tr>
+<td><code>now()</code></td>
+<td>秒</td>
+<td>Unix 时间戳（挂钟）</td>
+<td>1777650164</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>ms()</code>/<code>us()</code>/<code>ns()</code> 都是<strong>单调计数</strong>（示例值是"自开机以来的计数"量级，不是日期），
+只用于取差值；需要日期/时间戳请用 <code>now()</code> / <code>format()</code> / <code>datetime()</code>。</p>
+</blockquote>
+<p><strong>使用建议</strong>:
+- 一般性能测试 → 使用 <code>ms()</code>
+- 高精度性能分析 → 使用 <code>us()</code> 或 <code>ns()</code>
+- 需要存储或传输时间 → 使用 <code>now()</code>
+- 需要格式化显示 → 使用 <code>now()</code> + <code>format()</code>
+- <strong>计时把量程拉长</strong>：单项负载跑到 ≥100ms（或重复多轮取最小值）。
+  短负载的分辨率与抖动会淹没差异 —— 例如 15ms 的负载在 15.625ms 粒度下会变成"1 个刻度"的假数</p>
+<hr>
+<h2 id="_8">格式化说明符</h2>
+<table>
+<thead>
+<tr>
+<th>说明符</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%Y</code></td>
+<td>四位年份</td>
+<td>2026</td>
+</tr>
+<tr>
+<td><code>%m</code></td>
+<td>月份 (01-12)</td>
+<td>05</td>
+</tr>
+<tr>
+<td><code>%d</code></td>
+<td>日期 (01-31)</td>
+<td>01</td>
+</tr>
+<tr>
+<td><code>%H</code></td>
+<td>小时 (00-23)</td>
+<td>14</td>
+</tr>
+<tr>
+<td><code>%I</code></td>
+<td>小时 (01-12)</td>
+<td>02</td>
+</tr>
+<tr>
+<td><code>%M</code></td>
+<td>分钟 (00-59)</td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>%S</code></td>
+<td>秒 (00-59)</td>
+<td>45</td>
+</tr>
+<tr>
+<td><code>%p</code></td>
+<td>AM/PM</td>
+<td>PM</td>
+</tr>
+<tr>
+<td><code>%A</code></td>
+<td>星期几全称</td>
+<td>Friday</td>
+</tr>
+<tr>
+<td><code>%a</code></td>
+<td>星期几简称</td>
+<td>Fri</td>
+</tr>
+<tr>
+<td><code>%B</code></td>
+<td>月份全称</td>
+<td>May</td>
+</tr>
+<tr>
+<td><code>%b</code></td>
+<td>月份简称</td>
+<td>May</td>
+</tr>
+<tr>
+<td><code>%j</code></td>
+<td>一年中的第几天</td>
+<td>121</td>
+</tr>
+<tr>
+<td><code>%W</code></td>
+<td>一年中的第几周</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_9">示例代码</h2>
+<h3 id="1">1. 性能测试</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    var start = times.ms()
+
+    // 测试代码
+    var sum = 0
+    for 1:1000000 to i {
+        sum += i
+    }
+
+    var end = times.ms()
+    print(&quot;计算耗时: &quot; + (end - start) + &quot; ms&quot;)
+}
+</code></pre>
+<h3 id="2">2. 倒计时程序</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    print(&quot;倒计时开始!&quot;)
+
+    for 10:1:-1 to i {
+        print(&quot;还剩 &quot; + i + &quot; 秒...&quot;)
+        sleep(1000)
+    }
+
+    print(&quot;时间到!&quot;)
+}
+</code></pre>
+<h3 id="3">3. 定时任务</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    print(&quot;任务调度器启动&quot;)
+
+    var last_run = times.ms()
+    var interval = 2000  // 每 2 秒执行一次
+
+    for 1:5 to count {
+        var now = times.ms()
+        var elapsed = now - last_run
+
+        if (elapsed &lt; interval) {
+            sleep(interval - elapsed)
+        }
+
+        print(&quot;执行任务 #&quot; + count + &quot; (&quot; + times.format(times.now(), &quot;%H:%M:%S&quot;) + &quot;)&quot;)
+        last_run = times.ms()
+    }
+}
+</code></pre>
+<h3 id="4">4. 获取当前日期信息</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    var dt = times.datetime()
+
+    // 判断是否是周末
+    var weekday = times.format(times.now(), &quot;%w&quot;)  // 0=周日, 1=周一...
+    if (weekday == &quot;0&quot; || weekday == &quot;6&quot;) {
+        print(&quot;今天是周末，好好休息!&quot;)
+    } else {
+        print(&quot;今天是工作日，加油!&quot;)
+    }
+
+    // 判断上午/下午
+    var hour = dt[3]
+    if (hour &lt; 12) {
+        print(&quot;上午好!&quot;)
+    } else {
+        print(&quot;下午好!&quot;)
+    }
+}
+</code></pre>
+<h3 id="5">5. 格式化时间显示</h3>
+<pre><code class="language-leno">import times
+
+main() {
+    var now = times.now()
+
+    // 不同格式的时间显示
+    print(&quot;标准格式: &quot; + times.format(now, &quot;%Y-%m-%d %H:%M:%S&quot;))
+    print(&quot;中文格式: &quot; + times.format(now, &quot;%Y年%m月%d日 %H时%M分%S秒&quot;))
+    print(&quot;美式格式: &quot; + times.format(now, &quot;%m/%d/%Y %I:%M %p&quot;))
+    print(&quot;简洁格式: &quot; + times.format(now, &quot;%H:%M&quot;))
+
+    // 显示星期
+    print(&quot;今天是: &quot; + times.format(now, &quot;%A&quot;))
+    print(&quot;本月是: &quot; + times.format(now, &quot;%B&quot;))
+}
+</code></pre>
+<hr>
+<h2 id="_10">注意事项</h2>
+<ol>
+<li>
+<p><strong>计时分辨率与量程（2026-09-16 修正）</strong>
+   - <code>ms()</code>/<code>us()</code>/<code>ns()</code> 共用同一高精度单调时钟源（Windows QPC / POSIX CLOCK_MONOTONIC）：
+     <strong>精度由时钟源决定，与单位无关</strong> —— 换算成毫秒不丢精度，所以 <code>ms()</code> 也返回 <code>float</code>
+   - 三者都是<strong>单调计数</strong>，只用于取差值；挂钟时间请用 <code>now()</code> / <code>format()</code> / <code>datetime()</code>
+   - <strong>量程比分辨率更容易毁掉测量</strong>：单项负载请跑到 ≥100ms，或重复多轮取最小值，
+     否则调度/缓存/频率抖动会让数字不可复现
+   - 历史问题：<code>ms()</code> 曾用 <code>GetTickCount64</code>（分辨率 ≈15.625ms）且返回 <code>int</code>，
+     短测量会出现"整刻度"假象（如 16ms 实为 1 个刻度，真值可能只有 0.4ms）</p>
+</li>
+<li>
+<p><strong>时区问题</strong>
+   - <code>now()</code> 和 <code>format()</code> 使用本地时区
+   - 如果需要 UTC 时间，目前需要自行转换</p>
+</li>
+<li>
+<p><strong>sleep 精度</strong>
+   - <code>sleep()</code> 的实际休眠时间可能略长于指定时间
+   - 系统调度和其他因素会导致微小延迟</p>
+</li>
+<li>
+<p><strong>性能考虑</strong>
+   - 频繁调用高精度计时函数 (<code>us()</code>, <code>ns()</code>) 可能有一定开销
+   - 在性能关键代码中，建议减少调用次数</p>
+</li>
+</ol>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-09-16</em></p></main>
+</div>
+<nav class="pager"><a href="module_maths.html">← 上一篇</a><a href="module_rands.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
