@@ -106,9 +106,26 @@ pre:hover .copy-btn{opacity:1}
 .hero h1{font-size:26px;margin:0 0 6px}
 .hero p{color:var(--muted);margin:0 0 24px}
 .cat{margin-bottom:34px}
-.cat h2{font-size:19px;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.cat h2{font-size:19px;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .cat h2 .n{color:var(--muted);font-size:13px;font-weight:400;margin-left:8px}
+.cat-desc{color:var(--muted);font-size:13px;margin:6px 0 14px}
+details.cat{border:1px dashed var(--line);border-radius:10px;padding:14px 18px;background:transparent}
+details.cat summary{cursor:pointer;list-style:none}
+details.cat summary::-webkit-details-marker{display:none}
+details.cat summary h2{border:0;margin:0;padding:0;font-size:17px}
+details.cat summary h2:before{content:'▸ ';color:var(--accent)}
+details.cat[open] summary h2:before{content:'▾ '}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+/* ---- 两条主路径 ---- */
+.paths{margin-bottom:28px}
+.paths h2{font-size:15px;color:var(--muted);margin:0 0 10px}
+.path-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.path-card{display:flex;flex-direction:column;gap:3px;padding:15px 17px;background:var(--accent-soft);
+  border:1px solid var(--line);border-radius:10px;color:var(--ink);transition:transform .15s,border-color .15s}
+.path-card:hover{transform:translateY(-2px);border-color:var(--accent);text-decoration:none}
+.path-card .pc-tag{font-size:11px;color:var(--muted);letter-spacing:.5px}
+.path-card strong{font-size:16px}
+.path-card .pc-desc{font-size:12.5px;color:var(--muted);line-height:1.5}
 .card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:9px;
   padding:13px 15px;color:var(--ink);transition:border-color .15s,transform .15s}
 .card:hover{border-color:var(--accent);transform:translateY(-2px);text-decoration:none}

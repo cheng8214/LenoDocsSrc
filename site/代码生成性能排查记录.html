@@ -19,7 +19,7 @@
   <button id="btn-fs-down" title="缩小字号">A−</button>
   <button id="btn-fs-up" title="放大字号">A+</button>
 </span>
-  <span class="crumb">五、性能记录</span>
+  <span class="crumb">07 性能 · 排查 · 历史</span>
 </header>
 
 <div class="layout">
@@ -254,7 +254,7 @@ UNARY    856
 <h2 id="_7">总结</h2>
 <p>codegen 4.3s 的根因尚未定位。已排除 emit_byte（8.9ms）、gen_func_proto self（1.6ms）、infer_expr_type（禁用后仅降 4%）、字符串内化（O(1)）。最可能的嫌疑对象是 scope_resolve 的调用开销、gen_switch 内部的排序/malloc、ast_has_try 的重复遍历，以及未解释的 2214 vs 66 函数调用差异。建议优先用采样 profiler（Very Sleepy 或 WPR）获取 self-time 分布，或用源码二分法快速缩小范围。</p></main>
 </div>
-<nav class="pager"><a href="函数调用性能优化_调用帧与多返回值解构.html">← 上一篇</a><a href="leno对比.html">下一篇 →</a></nav>
+<nav class="pager"><a href="VM字节码校验与崩溃防护设计方案.html">← 上一篇</a><a href="优化方案_内存态序列化运行.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
 <div id="toast" class="toast"></div>
 </body></html>

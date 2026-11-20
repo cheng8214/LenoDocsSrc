@@ -100,8 +100,9 @@ HOME_TPL = """<!doctype html>
 <main class="home">
   <div class="hero">
     <h1>快速找到你要的那一条</h1>
-    <p>输入关键词直接搜全文，结果按章节定位；按 <kbd>/</kbd> 随时聚焦搜索。也可以从下面的分类进去翻。</p>
+    <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面两条主路径进去。全站 {n} 篇。</p>
   </div>
+  {paths}
   {recent}
   {sections}
   <div class="footnote">由 <code>build_html.py</code> 从 <code>LenoDocsSrc/*.md</code> 生成 ·
@@ -223,9 +224,26 @@ pre:hover .copy-btn{opacity:1}
 .hero h1{font-size:26px;margin:0 0 6px}
 .hero p{color:var(--muted);margin:0 0 24px}
 .cat{margin-bottom:34px}
-.cat h2{font-size:19px;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.cat h2{font-size:19px;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .cat h2 .n{color:var(--muted);font-size:13px;font-weight:400;margin-left:8px}
+.cat-desc{color:var(--muted);font-size:13px;margin:6px 0 14px}
+details.cat{border:1px dashed var(--line);border-radius:10px;padding:14px 18px;background:transparent}
+details.cat summary{cursor:pointer;list-style:none}
+details.cat summary::-webkit-details-marker{display:none}
+details.cat summary h2{border:0;margin:0;padding:0;font-size:17px}
+details.cat summary h2:before{content:'▸ ';color:var(--accent)}
+details.cat[open] summary h2:before{content:'▾ '}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+/* ---- 两条主路径 ---- */
+.paths{margin-bottom:28px}
+.paths h2{font-size:15px;color:var(--muted);margin:0 0 10px}
+.path-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.path-card{display:flex;flex-direction:column;gap:3px;padding:15px 17px;background:var(--accent-soft);
+  border:1px solid var(--line);border-radius:10px;color:var(--ink);transition:transform .15s,border-color .15s}
+.path-card:hover{transform:translateY(-2px);border-color:var(--accent);text-decoration:none}
+.path-card .pc-tag{font-size:11px;color:var(--muted);letter-spacing:.5px}
+.path-card strong{font-size:16px}
+.path-card .pc-desc{font-size:12.5px;color:var(--muted);line-height:1.5}
 .card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:9px;
   padding:13px 15px;color:var(--ink);transition:border-color .15s,transform .15s}
 .card:hover{border-color:var(--accent);transform:translateY(-2px);text-decoration:none}
@@ -502,27 +520,87 @@ def toc_html(toc):
     return "".join(out)
 
 
+# ============================================================ 分类体系（按读者任务，而非文档状态）
+# 97 篇 md 的路径被 Leno 代码仓 67 个文件按名引用 ⇒ **绝不物理移动**，分类只在这里做。
+# 每项：(分类名, 折叠?, 一句话说明, [文件名规则])；规则按优先级匹配，先命中先归类。
+CATEGORIES = [
+    ("01 入门 · 先读这些", False, "第一次接触 Leno：从教程到惯用写法，按顺序读", [
+        "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md",
+        "Leno_规范草稿.md", "区间口径约定.md",
+    ]),
+    ("02 模块 API 参考", False, "19 个标准模块的函数清单 —— 写代码时最常翻的", [
+        "PREFIX:module_",
+    ]),
+    ("03 使用指南", False, "按任务查：import / 打包 / 并发 / FFI / 加密 / GUI 布局", [
+        "SUFFIX:使用指南.md", "并发选择指引.md", "布局配方.md", "包管理与安装使用指南.md",
+        "单文件打包使用指南.md", "Leno跨模块clib开发经验.md", "加密算法示例指南.md",
+    ]),
+    ("04 语言设计与实现", False, "类型系统、语法提案、编译器与 VM 的实现细节", [
+        "F2_非可空与可空类型设计.md", "类型收窄与绑定语法改进.md", "解构语法实现文档.md",
+        "enum载荷_设计草案.md", "注解系统与optkeys设计草案.md", "struct 里const可行性.md",
+        "struct_extend_设计草案.md", "cstruct_packed_align_设计文档.md", "错误与空值契约.md",
+        "单一事实来源与重复实现收敛.md", "寄存式与栈式的差异清单.md",
+        "错误列号准确性_工作进度.md", "错误堆栈追踪改进方案.md", "Leno报错提示改进计划.md",
+    ]),
+    ("05 GUI · 平台", False, "LenoSDL3 控件与渲染、Android / Web / LenoNet / LenoHtml", [
+        "PREFIX:LenoSDL3_", "LenoSDL3像素直写渲染优化.md", "PREFIX:Android",
+        "PREFIX:LenoWeb", "PREFIX:LenoNet", "PREFIX:LenoHtml",
+    ]),
+    ("06 开发台账", True, "待办、待修、实测评估与改进清单 —— 维护者视角，按需展开", [
+        "PREFIX:待办", "PREFIX:待修", "SUFFIX:修复追踪.md", "SUFFIX:改进建议.md",
+        "SUFFIX:修复追踪.md", "语言摩擦与隐式契约清单.md", "易用性痛点（TraeSign 移植实录）.md",
+        "Leno语言改进建议.md", "密集数据与FFI能力评估_2026-11-11.md",
+        "Leno真实项目可用性评估_2026-11-08.md", "移植音乐下载器实录与待办.md",
+        "语言与框架问题_Aria实战_2026-10-31.md",
+    ]),
+    ("07 性能 · 排查 · 历史", True, "性能数据与已完结的排查记录；部分基于旧栈式 VM，看前先核对源码", [
+        "REST",   # 兜底：以上都没命中的全进这里
+    ]),
+]
+
+# 首页两条主路径：给"介绍 Leno"和"查 API"各一个直达入口
+PATHS = [
+    ("学 Leno", "从零到写出第一个程序", "Leno入门教程.html", "入门教程"),
+    ("看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"),
+    ("查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"),
+    ("查模块 API", "19 个标准模块的函数清单", "module_strings.html", "模块索引"),
+]
+
+
+def classify(rel):
+    """按文件名把 md 归到某个分类；返回分类名。规则按 CATEGORIES 顺序匹配。"""
+    name = rel.split("/")[-1]
+    for cat, _fold, _desc, rules in CATEGORIES[:-1]:
+        for r in rules:
+            if r.startswith("PREFIX:") and name.startswith(r[7:]):
+                return cat
+            if r.startswith("SUFFIX:") and name.endswith(r[7:]):
+                return cat
+            if name == r:
+                return cat
+    return CATEGORIES[-1][0]
+
+
 def parse_index():
+    """从 INDEX.md 读每篇的一句话描述与状态（分类已由 CATEGORIES 决定，这里只取元数据）。"""
     txt = INDEX_MD.read_text(encoding="utf-8")
-    cats, cur = [], None
+    meta = {}
+    cur_section = ""
     for line in txt.split("\n"):
-        m = re.match(r"^##\s+([一二三四五六七八])、\s*(.+?)\s*$", line)
-        if m:
-            cur = {"name": m.group(1) + "、" + m.group(2), "items": []}
-            cats.append(cur)
+        if re.match(r"^##\s+[一二三四五六七八]、", line):
+            cur_section = line.strip()
             continue
-        if not cur or not line.startswith("|"):
+        if not line.startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) < 2:
             continue
         m = re.match(r"\[([^\]]+)\]\(([^)]+?\.md)(?:#[^)]*)?\)", cells[0])
         if m:
-            cur["items"].append({
-                "name": m.group(1).strip(), "file": m.group(2).strip(),
-                "desc": cells[1], "status": cells[2] if len(cells) > 2 else "",
-            })
-    return cats
+            f = m.group(2).strip()
+            meta[f] = {"desc": cells[1], "status": cells[2] if len(cells) > 2 else "",
+                       "section": cur_section}
+    return meta
 
 
 def status_badge(s):
@@ -534,46 +612,33 @@ def status_badge(s):
 
 # ============================================================ 主流程
 def main():
-    cats = parse_index()
-    spots = {}
-    for ci, c in enumerate(cats):
-        for ii, it in enumerate(c["items"]):
-            spots.setdefault(it["file"], []).append((ci, ii))
-    for places in spots.values():
-        if len(places) > 1:
-            arch = [x for x in places if "归档" in cats[x[0]]["name"]]
-            keep = arch[0] if arch else places[0]
-            for ci, ii in places:
-                if (ci, ii) != keep:
-                    cats[ci]["items"][ii] = None
-    for c in cats:
-        c["items"] = [it for it in c["items"] if it]
-    # README.md 是**源仓库自述**（说明这个仓库是什么、怎么生成），不是文档页 ⇒ 排除
-    registered = {it["file"] for c in cats for it in c["items"]} | {"INDEX.md", "README.md"}
-
+    meta = parse_index()
+    # 只保留真实存在的 md；README 是仓库自述，不是文档页
     all_md = sorted(
         [p for p in SRC.rglob("*.md")
-         if "_site" not in p.parts and "_build_vendor" not in p.parts and p.name != "README.md"],
+         if "_site" not in p.parts and "_build_vendor" not in p.parts
+         and "site" not in p.parts and p.name not in ("README.md", "INDEX.md")],
         key=lambda p: (p.relative_to(SRC).as_posix().lower()),
     )
-    files = [p for p in all_md if p != INDEX_MD]
+    files = [p.relative_to(SRC).as_posix() for p in all_md]
 
-    others = [p for p in files if p.relative_to(SRC).as_posix() not in registered]
-    if others:
-        cats.append({
-            "name": "九、索引未收录（近期新增）",
-            "items": [{"name": p.stem, "file": p.relative_to(SRC).as_posix(),
-                       "desc": "INDEX.md 最后核对于 2026-10-02，这篇是之后新增或未登记的",
-                       "status": ""} for p in others],
+    # 按 CATEGORIES 建组（顺序即展示顺序）
+    cats = []
+    for cname, fold, desc, _rules in CATEGORIES:
+        cats.append({"name": cname, "fold": fold, "desc": desc, "items": []})
+    by_name = {c["name"]: c for c in cats}
+    for rel in files:
+        info = meta.get(rel, {})
+        title = re.sub(r"[`*]", "", info.get("desc", "")[:60]) or Path(rel).stem
+        by_name[classify(rel)]["items"].append({
+            "name": Path(rel).stem, "file": rel,
+            "desc": info.get("desc", ""), "status": info.get("status", ""),
         })
 
-    ordered, cat_of, seen = [], {}, set()
+    ordered, cat_of = [], {}
     for c in cats:
         for it in c["items"]:
             rel = it["file"]
-            if rel in seen or not (SRC / rel).exists():
-                continue
-            seen.add(rel)
             ordered.append(rel)
             cat_of[rel] = c["name"]
 
@@ -636,7 +701,16 @@ def main():
         prev='<a href="index.html">← 返回门户</a>', next="<span></span>",
     ), encoding="utf-8", newline="\n")
 
-    total_bytes = sum(p.stat().st_size for p in files)
+    total_bytes = sum((SRC / f).stat().st_size for f in files)
+    # 两条主路径快捷卡
+    path_cards = "".join(
+        '<a class="path-card" href="' + href + '"><span class="pc-tag">' + tag +
+        '</span><strong>' + title + '</strong><span class="pc-desc">' + d + '</span></a>'
+        for title, d, href, tag in PATHS
+    )
+    paths_html = ('<section class="paths"><h2>两条主路径</h2><div class="path-grid">' +
+                  path_cards + '</div></section>')
+
     sections = []
     for c in cats:
         items = [it for it in c["items"] if (SRC / it["file"]).exists()]
@@ -650,17 +724,23 @@ def main():
             desc = re.sub(r"[`*]", "", it["desc"])
             cards.append('<a class="card" href="' + href + '"><div class="f">' +
                          it["name"] + badge + '</div><div class="d">' + desc + "</div></a>")
-        # 分类标题里的 `code` 也要渲染；括号里的"N 篇"是 md 里手写的旧数字，
-        #   与真实条数常年不一致（实测 18 vs 19）⇒ 生成时**去掉**，只信下面 span.n 的真实计数 ✓
-        sec_name = re.sub(r"（\s*\d+\s*篇\s*）", "", c["name"])
-        sections.append('<section class="cat"><h2>' + inline_md(sec_name) +
-                        '<span class="n">' + str(len(items)) + ' 篇</span></h2><div class="grid">' +
-                        "".join(cards) + "</div></section>")
+        n = len(items)
+        if c["fold"]:
+            # 台账 / 历史类默认折叠，避免淹没主路径
+            sections.append('<details class="cat fold"><summary><h2>' + c["name"] +
+                            '<span class="n">' + str(n) + ' 篇 · 点击展开</span></h2>' +
+                            '<p class="cat-desc">' + c["desc"] + '</p></summary><div class="grid">' +
+                            "".join(cards) + "</div></details>")
+        else:
+            sections.append('<section class="cat"><h2>' + c["name"] +
+                            '<span class="n">' + str(n) + ' 篇</span></h2>' +
+                            '<p class="cat-desc">' + c["desc"] + '</p><div class="grid">' +
+                            "".join(cards) + "</div></section>")
 
     (OUT / "index.html").write_text(HOME_TPL.format(
         site=SITE_TITLE, n=len(index_docs), tools=TOOLS,
         total="{:.1f} MB 原文".format(total_bytes / 1024 / 1024),
-        recent='<div class="recent" id="recent"></div>', sections="\n".join(sections),
+        recent='<div class="recent" id="recent"></div>', paths=paths_html, sections="\n".join(sections),
     ), encoding="utf-8", newline="\n")
 
     (ASSETS / "style.css").write_text(CSS, encoding="utf-8", newline="\n")
