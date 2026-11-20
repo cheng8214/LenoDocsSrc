@@ -558,6 +558,38 @@ CATEGORIES = [
     ]),
 ]
 
+# 首页卡片 / 搜索结果显示名：md 文件名保持原样（被代码仓引用），只在这里换成人话。
+DISPLAY_NAME = {
+    "FAQ": "常见问题",
+    "idioms": "惯用写法速查",
+    "LENB-format-reverse-notes": "LENB 格式逆向笔记",
+    "leno对比": "Leno 与其他语言对比",
+    "cstruct_packed_align_设计文档": "C 结构体对齐与 packed 设计",
+    "struct_extend_设计草案": "struct 继承设计草案",
+    "struct 里const可行性": "struct 中 const 的可行性",
+    "async_await入门指南": "async / await 入门指南",
+    "import使用指南": "import 使用指南",
+    "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）",
+}
+
+# INDEX.md 里没登记描述的篇目，给一句兜底，避免首页卡片空着一行。
+DESC_FALLBACK = {
+    "idioms": "高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法",
+}
+
+
+def display_name(stem):
+    """把文件名 stem 换成首页可见的中文名；module_* 保留模块名便于对照源码。"""
+    if stem in DISPLAY_NAME:
+        return DISPLAY_NAME[stem]
+    if stem.startswith("module_"):
+        name = stem[len("module_"):]
+        if name.endswith("_api"):
+            name = name[:-4]
+        return name + " 模块 API"
+    return stem
+
+
 # 首页两条主路径：给"介绍 Leno"和"查 API"各一个直达入口
 PATHS = [
     ("学 Leno", "从零到写出第一个程序", "Leno入门教程.html", "入门教程"),
@@ -631,8 +663,9 @@ def main():
         info = meta.get(rel, {})
         title = re.sub(r"[`*]", "", info.get("desc", "")[:60]) or Path(rel).stem
         by_name[classify(rel)]["items"].append({
-            "name": Path(rel).stem, "file": rel,
-            "desc": info.get("desc", ""), "status": info.get("status", ""),
+            "name": display_name(Path(rel).stem), "file": rel,
+            "desc": info.get("desc", "") or DESC_FALLBACK.get(Path(rel).stem, ""),
+            "status": info.get("status", ""),
         })
 
     ordered, cat_of = [], {}
@@ -684,7 +717,7 @@ def main():
 
         index_docs.append({
             "f": rel.replace(".md", ".html").replace("\\", "/"),
-            "t": title, "c": cat, "a": 1 if archived else 0,
+            "t": display_name(Path(rel).stem), "c": cat, "a": 1 if archived else 0,
             "s": split_sections(text, toc),
         })
 
