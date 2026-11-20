@@ -65,7 +65,7 @@ strings.to_base64(&quot;Hello, Leno!&quot;, true)   // URL-safe：`+` / `/` ⇒ 
 <hr>
 <h2 id="_3">哈希算法</h2>
 <h3 id="md5">MD5</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/md5.leno"><code>examples/crypto/md5.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/md5.leno"><code>examples/crypto/md5.leno</code></a></p>
 <p>RFC 1321 标准实现，生成 128 位（16 字节）哈希值。</p>
 <pre><code class="language-leno">var hash = md5(&quot;abc&quot;)
 print(hash)  // 900150983cd24fb0d6963f7d28e17f72
@@ -74,7 +74,7 @@ print(hash)  // 900150983cd24fb0d6963f7d28e17f72
 <p><strong>安全提示</strong>: MD5 已不推荐用于安全场景（如密码存储、数字签名），仅作学习演示或校验和用途。</p>
 </blockquote>
 <h3 id="sha-1">SHA-1</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/sha1.leno"><code>examples/crypto/sha1.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/sha1.leno"><code>examples/crypto/sha1.leno</code></a></p>
 <p>FIPS 180-4 标准实现，生成 160 位（20 字节）哈希值。</p>
 <pre><code class="language-leno">var hash = sha1(&quot;abc&quot;)
 print(hash)  // a9993e364706816aba3e25717850c26c9cd0d89d
@@ -83,13 +83,13 @@ print(hash)  // a9993e364706816aba3e25717850c26c9cd0d89d
 <p><strong>安全提示</strong>: SHA-1 已被证明存在碰撞攻击，不推荐用于新系统的安全场景。</p>
 </blockquote>
 <h3 id="sha-256">SHA-256</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/sha256.leno"><code>examples/crypto/sha256.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/sha256.leno"><code>examples/crypto/sha256.leno</code></a></p>
 <p>FIPS 180-4 标准实现，生成 256 位（32 字节）哈希值，目前仍被认为是安全的哈希算法。</p>
 <pre><code class="language-leno">var hash = sha256(&quot;abc&quot;)
 print(hash)  // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
 </code></pre>
 <h3 id="hmac-sha256">HMAC-SHA256</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/hmac_sha256.leno"><code>examples/crypto/hmac_sha256.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/hmac_sha256.leno"><code>examples/crypto/hmac_sha256.leno</code></a></p>
 <p>RFC 2104 标准实现，基于 SHA-256 的消息认证码，用于验证消息的完整性和真实性。</p>
 <pre><code class="language-leno">var mac = hmac_sha256(&quot;secret_key&quot;, &quot;message to authenticate&quot;)
 print(mac)
@@ -98,7 +98,7 @@ print(mac)
 <hr>
 <h2 id="_4">对称加密</h2>
 <h3 id="aes-128">AES-128</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/aes128.leno"><code>examples/crypto/aes128.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/aes128.leno"><code>examples/crypto/aes128.leno</code></a></p>
 <p>FIPS-197 标准 AES-128 实现，包含完整的 SubBytes、ShiftRows、MixColumns、AddRoundKey 和密钥扩展。</p>
 <pre><code class="language-leno">var key = &quot;0123456789abcdef&quot;        // 16 字节密钥
 var plaintext = &quot;Hello, AES-128!&quot;
@@ -115,7 +115,7 @@ print(decrypted)   // Hello, AES-128!
 - 支持任意长度字符串（自动分块）
 - 中文 UTF-8 支持</p>
 <h3 id="chacha20">ChaCha20</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/chacha20.leno"><code>examples/crypto/chacha20.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/chacha20.leno"><code>examples/crypto/chacha20.leno</code></a></p>
 <p>Daniel J. Bernstein 设计的现代流加密算法，被广泛用于 TLS 1.3、WireGuard、SSH。</p>
 <pre><code class="language-leno">var key = &quot;01234567890123456789012345678901&quot;  // 32 字节
 var nonce = &quot;012345678901&quot;                     // 12 字节
@@ -130,7 +130,7 @@ var dec = chacha20_decrypt(key, 0, nonce, enc)
 - 输出 hex 编码避免 null 字节截断
 - 多块自动处理（每块 64 字节）</p>
 <h3 id="rc4">RC4</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/rc4.leno"><code>examples/crypto/rc4.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/rc4.leno"><code>examples/crypto/rc4.leno</code></a></p>
 <p>经典流密码，加密和解密使用相同操作（密钥流 XOR）。</p>
 <pre><code class="language-leno">var encrypted = rc4(&quot;password&quot;, &quot;Hello, Leno!&quot;)
 var decrypted = rc4(&quot;password&quot;, encrypted)
@@ -140,8 +140,8 @@ var decrypted = rc4(&quot;password&quot;, encrypted)
 </blockquote>
 <h3 id="tea-xtea">TEA / XTEA</h3>
 <p><strong>文件</strong>:
-- <a href="../../examples/crypto/tea.leno"><code>examples/crypto/tea.leno</code></a>
-- <a href="../../examples/crypto/xtea.leno"><code>examples/crypto/xtea.leno</code></a></p>
+- <a href="../../Leno/examples/crypto/tea.leno"><code>examples/crypto/tea.leno</code></a>
+- <a href="../../Leno/examples/crypto/xtea.leno"><code>examples/crypto/xtea.leno</code></a></p>
 <p>TEA (Tiny Encryption Algorithm) 是一种微型块加密算法，64 位数据块 + 128 位密钥，32 轮 Feistel 网络。</p>
 <pre><code class="language-leno">var key = &quot;0123456789abcdef&quot;
 var text = &quot;Hello, TEA!&quot;
@@ -161,7 +161,7 @@ var dec = xtea_decrypt(key, enc)
 <hr>
 <h2 id="_5">非对称加密</h2>
 <h3 id="rsa">RSA</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/rsa.leno"><code>examples/crypto/rsa.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/rsa.leno"><code>examples/crypto/rsa.leno</code></a></p>
 <p>PKCS#1 v1.5 风格的 RSA 实现，包含密钥生成、加密、解密、签名和验签。</p>
 <pre><code class="language-leno">// 使用已知密钥
 var key = new RSAKey()
@@ -187,7 +187,7 @@ var verified = rsa_verify(signature, key)
 <hr>
 <h2 id="_6">密钥派生</h2>
 <h3 id="pbkdf2">PBKDF2</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/pbkdf2.leno"><code>examples/crypto/pbkdf2.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/pbkdf2.leno"><code>examples/crypto/pbkdf2.leno</code></a></p>
 <p>RFC 2898 标准实现，基于 HMAC-SHA256 的密钥派生函数，通过加盐和多次迭代抵抗暴力破解。</p>
 <pre><code class="language-leno">var derived_key = pbkdf2_hmac_sha256(&quot;password&quot;, &quot;salt&quot;, 100000, 32)
 print(derived_key)  // 64 字符 hex 字符串
@@ -201,7 +201,7 @@ print(derived_key)  // 64 字符 hex 字符串
 <hr>
 <h2 id="_7">古典密码</h2>
 <h3 id="_8">凯撒密码</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a></p>
 <p>最古老的替换密码之一，将每个字母在字母表中偏移固定位置。</p>
 <pre><code class="language-leno">var encrypted = caesar_enc(&quot;Hello, World!&quot;, 3)
 var decrypted = caesar_dec(encrypted, 3)
@@ -214,7 +214,7 @@ var rot = rot13(&quot;Hello, ROT13!&quot;)
 - 基于频率分析的自动破译
 - 仿射密码（Affine Cipher）实现</p>
 <h3 id="_9">维吉尼亚密码</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/vigenere.leno"><code>examples/crypto/vigenere.leno</code></a></p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/vigenere.leno"><code>examples/crypto/vigenere.leno</code></a></p>
 <p>多表替换密码，使用关键词重复地对明文字母进行不同偏移的凯撒替换。</p>
 <pre><code class="language-leno">var encrypted = vigenere_enc(&quot;LEMON&quot;, &quot;ATTACKATDAWN&quot;)
 print(encrypted)  // LXFOPVEFRNHR
@@ -225,7 +225,7 @@ var decrypted = vigenere_dec(&quot;LEMON&quot;, encrypted)
 - Kasiski 测试猜测密钥长度
 - 基于频率分析的自动破译</p>
 <h3 id="_10">仿射密码</h3>
-<p><strong>文件</strong>: <a href="../../examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a>（与凯撒密码同文件）</p>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a>（与凯撒密码同文件）</p>
 <p>凯撒密码的推广，使用 <code>E(x) = (ax + b) mod 26</code>。</p>
 <pre><code class="language-leno">var encrypted = affine_encrypt(&quot;HELLO AFFINE&quot;, 5, 8)
 var decrypted = affine_decrypt(encrypted, 5, 8)

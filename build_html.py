@@ -438,10 +438,17 @@ def fix_links(s):
         u = m.group(1)
         if re.match(r"^(?:https?:|mailto:|javascript:|data:|#)", u, re.I):
             return m.group(0)
-        if u.startswith("../docs/"):
-            u = u[len("../docs/"):]
-        elif u.startswith("../"):
-            u = "../" + u
+        # 分三类（原本都相对 Leno/docs/，源码已搬到兄弟仓 LenoDocsSrc）：
+        # 1) ../docs/xxx.md —— 指向的文档已一起搬来 ⇒ 站内链接，不再退目录
+        # 2) ../examples|src|build/... —— 指向 Leno 仓 ⇒ 重定位到兄弟仓 Leno/
+        # 3) 其他 ../ —— 单纯补一层（HTML 在 site/ 下，比源码深一级）
+        if re.match(r"^\.\./docs/", u):
+            u = u[len("../docs/"):]          # 站内文档，不补层
+        else:
+            if re.match(r"^\.\./(examples|src|build|android|assert|leno_gui)/", u):
+                u = "../Leno/" + u[3:]       # ../examples/x → ../Leno/examples/x
+            if u.startswith("../"):
+                u = "../" + u                # HTML 在 site/ 下，统一再退一级
         if "build/leno_module/" not in u:
             u = re.sub(r"\.md(?=$|#)", ".html", u)
         return 'href="' + u + '"'

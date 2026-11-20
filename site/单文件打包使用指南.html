@@ -363,7 +363,7 @@ icon = &quot;ico5.ico&quot;     # 相对本文件所在目录（写绝对路径�
 <code>[VM 二进制][资源段][lenb]</code>，图标在文件最开头那段（VM 二进制）的 PE 资源段里，
 而 <code>EndUpdateResource</code> 会按 PE 结构重写整个文件，对<strong>最终 exe</strong> 调用会把尾部的资源段
 和 lenb 一起丢掉。所以流程是：VM 映像写临时文件 → <code>BeginUpdateResource</code> 换图标 →
-读回 → 再 prepend。详见 <a href="../../src/package/package_icon.c">package_icon.c</a>。</p>
+读回 → 再 prepend。详见 <a href="../../Leno/src/package/package_icon.c">package_icon.c</a>。</p>
 <hr>
 <h2 id="5-dll">5. 原生库（DLL）从哪来</h2>
 <p>不需要手写清单，打包器<strong>按实际 <code>import</code> 的模块反推</strong>：</p>
@@ -696,7 +696,7 @@ exe（<code>--console</code> 会覆盖 <code>_console(false)</code> 自动检测
 <h3 id="exe-5-1">自身 exe 路径已收敛（5 处 → 1 处）</h3>
 <p>"取当前进程 exe 的路径"原先在 5 个地方各写一份 <code>readlink("/proc/self/exe")</code>，
 其中一处漏了补 <code>'\0'</code>（readlink 不写结束符）⇒ 路径尾部是栈垃圾 ⇒ 单文件 exe 检测不到
-内嵌数据。现已全部收敛到 <a href="../../src/platform/platform_path.c"><code>src/platform/platform_path.c</code></a>：</p>
+内嵌数据。现已全部收敛到 <a href="../../Leno/src/platform/platform_path.c"><code>src/platform/platform_path.c</code></a>：</p>
 <table>
 <thead>
 <tr>

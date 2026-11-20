@@ -133,7 +133,7 @@ async func with_timeout(): string {
 }
 </code></pre>
 <h3 id="sleep">真实用法：并发网络客户端（不是 sleep 玩具）</h3>
-<p>全部步骤见 <a href="../../examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a>。
+<p>全部步骤见 <a href="../../Leno/examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a>。
 一个进程、<strong>一个线程、一个事件循环</strong>里同时跑：1 个 <code>aaccept</code> 协程 + N 个连接处理协程
 + N 个 <code>aconnect</code> 请求协程。</p>
 <pre><code class="language-leno">import sockets

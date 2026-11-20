@@ -769,7 +769,7 @@ async func task(int n): int {
 不适合微秒级同步。
 - 网络 I/O → 用 <code>socket.aconnect()</code> / <code>socket.arecv()</code> / <code>socket.aaccept()</code> 配合 await，
   见 <a href="module_sockets.html#异步-io-arecv--aaccept">sockets 模块文档</a> 与
-  <a href="../../examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a>。</p>
+  <a href="../../Leno/examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a>。</p>
 <hr>
 <h2 id="_12">性能提示</h2>
 <table>
@@ -859,7 +859,7 @@ async func task(int n): int {
 <code>MAX_COROUTINES/MAX_TIMERS = 1024</code> 后的扩容路径）。</p>
 <hr>
 <h2 id="2026-11-14_1">实战：并发网络客户端（2026-11-14）</h2>
-<p><a href="../../examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a> 演示了
+<p><a href="../../Leno/examples/async%20await/async_fetch.leno"><code>examples/async await/async_fetch.leno</code></a> 演示了
 async 最有价值的用法：<strong>一个线程、一个事件循环</strong>里同时跑「1 个 <code>aaccept</code> 协程 + N 个
 连接处理协程 + N 个 <code>aconnect</code> 请求协程」。每个连接 99% 的时间在等，所以不需要 N 个线程。</p>
 <p>实测（Windows 10，本机回环）：</p>
