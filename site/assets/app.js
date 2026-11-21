@@ -6,7 +6,7 @@
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function reEsc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
-  function base(){return /\/archive\//.test(location.pathname)?'../':''}
+  function base(){return /\/(archive|扩展模块)\//.test(location.pathname)?'../':''}
   function toast(msg){
     var el=document.getElementById('toast'); if(!el)return;
     el.textContent=msg; el.className='toast on';
@@ -48,6 +48,80 @@
   if(fd)fd.onclick=function(){setFs(Math.max(12,parseInt(get('fs','15'),10)-1))};
   if(fu)fu.onclick=function(){setFs(Math.min(22,parseInt(get('fs','15'),10)+1))};
 
+  /* ---- 全站目录抽屉（窄屏） ---- */
+  var nav=document.getElementById('nav'),bm=document.getElementById('btn-menu'),mask=null;
+  if(nav&&bm){
+    mask=document.createElement('div');mask.className='nav-mask';
+    document.body.appendChild(mask);
+    function closeNav(){nav.classList.remove('open');mask.classList.remove('on')}
+    bm.onclick=function(){nav.classList.toggle('open');mask.classList.toggle('on',nav.classList.contains('open'))};
+    mask.onclick=closeNav;
+    nav.addEventListener('click',function(e){if(e.target.closest('a'))closeNav()});
+  }
+
+  /* ---- 离线代码高亮（leno / c / bash / json / powershell） ---- */
+  var KW={
+    leno:'func var const let if elif else for while return break continue struct enum import use from new true false null and or not switch case default is as async await try catch throw self this in do class module type param out ref defer'+
+         ' int float bool string void Array Dict Ptr Result bytes any',
+    c:'auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while include define typedef',
+    bash:'if then else elif fi for while do done case esac function in return export local echo cd set source alias unset',
+    json:'true false null',
+    powershell:'param function if else elseif foreach while return begin process end $true $false $null Write-Host Get-Set-New-Remove'
+  };
+  function hl(code,lang){
+    if(!(lang in KW))return null;
+    var hash=(lang==='bash'||lang==='powershell');       // 只有 shell 系把 # 当注释
+    var com=hash?'#[^\n]*':'//[^\n]*';
+    var re=new RegExp('(\\/\\/[^\\n]*'+(hash?'|#[^\\n]*':'')+'|\\/\\*[\\s\\S]*?\\*\\/)'+
+      '|("(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|`(?:\\\\.|[^`\\\\])*`)'+
+      '|(\\b(?:0x[0-9a-fA-F]+|\\d+(?:\\.\\d+)?)\\b)'+
+      '|(\\b[A-Za-z_][A-Za-z0-9_]*\\b)','g');
+    var kw=KW[lang].split(/\s+/).filter(Boolean);
+    var kwRe=kw.length?new RegExp('^(?:'+kw.map(reEsc).join('|')+')$','i'):null;
+    var out='',last=0,m;
+    while((m=re.exec(code))!==null){
+      out+=esc(code.slice(last,m.index));last=m.index+m[0].length;
+      if(m[1])out+='<span class="tok-com">'+esc(m[1])+'</span>';
+      else if(m[2])out+='<span class="tok-str">'+esc(m[2])+'</span>';
+      else if(m[3])out+='<span class="tok-num">'+esc(m[3])+'</span>';
+      else if(m[4]){
+        var w=m[4],after=code.slice(m.index+m[0].length);
+        if(kwRe&&kwRe.test(w))out+='<span class="tok-kw">'+esc(w)+'</span>';
+        else if(/^\s*\(/.test(after))out+='<span class="tok-fn">'+esc(w)+'</span>';
+        else out+=esc(w);
+      }
+    }
+    out+=esc(code.slice(last));
+    return out;
+  }
+  document.querySelectorAll('pre code').forEach(function(code){
+    var m=(code.className||'').match(/language-([A-Za-z0-9+#-]+)/);
+    var lang=m?m[1]:'leno';  // 无标注默认按 leno
+    var html=hl(code.textContent,lang);
+    if(html!==null)code.innerHTML=html;
+  });
+
+  /* ---- 快捷键帮助（?） ---- */
+  var help=null;
+  function toggleHelp(force){
+    if(!help){
+      help=document.createElement('div');help.className='help-mask';
+      help.innerHTML='<div class="help" role="dialog" aria-label="快捷键帮助"><h3>快捷键</h3><dl>'+
+        '<dt><kbd>/</kbd></dt><dd>聚焦搜索框</dd>'+
+        '<dt><kbd>S</kbd></dt><dd>聚焦搜索框（同 /）</dd>'+
+        '<dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>在搜索结果间移动</dd>'+
+        '<dt><kbd>Enter</kbd></dt><dd>打开当前选中的结果（未选则第一条）</dd>'+
+        '<dt><kbd>Esc</kbd></dt><dd>清空搜索 / 关闭本面板</dd>'+
+        '<dt><kbd>?</kbd></dt><dd>打开 / 关闭本面板</dd>'+
+        '</dl><p class="tip">目录分组可点击展开；左侧全站目录在窄屏下由 ☰ 唤出。</p></div>';
+      help.onclick=function(e){if(e.target===help)toggleHelp(false)};
+      document.body.appendChild(help);
+    }
+    var on=typeof force==='boolean'?force:!help.classList.contains('on');
+    help.classList.toggle('on',on);
+    if(!on&&q){q.focus()}
+  }
+
   /* ---- 代码复制 / 标题锚点 ---- */
   document.querySelectorAll('pre').forEach(function(pre){
     var b=document.createElement('button');b.className='copy-btn';b.type='button';b.textContent='复制';
@@ -85,7 +159,7 @@
   /* ---- 搜索 ---- */
   var q=document.getElementById('q'), box=document.getElementById('results');
   if(!q||!box||typeof SEARCH_DOCS==='undefined')return;
-  var timer=null, items=[];
+  var timer=null, items=[], current=-1;
   function mark(s,terms){
     var out=esc(s);
     try{out=out.replace(new RegExp('('+terms.map(reEsc).join('|')+')','gi'),'<mark>$1</mark>')}catch(e){}
@@ -110,29 +184,44 @@
         if(hits.length>=60)break}
     }
     hits.sort(function(a,b){return a.score-b.score});
-    box.innerHTML=hits.length?hits.map(function(h){
+    var totalHits=hits.length;
+    var head=totalHits?'<div class="r-head">命中 '+totalHits+' 篇'+(totalHits>=60?'（仅显示前 60）':'')+
+      ' · <kbd>Enter</kbd> 打开 · <kbd>↑↓</kbd> 选择</div>':'';
+    box.innerHTML=hits.length?head+hits.map(function(h){
       var anchor=h.best.s.a?'#'+h.best.s.a:'';
       return '<a class="r-item" href="'+esc(base()+h.d.f+anchor)+'">'+
         '<div class="r-title">'+mark(h.d.t,terms)+'<span class="cat">'+esc(h.d.c)+
         (h.d.a?' · 已归档':'')+'</span></div>'+
         (h.best.s.h&&h.best.s.h!=='开头'?'<div class="r-frag">§ '+esc(h.best.s.h)+'</div>':'')+
         '<div class="r-frag">'+mark(h.best.frag,terms)+'</div></a>';
-    }).join('')+(hits.length>=60?'<div class="r-more">仅显示前 60 条，继续输入以缩小范围</div>':'')
-      :'<div class="r-empty">没有命中，换个词试试</div>';
+    }).join('')+''
+      :'<div class="r-empty">没有命中，换个词试试（多词之间按 <kbd>空格</kbd> 间隔，需同时命中）</div>';
     box.className='results on';items=Array.prototype.slice.call(box.querySelectorAll('.r-item'));
+    current=-1;                       // 未选择时 Enter 打开第一项
+  }
+  function move(delta){
+    if(!items.length)return;
+    items.forEach(function(a){a.classList.remove('sel')});
+    current=(current+delta+items.length)%items.length;
+    items[current].classList.add('sel');
+    items[current].scrollIntoView&&items[current].scrollIntoView({block:'nearest'});
   }
   q.addEventListener('input',function(){clearTimeout(timer);timer=setTimeout(render,120)});
   q.addEventListener('keydown',function(e){
-    if(e.key==='Escape'){q.value='';box.className='results';items=[];q.blur();return}
+    if(e.key==='Escape'){q.value='';box.className='results';items=[];current=-1;q.blur();return}
     if(!items.length)return;
-    var cur=items.indexOf(document.activeElement);
-    if(e.key==='ArrowDown'){e.preventDefault();items[(cur+1)%items.length].focus()}
-    else if(e.key==='ArrowUp'){e.preventDefault();items[(cur-1+items.length)%items.length].focus()}
+    if(e.key==='ArrowDown'){e.preventDefault();move(1)}
+    else if(e.key==='ArrowUp'){e.preventDefault();move(-1)}
+    else if(e.key==='Enter'){e.preventDefault();
+      var target=items[current>=0?current:0];if(target)location.href=target.href}
   });
   document.addEventListener('keydown',function(e){
     var tag=(e.target.tagName||'').toLowerCase();
-    if(e.key==='/'&&tag!=='input'&&tag!=='textarea'){e.preventDefault();q.focus();q.select()}
-    if(e.key==='Escape'&&document.activeElement!==q){box.className='results'}
+    var typing=(tag==='input'||tag==='textarea'||e.target.isContentEditable);
+    if(e.key==='/'&&!typing){e.preventDefault();q.focus();q.select()}
+    if((e.key==='?'||(e.key==='/'&&e.shiftKey))&&!typing){e.preventDefault();toggleHelp()}
+    if(e.key.toLowerCase()==='s'&&!typing&&!e.ctrlKey&&!e.metaKey){e.preventDefault();q.focus();q.select()}
+    if(e.key==='Escape'&&document.activeElement!==q){box.className='results';if(help)help.classList.remove('on')}
   });
   document.addEventListener('click',function(e){
     if(!e.target.closest('.searchbox'))box.className='results';

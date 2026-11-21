@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoQR v0.3.0 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/LenoQR.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">08 扩展模块（独立包）</a><span class="sep">/</span><span class="here">LenoQR v0.3.0</span></span>
+</header>
+<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href="../扩展模块/_总览.html">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">6</span></summary><div class="nv-group"><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../区间口径约定.html">区间口径约定</a><a href="../语言陷阱速查.html">语言陷阱速查</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../threads使用指南.html">threads使用指南</a><a href="../加密算法示例指南.html">加密算法示例指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../布局配方.html">布局配方</a><a href="../并发选择指引.html">并发选择指引</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">14</span></summary><div class="nv-group"><a href="../Android正经App路线.html">Android正经App路线</a><a href="../Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../待办与路线图.html">待办与路线图</a><a href="../易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details open><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/_总览.html">扩展模块总览</a><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html" class="active" aria-current="page">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a></div></details></nav>
+  <main class="content" id="top"><blockquote>
+<p>📦 <strong>扩展模块</strong>（非语言内置标准库）· 包名 <code>LenoQR</code> · import 名 "QR"
+源 README：<code>Leno/build/leno_module/LenoQR/README.md</code>（本页是同步副本，改请改源）</p>
+</blockquote>
+<h1 id="lenoqr-v030">LenoQR v0.3.0</h1>
+<p>Leno 的二维码模块。形态与 LenoCrypto 一致：<strong>编码端纯 Leno、解码端 FFI</strong>。</p>
+<blockquote>
+<p><strong>当前进度</strong>
+- ✅ <strong>生成（encode）</strong>：<strong>纯 Leno</strong> —— 版本 1–40 自动选择、L/M/Q/H、数字/字母数字/字节(UTF-8)
+  三种模式、8 个掩码 + 4 条罚分、format/version 的 BCH、GF(256)/Reed-Solomon（0x11D）
+- ✅ <strong>识别（decode）</strong>：quirc 后端（ISC），<code>gray</code> / <code>ARGB8888</code> / <code>RGB24</code> 三种像素入口
+- 两端<strong>不互相依赖</strong>：编码不需要原生库；解码不依赖编码器</p>
+</blockquote>
+<h2 id="encode-leno">生成（encode，纯 Leno）</h2>
+<pre><code class="language-leno">import &quot;QR&quot; as qr
+
+var r = qr.encode(&quot;https://gitee.com/cheng8214/LenoLang&quot;, &quot;M&quot;)   // 纠错档 L/M/Q/H，默认 M
+if not r.ok { print(r.err); return }
+
+print(&quot;v&quot; + _str(r.version) + &quot;/&quot; + r.eccName + &quot; mask=&quot; + _str(r.mask))
+var rows = r[&quot;rows&quot;] as Array[string]      // size 行，每行 '0'/'1'（'1' = 黑）
+</code></pre>
+<p>返回 Dict：</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ok</code> / <code>err</code></td>
+<td>bool / string</td>
+<td>失败原因（如"内容超出该版本容量：101 字节，v1/H 只能装 7 字节"）</td>
+</tr>
+<tr>
+<td><code>version</code> / <code>ecc</code> / <code>eccName</code> / <code>mask</code> / <code>size</code></td>
+<td>int / string</td>
+<td>实际选中的规格（版本、纠错档、掩码、边长模块数）</td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td>int</td>
+<td>0=数字 / 1=字母数字 / 2=字节(UTF-8)</td>
+</tr>
+<tr>
+<td><code>rows</code></td>
+<td>Array[string]</td>
+<td>矩阵（'0'/'1' 文本，便于直接打印/对拍）</td>
+</tr>
+<tr>
+<td><code>cw</code></td>
+<td>Array[int]</td>
+<td>交织后的完整码字流（数据 + 纠错）—— 仅对拍/诊断用</td>
+</tr>
+</tbody>
+</table>
+<p>配套：</p>
+<pre><code class="language-leno">// 矩阵 → 像素（scale 像素/模块，quiet 模块静区；静区不足 4 格很多识别器会扫不到）
+string gray = qr.toGray(r, 4, 4)     // 1 字节/像素，0=黑 255=白（可直接喂 decodeGray）
+string argb = qr.toARGB(r, 4, 4)     // ARGB8888（B,G,R,A）
+
+// 指定版本 / 查容量
+var r2 = qr.encodeVersion(text, &quot;H&quot;, 10)   // 不做自动选择；装不下就 ok=false
+qr.capacityBytes(1, 0)                      // v1/L 字节模式 = 17
+qr.dataCodewords(1, 0)                      // v1/L 数据码字 = 19
+qr.gfMul(a, b)                              // GF(256)/0x11D 乘法（自测用）
+</code></pre>
+<p><strong>ECI 26（UTF-8 显式声明）</strong>：少数老扫码器会按 Latin-1 解释未声明编码的字节，
+显式声明能避免乱码（代价 +12 bit 容量）：</p>
+<pre><code class="language-leno">var r = qr.encodeEci(&quot;你好，Leno&quot;, &quot;M&quot;)     // r.eci == 1
+</code></pre>
+<p><strong>Kanji 模式</strong>（<code>Shift-JIS</code> 字节 → 每字 13 bit；<strong>本库不做转码</strong>）：</p>
+<pre><code class="language-leno">import strings
+// &quot;こんにちは&quot; 的 SJIS 字节
+string sjis = strings.from_bytes([130, 177, 130, 241, 130, 201, 130, 191, 130, 205])
+var r = qr.encodeKanjiSJIS(sjis, &quot;M&quot;)       // r.mode == 3
+</code></pre>
+<p>不做自动转码的理由：Leno 没有 iconv，跨平台转码要么加原生依赖、要么维护大表；
+调用方通常本来就在处理 SJIS 数据（从文件/网络拿到的就是字节）。</p>
+<p>存成 PNG 的完整例子：<code>examples/gen_png.leno</code>（编码纯 Leno，只有"写 PNG"借 LenoSDL3 的 <code>IMG_SavePNG</code>）。
+不想依赖 SDL 的场合，直接拿 <code>rows</code> 自己画即可。</p>
+<h2 id="decodequirc">识别（decode，quirc）</h2>
+<pre><code class="language-leno">import &quot;QR&quot; as qr
+
+// ① 灰度缓冲（每像素 1 字节，0=黑 255=白）
+var r = qr.decodeGray(grayPtr, w, h, stride)
+
+// ② ARGB8888（内存序 B,G,R,A —— SDL 的 PIXELFORMAT_ARGB8888 / pngFileToPixels / 截屏都是它）
+var r = qr.decodeARGB(pxPtr, w, h, pitch)
+
+// ③ RGB24（内存序 B,G,R）
+var r = qr.decodeRGB24(pxPtr, w, h, pitch)
+
+if r.found { print(r.text) }
+</code></pre>
+<p>三者都返回同一种 Dict：</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>found</code></td>
+<td>bool</td>
+<td>是否识别到二维码</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>载荷（UTF-8/ASCII 字节原样转成 Leno string）</td>
+</tr>
+<tr>
+<td><code>len</code></td>
+<td>int</td>
+<td>载荷字节数</td>
+</tr>
+<tr>
+<td><code>err</code></td>
+<td>string</td>
+<td>空串 = 正常；非空 = 真错误（库没编 / ABI 不符 / 参数非法）</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>found=false</code> 且 <code>err=""</code> 表示"图里没有二维码"</strong> —— 扫一张截图没扫到码是日常，不是异常，
+所以这里不抛异常（与 LenoSDL3 的 capture 系列返回 Dict 是同一口径）。</p>
+<p><strong>多码</strong>（一张图里多枚码：海报拼图、成对贴纸、界面截图）—— 检测<strong>只做一次</strong>，
+按 index 逐个解：</p>
+<pre><code class="language-leno">var all = qr.decodeAllARGB(px, w, h, pitch)
+// {found, count, texts: Array[string], metas: Array[int], err}
+//   count = 检测到的枚数（含解不开的）
+//   texts = 成功解开的载荷
+//   metas = 每枚 4 个整数 [version, ecc_level, mask, data_type]
+//           ecc_level 是 quirc 口径：M=0 L=1 H=2 Q=3；data_type：1=数字 2=字母 4=字节 8=Kanji
+print(_str(all.count) + &quot; 枚&quot;)
+for (all.texts as Array[string]) to t { print(&quot;  - &quot; + t) }
+</code></pre>
+<p>单码接口（<code>decodeGray/ARGB/RGB24</code>）在多码图上只返回<strong>第一枚</strong>能解开的 ——
+不确定图里有几枚时用 <code>decodeAll*</code>。</p>
+<p>其它诊断/元信息：</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>qr.version()</code></td>
+<td>quirc 自身版本串（当前 <code>1.0</code>）</td>
+</tr>
+<tr>
+<td><code>qr.abi()</code></td>
+<td>原生库 ABI 版本（当前 <code>1</code>，用于和 <code>.leno</code> 侧握手）</td>
+</tr>
+<tr>
+<td><code>qr.maxPayload()</code></td>
+<td>单枚码的最大载荷字节数（quirc 给的是 8896）</td>
+</tr>
+<tr>
+<td><code>qr.libName()</code> / <code>qr.libPath()</code> / <code>qr.available()</code></td>
+<td>加载诊断</td>
+</tr>
+</tbody>
+</table>
+<p>示例：<code>examples/decode_png.leno</code>（用 LenoSDL3 解 PNG → 交给 LenoQR 识别）；
+屏幕框选识别可直接把 <code>SDL3.captureScreen()</code> / <code>Win32.captureScreen()</code> 返回的
+<code>{w,h,pitch,pixels}</code> 喂给 <code>decodeARGB</code>。</p>
+<h2 id="_1">原生库怎么来的</h2>
+<pre><code>src/
+  quirc.h quirc_internal.h quirc.c decode.c identify.c version_db.c   ← 上游原样（ISC）
+  leno_qr.c      ← 我们唯一的 C 入口（包装层）
+  build_dll.bat  ← Windows：产出 lib\quirc.dll
+  build_so.sh    ← Linux / macOS：产出 lib\quirc.so
+</code></pre>
+<p><strong>为什么要包装层</strong>（而不是让 Leno 直接调 <code>quirc_*</code>）：</p>
+<ol>
+<li><code>quirc_code</code> / <code>quirc_data</code> 各带 ~9KB 内嵌数组，交给 Leno 用 cstruct 严格对齐 =
+   把 quirc 的 ABI 抄进 <code>.leno</code>，换版本就静默错位；</li>
+<li>quirc 只吃<strong>紧凑灰度缓冲</strong>（w×h，无 stride），而调用方给的是带 pitch 的 ARGB8888
+   —— 逐行拷贝与灰度转换（BT.601 luma）都放在 C 里做一次。</li>
+</ol>
+<p>对外只有 5 个导出：<code>leno_qr_abi</code> / <code>leno_qr_version</code> / <code>leno_qr_max_payload</code> /
+<code>leno_qr_scan_gray</code> / <code>leno_qr_scan_argb</code>（返回 <code>&gt;=0</code> 字节数、<code>0</code> 没找到、<code>-2</code> 参数、<code>-3</code> 内存）。</p>
+<p><strong>ABI 握手</strong>：<code>.leno</code> 侧启动时比对 <code>leno_qr_abi()</code> 与 <code>qr_native.leno</code> 里的 <code>ABI</code> 常量。
+dlopen 成功 ≠ 签名一致（旧 DLL 配新 <code>.leno</code> 在 x64 上不会崩，只会读出垃圾）⇒ 不一致直接报
+"请重跑 build 脚本"。</p>
+<p><strong>库的查找</strong>：只把裸文件名交给 <code>ffi.load</code>，由 FFI 层按
+<code>模块目录/bin → 模块目录 → 已加载模块目录 → 单文件打包资源目录 → exe 目录 → PATH</code>
+去找。<code>quirc.dll</code> 与 <code>qr_native.leno</code> <strong>同在 <code>lib/</code></strong> ⇒ 走"模块目录"这条即命中。</p>
+<blockquote>
+<p>⚠ 不要自己用 <code>dirs.script_dir()</code> 拼路径：它给的是<strong>入口脚本</strong>所在目录（不是模块目录），
+从 <code>test/</code> 跑时会拼出 <code>leno_module/lib/</code> 这种不存在的路径（第一版踩过）。</p>
+</blockquote>
+<h2 id="_2">构建</h2>
+<pre><code class="language-bat">cd build\leno_module\LenoQR\src
+build_dll.bat          :: Windows → ..\lib\win\quirc.dll（-static-libgcc，自包含）
+</code></pre>
+<pre><code class="language-bash">cd build/leno_module/LenoQR/src
+./build_so.sh          # Linux → ../lib/linux/quirc.so
+OUT_DIR=../lib/mac ./build_so.sh   # macOS（同一脚本，换个输出目录）
+</code></pre>
+<ul>
+<li>上游 quirc 源<strong>不加 <code>-Wall</code></strong>（它本身不是零告警，不为消告警去 fork）；
+  我们自己的 <code>leno_qr.c</code> 用 <code>-Wall -Wextra</code>（当前<strong>0 warning</strong>）。</li>
+<li>产物落 <code>lib/&lt;平台&gt;/</code>，<code>src/</code> 只放源码（2026-11-19 起；此前是平铺在 <code>lib/</code>）。</li>
+</ul>
+<h2 id="-p">打包（<code>-p</code>）</h2>
+<p><code>leno.toml</code> 里声明：</p>
+<pre><code class="language-toml">[native-libs.quirc]
+win   = &quot;lib/win/quirc.dll&quot;
+linux = &quot;lib/linux/quirc.so&quot;
+</code></pre>
+<p><code>-p --onefile</code> 会把它内嵌进 exe，首次运行时解包到用户缓存目录（实测：897KB 单文件产物，
+<code>[pack] 内嵌 1 个原生库</code>，运行后能正常调 <code>qr.abi()</code>）。</p>
+<p>⚠ 打包器只取<strong>文件名</strong>落盘（<code>collector_add</code> 把 <code>lib/win/quirc.dll</code> 复制成 exe 同目录下的
+<code>quirc.dll</code>）⇒ <code>qr_native.leno</code> 的 <code>lib()</code> 里"子目录路径失败后退回裸文件名"那一路正是
+为这个场景准备的，两边配合得上。</p>
+<p>⚠ <strong>macOS 那行还没加</strong>：随包的 <code>.so</code> 是 Linux ELF（macOS dlopen 必失败），写上
+<code>mac = "..."</code> 会让"文件不存在就报错"的检查变成<strong>假通过</strong>。要在 macOS 分发时，
+先 <code>OUT_DIR=../lib/mac ./build_so.sh</code> 产出 Mach-O，再补一行
+<code>mac = "lib/mac/quirc.so"</code>，同时在 <code>qr_native.leno</code> 的 <code>lib_name()</code> 里加 mac 分支。</p>
+<h2 id="_3">测试</h2>
+<p>三个用例，各自守一段（都在仓库根目录跑）：</p>
+<pre><code class="language-bat">:: ① 解码：已知矩阵 → 灰度/ARGB → 解出原文（不依赖 LenoSDL3）
+build\leno.exe build\leno_module\LenoQR\test\test_decode_gray.leno
+
+:: ② 编码 ↔ 解码回环（GF 向量 / 容量表 / 版本边界 / 模式选择 / 8 条回环 / 超容量报错）
+build\leno.exe build\leno_module\LenoQR\test\test_encode_decode.leno
+
+:: ③ 真实图片：生成 → 写 PNG → 读回 → 解码（依赖 LenoSDL3 的图片编解码）
+build\leno.exe build\leno_module\LenoQR\test\test_roundtrip_png.leno
+
+:: ④ 多码：两枚码拼一张图，一次检测全部解出（count / texts / metas）
+build\leno.exe build\leno_module\LenoQR\test\test_decode_multi.leno
+
+:: ⑤ ECI(UTF-8) + Kanji(Shift-JIS) 回环 + data_type 校验 + 非法输入
+build\leno.exe build\leno_module\LenoQR\test\test_eci_kanji.leno
+</code></pre>
+<p><strong>矩阵级对拍（开发期工具，随模块入库但不参与运行时）</strong>：
+<code>test/dev_diff_vs_python.py</code> 用 python <code>qrcode</code> 8.2 生成同一版本/纠错/掩码的矩阵，与
+Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 diff</strong>，同时用 qrcode 的罚分独立算
+8 个掩码，验证"我们选的掩码 = 最优掩码"。需要 <code>pip install qrcode</code>：</p>
+<pre><code class="language-bat">python build\leno_module\LenoQR\test\dev_diff_vs_python.py
+</code></pre>
+<p>实测 <strong>11 个用例全一致（矩阵 + 掩码最优性）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>版本</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LENOQR TEST 001</code> / M、<code>1234567890</code> / L、<code>HELLO WORLD 123</code> / Q</td>
+<td>v1</td>
+<td>矩阵逐格一致 + 掩码最优</td>
+</tr>
+<tr>
+<td>36B URL / M、中文 <code>你好，Leno 二维码</code> / H</td>
+<td>v3</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>55B 长句 / Q、100B / L</td>
+<td>v5</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>300B / M</td>
+<td>v10</td>
+<td>同上（16 位字符计数）</td>
+</tr>
+<tr>
+<td>1200B / L</td>
+<td>v25</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>2900B 字母数字 / L、5000 位数字 / L</td>
+<td>v33 / v34</td>
+<td>同上（14/13 位计数 + 多组交织 + version info）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="windows-x64-gcc-1520">实测（Windows x64 · gcc 15.2.0）</h2>
+<ul>
+<li>编码耗时（纯 Leno，含 8 掩码评分）—— 优化前后：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>优化前</th>
+<th>优化后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15B（v1/M）</td>
+<td>1.6 ms</td>
+<td><strong>0.68 ms</strong></td>
+</tr>
+<tr>
+<td>300B（v10/M）</td>
+<td>16.2 ms</td>
+<td><strong>5.0 ms</strong></td>
+</tr>
+<tr>
+<td>1200B（v25/L）</td>
+<td>69 ms</td>
+<td><strong>21.4 ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p>优化点：① 罚分<strong>单遍扫描</strong>（原 6 遍）；② 掩码<strong>就地切/撤</strong>（原每掩码复制整张矩阵）；
+  ③ 掩码条件表按 size 缓存（批量生成同版本时零重算）；④ RS 生成多项式按 n 缓存；
+  ⑤ 计数循环统一用 <code>for a:b to i</code>（实测 100 万次空转：for 4.2ms vs while 6.4ms）。</p>
+<p>⚠ 用 <code>for</code> 时记两条（本库踩过）：
+  - <strong>闭区间</strong>：<code>for 0:n-1 to i</code> 走 <code>0..n-1</code> 共 n 轮；空区间（n=0）执行 0 次，不必为它退回 <code>while</code>；
+  - <strong>倒序要显式步长</strong>：<code>for 3:0</code> 是<strong>空区间</strong>（0 次），倒着扫要写 <code>for 3:0:-1 to i</code>。
+    本库的 <code>bits_push</code>（高位先写）与 zigzag 放置（右列→左列）都用这种写法 ✓
+- 识别耗时：一张 328×328 PNG（v4/Q）从读盘到出文本 <strong>≈ 5 ms</strong>；多码检测与单码同量级
+  （检测只做一次，逐枚解码另算）
+- 生成的 PNG 头/尺寸经独立解析核对（328×328 / 360×360，5–6 KB）</p>
+<h2 id="_4">边界与已知限制</h2>
+<ul>
+<li><strong>不做</strong>：Structured Append、Micro QR、ECI 分配号 ≥128（只支持单字节分配号，
+  足够覆盖 UTF-8/ISO-8859/SJIS 等常见值）、Kanji 的自动转码（要调用方给 SJIS 字节）。</li>
+<li>编码只吃 <code>string</code>（UTF-8 字节）：二进制载荷请先自己转成字符串载体。</li>
+<li>单码接口在多码图上只返回<strong>第一枚</strong>；需要全部用 <code>decodeAll*</code>。</li>
+<li>二维码四周必须留 <strong>≥4 模块静区</strong>，否则定位图案认不出来（这是 QR 规范，不是库的毛病）。</li>
+<li><code>text</code> 是 quirc 给出的<strong>原始载荷字节</strong>：UTF-8 载荷（绝大多数生成器）直接用；
+  Kanji/Shift-JIS 或 ECI 声明了别的编码时，需要调用方自行转码（quirc 里 <code>eci</code> / <code>data_type</code>
+  暂时没往上暴露 —— 需要时在 <code>leno_qr.c</code> 里加一个 meta 出口）。</li>
+<li>低质量<strong>拍照</strong>的鲁棒性弱于 zxing-cpp（quirc 的定位/纠错更简单）；截图与清晰照片够用。
+  真要压拍照场景，再考虑加 zxing-cpp 兜底（C++ 构建链代价另算）。</li>
+<li>POSIX 分支<strong>未在本机验证</strong>（本机无 WSL/Docker）。脚本与 Windows 同构，需在 Linux/macOS
+  上跑一遍测试才算收口。</li>
+</ul>
+<h2 id="_5">规格表从哪来</h2>
+<p><code>lib/qr_tables.leno</code> <strong>不要手改</strong>：它由 <code>src/gen_tables.py</code> 从 python qrcode 的
+<code>RS_BLOCK_TABLE</code> / <code>PATTERN_POSITION_TABLE</code> 导出（<code>python src/gen_tables.py</code> 重新生成）。
+手抄 PDF 的 160 组容量表+分块结构，错一位的症状是"某些版本扫不出来"，且很难肉眼发现。</p>
+<h2 id="_6">上游与许可</h2>
+<ul>
+<li>quirc（QR-code recognition library, © 2010-2012 Daniel Beer），<strong>ISC 许可</strong>，
+  全文见 <code>LICENSE-quirc.txt</code>；与本体 Apache-2.0 兼容。</li>
+<li>来源：<a href="https://github.com/dlbeer/quirc">https://github.com/dlbeer/quirc</a>（2026-10-17 取 master tarball，
+  SHA256 <code>FBEFCF8E04BE88F1FA43C68A39C9C6C42E5AB6FE91453B614AC58250821436AA</code>）；
+  上游文件未做任何修改（<code>quirc_version()</code> 报 <code>1.0</code>）。</li>
+</ul>
+<h2 id="_7">后续可选（都不阻塞现在）</h2>
+<ul>
+<li><strong>性能</strong>：v10 已从 16ms 降到 5.4ms；若还要更快，下一步是把矩阵按"每行一个 int 位图"
+  表示（罚分与掩码都用整型位运算），预计能再快 3–5 倍，但要重写放置与罚分。</li>
+<li><strong>识别增强</strong>：多码的<strong>坐标</strong>（quirc 的 corners 已有，只是没往上暴露）、ECI 编号
+  透传（<code>quirc_data.eci</code>）。</li>
+<li><strong>编码增强</strong>：ECI 分配号 ≥128（GB18030 等）、SVG 输出（不需要 SDL）。</li>
+<li><strong>POSIX</strong>：在 Linux/macOS 上跑 <code>build_so.sh</code> + 五个测试，再往 <code>leno.toml</code> 补 <code>linux</code>/<code>mac</code>。</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#encode-leno">生成（encode，纯 Leno）</a></li><li><a href="#decodequirc">识别（decode，quirc）</a></li><li><a href="#_1">原生库怎么来的</a></li><li><a href="#_2">构建</a></li><li><a href="#-p">打包（-p）</a></li><li><a href="#_3">测试</a></li><li><a href="#windows-x64-gcc-1520">实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#_4">边界与已知限制</a></li><li><a href="#_5">规格表从哪来</a></li><li><a href="#_6">上游与许可</a></li><li><a href="#_7">后续可选（都不阻塞现在）</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoMusic.html">← 上一篇</a><a href="../扩展模块/LenoResult.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SDL3 控件优化清单 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/LenoSDL3_控件优化清单.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">05 GUI · 平台</a><span class="sep">/</span><span class="here">SDL3 控件优化清单</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">6</span></summary><div class="nv-group"><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../区间口径约定.html">区间口径约定</a><a href="../语言陷阱速查.html">语言陷阱速查</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../threads使用指南.html">threads使用指南</a><a href="../加密算法示例指南.html">加密算法示例指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../布局配方.html">布局配方</a><a href="../并发选择指引.html">并发选择指引</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details open><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">14</span></summary><div class="nv-group"><a href="../Android正经App路线.html">Android正经App路线</a><a href="../Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../扩展模块/LenoSDL3_控件优化清单.html" class="active" aria-current="page">LenoSDL3_控件优化清单</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../待办与路线图.html">待办与路线图</a><a href="../易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/_总览.html">扩展模块总览</a><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a></div></details></nav>
+  <main class="content" id="top"><blockquote>
+<p>📦 源文件：<code>Leno/build/leno_module/LenoSDL3/docs/SDL3控件优化清单.md</code>（本页是同步副本，改请改源）</p>
+</blockquote>
+<h1 id="sdl3">SDL3 控件优化清单</h1>
+<blockquote>
+<p>审查范围：<code>leno_module/LenoSDL3/lib/sdl_*.leno</code>（42 个控件文件）
+生成时间：2026-08-23</p>
+</blockquote>
+<hr>
+<h2 id="_1">🔴 高优先级（性能影响大）</h2>
+<h3 id="1-listbox-_is_selected-on2-on">1. ListBox <code>_is_selected()</code> O(n²) → O(n)</h3>
+<p><strong>文件</strong>: <code>sdl_listbox.leno</code></p>
+<p><strong>问题</strong>: <code>render()</code> 循环每行调用 <code>_is_selected(i)</code>，内部线性扫描 <code>_sel</code> 数组。多选模式 + 大量选中项时整体为 O(n×m)，即 <strong>O(n²)</strong>。</p>
+<p><strong>方案</strong>: 维护 <code>Array[bool] _selMap</code>（按索引直接查 true/false），在选中/取消时同步更新，将 <code>_is_selected()</code> 降为 O(1)，整体 render 降为 O(n)。</p>
+<hr>
+<h3 id="2-combobox-_get_tex-dict">2. ComboBox <code>_get_tex()</code> 线性扫描 → Dict 缓存</h3>
+<p><strong>文件</strong>: <code>sdl_combobox.leno</code></p>
+<p><strong>问题</strong>: 纹理缓存用两个平行数组 <code>_imgCachePaths</code> / <code>_imgCacheTex</code> 做线性查找 O(n)。每次渲染选中项图标 + 弹层每项图标都调用，项数多时性能差。</p>
+<p><strong>方案</strong>: 用 <code>Dict[string, Ptr[u8]]</code> 做缓存，O(1) 查找。</p>
+<hr>
+<h3 id="3-edit-_compute_sb">3. Edit <code>_compute_sb()</code> 结果缓存</h3>
+<p><strong>文件</strong>: <code>sdl_edit.leno</code></p>
+<p><strong>问题</strong>: <code>_sb_width()</code> 和 <code>_sb_height()</code> 各自调用 <code>_compute_sb()</code>，而 <code>process</code> 和 <code>render</code> 中多处分别调用 <code>_sb_width()</code> / <code>_sb_height()</code>，导致同一帧内重复计算（涉及 <code>_content_height()</code> → <code>_ensure_layout()</code> 等重操作）。</p>
+<p><strong>方案</strong>: 仿照 <code>sdl_table.leno</code> 的做法，缓存 <code>_compute_sb()</code> 的结果到 <code>[float, float] _sbCache</code>，加 <code>_sbDirty</code> 脏标志，在文本/尺寸/字体变化时置脏，下次 <code>_compute_sb()</code> 时才重算。</p>
+<hr>
+<h3 id="4-chart">4. Chart 标签测量缓存</h3>
+<p><strong>文件</strong>: <code>sdl_chart.leno</code></p>
+<p><strong>问题</strong>: <code>BarChart.render</code> 每帧对 <code>cats</code> 逐个 <code>f.measureString()</code> 求最大宽度；<code>LineChart</code> 同理对 <code>xlabels</code>。数据量大时每帧重复测量。</p>
+<p><strong>方案</strong>: 在 <code>set_data</code> / <code>render</code> 首次时预计算标签最大宽度并缓存到字段，加脏标志。</p>
+<hr>
+<h2 id="_2">🟡 中优先级（代码质量/可维护性）</h2>
+<h3 id="5-buttonrender-measurestringtext">5. Button.render 中 <code>measureString(text)</code> 被调用两次</h3>
+<p><strong>文件</strong>: <code>sdl_button.leno</code> 第 431 行和第 509 行</p>
+<p><strong>问题</strong>: 第 431 行测量了 <code>text</code> 供图标尺寸自适应，第 509 行又测量了同一个 <code>text</code>，重复。</p>
+<p><strong>方案</strong>: 复用第一次测量的结果。</p>
+<hr>
+<h3 id="6-listboxcombobox-measurestringag">6. ListBox/ComboBox 循环内 <code>measureString("Ag")</code> 提取</h3>
+<p><strong>文件</strong>: <code>sdl_listbox.leno</code> 第 366 行、<code>sdl_combobox.leno</code> 第 472 行</p>
+<p><strong>问题</strong>: 在 <code>for items.len()</code> 循环内每行都调用 <code>_font.measureString("Ag")</code> 获取行高，但这个值对同一字体是常量。</p>
+<p><strong>方案</strong>: 在循环外测量一次并缓存到局部变量。</p>
+<hr>
+<h3 id="7-progressbar-hover">7. ProgressBar hover 逻辑修正</h3>
+<p><strong>文件</strong>: <code>sdl_progress.leno</code> 第 124-130 行</p>
+<p><strong>问题</strong>: 第 124 行 <code>if ev.isMouseMotion()</code> 块中先设 <code>_wasHover = hit</code>（而不是保存旧值 <code>_wasHover = hover</code>），导致 hover 状态变化检测失效——永远 <code>_wasHover == hover</code>。</p>
+<p><strong>方案</strong>: 修正为 <code>_wasHover = hover; hover = hit</code>。</p>
+<hr>
+<h3 id="8-scrollview-_sync">8. ScrollView <code>_sync()</code> 帧内去重</h3>
+<p><strong>文件</strong>: <code>sdl_scrollview.leno</code> 第 268 行和第 336 行</p>
+<p><strong>问题</strong>: <code>_sync()</code> 在 <code>process</code> 和 <code>render</code> 中各调用一次，做了内容尺寸测量、滚动夹紧、拇指几何计算、子控件定位等，重复计算。</p>
+<p><strong>方案</strong>: 加帧标志 <code>_syncedFrame</code>，一帧内只计算一次。</p>
+<hr>
+<h3 id="9-measurestringag">9. <code>measureString("Ag")</code> 缓存到字段</h3>
+<p><strong>文件</strong>: <code>sdl_checkbox.leno</code>、<code>sdl_radio.leno</code>、<code>sdl_toggle.leno</code>、<code>sdl_slider.leno</code> 等</p>
+<p><strong>问题</strong>: 每次渲染都调用 <code>_font.measureString("Ag")</code> 获取字体行高，但字体不变时这个值是常量。</p>
+<p><strong>方案</strong>: 在 <code>_ensure_font()</code> 中缓存行高到 <code>_fontH</code> 字段（参考 <code>sdl_edit.leno</code> 已有的 <code>_lineHeight</code> 缓存做法）。</p>
+<hr>
+<h2 id="_3">🟢 低优先级（改进建议）</h2>
+<h3 id="10-slider-process">10. Slider <code>process</code> 中变量遮蔽</h3>
+<p><strong>文件</strong>: <code>sdl_slider.leno</code> 第 141 行</p>
+<p><strong>问题</strong>: 第 135 行已有 <code>float mx = ev.mouseX(), my = ev.mouseY()</code>，第 141 行 <code>if ev.isMouseMotion()</code> 块内又声明了同名局部变量 <code>mx</code> / <code>my</code>，遮蔽外部变量。</p>
+<p><strong>方案</strong>: 移除内部的重复声明，直接复用外部变量。</p>
+<hr>
+<h3 id="11-_ensure_font">11. 重复的 <code>_ensure_font()</code> 模式</h3>
+<p><strong>文件</strong>: 几乎所有控件</p>
+<p><strong>问题</strong>: 每个控件都写了近乎相同的 <code>_ensure_font()</code> 函数（约 6-8 行代码重复）。</p>
+<p><strong>备注</strong>: Leno 无 mixin/继承字段机制，此重复暂时可接受。如需改进，可在 <code>sdl_font.leno</code> 中提供工具函数。</p>
+<hr>
+<h3 id="12-chart-_step_anim">12. 三个 Chart 的 <code>_step_anim()</code> 代码重复</h3>
+<p><strong>文件</strong>: <code>sdl_chart.leno</code></p>
+<p><strong>问题</strong>: <code>BarChart._step_anim()</code>、<code>LineChart._step_anim()</code>、<code>PieChart._step_anim()</code> 逻辑几乎一致。</p>
+<p><strong>备注</strong>: 由于 Leno 泛型限制，不易统一。当前重复可接受。</p>
+<hr>
+<h2 id="_4">修复进度</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>优先级</th>
+<th>问题</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>🔴</td>
+<td>ListBox <code>_is_selected</code> O(1)</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>2</td>
+<td>🔴</td>
+<td>ComboBox <code>_get_tex</code> Dict 缓存</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>3</td>
+<td>🔴</td>
+<td>Edit <code>_compute_sb</code> 缓存</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>4</td>
+<td>🔴</td>
+<td>Chart 标签测量缓存</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>5</td>
+<td>🟡</td>
+<td>Button measureString 去重</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>6</td>
+<td>🟡</td>
+<td>ListBox/ComboBox 循环内 measureString 提取</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>7</td>
+<td>🟡</td>
+<td>ProgressBar hover 逻辑修正</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>8</td>
+<td>🟡</td>
+<td>ScrollView _sync() 帧内去重</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>9</td>
+<td>🟡</td>
+<td>measureString("Ag") 缓存到字段</td>
+<td>✅ 已修</td>
+</tr>
+<tr>
+<td>10</td>
+<td>🟢</td>
+<td>Slider 变量遮蔽</td>
+<td>✅ 已修</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2026-08-27">第二轮审查（2026-08-27）：仍未优化的控件</h2>
+<blockquote>
+<p>对 <code>lib/sdl_*.leno</code> 全部 42 个控件逐一复查渲染热路径后，发现以下遗漏点。</p>
+</blockquote>
+<h3 id="_5">🔴 高优先级</h3>
+<h4 id="a-menu-_get_tex-mru">A. Menu <code>_get_tex()</code> 线性扫描（无 MRU 快路径）</h4>
+<p><strong>文件</strong>: <code>sdl_menu.leno</code> 第 674-680 行
+<strong>问题</strong>: 与第 2 项同类反模式。<code>_drawPanel</code> 循环内对每个菜单项调用 <code>_get_tex</code>，内部 <code>for _imgCachePaths.len()</code> 线性扫描（O(n)）。Table（1629）/TreeView（231）已加 <code>_imgLastPath</code>/<code>_imgLastTex</code> 单槽 MRU 快路径降为 O(1)，Menu 未跟进。菜单项图标多时（文件管理器右键菜单等）每帧重复 string 比较。
+<strong>方案</strong>: 对齐 Table/TreeView，加 <code>_imgLastPath</code>/<code>_imgLastTex</code> 单槽快路径；或直接改 <code>Dict[string, Ptr[u8]]</code>（与 ComboBox 一致）。</p>
+<h4 id="b-menu-measurestringag">B. Menu 循环内 <code>measureString("Ag")</code> 未提取</h4>
+<p><strong>文件</strong>: <code>sdl_menu.leno</code> 第 630 行、第 755 行
+<strong>问题</strong>: 与第 6 项同类反模式。<code>render()</code> 在标题循环内、<code>_drawPanel()</code> 在菜单项循环内，每项都调 <code>measureString("Ag")</code> 取行高——同字体下是常量。ListBox/ComboBox 已修，Menu 遗漏。
+<strong>方案</strong>: 在 <code>_ensure_font()</code> 中缓存 <code>_fontH</code>（对齐 CheckBox/Radio/Toggle），循环内直接读字段。</p>
+<h4 id="c-chart-y">C. Chart 每帧 Y 轴刻度标签测量</h4>
+<p><strong>文件</strong>: <code>sdl_chart.leno</code> 第 164-169 行（BarChart）、第 436 行（LineChart）
+<strong>问题</strong>: 第 4 项只缓存了类目轴标签最大宽度，但 Y 轴刻度标签 <code>maxYLabW</code> 每帧重新对 <code>ticks+1</code> 个标签调 <code>measureString</code>。<code>ymax</code> 仅在数据变化时才变。
+<strong>方案</strong>: 加 <code>_ymaxDirty</code> 脏标志，<code>set_data</code> 时置脏；<code>_niceMax(vmax)</code> 结果 + <code>maxYLabW</code> 一起缓存，ymax 不变时直接复用。</p>
+<h4 id="d-chart">D. Chart 类目标签单宽未缓存（每帧逐个测量）</h4>
+<p><strong>文件</strong>: <code>sdl_chart.leno</code> 第 238/250/259/273 行（BarChart）、第 468/481 行（LineChart）
+<strong>问题</strong>: 第 4 项只缓存了 <code>_maxCatW</code>（最大宽度，用于抽稀步长），但绘制每个标签时仍每帧 <code>measureString(cat)</code> 取该标签宽度做居中对齐。类目多时每帧 O(n) 次测量。
+<strong>方案</strong>: 在 <code>_catDirty</code> 失效时一并缓存 <code>Array[float] _catW</code>（每个类目标签宽度），绘制时直接读数组。</p>
+<h3 id="_6">🟡 中优先级</h3>
+<h4 id="e-edit-_render_sl_render_ml-measurestringag">E. Edit <code>_render_sl</code>/<code>_render_ml</code> 仍每帧 <code>measureString("Ag")</code></h4>
+<p><strong>文件</strong>: <code>sdl_edit.leno</code> 第 1539、1673、1696 行
+<strong>问题</strong>: 第 9 项已为多数控件缓存 <code>_fontH</code>，Edit 也有现成的 <code>_lineHeight</code> 字段（第 40 行，<code>_ensure_font</code> 第 124 行已赋值），但渲染路径却没用，仍每帧调 <code>measureString("Ag")</code> 取行高画光标。三处遗漏。
+<strong>方案</strong>: 用 <code>_lineHeight</code>（或新增 <code>_fontH = _lineHeight - 2.0</code>）替换这三处的 <code>measureString("Ag")</code>。</p>
+<h4 id="f-combobox-renderrenderpopup-measurestringag">F. ComboBox <code>render</code>/<code>renderPopup</code> 每帧 <code>measureString("Ag")</code></h4>
+<p><strong>文件</strong>: <code>sdl_combobox.leno</code> 第 404、446 行
+<strong>问题</strong>: 第 6 项把循环内的提到循环外（446 行注释“循环外测量一次”），但每帧仍调一次；<code>render()</code> 第 404 行同样每帧调。未缓存到字段。
+<strong>方案</strong>: 在 <code>_ensure_font()</code> 中缓存 <code>_fontH</code>，两处直接读字段。</p>
+<h4 id="g-tab-measurestring">G. Tab 每帧逐个标签 <code>measureString</code></h4>
+<p><strong>文件</strong>: <code>sdl_tab.leno</code> 第 341 行
+<strong>问题</strong>: <code>render()</code> 循环内对每个标签调 <code>measureString(_tabs[i])</code> 取宽度做居中。标签文本几乎不变，每帧重复测量。
+<strong>方案</strong>: 加 <code>_tabWDirty</code> 脏标志 + <code>Array[float] _tabW</code> 缓存，<code>add_tab</code>/<code>remove_tab</code>/<code>set_font_size</code> 时置脏；或对齐 Table <code>_fittedW</code> 模式。</p>
+<h4 id="h-label-measurestringtext">H. Label 普通绘制每帧 <code>measureString(text)</code></h4>
+<p><strong>文件</strong>: <code>sdl_label.leno</code> 第 198、215、258 行
+<strong>问题</strong>: <code>render()</code> 三种模式（截断/滚动/普通）每帧都对完整 <code>text</code> 调 <code>measureString</code>。Label 的 <code>set_text</code> 已把宽度缓存到 <code>_w</code>，但渲染对齐时又重测。文本不变时浪费。
+<strong>方案</strong>: 加 <code>_textW</code> 字段，<code>set_text</code>/<code>set_font_size</code> 时一并缓存，渲染对齐直接读 <code>_textW</code>。</p>
+<h4 id="i-label">I. Label 截断模式逐字符测量无缓存</h4>
+<p><strong>文件</strong>: <code>sdl_label.leno</code> 第 127-159 行 <code>_truncatedText()</code>
+<strong>问题</strong>: 截断模式下每帧调用 <code>_truncatedText()</code>，内部对每个字符 <code>slice</code> + <code>measureString</code>（O(n) 次测量 + n 次 slice 分配）。文本/max_w/字体不变时结果相同，每帧重算开销大。
+<strong>方案</strong>: 缓存截断结果到 <code>_truncText</code>，加 <code>_truncDirty</code> 脏标志（text/max_w/font 变化时置脏）。</p>
+<h4 id="j-button-measurestringtext">J. Button 每帧 <code>measureString(text)</code></h4>
+<p><strong>文件</strong>: <code>sdl_button.leno</code> 第 420 行
+<strong>问题</strong>: 第 5 项只去掉了 render 内部的二次测量重复，但首次测量本身仍每帧执行。按钮文本通常静态。
+<strong>方案</strong>: 加 <code>_textW</code>/<code>_textH</code> 缓存 + <code>_textDirty</code>，<code>set_text</code>/<code>set_font_size</code> 时置脏。影响小，低优先级即可。</p>
+<h3 id="_7">🟢 低优先级（可选）</h3>
+<h4 id="k-groupbox-measurestring_title">K. GroupBox 每帧 <code>measureString(_title)</code></h4>
+<p><strong>文件</strong>: <code>sdl_groupbox.leno</code> 第 156 行
+<strong>问题</strong>: 标题文本几乎不变，每帧重测。
+<strong>方案</strong>: 加 <code>_titleW</code> 缓存，<code>set</code>/<code>set_title</code>/<code>set_font_size</code> 时更新。</p>
+<h4 id="l-getwindowsize">L. 标题栏 <code>getWindowSize</code> 每帧查询</h4>
+<p><strong>文件</strong>: <code>sdl_titlebar.leno</code> 第 515-518 行
+<strong>问题</strong>: <code>render()</code> 每帧调 <code>core.getWindowSize(_winHandle)</code> 同步宽度。窗口大小仅在 resize 事件时变。
+<strong>方案</strong>: 由 Window 在 resize 时回调 <code>titlebar.onResize(w,h)</code> 更新，render 不再查询。可选。</p>
+<h3 id="_8">复查确认（已优化、无遗漏）</h3>
+<ul>
+<li>✅ ListBox <code>_is_selected</code> O(1)（<code>_selMap</code>）</li>
+<li>✅ Table / TreeView <code>_get_tex</code> MRU 快路径 + 可见行区间遍历 + 拟合文本缓存</li>
+<li>✅ ScrollView <code>_sync()</code> 帧内去重（<code>_frameSynced</code>）</li>
+<li>✅ CheckBox/Radio/Toggle/Slider/Progress <code>measureString("Ag")</code> 已缓存 <code>_fontH</code></li>
+<li>✅ ImageView/Titlebar/Button 纹理按需加载并缓存</li>
+<li>✅ Spinner/Spinbox/Splitter/Panel/Scrim/Separator/Separator/LinkButton 渲染路径无重复测量</li>
+<li>✅ ProgressBar hover 逻辑已修正；百分比文本每帧变化无法缓存（可接受）</li>
+<li>✅ Slider 数值标签每帧变化无法缓存（可接受）</li>
+</ul>
+<h2 id="_9">第二轮修复进度</h2>
+<blockquote>
+<p>⚠ <strong>本表曾长期与代码不符</strong>（截至 2026-09-28 的第三轮复核发现：A–I、K 共 10 项<strong>早已修完</strong>，
+只是没人回来勾表）。下面按<strong>代码实测</strong>补齐，每项附"证据字段名"便于复查。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>优先级</th>
+<th>问题</th>
+<th>状态</th>
+<th>证据（代码中的缓存字段/实现点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>🔴</td>
+<td>Menu <code>_get_tex</code> MRU/Dict 缓存</td>
+<td>✅ 已修</td>
+<td><code>_imgLastPath</code> / <code>_imgLastTex</code>（<code>_get_tex</code> 首行短路）</td>
+</tr>
+<tr>
+<td>B</td>
+<td>🔴</td>
+<td>Menu 循环内 <code>measureString("Ag")</code> 提取</td>
+<td>✅ 已修</td>
+<td><code>_fontH</code> 字段（<code>_ensure_font</code> 赋值，绘制处直接读）</td>
+</tr>
+<tr>
+<td>C</td>
+<td>🔴</td>
+<td>Chart Y 轴刻度标签测量缓存</td>
+<td>✅ 已修</td>
+<td><code>_cachedMaxYLabW</code>（<code>ymax</code> 不变即复用）</td>
+</tr>
+<tr>
+<td>D</td>
+<td>🔴</td>
+<td>Chart 类目标签单宽缓存</td>
+<td>✅ 已修</td>
+<td><code>_catW</code> + <code>_catDirty</code></td>
+</tr>
+<tr>
+<td>E</td>
+<td>🟡</td>
+<td>Edit render 复用 <code>_lineHeight</code></td>
+<td>✅ 已修</td>
+<td>渲染路径已无 <code>measureString("Ag")</code>（仅 <code>_ensure_font</code> 内一处）</td>
+</tr>
+<tr>
+<td>F</td>
+<td>🟡</td>
+<td>ComboBox <code>measureString("Ag")</code> 缓存到字段</td>
+<td>✅ 已修</td>
+<td><code>_fontH</code> 字段（render / renderPopup 均读字段）</td>
+</tr>
+<tr>
+<td>G</td>
+<td>🟡</td>
+<td>Tab 标签宽度缓存</td>
+<td>✅ 已修</td>
+<td><code>_tabW</code> 数组（随 <code>_tabWDirty</code> 重算）</td>
+</tr>
+<tr>
+<td>H</td>
+<td>🟡</td>
+<td>Label <code>measureString(text)</code> 缓存</td>
+<td>✅ 已修</td>
+<td><code>_textWidth()</code> + <code>_cachedTextW</code> / <code>_cachedTextKey</code></td>
+</tr>
+<tr>
+<td>I</td>
+<td>🟡</td>
+<td>Label <code>_truncatedText()</code> 结果缓存</td>
+<td>✅ 已修</td>
+<td><code>_cachedTruncText</code> / <code>_cachedTruncKey</code> / <code>_cachedTruncW</code></td>
+</tr>
+<tr>
+<td>J</td>
+<td>🟢</td>
+<td>Button <code>measureString(text)</code> 缓存</td>
+<td>✅ 已修（2026-09-28）</td>
+<td><code>_ensure_text_size()</code> —— <strong>唯一测量点</strong>，原先 render 主路径已缓存、但 <code>_draw_text_aligned</code> 的<strong>右对齐分支</strong>仍每帧测 ✗</td>
+</tr>
+<tr>
+<td>K</td>
+<td>🟢</td>
+<td>GroupBox 标题宽度缓存</td>
+<td>✅ 已修</td>
+<td><code>_cachedTitleW</code> / <code>_cachedTitleH</code> / <code>_cachedTitleKey</code></td>
+</tr>
+<tr>
+<td>L</td>
+<td>🟢</td>
+<td>Titlebar <code>getWindowSize</code> 改事件回调</td>
+<td>✅ 已修（2026-09-28）</td>
+<td><code>process()</code> 改走 <code>_winSizeDirty</code> 缓存；<strong>并补上 <code>isWindowResized()</code> 置脏</strong>（此前该事件在框架内无人处理 ⇒ 缓存语义才完备）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2026-09-28-2">第三轮复核（2026-09-28）：逐项对着代码验证 + 收尾最后 2 项</h2>
+<p><strong>方法与结论</strong>：把 A–L 逐条按"缓存字段是否存在、是否在<strong>每帧路径</strong>上生效"审查代码。
+结果：<strong>A–I、K 共 10 项早已修完</strong>（本表此前全部标"⬜ 待修"，属<strong>文档漂移</strong> ✗）；
+真正还有残留的只有 <strong>J</strong> 与 <strong>L</strong> 各一处（下面记录）。</p>
+<h3 id="jbutton_draw_text_aligned-measurestringtext">J（Button）：<code>_draw_text_aligned</code> 右对齐分支每帧 <code>measureString(text)</code></h3>
+<ul>
+<li>位置：<code>sdl_button.leno</code> 的 <code>_draw_text_aligned()</code> 右对齐分支。</li>
+<li>为什么漏：清单只点了"render 第 420 行的首次测量"，而<strong>对齐分支</strong>是另一条绘制出口
+  （<code>_draw_text_aligned</code> 被 5 处调用：纯文字 / 图标在左 / 图标在右 / 图标在上 / 图标在下）。</li>
+<li>改法：新增 <code>_ensure_text_size()</code>（<strong>唯一测量点</strong>，text 或字体变化才重测），
+  render 主路径与右对齐分支都走它 ⇒ 同一帧内任何对齐方式都<strong>零测量</strong>。</li>
+<li>缓存失效沿用既有哨兵：<code>set_text</code> / <code>_ensure_font</code> 把 <code>_cachedTextKey</code> 置 <code>"\x01"</code> ✓。</li>
+</ul>
+<h3 id="ltitlebarprocess-sdl_getwindowsize">L（Titlebar）：<code>process()</code> 每个事件都查一次 <code>SDL_GetWindowSize</code></h3>
+<ul>
+<li>位置：<code>sdl_titlebar.leno</code> 的 <code>process()</code> 开头。</li>
+<li>为什么漏：render（614-618）与边缘检测（361-363）<strong>已经</strong>改走 <code>_winSizeDirty</code> 缓存，
+  但 <code>process()</code> 开头仍在无条件查询 ⇒ 每个事件一次 native 调用 ✗。</li>
+<li>改法：同样改走 <code>_winSizeDirty</code>；<strong>并补一句 <code>if ev.isWindowResized() { _winSizeDirty = true }</code></strong> ——
+  这句是<strong>语义完备</strong>的关键：改成"脏才查"后，任何来源的尺寸变化都必须能置脏，否则 <code>w</code> 会停在旧值 ✗。
+  此前框架内<strong>没有任何地方</strong>使用 <code>isWindowResized()</code>（OS 侧缩放无人处理）⇒ 这句不能省。
+  位置必须在读取缓存<strong>之前</strong>，保证本事件就刷新 ✓。</li>
+</ul>
+<h3 id="_10">验证（两处改动都是纯缓存 ⇒ 必须证明"渲染像素不变"）</h3>
+<ul>
+<li><strong>逐像素比对</strong>：临时基线程序（固定内容 = 标题栏 + 左/中/右对齐按钮 + 两个禁用态按钮 + 标签）
+  在<strong>同一份源</strong>下渲染两次（改前 stash / 改后），从<strong>窗口后台缓冲</strong> <code>readPixelsAt</code> 读像素存 PNG
+  ⇒ 两张 PNG <strong>SHA256 完全相同</strong> ✅（10430 字节，<code>EF7D3E9B…</code>）。
+  注：截图必须放 <code>setOverlay</code>（控件绘制之后、present 之前）；放 <code>onRender</code> 回调只会得到空白底图 ✗。</li>
+<li><strong>编译回归</strong>：全仓 <code>leno_gui</code> 下<strong>用到 TitleBar/Button 的 31 个程序全部编译通过</strong> ✅（0 失败）。</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">🔴 高优先级（性能影响大）</a></li><ul class="lv3"><li><a href="#1-listbox-_is_selected-on2-on">1. ListBox _is_selected() O(n²) → O(n)</a></li><li><a href="#2-combobox-_get_tex-dict">2. ComboBox _get_tex() 线性扫描 → Dict 缓存</a></li><li><a href="#3-edit-_compute_sb">3. Edit _compute_sb() 结果缓存</a></li><li><a href="#4-chart">4. Chart 标签测量缓存</a></li></ul><li><a href="#_2">🟡 中优先级（代码质量/可维护性）</a></li><ul class="lv3"><li><a href="#5-buttonrender-measurestringtext">5. Button.render 中 measureString(text) 被调用两次</a></li><li><a href="#6-listboxcombobox-measurestringag">6. ListBox/ComboBox 循环内 measureString("Ag") 提取</a></li><li><a href="#7-progressbar-hover">7. ProgressBar hover 逻辑修正</a></li><li><a href="#8-scrollview-_sync">8. ScrollView _sync() 帧内去重</a></li><li><a href="#9-measurestringag">9. measureString("Ag") 缓存到字段</a></li></ul><li><a href="#_3">🟢 低优先级（改进建议）</a></li><ul class="lv3"><li><a href="#10-slider-process">10. Slider process 中变量遮蔽</a></li><li><a href="#11-_ensure_font">11. 重复的 _ensure_font() 模式</a></li><li><a href="#12-chart-_step_anim">12. 三个 Chart 的 _step_anim() 代码重复</a></li></ul><li><a href="#_4">修复进度</a></li><li><a href="#2026-08-27">第二轮审查（2026-08-27）：仍未优化的控件</a></li><ul class="lv3"><li><a href="#_5">🔴 高优先级</a></li><li><a href="#_6">🟡 中优先级</a></li><li><a href="#_7">🟢 低优先级（可选）</a></li><li><a href="#_8">复查确认（已优化、无遗漏）</a></li></ul><li><a href="#_9">第二轮修复进度</a></li><li><a href="#2026-09-28-2">第三轮复核（2026-09-28）：逐项对着代码验证 + 收尾最后 2 项</a></li><ul class="lv3"><li><a href="#jbutton_draw_text_aligned-measurestringtext">J（Button）：_draw_text_aligned 右对齐分支每帧 measureString(text)</a></li><li><a href="#ltitlebarprocess-sdl_getwindowsize">L（Titlebar）：process() 每个事件都查一次 SDL_GetWindowSize</a></li><li><a href="#_10">验证（两处改动都是纯缓存 ⇒ 必须证明"渲染像素不变"）</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">← 上一篇</a><a href="../扩展模块/LenoWeb.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

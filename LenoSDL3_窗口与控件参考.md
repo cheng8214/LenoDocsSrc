@@ -1,0 +1,813 @@
+# LenoSDL3 窗口与控件参考
+
+> 本文按 **先窗口、后通用约定、再逐个控件** 的顺序，把 Leno 的桌面 GUI 能力讲清楚。
+> 全部内容以 `Leno/leno_gui` 下的**官方活文档与实测用例**为准（`控件/总览/showcase.leno` 一窗展示全部控件，按控件分类的 `test_*.leno` 逐个验证属性），创建参数对照 `SDL3.leno` 门面的 `@optkeys` 白名单。代码照着改就能跑。
+> 按项目搭建顺序的实战路线见 [LenoSDL3 控件实战教程](LenoSDL3_控件实战教程.html)；实测坑点见 [SDL3 常用 API 与易踩坑速查](扩展模块/LenoSDL3_常用API与易踩坑速查.html)；官方用例清单见文末[第十章](#十官方活文档导览leno_gui)。
+
+## 目录
+
+- [一、创建窗口](#一创建窗口)
+- [二、通用约定（读控件前必看）](#二通用约定读控件前必看)
+- [三、文字与按钮](#三文字与按钮)
+- [四、输入与选择](#四输入与选择)
+- [五、容器与布局](#五容器与布局)
+- [六、列表与表格](#六列表与表格)
+- [七、图片与图形进度](#七图片与图形进度)
+- [八、反馈与浮层](#八反馈与浮层)
+- [九、窗口增强](#九窗口增强)
+- [十、官方活文档导览（leno_gui）](#十官方活文档导览leno_gui)
+
+---
+
+## 一、创建窗口
+
+### 1.1 最小可运行骨架
+
+```leno
+import "SDL3" as SDL3
+use SDL3.Event
+use SDL3.Renderer
+
+main() {
+    SDL3.ttfInit()                        // 用文字控件就必须先初始化字体子系统
+
+    var win = SDL3.createWindow({title: "我的窗口", w: 800, h: 600, resizable: true})
+    if not win.ok { SDL3.ttfQuit(); return }   // 建窗失败时后续操作全部无效
+
+    win.addLabel({x: 24, y: 24, text: "你好，Leno", font_size: 18})
+    var btn = win.addButton({x: 24, y: 60, w: 120, h: 36, text: "点我", type: "primary"})
+    btn.on_click(func() { print("被点了") })
+
+    win.run(
+        func(Event ev): bool {
+            if ev.isQuit() or ev.isWindowClose() { return false }  // 返回 false 结束主循环
+            return true
+        },
+        func(Renderer r) {
+            r.clearColor(#F5F6F8FF)       // 每帧清屏（最底层）
+        }
+    )
+    SDL3.ttfQuit()
+}
+```
+
+四件事缺一不可：
+
+1. **`SDL3.ttfInit()` / `SDL3.ttfQuit()`**：只要用到文字（Label/Button/Edit…）就要一对；`showcase.leno` 和每个测试文件都这么写。
+2. **`if not win.ok { ...; return }`**：无显示环境、DLL 缺失时 `createWindow` 返回 `ok=false` 的窗口，继续用它必崩。
+3. **`run()` 必须传两个回调**：事件回调 `(Event) -> bool` 和渲染回调 `(Renderer)`。只给一个会报"只能调用函数（不是对象类型）"，看不出缺哪个。
+4. **事件回调返回 `false` 才退出**：主循环本来就一直跑，不需要额外 `addTimer` 空转。
+
+### 1.2 `createWindow` 的参数
+
+| 参数 | 说明 |
+|---|---|
+| `title` | 窗口标题 |
+| `w` / `h` | 客户区宽高 |
+| `resizable` | 是否可缩放。`showcase` / `settings` 都用 `resizable: true` |
+| `flags` | SDL 窗口标志。可写 `WindowFlag.RESIZABLE`（需 `use SDL3.WindowFlag`），老代码也用 `0x20` |
+| `icon` | 窗口图标 PNG 路径。跨平台必须显式传（Windows 靠 exe 资源，Linux/macOS 没有） |
+
+```leno
+import dirs
+var icon = dirs.join(dirs.res_dir(), "images/app.png")
+var win = SDL3.createWindow({title: "应用", w: 800, h: 600, icon: icon, resizable: true})
+```
+
+⚠ 图标路径用 `dirs.res_dir()` 拼，不要用 `script_dir()`（打包后只有 `res_dir` 指向释放出的资源）。
+
+### 1.3 主题：在创建控件之前设置
+
+`test_theme.leno` 演示了完整的主题系统——**顺序很关键：先设主题，再建窗口和控件**。
+
+```leno
+SDL3.setTheme(SDL3.darkTheme())     // 或 SDL3.lightTheme()
+var win = SDL3.createWindow({title: "主题测试", w: 880, h: 580})  // 不传 bg_color
+// onRender 回调留空：让窗口内部用主题背景色清屏，别硬编码黑色
+win.run(func(Event ev): bool { ... }, func(Renderer r) {})
+```
+
+要点：设置主题在**创建控件之前**；窗口**不传 `bg_color`**、`onRender` 留空，主题背景色才生效。
+
+### 1.4 窗口常用方法
+
+显示与状态：
+
+| 方法 | 说明 |
+|---|---|
+| `show()` / `hide()` | 显示 / 隐藏 |
+| `maximize()` / `minimize()` / `restore()` | 最大化 / 最小化 / 还原 |
+| `setFullscreen(bool)` | 全屏切换 |
+| `setResizable(bool)` / `setBordered(bool)` | 可缩放 / 有边框 |
+| `setAlwaysOnTop(bool)` / `setOpacity(float)` | 置顶 / 整体透明度 |
+| `setMinSize(w, h)` / `setSize(w, h)` / `setPosition(x, y)` | 尺寸与位置 |
+| `getSize()` / `getPosition()` / `getID()` / `getHandle()` | 读取尺寸 / 位置 / 窗口 id / 原生句柄（`handle` 也可当字段用） |
+
+绘制与交互：
+
+| 方法 | 说明 |
+|---|---|
+| `setRoot(widget)` / `setRootAt(widget, ox, oy)` | 设置根布局（整窗交给一个容器） |
+| `addXxx({...})` | 用绝对坐标直接往窗口加控件（见 2.1） |
+| `setOverlay(func(Renderer r) {...})` | 顶层自绘，盖住所有控件 |
+| `setContextMenu(bar, ctx)` | 注册窗口级右击菜单，由 `run` 统一接管弹出 |
+| `addShortcut("Ctrl+C", func(){...})` / `removeShortcut(...)` | 快捷键 |
+| `setShortcutGuard(func():bool {...})` | 返回 true 时屏蔽快捷键（如输入框正在编辑） |
+| `addTimer(ms, func(){...})` / `addTimerOnce(...)` | 定时器 |
+| `dumpLayout()` | 打印整窗布局诊断（见 2.4） |
+| `redraw()` / `setMaxFPS(n)` | 主动重绘 / 限帧 |
+
+### 1.5 退出与关闭的四个入口
+
+| 入口 | 用在哪 | 行为 |
+|---|---|---|
+| `onEvent` 里 `return false` | 事件回调内 | 结束主循环 |
+| `win.requestClose()` | 任意位置 | 投递一条"关窗请求"，和点 X 走同一条 `onEvent` 路径；关不关由 `onEvent` 决定 |
+| `win.cancelClose()` | `onEvent` 里配合 `isWindowClose()` | 拦下这次销毁 → 做"关闭到托盘" |
+| `SDL3.requestExit()` | 托盘回调、定时器、渲染回调 | 请求主循环收尾（下一轮生效），销毁所有窗口 |
+
+```leno
+win.run(func(Event ev): bool {
+    if ev.isWindowClose() {
+        if tray == null { return false }   // 没托盘就别拦，否则没入口恢复
+        win.hide()
+        win.cancelClose()
+        return true
+    }
+    return true
+}, func(Renderer r) {})
+```
+
+⚠ **不要用 `SDL3.quit()` 退出程序**：它只关 SDL 子系统，**主循环还在跑**，进程不会退出（自更新替换 exe 会失败）。用 `requestExit()`。
+
+### 1.6 三层绘制顺序
+
+```
+① onRender（run 的第二个回调） —— 最底层，在控件之下
+② 控件树（setRoot 根布局 + addXxx 注册的控件）
+③ setOverlay 回调            —— 最上层，盖住一切
+```
+
+想让自绘盖在控件之上，必须放 `setOverlay`；放 `onRender` 里会被控件盖掉。
+
+---
+
+## 二、通用约定（读控件前必看）
+
+### 2.1 两种创建方式，别混用
+
+这是 `leno_gui` 里最一致的约定，也是新手最常踩的坑：
+
+| 写法 | 注册进窗口 | 谁绘制 | 用在哪 |
+|---|---|---|---|
+| `SDL3.createXxx({...})` | ✗ | 交给容器（`box.add(...)` / `panel.add(...)` / `tab.addToPage(...)`） | **放进布局/容器的控件** |
+| `win.addXxx({...})` | ✓ | 窗口自动绘制 | 用绝对坐标直接摆的控件 |
+
+⚠ 混用会让同一控件被窗口画一次、又被容器摆一次——重复绘制、位置打架。
+
+**`showcase.leno` 开头的注释把例外写得很清楚**：
+
+- `MenuBar` / `ComboBox` 必须用 `win.addXxx`（依赖窗口的**第二遍弹层绘制**）。
+- Panel 边框卡片里，子控件用 `SDL3.createXxx` + `panel.add`。
+- ScrollView / TabControl / HBox / VBox / AnchorBox 本身是顶层容器，内部用 `createXxx`。
+- 例外中的例外：ComboBox 经 `tab.addToPage` 添加时，靠 `sdl_combobox` 的**全局注册表**兜底画下拉层（`settings.leno` 就这么用）。
+
+一句话：**顶层绝对定位用 `win.addXxx`，容器内用 `createXxx` + `add`；MenuBar 和顶层 ComboBox 走 `win.addXxx`。**
+
+### 2.2 通用参数与颜色
+
+几乎所有 `createXxx` 都支持这些键：
+
+| 参数 | 说明 |
+|---|---|
+| `x` / `y` / `w` / `h` | 位置与尺寸（放进布局时 `x/y` 一般省略） |
+| `visible` / `enabled` | 可见 / 可交互 |
+| `cursor` | 悬停光标：`SDL3.SystemCursor.POINTER/WAIT/TEXT/CROSSHAIR/MOVE/NOT_ALLOWED`，`-1` = 不改变 |
+| `tip` | 悬停提示文字（要 `SDL3.setTipDelay(ms)` 设延迟） |
+| `bg_color` / `border_color` / `text_color` | 背景 / 边框 / 文字颜色 |
+| `radius` | 圆角半径（`0` 直角，越大越圆） |
+| `font_size` / `font_path` / `font_style` | 字体三件套。`font_style` 用数字：`1` 粗体、`2` 斜体、`4` 下划线，可按位组合 |
+
+颜色统一写 `#RRGGBBAA`，例如 `#282A32FF`（不透明）、`#00000000`（全透明）、`#FF6E8240`（半透明红）。
+
+⚠ 少数 API 用**不带 alpha 的 `0xRRGGBB` 整数**，如 `Table.set_row_color(i, 0xFF6060)`、`set_row_color(i, RED)`；两者别混。
+
+### 2.3 弹性布局四参数 `grow/shrink/basis/align`
+
+`test_layout.leno` 是这套语义的完整实测。容器 `add(widget, opts)`：
+
+```leno
+HBox row = win.addHBox({x: 10, y: 44, w: 800, h: 46, spacing: 8, pad_x: 6, pad_y: 6})
+row.add(SDL3.createButton({text: "grow:2", w: 80, h: 34}), {grow: 2})   // 占 2/4
+row.add(SDL3.createButton({text: "grow:1", w: 80, h: 34}), {grow: 1})   // 各占 1/4
+row.add(SDL3.createButton({text: "grow:1", w: 80, h: 34}), {grow: 1})
+```
+
+| 参数 | 语义 |
+|---|---|
+| `grow` | **权重，不是像素**。按权重分剩余空间；`grow:2 : grow:1 : grow:1` = 2:1:1 |
+| `shrink` | 空间不足时按 `shrink × basis` 比例收缩；`shrink:0` 不收缩、允许溢出（默认 1） |
+| `basis` | 主轴分配基数，**不是固定宽度**。不写时用控件加入那一刻的自然尺寸，事后 `set_size` 改了也不影响 |
+| `align` | 交叉轴 `0=start / 1=center / 2=end / 3=stretch` |
+| `minW` / `maxW` / `minH` / `maxH` | 最小/最大尺寸约束（`{grow:1, maxW:120}`、`{grow:1, minH:60}`） |
+| `justify` | 主轴分布：`0` 起始 / `1` 居中 / `3` space-between（`test_layout` 实测） |
+| `expand: true` | 老写法，等价 `grow:1`，向后兼容 |
+
+想钉死宽度写 `{basis: w, grow: 0, shrink: 0}`。排障用 `win.dumpLayout()` 或 `SDL3.dumpLayout(容器)`，它会提示"`free 未被吸收`"——正是"没铺开"的最常见根因。
+
+**AnchorBox 用锚点参数**，不是上面那套：`{left:8, top:8}`、`{right:8, top:8}`、`{centerX:true, centerY:true}`、`{right:8, bottom:8}`。
+
+### 2.4 回调签名（按实测，别猜）
+
+```leno
+btn.on_click(func() { ... })                              // 绝大多数控件：无参
+cv.on_click(func(float lx, float ly) { ... })              // Canvas：局部坐标
+cb.on_change(func(bool v) { ... })                         // CheckBox/Toggle/Radio
+sl.on_change(func(float v) { ... })                        // Slider/SpinBox/ProgressBar
+cbx.on_change(func(int idx) { ... })                       // ComboBox
+lb.on_change(func(Array[int] idxs) { ... })                // ListBox：选中下标数组
+tab.on_change(func(int idx) { ... })                       // TabControl
+bar.on_select(func(string menu, string id) { ... })        // MenuBar：菜单名 + 项 id
+tbl.on_select(func(int row) { ... })                       // Table
+tbl.on_check(func(int col, Array[int] checked) { ... })    // Table 勾选列
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) { ... })
+```
+
+事件对象常用方法：`ev.isQuit()`、`ev.isWindowClose()`、`ev.isKeyDown()` + `ev.scancode()`、`ev.isMouseButtonDown()`、`ev.mousePos()`、`ev.isMouseWheel()` + `ev.wheelY()`（**正值 = 往上滚看更早内容**）、`ev.isWindowResized()`。
+
+窗口缩放若要自己重排绝对定位的容器，在 `isWindowResized()` 分支里 `getSize()` 后逐个 `set_size()` / `set_pos()`（`test_layout.leno` 就是这么做的）。
+
+---
+
+## 三、文字与按钮
+
+### 3.1 Label —— 文字标签
+
+```leno
+Label lb = SDL3.createLabel({text: "歌曲名", font_size: 14, text_color: #333333FF,
+                             align: 0, tip: "完整标题"})
+lb.set_text("新标题")
+box.add(lb, {grow: 1, align: 1})
+```
+
+**主要参数**：`text`、`font_size`、`font_path`、`font_style`、`text_color`、`hover_color`、`align`（`left`/`center`/`right`）、`cursor`、`hover_shift`、`tip`、`max_w`、`truncate`、`wrap`、`wrap_w`、`scroll_always`、`visible`、`enabled`。
+
+**常用方法**：`set_text()`、`set_text_color()`、`set_hover_color()`、`set_font_size()`、`set_font_path()`、`set_align()`、`set_max_w()`、`set_truncate()`、`set_wrap()`、`set_wrap_w()`、`get_text()`、`get_lines()`、`measure_w()`、`measure_h()`、`on_click()`。
+
+### 3.2 Button —— 按钮
+
+`test_button_v3.leno` 逐项测了类型、颜色、外观开关、光标、字体样式和动态方法。
+
+```leno
+// 五种预设
+Button b = win.addButton({text: "Primary", x: 30, y: 55, w: 130, h: 40,
+                          type: "primary", tip: "主要操作"})
+b.on_click(func() { do_it() })
+
+// 纯图标按钮：不传 text（默认 ""），只给 image_path
+Button icon = SDL3.createButton({image_path: ui.ico("menu_delete_all.png"),
+                                 image_size: 16, w: 26, h: 26, radius: 6, background: false})
+```
+
+**主要参数**：`text`（默认 `""`）、`type`（`primary`/`danger`/`success`/`warning`/`dark`/`normal`）、`w`/`h`、`radius`、`bg_color`、`text_color`、`hover_color`、`pressed_color`、`border`、`border_color`、`shadow`、`background`、`font_size`、`font_path`、`font_style`、`padding`、`align`、`image_path`、`image_size`、`image_pos`、`image_gap`、`image_mode`、`image_alpha`、`image_tint`、`image_path_hover`、`image_path_pressed`、`image_path_disabled`、`bg_image`、`cursor`、`tip`、`enabled`、`visible`。
+
+**常量**：`Button.IMG_LEFT/RIGHT/TOP/BOTTOM`、`Button.IMG_ASPECT_FIT/STRETCH/ASPECT_FILL`、`Button.ALIGN_LEFT/CENTER/RIGHT`；`cursor` 用 `SDL3.SystemCursor.*`。
+
+**动态方法**（全是实测）：`set_text()`、`set_type()`、`set_bg_color()`、`set_text_color()`、`set_hover_color()`、`set_font_size()`、`set_font_style()`、`set_radius()`、`set_border()`、`set_shadow()`、`set_background()`、`set_cursor()`、`set_image()`、`set_image_pos()`、`set_image_mode()`、`set_enabled()`、`set_visible()`、`set_pos()`、`set_size()`、`get_text()`、`get_x()/get_y()/get_w()/get_h()`、`focus()`、`blur()`、`activate()`、`on_click()`。
+
+⚠ `background: false` 的纯图标按钮会连 hover 效果一起跳过。
+
+### 3.3 LinkButton —— 链接按钮
+
+**主要参数**：`text`、`url`、`color`、`hover_color`、`visited`、`underline`、`underline_hover`、`font_size`、`font_path`、`tip`、`visible`、`enabled`。
+
+**方法**：`set_text()`、`set_url()`、`set_visited()`、`set_underline()`、`set_text_color()`、`set_hover_color()`、`on_click()`、`get_text()`、`get_url()`。
+
+⚠ `url` 字段**只用于显示**，控件内部只回调 `onClick`——不绑回调点了没反应。
+
+### 3.4 CheckBox —— 复选框
+
+```leno
+var cb = win.addCheckBox({text: "我同意用户协议", x: 40, y: 40, checked: false})
+cb.on_change(func(bool v) { print("复选框 -> " + v) })
+bool v = cb.is_checked()
+```
+
+**主要参数**：`text`、`checked`、`box`、`gap`、`checked_color`、`unchecked_color`、`border_color`、`font_size`、`font_path`、`font_style`、`text_color`、`cursor`、`tip`、`enabled`、`visible`。
+**方法/回调**：`set_checked()`、`is_checked()`、`set_text()`、`on_change(func(bool v){...})`。
+
+### 3.5 RadioButton —— 单选框
+
+同 `group` 字符串的为一组，组内互斥；不同 `group` 互不影响。
+
+```leno
+win.addRadioButton({text: "选项 A", x: 40, y: 100, group: "mode", checked: true})
+win.addRadioButton({text: "选项 B", x: 40, y: 140, group: "mode"})
+```
+
+**参数/方法**同 CheckBox，多一个 `group`；回调 `on_change(func(bool v){...})`——**只在被选中时处理 `if v`**，取消选中那次也会回调。
+
+### 3.6 Toggle —— 开关
+
+```leno
+var tg = win.addToggle({text: "Wi-Fi", x: 240, y: 200, on: true, anim: true})
+tg.on_change(func(bool v) { ... })
+bool on = tg.is_on()
+```
+
+**主要参数**：`on`、`text`、`anim`、`on_color`、`off_color`、`w`/`h`、`font_size`、`text_color`、`tip`、`enabled`、`visible`。
+**方法/回调**：`set_on()`、`is_on()`、`on_change(func(bool v){...})`。
+
+---
+
+## 四、输入与选择
+
+### 4.1 Edit —— 单行 / 多行输入框
+
+`showcase.leno` 的"文本输入"卡片给了三种典型用法；`settings.leno` 演示了 IME 句柄下发。
+
+```leno
+// 单行 / 密码 / 多行
+win.addEdit({x: 90, y: 322, w: 220, h: 30, placeholder: "请输入姓名"})
+win.addEdit({x: 90, y: 362, w: 220, h: 30, password: true, placeholder: "密码"})
+win.addEdit({x: 90, y: 402, w: 220, h: 80, multiline: true,
+             text: "多行编辑框\n支持换行、选区、撤销/重做、IME"})
+
+// 放进容器时，若要用 IME/右键菜单，必须下发窗口句柄
+var ed = SDL3.createEdit({placeholder: "用户名", tip: "支持右键菜单：复制/粘贴/全选"})
+ed.set_window(win.handle)
+panel.add(ed)
+
+ed.on_change(func(string s) { ... })
+ed.on_enter(func() { ... })
+```
+
+**主要参数**：`text`、`placeholder`、`placeholder_color`、`multiline`、`wordWrap`、`password`、`readonly`、`pad_x`、`radius`、`border`、`border_color`、`bg_color`、`draw_bg`、`focus_color`、`font_size`、`font_path`、`font_style`、`text_color`、`w`/`h`、`tip`、`enabled`、`visible`。
+
+**方法**：`set_text()`、`get_text()`、`get_text_length()`、`set_readonly()`、`set_password()`、`set_multiline()`、`set_word_wrap()`、`set_placeholder()`、`set_pad_x()`、`set_window(handle)`、`set_window_size()`、`focus()`、`blur()`、`get_scroll_y()`、`get_max_scroll_y()`、`on_change()`、`on_enter()`、`set_context_menu_enabled()`、`on_context_select()`。
+
+### 4.2 SpinBox —— 数字输入框
+
+```leno
+var sp = SDL3.createSpinBox({x: 590, y: 286, w: 120, min: 10, max: 20,
+                             value: 14, step: 1, int_mode: true})
+sp.on_change(func(float v) { ... })
+```
+
+**主要参数**：`value`、`min`、`max`、`step`、`decimals`、`int_mode`、`arrow_color`、`arrow_w`、`focus_color`、`bg_color`、`border_color`、`font_size`、`placeholder`、`tip`、`w`/`h`。
+**方法**：`set_value()`、`get_value()`、`set_range()`、`set_step()`、`set_int_mode()`、`set_decimals()`、`on_change(func(float v){...})`、`get_text()`。
+
+### 4.3 Slider —— 滑块
+
+```leno
+var sl = win.addSlider({x: 470, y: 96, w: 240, h: 24, min: 0, max: 100, value: 40, tip: "拖动调节"})
+sl.on_change(func(float v) { status.set_text("滑块 = " + (v as string)) })
+
+var vertical = win.addSlider({x: 470, y: 140, w: 24, h: 150, min: 0, max: 10, value: 3, vertical: true})
+```
+
+**主要参数**：`value`、`min`、`max`、`step`、`vertical`、`show_value`、`track_color`、`fill_color`、`thumb_color`、`text_color`、`font_size`、`tip`、`w`/`h`。
+**方法**：`set_value()`、`get_value()`、`set_range()`、`set_track_gradient()`、`clear_track_gradient()`、`on_change(func(float v){...})`。
+
+### 4.4 ProgressBar —— 进度条
+
+```leno
+var pg = win.addProgressBar({x: 560, y: 140, w: 240, h: 22, value: 30, clickable: true})
+pg.on_change(func(float v) { ... })
+pg.set_value(pg.get_value() + 20.0)
+```
+
+**主要参数**：`value`、`min`、`max`、`show_text`、`clickable`、`fill_color`、`track_color`、`text_color`、`font_size`、`anim_speed`、`hit_pad_y`、`tip`、`w`/`h`。
+**方法**：`set_value()`、`get_value()`、`get_display_value()`、`on_change()`、`on_hover(func(float v){...})`。
+
+### 4.5 Calendar —— 日历
+
+月历网格 + 每天状态色 + 可选点选/切月。`on_pick` / `on_month_change` 回调；`set_mark()` / `set_marks()` / `clear_marks()` 标记日期；`weekdayName(y, m, d, names)` 的星期名由调用方给，控件不预设语言。
+
+**主要参数**：`year`、`month`、`today`、`month_fmt`、`week_start`、`marks`、`cell_min`、`cell_max`、`cell_radius`、`filled_color`、`plain_color`、`today_color`、`alert_color`、`font_size_day/head/week/legend`、`show_header`、`pad`、`gap`、`w`/`h`。
+
+### 4.6 pickColor —— 颜色选择对话框
+
+跨平台自带 8 色板 + RGBA 滑杆 + 实时预览 + 十六进制值，不依赖系统色板。
+
+```leno
+SDL3.pickColor({color: 当前色, title: "选个颜色"}, func(Color c) { 当前色 = c })
+```
+
+⚠ 结果走**第二个形参的回调**——主循环已跑时 `runModal` 只注册不阻塞，别读返回值；也别把回调塞进 Dict（`opts.get(...) as func(Color):void` 实测恒为 null）。
+
+---
+
+## 五、容器与布局
+
+### 5.1 HBox / VBox / AnchorBox
+
+| 容器 | 排列方式 |
+|---|---|
+| `HBox` | 子控件沿主轴横向排 |
+| `VBox` | 子控件沿主轴纵向排 |
+| `AnchorBox` | 按锚点精确落点 |
+
+**HBox / VBox 参数**：`x`/`y`/`w`/`h`、`pad_x`/`pad_y`（或 `padTop`/`padBottom`/`padLeft`/`padRight`）、`spacing`、`justify`、`bg_color`、`bg_radius`、`clip`、`visible`、`enabled`。
+**方法**：`add(widget, opts)`、`remove()`、`clear()`、`reset()`、`set_bg_color()`、`set_pos()`、`set_size()`、`measure_w()`、`measure_h()`。
+
+```leno
+// AnchorBox：锚点定位，不是 grow/basis
+var ab = win.addAnchorBox({x: 410, y: 410, w: 390, h: 350, pad_x: 8, pad_y: 8})
+ab.add(SDL3.createLabel({text: "左上"}), {left: 8, top: 8})
+ab.add(SDL3.createLabel({text: "居中"}), {centerX: true, centerY: true})
+ab.add(SDL3.createButton({text: "右下", w: 90, h: 32}), {right: 8, bottom: 8})
+```
+
+布局细节见 2.3 和[布局配方](布局配方.html)。
+
+### 5.2 GridLayout —— 网格布局
+
+**参数**：`cols`（列数）、`col_weights`、`col_spacing`、`row_spacing`、`spacing`、`pad_x`/`pad_y`、`min_col_width`、`align`、`w`/`h`。
+**方法**：`add(widget, {align: 1})`、`set_cols()`、`remove()`、`clear()`、`count()`、`measure_h()`、`measure_w()`。
+
+```leno
+GridLayout grid = SDL3.createGridLayout({cols: 2, col_weights: [1, 2], spacing: 8})
+grid.add(SDL3.createLabel({text: "名称"}), {align: 1})
+grid.add(SDL3.createLabel({text: "值"}),   {align: 1})
+```
+
+### 5.3 Panel —— 面板
+
+`showcase` 和 `settings` 都用一个 `card()` 构建器做"边框卡片 + 标题"——**容器加入布局用 `createPanel` + `tab.addToPage`，顶层用 `win.addPanel`**：
+
+```leno
+// showcase：顶层卡片
+func card(Window win, float x, float y, float w, float h, string title): Panel {
+    var p = win.addPanel({x:x, y:y, w:w, h:h, bg_color: #1C1E26FF, radius:10, border_color: #5A5F6EFF})
+    p.add(SDL3.createLabel({x:x+14, y:y+12, text:title, font_size:16, text_color: #B4C8FFFF}))
+    return p
+}
+```
+
+**参数**：`bg_color`、`border`、`border_color`、`border_alpha`、`radius`、`clip`、`w`/`h`、`enabled`、`visible`。
+**方法**：`add()`、`remove()`、`clear_children()`、`setLayout()`、`setLayoutPadded()`、`set_bg_color()`。
+
+### 5.4 GroupBox —— 分组框
+
+带标题的边框容器，可嵌套（`test_new_widgets.leno` 有完整属性实测）。
+
+**参数**：`title`、`title_pad`、`title_color`、`radius`、`border_alpha`、`border_color`、`bg_color`、`clip`、`w`/`h`。
+**方法**：`set_title()`、`add()`、`remove()`、`clear_children()`、`setLayout()`、`setLayoutPadded()`、`set_bg_color()`。
+
+### 5.5 ScrollView —— 滚动视图
+
+`showcase` 的标准写法：容器注册进窗口，内容用一个 `createVBox` 自适应。
+
+```leno
+var sv = win.addScrollView({x: 878, y: 426, w: 372, h: 180, content_w: 340, content_h: 520})
+var svBox = SDL3.createVBox({pad_x: 10, pad_y: 10, spacing: 8})
+for 12 to i {
+    svBox.add(SDL3.createButton({text: "条目 " + i, h: 32}), {})
+}
+sv.set_content(svBox)
+```
+
+**参数**：`content_w`/`content_h`、`fit_w`/`fit_h`、`w`/`h`、`smooth`、`step`、`bar_w`、`bar_color`、`bar_auto_hide`、`bar_hover_color`、`bg_color`、`border`、`border_color`、`border_alpha`、`radius`、`clip`。
+**方法**：`set_content()`、`set_content_size()`、`set_scroll()`、`scroll_to()`、`scroll_by()`、`ensure_visible()`、`near_bottom()`、`get_scroll_x()`、`get_scroll_y()`、`get_max_scroll_y()`、`get_layout_epoch()`。
+
+⚠ 子孙跟不跟着滚，取决于内容根是哪种控件，有三种情况；命中裁剪另见 `自测/test_scrollview_hitclip.leno`。
+
+### 5.6 TabControl —— 标签页
+
+⚠ **页内坐标是"相对内容区左上角"**：内容区原点 = `(tab.x, tab.y + tab_h)`，`settings.leno` 里的 `card()` 就是这么换算的。
+
+```leno
+var tab = win.addTabControl({x: 878, y: 684, w: 372, h: 250,
+                             tabs: ["基础", "高级"], active: 0, tab_h: 30})
+tab.addToPage(0, SDL3.createLabel({text: "基础设置"}), 20, 20)      // (widget, dx, dy)
+tab.addToPageLayout(0, widget, {grow: 1})
+tab.setPageLayout(1, SDL3.createVBox({}))
+tab.set_active(0) / tab.get_active()
+tab.on_change(func(int idx) { ... })
+```
+
+**参数**：`tabs`、`tab_icons`、`active`、`tab_h`、`tab_radius`、`tab_icon_size`、`underline`、`show_header`、`accent_color`、`active_color`、`active_text_color`、`bar_color`、`tab_color`、`bg_color`、`border`、`clip`、`font_size`、`w`/`h`。
+
+⚠ 同页混用绝对定位和 `addToPageLayout` 会提示一次（警告，不是错误）。
+
+### 5.7 Splitter / Card
+
+- **Splitter**（可拖分割条）：参数 `first`、`second`、`orientation`、`ratio`、`min_first`、`min_second`、`sep_color`、`sep_width`、`hover_color`、`hit_pad`、`w`/`h`；方法 `set_first()`、`set_second()`、`set_ratio()`、`get_ratio()`。常量 `SDL3.SPLIT_HORIZONTAL` / `SPLIT_VERTICAL`。事件实测见 `自测/test_splitter_events.leno`。
+- **Card**（海报/商品卡）：参数 `image_path`、`image_mode`、`image_aspect`、`image_h`、`image_radius`、`title`、`title_size`、`subtitle`、`badge`/`badges`、`badge_pos`、`pad`、`gap`、`text_align`、`hover_lift`、`bare`、`selected`、`sel_color`、`bg_color`、`radius`、`w`/`h`；方法 `set_image()`、`set_texture(tex, own)`、`set_title()`、`set_subtitle()`、`add_badge()`、`set_content()`、`set_selected()`、`on_click()`。设计细节见 [Card 卡片控件设计文档](LenoSDL3_Card卡片控件设计文档.html)。
+
+⚠ `set_texture(tex, own)` 的 `own:false` 表示借用共享纹理，销毁时不要重复释放。
+
+---
+
+## 六、列表与表格
+
+### 6.1 ListBox —— 列表
+
+```leno
+var lb = SDL3.createListBox({x: 470, y: 396, w: 160, h: 150,
+                             items: ["苹果", "香蕉", "橘子"], selected: 0})
+lb.on_change(func(Array[int] idxs) { status.set_text("选中 " + idxs.len() + " 项") })
+
+var multi = SDL3.createListBox({items: ["红", "绿", "蓝"], mode: 1})   // mode:1 多选
+```
+
+⚠ `on_change` 收的是 **`Array[int]` 选中下标数组**，不是单个 int。单选时点已选中的那一行不回调。
+
+**参数**：`items`、`selected`、`item_h`、`mode`、`image_path`、`image_size`、`image_gap`、`image_pad`、`sel_color`、`hover_color`、`bg_color`、`border_color`、`scroll_color`、`bar_auto_hide`、`w`/`h`。
+**方法**：`set_items()`、`add_item()`、`append_item()`、`append_bottom()`、`remove_item()`、`clear()`、`set_selected()`、`set_selected_indices()`、`select_all()`、`clear_selection()`、`get_selected_index()`、`get_selected_indices()`、`get_selected_text()`、`scroll_to_bottom()`、`is_at_bottom()`、`index_at()`、`on_change(func(Array[int] idxs){...})`、`on_activate()`。
+
+### 6.2 ComboBox —— 下拉框
+
+顶层**必须 `win.addComboBox`**；放进 Tab/容器时用 `createComboBox` + `add`（靠全局注册表画弹层）。
+
+```leno
+var cbx = win.addComboBox({x: 470, y: 700, w: 240, h: 32,
+                           items: ["选项一", "选项二"], placeholder: "请选择",
+                           selected: 1, tip: "下拉演示"})
+cbx.on_change(func(int idx) { status.set_text("下拉: " + cbx.get_selected_text()) })
+```
+
+⚠ `on_change` 收 **`int` 下标**——和 ListBox 不同。
+
+**参数**：`items`、`selected`、`editable`、`placeholder`、`item_h`、`popup_h`、`item_images`、`icon`、`icon_size`、`image_size`、`image_gap`、`show_arrow`、`sel_color`、`hover_color`、`bg_color`、`border`、`radius`、`w`/`h`。
+**方法**：`set_items()`、`set_items_with_images()`、`add_item()`、`clear()`、`set_selected()`、`get_selected()`、`get_selected_text()`、`set_editable()`、`set_suggestions()`、`open_list()`、`close()`、`on_change(func(int idx){...})`、`on_text_change()`、`on_enter()`。
+
+### 6.3 Table —— 表格
+
+`test_table_features.leno` 演示了复选框列、行级颜色和空状态。
+
+```leno
+Array[string] headers = ["", "任务", "状态", "耗时"]
+Array[int] aligns = [1, 0, 1, 2]
+Array[Array[string]] rows = [["", "编译模块A", "成功", "1.2s"], ...]
+
+var tbl = win.addTable({
+    x: 30, y: 64, w: 580, h: 280,
+    headers: headers, aligns: aligns, header_aligns: [1,1,1,1], rows: rows,
+    col_widths: [40, 220, 140, 100],
+    check_col: 0,                       // 第 0 列为复选框列
+    sortable: true, resizable: true, zebra: true, item_h: 28, header_h: 28,
+    empty_text: "暂无数据 — 点击\"添加行\"恢复"
+})
+
+int RED = 0xFF6060                       // ⚠ 行级颜色是 0xRRGGBB 整数，不是 #RRGGBBAA
+for rows.len() to i {
+    if rows[i][2] == "错误" { tbl.set_row_color(i, RED) }
+}
+tbl.on_check(func(int col, Array[int] checked) { print("勾选 " + checked.len() + " 行") })
+
+tbl.set_headers(headers); tbl.set_rows(rows); tbl.add_row([...], "")
+tbl.set_cell(row, col, "值"); tbl.get_cell(row, col)
+tbl.get_selected_row() / tbl.get_selected_rows()
+tbl.sort_by(col); tbl.check_all(); tbl.uncheck_all(); tbl.clear_row_colors()
+tbl.set_col_cell_type(col, "progress")   // 进度条列
+tbl.on_cell_draw(func(Renderer r, int row, int col, float x, float y, float w, float h) { ... })
+tbl.on_select(func(int row) { ... })
+tbl.on_edit_commit(func(int row, int col, string v) { ... })
+```
+
+**参数（节选）**：`headers`、`rows`、`aligns`、`header_aligns`、`col_widths`/`col_ratios`、`item_h`、`header_h`、`row_numbers`、`zebra`、`sortable`、`multi_select`、`cell_select`、`editable`、`editable_cols`、`frozen_cols`、`cell_types`、`numeric_cols`、`image_col`、`check_col`、`empty_text`、`sel_color`、`hover_color`、`row_radius`、`sep_color`、`w`/`h`。
+
+⚠ 表格方法 100+ 个，全部见 `lib/sdl_table.leno`；单选时点已选行不回调、进度条列与自绘回调的细节见速查。
+
+### 6.4 TreeView —— 树形列表
+
+**参数**：`items`、`text`、`image`、`image_expanded`、`image_mode`、`image_size`、`checkable`、`show_check`、`show_lines`、`indent`、`item_h`、`line_color`、`check_color`、`sel_color`、`hover_color`、`w`/`h`。
+**方法**：`set_items()`、`add_child()`、`remove_node()`、`expand()`、`expand_all()`、`collapse_all()`、`set_checked()`、`get_checked_ids()`、`get_selected_id()`、`get_selected_node()`、`set_data()`、`get_data()`、`on_change()`、`on_activate()`、`on_toggle()`、`on_check()`、`on_context()`。占位符行为见 `自测/test_treeview_placeholder.leno`。
+
+### 6.5 VirtualGrid —— 虚拟网格
+
+只构建可见项，成千上万条也不卡（长列表/卡片墙用）。
+
+**参数**：`count`、`item_w`/`item_h`、`cols`、`gap_x`/`gap_y`、`pad_x`/`pad_y`、`scroll_color`、`bar_w`、`bar_auto_hide`、`w`/`h`。
+**方法**：`set_count()`、`get_count()`、`set_builder(func(int idx): Widget {...})`、`set_scroll_y()`、`get_scroll_y()`。
+
+---
+
+## 七、图片与图形进度
+
+### 7.1 ImageView —— 图片展示
+
+```leno
+ImageView iv = SDL3.createImageView({image_path: path, image_mode: 0,
+                                     border: true, radius: 8,
+                                     cursor: SDL3.SystemCursor.POINTER, tip: "封面"})
+iv.set_image(newPath)
+iv.on_click(func() { ... })
+```
+
+`image_mode`：`0`=aspectFit 完整显示，`1`=stretch 拉伸，`2`=aspectFill 覆盖裁剪。
+**其他参数**：`overlay_path`、`overlay_hover_only`、`overlay_size`、`overlay_scale`、`alpha`、`image_tint`、`rotation`、`spin`、`radius`、`border`、`border_color`、`w`/`h`。
+**方法**：`set_image()`、`set_overlay()`、`set_mode()`、`set_rotation()`、`set_spin()`、`set_alpha()`、`set_tint()`、`set_border()`、`set_radius()`、`on_click()`、`get_image_path()`。
+
+⚠ 同路径图片走共享纹理缓存（`imageCacheCount()` / `setImageCacheMax(n)`）；旋转实测见 `自测/test_imageview_spin.leno`。
+
+### 7.2 Canvas —— 自绘画布
+
+`test_canvas_tab.leno` 把 Canvas 的坐标、裁剪、持久像素层讲得很清楚。
+
+```leno
+Canvas cv = SDL3.createCanvas({w: 26, h: 26, pad: 0, bg_color: #00000000, border: false})
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
+    // 局部坐标：(0,0)=左上角，(cw,ch)=右下角；越界图元会被裁剪到画布内
+    r.setColor(#58A0FFFF)
+    r.fillCircle(cw * 0.3, ch * 0.42, 60.0)
+    r.drawText(font, "Canvas 局部坐标", 12.0, ch - 26.0, #FFFFFFE6)
+})
+cv.on_click(func(float lx, float ly) { ... })   // ⚠ 收局部坐标，不是无参
+```
+
+**持久画布**：Canvas 自身**没有**像素级方法（旧的 `persist`/`set_pixel` 那套已不存在）。持久层用 `PixelBuffer` + `Renderer.blitBuffer`：
+
+```leno
+PixelBuffer buf = new PixelBuffer()
+buf.init(260, 190)
+cv.on_click(func(float lx, float ly) {
+    buf.fillRect(_int(lx*0.5) - 2, _int(ly*0.5) - 2, 5, 5, 255, 170, 80, 255)
+    SDL3.markFrameRedraw()               // 改了像素层要主动请求重绘
+})
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
+    r.blitBuffer(buf, ox, oy, cw, ch)     // 先上传持久层
+    // 再画每帧声明式内容（不写进持久层）
+})
+```
+
+**参数**：`bg_color`、`border`、`border_color`、`border_w`、`pad`、`clip`、`focusable`、`focus_border`、`cursor`、`w`/`h`。
+**回调**：`on_draw(Renderer, ox, oy, cw, ch)`、`on_click(float lx, float ly)`、`on_mouse_down()`、`on_mouse_up()`、`on_mouse_move()`、`on_drag()`、`on_wheel()`、`on_mouse_enter()`、`on_mouse_leave()`、`on_key()`、`on_dispose()`。
+
+⚠ Canvas 默认有**不透明底**，想透明必须 `bg_color: #00000000` + `border: false`。
+
+### 7.3 Separator —— 分隔线
+
+**参数**：`dir`（`0` 水平 / `1` 垂直）、`thickness`、`margin`、`color`、`alpha`、`w`/`h`。
+**方法**：`set_horizontal()`、`set_vertical()`、`set_thickness()`、`set_color()`、`set_alpha()`、`set_margin()`。
+
+### 7.4 Badge / Steps / Alert
+
+- **Badge**（胶囊徽标，不可点）：`text`、`bg_color`、`border_color`、`text_color`、`font_size`、`align`、`pad_x`/`pad_y`、`radius`、`w`/`h`；方法 `set_text()`、`set_bg_color()`、`set_text_color()`。
+- **Steps**（步骤条）：`SDL3.createSteps({steps, active, dir, title_side, ...})`，方法 `add_step()`、`set_active()`、`set_state()`、`count()`。
+- **Alert**（提示条）：`SDL3.createAlert({kind, text, ...})`，`kind` 取 info/warn/danger/success；方法 `set_kind()`、`set_text()`。要"停留到用户处理"用 Alert，不要用 Toast。
+
+### 7.5 RingProgress / Spinner / 图表
+
+- **RingProgress**（圆环进度，donut 图）：参数 `value`、`mode`（idle/sweep/value）、`size`、`thickness`、`track_color`、`fill_color`、`segments`、`show_text`、`text_fn`、`sub_text_fn`、`font_size`、`sweep_speed`、`tip`；方法 `set_value()`、`set_mode()`、`set_segments()`、`on_click()`。
+- **Spinner**（加载动画）：参数 `size`、`thickness`、`speed`、`color`、`track_color`、`track_alpha`、`full_track`、`running`、`tip`；方法 `start()`、`stop()`、`is_running()`、`set_color()`、`set_speed()`。
+- **图表**：`createBarChart` / `createLineChart` / `createPieChart`，共用 `data`（`set_data()`）、`title`、`show_grid`、`show_points`、`show_values`、`font_size`、`w`/`h`。独立测试见 `控件/图表/test_charts.leno`。
+
+---
+
+## 八、反馈与浮层
+
+### 8.1 Toast —— 轻提示
+
+一次操作的"回声"，不占布局、不吃事件、自动淡出。
+
+```leno
+SDL3.toast("已复制")
+SDL3.toastKind("保存失败", SDL3.TOAST_ERROR)
+SDL3.toastFull("正在解析…", SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
+```
+
+常量：`TOAST_INFO/SUCCESS/WARN/ERROR`、`TOAST_BOTTOM/TOP/BOTTOM_RIGHT`。
+设置：`setToastDuration(ms)`、`setToastPosition()`、`setToastMaxWidth()`、`setToastFontSize()`。
+
+### 8.2 Tooltip —— 悬停提示
+
+控件通用的 `tip` 参数就够用；`SDL3.setTipDelay(400)` 设全局延迟。内容随光标变化时用 `tipReportEx("owner", text, ax, ay)` + `tipClearEx("owner")`。
+
+⚠ 手动弹气泡必须用带 owner 的版本；用无条件 `tipClear` 会把别人的提示一起清掉。
+
+### 8.3 MenuBar / 右击菜单
+
+**MenuBar 是构建器写法**，先 `addMenu` 拿 int id，再往 id 里加项（`showcase.leno` / `settings.leno` 一致）：
+
+```leno
+var bar = win.addMenuBar({x: 0, y: 0, w: 920, h: 30, font_size: 14})
+
+int mFile = bar.addMenu("文件")
+bar.addItem(mFile, {label: "新建", id: "new", shortcut: "Ctrl+N", image: imgPath("new.png")})
+bar.addItem(mFile, {label: "打开", id: "open"})
+bar.addSeparator(mFile)
+int mEdit = bar.addMenu("编辑")
+int mMore = bar.addItem(mEdit, {label: "更多"})              // 返回子菜单 id
+bar.addSubmenuItem(mEdit, mMore, {label: "设置 A", id: "setA"})
+
+bar.on_select(func(string menu, string id) {                // 两个 string 参数
+    print("菜单选择: " + menu + " -> " + id)
+})
+
+// 窗口级右击菜单：底层 run 统一接管弹出，无需在 onEvent 里处理右键
+int ctx = bar.addContextMenu("ctx")
+bar.addContextItem(ctx, {label: "复制", id: "copy"})
+bar.addContextSeparator(ctx)
+bar.addContextItem(ctx, {label: "属性", id: "prop"})
+win.setContextMenu(bar, ctx)
+```
+
+⚠ MenuBar **必须 `win.addMenuBar()`**；用 `createMenuBar` + `win.add` 时标题会显示、点击有反应，但下拉菜单永远不弹。
+
+### 8.4 PopMenu —— 自绘弹出菜单
+
+无边框、置顶、非模态；图标传图片路径。
+
+```leno
+PopMenu pm = SDL3.createPopMenu({})
+pm.addItem("隐藏窗口", imgPath, func() { ... })
+pm.addCheck("窗口置顶", imgPath, false, func() { ... })
+pm.addSeparator()
+pm.beginSubmenu("显示设置")                 // 下一级，可嵌套
+pm.addCheck("12 小时制", imgPath, false, func() { ... })
+pm.endSubmenu()
+pm.showAt(x, y)
+pm.poll()                                   // 主循环里调：点菜单外自动收起
+```
+
+**方法**：`addItem()`、`addCheck()`、`addSeparator()`、`beginSubmenu()`、`endSubmenu()`、`setChecked()`、`setText()`、`setIcon()`、`showAt()`、`hide()`、`poll()`、`clickItem(idx)`（无头自测）。
+
+⚠ 子菜单是另一块独立面板，各面板必须紧贴（窗口透明，留缝会透出桌面）。Windows 上原生托盘菜单会冻结画面，所以托盘用这套自绘方案（见速查第六节）。
+
+### 8.5 Scrim —— 遮罩层
+
+半透明遮罩，常用于模态浮层后面。**参数**：`color`、`alpha`、`w`/`h`；**方法**：`show()`、`hide()`、`set_alpha()`、`on_window_resize()`。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 `自测/test_scrim_resize.leno`。
+
+---
+
+## 九、窗口增强
+
+### 9.1 TitleBar —— 自绘标题栏
+
+无边框窗口自己画标题栏，支持最小化/最大化/关闭、自绘图标、动作按钮、居中控件。
+
+**参数**：`title`、`h`、`bg_color`、`text_color`、`hover_color`、`close_hover_color`、`icon_color`、`sep_color`、`show_minimize`/`show_maximize`/`show_close`、`title_align`、`btn_align`、`actions`、`title_icon`、`icon_minimize`/`icon_maximize`/`icon_restore`/`icon_close`。
+**方法**：`set_title()`、`on_close()`、`on_minimize()`、`on_maximize()`、`on_action()`、`add_action()`、`set_maximized()`、`set_center_widget()`、`bind_window()`。
+
+### 9.2 Dialog —— 对话框
+
+```leno
+// 模态确认：结果走回调，不要读返回值
+SDL3.msgBox("确认", ["删除后无法恢复"], "删除", "取消", true, func() { do_delete() })
+
+// 自定义模态窗
+var dlg = SDL3.createDialogWindow({title: "设置", w: 480, h: 320})
+var done = false
+dlg.addLabel({x: 30, y: 36, text: "这是一个模态对话框", font_size: 16})
+dlg.addButton({x: 60, y: 120, w: 100, h: 36, text: "确定", type: "primary"})
+    .on_click(func():void { done = true })
+SDL3.runModal(dlg,
+    func(Event ev): bool { if ev.isQuit() or done { return false } return true },
+    func(Renderer r) { r.clearColor(#282A32FF) })
+```
+
+⚠ **`runModal` 不保证阻塞到窗口关闭**：主循环已在跑时它只注册窗口就返回 ⇒ 结果必须由按钮/关闭回调交出，不要写 `if runModal(...) {}`（恒判 false）。`SDL3.quit()` 也不是退出程序（见 1.5）。
+
+### 9.3 其它
+
+- **系统托盘**：`SDL3.createTray({icon, tooltip})` → `getMenu()` → `addButton()` / `addCheckbox()` / `addSeparator()`，必须靠 `win.run()` 驱动；Windows 上改用 `interceptTrayClick()` + `createPopMenu` 自绘（详见速查第六节）。
+- **文件对话框**：`showOpenFileDialog()`、`showSaveFileDialog()`、`showOpenFolderDialog()`。
+- **拖拽提示**：`SDL3.createDragHint({...})` + `show()` / `updatePos()` / `hide()`。
+- **窗口穿透**：`win.setClickThrough(bool)` / `isClickThrough()`。
+- **屏幕可用区**：`SDL3.getDisplayUsableAt(x, y)` 返回 `[x, y, w, h]`（扣掉任务栏，多屏可用），取不到时 w/h 为 0，调用方自己兜底。
+
+---
+
+## 十、官方活文档导览（leno_gui）
+
+`Leno/leno_gui/` 是控件库的"活文档"——每个 `test_*.leno` 都能直接 `leno 文件名` 跑起来。按你要找的东西直接翻对应目录：
+
+| 想找什么 | 去哪个文件 |
+|---|---|
+| **一个窗口看全部控件 + 三种布局 + 菜单/右击/模态/滚动/Tab** | `控件/总览/showcase.leno` ⭐ 先看这个 |
+| 主题（深色/浅色）切换 | `控件/总览/test_theme.leno` |
+| 按钮全部属性与动态方法 | `控件/按钮/test_button_v3.leno`（类型/颜色/光标/字体/动态）、`test_button_new.leno`、`test_button_image.leno` |
+| Label / Edit / Canvas | `控件/标签/test_label.leno`、`控件/编辑框/test_edit*.leno`、`控件/画布/test_canvas_tab.leno` |
+| 弹性布局 grow/shrink/basis/justify/align/锚点 | `控件/布局/test_layout.leno` ⭐ |
+| 复选/单选/开关 | `控件/选择控件/test_check_radio_toggle.leno`、`test_toggle_anim.leno` |
+| 滑块 / 进度条 / SpinBox | `控件/数值控件/test_slider_progress.leno`、`test_progress_anim.leno`、`test_spinbox.leno` |
+| ListBox / ComboBox / TreeView / Panel / ScrollView | `控件/复合控件/选择类/`、`控件/复合控件/容器类/` |
+| Tab × Canvas / Table / 重置 | `控件/复合控件/布局类/test_tab_*.leno` |
+| Table 全部能力 | `控件/表格/test_table*.leno`（features / advanced / cells / image / keyboard_tooltip） |
+| 菜单 / 右击菜单 / 提示 | `控件/复合控件/菜单/`、`控件/复合控件/提示类/test_tooltip.leno` |
+| 一整个设置面板怎么拼 | `控件/设置面板/settings.leno` ⭐ |
+| 边界与回归（焦点链/裁剪/缓存/缩放） | `自测/` 下 30+ 个 `test_*.leno` |
+| **完整真实应用** | `应用/数据看板/dashboard.leno`、`应用/影视海报墙/movie_wall.leno`、`应用/文件管理器/file_manager.leno`、`应用/模拟时钟/clock.leno`、`应用/IDE布局/ide_layout.leno` |
+
+> 这些文件和 `Leno/build/leno_module/LenoSDL3/examples/` 的 40+ 用例合起来，覆盖了每个控件的全部属性。查某个具体参数时，搜文件名比猜 API 快。
+
+---
+
+## 附：控件 → 创建函数速查
+
+| 控件 | 创建函数 | 分类 |
+|---|---|---|
+| `Label` / `Button` / `LinkButton` | `createLabel` / `createButton` / `createLinkButton` | 文字按钮 |
+| `CheckBox` / `RadioButton` / `Toggle` | 同名 `createXxx` | 选择 |
+| `Edit` / `SpinBox` / `Slider` / `ProgressBar` | 同名 `createXxx` | 输入数值 |
+| `Calendar` / `pickColor` | `createCalendar` / `pickColor` | 选择 |
+| `HBox` / `VBox` / `AnchorBox` / `GridLayout` | 同名 `createXxx` | 布局 |
+| `Panel` / `GroupBox` / `ScrollView` / `TabControl` / `Splitter` / `Card` | 同名 `createXxx` | 容器 |
+| `ListBox` / `ComboBox` / `Table` / `TreeView` / `VirtualGrid` | 同名 `createXxx`（ComboBox 顶层用 `win.addComboBox`） | 列表 |
+| `ImageView` / `Canvas` / `Separator` / `Badge` / `RingProgress` / `Spinner` | 同名 `createXxx` | 图形进度 |
+| `BarChart` / `LineChart` / `PieChart` | 同名 `createXxx` | 图表 |
+| `Toast` / `Tooltip` / `MenuBar` / `PopMenu` / `Scrim` / `Tray` | `toast()` / `tipReport()` / `win.addMenuBar` / `createPopMenu` / `createScrim` / `createTray` | 反馈浮层 |
+| `TitleBar` / Dialog | `createTitleBar` / `createDialogWindow` + `runModal` | 窗口增强 |

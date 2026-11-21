@@ -15,7 +15,7 @@
 > ★ 2026-11-09：原先只有 `Web` 一个入口，它一次绑定 8510 行依赖（编译是 `WebNet` 的 1.9 倍），
 > 于是四个项目全部绕去 `import "web_net"`（37 次对门面 0 次）。拆出窄入口后已全部改回公共入口。
 > **本文补于 2026-10-14**：这是 LenoWeb 的**第一份参考文档**。此前它的能力只写在模块源码头注释与
-> 几份开发记录里（`移植音乐下载器实录与待办.md` / `LenoHtml_开发问题记录.md` / `LenoNet开发问题记录.md`），
+> 几份开发记录里（`移植音乐下载器实录与待办.md` 等），
 > 从 `docs/` 入口**根本发现不了** —— 实际后果之一是"Leno 有没有 gzip"被误判成"没有"
 > （`web_gzip.leno` 就在那儿，纯 Leno 实现，但文档层没有任何入口提及它）。
 >
@@ -232,7 +232,7 @@ API：`backend()`（`"windows"` / `"iconv"` / `"none"`）、`normalize` / `codep
   `[ ]` 与 `( )` 内部的空格不算分隔符；伪类可叠加、位置类伪类只数**元素**子节点；
   **未知伪类不拦**（写错的伪类不会静默返回空）。
 - ⚠ `select` 结果去重是 O(m²)（调用点已按"是否可能重复"过滤）。
-- ⚠ 解析状态用**模块级全局变量**管理 ⇒ 多线程同时解析同一份 HTML 需谨慎（见 `多线程struct与模块全局变量问题记录.md`）。
+- ⚠ 解析状态用**模块级全局变量**管理 ⇒ 多线程同时解析同一份 HTML 需谨慎（见 `archive/多线程struct与模块全局变量问题记录.md`）。
 
 ### web_crawler：URL / robots / sitemap / 爬虫框架 / CSV
 
@@ -312,7 +312,7 @@ CSV：`csvField(v)` / `toCsv(rows)`（CRLF，Excel 友好）/ `writeCsv(path, ro
 | **`fetchAll`** | 结果按**输入顺序**返回；`concurrency` 建议 4~16；`multiInit` 失败时整批返回带 `resp.error` 的占位结果 |
 | **回调上限** | `ffi.callback` 同时存活上限 **256**；`HttpClient.close()` 必须释放自己建的 2 个回调，否则第 128 次请求起失败 |
 | **线程安全** | 每线程各用各的 `HttpClient` ✓；同一 client 跨线程共用**不安全**（用户责任）；`curl_global_init` 已改为模块加载时做一次 |
-| **模块级全局** | `web_html` 用模块级全局管解析状态；`ObjModule.globals` **不随 `threads.start()` 深拷贝**（见 `多线程struct与模块全局变量问题记录.md`）⇒ 多线程共用一个模块的全局要当心 |
+| **模块级全局** | `web_html` 用模块级全局管解析状态；`ObjModule.globals` **不随 `threads.start()` 深拷贝**（见 `archive/多线程struct与模块全局变量问题记录.md`）⇒ 多线程共用一个模块的全局要当心 |
 | **charset 后端** | Windows `kernel32` / POSIX `iconv`；**两者都不可用 ⇒ 原样返回**；POSIX（iconv）路径**未在 Windows 实测**，需在 Linux/macOS 跑一遍 |
 | **sitemap 接口分两种** | `parseSitemap` 只取 `<loc>`（兼容旧接口）；要 lastmod/changefreq/priority 用 `parseSitemapEntries`；索引文件先用 `isSitemapIndex` 判 |
 | **CSV** | `toCsv` 行尾是 CRLF（Excel 友好）；`writeCsv` 默认带 BOM |
@@ -336,7 +336,6 @@ CSV：`csvField(v)` / `toCsv(rows)`（CRLF，Excel 友好）/ `writeCsv(path, ro
 
 ## 相关文档
 
-- [`LenoHtml_开发问题记录.md`](LenoHtml_开发问题记录.md) —— HTML 解析器的问题与取舍
-- [`LenoNet开发问题记录.md`](LenoNet开发问题记录.md) / [`LenoNet_崩溃问题排查记录.md`](LenoNet_崩溃问题排查记录.md) —— libcurl 绑定与崩溃排查
+- [`archive/LenoNet_崩溃问题排查记录.md`](archive/LenoNet_崩溃问题排查记录.md) —— libcurl 绑定期的**堆损坏**排查过程（LenoNet 已并入本模块）
 - [`移植音乐下载器实录与待办.md`](移植音乐下载器实录与待办.md) —— 实战用例（zlib + gb18030 那类）
 - [`语言陷阱速查.md`](语言陷阱速查.md) —— `len()` vs `byte_len()` 等语言层坑

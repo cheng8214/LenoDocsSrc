@@ -1,0 +1,447 @@
+> 📦 **扩展模块**（非语言内置标准库）· 包名 `LenoHTTP` · import 名 "HTTP"
+> 源 README：`Leno/build/leno_module/LenoHTTP/README.md`（本页是同步副本，改请改源）
+
+# LenoHTTP v0.2.9
+
+Leno 的 **HTTP/1.1 服务端**（纯 Leno，零原生依赖，基于内置 `sockets`）。
+路由、查询串、表单、静态文件、keep-alive、**线程池并发**、**视图文件**、**声明式鉴权 + 全局管道**。
+
+```leno
+import "HTTP" as http
+
+var app = http.newApp()
+
+http.get(app, "/", handler_home)                 // 处理函数可以是具名函数…
+http.get(app, "/echo", func(Dict req): Dict {    // …也可以是闭包
+    return http.json({"q": req["query"]["q"]})
+})
+http.post(app, "/form", handler_form)            // req["form"] 已解析好
+http.static(app, "/assets", "D:/www")            // 静态目录
+
+http.serve(app, "0.0.0.0", 8080)                 // 阻塞式服务（单线程）
+```
+
+多线程并发（0.2）：
+
+```leno
+func buildApp(): Dict {                          // 每个 worker 线程各调一次
+    var app = http.newApp()
+    http.get(app, "/", handler_home)
+    return app
+}
+func worker(int idx, Channel conns): int {       // 线程入口：具名模块函数，arity=2
+    return http.workerLoop(buildApp(), conns)
+}
+main() {
+    var app = buildApp()                         // 主线程这份只当 running 开关
+    http.serveWorkers(app, "0.0.0.0", 8080, 8, worker)
+}
+```
+
+完整可跑示例：
+
+| 示例 | 内容 |
+|---|---|
+| `examples/hello_server.leno` | 最小单线程服务 |
+| `examples/threaded_server.leno` | 线程池（`serveWorkers`） |
+| `examples/site.leno` | 演示站：路由 / 表单 / JSON / 静态 / 404（用 `$@"..."` 写 HTML） |
+| `examples/music_api.leno` | **鉴权 + SQLite 检索 + JSON 接口**（Bearer/cookie 两种鉴权、参数绑定防注入） |
+| `examples/board.leno` | 注册 / 登录 / 留言（会话 + CSRF + 模板转义） |
+
+```bat
+build\leno.exe build\leno_module\LenoHTTP\examples\hello_server.leno 8080 D:\www
+build\leno.exe build\leno_module\LenoHTTP\examples\threaded_server.leno 8080 8
+build\leno.exe build\leno_module\LenoHTTP\examples\music_api.leno 8090
+```
+
+## API
+
+| 函数 | 说明 |
+|---|---|
+| `newApp()` | 新建应用 `{routes, statics, running}` |
+| `get/post/put/del(app, path, handler, opts=null)` | 注册路由（精确匹配）；`opts` 是声明式元数据，如 `{auth: true}` |
+| `route(app, method, path, handler, opts=null)` | 任意方法（`"*"` = 全部） |
+| `routes(app, table)` | **集中路由表**：一次注册一批，除 `method`/`path`/`handler` 外的键都是元数据；返回注册条数 **0.2.2** |
+| `auth(app, fn)` | 注册**唯一**的鉴权检查器：`fn(req) -> 用户名 / ""`（空串 = 未登录）**0.2.2** |
+| `before(app, fn)` | 全局前置管道：`fn(req)` 返回 `null` 放行、返回响应 Dict 短路 **0.2.2** |
+| `after(app, fn)` | 响应后置钩子：`fn(req, res) -> res`，统一改响应头（CORS/安全头/请求 id）**0.2.8** |
+| `cors(app, origins)` | 一键 CORS：预检 ⇒ 204 + `Allow-*`；普通响应由 `after` 补 `Allow-Origin` **0.2.8** |
+| `jsonStatus(code, obj)` | 带状态码的 JSON 响应（`json()` 固定 200）**0.2.2** |
+| `static(app, prefix, dir)` | 挂静态目录（`/assets` → `dir`） |
+| `listen(host, port)` | 监听 → `{ok, sock, host, port, err}`；`port=0` 由系统分配 |
+| `run(server, app)` | 在已有监听器上跑主循环（避免二次 bind） |
+| `serve(app, host, port)` / `serveOn(app, port)` | 监听 + 主循环（阻塞，单线程） |
+| `serveWorkers(app, host, port, n, entry, queue=0, maxConns=0)` | **线程池**：主线程只 accept，连接交给 n 个 worker |
+| `workerLoop(app, conns)` | worker 侧循环：拿 fd → `from_fd` → `handle_conn` |
+| `acceptOne(server, app)` | 只处理一个连接（测试/自定义循环） |
+| `stop(app)` | 让 `serve/run` 退出（`serveWorkers` 用 `maxConns` 或进程退出） |
+| `text/html/json/bytes/status/redirect/notFound` | 响应助手 |
+| `esc(s)` | HTML 转义（`& < > " '`） |
+| `render(tpl, vars)` | 模板：`{{x}}` **转义**输出、`{{{x}}}` 原样输出、缺键给空串 |
+| `htmlTemplate(tpl, vars)` | 模板 → `text/html` 响应 |
+| `query(req, name, def="")` | 取查询参数（缺键/空串 ⇒ 默认值）**0.2.1 新增** |
+| `formValue(req, name, def="")` | 取表单字段（同上） |
+| `header(req, name, def="")` | 取请求头（名字不区分大小写） |
+| `stream(ctype, producer)` | **流式响应**：chunked 边算边发，`producer: func(): string`，返回 `""` 结束 **0.2.9** |
+| `sse(producer)` | SSE 便捷版：`text/event-stream` + `Cache-Control: no-cache` **0.2.9** |
+| `param(req, name, def="")` | 取**路径参数**（`/api/x/:id`）**0.2.8 新增** |
+| `intParam(req, name, def=0)` | 路径参数转整数：**非数字给默认值，绝不抛异常** **0.2.8 新增** |
+| `queryInt(req, name, def=0)` | 查询串转整数（同上口径）**0.2.8 新增** |
+| `views(app, dir)` | 指定视图目录 **0.2.1 新增** |
+| `view(app, name, vars)` | 渲染 `dir/name.html`，自动套 `dir/layout.html`（`{{{body}}}`） |
+| `cookie(req, name, def)` | 读 cookie（`Cookie: a=1; b=2`） |
+| `setCookie(res, name, value, path, maxAge)` | 写 `Set-Cookie`（`maxAge=0` = 会话 cookie；可多次调用，逐行发出） |
+| `clearCookie(res, name)` | 删除 cookie |
+
+**流式响应（★ 0.2.9，2026-11-06）**：`http.sse(producer)` 走 `Transfer-Encoding: chunked`，
+producer 每调一次发一段（`data: {...}\n\n`），返回 `""` 收尾；头里带 `X-Accel-Buffering: no`
+（反代别攒字节）。**会一直占着一个 worker 线程**，producer 必须自己决定何时结束。
+
+**静态文件缓存（★ 0.2.9）**：除 `ETag` / `If-None-Match` 外，现在也发 `Last-Modified`，
+并按 `If-Modified-Since`（秒级）回 304。
+
+**按路由体积上限（★ 0.2.9）**：路由元数据加 `maxBody: 614400` ⇒ 超过回 **413** 且不进 handler
+（`http.routes([{method:"POST", path:"/api/avatar", handler: h, auth: true, maxBody: 614400}])`）。
+
+**协议细节（★ 0.2.8，2026-11-06）**：
+- **chunked 请求体**：`Transfer-Encoding: chunked` 现在会真正解码（含扩展/末块 trailer），
+  超过 8MB 或长度行非法 ⇒ 400；以前是当"没有正文"静默放过 ✗
+- **请求走私防护**：同时出现 `Content-Length` 与 `Transfer-Encoding` ⇒ 直接 400（RFC 9112 §6.1）
+- **`Expect: 100-continue`**：会先回 `HTTP/1.1 100 Continue` 再读正文（否则 curl 要白等 1 秒）
+- **`Date` 头**：所有响应自动带 IMF-fixdate（`Fri, 06 Nov 2026 00:42:44 GMT`，自己算 GMT，
+  不跟本地时区/区域走）
+- **`HEAD`**：按 GET 找路由，只发头（`Content-Length` 与 GET 一致）
+- **`OPTIONS`**：路径存在但方法不匹配时回 **204 + `Allow`**（不再是 405）
+
+**慢连接保护（2026-10-20）**：单个请求的读入总时长上限 `MAX_REQUEST_SECONDS = 10`（秒），
+用 `select` 等"剩余时间"实现 ⇒ 滴水式客户端（每 4.9s 送一个字节）也不会把连接占死。
+超时返回 400 并关闭连接。线程池下每个 worker 仍受这条约束（最多被占 10s，不会永久卡住）。
+
+**gzip 响应（2026-10-18，自动）**：请求带 `Accept-Encoding: gzip` 且响应体 ≥ 1KB、
+类型可压（`text/*` / json / javascript / xml / svg）时自动压缩，头里给
+`Content-Encoding: gzip` 与 `Vary: Accept-Encoding`，`Content-Length` 是**压缩后**长度。
+要关掉就自己设 `headers["Content-Encoding"]`（有值即跳过压缩）。
+
+**请求** `req`：
+
+```leno
+{method, target, path, query: Dict, headers: Dict, body, form: Dict,
+ version, keepAlive, remote}
+```
+
+**响应**（handler 返回；也可以直接返回 `string`）：
+
+```leno
+{status: 200, body: "...", contentType: "text/plain; charset=utf-8", headers: Dict}
+```
+
+> handler 直接 `return "<h1>hi</h1>"` 时按 **`text/html`** 发出（0.2.1 起；旧版是 text/plain）。
+> 要纯文本请显式 `return http.text(...)`。
+
+## HTML 怎么写才不啰嗦（0.2.1）
+
+用**原始插值字符串** `$@"..."`：属性引号写 `""`、反斜杠原样、`{expr}` 插值，HTML 不需要 `+` 拼接：
+
+```leno
+func hello(Dict req): string {
+    var name = http.query(req, "name", "世界")        // 一行取参数
+    return $@"<main><section class=""card"">
+  <h1>你好 {http.esc(name)}</h1>
+  <p>注意：<b>插值不会自动转义</b>，用户输入一律 http.esc(...)</p>
+</section></main>"
+}
+```
+
+> `""` = 一个引号；换行直接写在字符串里（支持跨行）。
+> 也可以改用 `$"..."`（这时引号要写 `\"`），两者结果一致。
+> 想彻底不碰引号就用**视图文件**：HTML 放 `views/hello.html`，handler 里一行
+> `return http.view(app, "hello", {name: name})`。
+
+视图文件约定：
+
+```
+views/
+  layout.html   ← 用 {{{body}}} 插入页面；title 等变量也能直接用
+  hello.html    ← <h1>你好 {{name}}</h1>
+```
+
+```leno
+http.views(app, "views")
+http.get(app, "/hello", func(Dict req): Dict {
+    return http.view(app, "hello", {name: "Leno", title: "问候"})
+})
+```
+
+`{{x}}` 默认**转义**（防 XSS），`{{{x}}}` 原样输出（只对可信内容用）。
+
+## 文件上传：multipart/form-data（0.2.6）
+
+```leno
+import files
+
+http.post(app, "/upload", func(Dict req): Dict {
+    var f = http.file(req, "avatar")            // {name, filename, contentType, body}
+    if f.len() == 0 {
+        return http.jsonStatus(400, {ok: false, error: "缺少 avatar"})
+    }
+    string name = f["filename"] as string
+    string body = f["body"] as string           // **原始字节**（图片/压缩包都行）
+    files.write("uploads/" + name, body)
+    return http.json({ok: true, file: name, size: body.byte_len()})
+})
+```
+
+| API | 说明 |
+|---|---|
+| `http.file(req, name)` | 取一个上传文件；没有 ⇒ 空 Dict（`f.len() == 0`） |
+| `http.files(req)` | 全部文件（顺序同请求） |
+| `http.formValue(req, name, def)` | **文本字段也能用**（multipart 的文本字段已并入 `form`） |
+
+实现要点：
+
+- 全程按**字节**切分（`Array[int]` 扫描 + `byte_slice`）—— body 里可能是二进制，
+  字符串的 `find` 是**字符**位置，用在图片上会算错
+- 内容里出现 `\r\n--boundary` 的**伪边界**不会被骗（测试里专门构造了这个字节序列）
+- 中文文件名按 UTF-8 原样保留
+- 上限仍是 `MAX_BODY = 8MB`（整包读进内存；再大要改成分块收，属另一个工程）
+
+## Range 与大文件分块（0.2.5）
+
+### 断点续传 / 视频拖动（`Range`）
+
+| 请求 | 响应 |
+|---|---|
+| `Range: bytes=100-199` | `206` + `Content-Range: bytes 100-199/<total>` + 恰好 100 字节 |
+| `Range: bytes=1048500-` | `206` + 尾部片段 |
+| `Range: bytes=99999999-` | `416` + `Content-Range: bytes */<total>`（客户端据此知道该从哪续） |
+| 无 `Range` | `200` + `Accept-Ranges: bytes` |
+
+只支持**单段**（多段 `bytes=0-99,200-299` 按无效处理 ⇒ 416）。
+
+### 大文件不再整读内存
+
+| 文件大小 | 怎么发 |
+|---|---|
+| ≤ **256KB** | 整读（能享受 gzip） |
+| > 256KB | **分块读发**（64KB 一块，内存峰值恒定；不 gzip） |
+
+```leno
+http.static(app, "/video", "media")     // 1GB 的 mp4 也不会把进程顶满
+```
+
+> 分块路径**跳过 gzip**：流式压缩要边读边压，成本远高于收益（大文件多是图片/视频，本来不可压）。
+> 打开文件用 `"rb"`（**二进制模式**）——文本模式在 Windows 上会把 `\r\n` 折成 `\n`，图片会被改坏。
+
+## 静态文件缓存：ETag / 304（0.2.4）
+
+静态文件响应默认带 **`ETag`**（内容指纹 = `size-mtime`）。浏览器二次请求会带
+`If-None-Match`，命中就回 **304（无正文）**——CSS/JS/图片不再重复传输。
+
+```leno
+http.static(app, "/assets", "assets")
+```
+
+| 请求 | 响应 |
+|---|---|
+| `GET /assets/a.css` | `200` + `ETag: "1234-1760000000"` + `Last-Modified: … GMT` + 正文 |
+| `GET` + `If-None-Match: "1234-1760000000"` | **`304`**，正文长度 0 |
+| `GET` + `If-Modified-Since: <该文件的 Last-Modified>` | **`304`**（★ 0.2.9 新增） |
+| `GET` + `Range: bytes=0-1023` | **`206`** + `Content-Range`，只发那一段 |
+| 文件改过（size/mtime 变） | ETag / Last-Modified 都变 ⇒ 自然回 200 新内容 |
+
+> `Last-Modified` 由 `lib/http_date.leno` 用纯算术算成 IMF-fixdate（GMT），**不走 `times.format`**
+> —— 后者按本地时区输出，写进 HTTP 头会让缓存提前/延后失效。
+
+## 路径参数（0.2.3）
+
+```leno
+http.get(app, "/api/song/:id", songDetail)      // ⇒ handler 里取 req["params"]["id"]
+http.get(app, "/u/:uid/p/:pid", postDetail)     // 多段参数
+```
+
+规则：
+
+| 项 | 行为 |
+|---|---|
+| 参数形态 | **整段**才算：`/a/:id` ✓、`/a/x:id` ✗ |
+| 优先级 | **精确路由永远赢**：同时注册 `/a/b` 与 `/a/:id` 时，`/a/b` 走精确那条 |
+| 段数 | 必须相同；`/api/song/42/x` 不会命中 `/api/song/:id`（⇒ 404） |
+| 方法不符 | 仍报 405（不是 404，方便排查），**并带 `Allow` 头**（0.2.7） |
+| 解码 | 参数值**不做** URL 解码（与 `req["path"]` 口径一致；需要时自己 `urlDecode`） |
+
+> 参数路由走第二条循环（精确未命中才查），所以静态路径多时不会变慢。
+> 与鉴权/中间件可叠加：`{auth: true}` 的路由同样能带 `:id`。
+
+## 鉴权与中间件（0.2.2）
+
+照 ASP.NET Core 的分工：**鉴权用声明、日志用管道**。
+
+```leno
+var app = http.newApp()
+
+// ① 检查器只注册一次：返回用户名 / 空串
+http.auth(app, func(Dict req): string {
+    string t = http.header(req, "authorization", "")
+    if t == "" { t = http.cookie(req, "sid", "") }
+    return lookup_session(t)          // "" = 未登录
+})
+
+// ② 受保护的路由标一下（等价 [Authorize]）
+http.get(app, "/api/search", search, {auth: true})
+http.post(app, "/api/login", login)              // 不标 = 公开
+
+// ②' 或者集中成一张表 —— 「哪些接口、哪些要鉴权」一眼看全
+http.routes(app, [
+    {method: "POST", path: "/api/login",  handler: login},
+    {method: "GET",  path: "/api/search", handler: search, auth: true},
+    {method: "GET",  path: "/api/stats",  handler: stats,  auth: true},
+])
+
+// ③ 全局管道：访问日志（返回 null = 放行）
+http.before(app, func(Dict req): Dict {
+    print("[" + (req["method"] as string) + "] " + (req["path"] as string))
+    return null
+})
+```
+
+handler 里直接取用户（框架塞好的）：
+
+```leno
+func search(Dict req): Dict {
+    string user = req["user"] as string          // 不用自己校验
+    return http.json({ok: true, user: user, ...})
+}
+```
+
+**四条定死的语义**：
+
+| 情况 | 行为 |
+|---|---|
+| 路由标了 `{auth: true}`、检查器返回空串 | `401` + JSON（`http.jsonStatus`） |
+| 标了 `{auth: true}`，但**没调 `http.auth`** | **500 + 指向 `http.auth`** —— 绝不静默放行 |
+| `before` 返回非 `null` | 短路，直接把它当响应发出（维护模式/限流） |
+| `before` 或 handler 抛异常 | `500`，**只断这一个请求**，服务不死 |
+
+**为什么不用"路径前缀中间件"**：漏保护最难发现。标注写在同一行、改路径时跟着走；
+前缀方案一旦路径变了就静默失效。`use` 是保留字，所以名字是 `before`。
+
+## 行为与设计
+
+- **路由顺序**：精确路径（注册顺序）→ 参数路由 → 静态目录 → 404；
+  **路径命中但方法不符 ⇒ 405，响应带 `Allow` 列出该路径允许的方法**（★ 0.2.7）
+- **HEAD**（★ 0.2.7）：按 `GET` 找路由，只发响应头（`Content-Length` 与 GET 一致，正文为空）；
+  只注册了 `POST` 的路径对 HEAD 仍回 405 + `Allow: POST`
+- **keep-alive**：HTTP/1.1 默认保持（`Connection: close` 关闭）、HTTP/1.0 需显式
+  `keep-alive`；单连接最多 100 个请求。
+  **空闲时不干等 5s**（★ 2026-11-05）：处理完一个请求后用 `select(idle_ms)` 探一下，
+  没数据就关连接（`handle_conn` 的第三参，默认 300ms；`worker_loop` 在队列有积压时传 0）。
+  否则一个空闲长连接会**独占处理线程**到 5s 超时 —— 线程池下 4 个空闲客户端就能把 worker
+  占满（实测吞吐 4110 → 7 req/s ✗，用例 `test/test_keepalive_idle.leno`）。
+  代价：客户端请求间隔 > `idle_ms` 会重连（标准 HTTP 客户端如 libcurl/浏览器自动处理）。
+- **上限**：请求头 64KB、请求体 8MB（超出报 413/400）
+- **静态文件**：拒绝任何含 `..` 的路径段（防目录穿越）；目录请求补 `index.html`；
+  按扩展名给 Content-Type；文件整读进内存
+- **并发模型**：两条路 —— `run/serve` 单线程顺序处理；`serveWorkers` 是**线程池**：
+  主线程只 `accept`，`sock.detach()` 拿到 fd（整数）经 `Channel` 交给 worker，
+  worker 用 `sockets.from_fd(fd)` 在自己堆上重建 Socket 再处理（`Socket` 对象本身仍不能跨线程）。
+  - ⚠ **app 必须在 worker 线程内构建**：路由表里存的是 handler 闭包，闭包不能跨线程传，
+    所以入口要自己 `buildApp()`（每个线程一份路由表）。
+  - worker 入口建议写成**同模块的具名函数**（`func(int, Channel)`）：`threads.start` 只认真实闭包，
+    个别路径取到的裸 `ObjFunction` 会被拒绝，具名函数最稳。
+  - ⚠ **可变共享状态**：模块级 `var` 是所有线程同一份且无锁，计数/缓存/session 请用
+    `Channel` 汇到单点线程处理，或每线程一份。
+  - ⚠ **空闲 keep-alive 会占住 worker**：`handle_conn(c, app, idle_ms = 300)` 的第三参控制
+    "多久没有下一个请求就关连接"；`worker_loop` 发现队列有积压时传 0（立刻让位去接新活）。
+    调大它 = 少重连、但空闲连接会多占 worker；调小 = 更快让位、但客户端更常重连。
+  - 队列满（默认 `workers*4`）时直接回 503 关连接，不阻塞 accept。
+- **debug 日志**：`app.set("debug", true)` 会为每个请求打印一行
+  （方法 / target / 状态 / keep / carry 字节数），排查"请求收不到"很快。
+
+## 顺带修掉的四个问题（本模块的副产品）
+
+1. **`sock.send()` 原来只调一次 `send()` 且忽略返回值** ⇒ 大响应被**静默截断**
+   （实测发 1MB 静态文件，客户端只收到前几十 KB，而 Leno 侧拿到的是 `true`）。
+   现在改成**循环发完**（EINTR 重试、EWOULDBLOCK 有限重试），见 `src/module/sockets/sockets.c`。
+2. **`accept()` 出来的 socket 会继承监听端的 nonblocking**（Windows 上明显）⇒
+   不显式转回阻塞，`recv` 在"数据还没到"时立刻返回 null，keep-alive 的第二个请求
+   会被误判成"对端关闭"（症状：第一个请求正常、第二个永远收不到）。
+   LenoHTTP 在 `handle_conn` 里显式 `set_nonblocking(false)` 再 `set_timeout(5000)`。
+3. **状态短语表缺 401/409/429/502/503** ⇒ 这些状态码全被兜成 `HTTP/1.1 401 OK`
+   （写鉴权接口时实测发现，客户端和日志都很别扭）。已补齐，并对未列出的码按
+   `4xx → Client Error` / `5xx → Server Error` 兜底，不再把错误说成 OK。
+4. **`acceptOne` 不等连接**：`listen` 把监听 socket 设成非阻塞（为了 `stop()`），
+   而 `acceptOne` 直接 `accept()` ⇒ 客户端稍晚一点连上来就返回"没有待处理连接"，
+   连接其实还在 backlog 里（测试里表现为客户端永久卡在 `recv`）。
+   现在先 `select` 等可读（默认 5s，可传超时）再 `accept`。
+
+## 验证
+
+```bat
+:: Leno 侧自测：路由 / 查询串 / 表单 / 404 / 405 / 静态文件 / keep-alive / 200KB 大响应
+build\leno.exe build\leno_module\LenoHTTP\test\test_http.leno
+
+:: 线程池并发：3 个 slowloris 慢连接挂着时，正常请求必须 < 1500ms（1 worker 对照会失败）
+build\leno.exe build\leno_module\LenoHTTP\test\test_thread_server.leno
+
+:: 空闲 keep-alive 不阻塞：8 个空闲长连接挂着时，第 9 个请求必须 < 1000ms
+::   （恢复成"直接 recv 等 5s"会失败在 ~3000ms，即空闲客户端保持连接的时间）
+build\leno.exe build\leno_module\LenoHTTP\test\test_keepalive_idle.leno
+
+:: 视图文件：渲染 / layout 生效 / 默认转义 / 缺文件报错（不起网络）
+build\leno.exe build\leno_module\LenoHTTP\test\test_view.leno
+
+:: 鉴权接口：401 / 登录拿 token / 带 token 搜索 / SQL 注入当字符串 / 空参 400 / cookie 鉴权
+build\leno.exe build\leno_module\LenoHTTP\test\test_music_api.leno
+
+:: 鉴权 + 中间件：公开路由 / 401 / 带 token / 缺检查器 500 / before 短路 / 异常后仍活
+build\leno.exe build\leno_module\LenoHTTP\test\test_middleware.leno
+
+:: 静态缓存：ETag / 304 空正文 / 不匹配 200 / 内容变化换 ETag / 穿越仍拒
+build\leno.exe build\leno_module\LenoHTTP\test\test_static_cache.leno
+
+:: Range + 分块：1MB 完整下载 / 206 片段 / 206 到结尾 / 416 越界 / 小文件回归
+build\leno.exe build\leno_module\LenoHTTP\test\test_static_range.leno
+
+:: 上传：文本字段 / 2 个文件 / 中文文件名 / 二进制逐字节 / 伪边界 / 缺失字段
+build\leno.exe build\leno_module\LenoHTTP\test\test_multipart_upload.leno
+
+:: Python 独立客户端压测（开发期工具；http.client + socket，与 Leno 实现完全无关）
+python build\leno_module\LenoHTTP\test\dev_stress_python.py
+```
+
+Python 压测（Windows x64，同一台机器）：
+
+| 场景 | 结果 |
+|---|---|
+| keep-alive 单连接 100 请求 | **0.27 ms/请求（≈3686 req/s）** |
+| 每次新建连接 100 请求 | 8.2–9.3 ms/请求 —— **本机 Python→Python 的 connect/close 基线就是 7.0ms**（安全软件/回环开销），服务端只多 1–2ms |
+| 10 线程 × 10 请求并发 | 122 ms 总计（≈823 req/s），0 错误 —— 这是**单线程** serve 的数据（靠 backlog 排队） |
+| **线程池**：20 线程 × 20 请求（keep-alive，8 workers） | **42 ms 总计（≈9500 req/s），0 错误** |
+| **线程池**：3 个 slowloris 慢连接（各挂 3s）+ 5 个正常请求，8 workers | 正常请求共 **2.3 ms** |
+| 同上，但只用 **1 worker**（对照，验证测试判别力） | 正常请求 **3009 ms** —— 被慢连接堵住 |
+| POST 表单（中文 urlencoded） | 字段回显正确 |
+| POST JSON 4KB | 字节数正确 |
+| 404 / 405 / 畸形请求 | 404 / 405 / 400 |
+| 200KB 静态文件 | sha256 逐字节一致（验证 `send` 循环修复） |
+| keep-alive 20 个请求 | 全 200 |
+
+## 边界（v0.1 明确不做）
+
+| 不做 | 说明 |
+|---|---|
+| chunked 请求体 / multipart | 只按 `Content-Length` 读；文件上传后续版本再说 |
+| TLS / HTTP/2 / WebSocket | 没有；需要时套反向代理（nginx/caddy） |
+| Range / 断点续传 / gzip 响应 | 没有（`LenoCompress` 有压缩能力，但响应侧还没接） |
+| 大文件流式发送 | 整读进内存（<几十 MB 还行） |
+
+## 能力缺口与路线
+
+见 [`LenoDocsSrc/site/LenoWeb能力缺口与修复路线.html`](../LenoWeb能力缺口与修复路线.html)：
+并发（`Socket` 跨线程）、multipart、Range/缓存头、中间件、路径参数等，都写了修法与验收标准。
+
+## 下一步
+
+- `multipart/form-data`（文件上传）
+- 响应 gzip（接 `LenoCompress.deflateRaw`）+ 静态文件 ETag/Last-Modified
+- ~~连接处理下沉到线程~~ ✅ 0.2 已用 `fd` 交接 + 线程池落地（见 `serveWorkers`）
+- 简单中间件（日志/超时/鉴权）与 `:param` 路由

@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno vs Python 性能对决：3-5 倍差距从何而来？ · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/leno对比.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">Leno vs Python 性能对决：3-5 倍差距从何而来？</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">6</span></summary><div class="nv-group"><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../区间口径约定.html">区间口径约定</a><a href="../语言陷阱速查.html">语言陷阱速查</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../threads使用指南.html">threads使用指南</a><a href="../加密算法示例指南.html">加密算法示例指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../布局配方.html">布局配方</a><a href="../并发选择指引.html">并发选择指引</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">14</span></summary><div class="nv-group"><a href="../Android正经App路线.html">Android正经App路线</a><a href="../Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../待办与路线图.html">待办与路线图</a><a href="../易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/_总览.html">扩展模块总览</a><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../archive/leno对比.html" class="active" aria-current="page">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-vs-python-3-5">Leno vs Python 性能对决：3-5 倍差距从何而来？</h1>
+<p>在 i5-14400F 上，我用同一套基准测试对比了 Leno（自研 VM 语言）和 Python 3.13.2。结果令人惊讶：Leno 在基础运算和循环控制上快 3-5 倍，但 Python 在递归上与 Leno 持平。这份测试公平吗？差距的根源是什么？本文带你深入分析。</p>
+<h2 id="_1">测试环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>Intel Core i5-14400F</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>Windows</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.13.2 (64-bit AMD64)</td>
+</tr>
+<tr>
+<td>Leno</td>
+<td>Leno VM（自研字节码虚拟机）</td>
+</tr>
+<tr>
+<td>测试规模</td>
+<td>每项 10,000,000 次操作</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">总体结果速览</h2>
+<table>
+<thead>
+<tr>
+<th>测试类别</th>
+<th>Leno 平均优势</th>
+<th>关键洞察</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算术运算</td>
+<td>4.5x</td>
+<td>整数模型差异是主因</td>
+</tr>
+<tr>
+<td>循环控制</td>
+<td>4.0x</td>
+<td>for N 专用指令 vs range() 迭代器</td>
+</tr>
+<tr>
+<td>数组操作</td>
+<td>3.5x</td>
+<td>动态数组实现更轻量</td>
+</tr>
+<tr>
+<td>字典操作</td>
+<td>3.3x</td>
+<td>Python dict 已高度优化</td>
+</tr>
+<tr>
+<td>函数调用</td>
+<td>1.5x</td>
+<td>Python 3.11+ 优化显著</td>
+</tr>
+<tr>
+<td>异常处理</td>
+<td>2.0x</td>
+<td>两者都不触发异常时开销小</td>
+</tr>
+<tr>
+<td>经典递归</td>
+<td>~1.0x</td>
+<td>两者持平（Python 略快）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论先行：测试代码公平，无注水。性能差距源于语言设计层面的根本差异。</strong></p>
+<h2 id="_3">详细对比数据</h2>
+<h3 id="1-leno-45">1. 算术运算 — Leno 快 4.5 倍</h3>
+<table>
+<thead>
+<tr>
+<th>测试项</th>
+<th>Leno (ms)</th>
+<th>Python (ms)</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>纯整数自增 i++</td>
+<td>78</td>
+<td>474</td>
+<td>6.1x</td>
+</tr>
+<tr>
+<td>局部变量赋值</td>
+<td>78</td>
+<td>354</td>
+<td>4.5x</td>
+</tr>
+<tr>
+<td>常量赋值</td>
+<td>62</td>
+<td>280</td>
+<td>4.5x</td>
+</tr>
+<tr>
+<td>加法 a = 1 + 2</td>
+<td>78</td>
+<td>273</td>
+<td>3.5x</td>
+</tr>
+<tr>
+<td>变量加法 a = b + c</td>
+<td>110</td>
+<td>461</td>
+<td>4.2x</td>
+</tr>
+<tr>
+<td>复合加法 a += 1</td>
+<td>78</td>
+<td>417</td>
+<td>5.3x</td>
+</tr>
+<tr>
+<td>乘法</td>
+<td>110</td>
+<td>454</td>
+<td>4.1x</td>
+</tr>
+<tr>
+<td>减法</td>
+<td>109</td>
+<td>483</td>
+<td>4.4x</td>
+</tr>
+<tr>
+<td>连续操作 a = b + c + d</td>
+<td>141</td>
+<td>667</td>
+<td>4.7x</td>
+</tr>
+</tbody>
+</table>
+<h4 id="_4">为什么差距这么大？</h4>
+<p>核心原因在于整数类型实现：</p>
+<ul>
+<li><strong>Leno</strong>：int 采用 int48 内联存储（值在 ±140 万亿范围内直接嵌入 Value 结构），<code>i++</code> 是原地修改</li>
+<li><strong>Python</strong>：int 是不可变的 PyLong 对象，每次 <code>i += 1</code> 都要创建新对象，涉及内存分配、引用计数、垃圾回收</li>
+</ul>
+<pre><code class="language-python"># Python 的 += 实际在做什么：
+i = 0
+i += 1
+# 1. 读取 i 的引用 → PyLongObject(0)
+# 2. 创建新的 PyLongObject(1)
+# 3. 将 i 的引用指向新对象
+# 4. 旧对象(0)的引用计数减1，可能触发 GC
+</code></pre>
+<p>Leno 的 int48 设计让它在常见整数范围内完全避免了堆分配，这是 3-6 倍差距的根本原因。</p>
+<h3 id="2-leno-39">2. 循环控制 — Leno 快 3.9 倍 ⭐ 最大优势</h3>
+<table>
+<thead>
+<tr>
+<th>测试项</th>
+<th>Leno (ms)</th>
+<th>Python (ms)</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>for 空循环</td>
+<td>47</td>
+<td>188</td>
+<td>4.0x</td>
+</tr>
+<tr>
+<td>while 空循环</td>
+<td>109</td>
+<td>520</td>
+<td>4.8x</td>
+</tr>
+<tr>
+<td>for i++</td>
+<td>78</td>
+<td>468</td>
+<td>6.0x</td>
+</tr>
+<tr>
+<td>while i++</td>
+<td>125</td>
+<td>502</td>
+<td>4.0x</td>
+</tr>
+<tr>
+<td>for to var（带变量）</td>
+<td>47</td>
+<td>329</td>
+<td>7.0x</td>
+</tr>
+<tr>
+<td>while 带变量</td>
+<td>125</td>
+<td>410</td>
+<td>3.3x</td>
+</tr>
+<tr>
+<td>for 数组添加</td>
+<td>110</td>
+<td>410</td>
+<td>3.7x</td>
+</tr>
+<tr>
+<td>while 数组添加</td>
+<td>203</td>
+<td>658</td>
+<td>3.2x</td>
+</tr>
+<tr>
+<td>for 步长2</td>
+<td>62</td>
+<td>224</td>
+<td>3.6x</td>
+</tr>
+<tr>
+<td>while 步长2</td>
+<td>125</td>
+<td>537</td>
+<td>4.3x</td>
+</tr>
+<tr>
+<td>嵌套循环 (1000×1000)</td>
+<td>16</td>
+<td>42</td>
+<td>2.6x</td>
+</tr>
+</tbody>
+</table>
+<p>Leno 代码（for 步长2 — 三段式步长语法 <code>start:end:step</code>）：</p>
+<pre><code class="language-leno">for 0:csnum-1:2 to k {
+    arr2.add(k)
+}
+</code></pre>
+<p>Python 代码（for 步长2 — range 自带步长参数）：</p>
+<pre><code class="language-python">for k in range(0, csnum, 2):
+    arr2.append(k)
+</code></pre>
+<p>Leno 代码（while 步长2 — 完全公平对比）：</p>
+<pre><code class="language-leno">var kk = 0
+while kk &lt; csnum {
+    kk++
+    arr3.add(kk)
+    kk++
+}
+</code></pre>
+<p>Python 代码（while 步长2 — 完全公平对比）：</p>
+<pre><code class="language-python">kk = 0
+while kk &lt; csnum:
+    kk += 1
+    arr3.append(kk)
+    kk += 1
+</code></pre>
+<h4 id="_5">差异分析</h4>
+<ul>
+<li><strong>Leno 的 <code>for start:end:step to k {}</code></strong>：三段式数值循环语法，与 Python 的 <code>range(start, end, step)</code> 语义等价，步长由循环控制，体内无需额外操作，由 <code>OP_FOR_LOOP</code> 字节码直接驱动</li>
+<li><strong>Python 的 <code>range(0, N, 2)</code></strong>：步长由 <code>range</code> 参数控制，体内同样不需要额外操作。但每次迭代仍有迭代器协议开销（<code>__next__</code> → <code>StopIteration</code>）</li>
+<li><strong>while 步长2</strong>：两边语义完全一致（体内两次 <code>++</code>），是纯粹公平的 VM vs CPython 对比</li>
+</ul>
+<p>步长 2 的测试中，迭代次数减半（约 5,000,000 次），差距主要来自整数模型差异：Leno 的 <code>k++</code> 是 int48 原地修改，Python 的 <code>k += 1</code> 需要创建新的 PyLong 对象。</p>
+<blockquote>
+<p><strong>注意</strong>：嵌套循环 (1000×1000) Leno 耗时约 16ms，Python 约 42ms，差距缩小到约 2.6x，因为 100 万次操作对两者都已较轻量。</p>
+</blockquote>
+<h3 id="3">3. 数据结构操作</h3>
+<table>
+<thead>
+<tr>
+<th>测试项</th>
+<th>Leno (ms)</th>
+<th>Python (ms)</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数组添加 arr.add()</td>
+<td>125</td>
+<td>433</td>
+<td>3.5x</td>
+</tr>
+<tr>
+<td>数组索引 arr[index]</td>
+<td>94</td>
+<td>404</td>
+<td>4.3x</td>
+</tr>
+<tr>
+<td>字典赋值 d.set("key",1)</td>
+<td>156</td>
+<td>508</td>
+<td>3.3x</td>
+</tr>
+</tbody>
+</table>
+<p>Python 的 <code>list.append()</code> 和 <code>dict[key] = value</code> 是用 C 实现的高度优化操作，但 Leno 仍能快 2-4 倍。这说明：</p>
+<ul>
+<li>Leno 的数组/字典实现更轻量（没有 Python 对象的引用计数、类型检查头开销）</li>
+<li>Leno 的方法调用路径更短（不需要通过 <code>PyObject_Call</code> 间接层）</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：Leno 字典赋值使用的是 <code>d.set("key", 1)</code>，Python 使用 <code>d["key"] = 1</code>，两者语义等价。</p>
+</blockquote>
+<h3 id="4">4. 函数调用与递归</h3>
+<table>
+<thead>
+<tr>
+<th>测试项</th>
+<th>Leno (ms)</th>
+<th>Python (ms)</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>空函数调用</td>
+<td>234</td>
+<td>356</td>
+<td>1.5x</td>
+</tr>
+<tr>
+<td>经典递归 fib(30)</td>
+<td>94</td>
+<td>79</td>
+<td>0.8x</td>
+</tr>
+</tbody>
+</table>
+<p>这是 Leno 优势最小的领域。经典递归 fib(30) 两者基本持平。</p>
+<p>Python 3.11+ 引入了 PEP 659（Specializing Adaptive Interpreter），对函数调用做了大量优化：</p>
+<ul>
+<li>内联缓存（inline caching）加速属性访问</li>
+<li>特殊化指令（specializing opcodes）根据运行时类型生成优化路径</li>
+<li>栈帧分配优化</li>
+</ul>
+<p>Leno 作为 VM 语言，函数调用仍需完整的栈帧管理（保存/恢复寄存器、参数传递、返回地址管理），优势被缩小到 1.6 倍。</p>
+<p><strong>经典递归 fib(30)：Python 79ms vs Leno 94ms</strong></p>
+<p>两者基本持平。Python 3.11+ 在递归场景的优势包括：</p>
+<ul>
+<li>C 层函数调用开销极低（CPython 核心用 C 实现，函数调用走 C 栈）</li>
+<li>PEP 659 自适应优化对频繁调用的递归函数生成特化路径</li>
+<li>栈帧复用机制减少帧分配开销</li>
+</ul>
+<p>Leno 和 Python 在递归上表现接近，说明 Leno 的函数调用机制已经足够高效。</p>
+<h3 id="5">5. 异常处理</h3>
+<table>
+<thead>
+<tr>
+<th>测试项</th>
+<th>Leno (ms)</th>
+<th>Python (ms)</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无 try 循环</td>
+<td>79</td>
+<td>184</td>
+<td>2.3x</td>
+</tr>
+<tr>
+<td>有空 try 循环</td>
+<td>109</td>
+<td>182</td>
+<td>1.7x</td>
+</tr>
+</tbody>
+</table>
+<p>Python 的 <code>try/except</code> 在不触发异常时开销已经很小（零成本异常设计），Leno 在此基础上再快约 2 倍。</p>
+<h3 id="6">6. 算法优化层面 — 两者持平</h3>
+<table>
+<thead>
+<tr>
+<th>实现方式</th>
+<th>Leno</th>
+<th>Python</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>经典递归 fib(30)</td>
+<td>94ms</td>
+<td>79ms</td>
+<td>Python 略快</td>
+</tr>
+<tr>
+<td>记忆化递归 fib(30)</td>
+<td>0ms</td>
+<td>0ms</td>
+<td>持平</td>
+</tr>
+<tr>
+<td>迭代实现 fib(30)</td>
+<td>0ms</td>
+<td>0ms</td>
+<td>持平</td>
+</tr>
+<tr>
+<td>尾递归 fib(30)</td>
+<td>0ms</td>
+<td>0ms</td>
+<td>持平</td>
+</tr>
+<tr>
+<td>迭代 fib(1000)</td>
+<td>0ms</td>
+<td>0ms</td>
+<td>持平</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键洞察</strong>：当算法本身优化后（记忆化、迭代、尾递归），两种语言的性能差距消失。这说明：</p>
+<ul>
+<li>瓶颈在算法，不在语言</li>
+<li>好的算法比语言选择更重要</li>
+<li>Leno 和 Python 在 O(n) 或更优算法面前都足够快</li>
+</ul>
+<h2 id="_6">测试公平性审查</h2>
+<h3 id="_7">测试代码是否注水？</h3>
+<p>逐行审查了两份测试代码（Leno 和 Python），结论：<strong>26 个测试项全部公平</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>审查维度</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>测试次数</td>
+<td>✅ 都是 10,000,000 次</td>
+</tr>
+<tr>
+<td>循环逻辑</td>
+<td>✅ 语义等价</td>
+</tr>
+<tr>
+<td>数据结构</td>
+<td>✅ 数组↔list，字典↔dict</td>
+</tr>
+<tr>
+<td>算法实现</td>
+<td>✅ 斐波那契四种实现完全一致</td>
+</tr>
+<tr>
+<td>计时方式</td>
+<td>✅ 都是 ms 级时间戳包围整个循环</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">发现的差异（非注水，是语言特性）</h3>
+<table>
+<thead>
+<tr>
+<th>差异点</th>
+<th>Leno</th>
+<th>Python</th>
+<th>对结果的影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整数类型</td>
+<td>int48 内联/原地修改</td>
+<td>PyLong 不可变对象</td>
+<td>算术运算 3-6x</td>
+</tr>
+<tr>
+<td>for 循环</td>
+<td><code>for N {}</code> 专用字节码</td>
+<td><code>range()</code> 迭代器协议</td>
+<td>空循环 4.0x</td>
+</tr>
+<tr>
+<td>循环变量</td>
+<td><code>for N to j</code> 直接暴露</td>
+<td><code>for j in range(N)</code> 取值</td>
+<td>带变量循环 7.0x</td>
+</tr>
+</tbody>
+</table>
+<p>这些差异是语言设计层面的选择，不是测试代码的问题。</p>
+<h2 id="leno">为什么 Leno 能快这么多？</h2>
+<h3 id="1">1. 更轻量的运行时</h3>
+<table>
+<thead>
+<tr>
+<th>Python 的开销</th>
+<th>Leno 的设计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GIL（全局解释器锁）</td>
+<td>无 GIL</td>
+</tr>
+<tr>
+<td>引用计数（每个对象）</td>
+<td>无引用计数（分代 GC）</td>
+</tr>
+<tr>
+<td>对象头（PyObject 16-24 字节）</td>
+<td>紧凑的 Value 结构（8 字节）</td>
+</tr>
+<tr>
+<td>类型检查（运行时）</td>
+<td>语义分析阶段部分类型检查</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2">2. 更直接的循环</h3>
+<pre><code class="language-leno">// Leno: for N {} 直接编译为
+//   i = 0
+// loop:
+//   if i &gt;= N: goto end
+//   ...
+//   i++
+//   goto loop
+</code></pre>
+<pre><code class="language-python"># Python: for _ in range(N) 实际执行
+#   iter = range(N).__iter__()
+#   while True:
+#       try:
+#           _ = iter.__next__()
+#       except StopIteration:
+#           break
+#       ...
+</code></pre>
+<h3 id="3_1">3. 更简单的整数模型</h3>
+<p><strong>Leno 的 int48 设计</strong>：</p>
+<ul>
+<li>值在 ±140 万亿内：直接嵌入 Value，零堆分配</li>
+<li>值超出范围：自动升级为 BigInt（透明）</li>
+</ul>
+<p><strong>Python 的 PyLong</strong>：</p>
+<ul>
+<li>所有整数都是堆对象</li>
+<li>每次运算都涉及对象创建/销毁</li>
+<li>任意精度是特性，但代价是性能</li>
+</ul>
+<h2 id="python">Python 的慢是"特性代价"</h2>
+<p>Python 的每一项"开销"都是为了提供强大的功能：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>代价</th>
+<th>收益</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任意精度整数</td>
+<td>每次运算创建对象</td>
+<td>永远不会溢出，大数运算安全</td>
+</tr>
+<tr>
+<td>对象模型</td>
+<td>引用计数 + 对象头</td>
+<td>灵活的元编程、C 扩展接口</td>
+</tr>
+<tr>
+<td>迭代器协议</td>
+<td>每次迭代方法调用</td>
+<td>统一的遍历接口（list、dict、generator 通用）</td>
+</tr>
+<tr>
+<td>GIL</td>
+<td>单线程执行限制</td>
+<td>简单的线程安全、C 扩展兼容性</td>
+</tr>
+</tbody>
+</table>
+<p>如果你需要 Python 的这些特性，它的性能是合理的代价。</p>
+<h2 id="_9">对开发者的启示</h2>
+<h3 id="leno_1">什么时候选择 Leno？</h3>
+<ul>
+<li>✅ 性能敏感的基础运算（游戏循环、数据处理）</li>
+<li>✅ 需要直接控制内存布局（FFI、嵌入式）</li>
+<li>✅ 喜欢类 C 语法但想要现代特性（泛型、类型推断）</li>
+<li>✅ 需要轻量级 VM 部署（比 Python 运行时更小）</li>
+</ul>
+<h3 id="python_1">什么时候选择 Python？</h3>
+<ul>
+<li>✅ 快速原型开发（生态丰富、库多）</li>
+<li>✅ 需要任意精度整数（金融、科学计算）</li>
+<li>✅ 依赖 Python 生态（NumPy、Pandas、Django）</li>
+<li>✅ 团队熟悉度高</li>
+</ul>
+<h3 id="_10">性能优化通用原则</h3>
+<ul>
+<li><strong>算法 &gt; 语言</strong>：记忆化/迭代让 fib 从 78ms → 0ms，比换语言更有效</li>
+<li><strong>避免微观优化</strong>：函数调用差距只有 1.6x，不值得为此重构</li>
+<li><strong>关注循环</strong>：循环是最大瓶颈（5x 差距），热路径中的循环最值得优化</li>
+<li><strong>数据结构选择</strong>：struct 比 dict 快 2.5x（Leno 文档中的基准测试）</li>
+</ul>
+<h2 id="_11">结语</h2>
+<p>Leno 在 i5-14400F 上展现出 3-5 倍于 Python 的基础性能，这不是测试注水的结果，而是语言设计差异的真实体现：</p>
+<ul>
+<li>Leno 选择了更底层的实现（int48 内联、专用循环指令、轻量 VM）</li>
+<li>Python 选择了更丰富的语义（任意精度整数、迭代器协议、灵活对象模型）</li>
+</ul>
+<p>两者没有绝对的好坏，只有适合的场景。Leno 证明了自研 VM 语言可以达到接近编译型语言的性能，同时保持脚本语言的开发效率。</p>
+<blockquote>
+<p><strong>补充验证</strong>：同一套测试在 i5-3470、i3-8100T 等老机型上也跑过，Leno 的加速比规律完全一致（3~6 倍），结论不依赖于特定 CPU。</p>
+</blockquote>
+<hr>
+<p><strong>测试环境</strong>：Intel Core i5-14400F / Windows / Python 3.13.2 / Leno VM</p>
+<p><strong>测试代码</strong>：两份测试脚本完全对等，26 项测试全部通过公平性审查</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">测试环境</a></li><li><a href="#_2">总体结果速览</a></li><li><a href="#_3">详细对比数据</a></li><ul class="lv3"><li><a href="#1-leno-45">1. 算术运算 — Leno 快 4.5 倍</a></li><li><a href="#2-leno-39">2. 循环控制 — Leno 快 3.9 倍 ⭐ 最大优势</a></li><li><a href="#3">3. 数据结构操作</a></li><li><a href="#4">4. 函数调用与递归</a></li><li><a href="#5">5. 异常处理</a></li><li><a href="#6">6. 算法优化层面 — 两者持平</a></li></ul><li><a href="#_6">测试公平性审查</a></li><ul class="lv3"><li><a href="#_7">测试代码是否注水？</a></li><li><a href="#_8">发现的差异（非注水，是语言特性）</a></li></ul><li><a href="#leno">为什么 Leno 能快这么多？</a></li><ul class="lv3"><li><a href="#1">1. 更轻量的运行时</a></li><li><a href="#2">2. 更直接的循环</a></li><li><a href="#3_1">3. 更简单的整数模型</a></li></ul><li><a href="#python">Python 的慢是"特性代价"</a></li><li><a href="#_9">对开发者的启示</a></li><ul class="lv3"><li><a href="#leno_1">什么时候选择 Leno？</a></li><li><a href="#python_1">什么时候选择 Python？</a></li><li><a href="#_10">性能优化通用原则</a></li></ul><li><a href="#_11">结语</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/JIT闭包与upvalue设计_R5.html">← 上一篇</a><a href="../archive/Leno报错提示改进计划.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

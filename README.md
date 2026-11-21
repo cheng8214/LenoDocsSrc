@@ -56,11 +56,23 @@ python -m pip install --target _build_vendor markdown
 - 门户是 `index.html`、原始索引页是 `INDEX_raw.html`。
   **别把后者叫 `INDEX.html`**：Windows 文件名不区分大小写，两者会互相覆盖
   （实测只剩一个，而且"查看原始索引全文"链接指回自己）。
-- **分类在 `build_html.py` 的 `CATEGORIES`**（7 类，⑥⑦ 首页默认折叠）；
+- **分类在 `build_html.py` 的 `CATEGORIES`**（8 类，⑥⑦ 首页默认折叠）；
   `INDEX.md` 的一~八节是 2026-10-02 旧分组，只用来取每篇的描述/状态，**不再是首页分类**。
   别把两者混淆；要调首页分类改 `CATEGORIES`，不要改 `INDEX.md` 的 `## 一、…` 标题。
-- **文档不物理移动**：97 篇 md 的路径被 Leno 代码仓 67 个文件按名引用，移动会断引用。
+- **文档不物理移动**：原有 md 的路径被 Leno 代码仓按名引用，移动会断引用。
   归类只在生成器里做，文件名与路径保持不变。
+- **扩展模块文档是同步副本**：`扩展模块/*.md` 来自 `Leno/build/leno_module/<模块>/README.md`，
+  由 `import_module_docs.py` 复制并改写链接。源 README 改了要重跑：
+  ```bat
+  python import_module_docs.py    :: 同步 18 篇扩展模块 README
+  python build_html.py            :: 再生成站点
+  ```
+  总览页 `扩展模块/_总览.md` 手工维护，不会被同步脚本覆盖。无 README 的 3 个模块
+  （Hack / Sys / Win32）只在总览表里列出。注意**包名 ≠ import 名**（`LenoFS` → `"FS"`、
+  `LenoSqlite` → `"sqlite3"`、`LenoHack` → `"GameHelper"`、`LenoWeb` → 四入口）。
+- 同步脚本还会把 `LenoSDL3/docs/` 里的 `SDL3常用API与易踩坑速查.md`、`SDL3控件优化清单.md`
+  复制成 `扩展模块/LenoSDL3_*.md`（归到「05 GUI·平台」分类，不是扩展模块）。
+  控件实战教程 `LenoSDL3_控件实战教程.md` 是手写的，取自 Aria 与 examples 的真实用法，不会被覆盖。
 - 文档里引用**模块自带**的文档（`build/leno_module/*/docs/*.md`）要写 `.md`，
   它们没有被转到站点里。
 - 引用别的文档写 `LenoDocsSrc/site/<名字>.html`（这是代码仓库里统一的写法）。

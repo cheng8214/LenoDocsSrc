@@ -1,0 +1,610 @@
+> 📦 **扩展模块**（非语言内置标准库）· 包名 `LenoWeb` · import 名 "WebNet" / "WebHtml" / "WebCrawl" / "Web"
+> 源 README：`Leno/build/leno_module/LenoWeb/README.md`（本页是同步副本，改请改源）
+
+# LenoWeb
+
+Leno 的 Web 模块：**HTTP 客户端（libcurl）+ HTML 解析 + 爬虫框架**。
+对外只需 `import "Web"` 一个入口（也可按需 import 子模块 `web_net` / `web_html` / `web_crawler` / `web_charset`）。
+
+```leno
+import "Web" as web
+
+main() {
+    var r = web.get("https://example.com")
+    print(r.statusCode, r.charset, r.body.len())
+}
+```
+
+## 模块组成（`lib/`）
+
+| 文件 | 职责 |
+| --- | --- |
+| `Web.leno` | 统一入口（转发 + 重新导出类型） |
+| `web_curl_core.leno` | libcurl 的 FFI 绑定（常量 / Easy / slist / MIME） |
+| `web_net.leno` | `HttpClient` / `Response` / `Session` / 表单 / multipart |
+| `web_charset.leno` | **字符集探测与转码**（GBK/BIG5/… ↔ UTF-8） |
+| `web_html.leno` | HTML 解析 + CSS 选择器 + 文本/表格/表单提取 |
+| `web_crawler.leno` | `Crawler` 调度 + URL 工具 + robots/sitemap + CSV |
+| `web_gzip.leno` | **转发层**：gzip / DEFLATE 解压实现已收编到 `LenoCompress`（函数名不变，`.gz` sitemap 用） |
+| `web_ws.leno` | **纯 Leno 的 WebSocket 客户端**（CDP 的通道） |
+| `web_cdp.leno` | **无头浏览器 / 动态渲染**（CDP 驱动 Chrome/Edge + 进程管理） |
+| `web_generic.leno` | `Result[T]` 等泛型小工具 |
+
+原生依赖：`lib/win/libcurl-x64.dll`（Windows）/ `lib/linux/libcurl.so`（Linux），已在 `leno.toml` 的 `[native-libs]` 声明。
+库文件自 2026-11-19 起**按平台分目录**存放（与 LenoSqlite / LenoMusic / LenoQR / LenoSDL3 统一）。
+
+## 字符集：响应体自动转 UTF-8（2026-10-06 新增）
+
+libcurl 只搬字节、不认识 `charset`，所以 GBK/GB2312 页面以前进 `body` 就是乱码。现在：
+
+- **`Response.body` 始终是 UTF-8**；原始字节在 **`Response.rawBody()`**
+- **`Response.charset`** = 探测到的字符集（小写；`""` = 未声明且无法推断）
+- 探测顺序：`BOM` → `Content-Type` → `<meta charset>` → UTF-8 合法性 → **系统 ANSI 兜底**
+  （中文 Windows 上 = `gbk`，所以"GBK 页面忘了声明编码"也能救回来）
+- **只对文本响应动手**：`image/*` 等二进制原样保留（`body == rawBody()`）
+- `Response.totalSize` 是**字节数**（不是字符数；字符数用 `body.len()`）
+- **落盘请用 `rawBody()`**：`download()` 已改用它，否则会把 GBK/二进制写坏
+
+需要自己处理原始字节时：
+
+```leno
+web.decodeCharset(raw, "gbk")        // 目标编码 → UTF-8
+web.encodeCharset("中文", "gbk")     // UTF-8 → GBK（往 GBK 站点提交表单必须用）
+web.detectCharset(raw, contentType)  // 只探测不转换
+web.isValidUtf8(s)                   // UTF-8 合法性（Windows 走 C，快）
+web.codepage("gb18030")              // → 54936
+```
+
+转码后端：Windows 用 `kernel32`（系统自带），POSIX 用 `iconv`；都拿不到时**原样返回**（不破坏内容）。
+
+> ⚠ **光有转码还不够**：2026-10-06 同时修掉了 `web_html` / `web_crawler` 里一批"把**字符数**当
+> **字节下标上界**"的写法（`int n = html.len()` 配 `html.byte(i)`）。纯 ASCII 时两者恰好相等，
+> 所以一直没暴露；含中文的页面会被**截断/切碎**（`parse("<p>中文</p>")` 取文本只剩 2 字节坏字符，
+> `allText` 得到 `"标标"`）。也就是说：转码把 GBK 页面正确变成 UTF-8 之后，**解析这一步又会把中文毁掉**。
+> 现已全部改为 `byte_len()`，回归用例 `examples/tests/test_utf8_text.leno`。
+
+## HTML 解析与选择器
+
+解析器是手写的、对畸形 HTML 容错（自动闭合、忽略注释/CDATA/DOCTYPE），选择器语法如下：
+
+| 语法 | 例子 |
+| --- | --- |
+| 标签 / 通配 | `div`、`*` |
+| id / class | `#main`、`.item`、`p.a.b` |
+| 属性 | `[href]`（存在性）、`[href='/x']`、`[href^='http']`、`[href$='.png']`、`[href*='x']`、`[class~='x']`（词）、`[lang\|='zh']`（前缀） |
+| 组合器 | 后代（空格）、子元素 `>`、紧随兄弟 `+`、后续兄弟 `~` |
+| 结构伪类 | `:first-child`、`:last-child`、`:only-child`、`:nth-child(2n+1)`、`:nth-child(odd)`、`:nth-child(-n+2)`、`:nth-last-child(n)` |
+| 类型伪类 | `:first-of-type`、`:last-of-type`、`:only-of-type`、`:nth-of-type(2n)`、`:nth-last-of-type(n)` |
+| 否定 / 关系 | `:not(.x)`（可嵌套 `:not(:nth-child(2))`）、`:has(> .price)`、`:has(+ span)`、`:has(~ li)` |
+| 其他 | `:empty`、`:root`；伪类**可叠加**：`td:not(.hidden):nth-child(2)` |
+
+```leno
+var rows = web.select(web.parse(html), "table tr:nth-child(2n+1) td:not(.hidden)")
+```
+
+### 解析性能（2026-10-25 优化）
+
+实测语料：246 KB / 20 003 个节点（`examples/03_HTML解析/test_parse_perf.leno` 的 2000 段重复页面）：
+
+| 指标 | 优化前 | 优化后 |
+| --- | --- | --- |
+| `parse` | 131 ms | **66 ms** |
+| 另一基准（3 轮取最好，同一份 HTML） | 206 ms | **94 ms** |
+| `select("div.item")` 2000 命中 | 22 ms | 5 ms |
+
+做了四件事（都在 `lib/web_html.leno`，**语义零变化**）：
+
+| 改动 | 原因 |
+| --- | --- |
+| `_parseText` 改 `byte_find("<") + byte_slice` | 原来是"逐字节 `byte(i)` + `Array[int].add` + `from_bytes`"，文本节点又是数量最多的节点 |
+| `_decodeEntities` 加**快路径**：没有 `&` 直接返回原串 | 绝大多数文本没有实体，原实现照样整段搬一遍字节数组 |
+| `_parseTagName` / `_parseAttrs` 改"扫边界 + 一次切片"，大小写并入扫描 | 原来每条标签/属性都累一个 `Array[int]` 再 `from_bytes`；`to_lower` 每次新建字符串，现在**没有大写就不调** |
+| `#text` 节点共享一份空 attrs / 空 children；`_isVoidTag` 去掉每次新建的数组字面量 | 每个节点的两次分配 + 每个开始标签一个 13 元素数组字面量 |
+
+等价性验证方式：把优化前的文件留一份副本，对 18 组边界用例 + 上面那份大语料，分别 dump
+"`tag` / 属性（键排序）/ `text` / 子节点顺序"的规范化文本再逐行比对，并比 `allText`、
+`select` 命中数 —— 结果**完全一致**（20 003 节点、`allText` 112 000 字符）。
+
+> 再往下要动编译器：`strings.byte_find_any(s, " \t\r\n=>/<&\"'", from)`（属性名/值一次定位）
+> 与 `strings.html_unescape(s)`（C 端单遍实体解码）。当前收益主要卡在"每节点分配"。`
+
+### 选择器 + 取值一步到位（2026-10-20）
+
+爬虫里 90% 的写法是"选一批节点，再逐个取文本 / 取属性"，以前要三行：
+
+```leno
+var nodes = web.select(root, "div.item h3")
+Array[string] names = []
+for nodes to n { names.add(web.textContent(n)) }
+```
+
+现在一行（语义与逐个调用完全一致，顺序也一致）：
+
+```leno
+var names = web.selectText(root, "div.item h3")            // 批量文本（去标签 + 合并空白）
+var hrefs = web.selectAttr(root, "div.item a", "href")     // 批量属性（缺失 ⇒ 空串）
+```
+
+两处语义细节（与 CSS 一致）：
+
+- 位置类伪类与 `nth-*` **只数元素**（`#text` 不计入编号）
+- 返回结果**已去重**（`p ~ span` 不会因为前面有多个 `p` 而重复给出同一个 `span`）
+
+`:has()` 支持前导组合器（`> S` 子、`+ S` 紧随兄弟、`~ S` 后续兄弟），不带前导组合器时按"有后代匹配"处理。
+
+### 命名实体
+
+`&nbsp;` → `U+00A0`（**不是**普通空格）、`&hearts;` → `♥`、`&euro;` → `€`、`&alpha;` → `α`
+等 ~250 个常用命名实体已收录（ISO-8859-1 全集 + 排版标点 + 货币 + 希腊字母 + 数学/箭头 + 符号）。
+未收录的（多码点实体、冷门符号）会**原样保留** `&name;`，不会吃掉内容；数字实体
+`&#20013;` / `&#x4E2D;` 一直支持。
+
+## 上传：multipart/form-data（新增）
+
+```leno
+var parts = [
+    web.formField("user", "zhangsan"),
+    web.formFile("avatar", "a.png", "a.png", "image/png")
+]
+web.postMultipart(url, parts)
+// 也支持 client.postMultipart / client.putMultipart / web.sessionPostMultipart
+```
+
+## 爬虫
+
+```leno
+var c = web.createCrawler({
+    start_urls: ["https://example.com"], allowed_domains: ["example.com"],
+    max_pages: 100, max_depth: 3, delay_ms: 500,
+    user_agent: "MyBot/1.0", respect_robots: true
+})
+c.setRobots(web.fetchRobots("https://example.com", c.user_agent))
+c.start()
+while not c.shouldStop() {
+    var item = c.nextUrl()          // 已自动去重 + 限速（delay_ms 与 robots 的 crawl-delay 取大）
+    if item == null { break }
+    var page = web.fetchPage(item.url, c.user_agent)
+    if page != null {
+        for web.extractLinks(page) to link { c.enqueue(link, item.depth + 1) }
+    }
+    c.markVisited(item.url)
+}
+```
+
+2026-10-06 的改进：
+
+- **入队/判重前先 `normalizeUrl`**（`#fragment`、`/a/./b`、host 大小写不再算两页），并新增"队列内去重"
+- **限速由框架生效**：`nextUrl()` 自动按 `delay_ms` 补睡，不必在循环里手写 `sleep`
+- **解析 robots 的 `crawl-delay`**（`web.parseCrawlDelay`），并与 `delay_ms` 取较大者
+- `max_pages = 0` 表示**不限**（原实现会立刻停）
+- **优先队列**（见下）：`enqueue(url, depth, priority)`，入队/出队都是 O(log n)
+- **CSV 落地**：`web.writeCsv(path, rows, header)` / `web.toCsv(rows)`（RFC 4180 转义 + UTF-8 BOM，Excel 直接认中文）
+- **断点续爬**：进度落盘 / 恢复（见下）
+- **sitemap**：索引递归 + 元数据 + 跨站防护（见下）
+
+### 优先队列
+
+`priority` 越大越先被 `nextUrl()` 取出；同优先级保持入队先后（FIFO 稳定）。
+
+```leno
+var item = c.nextUrl()
+// 详情页优先（1），翻页往后放（-1）——典型的两级抓取策略
+for page.detailLinks() to href { c.enqueue(href, item.depth + 1, 1) }
+c.enqueue(page.nextPageUrl(), item.depth, -1)
+```
+
+实现是**二叉大顶堆**（`_push` / `_pop` 都是 O(log n)，排序键 = `priority` 降序 + `seq` 升序）。
+为什么不是"排序数组"：数组插入要搬移 O(n)，出队也要搬移；队列上千时差别明显。
+注意 **同一 URL 第二次入队会被丢弃**（优先级不会"升级"）——与判重口径一致。
+
+### Sitemap
+
+```leno
+// 只要地址列表（自动下钻 sitemapindex，默认 2 层）
+Array[string] urls = web.fetchSitemapUrlsDeep("https://example.com", "MyBot/1.0")
+
+// 要诊断信息（为什么少了一些地址？）
+var rep = web.fetchSitemapReport("https://example.com/sitemap_index.xml", "MyBot/1.0", 2, 50)
+print(rep.sitemaps_fetched, rep.gzip_skipped, rep.errors)
+
+// 单条记录的元数据
+for web.parseSitemapEntries(xml) to e { print(e.url, e.lastmod, e.changefreq, e.priority) }
+```
+
+- `sitemapindex` **递归下钻**（去重 + 层数上限 `maxDepth` + 请求数上限 `maxSitemaps`）
+- **同站点限制**：索引里指向别的站点的子 sitemap 一律忽略并记入 `errors`
+  （否则一个第三方索引就能把爬虫引到任意站点）
+- `<lastmod>` / `<changefreq>` / `<priority>` 可读（`SitemapEntry`）
+- `.gz` **能解**：响应的 `Content-Encoding: gzip` 由 libcurl 自动解；服务端把 `.gz` 当静态文件
+  返回（不带 `Content-Encoding`）时，由模块自己的 `web_gzip` 解（纯 Leno，不需要 zlib）。
+  真解不开（截断/损坏）才计入 `gzip_skipped` 并给出原因——**不会**把压缩字节当 XML 解析出乱码"URL"
+- `web.robotsUrl(base)` 单独给出（原先是从 `sitemapUrl().replace(...)` 拼的，前辍一变就失效）
+
+### gzip / DEFLATE 解压（`web_gzip` → `LenoCompress`，2026-10-06 新增 / 10-17 收编）
+
+> 2026-10-17：实现搬到了独立包 **LenoCompress**（`LenoZip` 也要裸 DEFLATE，归档不该依赖 HTTP 模块）。
+> 本包的 `web_gzip.leno` 现在是**转发层**：`web.gunzip` / `web.inflateRaw` / `web.inflateZlib` /
+> `web.isGzip` 的签名与行为完全不变。**打包 LenoWeb 应用时 `LenoCompress` 必须一起在 `leno_module` 下。**
+
+```leno
+import "Web" as web
+import "Result" as res
+use res.Result
+use web.Inflated
+
+Result[Inflated] r = web.gunzip(rawBytes)   // 解 gzip（含头/trailer）
+if r.isErr() { print(r.errText()) }         // 失败统一 ErrCode.PARSE + 可读 msg
+else { print(_str(r.val.outBytes) + " 字节") }
+if web.isGzip(body) { ... }                 // 只判魔数 1f 8b（不解压）
+var d = web.inflateRaw(deflateOnly)         // 裸 DEFLATE（无 gzip 头/trailer）
+```
+
+> ★ 2026-11-09（P2）：`gunzip/inflateRaw/inflateZlib` 的返回值从 `GzipResult{ok,data,error,...}`
+> 改成 `Result[Inflated]`（`Inflated{data, inBytes, outBytes}`），与 LenoCompress 一致。
+
+**为什么自己写**：系统里没有独立的 zlib（PATH / System32 / Git 都查过），`libcurl` 也不导出
+`gzopen` / `inflate*`；随模块分发 DLL 又要维护 Windows/POSIX 两套二进制。这块逻辑不长，
+所以直接用 Leno 实现——零依赖、跨平台、**可重入**（无模块级状态，多线程可同时调用）。
+
+覆盖与取舍：
+
+| 项 | 说明 |
+| --- | --- |
+| 块类型 | stored(00) / fixed(01) / dynamic(10) 全支持，多块流 |
+| gzip 头 | FEXTRA / FNAME / FCOMMENT / FHCRC 可选字段都能跳过 |
+| 校验 | 魔数、保留位、stored 的 LEN/NLEN、Huffman 码长合法性、回拷距离越界、trailer 的 `ISIZE` |
+| 不解 | 多成员"连接式" gzip（只解第一个成员）；不做 CRC32（见「已知限制」） |
+| 性能 | 2.39MB 明文 / 57KB 压包 → **约 96ms**（≈25MB/s；高度重复的 sitemap 数据，普通数据会慢些） |
+
+长度/距离表是用公式算的，测试里对着 RFC1951 的原始数值逐项核过（`rfcTableCheck()`）；
+测试向量的字节来自 .NET `GZipStream`，三种块类型各一份。
+
+### 断点续爬
+
+长跑任务中途挂掉不用从头再来：
+
+```leno
+var c = web.createCrawler({
+    start_urls: ["https://example.com"],
+    state_path: "crawl_state.json",   // 给了它就自动落盘
+    save_every: 50                    // 每 50 页存一次（缺省 50）
+})
+if not c.resume() { c.start() }        // 有存档就续爬，没有就从头
+while not c.shouldStop() {
+    var item = c.nextUrl()
+    if item == null { break }
+    // ... 抓取 ...
+    c.markVisited(item.url)            // 每 save_every 页自动存一次
+}
+c.saveState(c.statePath)              // 收尾再存一次
+```
+
+存档是普通 JSON（`visited` + 未出队的 `queue` + `page_count`），只记录了必要状态：
+
+| 恢复的东西 | 含义 |
+| --- | --- |
+| `page_count` | 已抓页数（`max_pages` 判断不会因为重启而重置） |
+| 已访问集合 | 已抓的 URL 不会被重复抓、也不会被重新入队 |
+| 待抓队列 | 尚未出队的 URL 连同深度一起恢复（顺序保持） |
+
+底层是 `saveState(path)` / `loadState(path)`（可用 `web.saveState/loadState` 直接调）；
+坏存档 / 缺文件一律返回 `-1`，不抛异常。
+
+### 断点续传下载
+
+```leno
+web.downloadResume(url, "big.zip")     // 本地已有前半段 ⇒ 只取剩余字节并追加
+web.remoteSize(url)                    // HEAD 取 Content-Length；未知返回 -1
+```
+
+- 走 libcurl 的 `CURLOPT_RESUME_FROM_LARGE`：自动发 `Range: bytes=N-`
+- **服务端不支持 Range 会自动回退整体重下**（不会把文件拼成"前半段 + 全量"）
+- 本地文件比远端还大（上次下坏了）⇒ 从头重下
+- 总量已知时会校验最终大小，对不上返回 `-1`
+- 本地文件**已完整**时不再重复下载
+
+## 并发批抓（`curl_multi`，新增）
+
+爬虫吞吐的大头在这：N 个请求在**同一个线程**上同时飞。
+
+为什么是 `curl_multi` 而不是线程池：多路复用是 libcurl 的原生能力，没有锁、也不跨线程
+（所有回调都在调用线程上执行），同一个线程上 N 个请求同时飞 —— **这仍是对的选择**。
+
+> ⚠ **2026-10-12 更正**：旧版这里写的理由"Leno 的子线程要求入口必须是当前文件的函数 ⇒
+> 库函数自己起不了线程"**已经作废** —— 那条限制已撤，模块函数现在可以直接作线程入口
+> （见 [`LenoDocsSrc/site/线程并发能力修复追踪.html`](../线程并发能力修复追踪.html) 的 TH2）。
+> 也就是说：**库现在能自己开线程**；`curl_multi` 仍是本项目抓取的首选，纯粹因为
+> 它更省（一个线程、无锁、回调同线程）。
+
+```leno
+Array[string] urls = [...]                     // 几百个详情页
+Array[BatchResult] rs = web.fetchAll(urls, 8)  // 并发 8
+for rs.len() to i {
+    if rs[i].resp.ok() { save(rs[i].resp.body) }
+    else { log(rs[i].url + " 失败: " + rs[i].resp.error) }
+}
+```
+
+- **结果按输入顺序返回**（不是完成顺序）⇒ 可直接与 `urls` 对齐；每条带 `index` / `url` / `resp`
+- **单条失败不拖累其它**：`resp.error` 非空即该条失败，其余照常完成（`resp.curlCode` 给错误码）
+- `concurrency` 建议 4~16：再高对单站点只是压力，而且更容易触发风控
+- 可选参数 `userAgent` / `proxy`（应用到本批每个请求）、`timeoutMs`（默认 30s）
+- 与字符集层打通：GBK 页在结果里同样是**转好码**的 `resp.body`（`resp.charset` 给出探测结果）
+
+> 想要"每条请求换一个代理"：按代理数把 `urls` 分块，每块调一次 `fetchAll(urls_i, n, ua, proxy_i)`
+> 即可（顺序与并发都不受影响）。批内共用一个出口是刻意的 —— 一次批抓 = 一个 multi 句柄 + 一个出口，
+> 语义更好推理；需要复杂轮换时用 Session 的代理池（见下）。
+
+**并发是量出来的，不是"设了参数就算"**：`examples/tests/test_fetch_all.leno` 起 5 个独立延迟
+服务端（各延迟 250ms），并发 5 实测 **253ms**、串行实测 **1357ms** —— 同一批 URL 的两端对比。
+
+## 反爬基础（新增）
+
+只解决"看起来不像脚本"这一层：**浏览器式请求头（含顺序）**、**代理池**、**TLS 套件选项**。
+
+```leno
+// ① 浏览器式请求头：数组顺序就是发出去的顺序（libcurl 按 slist 顺序发）
+var c = web.createClient()
+c.setBrowserHeaders()                        // ua 省略 ⇒ web.chromeUA()
+var r = web.getWithBrowserHeaders(url)       // 一次性：新建客户端 + 浏览器头
+
+// ② 代理池：轮询 + 失败冷却
+var pool = web.createProxyPool(["http://u:p@host:8080", "socks5h://host:1080"])
+var s = web.createSession()
+web.sessionSetProxyPool(s, pool)             // 之后每个 sessionXxx 请求自动换代理
+var resp = web.sessionGet(s, url)
+web.sessionReportResult(s, resp.ok())        // 回报成败 ⇒ 坏代理自动冷却
+web.sessionCoolDownProxy(s, 60000)           // 服务端明确 403/429 时立刻冷却（比等连续失败快）
+
+// 爬虫侧：挂上池子后 fetchItem() 自动"取代理 → 抓 → 回报"
+web.setProxyPool(crawler, pool)
+var page = crawler.fetchItem(item)
+
+// ③ TLS 套件/曲线：**如实返回是否被支持**（不支持就 false，不静默）
+c.setCipherList("HIGH:!aNULL")
+
+// ④ 代理列表也可以从文件读（一行一个；`#` 注释、空行、行尾空白都容忍）
+var pool2 = web.proxyPoolFromFile("proxies.txt")   // 文件不存在 ⇒ 空池，不抛错
+```
+
+两个设计点值得说明：
+
+- **失败要冷却，不只是轮询**：坏代理留在轮换里，每次轮到它都要等一个超时 ——
+  一个坏 IP 就能把整体吞吐拖死。连续失败达 `fail_threshold`（默认 3）⇒ 冷却
+  `cool_ms`（默认 60s），到点**自动放回**（代理也可能只是临时抽风）；
+  `pool.remove(p)` 才是永久剔除（被封）。
+- **池子耗尽不偷偷直连**：全在冷却时 `next()` 返回 `""`，Session 保持现状并置
+  `s.pool_exhausted = true` —— 直连会暴露真实 IP，比"失败"更糟，所以退避还是收工交给调用方。
+
+`Accept-Encoding` **有意不写进模板**：建客户端时设的是 `ACCEPT_ENCODING = ""`，由 libcurl
+按**自身实际支持**的编码声明并自动解压；硬写 `gzip, deflate, br` 会在后端没有 brotli 时
+收到解不开的正文（静默乱码）。
+
+### TLS 指纹（JA3/JA4）：只改套件不够
+
+`setCipherList` / `setTls13Ciphers` / `setEcCurves` 能调套件与曲线顺序，但 JA3/JA4 还包含
+**扩展顺序、ALPN、GREASE**，libcurl 原生没有这些开关。真要对齐 Chrome 指纹，需要把
+`lib/win/libcurl-x64.dll` 换成 [curl-impersonate](https://github.com/lwthiker/curl-impersonate)
+的 Windows 构建（导出符号与 libcurl 兼容，本模块**无需改代码**即可加载）。
+
+本包**不预置**该 DLL（体积、来源可信度、许可证都要单独交代）。替换后这样验证：
+
+```leno
+print(web.version())          // 应显示替换后的版本串
+```
+
+本仓库自带 DLL 的实测结论（`examples/tests/test_antibot.leno` 第 ⑧ 段会打印）：
+`setCipherList = true`、`setTls13Ciphers = true`、**`setEcCurves = false`**（后端不接受该选项）。
+
+## 多线程
+
+**HTTP 请求可以从 `threads.start()` 的子线程发起**（2026-10-06 起）。
+
+> ★ **2026-10-12（TH2）**：线程入口不再要求"必须是本文件的函数" ——
+> **模块函数可以直接作入口** ⇒ 库可以自己开线程（见
+> [`LenoDocsSrc/site/线程并发能力修复追踪.html`](../线程并发能力修复追踪.html) 的 TH2）。
+> 下面示例里的 `worker` 仍然写成入口脚本的函数，只是**没这个必要了** ✓
+
+```leno
+func worker(any idAny, Channel ch) {          // 入口可以是本文件函数，也可以是模块函数
+    var r = web.get("http://127.0.0.1:8080/echo/" + _str(idAny))
+    ch.send(r.body)
+}
+
+main() {
+    var ch = threads.channel(8)
+    for 8 to i { threads.start(worker, i, ch) }
+    for 8 to i { print(ch.receive()) }
+}
+```
+
+约定（与 `requests.Session` 一致）：
+
+- **每个线程各用各的 `HttpClient`**，或直接用模块级 `web.get/post/...`（内部每次新建）⇒ 安全 ✓
+- **同一个 `HttpClient` 被多个线程同时用** ⇒ 不安全（和 `requests.Session` 一样，属用户责任）
+
+> 这条曾经走不通：FFI 回调在子线程里"只能成功第一次"，并发时直接崩。根因是
+> `src/vm/vm.c` 的 `vm_call_value` 把停止条件写到了**全局主 VM** 上（宏 `vm` 在该处已不在作用域），
+> 另有"回调槽位分配竞态"与"每客户端调用 `curl_global_init`（非线程安全）"两处。
+> 三处均已修；证据与验证见
+> [`LenoDocsSrc/site/archive/多线程struct与模块全局变量问题记录.html`](../archive/多线程struct与模块全局变量问题记录.html) 第八节。
+> 回归用例：`examples/tests/test_thread_http.leno`、`examples/tests/test_ffi_callback_thread.leno`。
+
+## 动态渲染：无头浏览器（2026-10-07 新增）
+
+SPA / JS 注入内容抓不到是静态 HTTP 爬虫的硬缺陷。本模块用 **CDP（Chrome DevTools Protocol）
+驱动本机真实浏览器**，把**渲染后**的 DOM 拿回来，再交给 `web.parse` / `web.select`：
+
+```leno
+import "Web" as web
+
+// 一次性：起浏览器 → 渲染 → 关掉
+var r = web.renderPage("https://example.com/spa", 20000)
+if r.ok {
+    var node = web.parse(r.html)                       // 渲染后的 HTML
+    print(web.allText(web.select(node, "#app")[0]))
+}
+
+// 批量：复用同一个浏览器（启动一次 ~2.5s，之后每页 ~0.5s）
+var b = web.launchBrowser(web.BrowserConfig(headless=true, startUrl="about:blank"))
+var r1 = web.renderWith(b, url1, 8000, 500)
+var r2 = web.renderWith(b, url2, 8000, 500)
+web.closeBrowser(b)                                    // 走协议 Browser.close
+```
+
+**完整版渲染（等待策略 / 交互 / 截图）**：`renderAdvanced(b, url, RenderOptions)`
+
+| 选项 | 默认 | 说明 |
+| --- | --- | --- |
+| `waitUntil` | `"load"` | `"load"` / `"networkidle"` / `"selector"` |
+| `waitSelector` | `""` | `waitUntil="selector"` 时等它出现 |
+| `networkIdleMs` | `500` | 连续这么久没有在飞请求 ⇒ 算网络空闲 |
+| `settleMs` | `500` | 等待结束后的额外静置（给前端渲染留时间） |
+| `clickSelector` | `""` | 取值前先点它（展开 / 触发懒加载） |
+| `scrollTimes` | `0` | 取值前向下滚几次（无限滚动） |
+| `screenshotPath` | `""` | 非空则截图（PNG）写到这里 |
+| `timeoutMs` | `20000` | 总预算 |
+
+```leno
+var opt = web.RenderOptions(waitUntil="networkidle", networkIdleMs=800,
+                            clickSelector="#load-more", scrollTimes=3,
+                            screenshotPath="spa.png", timeoutMs=25000)
+var r = web.renderAdvanced(b, "https://example.com/spa", opt)
+```
+
+`networkidle` 是用 `Network.requestWillBeSent` / `loadingFinished` 事件维护"在飞请求数"实现的
+（**必须先开 `Network` 域再导航**，否则漏掉最早那批请求，就等不准了）；超时不会报错，
+只是照常取值 —— 宁可拿到半成品，也不要卡死。
+
+**交互**（都在取值之前生效，所以拿到的 HTML 反映交互后的状态）：
+
+| 选项 | 实现 | 说明 |
+| --- | --- | --- |
+| `clickSelector` | `element.click()` | 最快，但事件 `isTrusted=false` |
+| `realClickSelector` | `Input.dispatchMouseEvent` | **真事件**（按 `getBoundingClientRect` 算视口坐标），过 `isTrusted` 检查 |
+| `typeSelector` / `typeValue` | `Input.insertText` | 真输入，会触发 `input` 事件 |
+| `scrollTimes` | `window.scrollTo` | 无限滚动 / 懒加载 |
+
+**会话与代理**：`BrowserConfig.proxy`（转成 `--proxy-server`）、`userDataDir`（**给了就持久化**，
+可复用登录态；不给则用临时目录）、`userAgent` / `languages`。
+
+**批量与并发**：
+
+```leno
+// 批量（顺序，多 tab 轮转）：结果按输入顺序返回
+var rs = web.renderMany(b, urls, opt, 3)
+
+// 真并发：**必须由你自己的文件起线程**（见下），每个线程用自己的 tab
+//   web.createTarget(b) → web.renderOn(b, tabId, url, opt) → web.closeTarget(b, tabId)
+```
+
+> ⚠ **为什么 `renderMany` 是顺序的**（★ 2026-10-12 更正）：旧版这里写的理由
+> "库模块里不能起线程 —— `threads.start` 的入口函数只能来自主脚本文件，传库里的函数
+> 会让进程直接崩溃"**已经作废**：TH2 起模块函数可以直接作线程入口，库**能**自己开线程 ✓
+> （见 [`LenoDocsSrc/site/线程并发能力修复追踪.html`](../线程并发能力修复追踪.html)）。
+> 这里仍保持顺序，是**刻意不用线程池**的取舍（同线程 + 无锁更稳）；真并发由调用方
+> 在自己文件里起线程 + `renderOn` 到各自的 tab ✓。
+>
+> ⚠ **后台标签的定时器会被节流**：Chrome 把隐藏标签里的 `setTimeout` 钳到 ≥1s。批量/并发渲染时
+> 只有第一个 tab 是活跃的，页面里"延时 60ms 再写内容"的脚本会迟到 ⇒ 取值拿到半成品（实测：
+> 同一条 URL 单独渲染正常、批量渲染缺内容）。已在启动参数里关掉节流
+> （`--disable-background-timer-throttling` / `--disable-backgrounding-occluded-windows` /
+> `--disable-renderer-backgrounding`），并用 `Emulation.setFocusEmulationEnabled` 让页面始终"被聚焦"。
+
+**反检测（`stealth = true`）**：默认关（注入脚本毕竟改了页面环境）。开启后分三层：
+
+| 层 | 做的事 |
+| --- | --- |
+| 启动参数 | `--disable-blink-features=AutomationControlled`（**从源头**去掉 `navigator.webdriver`）、`--lang=<语言>` |
+| CDP | `Emulation.setUserAgentOverride`：UA 按浏览器版本重拼（抹掉 `HeadlessChrome` 字样）+ 语言 + platform |
+| 注入脚本 | `Page.addScriptToEvaluateOnNewDocument`（**导航之前**注册）：webdriver / languages / plugins / mimeTypes / hardwareConcurrency / deviceMemory / `window.chrome` / WebGL 的 `UNMASKED_VENDOR|RENDERER` / `permissions.query('notifications')` |
+
+实测（本机 headless Edge 154，判据是一个**自己探测无头特征**的页面）：
+
+| 特征 | 不开 stealth | 开启后 |
+| --- | --- | --- |
+| `navigator.webdriver` | `false` | `undefined` |
+| UA | `…HeadlessChrome/154…` | 正常 Chrome UA |
+| WebGL `UNMASKED_RENDERER` | `ANGLE (Microsoft, … Basic Render Driver …, D3D11)` | `Intel Iris OpenGL Engine` |
+
+**实战验证**（`examples/08_动态渲染/`，2026-10-07 实跑）：
+
+| 脚本 | 结果 |
+| --- | --- |
+| `spa_crawl.leno` | quotes.toscrape.com/js：静态抓取 `.quote` **0 条** → 渲染后 **10 条**（含作者）；走协议关闭 |
+| `render_parallel.leno` | 4 个页面 / 3 个 tab / 3 线程：**7.3s**（单页约 6.3s ⇒ 并发确实起作用） |
+
+> ⚠ 这是"**抹掉无头特征**"这一层，不是完整指纹伪装（Canvas/字体/Audio 指纹等仍是真值）。
+> ⚠ 注入脚本是**手工拼的 JS 字符串**：括号写错会**静默失效**（`addScriptToEvaluateOnNewDocument`
+> 连报错都不报）⇒ 测试里有一条 `stealthSelfTest` 语法自检（把脚本丢进 `try/eval` 跑一遍）。
+> 这条护栏不是形式主义：实测就是靠它抓到"三个 `defineProperty` 各少一个 `}`"（补丁完全没生效，
+> 但协议层一路"成功"）。
+
+**为什么是这条路（而不是 WebView2）**：
+
+| | 覆盖面 / 理由 |
+| --- | --- |
+| 覆盖面 | Chromium 家族占桌面 **≈84%**（StatCounter 2026-08：Chrome 73.28% + Edge 10.46%），且 **Edge 在 Win10/11 系统自带**；WebView2 只在 Windows |
+| 生态 | Playwright / Puppeteer / Selenium 走的都是"外部浏览器 + CDP"这条同路 |
+| 依赖 | 语言**自带 libcurl 已导出 `curl_ws_*`**，`sockets` 也够用 ⇒ WebSocket 用纯 Leno 写（`web_ws`），零第三方二进制 |
+| 隔离 | 浏览器是独立进程：它崩了/被反爬干掉不会带走爬虫（WebView2 是同进程内嵌） |
+
+实现要点与踩过的坑：
+
+- **Chrome/Edge 136+**：`--remote-debugging-port` 对**默认用户目录不再生效**，必须配
+  `--user-data-dir=<独立目录>`。本模块自动建临时目录（不碰用户的浏览器），并把它当作
+  "端口上应答的到底是不是我们拉起的那个"的**核对**标记（见 `_verifyOwnership`）。
+  **绝不会** `taskkill /IM msedge.exe` —— 那会杀掉用户自己的浏览器。
+- 端口自选（连接探测找空闲端口），启动后轮询 `/json/version` 等就绪；`SystemInfo.getProcessInfo`
+  取进程号。
+- **进程生命周期靠句柄，不靠事后匹配**（2026-10-07 重做）：拉起用内建 `_spawn(exe, args)`
+  （**返回句柄**），收尾用 `_kill(handle)` 收**整棵进程树**（`Browser.close` 之后再按句柄兜一次：
+  crashpad handler 之类子进程按设计比浏览器活得久）。为什么必须这样：原先用
+  `_exec("cmd /c start …")`，`start` 让浏览器脱离父子关系 ⇒ **句柄丢了**、父进程一崩就再也管不着，
+  只能事后从 `netstat` 文本里猜 PID、或按命令行扫全场去找它（实测**一轮漏下 45 个** msedge，
+  而这些孤儿反复累积正是"批量渲染把机器压崩"的燃料）。现在有两条硬保证：① 只杀自己 spawn 的那个；
+  ② Leno 进程退出（**含崩溃 / 被强杀**）时，内核会连它一起收掉（Job Object 的
+  `KILL_ON_JOB_CLOSE`）。语言层回归：`assert/test_spawn.leno`。
+- **启动前查可用提交内存**：`BrowserConfig.minFreeCommitMb`（默认 1024MB）不够就**拒绝启动**，
+  上层回退静态结果 —— 宁可降级，也不把用户机器拖垮；查不出来 ⇒ 放行（宁松勿误）。
+- 渲染等待：`Page.loadEventFired` + `settleMs`（默认 800ms，给前端异步取数留时间）；
+  取值用 `Runtime.evaluate`（`returnByValue` + `awaitPromise`）。
+- 没装 Chrome/Edge 时 `findBrowser()` 返回 `""`，可用环境变量 **`LENO_BROWSER`** 指定路径。
+
+## 已知限制
+
+**POSIX 的 iconv 路径未经实测**（开发环境是 Windows）：`_iconvConvert` / `_iconvDoEx`
+只做静态审查，请在 Linux/macOS 上跑一遍 `examples/tests/test_charset_unit.leno` 确认。
+
+**gzip 解压不做 CRC32 校验**：`LenoCompress`（原 `web_gzip`）校验了头、块结构、`ISIZE`（原文字节数）与各种越界，
+但不逐字节算 CRC32（要按字节跑 8 次位运算，收益不抵成本）。截断与大多数损坏都能报出来，
+但"内容被改过、长度没变"的极端情况不会被发现。
+
+**动态渲染的几处边界**（`web_cdp`）：
+
+- 需要本机有 Chrome/Edge（Windows 上 Edge 自带）；**POSIX 路径未实测**（开发环境是 Windows）
+- `web_ws` 只实现 `ws://`，不实现 `wss://`（CDP 走本机明文，用不到）
+- 交互：`clickSelector` 是 JS 点击（`isTrusted=false`），需要真事件用 `realClickSelector`。
+  **拖拽 / 滚轮 / 键盘组合键还没做**（要真事件键盘序列得走 `Input.dispatchKeyEvent` 逐个按键）
+- 反检测只做到"抹掉无头特征"（见上），**不做** Canvas/字体/Audio 指纹伪装
+- **并发渲染不在库里做**（★ 2026-10-12 更正：旧理由"`threads.start` 的入口只能是主脚本
+  文件的函数、库模块里起线程会让进程崩溃"已撤 —— TH2 起模块函数可以直接作线程入口 ✓）：
+  这是**刻意不用线程池**的取舍（同线程 + 无锁更稳，见「多线程」一节），`renderMany` 仍是
+  顺序的，真并发由调用方起线程（模式见「批量与并发」）
+- `pageWsUrl` 的选择顺序是"**我们自己创建的 target**（`Target.createTarget` 拿到的 targetId 精确匹配）
+  → http 页面 → 非内部 scheme 的页面"。**不能取"第一个 page"**：实测 Edge 首启会自带
+  `edge://sync-confirmation-dialog/` 这类内部页，取第一个就会连到它上面
+- **没有做反检测**：`--headless=new` 仍会暴露若干特征（`navigator.webdriver`、Headless Chrome
+  的 UA 片段等）。要过强反爬需另做 stealth（`Page.addScriptToEvaluateOnNewDocument` 抹特征、
+  用真实 profile 等），属 P2/P3
+
+**TLS 指纹仍是原生 libcurl**：代理轮换与浏览器式请求头已具备，但 JA3/JA4 需要替换 DLL
+（`setEcCurves` 在本包自带 DLL 上就返回 `false`）。见「反爬基础 → TLS 指纹」。
+
+## 示例与测试
+
+见 [`examples/README.md`](../../../Leno/build/leno_module/LenoWeb/examples/README.md)。一键跑测试：
+
+```bash
+build\leno.exe build\leno_module\LenoWeb\examples\tests\run_tests.leno
+```

@@ -60,6 +60,7 @@ PAGE_TPL = """<!doctype html>
 <script charset="utf-8" src="{base}assets/app.js" defer></script>
 </head><body data-doc="{doc}">
 <header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
   <a class="brand" href="{base}index.html">{site}</a>
   <div class="searchbox">
     <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
@@ -70,8 +71,9 @@ PAGE_TPL = """<!doctype html>
 </header>
 {banner}
 <div class="layout">
-  <aside class="side"><div class="side-title">本页目录</div>{toc}</aside>
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div>{nav}</nav>
   <main class="content" id="top">{body}</main>
+  <aside class="side"><div class="side-title">本页目录</div>{toc}</aside>
 </div>
 <nav class="pager">{prev}{next}</nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
@@ -102,6 +104,30 @@ HOME_TPL = """<!doctype html>
     <h1>快速找到你要的那一条</h1>
     <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面两条主路径进去。全站 {n} 篇。</p>
   </div>
+  <section class="intro">
+    <div class="intro-text">
+      <h2>Leno 是什么</h2>
+      <p>一门自研 VM 上的<strong>工程脚本语言</strong>：兼具静态类型检查与运行时灵活性，
+         适合桌面应用、工具链、系统封装与脚本内核开发。既能写业务层，也能用 FFI / cstruct / Ptr 下探到原生内存。</p>
+      <div class="intro-tags">
+        <span>类型收窄 · 可空类型 · 泛型</span>
+        <span>struct / enum / face</span>
+        <span>模块系统 + 19 个标准模块</span>
+        <span>线程并发 + async / await</span>
+        <span>FFI · cstruct · Ptr 原生内存</span>
+        <span>int48 内联 · 自研字节码 VM</span>
+      </div>
+      <p class="intro-links"><a href="Leno入门教程.html">从零入门 →</a>
+        <a href="Leno入门教程.html#语法速查表">语法速查 →</a>
+        <a href="module_ffi_api.html">模块 API →</a></p>
+    </div>
+    <div class="intro-code">
+      <div class="ic-bar"><span>hello.leno</span><span class="ic-run">leno hello.leno</span></div>
+      <pre><code class="language-leno">main() {{
+    print("Hello, Leno!")
+}}</code></pre>
+    </div>
+  </section>
   {paths}
   {recent}
   {sections}
@@ -143,6 +169,8 @@ kbd{background:var(--code-bg);border:1px solid var(--line);border-bottom-width:2
   padding:10px 22px;background:var(--panel);border-bottom:1px solid var(--line)}
 .brand{font-weight:700;font-size:17px;white-space:nowrap;color:var(--ink)}
 .brand:hover{text-decoration:none;color:var(--accent)}
+.menu-btn{display:none;width:32px;height:32px;flex:none;border:1px solid var(--line);border-radius:6px;
+  background:var(--panel);color:var(--ink);cursor:pointer;font-size:16px;line-height:1;padding:0}
 .searchbox{position:relative;flex:1;max-width:620px;margin:0 auto}
 .searchbox.wide{max-width:720px}
 .searchbox input{width:100%;padding:9px 14px;border:1px solid var(--line);border-radius:8px;
@@ -152,13 +180,20 @@ kbd{background:var(--code-bg);border:1px solid var(--line);border-bottom-width:2
 .tools button{width:30px;height:30px;border:1px solid var(--line);border-radius:6px;
   background:var(--panel);color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0}
 .tools button:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
-.crumb{color:var(--muted);font-size:13px;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}
+.crumb{color:var(--muted);font-size:13px;white-space:nowrap;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+.crumb a{color:var(--muted)}
+.crumb a:hover{color:var(--accent)}
+.crumb .sep{color:var(--line);margin:0 5px}
+.crumb .here{color:var(--ink)}
 .results{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;max-height:70vh;overflow:auto;
   background:var(--panel);border:1px solid var(--line);border-radius:10px;
   box-shadow:0 12px 40px rgba(20,30,60,.18);padding:6px}
 .results.on{display:block}
 .r-item{display:block;padding:9px 12px;border-radius:7px;color:var(--ink);line-height:1.5}
 .r-item:hover,.r-item.sel{background:var(--accent-soft);text-decoration:none}
+.r-item.sel{box-shadow:inset 3px 0 0 var(--accent)}
+.r-head{padding:7px 12px 9px;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.r-head kbd{font-size:11px;padding:0 4px}
 .r-title{font-weight:650;font-size:14px}
 .r-title .cat{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
 .r-frag{color:var(--muted);font-size:13px;margin-top:2px}
@@ -169,8 +204,27 @@ kbd{background:var(--code-bg);border:1px solid var(--line);border-bottom-width:2
 /* ---- 文档页 ---- */
 .banner{padding:10px 22px;background:var(--warn-bg);color:var(--warn);border-bottom:1px solid var(--line);
   font-size:13px;text-align:center}
-.layout{display:flex;gap:28px;max-width:var(--layout-max);margin:0 auto;padding:26px 22px 60px}
-.side{width:250px;flex:none;position:sticky;top:70px;align-self:flex-start;
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:26px;
+  max-width:var(--layout-max);margin:0 auto;padding:26px 22px 60px;align-items:start}
+/* ---- 全站导航（左） ---- */
+.nav{position:sticky;top:70px;max-height:calc(100vh - 100px);overflow:auto;font-size:13px;
+  border-right:1px solid var(--line);padding-right:12px}
+.nav details{margin-bottom:6px}
+.nav summary{cursor:pointer;list-style:none;padding:5px 8px;border-radius:5px;font-weight:650;
+  color:var(--ink);font-size:12.5px;letter-spacing:.2px}
+.nav summary::-webkit-details-marker{display:none}
+.nav summary:before{content:'▸';color:var(--muted);margin-right:7px;font-size:11px}
+.nav details[open]>summary:before{content:'▾'}
+.nav summary:hover{background:var(--accent-soft)}
+.nav .nv-group{margin:2px 0 6px 8px;padding-left:10px;border-left:1px solid var(--line)}
+.nav .nv-group a{display:block;padding:4px 8px;border-radius:5px;color:var(--muted);
+  line-height:1.45;word-break:break-word;font-size:12.5px}
+.nav .nv-group a:hover{background:var(--accent-soft);color:var(--accent);text-decoration:none}
+.nav .nv-group a.active{background:var(--accent);color:#fff;font-weight:650}
+.nav .nv-group a.active:hover{background:var(--accent)}
+.nav-mask{display:none}
+/* ---- 本页目录（右） ---- */
+.side{width:100%;flex:none;position:sticky;top:70px;align-self:flex-start;
   max-height:calc(100vh - 100px);overflow:auto;font-size:13px}
 .side-title{font-weight:700;color:var(--muted);margin:0 0 8px 8px;letter-spacing:.5px}
 .side ul{list-style:none;margin:0;padding-left:12px;border-left:1px solid var(--line)}
@@ -198,11 +252,39 @@ h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{opacity:1}
 .content pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:14px 16px;overflow:auto;line-height:1.55;position:relative}
 .content pre code{background:none;padding:0;font-size:13px}
+/* 离线代码高亮 token（纯 CSS，无外部依赖） */
+.tok-kw{color:#a626a4;font-weight:600}       /* 关键字 */
+.tok-str{color:#0a7f43}                        /* 字符串 */
+.tok-num{color:#b45309}                        /* 数字 */
+.tok-com{color:#8a94a6;font-style:italic}      /* 注释 */
+.tok-fn{color:#2563eb}                         /* 函数名 */
+.tok-op{color:#0891b2}                         /* 运算符 / 标点 */
+:root[data-theme="dark"] .tok-kw{color:#e39fd8}
+:root[data-theme="dark"] .tok-str{color:#7fd6a4}
+:root[data-theme="dark"] .tok-num{color:#f0b866}
+:root[data-theme="dark"] .tok-com{color:#7d879b}
+:root[data-theme="dark"] .tok-fn{color:#8ab4f8}
+:root[data-theme="dark"] .tok-op{color:#67d3e0}
+/* 快捷键帮助面板 */
+.help-mask{display:none;position:fixed;inset:0;z-index:90;background:rgba(15,20,35,.5)}
+.help-mask.on{display:grid;place-items:center}
+.help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 28px;
+  box-shadow:0 16px 50px rgba(0,0,0,.25);max-width:440px;width:calc(100vw - 40px)}
+.help h3{margin:0 0 14px;font-size:17px}
+.help dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:0;font-size:13.5px;align-items:center}
+.help dt{text-align:right}
+.help dd{margin:0;color:var(--muted)}
+.help .tip{margin:16px 0 0;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:12px}
 .copy-btn{position:absolute;top:8px;right:8px;opacity:0;transition:opacity .15s;
   border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--muted);
   font-size:11px;padding:3px 8px;cursor:pointer}
 pre:hover .copy-btn{opacity:1}
 .copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+/* 触屏设备无 hover：复制按钮 / 锚点常驻显示，否则手机上永远点不到 */
+@media(hover:none){
+  .copy-btn,.anchor{opacity:1!important}
+  .copy-btn{border-color:var(--line)}
+}
 .content table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;display:block;overflow:auto}
 .content th,.content td{border:1px solid var(--line);padding:7px 11px;text-align:left;vertical-align:top}
 .content th{background:var(--bg);font-weight:650;position:sticky;top:0}
@@ -223,6 +305,24 @@ pre:hover .copy-btn{opacity:1}
 .home{max-width:1240px;margin:0 auto;padding:34px 22px 80px}
 .hero h1{font-size:26px;margin:0 0 6px}
 .hero p{color:var(--muted);margin:0 0 24px}
+/* ---- 首页 Leno 介绍卡 ---- */
+.intro{display:grid;grid-template-columns:1.15fr 1fr;gap:24px;align-items:start;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:30px}
+.intro h2{font-size:19px;margin:0 0 10px}
+.intro-text p{color:var(--muted);margin:0 0 14px;line-height:1.7}
+.intro-text p strong{color:var(--ink)}
+.intro-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.intro-tags span{font-size:12px;padding:4px 10px;border-radius:14px;background:var(--accent-soft);
+  color:var(--accent);border:1px solid var(--line)}
+.intro-links{display:flex;gap:18px;flex-wrap:wrap;margin:0!important}
+.intro-links a{font-weight:650}
+.intro-code{min-width:0}
+.ic-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;
+  padding:7px 12px;font-size:12px;color:var(--muted)}
+.ic-run{font-family:Consolas,monospace;color:var(--ok)}
+.intro-code pre{margin:0;border-radius:0 0 8px 8px}
+@media(max-width:760px){.intro{grid-template-columns:1fr;padding:18px}}
 .cat{margin-bottom:34px}
 .cat h2{font-size:19px;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .cat h2 .n{color:var(--muted);font-size:13px;font-weight:400;margin-left:8px}
@@ -259,10 +359,29 @@ details.cat[open] summary h2:before{content:'▾ '}
 .recent .card{padding:9px 12px}
 .recent .d{display:none}
 .footnote{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
-@media(max-width:900px){.side{display:none}.content{padding:20px}.topbar{gap:8px;padding:8px 12px}
-  .crumb{display:none}.tools button{width:26px;height:26px}}
-@media print{.topbar,.side,.pager,.totop,.toast,.copy-btn,.anchor{display:none}
-  .content{border:0;padding:0}.layout{display:block;padding:0}}
+@media(max-width:1200px){.layout{grid-template-columns:220px minmax(0,1fr);gap:20px}
+  .side{display:none}}
+@media(max-width:900px){
+  .layout{display:block;padding:18px}
+  .crumb{display:none}
+  .menu-btn{display:block}
+  .tools button{width:26px;height:26px}
+  .nav{display:none;position:fixed;z-index:80;top:0;left:0;bottom:0;width:min(82vw,320px);
+    max-height:none;background:var(--panel);border-right:1px solid var(--line);
+    padding:70px 16px 20px;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+  .nav.open{display:block}
+  .nav-mask.on{display:block;position:fixed;inset:0;z-index:70;background:rgba(15,20,35,.45)}
+}
+@media print{.topbar,.nav,.side,.pager,.totop,.toast,.copy-btn,.anchor,.nav-mask,.help-mask{display:none}
+  .content{border:0;padding:0}.layout{display:block;padding:0}
+  /* 打印用浅底深字，覆盖深浅主题；token 保留下划线/加粗以区分 */
+  :root,:root[data-theme="dark"]{--bg:#fff;--panel:#fff;--ink:#000;--line:#bbb;--code-bg:#f4f4f4}
+  .content pre{white-space:pre-wrap;word-break:break-word;border:1px solid #ccc}
+  .tok-kw{color:#000!important;font-weight:700}
+  .tok-str{color:#000!important;font-style:italic}
+  .tok-num,.tok-com,.tok-fn,.tok-op{color:#000!important}
+  .crumb{display:none}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 """
 
 APP_JS = r"""
@@ -273,7 +392,7 @@ APP_JS = r"""
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function reEsc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
-  function base(){return /\/archive\//.test(location.pathname)?'../':''}
+  function base(){return /\/(archive|扩展模块)\//.test(location.pathname)?'../':''}
   function toast(msg){
     var el=document.getElementById('toast'); if(!el)return;
     el.textContent=msg; el.className='toast on';
@@ -315,6 +434,80 @@ APP_JS = r"""
   if(fd)fd.onclick=function(){setFs(Math.max(12,parseInt(get('fs','15'),10)-1))};
   if(fu)fu.onclick=function(){setFs(Math.min(22,parseInt(get('fs','15'),10)+1))};
 
+  /* ---- 全站目录抽屉（窄屏） ---- */
+  var nav=document.getElementById('nav'),bm=document.getElementById('btn-menu'),mask=null;
+  if(nav&&bm){
+    mask=document.createElement('div');mask.className='nav-mask';
+    document.body.appendChild(mask);
+    function closeNav(){nav.classList.remove('open');mask.classList.remove('on')}
+    bm.onclick=function(){nav.classList.toggle('open');mask.classList.toggle('on',nav.classList.contains('open'))};
+    mask.onclick=closeNav;
+    nav.addEventListener('click',function(e){if(e.target.closest('a'))closeNav()});
+  }
+
+  /* ---- 离线代码高亮（leno / c / bash / json / powershell） ---- */
+  var KW={
+    leno:'func var const let if elif else for while return break continue struct enum import use from new true false null and or not switch case default is as async await try catch throw self this in do class module type param out ref defer'+
+         ' int float bool string void Array Dict Ptr Result bytes any',
+    c:'auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while include define typedef',
+    bash:'if then else elif fi for while do done case esac function in return export local echo cd set source alias unset',
+    json:'true false null',
+    powershell:'param function if else elseif foreach while return begin process end $true $false $null Write-Host Get-Set-New-Remove'
+  };
+  function hl(code,lang){
+    if(!(lang in KW))return null;
+    var hash=(lang==='bash'||lang==='powershell');       // 只有 shell 系把 # 当注释
+    var com=hash?'#[^\n]*':'//[^\n]*';
+    var re=new RegExp('(\\/\\/[^\\n]*'+(hash?'|#[^\\n]*':'')+'|\\/\\*[\\s\\S]*?\\*\\/)'+
+      '|("(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|`(?:\\\\.|[^`\\\\])*`)'+
+      '|(\\b(?:0x[0-9a-fA-F]+|\\d+(?:\\.\\d+)?)\\b)'+
+      '|(\\b[A-Za-z_][A-Za-z0-9_]*\\b)','g');
+    var kw=KW[lang].split(/\s+/).filter(Boolean);
+    var kwRe=kw.length?new RegExp('^(?:'+kw.map(reEsc).join('|')+')$','i'):null;
+    var out='',last=0,m;
+    while((m=re.exec(code))!==null){
+      out+=esc(code.slice(last,m.index));last=m.index+m[0].length;
+      if(m[1])out+='<span class="tok-com">'+esc(m[1])+'</span>';
+      else if(m[2])out+='<span class="tok-str">'+esc(m[2])+'</span>';
+      else if(m[3])out+='<span class="tok-num">'+esc(m[3])+'</span>';
+      else if(m[4]){
+        var w=m[4],after=code.slice(m.index+m[0].length);
+        if(kwRe&&kwRe.test(w))out+='<span class="tok-kw">'+esc(w)+'</span>';
+        else if(/^\s*\(/.test(after))out+='<span class="tok-fn">'+esc(w)+'</span>';
+        else out+=esc(w);
+      }
+    }
+    out+=esc(code.slice(last));
+    return out;
+  }
+  document.querySelectorAll('pre code').forEach(function(code){
+    var m=(code.className||'').match(/language-([A-Za-z0-9+#-]+)/);
+    var lang=m?m[1]:'leno';  // 无标注默认按 leno
+    var html=hl(code.textContent,lang);
+    if(html!==null)code.innerHTML=html;
+  });
+
+  /* ---- 快捷键帮助（?） ---- */
+  var help=null;
+  function toggleHelp(force){
+    if(!help){
+      help=document.createElement('div');help.className='help-mask';
+      help.innerHTML='<div class="help" role="dialog" aria-label="快捷键帮助"><h3>快捷键</h3><dl>'+
+        '<dt><kbd>/</kbd></dt><dd>聚焦搜索框</dd>'+
+        '<dt><kbd>S</kbd></dt><dd>聚焦搜索框（同 /）</dd>'+
+        '<dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>在搜索结果间移动</dd>'+
+        '<dt><kbd>Enter</kbd></dt><dd>打开当前选中的结果（未选则第一条）</dd>'+
+        '<dt><kbd>Esc</kbd></dt><dd>清空搜索 / 关闭本面板</dd>'+
+        '<dt><kbd>?</kbd></dt><dd>打开 / 关闭本面板</dd>'+
+        '</dl><p class="tip">目录分组可点击展开；左侧全站目录在窄屏下由 ☰ 唤出。</p></div>';
+      help.onclick=function(e){if(e.target===help)toggleHelp(false)};
+      document.body.appendChild(help);
+    }
+    var on=typeof force==='boolean'?force:!help.classList.contains('on');
+    help.classList.toggle('on',on);
+    if(!on&&q){q.focus()}
+  }
+
   /* ---- 代码复制 / 标题锚点 ---- */
   document.querySelectorAll('pre').forEach(function(pre){
     var b=document.createElement('button');b.className='copy-btn';b.type='button';b.textContent='复制';
@@ -352,7 +545,7 @@ APP_JS = r"""
   /* ---- 搜索 ---- */
   var q=document.getElementById('q'), box=document.getElementById('results');
   if(!q||!box||typeof SEARCH_DOCS==='undefined')return;
-  var timer=null, items=[];
+  var timer=null, items=[], current=-1;
   function mark(s,terms){
     var out=esc(s);
     try{out=out.replace(new RegExp('('+terms.map(reEsc).join('|')+')','gi'),'<mark>$1</mark>')}catch(e){}
@@ -377,29 +570,44 @@ APP_JS = r"""
         if(hits.length>=60)break}
     }
     hits.sort(function(a,b){return a.score-b.score});
-    box.innerHTML=hits.length?hits.map(function(h){
+    var totalHits=hits.length;
+    var head=totalHits?'<div class="r-head">命中 '+totalHits+' 篇'+(totalHits>=60?'（仅显示前 60）':'')+
+      ' · <kbd>Enter</kbd> 打开 · <kbd>↑↓</kbd> 选择</div>':'';
+    box.innerHTML=hits.length?head+hits.map(function(h){
       var anchor=h.best.s.a?'#'+h.best.s.a:'';
       return '<a class="r-item" href="'+esc(base()+h.d.f+anchor)+'">'+
         '<div class="r-title">'+mark(h.d.t,terms)+'<span class="cat">'+esc(h.d.c)+
         (h.d.a?' · 已归档':'')+'</span></div>'+
         (h.best.s.h&&h.best.s.h!=='开头'?'<div class="r-frag">§ '+esc(h.best.s.h)+'</div>':'')+
         '<div class="r-frag">'+mark(h.best.frag,terms)+'</div></a>';
-    }).join('')+(hits.length>=60?'<div class="r-more">仅显示前 60 条，继续输入以缩小范围</div>':'')
-      :'<div class="r-empty">没有命中，换个词试试</div>';
+    }).join('')+''
+      :'<div class="r-empty">没有命中，换个词试试（多词之间按 <kbd>空格</kbd> 间隔，需同时命中）</div>';
     box.className='results on';items=Array.prototype.slice.call(box.querySelectorAll('.r-item'));
+    current=-1;                       // 未选择时 Enter 打开第一项
+  }
+  function move(delta){
+    if(!items.length)return;
+    items.forEach(function(a){a.classList.remove('sel')});
+    current=(current+delta+items.length)%items.length;
+    items[current].classList.add('sel');
+    items[current].scrollIntoView&&items[current].scrollIntoView({block:'nearest'});
   }
   q.addEventListener('input',function(){clearTimeout(timer);timer=setTimeout(render,120)});
   q.addEventListener('keydown',function(e){
-    if(e.key==='Escape'){q.value='';box.className='results';items=[];q.blur();return}
+    if(e.key==='Escape'){q.value='';box.className='results';items=[];current=-1;q.blur();return}
     if(!items.length)return;
-    var cur=items.indexOf(document.activeElement);
-    if(e.key==='ArrowDown'){e.preventDefault();items[(cur+1)%items.length].focus()}
-    else if(e.key==='ArrowUp'){e.preventDefault();items[(cur-1+items.length)%items.length].focus()}
+    if(e.key==='ArrowDown'){e.preventDefault();move(1)}
+    else if(e.key==='ArrowUp'){e.preventDefault();move(-1)}
+    else if(e.key==='Enter'){e.preventDefault();
+      var target=items[current>=0?current:0];if(target)location.href=target.href}
   });
   document.addEventListener('keydown',function(e){
     var tag=(e.target.tagName||'').toLowerCase();
-    if(e.key==='/'&&tag!=='input'&&tag!=='textarea'){e.preventDefault();q.focus();q.select()}
-    if(e.key==='Escape'&&document.activeElement!==q){box.className='results'}
+    var typing=(tag==='input'||tag==='textarea'||e.target.isContentEditable);
+    if(e.key==='/'&&!typing){e.preventDefault();q.focus();q.select()}
+    if((e.key==='?'||(e.key==='/'&&e.shiftKey))&&!typing){e.preventDefault();toggleHelp()}
+    if(e.key.toLowerCase()==='s'&&!typing&&!e.ctrlKey&&!e.metaKey){e.preventDefault();q.focus();q.select()}
+    if(e.key==='Escape'&&document.activeElement!==q){box.className='results';if(help)help.classList.remove('on')}
   });
   document.addEventListener('click',function(e){
     if(!e.target.closest('.searchbox'))box.className='results';
@@ -450,11 +658,15 @@ def lift_blockquote_fences(text):
     return "\n".join(out)
 
 
-def fix_links(s):
-    """只改本地 .md 链接；外链 / 锚点 / mailto 原样保留。"""
+def fix_links(s, subdir=False):
+    """只改本地 .md 链接；外链 / 锚点 / mailto 原样保留。
+    subdir=True 表示页面在 site/ 的子目录里（扩展模块/），链接已按该层级写好，不再补层。"""
     def repl(m):
         u = m.group(1)
         if re.match(r"^(?:https?:|mailto:|javascript:|data:|#)", u, re.I):
+            return m.group(0)
+        if subdir:
+            # 子目录页：站内 ../xxx.html 与源码 ../../../Leno/... 都已就位，原样保留
             return m.group(0)
         # 分三类（原本都相对 Leno/docs/，源码已搬到兄弟仓 LenoDocsSrc）：
         # 1) ../docs/xxx.md —— 指向的文档已一起搬来 ⇒ 站内链接，不再退目录
@@ -474,11 +686,15 @@ def fix_links(s):
 
 
 def strip_md(s):
-    s = re.sub(r"```[^\n]*\n.*?```", " ", s, flags=re.S)
+    # 代码块：保留代码正文（只去掉围栏行）——搜 on_click / createXxx / ptr_from_int 全靠它。
+    # 早期版本整块删除，导致教程页的代码示例一个字都搜不到 ✗
+    s = re.sub(r"^\s*```[^\n]*\s*$", " ", s, flags=re.M)
     s = re.sub(r"`([^`]*)`", r"\1", s)
     s = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", s)
     s = re.sub(r"^\s*\|[\s:\-|]+\|\s*$", " ", s, flags=re.M)
-    s = re.sub(r"[|*>_#]+", " ", s)
+    # 注意：不能把 `_` 当 Markdown 强调符剥掉 —— Leno 的 API 名大量带下划线
+    # （ptr_from_int / int_from_ptr / module_ffi_api…），剥掉后搜索索引里就没有 `_int` 了。
+    s = re.sub(r"[|*>#]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -540,7 +756,7 @@ CATEGORIES = [
         "enum载荷_设计草案.md", "注解系统与optkeys设计草案.md", "struct 里const可行性.md",
         "struct_extend_设计草案.md", "cstruct_packed_align_设计文档.md", "错误与空值契约.md",
         "单一事实来源与重复实现收敛.md", "寄存式与栈式的差异清单.md",
-        "错误列号准确性_工作进度.md", "错误堆栈追踪改进方案.md", "Leno报错提示改进计划.md",
+        "错误堆栈追踪改进方案.md",
     ]),
     ("05 GUI · 平台", False, "LenoSDL3 控件与渲染、Android / Web / LenoNet / LenoHtml", [
         "PREFIX:LenoSDL3_", "LenoSDL3像素直写渲染优化.md", "PREFIX:Android",
@@ -552,6 +768,10 @@ CATEGORIES = [
         "Leno语言改进建议.md", "密集数据与FFI能力评估_2026-11-11.md",
         "Leno真实项目可用性评估_2026-11-08.md", "移植音乐下载器实录与待办.md",
         "语言与框架问题_Aria实战_2026-10-31.md",
+    ]),
+    # ⚠ 扩展模块必须在 REST 兜底之前：按路径前缀归类，优先级最高
+    ("08 扩展模块（独立包）", False, "按需 import 的扩展包：压缩 / 加密 / HTTP / SQLite / SDL3 / Web / Excel / 二维码…", [
+        "PREFIX:扩展模块/",
     ]),
     ("07 性能 · 排查 · 历史", True, "性能数据与已完结的排查记录；部分基于旧栈式 VM，看前先核对源码", [
         "REST",   # 兜底：以上都没命中的全进这里
@@ -570,6 +790,8 @@ DISPLAY_NAME = {
     "async_await入门指南": "async / await 入门指南",
     "import使用指南": "import 使用指南",
     "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）",
+    "注解系统与optkeys设计草案": "注解系统与 @optkeys（已实现）",
+    "enum载荷_设计草案": "enum 载荷（已实现）",
 }
 
 # INDEX.md 里没登记描述的篇目，给一句兜底，避免首页卡片空着一行。
@@ -578,8 +800,25 @@ DESC_FALLBACK = {
 }
 
 
+# 扩展模块（独立包）的中文显示名
+EXT_DISPLAY = {
+    "_总览": "扩展模块总览",
+    "LenoCLI": "CLI · 命令行解析", "LenoCompress": "Compress · 压缩",
+    "LenoCrypto": "Crypto · 加密", "LenoCSV": "CSV · 表格读写",
+    "LenoFS": "FS · 文件系统", "LenoGlob": "Glob · 通配匹配",
+    "LenoHTTP": "HTTP · 服务端", "LenoLog": "Log · 日志",
+    "LenoMusic": "Music · 音频", "LenoQR": "QR · 二维码",
+    "LenoResult": "Result · 错误与空值", "LenoSDL3": "SDL3 · GUI 渲染",
+    "LenoSqlite": "sqlite3 · 数据库", "LenoStats": "Stats · 统计",
+    "LenoUUID": "UUID · 唯一 ID", "LenoWeb": "Web · HTTP/HTML/爬虫",
+    "LenoXLSX": "XLSX · Excel", "LenoZip": "Zip · 归档",
+}
+
+
 def display_name(stem):
     """把文件名 stem 换成首页可见的中文名；module_* 保留模块名便于对照源码。"""
+    if stem in EXT_DISPLAY:
+        return EXT_DISPLAY[stem]
     if stem in DISPLAY_NAME:
         return DISPLAY_NAME[stem]
     if stem.startswith("module_"):
@@ -596,19 +835,23 @@ PATHS = [
     ("看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"),
     ("查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"),
     ("查模块 API", "19 个标准模块的函数清单", "module_strings.html", "模块索引"),
+    ("扩展模块", "压缩 / 加密 / HTTP / SQLite / Web / GUI…", "扩展模块/_总览.html", "独立包"),
 ]
 
 
 def classify(rel):
-    """按文件名把 md 归到某个分类；返回分类名。规则按 CATEGORIES 顺序匹配。"""
+    """按路径+文件名把 md 归到某个分类；返回分类名。规则按 CATEGORIES 顺序匹配。"""
     name = rel.split("/")[-1]
+    path = rel.replace("\\", "/")
     for cat, _fold, _desc, rules in CATEGORIES[:-1]:
         for r in rules:
-            if r.startswith("PREFIX:") and name.startswith(r[7:]):
-                return cat
-            if r.startswith("SUFFIX:") and name.endswith(r[7:]):
-                return cat
-            if name == r:
+            if r.startswith("PREFIX:"):
+                if path.startswith(r[7:]) or name.startswith(r[7:]):
+                    return cat
+            elif r.startswith("SUFFIX:"):
+                if name.endswith(r[7:]):
+                    return cat
+            elif name == r:
                 return cat
     return CATEGORIES[-1][0]
 
@@ -640,6 +883,38 @@ def status_badge(s):
         return ""
     cls = "old" if ("归档" in s or "过时" in s or "已废" in s) else ""
     return '<span class="badge ' + cls + '">' + s.replace("|", "") + "</span>"
+
+
+def global_nav_html(cats, cur_rel, base):
+    """左侧全站目录：按分类分组折叠，当前分类展开、当前文档高亮。"""
+    out = []
+    for c in cats:
+        items = [it for it in c["items"] if (SRC / it["file"]).exists()]
+        if not items:
+            continue
+        cur_in = any(it["file"] == cur_rel for it in items)
+        out.append("<details" + (" open" if cur_in else "") + "><summary>" + esc_html(c["name"]) +
+                   ' <span style="color:var(--muted);font-weight:400">' + str(len(items)) + "</span></summary>")
+        out.append('<div class="nv-group">')
+        for it in items:
+            href = base + it["file"].replace(".md", ".html").replace("\\", "/")
+            active = ' class="active" aria-current="page"' if it["file"] == cur_rel else ""
+            out.append('<a href="' + href + '"' + active + ">" + esc_html(it["name"]) + "</a>")
+        out.append("</div></details>")
+    return "".join(out)
+
+
+def esc_html(s):
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
+def breadcrumb_html(cat, title, base, archived):
+    """顶栏面包屑：首页 / 分类 / 当前文档。"""
+    home = '<a href="' + base + 'index.html">首页</a>'
+    c = '<a href="' + base + 'index.html">' + esc_html(cat) + "</a>" if cat else "文档"
+    here = '<span class="here">' + esc_html(title) + "</span>"
+    sep = '<span class="sep">/</span>'
+    return home + sep + c + sep + here
 
 
 # ============================================================ 主流程
@@ -683,22 +958,29 @@ def main():
     for pos, rel in enumerate(ordered):
         path = SRC / rel
         text = lift_blockquote_fences(path.read_text(encoding="utf-8"))
+        is_ext = rel.replace("\\", "/").startswith("扩展模块/")
         md = markdown.Markdown(
             extensions=["markdown.extensions.tables", "markdown.extensions.fenced_code",
                      "markdown.extensions.toc", "markdown.extensions.sane_lists"], output_format="html5")
-        body = fix_links(md.convert(text))
+        body = fix_links(md.convert(text), subdir=is_ext)
         toc = flatten_tokens(getattr(md, "toc_tokens", []), [])
 
         archived = "archive/" in rel.replace("\\", "/")
         cat = cat_of.get(rel, "")
-        base = "../" if archived else ""
+        # 子目录页(archive/ 或 扩展模块/)的 HTML 深一级，资源与首页要退一层
+        base = "../" if (archived or is_ext) else ""
         title = re.sub(r"^#\s+", "", next((l for l in text.split("\n") if l.startswith("# ")), path.stem))
         title = re.sub(r"[`*]", "", title).strip()
 
         banner = ""
+        is_ext_cat = cat.startswith("08")      # 只有真正归到「扩展模块」分类的才显示该横幅
         if archived:
             banner = ('<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，'
                       '仅供考古；现行状态请看 <a href="' + base + 'index.html">索引</a>。</div>')
+        elif is_ext_cat:
+            banner = ('<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· '
+                      '⚠ 包名 ≠ import 名，见 <a href="' + base + '扩展模块/_总览.html">总览对照表</a>。'
+                      '本页是从 Leno 仓 README 同步的副本。</div>')
         elif "历史" in text[:1500] or "过时" in text[:1500]:
             banner = '<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>'
 
@@ -710,7 +992,9 @@ def main():
         out_path = OUT / rel.replace(".md", ".html")
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(PAGE_TPL.format(
-            title=title, site=SITE_TITLE, base=base, crumb=inline_md(cat), tools=TOOLS,
+            title=title, site=SITE_TITLE, base=base,
+            crumb=breadcrumb_html(cat, title, base, archived), tools=TOOLS,
+            nav=global_nav_html(cats, rel, base),
             doc=rel.replace(".md", ".html").replace("\\", "/"),
             banner=banner, toc=toc_html(toc), body=body, prev=prev_link, next=next_link,
         ), encoding="utf-8", newline="\n")
@@ -727,7 +1011,9 @@ def main():
     #   `index.html`（门户）与 `INDEX.html`（原始索引）会互相覆盖 —— 实测只活下来一个，
     #   而且"查看原始索引全文"链接指回自己（死循环）。改成不同的基名才两地都对 ✓
     (OUT / "INDEX_raw.html").write_text(PAGE_TPL.format(
-        title="INDEX 原文 · 文档索引", site=SITE_TITLE, base="", crumb="索引原文", tools=TOOLS,
+        title="INDEX 原文 · 文档索引", site=SITE_TITLE, base="",
+        crumb='<a href="index.html">首页</a><span class="sep">/</span><span class="here">索引原文</span>',
+        tools=TOOLS, nav=global_nav_html(cats, "__INDEX__", ""),
         doc="INDEX_raw.html", banner="",
         toc=toc_html(flatten_tokens(getattr(md, "toc_tokens", []), [])),
         body=fix_links(md.convert(INDEX_MD.read_text(encoding="utf-8"))),

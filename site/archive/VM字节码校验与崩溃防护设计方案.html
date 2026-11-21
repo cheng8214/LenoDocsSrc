@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VM 字节码校验与崩溃防护设计方案 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/VM字节码校验与崩溃防护设计方案.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">VM 字节码校验与崩溃防护设计方案</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">6</span></summary><div class="nv-group"><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../区间口径约定.html">区间口径约定</a><a href="../语言陷阱速查.html">语言陷阱速查</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../threads使用指南.html">threads使用指南</a><a href="../加密算法示例指南.html">加密算法示例指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../布局配方.html">布局配方</a><a href="../并发选择指引.html">并发选择指引</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">14</span></summary><div class="nv-group"><a href="../Android正经App路线.html">Android正经App路线</a><a href="../Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../待办与路线图.html">待办与路线图</a><a href="../易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/_总览.html">扩展模块总览</a><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html" class="active" aria-current="page">VM字节码校验与崩溃防护设计方案</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a></div></details></nav>
+  <main class="content" id="top"><h1 id="vm">VM 字节码校验与崩溃防护设计方案</h1>
+<blockquote>
+<p>⚠ <strong>局部过时（2026-10-02 注）</strong>：本文 §1.1 复盘的那个 bug 发生在<strong>编译器函数内联器</strong>
+<code>codegen_inline.c</code> 的 <code>try_inline_call</code> / <code>inline_return_jumps</code> 上 —— 该文件<strong>已随寄存器式改造
+删除</strong>（<code>0f0cf52</code>，621 行）且尚未移植 ⇒ 复现路径与 <code>file:line</code> 已不可用。
+但<strong>校验分层的思想与那条教训（"嵌套内联时不能重置 return 跳转计数"）仍适用</strong>：
+将来若把内联器移植回寄存器式 codegen，本文件是必读的踩坑记录。
+文中对 jumptable 版解释器的引用同样属栈式时代。</p>
+<p>本文档源于 2026-09-04 修复的嵌套内联 <code>inline_return_jumps</code> 数组覆写 bug。该 bug 导致 tetris.leno 消行后 VM 直接 segfault，无任何错误信息输出。本文档设计一套分层防护方案，使此类编译器 bug 在未来能被更早捕获，而非以"静默崩溃"的方式暴露给用户。</p>
+</blockquote>
+<h2 id="_1">一、问题背景</h2>
+<h3 id="11-bug">1.1 Bug 回顾</h3>
+<p><code>codegen_inline.c</code> 的 <code>try_inline_call</code> 通用路径中，进入嵌套内联时将 <code>inline_return_jump_count</code> 重置为 0，导致内层函数的 return 跳转覆写外层函数已记录的条目。产生两条损坏的字节码：</p>
+<table>
+<thead>
+<tr>
+<th>损坏点</th>
+<th>位置</th>
+<th>修复前（bug）</th>
+<th>修复后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>updateGame <code>return</code></td>
+<td>offset 0201</td>
+<td><code>OP_JUMP -1 (to 205)</code> — 未 patch，跳到自身末字节</td>
+<td><code>OP_JUMP 385 (to 591)</code> — 正确指向内联出口</td>
+</tr>
+<tr>
+<td>tryMove <code>return false</code></td>
+<td>offset 0345</td>
+<td><code>OP_JUMP (to 591)</code> — 被外层错误覆盖</td>
+<td><code>OP_JUMP 47 (to 397)</code> — 正确指向自身出口</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-vm">1.2 为什么 VM 没报错就直接崩溃</h3>
+<p>这次崩溃不是单一故障，而是两条损坏的跳转形成了组合拳：</p>
+<ol>
+<li><strong>Bug #1（updateGame return，跳到 205）</strong>：offset 205 是 OP_JUMP 指令（从 201 开始，长度 5）的最后一个操作数字节 <code>0xff</code>。在 jumptable 模式下，<code>jump_table[0xff]</code> 是 NULL 指针，<code>goto *NULL</code> 直接 segfault</li>
+<li><strong>Bug #2（tryMove return，跳到 591）</strong>：offset 591 是合法的指令边界（<code>OP_GET_LOCAL</code>），VM 执行的是合法但语义错误的指令 — 加载错误的 result_slot、清除错误的 local range、继续执行本该跳过的代码，导致栈状态损坏</li>
+</ol>
+<p><strong>关键洞察</strong>：Bug #2 是实际触发崩溃的主因。跳到 591 后执行的是合法指令，VM 无法检测"执行顺序错误"。而 Bug #1 如果单独存在，jumptable 模式下的 NULL deref 会直接 segfault，没有机会报错。</p>
+<h3 id="13">1.3 问题的普遍性</h3>
+<p>这不是孤立事件。Leno 编译器历史上有过多次类似的"字节码损坏导致静默崩溃"：</p>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>Bug</th>
+<th>现象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025</td>
+<td><code>patch_ast_indices</code> 循环上界 count 而非 count-1</td>
+<td>间歇性 segfault，零输出</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>窥孔优化误匹配操作数字节</td>
+<td>栈错位，运行时报无关类型错误</td>
+</tr>
+<tr>
+<td>2026-09</td>
+<td><code>inline_return_jumps</code> 数组覆写</td>
+<td>segfault，零输出</td>
+</tr>
+</tbody>
+</table>
+<p>共同特征：<strong>编译器生成了损坏的字节码，VM 盲目执行后崩溃，没有任何诊断信息</strong>。</p>
+<h2 id="_2">二、分层防护设计</h2>
+<h3 id="21">2.1 设计原则</h3>
+<ul>
+<li><strong>编译期拦截优先于运行期检测</strong>：在字节码生成后、执行前做校验，能在开发阶段就暴露问题</li>
+<li><strong>Debug build 全防护，Release build 零开销</strong>：开发时需要最大可见性，发布时不能牺牲性能</li>
+<li><strong>不改变 VM 热路径</strong>：dispatch loop 是性能关键路径，release 模式下不加任何检查</li>
+</ul>
+<h3 id="22">2.2 三层防护总览</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>名称</th>
+<th>触发时机</th>
+<th>Runtime 开销</th>
+<th>能捕获的 bug</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第三层</td>
+<td>编译后字节码校验</td>
+<td>编译完成后</td>
+<td>零</td>
+<td>跳转目标不在合法指令边界</td>
+</tr>
+<tr>
+<td>第二层</td>
+<td>Dispatch 守卫</td>
+<td>每条指令 dispatch</td>
+<td>~1-3%（仅 debug）</td>
+<td>无效操作码（如 0xff 被当 opcode）</td>
+</tr>
+<tr>
+<td>第一层</td>
+<td>Jump 边界检查</td>
+<td>每条跳转指令</td>
+<td>&lt; 0.5%（仅 debug）</td>
+<td>跳转目标超出 code 数组范围</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23">2.3 开关策略</h3>
+<pre><code>Debug build  (-DLENO_DEBUG)：三层全开
+Release build (默认)        ：仅第三层
+</code></pre>
+<h2 id="_3">三、第三层：编译后字节码校验（核心）</h2>
+<h3 id="31">3.1 原理</h3>
+<p>在 <code>codegen_finish</code> 或模块编译完成后，对每个 <code>BytecodeChunk</code> 做一次线性扫描：</p>
+<ol>
+<li>逐条解码指令，记录所有合法的指令起始 offset 到一个 bitmap</li>
+<li>对每条 jump 类指令（OP_JUMP / OP_JUMP_IF_FALSE / OP_JUMP_IF_TRUE / OP_LOOP），计算其目标 offset</li>
+<li>检查目标 offset 是否落在合法边界上</li>
+<li>如果不落在边界上，报编译错误</li>
+</ol>
+<h3 id="32-bug">3.2 能捕获的 bug</h3>
+<ul>
+<li><strong>未 patch 的跳转</strong>（如本次 bug #1：offset 201 的 OP_JUMP 目标 205 不是指令起始位置）</li>
+<li><strong>跳转到指令中间</strong>（操作数字节被误认为指令）</li>
+<li><strong>跳转目标超出 code 数组范围</strong></li>
+</ul>
+<h3 id="33-bug">3.3 不能捕获的 bug</h3>
+<ul>
+<li><strong>跳转到合法边界但语义错误</strong>（如本次 bug #2：tryMove 的 return 跳到 591，591 是合法指令边界，但执行顺序错误）</li>
+<li>这类 bug 需要更深的控制流分析或类型验证，类似 Java bytecode verifier 的 level</li>
+</ul>
+<h3 id="34">3.4 实现草案</h3>
+<pre><code class="language-c">// 新增文件：src/codegen/codegen_verify.c
+
+typedef struct {
+    uint8_t* bitmap;    // bitmap[offset] = 1 表示 offset 是合法指令起始
+    int code_len;
+} InstructionMap;
+
+// 逐条解码，建立指令边界 bitmap
+static void build_instruction_map(Chunk* chunk, InstructionMap* map) {
+    map-&gt;code_len = chunk-&gt;len;
+    map-&gt;bitmap = calloc(chunk-&gt;len + 1, 1);
+
+    int ip = 0;
+    while (ip &lt; chunk-&gt;len) {
+        uint8_t opcode = chunk-&gt;code[ip];
+        map-&gt;bitmap[ip] = 1;
+
+        // 根据 opcode 获取指令长度（需要一张 opcode → length 的表）
+        int instr_len = opcode_lengths[opcode];
+        if (instr_len == 0) {
+            // 未知操作码，无法继续解码
+            // 报错或中止
+            break;
+        }
+        ip += instr_len;
+    }
+}
+
+// 校验所有跳转目标
+static bool verify_jumps(Chunk* chunk, InstructionMap* map, ErrorList* errors) {
+    bool ok = true;
+    int ip = 0;
+    while (ip &lt; chunk-&gt;len) {
+        uint8_t opcode = chunk-&gt;code[ip];
+        int instr_len = opcode_lengths[opcode];
+
+        if (is_jump_opcode(opcode)) {
+            // 读取跳转偏移
+            int32_t offset = read_int32(chunk, ip + 1);  // 或 +2，取决于操作数布局
+            int target = ip + instr_len + offset;        // jump 是从下一条指令起算
+
+            if (target &lt; 0 || target &gt;= chunk-&gt;len) {
+                // 跳转目标超出 code 数组范围
+                error_add_at(ERR_COMPILE, chunk-&gt;lines[ip], 0,
+                    &quot;内部错误：跳转目标超出字节码范围 (ip=%d, target=%d)&quot;, ip, target);
+                ok = false;
+            } else if (!map-&gt;bitmap[target]) {
+                // 跳转目标不在合法指令边界上
+                error_add_at(ERR_COMPILE, chunk-&gt;lines[ip], 0,
+                    &quot;内部错误：跳转目标 %d 不在指令边界上 (源 ip=%d)，&quot;
+                    &quot;可能是编译器内联或跳转回填 bug&quot;, target, ip);
+                ok = false;
+            }
+        }
+        ip += instr_len;
+    }
+    return ok;
+}
+
+bool codegen_verify_chunk(Chunk* chunk) {
+    InstructionMap map;
+    build_instruction_map(chunk, &amp;map);
+    bool ok = verify_jumps(chunk, &amp;map, &amp;current_error_list);
+    free(map.bitmap);
+    return ok;
+}
+</code></pre>
+<h3 id="35">3.5 指令长度表</h3>
+<p>需要维护一张 <code>opcode → instruction_length</code> 的表。这张表必须与 <code>vm_run.inc</code> 中的 <code>READ_BYTE()</code> / <code>READ_SHORT()</code> / <code>READ_INT32()</code> 序列保持一致。</p>
+<p>维护方式建议：</p>
+<ul>
+<li><strong>方案 A（手动维护）</strong>：在 <code>leno_vm.h</code> 的 OpCode 枚举旁加注释标注每条指令长度，人工同步</li>
+<li><strong>方案 B（自动生成）</strong>：用一个 codegen 脚本从 <code>op_*.inc</code> 文件中解析 <code>READ_BYTE()</code> / <code>READ_SHORT()</code> / <code>READ_INT32()</code> 调用，自动生成长度表</li>
+</ul>
+<p>推荐方案 B，避免人工同步出错。可参考 <code>debug.c</code> 中已有的反汇编逻辑 — 它已经知道每条指令的长度（否则无法反汇编），可以提取复用。</p>
+<h3 id="36">3.6 调用时机</h3>
+<pre><code class="language-c">// codegen.c 或 module_compiler.c 中
+// 在 codegen_finish 之后、序列化/执行之前
+if (!codegen_verify_chunk(&amp;gen.chunk)) {
+    // 报告错误，不执行
+    return ERROR;
+}
+</code></pre>
+<h3 id="37">3.7 性能影响</h3>
+<ul>
+<li><strong>Runtime 阶段</strong>：零。校验只在编译时执行一次，VM 执行期间不触碰。</li>
+<li><strong>编译阶段</strong>：O(n) 线性扫描，n = 字节码长度。对典型 Leno 文件（几千到几万字节），耗时 &lt; 1ms，可忽略。</li>
+<li><strong>可配置</strong>：加 <code>--no-verify</code> 选项跳过，用于极端性能场景（如大模块增量编译）。</li>
+</ul>
+<h2 id="dispatch-debug">四、第二层：Dispatch 守卫（仅 Debug）</h2>
+<h3 id="41">4.1 原理</h3>
+<p>在 VM 的 dispatch 入口处检查 opcode 是否有效。当前 jumptable 模式下 <code>jump_table[0xff]</code> 是 NULL，<code>goto *NULL</code> 直接 segfault。加一个 NULL 检查，把 segfault 变成 runtime error。</p>
+<h3 id="42">4.2 实现草案</h3>
+<pre><code class="language-c">// vm_run.inc 中，jumptable 模式
+
+// 方案 1：填充 jump_table 的空槽
+const void* jump_table[256] = {
+    [OP_CONST] = &amp;&amp;LABEL(OP_CONST),
+    // ... 所有合法 opcode ...
+    // 其余自动初始化为 NULL
+};
+// 填充空槽指向一个错误处理标签
+for (int i = 0; i &lt; 256; i++) {
+    if (jump_table[i] == NULL) {
+        jump_table[i] = &amp;&amp;LABEL_INVALID_OPCODE;
+    }
+}
+// ...
+LABEL_INVALID_OPCODE:
+    runtime_error(&quot;内部错误：无效操作码 0x%02X，字节码可能损坏&quot;,
+                 GET_CURRENT_LINE());
+    return -1;
+</code></pre>
+<p>方案 1 的优势：不改变 dispatch 热路径（仍然是 <code>goto *jump_table[op]</code>），只在空槽被命中时才触发。但初始化时遍历 256 个槽有一次性成本。</p>
+<pre><code class="language-c">// 方案 2：dispatch 前加检查
+uint8_t op = READ_BYTE();
+if (unlikely(op &gt;= OP_COUNT)) {
+    runtime_error(&quot;内部错误：无效操作码 0x%02X&quot;, op);
+    return -1;
+}
+goto *jump_table[op];
+</code></pre>
+<p>方案 2 更直观，但每次 dispatch 多一次比较。Debug build 可以接受。</p>
+<p>推荐方案 1（填充空槽），因为它不改变 dispatch 热路径的指令序列，release build 也能零成本保留。</p>
+<h3 id="43">4.3 性能影响</h3>
+<ul>
+<li><strong>方案 1（填充空槽）</strong>：零 runtime 开销。<code>goto *jump_table[op]</code> 不变，只是空槽指向了错误标签而非 NULL。Debug 和 Release 都可以开启。</li>
+<li><strong>方案 2（dispatch 前检查）</strong>：~1-3% 开销，仅 Debug build 使用。</li>
+</ul>
+<h3 id="44-bug">4.4 能捕获的 bug</h3>
+<ul>
+<li>Bug #1（opcode 0xff 被执行）：segfault 变成 runtime error "无效操作码 0xFF"</li>
+<li>其他任何导致 IP 跑飞后命中未定义 opcode 槽的情况</li>
+</ul>
+<h3 id="45-bug">4.5 不能捕获的 bug</h3>
+<ul>
+<li>跳到合法 opcode 的操作数字节（如跳到 OP_GET_LOCAL 的 slot 字节，如果 slot 值恰好是合法 opcode 值）</li>
+<li>跳到合法指令边界但语义错误（Bug #2）</li>
+</ul>
+<h2 id="jump-debug">五、第一层：Jump 边界检查（仅 Debug）</h2>
+<h3 id="51">5.1 原理</h3>
+<p>在每个 jump opcode 的 handler 中，跳转后检查 IP 是否仍在 code 数组范围内。</p>
+<pre><code class="language-c">OPCODE(OP_JUMP) {
+    int32_t offset = READ_INT32();
+    frame-&gt;ip += offset;
+    DEBUG_CHECK_IP();  // 仅 debug build 展开
+    DISPATCH;
+}
+</code></pre>
+<pre><code class="language-c">#ifdef LENO_DEBUG
+  #define DEBUG_CHECK_IP() do { \
+    if (unlikely(frame-&gt;ip &lt; frame-&gt;chunk-&gt;code || \
+                 frame-&gt;ip &gt;= frame-&gt;chunk-&gt;code + frame-&gt;chunk-&gt;len)) { \
+        runtime_error(&quot;内部错误：跳转后 IP 越界 (ip=%p, code=[%p,%p))&quot;, \
+                      (void*)frame-&gt;ip, \
+                      (void*)frame-&gt;chunk-&gt;code, \
+                      (void*)(frame-&gt;chunk-&gt;code + frame-&gt;chunk-&gt;len)); \
+        return -1; \
+    } \
+  } while (0)
+#else
+  #define DEBUG_CHECK_IP()
+#endif
+</code></pre>
+<h3 id="52">5.2 性能影响</h3>
+<ul>
+<li>仅在 jump 指令上触发（典型代码中占 10-20%）</li>
+<li>每次两个指针比较，CPU 分支预测器预测不跳</li>
+<li>实测 &lt; 0.5%，Debug build 可接受</li>
+</ul>
+<h3 id="53-bug">5.3 能捕获的 bug</h3>
+<ul>
+<li>跳转目标超出 code 数组范围（向前跳到负数 offset 或向后跳过尾）</li>
+<li>如果配合第二层的空槽填充，能间接捕获 Bug #1（因为 0xff 对应的空槽报错后 return，不会继续执行）</li>
+</ul>
+<h3 id="54-bug">5.4 不能捕获的 bug</h3>
+<ul>
+<li>跳转目标在 code 数组范围内但不在指令边界上（需要第三层才能捕获）</li>
+<li>跳到合法指令边界但语义错误</li>
+</ul>
+<h2 id="bug">六、各层对历史 bug 的覆盖矩阵</h2>
+<table>
+<thead>
+<tr>
+<th>Bug</th>
+<th style="text-align: center;">第三层（编译后校验）</th>
+<th style="text-align: center;">第二层（dispatch 守卫）</th>
+<th style="text-align: center;">第一层（jump 检查）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>inline_return_jumps 覆写 #1（未 patch，跳到 205）</td>
+<td style="text-align: center;">能捕获（205 不在指令边界）</td>
+<td style="text-align: center;">能捕获（0xff 空槽）</td>
+<td style="text-align: center;">不能（205 在范围内）</td>
+</tr>
+<tr>
+<td>inline_return_jumps 覆写 #2（跳到 591，合法边界）</td>
+<td style="text-align: center;">不能</td>
+<td style="text-align: center;">不能</td>
+<td style="text-align: center;">不能</td>
+</tr>
+<tr>
+<td>patch_ast_indices segfault（访问未初始化指针）</td>
+<td style="text-align: center;">不能（不是跳转问题）</td>
+<td style="text-align: center;">不能</td>
+<td style="text-align: center;">不能</td>
+</tr>
+<tr>
+<td>窥孔优化误匹配（栈错位）</td>
+<td style="text-align: center;">不能</td>
+<td style="text-align: center;">不能</td>
+<td style="text-align: center;">不能</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>注意</strong>：第三层和第二层对 Bug #2 都无能为力。Bug #2 是"跳到合法指令边界但执行顺序错误"，这属于控制流验证的范畴，需要类似 Java bytecode verifier 的数据流分析，成本和复杂度远超当前方案的定位。当前方案的目标是把"静默 segfault"变成"有报错的 runtime error"，而非完全消灭所有编译器 bug。</p>
+</blockquote>
+<h2 id="_4">七、实施计划</h2>
+<h3 id="71">7.1 优先级</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>内容</th>
+<th>工作量</th>
+<th>优先级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>第三层：编译后字节码校验</td>
+<td>1-2 天</td>
+<td>最高 — 零 runtime 开销，能捕获最常见的"跳转目标不在边界"类 bug</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>第二层方案 1：jump_table 空槽填充</td>
+<td>半天</td>
+<td>高 — 零 runtime 开销，实现简单</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>第一层：Jump 边界检查（debug only）</td>
+<td>半天</td>
+<td>中 — 仅 debug build，增量价值有限</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>opcode 长度表自动生成</td>
+<td>1 天</td>
+<td>中 — 消除手动维护负担，可从 debug.c 提取</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 第三层实施步骤</h3>
+<ol>
+<li>从 <code>debug.c</code> 的反汇编逻辑中提取 opcode → instruction_length 的映射</li>
+<li>实现 <code>build_instruction_map</code>：逐条解码，标记合法 offset</li>
+<li>实现 <code>verify_jumps</code>：检查所有 jump 指令的目标是否落在合法边界</li>
+<li>在 <code>codegen_finish</code> 或 <code>module_compiler</code> 中调用校验</li>
+<li>加 <code>--no-verify</code> 选项跳过（极端性能场景）</li>
+<li>测试：用本次 bug 的修复前代码（<code>inline_return_jump_count = 0</code>）验证校验能否报错</li>
+</ol>
+<h3 id="73">7.3 第二层实施步骤</h3>
+<ol>
+<li>在 <code>vm_run.inc</code> 的 jumptable 初始化后，遍历填充空槽</li>
+<li>定义 <code>LABEL_INVALID_OPCODE</code> 错误处理标签</li>
+<li>测试：手动构造一个包含 0xff opcode 的 chunk，验证报错而非 segfault</li>
+</ol>
+<h3 id="74">7.4 持续维护</h3>
+<ul>
+<li>新增 opcode 时必须同步更新 <code>opcode_lengths</code> 表（或改用自动生成）</li>
+<li><code>debug.c</code> 的反汇编逻辑是 opcode 长度的权威来源，校验逻辑应与其共享同一张长度表</li>
+</ul>
+<h2 id="_5">八、局限性说明</h2>
+<p>本方案不能替代编译器的正确性测试。它的定位是：</p>
+<ol>
+<li><strong>安全网</strong>：当编译器有 bug 时，尽量把"静默崩溃"变成"有报错的错误"</li>
+<li><strong>加速排查</strong>：报错信息包含 offset 和可能的原因，比 segfault 后 GDB 附加快得多</li>
+<li><strong>不保证完备</strong>：对于跳到合法指令边界但语义错误的 bug（如 Bug #2），本方案无法捕获</li>
+</ol>
+<p>彻底消灭此类 bug 需要：
+- 编译器层面的充分单元测试（每个 codegen pass 的输入/输出 golden test）
+- 字节码层面的差分测试（differential testing：同一段代码开/关内联，对比字节码语义等价性）
+- 这些属于编译器测试基础设施的范畴，不在本方案范围内</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#_1">一、问题背景</a></li><ul class="lv3"><li><a href="#11-bug">1.1 Bug 回顾</a></li><li><a href="#12-vm">1.2 为什么 VM 没报错就直接崩溃</a></li><li><a href="#13">1.3 问题的普遍性</a></li></ul><li><a href="#_2">二、分层防护设计</a></li><ul class="lv3"><li><a href="#21">2.1 设计原则</a></li><li><a href="#22">2.2 三层防护总览</a></li><li><a href="#23">2.3 开关策略</a></li></ul><li><a href="#_3">三、第三层：编译后字节码校验（核心）</a></li><ul class="lv3"><li><a href="#31">3.1 原理</a></li><li><a href="#32-bug">3.2 能捕获的 bug</a></li><li><a href="#33-bug">3.3 不能捕获的 bug</a></li><li><a href="#34">3.4 实现草案</a></li><li><a href="#35">3.5 指令长度表</a></li><li><a href="#36">3.6 调用时机</a></li><li><a href="#37">3.7 性能影响</a></li></ul><li><a href="#dispatch-debug">四、第二层：Dispatch 守卫（仅 Debug）</a></li><ul class="lv3"><li><a href="#41">4.1 原理</a></li><li><a href="#42">4.2 实现草案</a></li><li><a href="#43">4.3 性能影响</a></li><li><a href="#44-bug">4.4 能捕获的 bug</a></li><li><a href="#45-bug">4.5 不能捕获的 bug</a></li></ul><li><a href="#jump-debug">五、第一层：Jump 边界检查（仅 Debug）</a></li><ul class="lv3"><li><a href="#51">5.1 原理</a></li><li><a href="#52">5.2 性能影响</a></li><li><a href="#53-bug">5.3 能捕获的 bug</a></li><li><a href="#54-bug">5.4 不能捕获的 bug</a></li></ul><li><a href="#bug">六、各层对历史 bug 的覆盖矩阵</a></li><li><a href="#_4">七、实施计划</a></li><ul class="lv3"><li><a href="#71">7.1 优先级</a></li><li><a href="#72">7.2 第三层实施步骤</a></li><li><a href="#73">7.3 第二层实施步骤</a></li><li><a href="#74">7.4 持续维护</a></li></ul><li><a href="#_5">八、局限性说明</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/Leno报错提示改进计划.html">← 上一篇</a><a href="../archive/代码生成性能排查记录.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
