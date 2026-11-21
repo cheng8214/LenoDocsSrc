@@ -77,7 +77,10 @@ rands.ints(7, 7)     // 恒为 7（min == max 合法）
 </code></pre>
 <blockquote>
 <p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起；此前<strong>静默对调</strong>两个参数 ——
-<code>rands.ints(10, 3)</code> 会"正常"返回 3~10 的数，排查时完全看不出参数写反了）。</p>
+<code>rands.ints(10, 3)</code> 会"正常"返回 3~10 的数，排查时完全看不出参数写反了）。
+报错文案会带上实际收到的值（2026-11-21 起），负区间写反时一眼能认：
+<code>ints() 的 min 不能大于 max（实际收到 min=3，max=10）…</code>。同理适用于
+<code>floats</code> / <code>int_array</code> / <code>array</code>。</p>
 </blockquote>
 <h3 id="floatsmin-max"><code>floats(min, max)</code></h3>
 <p>生成指定范围内的随机浮点数 —— 按全语言的<strong>闭区间</strong>口径写作 <code>[min, max]</code>。</p>
@@ -98,6 +101,10 @@ rands.floats(0.0, 1.0)     // 等同于 om()
 <blockquote>
 <p>⚠ <code>min &gt; max</code> ⇒ <strong>报错</strong>（2026-11-16 起）。此前<strong>不检查</strong>：<code>floats(4.0, 2.0)</code> 走
 <code>min + r*(max-min)</code>，结果落在 [2,4) 却<strong>小于 min</strong> ⇒ 静默给出与参数名相反的值。</p>
+<p>⚠ <strong>最容易写反的是负区间</strong>（2026-11-21 实测：<code>leno_gui/特效/fireworks.leno</code> 就是这么崩的）：
+<code>floats(-6.0, -10.0)</code> 是错的，要写 <code>floats(-10.0, -6.0)</code> —— <strong>负得更多的那个才是 <code>min</code></strong>。
+报错已带上实际值，直接对得上：
+<code>floats() 的 min 不能大于 max（实际收到 min=-6，max=-10）—— 参数顺序是 [min, max]…</code></p>
 </blockquote>
 <hr>
 <h2 id="_5">布尔与选择</h2>
