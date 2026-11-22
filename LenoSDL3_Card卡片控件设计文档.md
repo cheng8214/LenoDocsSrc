@@ -139,7 +139,7 @@
 | 坐标 | `sync_content()` 在 **`process()` 与 `render()` 都调**（照 `Panel.syncLayoutChild` 的做法，`sdl_panel.leno:110,144`）⇒ 容器每帧 `set_pos/set_size` 到内容区 ⇒ 跟着卡片滚/动 |
 | 事件 | `process` 先 `sync_content()`，再 `_content?.process(ev)`；**内容区内的点击不再触发整卡 `on_click`**（否则"点卡内收藏 = 又打开了详情"✗）。需要穿透时给 `content_click_through:true` |
 | 命中 | 整卡矩形（含内容区）都算 `hover`（观感更好：鼠标在卡内任意处卡片都亮） |
-| 句柄 | `Card._bind_window(hwnd)` → 记录并 `lay.passWindowHandle(_content, hwnd)`；`sdl_window` 的两处 switch 要把 `Card` 加进 `_bind_window` 那一组（否则卡内 `Edit` 拿不到 hwnd ⇒ IME 候选框跑到窗口左上角，见 `LenoSDL3_打包后窗口句柄下发静默失效排查记录.md`） |
+| 句柄 | `Card._bind_window(hwnd)` → 记录并 `lay.passWindowHandle(_content, hwnd)`；`sdl_window` 的两处 switch 要把 `Card` 加进 `_bind_window` 那一组（否则卡内 `Edit` 拿不到 hwnd ⇒ IME 候选框跑到窗口左上角，见 `archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.md`） |
 | 裁剪 | **默认不裁内容区**（`content_clip:false`）—— 裁一次就是一次 flush（A1 同源）；要裁的由调用方开 `content_clip:true` |
 | 释放 | `dispose()` → `_content?.dispose()`（照 `Panel.dispose`） |
 
@@ -210,7 +210,7 @@ disabled 单独走 mixbg(…, bg, 60) 那一档（不用 packColor(通道/2)，�
   而框架自己的注释就写着：D3D 后端上 `SDL_RenderClear` 会出现**短暂黑闪**
   （窗口层特意用 `fillRect` 代替它 ✓）⇒ 放大到每帧 22 次 = **肉眼可见的卡片闪烁** ✗
   （2026-10-13 用户报"Card 闪烁"、2026-10-14 修复后实测确认**不闪了** ✓；
-  机制/验证/排查坑见 `LenoSDL3_裁剪过多导致闪烁排查记录.md` §7.1 ✓）。
+  机制/验证/排查坑见 `archive/LenoSDL3_裁剪过多导致闪烁排查记录.md` §7.1 ✓）。
   缓存键 = 源纹理 / 裁切源矩形 / 目标尺寸 / 半径 / 着色（任一变化才重建 ✓）；
   `clear_tex`（换图）、`set_image_radius`、`dispose` 都会 `drop_rr()` ✓。
   渲染器侧由 `Renderer.composeRoundedTexture(out, …)` 提供（`out` 尺寸不符时**返回 null 而不销毁它** ✓）。

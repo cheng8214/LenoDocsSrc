@@ -973,7 +973,7 @@ SDL_FRect dst = SDL_FRect.malloc(); r.drawTextureRect(tex, null, dst.to_ptr())
 ### ✅ 图片"覆盖填满"要**裁源**，不要裁屏（目标：整卡每帧 0 次 `pushClipRect`）
 
 `pushClipRect` / `popClipRect` 每次都先 `flushBatches()`（`sdl_renderer:562,595`）⇒ 每张卡每帧 2 次 flush；
-22 张卡 = 44 次/帧，正是 `LenoSDL3_裁剪过多导致闪烁排查记录.md` 里那条隐患 ✓。
+22 张卡 = 44 次/帧，正是 `archive/LenoSDL3_裁剪过多导致闪烁排查记录.md` 里那条隐患 ✓。
 正解：把居中裁切算进**源矩形**（`image_mode:2` / `MODE_ASPECT_FILL`），dst 就等于图片区
 ⇒ 零裁剪、零溢出、还少画被丢弃的像素 ✓（v1 走裁屏、本仓海报墙 **100% 命中** ✗；v2 改裁源后为 0 ✓）
 
