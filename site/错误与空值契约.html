@@ -284,8 +284,74 @@ NULL ⇒ <code>null</code>（不再是 <code>""</code>）、BLOB ⇒ 字节数�
 <li><code>Result[T]</code> 目前不能带"多值成功"（要两个值就包一层 struct）。</li>
 <li><strong>enum 不能挂方法</strong>（<code>extend</code> 只接受 struct）⇒ <code>Result[T]</code> / <code>Option[T]</code> 只能是 struct
   （泛型载荷 enum 本身 2026-11-10 起已完整支持，理由见 §2.1 的引用块）。</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 修前是什么样（问题）</a></li><li><a href="#2">2. 修后：一套形态</a></li><ul class="lv3"><li><a href="#21-resultt">2.1 Result[T]</a></li><li><a href="#22-optiont">2.2 Option[T]</a></li><li><a href="#23">2.3 严格解析</a></li></ul><li><a href="#3">3. 迁移对照（旧写法 → 新写法）</a></li><li><a href="#4-sqlite-null-2026-11-09">4. SQLite NULL 语义（2026-11-09 起）</a></li><li><a href="#5-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</a></li><li><a href="#6">6. 还没做的（诚实清单）</a></li></ul></aside>
+</ul>
+<h2 id="7-2026-11-22">7. 运行期错误的"可捕获性"（2026-11-22 实测钉住）</h2>
+<p>压测时逐条验证过，<strong>哪些能 <code>try/catch</code>、哪些不能</strong>必须写清，否则用户会以为"都能兜住"：</p>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>能否 catch</th>
+<th>实测文案 / 行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整数除零、取模零、浮点除零</td>
+<td>✅ 能</td>
+<td><code>除零错误：除数为 0</code> + <code>[操作]/[操作数a]/[操作数b]/[位置]</code></td>
+</tr>
+<tr>
+<td>数组/字符串索引越界</td>
+<td>✅ 能</td>
+<td><code>数组索引越界: 索引 3, 长度 3</code></td>
+</tr>
+<tr>
+<td><code>null</code> 参与算术</td>
+<td>✅ 能</td>
+<td><code>加法运算: null 不能参与运算</code></td>
+</tr>
+<tr>
+<td><code>_int</code> / <code>_float</code> 解析失败</td>
+<td>✅ 能</td>
+<td>见下面的"全有全无"口径</td>
+</tr>
+<tr>
+<td><strong>子线程里抛异常</strong></td>
+<td>✅ 能（在 <code>join()</code> 处抛）</td>
+<td><code>线程内抛出异常：&lt;原消息&gt;</code>（2026-11-22 中文化，原为 <code>Thread error:</code>）</td>
+</tr>
+<tr>
+<td>向已 <code>close()</code> 的通道 <code>send</code></td>
+<td>✅ 能</td>
+<td><code>不能向**已关闭**的通道 send —— …</code>（原为英文 <code>Cannot send to closed channel</code>）</td>
+</tr>
+<tr>
+<td><strong>调用栈溢出</strong></td>
+<td>❌ <strong>不能</strong></td>
+<td>致命错误：打印 <code>调用栈溢出：递归深度已达 N（可能是无限递归）—— 这是**致命错误**，不能被 try/catch 捕获</code> 后<strong>进程直接以 -1 退出</strong></td>
+</tr>
+<tr>
+<td>向 <code>Closed</code> 通道发数据之外的"死锁"</td>
+<td>—</td>
+<td>阻塞（与 Go 同口径），用 <code>try_send</code> / <code>try_receive</code> / <code>join_for(ms)</code> 避免挂死</td>
+</tr>
+</tbody>
+</table>
+<p><strong>浮点"非有限值"的两套来源，口径故意不同</strong>（2026-11-22）：</p>
+<ul>
+<li><strong>字面量</strong>（写死的常量）超范围 ⇒ <strong>编译期报错</strong>：<code>浮点字面量超出范围：</code>1.0e400``。
+  理由：写死的常量超范围几乎必然是笔误（多打一位），而且此时还没有"运行时数据"可怪。</li>
+<li><strong>运行期算术溢出</strong>（<code>1e308 * 10.0</code>）⇒ 仍是 IEEE 的 <code>inf</code>（<code>_str</code> 打印 <code>inf</code>），除零则报错。
+  理由：这是数据驱动，拦下来会误伤正常逻辑。⇒ 需要判"是不是有限值"时用 <code>is_inf</code> / <code>is_nan</code>（见 <code>module_maths</code>）。</li>
+</ul>
+<p><strong><code>_int</code> / <code>_float</code> 是"全有全无"，不取前缀</strong>（2026-11-22 补文案）：</p>
+<p><code>_int("12x")</code> <strong>报错</strong>（不是给 12）。要前缀数字请显式取：</p>
+<pre><code class="language-leno">var n = _int(regexs.extract(s, &quot;-?[0-9]+&quot;))   // 明确&quot;我要前缀&quot;
+var m = _int_or(s, 0)                          // 明确&quot;失败就用默认值&quot;
+</code></pre>
+<p>报错文案已带这条提示（<code>无法将字符串转换为整数："12x"（要求整串都是数字，**不取前缀**；…）</code>）。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1">1. 修前是什么样（问题）</a></li><li><a href="#2">2. 修后：一套形态</a></li><ul class="lv3"><li><a href="#21-resultt">2.1 Result[T]</a></li><li><a href="#22-optiont">2.2 Option[T]</a></li><li><a href="#23">2.3 严格解析</a></li></ul><li><a href="#3">3. 迁移对照（旧写法 → 新写法）</a></li><li><a href="#4-sqlite-null-2026-11-09">4. SQLite NULL 语义（2026-11-09 起）</a></li><li><a href="#5-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</a></li><li><a href="#6">6. 还没做的（诚实清单）</a></li><li><a href="#7-2026-11-22">7. 运行期错误的"可捕获性"（2026-11-22 实测钉住）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="解构语法实现文档.html">← 上一篇</a><a href="错误堆栈追踪改进方案.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
