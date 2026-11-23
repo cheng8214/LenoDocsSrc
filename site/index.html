@@ -10,7 +10,7 @@
 <header class="topbar">
   <span class="brand">Leno Docs</span>
   <div class="searchbox wide">
-    <input id="q" type="search" placeholder="搜索 119 篇文档：语言特性 / 报错症状 / 模块 API / 排查记录…" autocomplete="off" spellcheck="false" autofocus>
+    <input id="q" type="search" placeholder="搜索 120 篇文档：语言特性 / 报错症状 / 模块 API / 排查记录…" autocomplete="off" spellcheck="false" autofocus>
     <div id="results" class="results"></div>
   </div>
   <span class="tools">
@@ -19,14 +19,44 @@
   <button id="btn-fs-down" title="缩小字号">A−</button>
   <button id="btn-fs-up" title="放大字号">A+</button>
 </span>
-  <span class="crumb">119 篇 · 4.2 MB 原文</span>
+  <span class="crumb">120 篇 · 4.2 MB 原文</span>
 </header>
 <main class="home">
   <div class="hero">
-    <h1>快速找到你要的那一条</h1>
-    <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面几条入口进去 ——
-       <b>第一次来</b>：按 ① → ② → ③ 走。全站 119 篇。</p>
+    <h1>第一次用 Leno？从这三步开始</h1>
+    <p>不用先学完整个语言。<b>照着顺序走</b>：先跑起来 → 再懂语法 → 然后抄现成的。
+       已经在写代码了？直接在上面搜索框里搜关键词（按 <kbd>/</kbd> 聚焦）。全站 120 篇。</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="Leno零基础入门.html"><span class="k">①</span> 零基础学 Leno</a>
+      <a class="btn" href="安装与第一个项目.html"><span class="k">②</span> 装好并跑起来</a>
+      <a class="btn" href="常见任务cookbook.html"><span class="k">③</span> 抄一段就用</a>
+    </div>
   </div>
+  <section class="steps">
+    <a class="step" href="Leno零基础入门.html">
+      <span class="no">1</span><span class="t">约 2 小时</span>
+      <h3>先看懂代码</h3>
+      <p>18 章，从"打印一行字"讲到结构体/枚举/异常。每章都能直接运行，附真实输出和常见错误。</p>
+    </a>
+    <a class="step" href="安装与第一个项目.html">
+      <span class="no">2</span><span class="t">约 15 分钟</span>
+      <h3>让它在你机器上跑</h3>
+      <p>拿 exe → 配 PATH → <code>--init</code> 建项目 → 打包成能双击的 exe。含环境坑速查。</p>
+    </a>
+    <a class="step" href="常见任务cookbook.html">
+      <span class="no">3</span><span class="t">随时查</span>
+      <h3>按任务抄代码</h3>
+      <p>读文件 / JSON / 命令行参数 / 线程 / 随机数 …15 个完整程序，复制就能用。</p>
+    </a>
+  </section>
+  <section class="stuck">
+    <h3>卡住了？三条急救线</h3>
+    <ul>
+      <li>报错看不懂 → <a href="语言陷阱速查.html">语言陷阱速查</a>（按<b>症状</b>查：一句话说明原因和改法）</li>
+      <li>某个函数怎么用 → <a href="module_strings.html">模块 API</a>（19 个标准模块的函数清单，含示例）</li>
+      <li>不知道该怎么写才对 → <a href="idioms.html">惯用写法速查</a>（别再写 <code>Array[Array[string]]</code> 这种）</li>
+    </ul>
+  </section>
   <section class="intro">
     <div class="intro-text">
       <h2>Leno 是什么</h2>
@@ -40,8 +70,8 @@
         <span>FFI · cstruct · Ptr 原生内存</span>
         <span>int48 内联 · 自研字节码 VM</span>
       </div>
-      <p class="intro-links"><a href="Leno入门教程.html">从零入门 →</a>
-        <a href="Leno入门教程.html#语法速查表">语法速查 →</a>
+      <p class="intro-links"><a href="Leno零基础入门.html">零基础入门 →</a>
+        <a href="Leno入门教程.html">语言全貌 →</a>
         <a href="module_ffi_api.html">模块 API →</a></p>
     </div>
     <div class="intro-code">
@@ -53,7 +83,7 @@
   </section>
   <section class="paths"><h2>从这里开始</h2><div class="path-grid"><a class="path-card" href="Leno零基础入门.html"><span class="pc-tag">① 小白入门</span><strong>零基础学 Leno</strong><span class="pc-desc">从没写过代码？从这里开始</span></a><a class="path-card" href="安装与第一个项目.html"><span class="pc-tag">② 安装上手</span><strong>装好并跑起来</strong><span class="pc-desc">拿 exe → 第一个项目 → 打包成 exe</span></a><a class="path-card" href="常见任务cookbook.html"><span class="pc-tag">③ 任务配方</span><strong>抄一段就用</strong><span class="pc-desc">读写文件 / JSON / 参数 / 线程 15 个现成任务</span></a><a class="path-card" href="Leno入门教程.html"><span class="pc-tag">入门教程</span><strong>学 Leno（全貌）</strong><span class="pc-desc">语法 + 类型系统 + 模块</span></a><a class="path-card" href="idioms.html"><span class="pc-tag">惯用写法</span><strong>看惯用法</strong><span class="pc-desc">别再写 Array[Array[string]]</span></a><a class="path-card" href="语言陷阱速查.html"><span class="pc-tag">陷阱速查</span><strong>查报错</strong><span class="pc-desc">症状 → 病因 → 怎么办</span></a><a class="path-card" href="module_strings.html"><span class="pc-tag">模块索引</span><strong>查模块 API</strong><span class="pc-desc">19 个标准模块的函数清单</span></a><a class="path-card" href="扩展模块/_总览.html"><span class="pc-tag">独立包</span><strong>扩展模块</strong><span class="pc-desc">压缩 / 加密 / HTTP / SQLite / Web / GUI…</span></a></div></section>
   <div class="recent" id="recent"></div>
-  <section class="cat"><h2>01 入门 · 先读这些<span class="n">9 篇</span></h2><p class="cat-desc">第一次接触 Leno：从教程到惯用写法，按顺序读</p><div class="grid"><a class="card" href="Leno零基础入门.html"><div class="f">Leno零基础入门<span class="badge ">✅</span></div><div class="d">从没写过代码也能读的教程：18 章、每章可运行小程序 + 真实输出 + 常见错误；练习带答案</div></a><a class="card" href="安装与第一个项目.html"><div class="f">安装与第一个项目<span class="badge ">✅</span></div><div class="d">拿 exe → 配 PATH → 三种交付（直跑/.lenb/独立 exe）→ --init 项目骨架 → --check 自检 → LSP</div></a><a class="card" href="常见任务cookbook.html"><div class="f">常见任务cookbook<span class="badge ">✅</span></div><div class="d">15 个"我要做 X"的完整程序：文件 / JSON / 参数 / 外部命令 / 数组 / 词频 / 时间 / 随机 / 线程 / 结构体枚举，全部实测跑过</div></a><a class="card" href="Leno入门教程.html"><div class="f">Leno入门教程<span class="badge ">✅</span></div><div class="d">语言全貌教程：语法 + 类型系统 + 模块，最全的一份</div></a><a class="card" href="FAQ.html"><div class="f">常见问题<span class="badge ">✅</span></div><div class="d">常见问题（.leno 直跑 vs .lenb、缓存、退出码…）</div></a><a class="card" href="idioms.html"><div class="f">惯用写法速查</div><div class="d">高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法</div></a><a class="card" href="语言陷阱速查.html"><div class="f">语言陷阱速查<span class="badge ">✅</span></div><div class="d">症状 → 病因 → 怎么办：语言 / 编译器 / 模块 / 构建层的坑（框架层见 LenoSDL3 那份速查）</div></a><a class="card" href="Leno_规范草稿.html"><div class="f">Leno_规范草稿<span class="badge ">✅（草稿）</span></div><div class="d">语言规范草案（设计口径，不是教程）</div></a><a class="card" href="区间口径约定.html"><div class="f">区间口径约定<span class="badge ">✅</span></div><div class="d">下标/整数区间一律闭区间的唯一口径来源：切片 / for a:b / switch case / RegexMatch.last / rfind(last)；含 2026-11-20 的 end ⇒ last 迁移表</div></a></div></section>
+  <section class="cat"><h2>01 入门 · 先读这些<span class="n">10 篇</span></h2><p class="cat-desc">第一次接触 Leno：从教程到惯用写法，按顺序读</p><div class="grid"><a class="card" href="Leno零基础入门.html"><div class="f">Leno零基础入门<span class="badge ">✅</span></div><div class="d">从没写过代码也能读的教程：18 章、每章可运行小程序 + 真实输出 + 常见错误；练习带答案</div></a><a class="card" href="安装与第一个项目.html"><div class="f">安装与第一个项目<span class="badge ">✅</span></div><div class="d">拿 exe → 配 PATH → 三种交付（直跑/.lenb/独立 exe）→ --init 项目骨架 → --check 自检 → LSP</div></a><a class="card" href="常见任务cookbook.html"><div class="f">常见任务cookbook<span class="badge ">✅</span></div><div class="d">15 个"我要做 X"的完整程序：文件 / JSON / 参数 / 外部命令 / 数组 / 词频 / 时间 / 随机 / 线程 / 结构体枚举，全部实测跑过</div></a><a class="card" href="示例程序导览.html"><div class="f">示例程序导览<span class="badge ">✅</span></div><div class="d">examples/ 里有 800+ 文件，这篇挑出 26 个值得读的按主题排好（每个都实测能编译+能跑），并标明哪些不用看</div></a><a class="card" href="Leno入门教程.html"><div class="f">Leno入门教程<span class="badge ">✅</span></div><div class="d">语言全貌教程：语法 + 类型系统 + 模块，最全的一份</div></a><a class="card" href="FAQ.html"><div class="f">常见问题<span class="badge ">✅</span></div><div class="d">常见问题（.leno 直跑 vs .lenb、缓存、退出码…）</div></a><a class="card" href="idioms.html"><div class="f">惯用写法速查</div><div class="d">高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法</div></a><a class="card" href="语言陷阱速查.html"><div class="f">语言陷阱速查<span class="badge ">✅</span></div><div class="d">症状 → 病因 → 怎么办：语言 / 编译器 / 模块 / 构建层的坑（框架层见 LenoSDL3 那份速查）</div></a><a class="card" href="Leno_规范草稿.html"><div class="f">Leno_规范草稿<span class="badge ">✅（草稿）</span></div><div class="d">语言规范草案（设计口径，不是教程）</div></a><a class="card" href="区间口径约定.html"><div class="f">区间口径约定<span class="badge ">✅</span></div><div class="d">下标/整数区间一律闭区间的唯一口径来源：切片 / for a:b / switch case / RegexMatch.last / rfind(last)；含 2026-11-20 的 end ⇒ last 迁移表</div></a></div></section>
 <section class="cat"><h2>02 模块 API 参考<span class="n">19 篇</span></h2><p class="cat-desc">19 个标准模块的函数清单 —— 写代码时最常翻的</p><div class="grid"><a class="card" href="module_arrays.html"><div class="f">arrays 模块 API</div><div class="d">数组（arr[:] 双侧省略可用，等价整段浅拷贝）</div></a><a class="card" href="module_asyncs.html"><div class="f">asyncs 模块 API</div><div class="d">异步协程</div></a><a class="card" href="module_cstructs.html"><div class="f">cstructs 模块 API</div><div class="d">cstruct 内存布局</div></a><a class="card" href="module_dicts.html"><div class="f">dicts 模块 API</div><div class="d">字典</div></a><a class="card" href="module_dirs.html"><div class="f">dirs 模块 API</div><div class="d">目录操作</div></a><a class="card" href="module_ffi_api.html"><div class="f">ffi 模块 API</div><div class="d">FFI（命名带 _api，历史遗留）</div></a><a class="card" href="module_files.html"><div class="f">files 模块 API</div><div class="d">files 模块（注意"字节保真 / 不翻译行尾"口径）</div></a><a class="card" href="module_io.html"><div class="f">io 模块 API</div><div class="d">文件读写与标准流</div></a><a class="card" href="module_jsons.html"><div class="f">jsons 模块 API</div><div class="d">JSON</div></a><a class="card" href="module_maths.html"><div class="f">maths 模块 API</div><div class="d">数学</div></a><a class="card" href="module_rands.html"><div class="f">rands 模块 API</div><div class="d">随机数</div></a><a class="card" href="module_regexs.html"><div class="f">regexs 模块 API</div><div class="d">正则</div></a><a class="card" href="module_sockets.html"><div class="f">sockets 模块 API</div><div class="d">网络</div></a><a class="card" href="module_strings.html"><div class="f">strings 模块 API</div><div class="d">字符串方法</div></a><a class="card" href="module_sys.html"><div class="f">sys 模块 API</div><div class="d">系统（环境变量 / 进程 / 线程）</div></a><a class="card" href="module_threads_api.html"><div class="f">threads 模块 API</div><div class="d">线程 / Channel（命名带 _api，历史遗留）</div></a><a class="card" href="module_times.html"><div class="f">times 模块 API</div><div class="d">时间</div></a><a class="card" href="module_types.html"><div class="f">types 模块 API</div><div class="d">类型判定与转换</div></a><a class="card" href="module_web.html"><div class="f">web 模块 API</div><div class="d">LenoWeb（HTTP / HTML / 字符集 / gzip 解压 / 爬虫 / 无头浏览器）；2026-10-14 首份文档</div></a></div></section>
 <section class="cat"><h2>03 使用指南<span class="n">9 篇</span></h2><p class="cat-desc">按任务查：import / 打包 / 并发 / FFI / 加密 / GUI 布局</p><div class="grid"><a class="card" href="FFI使用指南.html"><div class="f">FFI使用指南<span class="badge old">🟡 版本历史里有一条 JIT 记录已过时</span></div><div class="d">FFI / clib 调用全流程</div></a><a class="card" href="import使用指南.html"><div class="f">import 使用指南<span class="badge ">✅</span></div><div class="d">import / 模块加载与缓存</div></a><a class="card" href="threads使用指南.html"><div class="f">threads使用指南<span class="badge ">✅</span></div><div class="d">线程 / Channel（与 module_threads_api.md 有重叠）</div></a><a class="card" href="包管理与安装使用指南.html"><div class="f">包管理与安装使用指南<span class="badge ">✅</span></div><div class="d">leno --init/install/publish 与 leno.toml</div></a><a class="card" href="单文件打包使用指南.html"><div class="f">单文件打包使用指南<span class="badge ">✅</span></div><div class="d">-p --onefile 打包与资源内嵌</div></a><a class="card" href="并发选择指引.html"><div class="f">并发选择指引<span class="badge ">✅</span></div><div class="d">async / threads / Channel 怎么选</div></a><a class="card" href="布局配方.html"><div class="f">布局配方</div><div class="d"></div></a><a class="card" href="Leno跨模块clib开发经验.html"><div class="f">Leno跨模块clib开发经验<span class="badge ">✅</span></div><div class="d">跨模块 clib 的踩坑与写法</div></a><a class="card" href="加密算法示例指南.html"><div class="f">加密算法示例指南<span class="badge ">✅</span></div><div class="d">examples/ 里纯 Leno 密码学算法导览</div></a></div></section>
 <section class="cat"><h2>04 语言设计与实现<span class="n">12 篇</span></h2><p class="cat-desc">类型系统、语法提案、编译器与 VM 的实现细节</p><div class="grid"><a class="card" href="F2_非可空与可空类型设计.html"><div class="f">非可空与可空类型设计（F2）<span class="badge ">🧭</span></div><div class="d">F2 设计稿：P 与 P? 运行期同构 ⇒ ? 目前只是声明意图；四条通路现状实测（声明 / 赋值 / 实参 / return / 字段写入全是静默）+ 分层方案 L0 天然可空豁免 → L1 警告 → 收窄 + L2 流失警告 → L3/L4 升错误，含 6 个真实迁移样例（Aria 桌面歌词 / 托盘、LenoSDL3 FFI 懒加载）× 判据 × 未决问题</div></a><a class="card" href="类型收窄与绑定语法改进.html"><div class="f">类型收窄与绑定语法改进<span class="badge ">✅</span></div><div class="d">is 收窄 / => 绑定的设计</div></a><a class="card" href="解构语法实现文档.html"><div class="f">解构语法实现文档<span class="badge ">🟡 引用表含已删文件</span></div><div class="d">解构声明语法与语义（Phase 1/2/3）</div></a><a class="card" href="enum载荷_设计草案.html"><div class="f">enum 载荷（已实现）<span class="badge ">✅ 已实现并收官（2026-11-10）</span></div><div class="d">enum 成员带载荷（case Progress(done, total)）+ 模式匹配收窄；不破坏 int 枚举</div></a><a class="card" href="注解系统与optkeys设计草案.html"><div class="f">注解系统与 @optkeys（已实现）<span class="badge ">✅ 已实现（2026-10-31，`semantic_annotations.c`）</span></div><div class="d">@ 注解语法 + @optkeys：把控件选项键的检查从运行时 dochk.check 提前到编译期（含 parser/semantic 落点、迁移路径、对账用例）</div></a><a class="card" href="struct 里const可行性.html"><div class="f">struct 中 const 的可行性</div><div class="d"></div></a><a class="card" href="struct_extend_设计草案.html"><div class="f">struct 继承设计草案</div><div class="d"></div></a><a class="card" href="cstruct_packed_align_设计文档.html"><div class="f">C 结构体对齐与 packed 设计<span class="badge ">✅</span></div><div class="d">cstruct packed / align(N)（已实现）</div></a><a class="card" href="错误与空值契约.html"><div class="f">错误与空值契约</div><div class="d"></div></a><a class="card" href="单一事实来源与重复实现收敛.html"><div class="f">单一事实来源与重复实现收敛<span class="badge ">🟡</span></div><div class="d">重复实现收敛（多条目对象是已移除的 JIT）</div></a><a class="card" href="寄存式与栈式的差异清单.html"><div class="f">寄存式与栈式的差异清单<span class="badge ">被 11 处按名引用，且是 `待办与路线图.md` 的历史锚点</span></div><div class="d">📜 正文首部已自标归档（2026-09-23），46 处讲"与栈式对照"</div></a><a class="card" href="错误堆栈追踪改进方案.html"><div class="f">错误堆栈追踪改进方案<span class="badge old">🟡 内联器那段已过时</span></div><div class="d">异常对象与报错文案（现行契约在"引擎错误自带位置"）</div></a></div></section>

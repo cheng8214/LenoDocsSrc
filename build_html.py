@@ -129,10 +129,40 @@ HOME_TPL = """<!doctype html>
 </header>
 <main class="home">
   <div class="hero">
-    <h1>快速找到你要的那一条</h1>
-    <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面几条入口进去 ——
-       <b>第一次来</b>：按 ① → ② → ③ 走。全站 {n} 篇。</p>
+    <h1>第一次用 Leno？从这三步开始</h1>
+    <p>不用先学完整个语言。<b>照着顺序走</b>：先跑起来 → 再懂语法 → 然后抄现成的。
+       已经在写代码了？直接在上面搜索框里搜关键词（按 <kbd>/</kbd> 聚焦）。全站 {n} 篇。</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="Leno零基础入门.html"><span class="k">①</span> 零基础学 Leno</a>
+      <a class="btn" href="安装与第一个项目.html"><span class="k">②</span> 装好并跑起来</a>
+      <a class="btn" href="常见任务cookbook.html"><span class="k">③</span> 抄一段就用</a>
+    </div>
   </div>
+  <section class="steps">
+    <a class="step" href="Leno零基础入门.html">
+      <span class="no">1</span><span class="t">约 2 小时</span>
+      <h3>先看懂代码</h3>
+      <p>18 章，从"打印一行字"讲到结构体/枚举/异常。每章都能直接运行，附真实输出和常见错误。</p>
+    </a>
+    <a class="step" href="安装与第一个项目.html">
+      <span class="no">2</span><span class="t">约 15 分钟</span>
+      <h3>让它在你机器上跑</h3>
+      <p>拿 exe → 配 PATH → <code>--init</code> 建项目 → 打包成能双击的 exe。含环境坑速查。</p>
+    </a>
+    <a class="step" href="常见任务cookbook.html">
+      <span class="no">3</span><span class="t">随时查</span>
+      <h3>按任务抄代码</h3>
+      <p>读文件 / JSON / 命令行参数 / 线程 / 随机数 …15 个完整程序，复制就能用。</p>
+    </a>
+  </section>
+  <section class="stuck">
+    <h3>卡住了？三条急救线</h3>
+    <ul>
+      <li>报错看不懂 → <a href="语言陷阱速查.html">语言陷阱速查</a>（按<b>症状</b>查：一句话说明原因和改法）</li>
+      <li>某个函数怎么用 → <a href="module_strings.html">模块 API</a>（19 个标准模块的函数清单，含示例）</li>
+      <li>不知道该怎么写才对 → <a href="idioms.html">惯用写法速查</a>（别再写 <code>Array[Array[string]]</code> 这种）</li>
+    </ul>
+  </section>
   <section class="intro">
     <div class="intro-text">
       <h2>Leno 是什么</h2>
@@ -146,8 +176,8 @@ HOME_TPL = """<!doctype html>
         <span>FFI · cstruct · Ptr 原生内存</span>
         <span>int48 内联 · 自研字节码 VM</span>
       </div>
-      <p class="intro-links"><a href="Leno入门教程.html">从零入门 →</a>
-        <a href="Leno入门教程.html#语法速查表">语法速查 →</a>
+      <p class="intro-links"><a href="Leno零基础入门.html">零基础入门 →</a>
+        <a href="Leno入门教程.html">语言全貌 →</a>
         <a href="module_ffi_api.html">模块 API →</a></p>
     </div>
     <div class="intro-code">
@@ -387,6 +417,32 @@ details.cat[open] summary h2:before{content:'▾ '}
 .recent .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 .recent .card{padding:9px 12px}
 .recent .d{display:none}
+
+/* ---- 首页：新手三步 + 卡住了（2026-11-23） ---- */
+.hero-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;
+  text-decoration:none;font-size:14.5px;transition:.15s}
+.btn:hover{text-decoration:none;border-color:var(--accent);background:var(--accent-soft)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn .k{font-weight:800;opacity:.85}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:26px 0 8px}
+.step{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px 15px;text-decoration:none;color:var(--ink);display:block;transition:.15s}
+.step:hover{text-decoration:none;border-color:var(--accent);transform:translateY(-2px)}
+.step .no{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+  border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;margin-bottom:8px}
+.step h3{margin:0 0 4px;font-size:15.5px}
+.step p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.6}
+.step .t{position:absolute;top:14px;right:16px;font-size:12px;color:var(--muted)}
+
+.stuck{background:var(--warn-bg);border:1px solid var(--warn);border-radius:12px;
+  padding:16px 18px;margin:18px 0 6px}
+.stuck h3{margin:0 0 8px;font-size:15px;color:var(--warn)}
+.stuck ul{margin:0;padding-left:18px;line-height:2}
+.stuck a{font-weight:600}
 .footnote{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 @media(max-width:1200px){.layout{grid-template-columns:220px minmax(0,1fr);gap:20px}
   .side{display:none}}
@@ -771,7 +827,7 @@ def toc_html(toc):
 CATEGORIES = [
     ("01 入门 · 先读这些", False, "第一次接触 Leno：从教程到惯用写法，按顺序读", [
         # ★ 2026-11-23：新手三连排最前 —— 零基础 → 装环境/第一个项目 → 抄任务代码
-        "Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md",
+        "Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md", "示例程序导览.md",
         "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md",
         "Leno_规范草稿.md", "区间口径约定.md",
     ]),
