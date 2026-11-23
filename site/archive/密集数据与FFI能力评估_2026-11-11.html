@@ -131,19 +131,27 @@ q[-1] = 1.0                → 0xC0000005 崩溃（静默越界）        → [�
 <code>OP_INDEX_SET</code> 的字符串下标分支（<code>obj["x"]</code> 形态）⇒ 每次再做一次字段名比较。</p>
 <p><strong>修复</strong>：新增两条融合指令（追加在 opcode 枚举末尾，序列化版本 bump 到 v3.2.33）</p>
 <ul>
-<li><code>OP_CSTRUCT_ARR_GETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[A] = R[B][R[C]].field(fi)</code></li>
-<li><code>OP_CSTRUCT_ARR_SETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[B][R[C]].field(fi) = R[A]</code></li>
-</ul>
-<ul>
-<li>codegen：<code>codegen_expr.c</code> 的 <code>AST_INDEX</code> 分支（读）、<code>codegen_stmt.c</code> 的 <code>gen_index_assign</code>
+<li>
+<p><code>OP_CSTRUCT_ARR_GETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[A] = R[B][R[C]].field(fi)</code></p>
+</li>
+<li>
+<p><code>OP_CSTRUCT_ARR_SETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[B][R[C]].field(fi) = R[A]</code></p>
+</li>
+<li>
+<p>codegen：<code>codegen_expr.c</code> 的 <code>AST_INDEX</code> 分支（读）、<code>codegen_stmt.c</code> 的 <code>gen_index_assign</code>
   <strong>与 <code>gen_assign</code></strong>（写）三处发射 —— <strong>语句位置的赋值走 <code>gen_assign</code>，只改
-  <code>gen_index_assign</code> 时基准一点没变</strong>（踩过一次，注释已写明）。</li>
-<li>VM：<code>12_fields_object.inc</code>。标量字段用 <strong>C 栈上临时 <code>ObjCStruct</code></strong> 直接算地址
+  <code>gen_index_assign</code> 时基准一点没变</strong>（踩过一次，注释已写明）。</p>
+</li>
+<li>
+<p>VM：<code>12_fields_object.inc</code>。标量字段用 <strong>C 栈上临时 <code>ObjCStruct</code></strong> 直接算地址
   （零 GC 分配）；"数组字段 / 嵌套 cstruct"仍走真视图对象（视图里存了父对象指针，
   父对象必须在 GC 堆上）。<code>f32 / i32 / f64</code> 走 memcpy 快路径，其余类型回落
-  <code>cstruct_set_field_value</code>。</li>
-<li>校验：<code>bytecode_verify.c</code> 必须登记这两条（漏了就是"内存反序列化失败(6)"，
-  而 <code>--check</code> 全绿 —— 本次实测踩到）。</li>
+  <code>cstruct_set_field_value</code>。</p>
+</li>
+<li>
+<p>校验：<code>bytecode_verify.c</code> 必须登记这两条（漏了就是"内存反序列化失败(6)"，
+  而 <code>--check</code> 全绿 —— 本次实测踩到）。</p>
+</li>
 </ul>
 <p><strong>验收</strong>：52 ms → <strong>5 ms</strong>（10.4x），反超手写 <code>write_float</code>；<code>assert/test_cstruct_array_field.leno</code>
 覆盖读写/类型提升/数组字段视图/普通 struct 不受影响/越界。</p>

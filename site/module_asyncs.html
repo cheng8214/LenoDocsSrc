@@ -531,14 +531,16 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li><strong>必须在 main 中调用 <code>run()</code></strong><ul>
+<li>
+<p><strong>必须在 main 中调用 <code>run()</code></strong></p>
+<ul>
 <li>创建的所有协程都等待 <code>run()</code> 启动</li>
 <li><code>run()</code> 会阻塞直到所有协程完成</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong><code>await</code> 只能在 <code>async func</code> 中使用</strong></li>
+<li>
+<p><strong><code>await</code> 只能在 <code>async func</code> 中使用</strong></p>
+</li>
 </ol>
 <pre><code class="language-leno">   async func valid() {
        await asyncs.sleep(100)  // ✅ 正确
@@ -556,29 +558,31 @@ main() {
    var result = asyncs.all([f])  // 然后才能收集结果
 </code></pre>
 <ol>
-<li><strong>协程调度</strong><ul>
+<li>
+<p><strong>协程调度</strong></p>
+<ul>
 <li>协程是协作式调度，不会抢占</li>
 <li>长时间运行的任务应主动 <code>yield()</code></li>
 <li><code>sleep()</code> 会自动让出执行权</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>异常处理</strong><ul>
+<li>
+<p><strong>异常处理</strong></p>
+<ul>
 <li>协程内异常有三种传播路径（见下方「异常传播路径」）</li>
 <li>未被捕获的异常会被 <code>asyncs.run()</code> 收集并抛出</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>内存管理</strong><ul>
+<li>
+<p><strong>内存管理</strong></p>
+<ul>
 <li>Future 对象会被自动回收</li>
 <li>避免创建过多未完成的协程</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>与同步代码混用</strong><ul>
+<li>
+<p><strong>与同步代码混用</strong></p>
+<ul>
 <li><code>asyncs.run()</code> 是同步阻塞的</li>
 <li>可以在普通函数中调用 <code>run()</code></li>
 </ul>

@@ -47,46 +47,48 @@
 </blockquote>
 <h2 id="目录">目录</h2>
 <ul>
-<li><a href="#1-架构概述">1. 架构概述</a></li>
-</ul>
+<li>
+<p><a href="#1-架构概述">1. 架构概述</a></p>
+</li>
+<li>
+<p><a href="#2-寄存器约定与内联规则">2. 寄存器约定与内联规则</a></p>
 <ul>
-<li><a href="#2-寄存器约定与内联规则">2. 寄存器约定与内联规则</a><ul>
 <li><a href="#23-写内联操作码的规则必读">2.3 写内联操作码的规则（必读）</a></li>
 <li><a href="#24-反面案例内联用-rsi--windows-上段错误2026-09-12">2.4 反面案例：内联用 RSI → Windows 上段错误</a></li>
 <li><a href="#25-跨平台结论">2.5 跨平台结论</a></li>
 <li><a href="#26-ffi-定宽内存读写内联表驱动2026-09-12">2.6 ffi 定宽内存读写内联（表驱动）</a></li>
 </ul>
 </li>
-</ul>
-<ul>
-<li><a href="#3-nan-boxing-与-jit-虚拟栈">3. NaN-boxing 与 JIT 虚拟栈</a></li>
-</ul>
-<ul>
-<li><a href="#4-已支持字节码清单">4. 已支持字节码清单</a></li>
-</ul>
-<ul>
-<li><a href="#5-不支持的字节码导致-scan-拒绝">5. 不支持的字节码（导致 scan 拒绝）</a></li>
-</ul>
-<ul>
-<li><a href="#6-callout-机制">6. Callout 机制</a></li>
-</ul>
-<ul>
-<li><a href="#7-调试方法">7. 调试方法</a></li>
-</ul>
-<ul>
-<li><a href="#8-踩坑记录与解决方案">8. 踩坑记录与解决方案</a></li>
-</ul>
-<ul>
-<li><a href="#9-性能数据">9. 性能数据</a></li>
-</ul>
-<ul>
-<li><a href="#10-架构瓶颈分析">10. 架构瓶颈分析</a></li>
-</ul>
-<ul>
-<li><a href="#11-优化路线图">11. 优化路线图</a></li>
-</ul>
-<ul>
-<li><a href="#12-当前未解决问题">12. 当前未解决问题</a></li>
+<li>
+<p><a href="#3-nan-boxing-与-jit-虚拟栈">3. NaN-boxing 与 JIT 虚拟栈</a></p>
+</li>
+<li>
+<p><a href="#4-已支持字节码清单">4. 已支持字节码清单</a></p>
+</li>
+<li>
+<p><a href="#5-不支持的字节码导致-scan-拒绝">5. 不支持的字节码（导致 scan 拒绝）</a></p>
+</li>
+<li>
+<p><a href="#6-callout-机制">6. Callout 机制</a></p>
+</li>
+<li>
+<p><a href="#7-调试方法">7. 调试方法</a></p>
+</li>
+<li>
+<p><a href="#8-踩坑记录与解决方案">8. 踩坑记录与解决方案</a></p>
+</li>
+<li>
+<p><a href="#9-性能数据">9. 性能数据</a></p>
+</li>
+<li>
+<p><a href="#10-架构瓶颈分析">10. 架构瓶颈分析</a></p>
+</li>
+<li>
+<p><a href="#11-优化路线图">11. 优化路线图</a></p>
+</li>
+<li>
+<p><a href="#12-当前未解决问题">12. 当前未解决问题</a></p>
+</li>
 </ul>
 <hr>
 <h2 id="1-架构概述">1. 架构概述</h2>
@@ -1635,20 +1637,22 @@ callout 的三项优化与性能数据，见 <code>docs/archive/JIT模块调用�
 </table>
 <h3 id="特殊拒绝条件">特殊拒绝条件</h3>
 <ul>
-<li><strong>虚拟栈溢出</strong>：<code>vstack &gt; JIT_MAX_VSTACK (64)</code>（允许负 vstack，因嵌套循环 exit POP 在线性扫描中被重复扣减）</li>
-</ul>
-<ul>
-<li><strong>local 数过多</strong>：超过 <code>JIT_MAX_LOCALS (64)</code>（含内联 callee 的槽位）</li>
-</ul>
-<ul>
-<li><strong>循环体内存在可达的 <code>OP_RETURN</code> / <code>OP_RETURN_MULTI</code></strong>：循环 JIT 只能「跑完循环再回到解释器」，
+<li>
+<p><strong>虚拟栈溢出</strong>：<code>vstack &gt; JIT_MAX_VSTACK (64)</code>（允许负 vstack，因嵌套循环 exit POP 在线性扫描中被重复扣减）</p>
+</li>
+<li>
+<p><strong>local 数过多</strong>：超过 <code>JIT_MAX_LOCALS (64)</code>（含内联 callee 的槽位）</p>
+</li>
+<li>
+<p><strong>循环体内存在可达的 <code>OP_RETURN</code> / <code>OP_RETURN_MULTI</code></strong>：循环 JIT 只能「跑完循环再回到解释器」，
   没有能力从机器码里真正返回函数（codegen 里 <code>OP_RETURN</code> 只能退回「spill 后继续往下跑」），
   这个 <code>return</code> 会被静默丢弃。<code>scan_loop_body</code> 置 <code>ScanResult.has_reachable_return</code>，
   <code>jit_compile()</code> 据此拒绝（<code>scan REJECT</code> 日志）；函数级 JIT / 内联 callee 能正确处理，不受影响。
-  详见 §8.21。</li>
-</ul>
-<ul>
-<li><strong><code>OP_INVOKE_METHOD_TYPED</code> 的返回值个数无法在编译期确定</strong>：见 §8.20，拒绝（不猜成 1 个）。</li>
+  详见 §8.21。</p>
+</li>
+<li>
+<p><strong><code>OP_INVOKE_METHOD_TYPED</code> 的返回值个数无法在编译期确定</strong>：见 §8.20，拒绝（不猜成 1 个）。</p>
+</li>
 </ul>
 <hr>
 <h2 id="6-callout-机制">6. Callout 机制</h2>
@@ -1869,17 +1873,21 @@ XORPD (0F 57)           → 0x66 前缀
 <p><strong>现象</strong>：嵌套 while 循环结果错误（如 200x200 输出 600 而非 40000）。</p>
 <p><strong>根因</strong>：JUMP_IF_FALSE/JUMP_IF_TRUE 的跳转目标（内层循环 exit POP）在线性 codegen 中 tos_live=0，但跳转路径本身可能 tos_live=1（条件值在 RAX 中）或 tos_live=0（条件值在栈上）。</p>
 <ul>
-<li>tos_live=1 路径：跳转时 RAX 中的条件值被"abandoned"（零成本丢弃），但跳转目标 exit POP 的 tos_live=0 执行 <code>add rsp, 8</code>，试图弹出不存在的栈元素，导致 RSP 漂移</li>
-</ul>
-<ul>
-<li>tos_live=0 路径：跳转路径上执行 <code>add rsp, 8</code> 弹出条件值，但跳转目标 exit POP 又执行一次 <code>add rsp, 8</code>，导致双重 pop</li>
+<li>
+<p>tos_live=1 路径：跳转时 RAX 中的条件值被"abandoned"（零成本丢弃），但跳转目标 exit POP 的 tos_live=0 执行 <code>add rsp, 8</code>，试图弹出不存在的栈元素，导致 RSP 漂移</p>
+</li>
+<li>
+<p>tos_live=0 路径：跳转路径上执行 <code>add rsp, 8</code> 弹出条件值，但跳转目标 exit POP 又执行一次 <code>add rsp, 8</code>，导致双重 pop</p>
+</li>
 </ul>
 <p><strong>修复</strong>：</p>
 <ul>
-<li>tos_live=1 路径：跳转前 <code>push rax</code> 将条件值推入栈（为跳转目标准备），fall-through 路径 tos_live 保持 1</li>
-</ul>
-<ul>
-<li>tos_live=0 路径：跳转路径不再 pop（移除 <code>add rsp, 8</code>），将条件值留在栈上供跳转目标 POP 弹出</li>
+<li>
+<p>tos_live=1 路径：跳转前 <code>push rax</code> 将条件值推入栈（为跳转目标准备），fall-through 路径 tos_live 保持 1</p>
+</li>
+<li>
+<p>tos_live=0 路径：跳转路径不再 pop（移除 <code>add rsp, 8</code>），将条件值留在栈上供跳转目标 POP 弹出</p>
+</li>
 </ul>
 <p>非嵌套单层循环不受影响：跳转目标为 exit_mc，epilogue 的 <code>mov rsp, rbp</code> 会丢弃栈上残留值。</p>
 <h3 id="8-11-epilogue-不能用-leave-指令">8.11 Epilogue 不能用 LEAVE 指令</h3>
@@ -2206,16 +2214,18 @@ opcode 前先确认该处的表示，并对照 <code>val_is_truthy()</code>。<s
 </table>
 <p><strong>根因（两层）</strong></p>
 <ol>
-<li><strong>语义层</strong>：JIT 的比较 opcode（<code>OP_*_INT</code>、<code>OP_*_INT_IMM</code>、<code>OP_*_FLOAT</code>、通用
+<li>
+<p><strong>语义层</strong>：JIT 的比较 opcode（<code>OP_*_INT</code>、<code>OP_*_INT_IMM</code>、<code>OP_*_FLOAT</code>、通用
    <code>OP_EQ/NEQ/LT/GT/LE/GE</code>）只 <code>setcc</code> 出<strong>裸 0/1</strong>，而解释器压的是 <code>val_bool</code>
    （<code>TRUE_VAL</code>/<code>FALSE_VAL</code>）。裸 0/1 在 JIT 内部是<strong>歧义</strong>的：它既是 int48 的 1，
    又会被「int48 重装箱」路径变成 int，还会被「非 int → 原样裸存」路径把 <code>0x1</code>
    直接写进 locals（解释器把它读成次正规 double 4.9e-324）。所以必须在<strong>产生处</strong>
-   就做成 VM 的表示，而不是在消费处猜。</li>
-</ol>
-<ol>
-<li><strong>实现陷阱（这次真正花时间的部分）</strong>：<code>TRUE_VAL</code> 与 <code>FALSE_VAL</code> <strong>相差
-   <code>1&lt;&lt;48</code>，但必须用 ADD 而不是 OR</strong>：</li>
+   就做成 VM 的表示，而不是在消费处猜。</p>
+</li>
+<li>
+<p><strong>实现陷阱（这次真正花时间的部分）</strong>：<code>TRUE_VAL</code> 与 <code>FALSE_VAL</code> <strong>相差
+   <code>1&lt;&lt;48</code>，但必须用 ADD 而不是 OR</strong>：</p>
+</li>
 </ol>
 <pre><code>   FALSE_VAL = QNAN|SIGN_BIT|TAG_FALSE = 0xFFF9_000000000000   ← 第 48 位本来就是 1
    TRUE_VAL  = QNAN|SIGN_BIT|TAG_TRUE  = 0xFFFA_000000000000
@@ -10993,18 +11003,20 @@ LuaJIT 的 snapshot + side exit（旁路<strong>回到主循环</strong> ✓ 不
 </ul>
 <h3 id="测试环境">测试环境</h3>
 <ul>
-<li><strong>机器：Intel i5-3450</strong>（Ivy Bridge，4 核 4 线程）+ Windows。
+<li>
+<p><strong>机器：Intel i5-3450</strong>（Ivy Bridge，4 核 4 线程）+ Windows。
   该机负载波动大（同一基准各轮可差 10~20%），所有耗时<strong>只做同机同轮对照</strong>，
-  不要与本机之外的绝对值比较；换机器后需要重新建立基线。</li>
-</ul>
-<ul>
-<li>测试文件：<code>examples/性能测试/全部测试.leno</code>（539 行，含算术/函数调用/数组字典/try/while vs for/fib 对比）</li>
-</ul>
-<ul>
-<li>编译命令：<code>cmd //c build.bat</code></li>
-</ul>
-<ul>
-<li>运行命令：<code>./build/lenojit.exe "examples/性能测试/全部测试.leno"</code></li>
+  不要与本机之外的绝对值比较；换机器后需要重新建立基线。</p>
+</li>
+<li>
+<p>测试文件：<code>examples/性能测试/全部测试.leno</code>（539 行，含算术/函数调用/数组字典/try/while vs for/fib 对比）</p>
+</li>
+<li>
+<p>编译命令：<code>cmd //c build.bat</code></p>
+</li>
+<li>
+<p>运行命令：<code>./build/lenojit.exe "examples/性能测试/全部测试.leno"</code></p>
+</li>
 </ul>
 <h3 id="jit-统计">JIT 统计</h3>
 <table>
@@ -11753,22 +11765,26 @@ RAX 常驻栈顶，<code>a + b</code> 退化成「pop 一次 + add + 留在 RAX�
 <p>按投入产出比排序：</p>
 <h3 id="p0-虚拟栈寄存器化-预计提速-3-5x">P0：虚拟栈寄存器化（预计提速 3-5x）</h3>
 <ul>
-<li><strong>目标</strong>：维护 register cache，栈顶 1-2 个元素常驻 RAX/RDX，不下推到内存</li>
+<li>
+<p><strong>目标</strong>：维护 register cache，栈顶 1-2 个元素常驻 RAX/RDX，不下推到内存</p>
+</li>
+<li>
+<p><strong>改动范围</strong>：只改 codegen 中的 push/pop 语义，不碰 scan 逻辑和 bailout 机制</p>
+</li>
+<li>
+<p><strong>实现要点</strong>：</p>
+</li>
 </ul>
 <ul>
-<li><strong>改动范围</strong>：只改 codegen 中的 push/pop 语义，不碰 scan 逻辑和 bailout 机制</li>
-</ul>
-<ul>
-<li><strong>实现要点</strong>：</li>
-</ul>
-<ul>
-<li><code>push</code> → 如果 RAX 空，放 RAX；否则 spill 栈顶到 <code>[rsp]</code> 再放 RAX</li>
-</ul>
-<ul>
-<li><code>pop</code> → 如果 RAX 有值，取 RAX；否则从 <code>[rsp]</code> 加载</li>
-</ul>
-<ul>
-<li>二元运算（ADD/SUB/MUL）→ 左操作数在 RAX，右操作数在 RDX，直接 <code>add rax,rdx</code>，0 次内存操作</li>
+<li>
+<p><code>push</code> → 如果 RAX 空，放 RAX；否则 spill 栈顶到 <code>[rsp]</code> 再放 RAX</p>
+</li>
+<li>
+<p><code>pop</code> → 如果 RAX 有值，取 RAX；否则从 <code>[rsp]</code> 加载</p>
+</li>
+<li>
+<p>二元运算（ADD/SUB/MUL）→ 左操作数在 RAX，右操作数在 RDX，直接 <code>add rax,rdx</code>，0 次内存操作</p>
+</li>
 </ul>
 <ul>
 <li><strong>状态</strong>：✅ 已完成（2026-09-06）。TOS 缓存 RAX，push/pop 从 4 次内存操作降到 1-2 次。修复 OP_JUMP_IF_FALSE/TRUE 的 <code>tos_live=0</code> 编译期赋值污染 fall-through 路径的 bug（导致 while 循环 RSP 漂移、提前退出）。261 回归测试全过，while 50-5000 次迭代验证正确。</li>
@@ -11779,49 +11795,55 @@ RAX 常驻栈顶，<code>a + b</code> 退化成「pop 一次 + add + 留在 RAX�
 </ul>
 <h3 id="p1-嵌套循环支持-解锁大量真实代码">P1：嵌套循环支持（解锁大量真实代码）</h3>
 <ul>
-<li><strong>目标</strong>：for 套 for、while 套 while 能被 JIT 编译</li>
+<li>
+<p><strong>目标</strong>：for 套 for、while 套 while 能被 JIT 编译</p>
+</li>
+<li>
+<p><strong>改动范围</strong>：scan + codegen 的 loop patch 表</p>
+</li>
+<li>
+<p><strong>实现要点</strong>：</p>
+</li>
 </ul>
 <ul>
-<li><strong>改动范围</strong>：scan + codegen 的 loop patch 表</li>
-</ul>
-<ul>
-<li><strong>实现要点</strong>：</li>
-</ul>
-<ul>
-<li><code>OP_FOR_PREP</code> 不再拒绝，记录为内层循环入口，跳过初始化字节</li>
-</ul>
-<ul>
-<li>body 中途出现 <code>OP_LOOP</code>/<code>OP_FOR_LOOP</code> 时，记录为内层回边</li>
-</ul>
-<ul>
-<li><del>codegen 需要一个 loop stack（记录每层循环的</del> <del><code>loop_start_mc</code></del> <del>和</del> <del><code>exit_mc</code>）</del> 不需要：每个回边指令自带跳转偏移，通过 <code>offmap_lookup</code> 独立计算目标地址，天然支持任意嵌套深度</li>
-</ul>
-<ul>
-<li>正确处理内层循环退出后回到外层循环体的跳转</li>
-</ul>
-<ul>
-<li>修复 JUMP_IF_FALSE/TRUE 跳转路径 TOS 不匹配（见 8.10）</li>
-</ul>
-<ul>
-<li>修复 scan vstack 负值检查（见 8.9）</li>
+<li>
+<p><code>OP_FOR_PREP</code> 不再拒绝，记录为内层循环入口，跳过初始化字节</p>
+</li>
+<li>
+<p>body 中途出现 <code>OP_LOOP</code>/<code>OP_FOR_LOOP</code> 时，记录为内层回边</p>
+</li>
+<li>
+<p><del>codegen 需要一个 loop stack（记录每层循环的</del> <del><code>loop_start_mc</code></del> <del>和</del> <del><code>exit_mc</code>）</del> 不需要：每个回边指令自带跳转偏移，通过 <code>offmap_lookup</code> 独立计算目标地址，天然支持任意嵌套深度</p>
+</li>
+<li>
+<p>正确处理内层循环退出后回到外层循环体的跳转</p>
+</li>
+<li>
+<p>修复 JUMP_IF_FALSE/TRUE 跳转路径 TOS 不匹配（见 8.10）</p>
+</li>
+<li>
+<p>修复 scan vstack 负值检查（见 8.9）</p>
+</li>
 </ul>
 <ul>
 <li><strong>状态</strong>：✅ 已完成（2026-09-06）。支持 while-while / for-for / while-for / for-while / 三层嵌套，261 回归测试全过，嵌套 10000x10000 = 1亿次 for+for 仅 78ms。</li>
 </ul>
 <h3 id="p2-op-_call-callout-让更多代码进入-jit-路径">P2：OP_CALL callout（让更多代码进入 JIT 路径）</h3>
 <ul>
-<li><strong>目标</strong>：循环体中遇到 OP_CALL 不再整个循环拒绝编译</li>
-</ul>
-<ul>
-<li><strong>改动范围</strong>：利用现有 callout 基础设施</li>
-</ul>
-<ul>
-<li><strong>注意</strong>：能让 fib"跑通"JIT 路径但不会提速——callout 开销远大于解释执行省下的 dispatch 开销</li>
-</ul>
-<ul>
-<li><strong>状态</strong>：❌ 实验失败（2026-09-06），已回退。完整踩坑记录见第 13 节。实测 callout 单次调用
+<li>
+<p><strong>目标</strong>：循环体中遇到 OP_CALL 不再整个循环拒绝编译</p>
+</li>
+<li>
+<p><strong>改动范围</strong>：利用现有 callout 基础设施</p>
+</li>
+<li>
+<p><strong>注意</strong>：能让 fib"跑通"JIT 路径但不会提速——callout 开销远大于解释执行省下的 dispatch 开销</p>
+</li>
+<li>
+<p><strong>状态</strong>：❌ 实验失败（2026-09-06），已回退。完整踩坑记录见第 13 节。实测 callout 单次调用
   开销约为解释器原生调用路径的 20~30 倍，调用密集循环（基准 Phase B 300 万次调用）
-  从 859ms 恶化到 18000ms+。结论：callout 方案是死路，必须走内联（见 13.6）。</li>
+  从 859ms 恶化到 18000ms+。结论：callout 方案是死路，必须走内联（见 13.6）。</p>
+</li>
 </ul>
 <h3 id="p3-架构方向决定-函数级-jit-method-jit">P3：架构方向决定——函数级 JIT（method JIT）</h3>
 <table>
@@ -11861,37 +11883,41 @@ RAX 常驻栈顶，<code>a + b</code> 退化成「pop 一次 + add + 留在 RAX�
 <p><strong>不推荐 Trace JIT</strong>：Mike Pall 花了几年全职才做出来，需要 trace recording、SSA IR、trace stitching、snapshot-based deoptimization、trace exit 修复，一个人无法完成。</p>
 <p><strong>推荐函数级 JIT</strong>：</p>
 <ul>
-<li>天然解决嵌套循环（编译整个函数体，循环只是函数内跳转）</li>
-</ul>
-<ul>
-<li>可支持函数间调用（JIT 函数调用 JIT 函数，开销远低于 callout）</li>
-</ul>
-<ul>
-<li>可做叶子函数内联</li>
-</ul>
-<ul>
-<li>不需要 trace recording，可用现有 codegen 基础设施扩展</li>
-</ul>
-<ul>
-<li>渐进式迁移（先编译最热的几个函数）</li>
-</ul>
-<ul>
-<li>核心改变：触发点改为函数被调用 N 次后编译整个函数体；编译范围从 <code>OP_CALL</code> 到 <code>OP_RETURN</code>；OP_CALL 走快路径（已 JIT 函数直接 <code>call jit_fn</code>）或慢路径（callout 到 VM）；用 simple linear-sscan allocator 把局部变量分配到 callee-saved 寄存器</li>
-</ul>
-<ul>
-<li><strong>状态（2026-09-13）</strong>：🟡 部分落地。「触发点改为函数被调用 N 次后编译整个函数体」
+<li>
+<p>天然解决嵌套循环（编译整个函数体，循环只是函数内跳转）</p>
+</li>
+<li>
+<p>可支持函数间调用（JIT 函数调用 JIT 函数，开销远低于 callout）</p>
+</li>
+<li>
+<p>可做叶子函数内联</p>
+</li>
+<li>
+<p>不需要 trace recording，可用现有 codegen 基础设施扩展</p>
+</li>
+<li>
+<p>渐进式迁移（先编译最热的几个函数）</p>
+</li>
+<li>
+<p>核心改变：触发点改为函数被调用 N 次后编译整个函数体；编译范围从 <code>OP_CALL</code> 到 <code>OP_RETURN</code>；OP_CALL 走快路径（已 JIT 函数直接 <code>call jit_fn</code>）或慢路径（callout 到 VM）；用 simple linear-sscan allocator 把局部变量分配到 callee-saved 寄存器</p>
+</li>
+<li>
+<p><strong>状态（2026-09-13）</strong>：🟡 部分落地。「触发点改为函数被调用 N 次后编译整个函数体」
   已由 §8.25 的解释器侧热入口实现（<code>JIT_FUNC_HOT_THRESHOLD = 50</code>）；
   「JIT 函数调用 JIT 函数」已由 callout 薄桥实现，但仍占用 C 栈（深度上限 64）；
-  「局部变量分配到寄存器」未做。</li>
+  「局部变量分配到寄存器」未做。</p>
+</li>
 </ul>
 <h3 id="p4-自尾调用编译成回边-解锁深递归-尾递归-2026-09-13-提出">P4：自尾调用编译成回边 —— 解锁深递归 / 尾递归（2026-09-13 提出）</h3>
 <ul>
-<li><strong>目标</strong>：让 <code>OP_TAIL_CALL</code> 也能进 JIT，尤其是「自己调自己」的尾递归
+<li>
+<p><strong>目标</strong>：让 <code>OP_TAIL_CALL</code> 也能进 JIT，尤其是「自己调自己」的尾递归
   （<code>return f(n-1, acc+x)</code> 形态，本语言编译器自动做尾调用优化，
-  所以这是最常见的递归写法）。</li>
-</ul>
+  所以这是最常见的递归写法）。</p>
+</li>
+<li>
+<p><strong>为什么不能只在 <code>OP_TAIL_CALL</code> 上挂热入口</strong>：</p>
 <ul>
-<li><strong>为什么不能只在 <code>OP_TAIL_CALL</code> 上挂热入口</strong>：<ul>
 <li><code>OP_TAIL_CALL</code> 的语义是<strong>复用当前帧</strong>（关 upvalue → 释放 locals →
     memmove args/callee → <code>vm.sp = old_stack_base + arg_count + 1</code> → 就地换
     <code>closure/chunk/ip/locals</code>），并不「返回」到调用者。要把它接到
@@ -11901,25 +11927,25 @@ RAX 常驻栈顶，<code>a + b</code> 退化成「pop 一次 + add + 留在 RAX�
     <code>scan_loop_body</code> 会在 <code>default</code> 分支把它判成不可编译 → 白忙。</li>
 </ul>
 </li>
-</ul>
-<ul>
-<li><strong>正解</strong>：在 <code>func_mode</code> 下把「对自身的尾调用」编译成<strong>跳回函数入口的回边</strong>
+<li>
+<p><strong>正解</strong>：在 <code>func_mode</code> 下把「对自身的尾调用」编译成<strong>跳回函数入口的回边</strong>
   （等价于把递归写成循环），参数直接写进 scratch 槽。这样尾递归函数变成
   一个有回边的函数体，配合 P1 已有的回边基础设施（<code>offmap_lookup</code> + patch）
   就有机会整体编译。同时它天然不消耗 C 栈，<strong>顺带解掉深度上限 64 的问题</strong>
-  （深度不再重要，因为不再递归）。</li>
-</ul>
-<ul>
-<li><strong>改动范围</strong>：<code>jit_scan.c</code> 增加 <code>OP_TAIL_CALL</code> 的识别与「是否自调用」判定；
+  （深度不再重要，因为不再递归）。</p>
+</li>
+<li>
+<p><strong>改动范围</strong>：<code>jit_scan.c</code> 增加 <code>OP_TAIL_CALL</code> 的识别与「是否自调用」判定；
   <code>ops_callout.inc</code> 增加自尾调用 → 回边 codegen；非自尾调用仍走原有 callout /
-  VC 重入路径（或继续 bailout）。三处同步规则见 §2.3 第 5 条。</li>
-</ul>
+  VC 重入路径（或继续 bailout）。三处同步规则见 §2.3 第 5 条。</p>
+</li>
+<li>
+<p><strong>验证</strong>：<code>tailRec(200000)</code> 差分 + <code>assert/test_jit_hot_func.leno</code> 扩用例 +
+  <code>Bailouts</code> 计数不得上升（§14.3 第 12 条）。</p>
+</li>
+<li>
+<p><strong>状态（2026-09-16 更新）</strong>：🟡 <strong>已由 R6-b 部分实现，剩余价值需重估</strong>。</p>
 <ul>
-<li><strong>验证</strong>：<code>tailRec(200000)</code> 差分 + <code>assert/test_jit_hot_func.leno</code> 扩用例 +
-  <code>Bailouts</code> 计数不得上升（§14.3 第 12 条）。</li>
-</ul>
-<ul>
-<li><strong>状态（2026-09-16 更新）</strong>：🟡 <strong>已由 R6-b 部分实现，剩余价值需重估</strong>。<ul>
 <li><strong>已做</strong>（R6-b，§8.76）：<code>OP_TAIL_CALL</code> 在<strong>函数级 JIT</strong> 里实现为「<strong>调用 callee
     （可走 JIT 机器码快路径）+ 按 VM 实际发布的个数产出结果 + epilogue</strong>」；循环/内联维持拒绝。
     实测收益 <strong>2.29x</strong>（<code>examples/性能测试/JIT_R5R6收益基准.leno</code> 第 4 项）。
@@ -12092,16 +12118,25 @@ main() {
 在修复前，<strong>不要</strong>把"含 dict 取值 + 局部变量声明"的循环当作已支持场景。</p>
 <hr>
 <ol>
-<li><strong><code>step == 0</code> / <code>step</code> 是 float 的 for 循环无法 JIT</strong>（<code>site -2</code> / <code>site -3</code>，已知限制非 bug）：
+<li>
+<p><strong><code>step == 0</code> / <code>step</code> 是 float 的 for 循环无法 JIT</strong>（<code>site -2</code> / <code>site -3</code>，已知限制非 bug）：
    <code>step == 0</code> 的 VM 语义是「不进循环」，float 步长无法走 int48 快路径判断方向，
    两者都显式 bailout 交回解释器。<strong>正/负步长（±1/±2/±3）现已全部支持</strong>，
-   日志直接报 <code>BAILOUT(prologue:step==0)</code> / <code>(prologue:step-is-float)</code></li>
-<li><strong>while 比 for 慢约 2 倍</strong>：<code>OP_GET_GLOBAL</code> 每次 NaN-box 解码开销，P0 寄存器化后有望缓解</li>
-<li><strong><code>body_start=1156</code> 编译失败</strong>（历史记录，待复核）：具体原因未完全定位
-   （无 scan FAIL 和 codegen FAIL 消息）</li>
-<li><strong>fib_iterative(1000) 3 次 bailout</strong>：斐波那契值约 fib(56) 溢出 int48（超 2^47），
-   属预期行为，JIT 的溢出检测正常工作</li>
-<li><del><strong><code>OP_TAIL_CALL</code> 不在 JIT 支持范围内</strong>（2026-09-13 新增，§8.25 / §11 P4）</del>
+   日志直接报 <code>BAILOUT(prologue:step==0)</code> / <code>(prologue:step-is-float)</code></p>
+</li>
+<li>
+<p><strong>while 比 for 慢约 2 倍</strong>：<code>OP_GET_GLOBAL</code> 每次 NaN-box 解码开销，P0 寄存器化后有望缓解</p>
+</li>
+<li>
+<p><strong><code>body_start=1156</code> 编译失败</strong>（历史记录，待复核）：具体原因未完全定位
+   （无 scan FAIL 和 codegen FAIL 消息）</p>
+</li>
+<li>
+<p><strong>fib_iterative(1000) 3 次 bailout</strong>：斐波那契值约 fib(56) 溢出 int48（超 2^47），
+   属预期行为，JIT 的溢出检测正常工作</p>
+</li>
+<li>
+<p><del><strong><code>OP_TAIL_CALL</code> 不在 JIT 支持范围内</strong>（2026-09-13 新增，§8.25 / §11 P4）</del>
    —— <strong>✅ 已解决（2026-09-16，R6-b，§8.76）</strong>。
    （历史记录）<code>return f(x)</code> 经编译器尾调用优化发射 <code>OP_TAIL_CALL</code>，它复用当前帧、
    既不经过函数级热入口，也不在 scan 的 opcode 支持列表里。后果：① 尾递归函数无论
@@ -12113,35 +12148,42 @@ main() {
    <code>OP_GET_GLOBAL_FUNC + OP_TAIL_CALL</code>（不是合体的 <code>OP_CALL_GLOBAL_FUNC</code>）。
    实测：含尾调用的函数能进 <code>FuncCompiled</code>、JIT 与 <code>LENO_NO_JIT=1</code> 输出逐字一致、
    深尾递归 20000 层 ×200 轮不崩（空间行为靠深度守卫交解释器做真 TCO），收益 <strong>2.29x</strong>。
-   <strong>仍未支持</strong>：<code>OP_TAIL_CALL_NATIVE</code>（<code>return 原生函数(x)</code>）。</li>
-<li><strong>JIT 函数调用的递归深度上限 64（2026-09-13 新增）</strong>：JIT body → callout →
+   <strong>仍未支持</strong>：<code>OP_TAIL_CALL_NATIVE</code>（<code>return 原生函数(x)</code>）。</p>
+</li>
+<li>
+<p><strong>JIT 函数调用的递归深度上限 64（2026-09-13 新增）</strong>：JIT body → callout →
    JIT body 是真实 C 调用链，<code>jit_func_depth &gt;= JIT_FUNC_MAX_DEPTH</code> 即回退解释器。
-   实测 <code>nonTail(200000)</code> 无加速（§8.25）。根治需要 JIT 自管调用栈。</li>
-<li><strong>函数级 JIT 中途 bailout 会重跑整个调用（2026-09-13 新增，§8.25 / 14.4-③）</strong>：
+   实测 <code>nonTail(200000)</code> 无加速（§8.25）。根治需要 JIT 自管调用栈。</p>
+</li>
+<li>
+<p><strong>函数级 JIT 中途 bailout 会重跑整个调用（2026-09-13 新增，§8.25 / 14.4-③）</strong>：
    与 <code>jit_callout_*</code> 快路径同一取舍 —— JIT 中途对堆的副作用（数组 append、
    字典写、打印）在回退时无法回滚。缓解措施是 <code>hot_disabled</code>：一次失败即永久
-   停用解释器侧入口，避免「每次调用都进 JIT 再回退」的反复试探。</li>
-<li><strong><code>examples/crypto/aes128.leno</code> 在 JIT 模式下栈溢出</strong> —— <strong>✅ 已修复（2026-09-13，§8.26）</strong>。
+   停用解释器侧入口，避免「每次调用都进 JIT 再回退」的反复试探。</p>
+</li>
+<li>
+<p><strong><code>examples/crypto/aes128.leno</code> 在 JIT 模式下栈溢出</strong> —— <strong>✅ 已修复（2026-09-13，§8.26）</strong>。
    （历史记录）现象：JIT 模式退出码 <code>0xC00000FD</code>（STATUS_STACK_OVERFLOW），stdout 停在
    <code>--- 字符串加解密 ---</code> 之前；<code>LENO_NO_JIT=1</code> 完整跑完。
    根因：内联体的 <code>bc_off</code> 基址按 nesting depth 编号（<code>0x10000 * inline_depth</code>），
    而内联只有一层 → 同一循环内多个内联点共用命名空间，
    <code>offmap_lookup</code> 把第 2..N 个实例的跳转解析到第 1 个实例的机器码
    → 死循环 + RSP 漂移 → 栈溢出。修法：按<strong>内联实例</strong>编号
-   （<code>bc_off = 0x10000 * (inline_idx + 1)</code>）。回归见 <code>assert/test_jit_multi_inline.leno</code>。</li>
-</ol>
-<ol>
-<li><strong>比较结果的位模式：JIT 写回裸 0/1，解释器压 <code>val_bool</code></strong> —— <strong>✅ 已修复（2026-09-12，§8.24）</strong>。
+   （<code>bc_off = 0x10000 * (inline_idx + 1)</code>）。回归见 <code>assert/test_jit_multi_inline.leno</code>。</p>
+</li>
+<li>
+<p><strong>比较结果的位模式：JIT 写回裸 0/1，解释器压 <code>val_bool</code></strong> —— <strong>✅ 已修复（2026-09-12，§8.24）</strong>。
    （历史记录）<code>var x = (a &gt; b)</code> 或 <code>bool flag = (a &gt; b)</code> 在 JIT 循环里
    写回后，解释器读到的是<strong>次正规 float</strong>（≈4.9e-324 / 0.0）而不是 bool。
    真值判断恰好仍然正确（非零/零），但 <code>x is bool</code> 变 false、<code>_int(flag)</code> 由 1 变 0
    —— 后者是<strong>静默算错</strong>。复现探针：<code>build/probe8.leno</code>（<code>boolLocal</code> / <code>intOfFlag</code>）。
    注：同类问题里的 <strong><code>OP_NOT</code> 已在 2026-09-12 修掉</strong>（现在产出 NaN-boxed bool，§8.22），
-   剩下的只是各比较 opcode 自身仍压裸 0/1。</li>
-</ol>
-<ol>
-<li><del><strong>对象分配 ~200ns/次，且 JIT 循环内没有 GC 安全点</strong>（2026-09-13 新增，§8.31）</del>
-    <strong>✅ 已大幅改善（2026-09-15，§8.74）</strong>：<ul>
+   剩下的只是各比较 opcode 自身仍压裸 0/1。</p>
+</li>
+<li>
+<p><del><strong>对象分配 ~200ns/次，且 JIT 循环内没有 GC 安全点</strong>（2026-09-13 新增，§8.31）</del>
+    <strong>✅ 已大幅改善（2026-09-15，§8.74）</strong>：</p>
+<ul>
 <li><strong>安全点</strong>：§8.37/§8.38 的<strong>回边让出</strong>已落地（10M 次 <code>new</code> 的 ~960MB 泄漏场景解决，
       <code>Yields</code> 会按分配量出现）。</li>
 <li><strong>分配成本</strong>：池上限 4MB → <strong>32MB</strong>（实测饱和点）后，
@@ -12154,21 +12196,21 @@ main() {
       （目前有意排除，见 <code>gc.c</code> 池设计注释）、<code>OP_STRUCT_INIT</code> callout 包装的 ~14 ns。</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>内联体内不支持闭包与 upvalue（R5，2026-09-15，有意拒绝，不是待修项）</strong>：
+<li>
+<p><strong>内联体内不支持闭包与 upvalue（R5，2026-09-15，有意拒绝，不是待修项）</strong>：
     含 <code>OP_CLOSURE</code> 或 <code>OP_GET/SET_UPVALUE</code> 的被调方一律不能内联（inline scan 直接拒）。
     原因：函数级 JIT 不压帧，"当前闭包"由 ABI 第三参带入；一旦内联，同一段机器码里
     会同时存在 caller 与 callee 两个闭包环境，<code>GET_UPVALUE</code> 该读谁归属不清 ⇒ 可能静默读错环境。
-    这是设计文档的不变量 <strong>I8</strong>；代价只是"含闭包的函数不被内联"，循环本身仍可 JIT。</li>
-</ol>
-<ol>
-<li><strong>bailout 重放会连"建闭包"这个堆副作用一起重放（R5 新增受害面，2026-09-15）</strong>：
+    这是设计文档的不变量 <strong>I8</strong>；代价只是"含闭包的函数不被内联"，循环本身仍可 JIT。</p>
+</li>
+<li>
+<p><strong>bailout 重放会连"建闭包"这个堆副作用一起重放（R5 新增受害面，2026-09-15）</strong>：
     循环 bailout 从<strong>循环头重跑本轮</strong>、函数级 bailout 重跑<strong>整个调用</strong>（见本节第 7 条），
     而 R5 之后 <code>OP_CLOSURE</code> 也是 JIT 能执行的<strong>分配</strong>操作 ⇒ 若那一轮已经"建闭包 + 存进容器"，
     重放会再建一次（容器里多一个）。属既有取舍的延伸，缓解同样是
     <code>hot_disabled</code> / <code>JIT_BAILOUT_LIMIT</code>；主要防线是<strong>扫描期把不安全形态拒掉</strong>
-    （设计文档 I6：宁可拒收，不靠 bailout 兜底）。</li>
+    （设计文档 I6：宁可拒收，不靠 bailout 兜底）。</p>
+</li>
 </ol>
 <blockquote>
 <p>已关闭的旧条目：</p>
@@ -12206,43 +12248,49 @@ Phase B/B2/C 未命中 JIT 的根因）的完整过程。实验最终失败回�
 重入解释循环执行被调函数）→ 返回值从 VM 栈拷回 ret 缓冲区 → JIT 压回虚拟栈。</p>
 <h3 id="13-1-坑一-modrm-编码-mod-位错误-寄存器复制-内存加载">13.1 坑一：ModRM 编码 mod 位错误（寄存器复制 ≠ 内存加载）</h3>
 <ul>
-<li><strong>症状</strong>：JIT 编译通过，一执行就崩溃（Exit code 0xC0000005，访问违例）</li>
-</ul>
-<ul>
-<li><strong>根因</strong>：返回值循环里 <code>mov rax, [rdx]</code> 的 ModRM 字节用了 <code>mod=11</code>（寄存器-寄存器），
-  实际语义变成 <code>mov rax, rdx</code>（寄存器复制），rdx 里是缓冲区地址而非值，后续解引用野指针</li>
-</ul>
-<ul>
-<li><strong>修复</strong>：ModRM 用 <code>mod=00, rm=RDX</code>（<code>48 8B 02</code>）才是从 <code>[rdx]</code> 内存加载</li>
-</ul>
-<ul>
-<li><strong>教训</strong>：手写机器码时 <code>mov reg, [reg]</code> 和 <code>mov reg, reg</code> 只差一个 mod 位，
+<li>
+<p><strong>症状</strong>：JIT 编译通过，一执行就崩溃（Exit code 0xC0000005，访问违例）</p>
+</li>
+<li>
+<p><strong>根因</strong>：返回值循环里 <code>mov rax, [rdx]</code> 的 ModRM 字节用了 <code>mod=11</code>（寄存器-寄存器），
+  实际语义变成 <code>mov rax, rdx</code>（寄存器复制），rdx 里是缓冲区地址而非值，后续解引用野指针</p>
+</li>
+<li>
+<p><strong>修复</strong>：ModRM 用 <code>mod=00, rm=RDX</code>（<code>48 8B 02</code>）才是从 <code>[rdx]</code> 内存加载</p>
+</li>
+<li>
+<p><strong>教训</strong>：手写机器码时 <code>mov reg, [reg]</code> 和 <code>mov reg, reg</code> 只差一个 mod 位，
   objdump 反汇编一眼可辨（<code>mov (%rdx),%rax</code> vs <code>mov %rdx,%rax</code>），生成大段机器码后
-  必须先 dump 反汇编核对再跑</li>
+  必须先 dump 反汇编核对再跑</p>
+</li>
 </ul>
 <h3 id="13-2-坑二-r9-被挪用作循环计数器-摧毁-globals-基址">13.2 坑二：r9 被挪用作循环计数器，摧毁 globals 基址</h3>
 <ul>
-<li><strong>症状</strong>：修完坑一后仍崩溃。反汇编看到 <code>mov 0x0(%r9),%rax</code> —— 对空指针取值</li>
-</ul>
-<ul>
-<li><strong>根因</strong>：返回值压栈循环拿 r9 当计数器（<code>sub r9, 1</code>），但 r9 在整个 JIT 代码里
+<li>
+<p><strong>症状</strong>：修完坑一后仍崩溃。反汇编看到 <code>mov 0x0(%r9),%rax</code> —— 对空指针取值</p>
+</li>
+<li>
+<p><strong>根因</strong>：返回值压栈循环拿 r9 当计数器（<code>sub r9, 1</code>），但 r9 在整个 JIT 代码里
   固定持有 globals 基址指针（入口处 <code>mov %rdx,%r9</code>，所有 OP_GET_GLOBAL/SET_GLOBAL
-  都靠它寻址）。循环结束后 r9=0，下一条全局变量访问即空指针崩溃</li>
-</ul>
-<ul>
-<li><strong>修复</strong>：改用 r11 当计数器（用完恢复 <code>r11 = INT_TAG</code> 常量），r9 全程不动</li>
-</ul>
-<ul>
-<li><strong>教训</strong>：JIT 的寄存器分配是全局约定（rcx=locals / r9=globals / r10=PAYLOAD_MASK /
-  r11=INT_TAG / rbx=类型位图），任何临时代码借用约定寄存器都必须用完恢复。</li>
+  都靠它寻址）。循环结束后 r9=0，下一条全局变量访问即空指针崩溃</p>
+</li>
+<li>
+<p><strong>修复</strong>：改用 r11 当计数器（用完恢复 <code>r11 = INT_TAG</code> 常量），r9 全程不动</p>
+</li>
+<li>
+<p><strong>教训</strong>：JIT 的寄存器分配是全局约定（rcx=locals / r9=globals / r10=PAYLOAD_MASK /
+  r11=INT_TAG / rbx=类型位图），任何临时代码借用约定寄存器都必须用完恢复。</p>
+</li>
 </ul>
 <h3 id="13-3-坑三-args-缓冲区读写方向相反-本实验最隐蔽的-bug-导致结果错误">13.3 坑三：args 缓冲区读写方向相反（本实验最隐蔽的 bug，导致结果错误）</h3>
 <ul>
-<li><strong>症状</strong>：不崩了，但 Phase B 结果错误：hits=15（正确值 900000），且恰好等于前 50 次
-  解释执行（JIT 热度阈值）期间的命中数——即 <strong>JIT 接管后所有调用全部 miss</strong></li>
-</ul>
-<ul>
-<li><strong>定位过程</strong>：</li>
+<li>
+<p><strong>症状</strong>：不崩了，但 Phase B 结果错误：hits=15（正确值 900000），且恰好等于前 50 次
+  解释执行（JIT 热度阈值）期间的命中数——即 <strong>JIT 接管后所有调用全部 miss</strong></p>
+</li>
+<li>
+<p><strong>定位过程</strong>：</p>
+</li>
 </ul>
 <ol>
 <li><code>LENO_NO_JIT=1</code> 对照跑：结果全对 → 排除解释器和 op_call.inc 修改，锁定 JIT 机器码路径</li>
@@ -12252,70 +12300,78 @@ Phase B/B2/C 未命中 JIT 的根因）的完整过程。实验最终失败回�
      返回值 t！</strong> 且 a3..a6 = 0（从未写入的槽）</li>
 </ol>
 <ul>
-<li><strong>根因</strong>：JIT 生成侧把 args[i] 存到 <code>args_base - 8*i</code>（向低地址排列），callout 侧按
+<li>
+<p><strong>根因</strong>：JIT 生成侧把 args[i] 存到 <code>args_base - 8*i</code>（向低地址排列），callout 侧按
   <code>args[i] = args_ptr[i]</code>（向高地址）读取。方向相反 → 整体错位：callout 的 args[1] 读到
   了 ret 缓冲区残留的 ret[0]（上次返回值 -1.0），args[2] 读到 ret[1]，后面的读到脏内存。
-  sphereHit 拿到错乱的 ox/dx 参数，几何上永远不命中</li>
-</ul>
-<ul>
-<li><strong>修复</strong>：store 方向改为 <code>args_base + 8*i</code>，与 callout 读取方向一致</li>
-</ul>
-<ul>
-<li><strong>教训</strong>：跨边界缓冲区（机器码写 / C 函数读）的方向约定必须写进注释并在两侧对齐；
+  sphereHit 拿到错乱的 ox/dx 参数，几何上永远不命中</p>
+</li>
+<li>
+<p><strong>修复</strong>：store 方向改为 <code>args_base + 8*i</code>，与 callout 读取方向一致</p>
+</li>
+<li>
+<p><strong>教训</strong>：跨边界缓冲区（机器码写 / C 函数读）的方向约定必须写进注释并在两侧对齐；
   这类 bug 的特征是"程序不崩但结果全错"，最有效的定位手段是<strong>在边界两侧都打印原始位模式</strong>，
-  一对比就现形</li>
+  一对比就现形</p>
+</li>
 </ul>
 <h3 id="13-4-坑四-ret-缓冲区向高地址增长-越界覆盖-tmp-vstack-槽">13.4 坑四：ret 缓冲区向高地址增长，越界覆盖 tmp/vstack 槽</h3>
 <ul>
-<li><strong>症状</strong>：设计期发现（代码走查时定位，未实际触发数据错乱）。原始布局下 ret 缓冲区
+<li>
+<p><strong>症状</strong>：设计期发现（代码走查时定位，未实际触发数据错乱）。原始布局下 ret 缓冲区
   从 tmp3 正下方一格开始向高地址增长：ret[1] 即覆盖 tmp3、ret[2] 覆盖 tmp2、ret[3]
   覆盖 tmp1、ret[4] 起覆盖 vstack 最深槽（向上逐槽推进）。Phase B（ret_count=2）恰好
   没踩到正在使用的槽才"侥幸正确"；一旦循环体内同时有 OP_INDEX/OP_DICT_SET 等用到
   tmp 槽的 callout、或 vstack 较深，数据即被静默破坏。若 n+v+4 &lt; 16（小帧），
-  ret[i] 最终顶到 rbp+0（覆盖保存的 rbp）乃至返回地址</li>
-</ul>
-<ul>
-<li><strong>根因</strong>：callout 写 ret_out[i] 时 i 递增、<strong>向高地址增长</strong>，但 ret_base 放在了
-  缓冲区最高端（tmp3 之下），增长方向直冲帧内数据区</li>
-</ul>
-<ul>
-<li><strong>修复</strong>：ret_base 挪到缓冲区最低端，让 ret[15] 恰好紧贴 tmp3 之下（<code>ret_base_disp =
-  -8 * (n + max_vstack + 3 + JIT_RET_MAX)</code>），增长方向只在自己 16 槽范围内</li>
-</ul>
-<ul>
-<li><strong>教训</strong>：帧内缓冲区的"增长方向"和"容量边界"必须一起设计；向高地址增长的缓冲区，
-  base 必须放最低端，否则静默踩踏 tmp/vstack/saved rbp</li>
+  ret[i] 最终顶到 rbp+0（覆盖保存的 rbp）乃至返回地址</p>
+</li>
+<li>
+<p><strong>根因</strong>：callout 写 ret_out[i] 时 i 递增、<strong>向高地址增长</strong>，但 ret_base 放在了
+  缓冲区最高端（tmp3 之下），增长方向直冲帧内数据区</p>
+</li>
+<li>
+<p><strong>修复</strong>：ret_base 挪到缓冲区最低端，让 ret[15] 恰好紧贴 tmp3 之下（<code>ret_base_disp =
+  -8 * (n + max_vstack + 3 + JIT_RET_MAX)</code>），增长方向只在自己 16 槽范围内</p>
+</li>
+<li>
+<p><strong>教训</strong>：帧内缓冲区的"增长方向"和"容量边界"必须一起设计；向高地址增长的缓冲区，
+  base 必须放最低端，否则静默踩踏 tmp/vstack/saved rbp</p>
+</li>
 </ul>
 <h3 id="13-5-坑五-序列化缓存缺-return-_count-字段-反序列化出垃圾值">13.5 坑五：序列化缓存缺 return_count 字段（反序列化出垃圾值）</h3>
 <ul>
-<li><strong>症状</strong>：JIT scan 读 <code>ObjFunction.return_count</code> 时得到 0（垃圾值），多返回值函数
-  被当成 0 返回值处理</li>
+<li>
+<p><strong>症状</strong>：JIT scan 读 <code>ObjFunction.return_count</code> 时得到 0（垃圾值），多返回值函数
+  被当成 0 返回值处理</p>
+</li>
+<li>
+<p><strong>根因</strong>：给 ObjFunction 新增 return_count 字段后，serialize.c 的
+  ObjFunction 序列化/反序列化没同步；且旧 <code>.lenomc</code> 模块缓存命中后跳过反序列化修复</p>
+</li>
+<li>
+<p><strong>修复</strong>：序列化写入/读取 return_count（u32），版本号 LENO_BIN_VERSION → 0x00020300、
+  LENO_MODCACHE_VERSION → 0x2，使旧缓存整体失效</p>
+</li>
+<li>
+<p><strong>教训</strong>：<strong>任何给 ObjFunction/Chunk 等持久化结构加字段的改动，必须同步三处</strong>：
+  序列化写、反序列化读、版本号提升。否则旧缓存的字段错位比崩溃更难查</p>
+</li>
+<li>
+<p><strong>该基础设施已保留</strong>（这是本次实验唯一留下的成果）：</p>
+</li>
 </ul>
 <ul>
-<li><strong>根因</strong>：给 ObjFunction 新增 return_count 字段后，serialize.c 的
-  ObjFunction 序列化/反序列化没同步；且旧 <code>.lenomc</code> 模块缓存命中后跳过反序列化修复</li>
-</ul>
-<ul>
-<li><strong>修复</strong>：序列化写入/读取 return_count（u32），版本号 LENO_BIN_VERSION → 0x00020300、
-  LENO_MODCACHE_VERSION → 0x2，使旧缓存整体失效</li>
-</ul>
-<ul>
-<li><strong>教训</strong>：<strong>任何给 ObjFunction/Chunk 等持久化结构加字段的改动，必须同步三处</strong>：
-  序列化写、反序列化读、版本号提升。否则旧缓存的字段错位比崩溃更难查</li>
-</ul>
-<ul>
-<li><strong>该基础设施已保留</strong>（这是本次实验唯一留下的成果）：</li>
-</ul>
-<ul>
-<li><code>codegen_func.c</code>：<code>ast_return_count()</code> 编译期统计所有 return 语句的返回值个数
+<li>
+<p><code>codegen_func.c</code>：<code>ast_return_count()</code> 编译期统计所有 return 语句的返回值个数
     （各 return 一致 → 记录个数；不一致 → -1；无 return → 1），存入
-    <code>ObjFunction.return_count</code></li>
-</ul>
-<ul>
-<li>serialize.c / leno_serialize.h：return_count 的持久化</li>
-</ul>
-<ul>
-<li><strong>未来内联实现可直接消费该字段做静态 vstack 跟踪</strong></li>
+    <code>ObjFunction.return_count</code></p>
+</li>
+<li>
+<p>serialize.c / leno_serialize.h：return_count 的持久化</p>
+</li>
+<li>
+<p><strong>未来内联实现可直接消费该字段做静态 vstack 跟踪</strong></p>
+</li>
 </ul>
 <h3 id="13-6-根本问题-callout-性能模型不成立-实验失败的核心原因">13.6 根本问题：callout 性能模型不成立（实验失败的核心原因）</h3>
 <p>修完全部正确性 bug 后，结果对了，但性能惨败：</p>
@@ -12358,16 +12414,18 @@ Phase B/B2/C 未命中 JIT 的根因）的完整过程。实验最终失败回�
 <p>（中间态记录：args 方向 bug 未修时 B/B2 为 ~3600ms 但 hits=15 全错、C 为 297ms 但
 hits=50 全错——"快"是因为几何判断全走 miss 短路路径，毫无意义）</p>
 <ul>
-<li><strong>根因</strong>：callout 每次调用的固定开销 ≈ 参数逐个 raw→NaN-boxed 转换 + 保存/恢复
+<li>
+<p><strong>根因</strong>：callout 每次调用的固定开销 ≈ 参数逐个 raw→NaN-boxed 转换 + 保存/恢复
   5 个寄存器 + Windows x64 shadow space + <code>vm_call_value</code> 重入整个解释循环（含
   stop_frame_cnt 协议）+ 返回值逐个拷回。实测单次 ~5µs；而解释器原生 OP_CALL 路径
   只是压帧改 ip 续跑 dispatch 循环，单次 ~0.2µs。<strong>callout 比被它"加速"的路径贵 25 倍</strong>，
-  调用密集循环 JIT 后必然大幅负优化——这不是实现 bug，是方案结构性缺陷</li>
-</ul>
-<ul>
-<li><strong>附带发现</strong>：嵌套 JIT（外层 JIT callout 进 trace，trace 的内层循环又被 JIT 编译）
+  调用密集循环 JIT 后必然大幅负优化——这不是实现 bug，是方案结构性缺陷</p>
+</li>
+<li>
+<p><strong>附带发现</strong>：嵌套 JIT（外层 JIT callout 进 trace，trace 的内层循环又被 JIT 编译）
   出现 VM 栈下溢崩溃（sp=-2），未深入定位——方案已废弃，问题一并消失。
-  若未来内联实现引入"JIT 代码内再进解释器再进 JIT"的场景，需重新审视该</li>
+  若未来内联实现引入"JIT 代码内再进解释器再进 JIT"的场景，需重新审视该</p>
+</li>
 </ul>
 <h3 id="13-7-最终决策与现状">13.7 最终决策与现状</h3>
 <ol>

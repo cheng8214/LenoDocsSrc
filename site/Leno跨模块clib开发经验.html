@@ -188,17 +188,19 @@ ffi.write_int8(buf, off, 32); ffi.write_int8(buf, off+1, 0)
 混合平台同理：<code>.dll</code> 与 <code>.so</code> 放同一层，看一眼分不清谁是谁的产物。</p>
 <h3 id="两条配套约束-漏了就跑不起来">两条配套约束（漏了就跑不起来）</h3>
 <ol>
-<li><strong><code>ffi.load</code> 要能吃子目录相对路径。</strong>
+<li>
+<p><strong><code>ffi.load</code> 要能吃子目录相对路径。</strong>
    它原来的自动搜索会把传入路径<strong>剥成纯文件名</strong>（<code>filename = last_sep + 1</code>）再拼模块目录
    ⇒ <code>ffi.load("win/quirc.dll")</code> 永远命中不了子目录。
    已在 <code>src/module/ffi/ffi.c</code> 补了 2a-2「模块目录 + 完整相对路径」，<strong>并且 2c
    （遍历所有已加载模块目录那一轮）也补了</strong> —— 编译期内联的模块 <code>source_path</code> 可能为空，
-   <code>mod_dir</code> 取不到时 2a/2a-2/2b 全跳过，真正救场的是 2c。</li>
-</ol>
-<ol>
-<li><strong>loader 要「子目录 → 裸名」两路。</strong>
+   <code>mod_dir</code> 取不到时 2a/2a-2/2b 全跳过，真正救场的是 2c。</p>
+</li>
+<li>
+<p><strong>loader 要「子目录 → 裸名」两路。</strong>
    打包时 <code>collector_add</code> 只取<strong>文件名</strong>复制到 exe 同目录（子目录前缀被剥掉）
-   ⇒ 打包产物里没有 <code>win/</code> 这层，只能按纯名字找到。</li>
+   ⇒ 打包产物里没有 <code>win/</code> 这层，只能按纯名字找到。</p>
+</li>
 </ol>
 <pre><code class="language-leno">// 平台子目录优先，兜底裸文件名（打包产物 / 旧布局）
 try { g_lib = ffi.load(libPath(&quot;SDL3&quot;)) }

@@ -390,7 +390,9 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li><strong>计时分辨率与量程（2026-09-16 修正）</strong><ul>
+<li>
+<p><strong>计时分辨率与量程（2026-09-16 修正）</strong></p>
+<ul>
 <li><code>ms()</code>/<code>us()</code>/<code>ns()</code> 共用同一高精度单调时钟源（Windows QPC / POSIX CLOCK_MONOTONIC）：
      <strong>精度由时钟源决定，与单位无关</strong> —— 换算成毫秒不丢精度，所以 <code>ms()</code> 也返回 <code>float</code></li>
 <li>三者都是<strong>单调计数</strong>，只用于取差值；挂钟时间请用 <code>now()</code> / <code>format()</code> / <code>datetime()</code></li>
@@ -400,23 +402,23 @@ main() {
      短测量会出现"整刻度"假象（如 16ms 实为 1 个刻度，真值可能只有 0.4ms）</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>时区问题</strong><ul>
+<li>
+<p><strong>时区问题</strong></p>
+<ul>
 <li><code>now()</code> 和 <code>format()</code> 使用本地时区</li>
 <li>如果需要 UTC 时间，目前需要自行转换</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>sleep 精度</strong><ul>
+<li>
+<p><strong>sleep 精度</strong></p>
+<ul>
 <li><code>sleep()</code> 的实际休眠时间可能略长于指定时间</li>
 <li>系统调度和其他因素会导致微小延迟</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>性能考虑</strong><ul>
+<li>
+<p><strong>性能考虑</strong></p>
+<ul>
 <li>频繁调用高精度计时函数 (<code>us()</code>, <code>ns()</code>) 可能有一定开销</li>
 <li>在性能关键代码中，建议减少调用次数</li>
 </ul>

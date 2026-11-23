@@ -802,71 +802,73 @@ clib / struct 两张表（<code>scan_cstruct.inc</code>）——<strong>漏了 c
 <p><strong>本线已收口（2026-09-19，见第六节 ㉔）</strong>：上表 8 点现已<strong>全部有结论，不再复查</strong> —— 6 点走唯一政策点
 <code>mod_resolve_param_type()</code>（字段 ㉒；方法/函数参数 ⑳㉑；方法/函数返回与 <code>use</code> 传导 ㉓），2 点
 （元素类型、alias 底层）为 ⑨ 实测判定<strong>故意保留</strong>。若将来要碰元素类型段，先读 ⑨ 的三条功能判别
-与 ㉓ 里那份"诊断文案逐字一致"的验证记录。</p>
+与 ㉓ 里那份"诊断文案逐字一致"的验证记录。
+<strong>验证</strong>：新用例 passed；套件 <strong>322/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
+（新警告在 SDL3 上<strong>零误报</strong> —— cstruct 字段里的基类型与嵌套 cstruct 现在都能认出来了）；lint 干净。</p>
 </blockquote>
-<p><strong>验证</strong>：新用例 passed；套件 <strong>322/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
-（新警告在 SDL3 上<strong>零误报</strong> —— cstruct 字段里的基类型与嵌套 cstruct 现在都能认出来了）；lint 干净。
-- <strong>⑨ 审计表里剩的两处：实测判定"无需改"（2026-09-18 —— 都是实测结论，不是"看着不一致就统一"）</strong>。
-<strong>① 元素类型段缺 cstruct</strong>（<code>scan_struct.inc</code> / <code>scan_cstruct.inc</code> 各一处）：显形是<strong>诊断文字</strong>把
-cstruct 元素写成 <code>struct</code> —— 跨模块 <code>Array[Vec]</code>（Vec 是 cstruct）时 <code>return h.items[0]</code> 报
-「实际 <strong>struct</strong> Vec」，而同文件同写法报「实际 Array[<strong>cstruct</strong> Vec]」。
-三条判别<strong>都没发现功能后果</strong>：
-· <code>take(h.items[0])</code>（元素传给期待 <code>Vec</code> 的参数）→ <strong>通过</strong>（<code>type_is_compatible</code> 容忍种类差异）；
-· <code>ruler(h.items)</code>（跨模块 <code>Array[...]</code> 传给本地 <code>Array[Vec]</code> 参数）→ <strong>通过</strong> ⇒ <strong>无假报错</strong>；
-· <code>h.items[0].x</code>（访问元素字段）→ <strong>通过</strong>（名字 <code>Vec</code> 是好的，字段按名字解析）。
-⇒ 影响面 = <strong>报文里少一个字</strong>。<strong>为什么不顺手改</strong>：补分支会把扁平 <code>element_type</code> 的 kind 由
-STRUCT 变 CSTRUCT，而 kind 可能被 <strong>codegen 的数组元素读写路径</strong>用来决定"值拷贝 vs 引用"
-（cstruct 是值类型）—— 为"少一个字"去动可能影响生成代码的字段不划算（套件 + 真实应用只能验当下，
-语料外还有用户代码）。<strong>附注</strong>：<code>Array[cstruct]</code> 连 <code>push</code> 都不支持，且<strong>同文件也一样</strong>
-（<code>类型 'Array[cstruct Vec]' 没有方法 'push'</code>）⇒ 那条失败与种类错位<strong>无关</strong>，属既有支持面，
-不是本轮问题（已在此登记，供将来有人做 <code>Array[cstruct]</code> 时参考）。
-<strong>② alias 底层段缺 clib</strong>（<code>scan_alias.inc</code>）：<code>alias X = SomeClib</code> 这种写法<strong>语料里没有</strong>，
-语义上也<strong>无实义</strong>（clib 是"函数集合"，不是数据类型）；那段代码自身的兜底注释已写"不是本模块的
-struct/face/cstruct，保留为 TYPE_STRUCT（可能来自 use）"⇒ 不可达，<strong>不改</strong>。
-<strong>方法教训</strong>：<strong>"集合不一致" ≠ "都有 bug"</strong> —— 8 处里 <strong>4 处真出过 bug</strong>（本轮修掉 2 处、上轮 2 处），
-另 <strong>2 处实测无害</strong>。先量再改比"看着不一致就统一"更省事，后者会为无害差异引入真风险。
-- <strong>⑩ 同族第 5 例（2026-09-18 已修）：模块限定 <code>new</code> 之后字段"写不进去"（字段索引两份实现、深度不同）</strong>。
-症状：<code>var pa = new a.Pair()</code>（只 <code>import "lib/a.leno" as a</code>、<strong>不</strong> <code>use</code> 类型名）之后写
-<code>pa.x = 1</code> 报「无法确定字段索引，struct 类型可能未定义」（codegen 兜底报的）—— 而<strong>同一字段读
-<code>pa.x</code> 正常</strong>，非常反直觉。
-<strong>根因</strong>（读码钉死，不靠猜）：字段索引有<strong>两份取法、深度不同</strong> —— <code>infer_field_type</code>
-（<code>semantic_type.c</code>）是<strong>三级</strong>（作用域 → 全局定义表 → 导入模块符号表），而
-<code>visit_field_access.inc</code> 自己那套是<strong>一级</strong>（<code>scope_resolve(类型名)</code>），并且<strong>同一个文件里 cstruct
-那一支反而是三级</strong> ⇒ 对称性破裂。表达式上下文（读）会由 <code>infer_expr_type</code> 调一次三级推断把
-<code>field_index</code> 补上 ✓；<strong>赋值目标没有任何人调推断</strong> ⇒ 索引停在 -1 ✗。
-<strong>修法</strong>：那一处复用 <code>infer_field_type</code>（唯一实现）；且<strong>只在"一级解析拿不到字段"时才补</strong>
-（拿得到就走原路径 ⇒ 零风险）。
-<strong>用例</strong>（先写、修前 <code>exit=-1</code>）：<code>assert/test_module_qualified_new_field.leno</code> —— 判据 ① 不 <code>use</code>
-类型名：<code>new a.Pair()</code> 后写字段 + 打印 ⇒ <code>X=1 Y=2</code>；判据 ② <code>use a.Pair</code> + 裸名 <code>new Pair()</code>
-（既有可用写法，防改坏）⇒ <code>X=3 Y=4</code>。
-<strong>验证</strong>：新用例 passed；套件 <strong>323/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-lint 干净。
-<strong>顺带更正一处文档归因</strong>：这条此前被记作"推断出来的类型名与模块限定名的关系没打通、是 2b-2 的
-前哨"——<strong>不成立</strong>：<code>AST_STRUCT_INIT</code> 的类型推断本来就剥前缀（<code>semantic_type.c:2590-2593</code>）。
-真正原因就是上面的"两级深度"。⇒ 结论：<strong>"前哨"这个判断也要先量再写</strong>（与 ⑨ 的教训同源）。
-- <strong>⑪ 同族第 6 例（2026-09-18 已修）：字段赋值的类型检查在"模块限定但没 use"时被静默跳过</strong>
-—— 属最高级别的"静默"（不报错、程序照跑）。
-实测：只 <code>import "lib/a.leno" as a</code>、不 <code>use</code> 类型名时，<code>var pa = new a.Pair()</code> +
-<code>pa.x = "oops"</code>（int 字段赋 string）⇒ <strong>零诊断、<code>exit=0</code></strong>，<strong>而且真的跑起来打印 <code>X=oops</code></strong>
-（字符串装进了 int 字段）；<strong>同一份代码加一句 <code>use a.Pair</code></strong> ⇒ 正确报
-「类型错误：字段赋值类型不匹配 'x'」。
-<strong>根因</strong>（与 ⑩ 同形）：<code>visit_var.inc</code> 的 AST_ASSIGN→AST_FIELD_ACCESS 分支解析目标 struct
-只有<strong>两级</strong>（<code>scope_resolve</code> + <code>scope_resolve_tree_bfs</code>），<strong>没有</strong>"导入模块符号表"那一级，
-查不到就<strong>什么都不做</strong> ⇒ 检查静默不执行；而唯一实现 <code>infer_field_type</code> 是三级。
-<strong>修法</strong>：查不到时走 <code>infer_field_type</code> 取期望类型，再做同一条兼容性判定（不改判定口径）。
-<strong>用例</strong>（先写、修前失败）：<code>assert/test_field_assign_type_check.leno</code> —— ① 不 use 的错赋值
-<strong>必须报错</strong>（修前 <code>exit=0</code>）；② use 的错赋值同样报错（对照）；③ 不 use 的<strong>正确</strong>赋值仍须通过
-（防"改完变误报"）。
-<strong>顺带修一处用例机器的过度约束</strong>：<code>assert/helpers/compiler.leno</code> 的 <code>expect_error</code> 把"报错落点"
-写死成 <code>(&lt;行&gt;,1): error:</code>（<strong>列号必须是 1</strong>）⇒ 只有报在第 1 列的错误才通过；字段赋值那条报在
-<code>(5,8)</code>，用例因此<strong>假失败</strong>。已改成只校验<strong>行</strong>（<code>(&lt;行&gt;,</code>）—— 列号本就不该当承诺（同 S6 精神）。
-<strong>验证</strong>：新用例 passed（3 判据）；套件 <strong>324/0</strong>。⚠ 这条检查以前是<strong>静默跳过</strong>、现在<strong>真跑</strong>
-⇒ 特意验证了误伤面：真实应用（47 模块）冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-lint 干净。
-- <strong>⑫ 同族第 7 例（2026-09-18 已修）：字段赋值还有两条路径没走唯一实现</strong> —— 一条把<strong>合法代码判死</strong>，
-另一条<strong>完全不检查</strong>。
-顺着 ⑪ 往下查时撞出来的（先复现：不 use 时 <code>pa.x += 2</code> 被拒，而 use 时 <code>X=3</code> ✓）。
-<code>pa.x += 2</code> 与 <code>pa["x"] = v</code> 看着只是写法不同，实际落到<strong>三条</strong>不同的语义路径上、深度各不相同：</p>
+<ul>
+<li><strong>⑨ 审计表里剩的两处：实测判定"无需改"（2026-09-18 —— 都是实测结论，不是"看着不一致就统一"）</strong>。
+  <strong>① 元素类型段缺 cstruct</strong>（<code>scan_struct.inc</code> / <code>scan_cstruct.inc</code> 各一处）：显形是<strong>诊断文字</strong>把
+  cstruct 元素写成 <code>struct</code> —— 跨模块 <code>Array[Vec]</code>（Vec 是 cstruct）时 <code>return h.items[0]</code> 报
+  「实际 <strong>struct</strong> Vec」，而同文件同写法报「实际 Array[<strong>cstruct</strong> Vec]」。
+  三条判别<strong>都没发现功能后果</strong>：
+  · <code>take(h.items[0])</code>（元素传给期待 <code>Vec</code> 的参数）→ <strong>通过</strong>（<code>type_is_compatible</code> 容忍种类差异）；
+  · <code>ruler(h.items)</code>（跨模块 <code>Array[...]</code> 传给本地 <code>Array[Vec]</code> 参数）→ <strong>通过</strong> ⇒ <strong>无假报错</strong>；
+  · <code>h.items[0].x</code>（访问元素字段）→ <strong>通过</strong>（名字 <code>Vec</code> 是好的，字段按名字解析）。
+  ⇒ 影响面 = <strong>报文里少一个字</strong>。<strong>为什么不顺手改</strong>：补分支会把扁平 <code>element_type</code> 的 kind 由
+  STRUCT 变 CSTRUCT，而 kind 可能被 <strong>codegen 的数组元素读写路径</strong>用来决定"值拷贝 vs 引用"
+  （cstruct 是值类型）—— 为"少一个字"去动可能影响生成代码的字段不划算（套件 + 真实应用只能验当下，
+  语料外还有用户代码）。<strong>附注</strong>：<code>Array[cstruct]</code> 连 <code>push</code> 都不支持，且<strong>同文件也一样</strong>
+  （<code>类型 'Array[cstruct Vec]' 没有方法 'push'</code>）⇒ 那条失败与种类错位<strong>无关</strong>，属既有支持面，
+  不是本轮问题（已在此登记，供将来有人做 <code>Array[cstruct]</code> 时参考）。
+  <strong>② alias 底层段缺 clib</strong>（<code>scan_alias.inc</code>）：<code>alias X = SomeClib</code> 这种写法<strong>语料里没有</strong>，
+  语义上也<strong>无实义</strong>（clib 是"函数集合"，不是数据类型）；那段代码自身的兜底注释已写"不是本模块的
+  struct/face/cstruct，保留为 TYPE_STRUCT（可能来自 use）"⇒ 不可达，<strong>不改</strong>。
+  <strong>方法教训</strong>：<strong>"集合不一致" ≠ "都有 bug"</strong> —— 8 处里 <strong>4 处真出过 bug</strong>（本轮修掉 2 处、上轮 2 处），
+  另 <strong>2 处实测无害</strong>。先量再改比"看着不一致就统一"更省事，后者会为无害差异引入真风险。</li>
+<li><strong>⑩ 同族第 5 例（2026-09-18 已修）：模块限定 <code>new</code> 之后字段"写不进去"（字段索引两份实现、深度不同）</strong>。
+  症状：<code>var pa = new a.Pair()</code>（只 <code>import "lib/a.leno" as a</code>、<strong>不</strong> <code>use</code> 类型名）之后写
+  <code>pa.x = 1</code> 报「无法确定字段索引，struct 类型可能未定义」（codegen 兜底报的）—— 而<strong>同一字段读
+  <code>pa.x</code> 正常</strong>，非常反直觉。
+  <strong>根因</strong>（读码钉死，不靠猜）：字段索引有<strong>两份取法、深度不同</strong> —— <code>infer_field_type</code>
+  （<code>semantic_type.c</code>）是<strong>三级</strong>（作用域 → 全局定义表 → 导入模块符号表），而
+  <code>visit_field_access.inc</code> 自己那套是<strong>一级</strong>（<code>scope_resolve(类型名)</code>），并且<strong>同一个文件里 cstruct
+  那一支反而是三级</strong> ⇒ 对称性破裂。表达式上下文（读）会由 <code>infer_expr_type</code> 调一次三级推断把
+  <code>field_index</code> 补上 ✓；<strong>赋值目标没有任何人调推断</strong> ⇒ 索引停在 -1 ✗。
+  <strong>修法</strong>：那一处复用 <code>infer_field_type</code>（唯一实现）；且<strong>只在"一级解析拿不到字段"时才补</strong>
+  （拿得到就走原路径 ⇒ 零风险）。
+  <strong>用例</strong>（先写、修前 <code>exit=-1</code>）：<code>assert/test_module_qualified_new_field.leno</code> —— 判据 ① 不 <code>use</code>
+  类型名：<code>new a.Pair()</code> 后写字段 + 打印 ⇒ <code>X=1 Y=2</code>；判据 ② <code>use a.Pair</code> + 裸名 <code>new Pair()</code>
+  （既有可用写法，防改坏）⇒ <code>X=3 Y=4</code>。
+  <strong>验证</strong>：新用例 passed；套件 <strong>323/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+  lint 干净。
+  <strong>顺带更正一处文档归因</strong>：这条此前被记作"推断出来的类型名与模块限定名的关系没打通、是 2b-2 的
+  前哨"——<strong>不成立</strong>：<code>AST_STRUCT_INIT</code> 的类型推断本来就剥前缀（<code>semantic_type.c:2590-2593</code>）。
+  真正原因就是上面的"两级深度"。⇒ 结论：<strong>"前哨"这个判断也要先量再写</strong>（与 ⑨ 的教训同源）。</li>
+<li><strong>⑪ 同族第 6 例（2026-09-18 已修）：字段赋值的类型检查在"模块限定但没 use"时被静默跳过</strong>
+  —— 属最高级别的"静默"（不报错、程序照跑）。
+  实测：只 <code>import "lib/a.leno" as a</code>、不 <code>use</code> 类型名时，<code>var pa = new a.Pair()</code> +
+  <code>pa.x = "oops"</code>（int 字段赋 string）⇒ <strong>零诊断、<code>exit=0</code></strong>，<strong>而且真的跑起来打印 <code>X=oops</code></strong>
+  （字符串装进了 int 字段）；<strong>同一份代码加一句 <code>use a.Pair</code></strong> ⇒ 正确报
+  「类型错误：字段赋值类型不匹配 'x'」。
+  <strong>根因</strong>（与 ⑩ 同形）：<code>visit_var.inc</code> 的 AST_ASSIGN→AST_FIELD_ACCESS 分支解析目标 struct
+  只有<strong>两级</strong>（<code>scope_resolve</code> + <code>scope_resolve_tree_bfs</code>），<strong>没有</strong>"导入模块符号表"那一级，
+  查不到就<strong>什么都不做</strong> ⇒ 检查静默不执行；而唯一实现 <code>infer_field_type</code> 是三级。
+  <strong>修法</strong>：查不到时走 <code>infer_field_type</code> 取期望类型，再做同一条兼容性判定（不改判定口径）。
+  <strong>用例</strong>（先写、修前失败）：<code>assert/test_field_assign_type_check.leno</code> —— ① 不 use 的错赋值
+  <strong>必须报错</strong>（修前 <code>exit=0</code>）；② use 的错赋值同样报错（对照）；③ 不 use 的<strong>正确</strong>赋值仍须通过
+  （防"改完变误报"）。
+  <strong>顺带修一处用例机器的过度约束</strong>：<code>assert/helpers/compiler.leno</code> 的 <code>expect_error</code> 把"报错落点"
+  写死成 <code>(&lt;行&gt;,1): error:</code>（<strong>列号必须是 1</strong>）⇒ 只有报在第 1 列的错误才通过；字段赋值那条报在
+  <code>(5,8)</code>，用例因此<strong>假失败</strong>。已改成只校验<strong>行</strong>（<code>(&lt;行&gt;,</code>）—— 列号本就不该当承诺（同 S6 精神）。
+  <strong>验证</strong>：新用例 passed（3 判据）；套件 <strong>324/0</strong>。⚠ 这条检查以前是<strong>静默跳过</strong>、现在<strong>真跑</strong>
+  ⇒ 特意验证了误伤面：真实应用（47 模块）冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+  lint 干净。</li>
+<li><strong>⑫ 同族第 7 例（2026-09-18 已修）：字段赋值还有两条路径没走唯一实现</strong> —— 一条把<strong>合法代码判死</strong>，
+  另一条<strong>完全不检查</strong>。
+  顺着 ⑪ 往下查时撞出来的（先复现：不 use 时 <code>pa.x += 2</code> 被拒，而 use 时 <code>X=3</code> ✓）。
+  <code>pa.x += 2</code> 与 <code>pa["x"] = v</code> 看着只是写法不同，实际落到<strong>三条</strong>不同的语义路径上、深度各不相同：</li>
+</ul>
 <table>
 <thead>
 <tr>

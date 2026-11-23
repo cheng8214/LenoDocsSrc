@@ -953,17 +953,19 @@ print(&quot;您的年龄是: &quot; + age)
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li><strong>转换失败会报错</strong>：所有 <code>_xxx()</code> 函数在转换失败时会抛出运行时错误，建议使用类型守卫先做检查。</li>
-</ol>
-<ol>
-<li><strong>与类型守卫的关系</strong>：<ul>
+<li>
+<p><strong>转换失败会报错</strong>：所有 <code>_xxx()</code> 函数在转换失败时会抛出运行时错误，建议使用类型守卫先做检查。</p>
+</li>
+<li>
+<p><strong>与类型守卫的关系</strong>：</p>
+<ul>
 <li><code>is</code> 类型守卫用于编译时类型收窄（更安全）</li>
 <li><code>_xxx()</code> 转换函数用于运行时类型转换（更灵活）</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>优先使用类型守卫</strong>：</li>
+<li>
+<p><strong>优先使用类型守卫</strong>：</p>
+</li>
 </ol>
 <pre><code class="language-leno">// 推荐：使用类型守卫（编译时检查）
 func good(var x) {

@@ -844,21 +844,23 @@ var result = add(get_info(), 10)  // add(42, 10) = 52
 </code></pre>
 <p><strong>实现机制</strong>：</p>
 <ol>
-<li><strong>Codegen 层</strong>：<code>gen_expr</code> 的 <code>AST_CALL</code> case 在 <code>gen_call</code> 返回后检查 <code>cached_type</code>。
+<li>
+<p><strong>Codegen 层</strong>：<code>gen_expr</code> 的 <code>AST_CALL</code> case 在 <code>gen_call</code> 返回后检查 <code>cached_type</code>。
    如果是 <code>TYPE_MULTI_RET</code> 且 <code>suppress_multi_pop</code> 未设置，则 emit <code>OP_POP</code> 弹出多余的返回值，
-   只保留第一个返回值在栈顶。</li>
-</ol>
-<ol>
-<li><strong>调用者控制</strong>：三个调用者通过 <code>suppress_multi_pop</code> 标志控制弹出行为：<ul>
+   只保留第一个返回值在栈顶。</p>
+</li>
+<li>
+<p><strong>调用者控制</strong>：三个调用者通过 <code>suppress_multi_pop</code> 标志控制弹出行为：</p>
+<ul>
 <li><code>gen_var_decl</code>：设置 <code>suppress_multi_pop=1</code>，由自己统一弹出多余值（保留第一个）</li>
 <li><code>gen_destruct_decl</code>：设置 <code>suppress_multi_pop=1</code>，保留所有返回值用于解构</li>
 <li><code>gen_expr_stmt</code>：设置 <code>suppress_multi_pop=1</code>，由自己弹出所有返回值</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>类型系统层</strong>：<code>type_is_compatible</code> 在 source 是 <code>TYPE_MULTI_RET</code> 时，
-   自动退化为第一个元素类型进行比较，使多返回值函数可以直接作为单参数传递。</li>
+<li>
+<p><strong>类型系统层</strong>：<code>type_is_compatible</code> 在 source 是 <code>TYPE_MULTI_RET</code> 时，
+   自动退化为第一个元素类型进行比较，使多返回值函数可以直接作为单参数传递。</p>
+</li>
 </ol>
 <h3 id="4-8-已知限制">4.8 已知限制</h3>
 <table>

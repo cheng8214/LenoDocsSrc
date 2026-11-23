@@ -1400,14 +1400,16 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
 </ol>
 <p>⇒ 缺口不在语言，在<strong>可发现性</strong>。补 <code>AGENTS.md</code> + README 的 import 名映射，比加任何语法都便宜。</p>
 <ol>
-<li><strong>B 类在缩小</strong>。这轮补掉的 comparator 排序是原报告认定的"真缺口"之一；顺带发现
+<li>
+<p><strong>B 类在缩小</strong>。这轮补掉的 comparator 排序是原报告认定的"真缺口"之一；顺带发现
    <code>maths</code> 缺 <code>pow_mod</code>（有 <code>pow</code> 有 <code>mod</code> 没有二者结合），也已补。
-   剩下的大项仍是 <strong>记录类型（P1）</strong> 和 <strong>Result（P2）</strong> —— 这两项确实是工程级投入，不是补个 API。</li>
-</ol>
-<ol>
-<li><strong>补测试的性价比最高</strong>。LenoWeb 0→3 个测试，<strong>第一天就抓到 <code>parseUrl</code> 的静默 bug</strong>；
+   剩下的大项仍是 <strong>记录类型（P1）</strong> 和 <strong>Result（P2）</strong> —— 这两项确实是工程级投入，不是补个 API。</p>
+</li>
+<li>
+<p><strong>补测试的性价比最高</strong>。LenoWeb 0→3 个测试，<strong>第一天就抓到 <code>parseUrl</code> 的静默 bug</strong>；
    而 LenoCSV / LenoCompress / LenoCrypto（本来就有测试）这轮几十组边界探针 <strong>一个 bug 都没找到</strong>。
-   对比很直接：<strong>有测试的模块质量好，没测试的模块藏着静默错误</strong>。</li>
+   对比很直接：<strong>有测试的模块质量好，没测试的模块藏着静默错误</strong>。</p>
+</li>
 </ol>
 <p><strong>如果只能再做一件事</strong>：<del>把 <code>Web</code> 门面（37 : 0）收进正轨</del> ✅ <strong>已做（2026-11-09）</strong>。</p>
 <p>拆出 <code>WebNet</code> / <code>WebHtml</code> / <code>WebCrawl</code> 三个窄入口后，四个项目 37 处全部改回公共入口

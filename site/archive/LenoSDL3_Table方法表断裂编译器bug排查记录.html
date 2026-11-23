@@ -37,15 +37,27 @@ file_manager.leno(1154,22): error: [语义错误] 类型 'struct Table' 没有�
 <p><strong>编译器 bug：模块符号表文本扫描器（<code>src/module_symbol_table/inc/scan/scan_struct.inc</code>）使用固定栈数组 <code>methods[MOD_MAX_METHODS]</code> 收集 struct 方法，上限 128 个。<code>struct Table</code> 共有 149 个方法，超出 128 的方法被静默丢弃，导致跨模块调用 <code>contains</code>（第 132 个）、<code>on_dbl_click</code>（第 130 个）时报"没有方法"。</strong></p>
 <p>最初"<code>_to_float</code> 之后插入导致方法表断裂"是误判，实际机制：</p>
 <ul>
-<li>基线 <code>a1ff6efb</code> 有 143 个方法，<code>contains</code>@125、<code>on_dbl_click</code>@123，均在 128 以内 → 编译通过</li>
-<li><code>2c86ea7b</code> 在两者之前插入 6 个新方法，索引变为 131/129，<strong>被 128 上限截断</strong> → 编译失败</li>
-<li>把新方法挪到 struct <strong>末尾</strong>：<code>contains</code>/<code>on_dbl_click</code> 索引不变（仍 &lt;128），被丢弃的变成末尾的新方法（file_manager 未直接调用它们）→ 编译通过</li>
-<li>这解释了所有"与内容无关、与位置强相关"的实验现象：本质是<strong>方法在 struct 内的序号</strong>是否 ≥128</li>
-</ul>
-<ul>
-<li>与新增方法的<strong>内容无关</strong>：极简方法体、改名、改返回类型、删注释、去掉双引号全部无效</li>
-<li>与<strong>插入位置</strong>强相关：方法放在 <code>_to_float</code> 之后 → 失败；同一批方法放到 struct <strong>末尾</strong> → 编译通过</li>
-<li><code>2c86ea7b</code> 完整版因此同时丢了 <code>on_dbl_click</code> 与 <code>contains</code>；仅复现前部新增时先丢 <code>contains</code>（定义更靠后）</li>
+<li>
+<p>基线 <code>a1ff6efb</code> 有 143 个方法，<code>contains</code>@125、<code>on_dbl_click</code>@123，均在 128 以内 → 编译通过</p>
+</li>
+<li>
+<p><code>2c86ea7b</code> 在两者之前插入 6 个新方法，索引变为 131/129，<strong>被 128 上限截断</strong> → 编译失败</p>
+</li>
+<li>
+<p>把新方法挪到 struct <strong>末尾</strong>：<code>contains</code>/<code>on_dbl_click</code> 索引不变（仍 &lt;128），被丢弃的变成末尾的新方法（file_manager 未直接调用它们）→ 编译通过</p>
+</li>
+<li>
+<p>这解释了所有"与内容无关、与位置强相关"的实验现象：本质是<strong>方法在 struct 内的序号</strong>是否 ≥128</p>
+</li>
+<li>
+<p>与新增方法的<strong>内容无关</strong>：极简方法体、改名、改返回类型、删注释、去掉双引号全部无效</p>
+</li>
+<li>
+<p>与<strong>插入位置</strong>强相关：方法放在 <code>_to_float</code> 之后 → 失败；同一批方法放到 struct <strong>末尾</strong> → 编译通过</p>
+</li>
+<li>
+<p><code>2c86ea7b</code> 完整版因此同时丢了 <code>on_dbl_click</code> 与 <code>contains</code>；仅复现前部新增时先丢 <code>contains</code>（定义更靠后）</p>
+</li>
 </ul>
 <h2 id="排查过程-排除法">排查过程（排除法）</h2>
 <ol>

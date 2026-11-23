@@ -340,12 +340,14 @@ icon = &quot;ico5.ico&quot;     # 相对本文件所在目录（写绝对路径�
 <p>打包产物的<strong>应用图标</strong>就换成这个文件。<strong>两种模式都生效</strong>（目录模式 / <code>--onefile</code>）；
 不写 ⇒ 用 VM 自带的默认图标（也就是 <code>leno.exe</code> 那个）。</p>
 <ul>
-<li><strong>只认 <code>.ico</code></strong>：Windows 的图标是 PE 资源（<code>RT_GROUP_ICON</code> + <code>RT_ICON</code>），PNG/JPG
-  必须先转成 ICO 容器。ICO 里的图像数据<strong>原样搬运</strong>，所以 DIB 编码与 PNG 编码的条目都支持。</li>
-</ul>
-<ul>
-<li><strong>仓库自带的转换工具</strong>（不用装 ImageMagick ✓）：ICO 里的数据既然是原样搬运，
-  那就<strong>不需要解码/重新编码</strong> —— <code>tools\png_to_ico.leno</code> 只写 22 字节 ICO 头 + 原 PNG 数据：</li>
+<li>
+<p><strong>只认 <code>.ico</code></strong>：Windows 的图标是 PE 资源（<code>RT_GROUP_ICON</code> + <code>RT_ICON</code>），PNG/JPG
+  必须先转成 ICO 容器。ICO 里的图像数据<strong>原样搬运</strong>，所以 DIB 编码与 PNG 编码的条目都支持。</p>
+</li>
+<li>
+<p><strong>仓库自带的转换工具</strong>（不用装 ImageMagick ✓）：ICO 里的数据既然是原样搬运，
+  那就<strong>不需要解码/重新编码</strong> —— <code>tools\png_to_ico.leno</code> 只写 22 字节 ICO 头 + 原 PNG 数据：</p>
+</li>
 </ul>
 <pre><code class="language-bash">  build\leno.exe tools\png_to_ico.leno leno_gui\应用\音乐下载器\images\index.png leno_gui\应用\音乐下载器\app.ico
 </code></pre>

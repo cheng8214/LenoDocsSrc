@@ -367,16 +367,18 @@ main() {
 <h2 id="实际实现说明">实际实现说明</h2>
 <h3 id="已实现的改进">已实现的改进</h3>
 <ol>
-<li><strong><code>e.stack</code> 格式升级</strong>：从纯函数名数组 <code>["inner", "middle", "&lt;main&gt;"]</code> 变为 <code>"func (file:line)"</code> 格式 <code>["inner (script.leno:3)", "middle (script.leno:6)", "&lt;main&gt; (script.leno:10)"]</code>。仍是字符串数组，不影响遍历。</li>
-</ol>
-<ol>
-<li><strong>未捕获异常打印调用栈</strong>：所有未捕获异常路径（<code>throw_runtime_error</code>、<code>OP_THROW</code>、<code>OP_END_TRY</code>）现在都会通过 <code>print_unhandled_exception()</code> 打印完整的调用栈到 stderr。</li>
-</ol>
-<ol>
-<li><strong><code>throw</code> 字符串向后兼容</strong>：<code>throw "string"</code> 保持原行为，<code>catch e</code> 拿到的 <code>e</code> 仍然是字符串本身。但未捕获时也会实时构建并打印调用栈。</li>
-</ol>
-<ol>
-<li><strong>未捕获异常消息提取</strong>：当异常是 Dict 时，从 <code>e.msg</code> 提取消息字符串传给 <code>runtime_error</code>，避免打印整个 Dict 表示。</li>
+<li>
+<p><strong><code>e.stack</code> 格式升级</strong>：从纯函数名数组 <code>["inner", "middle", "&lt;main&gt;"]</code> 变为 <code>"func (file:line)"</code> 格式 <code>["inner (script.leno:3)", "middle (script.leno:6)", "&lt;main&gt; (script.leno:10)"]</code>。仍是字符串数组，不影响遍历。</p>
+</li>
+<li>
+<p><strong>未捕获异常打印调用栈</strong>：所有未捕获异常路径（<code>throw_runtime_error</code>、<code>OP_THROW</code>、<code>OP_END_TRY</code>）现在都会通过 <code>print_unhandled_exception()</code> 打印完整的调用栈到 stderr。</p>
+</li>
+<li>
+<p><strong><code>throw</code> 字符串向后兼容</strong>：<code>throw "string"</code> 保持原行为，<code>catch e</code> 拿到的 <code>e</code> 仍然是字符串本身。但未捕获时也会实时构建并打印调用栈。</p>
+</li>
+<li>
+<p><strong>未捕获异常消息提取</strong>：当异常是 Dict 时，从 <code>e.msg</code> 提取消息字符串传给 <code>runtime_error</code>，避免打印整个 Dict 表示。</p>
+</li>
 </ol>
 <h3 id="内联优化对调用栈的影响">内联优化对调用栈的影响</h3>
 <p>Leno 编译器实现了函数内联优化（<code>codegen_inline.c</code>），满足以下条件的函数会被内联到调用点：

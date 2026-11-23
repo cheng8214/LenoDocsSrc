@@ -1615,16 +1615,17 @@ Compare-Object $reg $stk
 <p>两项都是「<strong>减少指令条数</strong>」而不是改结构 —— 与 ⑤-g 的结论一致（调用路径没有单点"肥肉"，
 可动的是条数）。</p>
 <ol>
-<li><strong>无返回值函数末尾不再发 <code>LOADNIL</code></strong>（<code>codegen_func.c</code> 的补 return、<code>codegen_stmt.c</code> 的裸 <code>return</code>）：
+<li>
+<p><strong>无返回值函数末尾不再发 <code>LOADNIL</code></strong>（<code>codegen_func.c</code> 的补 return、<code>codegen_stmt.c</code> 的裸 <code>return</code>）：
    <code>OP_RETURN</code> 在 <code>nresults == 0</code>（B 字段 = 1）时本就返回 null，与
    「<code>LOADNIL</code> + <code>RETURN(nresults=1)</code>」<strong>结果完全相同</strong>，但空体函数从 2 条降到 1 条
    （<code>func f() {}</code> 现在只有一条 <code>RETURN A=0 B=1</code>）。
    ⚠ <code>reg_alloc/reg_free</code> <strong>保留</strong> —— <code>max_reg</code>（→ <code>local_count</code> → locals 数组大小与 GC
    扫描范围）的记账必须与改动前逐位一致，不能顺手把槽位也省掉。
-   <strong>实测</strong>（<code>全部测试</code> 5 次取 min）：空函数调用 <strong>170.0 → 156.8ms（−7.8%）</strong>，双向 A/B 同向。</li>
-</ol>
-<ol>
-<li><strong>新增 <code>OP_INDEX_ARRAY_IMM</code>（iABC，C = 无符号 0..255 立即数下标）</strong>：
+   <strong>实测</strong>（<code>全部测试</code> 5 次取 min）：空函数调用 <strong>170.0 → 156.8ms（−7.8%）</strong>，双向 A/B 同向。</p>
+</li>
+<li>
+<p><strong>新增 <code>OP_INDEX_ARRAY_IMM</code>（iABC，C = 无符号 0..255 立即数下标）</strong>：
    <code>arr[0]</code> 原是「<code>LOADI tmp,0</code> + <code>OP_INDEX_ARRAY_INT</code>」两条派发 —— 那个临时寄存器纯为凑一个
    寄存器操作数（Lua 的 <code>GETI</code> 把小下标直接编在指令里）。现在一条：
    <code>OP_INDEX_ARRAY_IMM A=7 B=1 C=0</code>（循环体 3 条 → 2 条）。
@@ -1647,10 +1648,12 @@ Compare-Object $reg $stk
    在<strong>字典/字符串键</strong>上不划算（要过常量表 + 判型）；这里是「<strong>静态已特化的数组 + 整数下标</strong>」，
    省掉的是纯 <code>LOADI</code> 且保留了跳过判型的快路径 ⇒ 两头都赚。
    <strong>实测</strong>（同轮双向 A/B，<code>全部测试</code> 5 次取 min）：<code>arr[index]</code> <strong>50.7 → 35.8ms（−29.4%）</strong>，
-   反向复测 −25.9%，两次同向不重叠。</li>
+   反向复测 −25.9%，两次同向不重叠。</p>
+</li>
 </ol>
 <ul>
-<li><strong>⑤-n 的负结论：handler 序言里的 <code>GET_CURRENT_LINE()</code> 不是瓶颈（别再改）</strong>。
+<li>
+<p><strong>⑤-n 的负结论：handler 序言里的 <code>GET_CURRENT_LINE()</code> 不是瓶颈（别再改）</strong>。
   各算术 handler 开头都无条件算一次 <code>int line = GET_CURRENT_LINE();</code>，而
   <code>frame-&gt;chunk-&gt;lines[…]</code> 是 <strong>3 次依赖加载</strong>，看起来该下沉到错误分支。做法：把
   <code>GET_CURRENT_LINE()</code> 宏<strong>临时</strong>改成常量 <code>(0)</code> 出一个探针二进制，与正常构建做 36 项全量 A/B
@@ -1658,16 +1661,17 @@ Compare-Object $reg $stk
   机理与 ⑤-c 已排除项 3（缓存 <code>frame-&gt;locals</code> 为局部变量、中性）同源：这段在<strong>关键路径之外</strong>，
   <code>-O2</code> + 乱序执行已经吃掉它 ⇒ <strong>已回退，不做</strong>。
   <strong>连带影响</strong>：⑤-c「剩余嫌疑 3」里的"<code>frame-&gt;ip</code> 经结构体字段访问"据此<strong>进一步降权</strong> ——
-  同族手法（把指针从结构体搬进局部变量）已被<strong>两次实测</strong>判为中性。</li>
-</ul>
-<ul>
-<li><strong>顺带观察（按本文档的测量方法学，判为布局彩票，勿据此下结论）</strong>：本轮 <code>fib 经典递归</code> 与
+  同族手法（把指针从结构体搬进局部变量）已被<strong>两次实测</strong>判为中性。</p>
+</li>
+<li>
+<p><strong>顺带观察（按本文档的测量方法学，判为布局彩票，勿据此下结论）</strong>：本轮 <code>fib 经典递归</code> 与
   <code>while 空</code> 在两个方向的 A/B 里都稳定快 ~5%，但这两项与本次改动<strong>无逻辑关联</strong>（无数组下标、
-  无空体函数）⇒ 属于 ⑤-m 末尾记的"换一次构建 = ±5~10% 地址对齐漂移"，<strong>不计作收益</strong>。</li>
-</ul>
-<ul>
-<li><strong>门禁</strong>：断言套件 <strong>358/358</strong>；<code>--debug</code> 可见 <code>arr[0]</code> 已走 <code>OP_INDEX_ARRAY_IMM</code>、
-  空体函数只剩一条 <code>RETURN</code>。</li>
+  无空体函数）⇒ 属于 ⑤-m 末尾记的"换一次构建 = ±5~10% 地址对齐漂移"，<strong>不计作收益</strong>。</p>
+</li>
+<li>
+<p><strong>门禁</strong>：断言套件 <strong>358/358</strong>；<code>--debug</code> 可见 <code>arr[0]</code> 已走 <code>OP_INDEX_ARRAY_IMM</code>、
+  空体函数只剩一条 <code>RETURN</code>。</p>
+</li>
 </ul>
 <p><strong>⑤-o 调用路径第一步：<code>INLINE_LOCALS_MAX</code> 32 → 64 —— ✅ 已完成</strong></p>
 <p>调用路径是唯一 2x 级缺口（微基准 2.27x）。<strong>先量再改</strong>：写探针量「每次调用净成本」随
@@ -2789,17 +2793,18 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 ⚠ 帧数组扩容时 <code>locals</code> 指针的搬迁也改了：原实现无条件写成自己的 <code>inline_locals</code>，
 会把原地帧指向调用方的指针改错 ⇒ 改成按地址差统一平移。</p>
 <ol>
-<li><strong>位运算快路径改"裸位运算"</strong>（<code>e91ed86</code>）—— 见 <code>04_compare_bit_cast.inc</code> 的 ★★ 注释。
+<li>
+<p><strong>位运算快路径改"裸位运算"</strong>（<code>e91ed86</code>）—— 见 <code>04_compare_bit_cast.inc</code> 的 ★★ 注释。
    NaN 装箱下两个 int48 是 <code>T | p</code>（T = <code>QNAN|SIGN_BIT|TAG_INT</code> <strong>两侧相同</strong>，p 是 48 位补码
    载荷、只占 bit 0..47）⇒ <strong>AND/OR 直接在原始 64 位上做就是精确的</strong>，XOR 补回 T 即可
    （负数只是 48 位补码，照样成立）。省掉两次拆箱（其中符号扩展带<strong>分支</strong>）+ 一次装箱。
    实测 <code>bench_bitwise_loop</code>（2 亿轮 × 6 条）<strong>2588ms → 1946ms（−25%）</strong>，对 Lua <strong>1.80x → 1.36x</strong>。
    ⚠ 定位过程（方法论）：先反汇编确认<strong>指令数完全相同</strong>（Lua 的 <code>MMBINI/MMBINK</code> 在整数快路径上
    被 <code>pc++</code> <strong>跳过</strong>，实际每轮也是 6 条）⇒ 差距全在每指令成本；再两步消融：守卫 384ms、
-   拆箱/装箱 <strong>504ms</strong> ⇒ <strong>拆箱/装箱才是大头</strong>，不是类型检查。</li>
-</ol>
-<ol>
-<li><strong>int48 越界必须提升 bigint</strong>（<code>27669a0</code>）—— 正确性修复（静默错值，比崩溃更难查）。
+   拆箱/装箱 <strong>504ms</strong> ⇒ <strong>拆箱/装箱才是大头</strong>，不是类型检查。</p>
+</li>
+<li>
+<p><strong>int48 越界必须提升 bigint</strong>（<code>27669a0</code>）—— 正确性修复（静默错值，比崩溃更难查）。
    · 左移：守卫只看<strong>移位量</strong>、看不到<strong>左值大小</strong> ⇒ <code>123456789012345 &lt;&lt; 3</code> 静默截成
      -138245594743864（正确 987654312098760）。判据必须<strong>先比阈值再移位</strong>（先移位会撞
      int64 左移 UB，回绕后还会被误判成"在范围内"—— <code>hi &lt;&lt; 1</code> 就是这么算成 -2 的）。
@@ -2807,7 +2812,8 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
    · 同族已核过、<strong>无需改</strong>：ADD/SUB（<code>VM_INT_RESULT</code>）、MUL（<code>LENO_MUL_OVERFLOW</code>）、
      NEG（范围检查）、USHR（<code>val_int_safe</code>）、MOD（结果绝对值恒小于除数）、BITNOT（<code>~x</code> 封闭）。
    · 新增 <code>assert/test_int48_overflow.leno</code> —— <strong>这两个边界原先一个都没被覆盖</strong>，
-     套件全绿也漏（"全绿"不等于"覆盖到了"）。</li>
+     套件全绿也漏（"全绿"不等于"覆盖到了"）。</p>
+</li>
 </ol>
 <p><strong>❌ 已回退（中性 —— 接在 ⑤-c"已排除"清单的第 6 项之后，别再试）</strong></p>
 <ol>

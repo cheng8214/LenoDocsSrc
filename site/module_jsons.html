@@ -874,14 +874,16 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li><strong>编码问题</strong><ul>
+<li>
+<p><strong>编码问题</strong></p>
+<ul>
 <li>JSON 文件应使用 UTF-8 编码</li>
 <li>支持中文、emoji 等 Unicode 字符</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>数字精度</strong><ul>
+<li>
+<p><strong>数字精度</strong></p>
+<ul>
 <li><strong>整数按精确的 int64 解析</strong> ✓（<strong>2026-10-10 起</strong>；超出 int48 会自动升 bigint ✓）
      ⇒ <strong>雪花 ID / 大时间戳</strong>（&gt; 2^53 但在 int64 内）现在<strong>不再失真</strong> ✓：
      <code>jsons.get_int(jsons.decode("{\"id\":153282510146394112}"), "id", -1)</code> ⇒ <code>153282510146394112</code> ✓
@@ -891,23 +893,23 @@ main() {
 <li>⚠ 回写（<code>encode</code>）会<strong>按十进制原样写出</strong>大整数 ✓（不写科学计数法 ✓ 也不写 <code>null</code> ✓）</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>对象键名</strong><ul>
+<li>
+<p><strong>对象键名</strong></p>
+<ul>
 <li>JSON 对象键必须是字符串</li>
 <li>使用点号或方括号访问: <code>obj.key</code> 或 <code>obj["key"]</code></li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>数组越界</strong><ul>
+<li>
+<p><strong>数组越界</strong></p>
+<ul>
 <li>访问不存在的索引返回 <code>null</code>，不会报错</li>
 <li>建议先检查数组长度</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>循环引用</strong>（2026-11-16 复核更正 —— 下面两条旧说法已过期 ✗）<ul>
+<li>
+<p><strong>循环引用</strong>（2026-11-16 复核更正 —— 下面两条旧说法已过期 ✗）</p>
+<ul>
 <li><del>"当前版本不支持处理循环引用 / 编码可能导致无限递归"</del> ⇒ <strong>不会无限递归</strong>：
      编解码都有 <strong>512 层</strong>深度上限，超限<strong>明确报错</strong>
      （<code>编码失败：嵌套超过 512 层（结构可能存在循环引用）</code>），不崩、不静默截断</li>
@@ -917,23 +919,23 @@ main() {
      <code>print()</code> / <code>_str()</code>（<strong>地址栈</strong>环检测，命中同一个对象在自己的路径上 ⇒ 立即报错）</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>文件权限</strong><ul>
+<li>
+<p><strong>文件权限</strong></p>
+<ul>
 <li><code>read_file</code> 需要读权限</li>
 <li><code>write_file</code> 需要写权限，会自动创建父目录</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>错误处理</strong><ul>
+<li>
+<p><strong>错误处理</strong></p>
+<ul>
 <li>解析错误返回 <code>null</code>，不会抛出异常</li>
 <li>建议始终检查返回值</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>数组可以直接存、也可以直接收窄</strong>（2026-10-08 实测更正 ✓）<ul>
+<li>
+<p><strong>数组可以直接存、也可以直接收窄</strong>（2026-10-08 实测更正 ✓）</p>
+<ul>
 <li>字面量字段里直接放数组：<code>jsons.write_file(p, {version: 1, arr: ["x","y"]})</code> ✓ 落盘就是 JSON 数组</li>
 <li><code>Dict[string, any] d = {}</code> 再 <code>d["arr"] = ["x","y"]</code> ✓ <strong>内存与落盘都正常，不会被丢掉</strong></li>
 <li><code>jsons.decode(...)</code> 解出来的数组，<code>is Array[string]</code> <strong>成立</strong> ✓（库返回的数组如 <code>jsons.keys</code> 同样成立）</li>

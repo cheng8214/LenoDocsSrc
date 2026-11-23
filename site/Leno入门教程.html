@@ -7555,12 +7555,14 @@ main() {
 <p>旧版本需要 <code>arr.add(d as Speaker)</code> 显式上转，当前版本已支持隐式兼容检查。</p>
 </blockquote>
 <ol>
-<li><strong>跨模块 <code>new</code> 两种写法都可以</strong>
+<li>
+<p><strong>跨模块 <code>new</code> 两种写法都可以</strong>
    <code>b.Dog d = new b.Dog()</code> 与 <code>use b.Dog</code> 后的 <code>Dog d = new Dog()</code> 都支持
-   （旧版本只支持后者；详见下方“使用 use 导入类型”）。</li>
-</ol>
-<ol>
-<li><strong>遍历 vs 下标访问（历史坑，2026-07-09 编译器已修复）</strong><ul>
+   （旧版本只支持后者；详见下方“使用 use 导入类型”）。</p>
+</li>
+<li>
+<p><strong>遍历 vs 下标访问（历史坑，2026-07-09 编译器已修复）</strong></p>
+<ul>
 <li><code>for arr to s { s.speak() }</code>：遍历变量 <code>s</code> 始终正确收窄为 <code>Speaker</code>，可直接调用方法（这是官方推荐写法）。</li>
 <li><code>arr[i].speak()</code>：旧版本下标取出退化为 <code>any</code> 导致报错，当前版本已修复，可直接调用。</li>
 <li><code>(x as Speaker).speak()</code>：旧版本 <code>as</code> 裸表达式不收窄（绑定到变量 <code>var sp = x as Speaker; sp.speak()</code> 则一直正常），当前版本已修复。</li>
@@ -8955,10 +8957,12 @@ print(config.exported_b)    // 20
 </code></pre>
 <h4 id="注意事项">注意事项</h4>
 <ol>
-<li><strong>ASCII 字符串无区别</strong>：纯英文/数字时，<code>len()</code> == <code>byte_len()</code>，<code>slice()</code> == <code>byte_slice()</code>，用哪个都行。</li>
-</ol>
-<ol>
-<li><strong>中文等多字节字符</strong>：一个中文字符占 3 个 UTF-8 字节，<code>len()</code> 和 <code>byte_len()</code> 结果不同：</li>
+<li>
+<p><strong>ASCII 字符串无区别</strong>：纯英文/数字时，<code>len()</code> == <code>byte_len()</code>，<code>slice()</code> == <code>byte_slice()</code>，用哪个都行。</p>
+</li>
+<li>
+<p><strong>中文等多字节字符</strong>：一个中文字符占 3 个 UTF-8 字节，<code>len()</code> 和 <code>byte_len()</code> 结果不同：</p>
+</li>
 </ol>
 <pre><code class="language-leno">   var s = &quot;你好ab&quot;
    print(s.len())       // 4（4个字符）
@@ -8967,13 +8971,15 @@ print(config.exported_b)    // 20
    print(s[2])          // &quot;a&quot;
 </code></pre>
 <ol>
-<li><strong>加密/解密等二进制操作必须用字节级 API</strong>：加密算法操作的是原始字节，填充长度、偏移量都是字节数，必须使用 <code>byte_len()</code>、<code>byte_slice()</code>、<code>byte()</code>。</li>
-</ol>
-<ol>
-<li><strong><code>for str to ch</code> 遍历按字符</strong>：遍历字符串时，每次迭代得到一个完整的 Unicode 字符，不是字节。</li>
-</ol>
-<ol>
-<li><strong><code>strings.char()</code> 创建单字节字符</strong>：<code>strings.char(65)</code> 创建 "A"，<code>strings.char(0xE4)</code> 创建单个字节，适合构造二进制数据。</li>
+<li>
+<p><strong>加密/解密等二进制操作必须用字节级 API</strong>：加密算法操作的是原始字节，填充长度、偏移量都是字节数，必须使用 <code>byte_len()</code>、<code>byte_slice()</code>、<code>byte()</code>。</p>
+</li>
+<li>
+<p><strong><code>for str to ch</code> 遍历按字符</strong>：遍历字符串时，每次迭代得到一个完整的 Unicode 字符，不是字节。</p>
+</li>
+<li>
+<p><strong><code>strings.char()</code> 创建单字节字符</strong>：<code>strings.char(65)</code> 创建 "A"，<code>strings.char(0xE4)</code> 创建单个字节，适合构造二进制数据。</p>
+</li>
 </ol>
 <h3 id="转义字符">转义字符</h3>
 <p>Leno 支持以下转义字符，可在普通字符串和插值字符串中使用：</p>

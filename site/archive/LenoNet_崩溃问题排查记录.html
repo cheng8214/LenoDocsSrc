@@ -91,14 +91,16 @@
    }
 </code></pre>
 <ol>
-<li><strong><code>op_type_specialized.inc</code> 大量使用 <code>vm_stack_push_fast</code></strong>:<ul>
+<li>
+<p><strong><code>op_type_specialized.inc</code> 大量使用 <code>vm_stack_push_fast</code></strong>:</p>
+<ul>
 <li><code>OP_ADD_INT</code>, <code>OP_SUB_INT</code>, <code>OP_MUL_INT</code> 等 ~30 个指令</li>
 <li>这些指令在 FFI 回调执行 Leno 字节码时会被触发</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>FFI 回调 <code>callback_dispatch_direct</code> 用 <code>vm_stack_push</code>（安全版）压入参数</strong>:</li>
+<li>
+<p><strong>FFI 回调 <code>callback_dispatch_direct</code> 用 <code>vm_stack_push</code>（安全版）压入参数</strong>:</p>
+</li>
 </ol>
 <pre><code class="language-c">   // ffi.c:2354 - 用安全版
    vm_stack_push(vm_ptr, leno_arg);

@@ -61,16 +61,18 @@
 <p>约 <strong>22%（~45ms）的差距全部来自“编译器内存税”</strong>，而不是字节码本身有任何差异——三组最终都在<strong>同一个 VM、同一份字节码</strong>上执行。</p>
 <h3 id="为什么编译器驻留会拖慢-vm">为什么编译器驻留会拖慢 VM？</h3>
 <ol>
-<li><strong>icache（指令缓存）污染</strong>
-   编译器的词法/语法/语义/codegen 代码与 VM 解释器代码同在进程代码段。即使编译阶段已结束，这些代码页仍留在内存。VM 的指令分派循环（<code>vm_run</code> 的 <code>switch(opcode)</code>）执行时，L1 icache 被编译器代码页挤占，指令预取命中率下降。</li>
-</ol>
-<ol>
-<li><strong>dcache（数据缓存）污染</strong>
-   编译器留下的 AST 节点、符号表、类型信息、模块扫描结构——这些活跃内存与 VM 的栈、常量池、对象堆竞争 L1/L2 dcache。斐波那契递归是 cache-sensitive 的密集计算，每一次栈帧访问、每一次常量读取，都可能因 dcache miss 多等几个周期。</li>
-</ol>
-<ol>
-<li><strong>TLB 压力</strong>
-   编译器分配的内存页增加了页表遍历开销，虽不如 icache/dcache 明显，但在微秒级 benchmark 里也会累积。</li>
+<li>
+<p><strong>icache（指令缓存）污染</strong>
+   编译器的词法/语法/语义/codegen 代码与 VM 解释器代码同在进程代码段。即使编译阶段已结束，这些代码页仍留在内存。VM 的指令分派循环（<code>vm_run</code> 的 <code>switch(opcode)</code>）执行时，L1 icache 被编译器代码页挤占，指令预取命中率下降。</p>
+</li>
+<li>
+<p><strong>dcache（数据缓存）污染</strong>
+   编译器留下的 AST 节点、符号表、类型信息、模块扫描结构——这些活跃内存与 VM 的栈、常量池、对象堆竞争 L1/L2 dcache。斐波那契递归是 cache-sensitive 的密集计算，每一次栈帧访问、每一次常量读取，都可能因 dcache miss 多等几个周期。</p>
+</li>
+<li>
+<p><strong>TLB 压力</strong>
+   编译器分配的内存页增加了页表遍历开销，虽不如 icache/dcache 明显，但在微秒级 benchmark 里也会累积。</p>
+</li>
 </ol>
 <h3 id="关键证据">关键证据</h3>
 <p><code>src/main.c</code> 中 <code>lenolang_run()</code> 的执行顺序是：先 <code>vm_run()</code>（第 186 行），<strong>之后</strong>才释放 AST / 语义表 / 字节码块（第 189–194 行）。这说明编译器资源不是“懒释放”，而是<strong>在 <code>vm_run</code> 执行期间根本没释放</strong>。</p>
@@ -120,12 +122,14 @@
 </code></pre>
 <p>如果这 45ms 差距能缩到 5ms 以内，即可确认是 dcache 污染问题。（尚未实现，待验证。）</p>
 <ol>
-<li><strong>编译器与 VM 分离进程（极端方案）</strong>
-   编译阶段把源码编成 <code>.lenb</code>，运行阶段只负责加载执行（<code>leno.exe</code> 一肩挑这两件事）。这就是现在的 <code>.lenb</code> 模式，已经是最优解。</li>
-</ol>
-<ol>
-<li><strong>预热缓存（warmup）</strong>
-   若必须跑 <code>.leno</code> 源码，可在正式计算前跑一段“空转”代码，把 VM 的 hot path 预热进 icache，减少编译器代码页的干扰。收益有限。</li>
+<li>
+<p><strong>编译器与 VM 分离进程（极端方案）</strong>
+   编译阶段把源码编成 <code>.lenb</code>，运行阶段只负责加载执行（<code>leno.exe</code> 一肩挑这两件事）。这就是现在的 <code>.lenb</code> 模式，已经是最优解。</p>
+</li>
+<li>
+<p><strong>预热缓存（warmup）</strong>
+   若必须跑 <code>.leno</code> 源码，可在正式计算前跑一段“空转”代码，把 VM 的 hot path 预热进 icache，减少编译器代码页的干扰。收益有限。</p>
+</li>
 </ol>
 <h3 id="一句话总结">一句话总结</h3>
 <blockquote>

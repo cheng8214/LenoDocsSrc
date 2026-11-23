@@ -79,7 +79,8 @@ main() {
 <p>块级：ATX 标题（<code>#</code>..<code>######</code>，带 id）/ 段落（软换行保留、行尾两空格 → <code>&lt;br&gt;</code>）/
 围栏代码（<code>```lang</code>，语言进 <code>class="language-xx"</code>，<strong>只认裸 <code>```</code> 闭合</strong>）/
 <strong>缩进代码块</strong>（4 空格或 tab）/ 表格（GFM，含 <code>:</code> 对齐、单元格内 <code>\|</code> 转义）/
-无序与有序列表（含嵌套，遵守 <code>sane_lists</code>：<strong>列表前要有空行</strong>）/ 引用（含嵌套，<strong>引用里也能放代码块</strong>）/
+无序与有序列表（含嵌套；<strong>紧凑</strong>时 <code>&lt;li&gt;文字&lt;/li&gt;</code>、<strong>松散</strong>（项间有空行）时 <code>&lt;li&gt;&lt;p&gt;文字&lt;/p&gt;&lt;/li&gt;</code>；
+遵守 <code>sane_lists</code>：列表前要有空行）/ 引用（含嵌套、<strong>懒续行</strong>（不写 <code>&gt;</code> 的续行仍属引用）、引用里也能放代码块）/
 分隔线 / 原始 HTML 块透传。</p>
 <p>行内：<code>`code`</code>（<strong>开闭反引号等长</strong>）/ <code>**粗**</code> / <code>*斜*</code> / <code>~~删除线~~</code> /
 <code>[链接](url)</code> / <code>![图](src)</code> / <strong>行内 HTML 透传</strong>（<code>&lt;br&gt;</code> <code>&lt;kbd&gt;</code> <code>&lt;sub&gt;</code>…）/ <code>\</code> 转义。</p>

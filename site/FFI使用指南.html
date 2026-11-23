@@ -3458,7 +3458,8 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <em>最后更新: 2026-10-01</em></p>
 <h3 id="更新记录">更新记录</h3>
 <ul>
-<li><strong>(2026-10-12) 修回调实参的 64 位截断</strong>：<code>callback_dispatch_direct</code> 把回调实参转成 Leno 值时
+<li>
+<p><strong>(2026-10-12) 修回调实参的 64 位截断</strong>：<code>callback_dispatch_direct</code> 把回调实参转成 Leno 值时
   写的是 <code>val_int((int)ffi_args[i].value.i)</code> —— <code>(int)</code> 是 32 位 ⇒ <strong>回调签名里的 i64/u64
   （含指针）只能拿到低 32 位</strong>（符号扩展）。改为 <code>val_int_safe(...)</code>（与返回类型路径同口径）。
   本站真实事故：LenoSDL3 托盘窗口过程（<code>sdl_tray.leno</code> 的子类化 ffi.callback）把<strong>截断后的
@@ -3466,25 +3467,26 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
   <code>0xC0000005</code> 崩在 <code>SDL3.dll+0x11AF30</code>（Trae签到 10-03~10-11 共 5 次同偏移；转储现场
   <code>RCX=0x3C1FA238</code> = 栈地址 <code>0x0000005C_3C1FA238</code> 的低 32 位）。<strong>只在高地址指针上偶发</strong>
   （低 4GB 地址被截断后值不变）⇒ 以前一直没被发现。新增 8.4 陷阱 9 说明 + 回归
-  <code>assert/test_ffi_callback_i64.leno</code> ✓</li>
-</ul>
-<ul>
-<li><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
+  <code>assert/test_ffi_callback_i64.leno</code> ✓</p>
+</li>
+<li>
+<p><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
   "按 ABI 精确分类 + 汇编调用桩"（<code>leno_win64_call</code> / <code>leno_sysv_call</code> / <code>leno_aapcs_call</code>）。
   旧做法覆盖不全：<code>(i32,f32,i32,f32)</code> 会<strong>静默空调用</strong>（返回 0、函数根本没进）、
   <code>(f32,f64,i32,i32)</code> 会传错值、5 参数含浮点则被上层拦截<strong>抛错</strong>（现已不再抛）。
   另修两个同源缺陷：<strong>f32 返回值恒为 0</strong>（前端读 <code>result.f</code>，后端却写 <code>result.d</code>）、
   <strong>"全浮点参数 + 整数返回"</strong>从浮点寄存器取返回值（真值在整数返回寄存器）。
-  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</li>
-</ul>
+  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</p>
+</li>
+<li>
+<p><strong>v4.1</strong> (2026-09-12):</p>
 <ul>
-<li><strong>v4.1</strong> (2026-09-12):<ul>
 <li><strong>JIT 内联定宽内存读写</strong>：热循环中 <code>read_byte</code>/<code>read_int8</code>/<code>read_int16</code>/<code>read_uint16</code>/<code>read_int</code>/<code>read_uint</code> 及对应 <code>write_*</code>（共 12 个）由 JIT 直接生成机器码 load/store，免去 callout 开销。像素直写风格基准（15,000,000 次调用）334ms → 221ms（约 -34%）。语义与越界/空指针报错文本与解释器一致；详见 <code>docs/archive/JIT实现与调试记录.md</code> §2.6。</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v4.0</strong> (2026-08-19):</p>
 <ul>
-<li><strong>v4.0</strong> (2026-08-19):<ul>
 <li><strong>符号地址缓存</strong>：<code>ObjFFILibrary</code> 新增函数地址缓存表（32 槽），<code>ffi.call_*</code>/<code>clib</code>/<code>ffi.dlsym</code> 首次调用后缓存函数地址，后续调用跳过 <code>GetProcAddress</code>/<code>dlsym</code>。</li>
 <li><strong>混合参数回退路径浮点 bug 修复</strong>：<code>ffi_call_impl</code> 调用前检查参数组合，当 &gt;4 参数含浮点且超出 Win64 精确分发范围时，提前抛出明确错误，而非静默走 broken 回退路径。</li>
 <li><strong>回调数量上限提升</strong>：<code>MAX_FFI_CALLBACKS</code> 从 128 增至 256。</li>
@@ -3496,9 +3498,9 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <li><strong><code>ffi.call</code> 标记 deprecated</strong>：使用时输出 <code>stderr</code> 警告，引导使用 <code>ffi.call_int</code> 等明确返回类型的函数。</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.5</strong> (2026-08-19):</p>
 <ul>
-<li><strong>v3.5</strong> (2026-08-19):<ul>
 <li><strong>修复 1.2 节内存布局示意图</strong>：修正 <code>write_int64</code> 偏移 7 与 <code>write_uint16</code> 重叠的错误，改为正确的偏移 9，并补充被遗漏的 <code>write_uint16</code> 和 <code>write_bool</code> 行。新增字段重叠警告说明。</li>
 <li><strong>新增 8.5 cstruct 内存对齐与 padding</strong>：详细说明 cstruct 默认自然对齐规则（对齐=类型大小）、字段顺序对 padding 的影响、如何用 <code>size()</code>/<code>alignment()</code>/<code>debug()</code> 验证布局、以及 packed 结构体的限制。</li>
 <li><strong>新增 8.6 字节序（Endianness）</strong>：明确 <code>ffi.write_*</code>/<code>read_*</code> 使用主机字节序（memcpy 直接拷贝）。现已提供 <code>write_le_i16</code>/<code>write_be_i32</code> 等显式字节序函数，可直接使用，无需手动拼装。</li>
@@ -3506,36 +3508,36 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <li><strong>修正 ffi.call_* vs clib 性能差异</strong>：对比表新增符号解析和调用开销行，如实说明当前实现中两者底层走同一路径（<code>ffi_call_impl</code>），都每次调用执行 <code>GetProcAddress</code>/<code>dlsym</code>，没有在 <code>ffi.load</code> 时缓存函数地址。clib 优势在类型安全和开发体验，而非运行时性能。</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.4</strong> (2026-08-14):</p>
 <ul>
-<li><strong>v3.4</strong> (2026-08-14):<ul>
 <li><strong>str8 返回值内存泄漏说明</strong>：明确标注 <code>str8</code> 返回类型会深拷贝 C <code>char*</code> 为 Leno <code>string</code>，但原始 C 内存不自动释放。对于需要释放的 C 字符串（如 <code>curl_easy_escape</code>），应使用 <code>call_ptr</code> + <code>read_string</code> + 手动释放三步走方案。</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.3</strong> (2026-06-19):</p>
 <ul>
-<li><strong>v3.3</strong> (2026-06-19):<ul>
 <li>新增 <strong>8.4 常见陷阱与注意事项</strong>：汇总 LenoMusic 开发中的 8 个实战踩坑：
     <code>as int</code> 优先级、clib 链式调用、buffer 大小计算、f32/f64 精度、Ptr 大小写、files.exists/open 区别、clib 类型限制、ffi.free 统一释放</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.2</strong> (2026-06-07):</p>
 <ul>
-<li><strong>v3.2</strong> (2026-06-07):<ul>
 <li><strong>clib 支持 cstruct 参数</strong>：clib 声明中可直接使用 cstruct 名称作为参数类型，调用时 cstruct 实例自动转换为指针传递，无需手动 <code>to_ptr()</code></li>
 <li>6.3 节更新：新增 clib + cstruct 声明式调用示例（推荐方式）</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.1</strong> (2026-06-07):</p>
 <ul>
-<li><strong>v3.1</strong> (2026-06-07):<ul>
 <li>新增 <code>ffi.last_error()</code> — 获取最近一次 FFI 调用后的系统错误码</li>
 <li>新增 <code>ffi.write_bool()</code> / <code>ffi.write_uint16()</code> — 补全内存写入 API 对称性</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>v3.0</strong> (2026-06-07):</p>
 <ul>
-<li><strong>v3.0</strong> (2026-06-07):<ul>
 <li><strong>零摩擦 FFI</strong>：clib 返回值自动展开，无需 <code>as</code> 转换（i32→int, f64→float, str8→string, str16→string）</li>
 <li><strong>参数自动窄化</strong>：Leno int 可直接传给 i8/u8/i16/u16/i32/u32/i64/u64 参数，运行时范围检查</li>
 <li><strong>新增 C 布局类型</strong>：<code>i8</code>、<code>u8</code>、<code>i16</code>、<code>u16</code></li>

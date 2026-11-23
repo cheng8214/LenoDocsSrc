@@ -736,36 +736,38 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li><strong>路径分隔符</strong><ul>
+<li>
+<p><strong>路径分隔符</strong></p>
+<ul>
 <li>Windows 使用 <code>\</code>，Linux/macOS 使用 <code>/</code></li>
 <li>使用 <code>dirs.sep()</code> 获取当前平台的分隔符</li>
 <li><code>dirs.join()</code> 会自动处理分隔符</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>权限问题</strong><ul>
+<li>
+<p><strong>权限问题</strong></p>
+<ul>
 <li>某些操作（如创建目录、删除文件）可能需要相应权限</li>
 <li>操作失败时返回 <code>false</code>，不会抛出异常</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>符号链接</strong><ul>
+<li>
+<p><strong>符号链接</strong></p>
+<ul>
 <li>当前版本对符号链接的处理取决于操作系统</li>
 <li><code>is_dir()</code> 和 <code>is_file()</code> 会跟随符号链接</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>路径长度限制</strong><ul>
+<li>
+<p><strong>路径长度限制</strong></p>
+<ul>
 <li>Windows 传统路径限制为 260 字符</li>
 <li>使用绝对路径时注意长度限制</li>
 </ul>
 </li>
-</ol>
-<ol>
-<li><strong>线程安全</strong><ul>
+<li>
+<p><strong>线程安全</strong></p>
+<ul>
 <li>目录遍历操作不是原子性的</li>
 <li>遍历过程中目录内容变化可能导致不一致</li>
 </ul>

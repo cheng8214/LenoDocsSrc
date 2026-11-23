@@ -477,16 +477,18 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <h3 id="根因分析">根因分析</h3>
 <p><code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 虽然看似冗余，但实际上对编译器优化至关重要：</p>
 <ol>
-<li><strong>寄存器分配锚点</strong>: frame 赋值给编译器一个明确的“重新加载点”，让 <code>frame</code> 指针保持在寄存器中。移除后，编译器可能无法证明 <code>frame</code> 在跨函数调用后仍然有效，被迫从内存重新加载</li>
-</ol>
-<ol>
-<li><strong>别名分析屏障</strong>: <code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 明确告诉编译器 <code>frame</code> 指向 <code>vm.frames</code> 数组的具体位置。没有这行，编译器可能保守地认为 <code>frame</code> 指向的内存可能被任何函数调用修改，从而生成更多的内存读写</li>
-</ol>
-<ol>
-<li><strong>指令调度优化</strong>: frame 赋值后的代码块，编译器可以更激进地重排指令。移除后编译器变得保守，指令调度质量下降</li>
-</ol>
-<ol>
-<li><strong>与 #10、#14 一致</strong>: 之前移除 <code>OP_CLOSE_UPVALUE</code>、<code>OP_DEFINE_GLOBAL</code>、<code>OP_GET_NATIVE</code>、<code>OP_STRING_ADD</code> 的 frame 更新时也观测到性能下降，这次是大规模验证了这一现象</li>
+<li>
+<p><strong>寄存器分配锚点</strong>: frame 赋值给编译器一个明确的“重新加载点”，让 <code>frame</code> 指针保持在寄存器中。移除后，编译器可能无法证明 <code>frame</code> 在跨函数调用后仍然有效，被迫从内存重新加载</p>
+</li>
+<li>
+<p><strong>别名分析屏障</strong>: <code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 明确告诉编译器 <code>frame</code> 指向 <code>vm.frames</code> 数组的具体位置。没有这行，编译器可能保守地认为 <code>frame</code> 指向的内存可能被任何函数调用修改，从而生成更多的内存读写</p>
+</li>
+<li>
+<p><strong>指令调度优化</strong>: frame 赋值后的代码块，编译器可以更激进地重排指令。移除后编译器变得保守，指令调度质量下降</p>
+</li>
+<li>
+<p><strong>与 #10、#14 一致</strong>: 之前移除 <code>OP_CLOSE_UPVALUE</code>、<code>OP_DEFINE_GLOBAL</code>、<code>OP_GET_NATIVE</code>、<code>OP_STRING_ADD</code> 的 frame 更新时也观测到性能下降，这次是大规模验证了这一现象</p>
+</li>
 </ol>
 <h3 id="核心教训">核心教训</h3>
 <blockquote>

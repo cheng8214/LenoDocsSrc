@@ -128,13 +128,15 @@ if (sym-&gt;is_const) {
 <p><code>src/semantic/visitinc/visit_module.inc:1652-1855</code> —— <code>AST_MODULE_ACCESS</code> 处理：</p>
 <p>当解析 <code>StructName.MEMBER</code> 时（<code>StructName</code> 不是模块别名，而是作用域中的变量/类型符号）：</p>
 <ol>
-<li><strong>enum 类型</strong>（行 1714-1765）：查找 <code>sym-&gt;enum_value_names</code> 数组，找到后将 <code>AST_MODULE_ACCESS</code> <strong>直接转换为 <code>AST_NUM</code> 常量</strong>。这正是关联常量应该复用的模式。</li>
-</ol>
-<ol>
-<li><strong>struct/cstruct/face 类型</strong>（行 1766-1783）：转换为 <code>AST_FIELD_ACCESS</code>，即当作"访问 struct 实例的字段"处理。</li>
-</ol>
-<ol>
-<li><strong>普通变量</strong>（行 1784-1794）：转换为 <code>AST_INDEX</code>（<code>obj["member"]</code>）。</li>
+<li>
+<p><strong>enum 类型</strong>（行 1714-1765）：查找 <code>sym-&gt;enum_value_names</code> 数组，找到后将 <code>AST_MODULE_ACCESS</code> <strong>直接转换为 <code>AST_NUM</code> 常量</strong>。这正是关联常量应该复用的模式。</p>
+</li>
+<li>
+<p><strong>struct/cstruct/face 类型</strong>（行 1766-1783）：转换为 <code>AST_FIELD_ACCESS</code>，即当作"访问 struct 实例的字段"处理。</p>
+</li>
+<li>
+<p><strong>普通变量</strong>（行 1784-1794）：转换为 <code>AST_INDEX</code>（<code>obj["member"]</code>）。</p>
+</li>
 </ol>
 <p><strong>关键洞察</strong>：enum 的 <code>TypeName.MEMBER</code> 访问路径已经是"编译期常量解析"的实现。struct 关联常量可以在 enum 路径旁边加一个分支，以相同方式将 <code>StructName.CONST_NAME</code> 解析为编译期常量值。</p>
 <hr>
@@ -655,19 +657,21 @@ if (sdef &amp;&amp; sdef-&gt;const_count &gt; 0) {
 <p><strong>值得做，但优先级中等。</strong></p>
 <p><strong>理由</strong>：</p>
 <ol>
-<li><strong>痛点真实存在</strong>：LenoSDL3 和 LenoWin32 中有大量散落在模块顶层的关联常量，命名空间扁平、LSP 补全断裂。</li>
-</ol>
-<ol>
-<li><strong>实现量可控</strong>：约 200 行代码，其中 80% 是机械式扩展。核心逻辑（parser 加分支 + 语义分析加路由）不超过 50 行。</li>
-</ol>
-<ol>
-<li><strong>与现有架构契合度高</strong>：enum 的 <code>TypeName.MEMBER</code> 编译期常量解析路径已经验证了这条路线可行，struct 关联常量只是复用同一模式。</li>
-</ol>
-<ol>
-<li><strong>不引入运行时复杂度</strong>：关联常量在编译期求值，不占实例内存，不影响 GC，不影响 NaN-boxing。</li>
-</ol>
-<ol>
-<li><strong>非阻塞性</strong>：当前模块级 const + 命名前缀约定"勉强够用"，不做不会阻碍开发。但 LSP 补全优化时会显著放大价值。</li>
+<li>
+<p><strong>痛点真实存在</strong>：LenoSDL3 和 LenoWin32 中有大量散落在模块顶层的关联常量，命名空间扁平、LSP 补全断裂。</p>
+</li>
+<li>
+<p><strong>实现量可控</strong>：约 200 行代码，其中 80% 是机械式扩展。核心逻辑（parser 加分支 + 语义分析加路由）不超过 50 行。</p>
+</li>
+<li>
+<p><strong>与现有架构契合度高</strong>：enum 的 <code>TypeName.MEMBER</code> 编译期常量解析路径已经验证了这条路线可行，struct 关联常量只是复用同一模式。</p>
+</li>
+<li>
+<p><strong>不引入运行时复杂度</strong>：关联常量在编译期求值，不占实例内存，不影响 GC，不影响 NaN-boxing。</p>
+</li>
+<li>
+<p><strong>非阻塞性</strong>：当前模块级 const + 命名前缀约定"勉强够用"，不做不会阻碍开发。但 LSP 补全优化时会显著放大价值。</p>
+</li>
 </ol>
 <h3 id="9-2-实现顺序建议">9.2 实现顺序建议</h3>
 <ol>
