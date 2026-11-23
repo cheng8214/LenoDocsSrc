@@ -618,17 +618,20 @@ I3 的字段顺序）；C3 条目在 callout 里<strong>兜底拒绝</strong>（
          return s.add()
      }
 </code></pre>
-<p>  反汇编显示 <code>S.add</code> 的方法体是 <code>OP_GET_FIELD_FAST slot=0 field=0</code> + <strong><code>OP_GET_UPVALUE 0</code></strong>
-  ⇒ 该方法 <code>func-&gt;upvalue_count == 1</code>。
-- 而创建路径（<code>op_struct.inc:124-134</code> 明确"需要 upvalue 的方法，标记为 NULL，在运行时
-  动态创建"；<code>op_property.inc:111-121</code>、<code>op_struct.inc:949-955</code> / <code>1114-1120</code>、
-  <code>jit_callout_get_method</code>）新建时把 <code>upvalues[0..n)</code> <strong>一律置 NULL</strong>。
-- <strong>该形态在解释器侧当前另有问题</strong>：上述程序运行到 <code>s.add()</code> 时报
-  「尝试在非 struct 类型上调用方法 'add'」（属 VM 侧另一处缺陷，本轮未追）。
-- <strong>结论（已落地）</strong>：JIT 侧<strong>不依赖</strong>"方法闭包一定无捕获"这一假设，<code>GET/SET_UPVALUE</code>
-  一律做三级守卫（<code>closure == NULL</code> / <code>slot &gt;= upvalue_count</code> / <code>upvalues[slot] == NULL</code>）
-  —— 任一不满足即 bailout 交解释器。JIT 在这里比 VM 更保守是正确的：宁可回退，
-  也不要 NULL 解引用（P2a 已实现，见 §P2 的实现记录）。</p>
+<pre><code> 反汇编显示 `S.add` 的方法体是 `OP_GET_FIELD_FAST slot=0 field=0` + **`OP_GET_UPVALUE 0`**
+ ⇒ 该方法 `func-&gt;upvalue_count == 1`。
+</code></pre>
+<ul>
+<li>而创建路径（<code>op_struct.inc:124-134</code> 明确"需要 upvalue 的方法，标记为 NULL，在运行时
+     动态创建"；<code>op_property.inc:111-121</code>、<code>op_struct.inc:949-955</code> / <code>1114-1120</code>、
+     <code>jit_callout_get_method</code>）新建时把 <code>upvalues[0..n)</code> <strong>一律置 NULL</strong>。</li>
+<li><strong>该形态在解释器侧当前另有问题</strong>：上述程序运行到 <code>s.add()</code> 时报
+     「尝试在非 struct 类型上调用方法 'add'」（属 VM 侧另一处缺陷，本轮未追）。</li>
+<li><strong>结论（已落地）</strong>：JIT 侧<strong>不依赖</strong>"方法闭包一定无捕获"这一假设，<code>GET/SET_UPVALUE</code>
+     一律做三级守卫（<code>closure == NULL</code> / <code>slot &gt;= upvalue_count</code> / <code>upvalues[slot] == NULL</code>）
+     —— 任一不满足即 bailout 交解释器。JIT 在这里比 VM 更保守是正确的：宁可回退，
+     也不要 NULL 解引用（P2a 已实现，见 §P2 的实现记录）。</li>
+</ul>
 <hr>
 <h2 id="8-探针与用例清单-待建">8. 探针与用例清单（待建）</h2>
 <table>

@@ -714,7 +714,7 @@ build\leno.exe leno_gui\应用\影视海报墙\movie_wall.leno
 </tr>
 <tr>
 <td><strong>P2</strong></td>
-<td>多角标再加"图标+文字"组合细节 · ~~圆角图的 9 宫格优化（少一次离屏）~~</td>
+<td>多角标再加"图标+文字"组合细节 · <del>圆角图的 9 宫格优化（少一次离屏）</del></td>
 <td>需改 <code>sdl_renderer</code></td>
 <td>✅ 2026-10-14（<strong>改走"合成结果缓存"达成本目标</strong>：稳态每帧 0 次离屏合成 ⇒ 不用再省那一次 ✗）</td>
 </tr>
@@ -864,8 +864,8 @@ build\leno.exe leno_gui\应用\影视海报墙\movie_wall.leno
    且蒙版是<strong>共享缓存</strong> ⇒ 画完必须当场还原 BLEND</li>
 <li>⛔ 软件渲染器（dummy）建不了蒙版/离屏纹理 ⇒ 圆角静默回退方角 ⇒ <strong>验证圆角必须真机</strong>；
    附带一条探针坑：<code>win.run</code> 之前自建渲染器的句柄在跑起来后失效（<code>renderer is invalid</code>）</li>
-<li>~~⛔ 在 A 的<strong>方法</strong>里 <code>new B(键=值)</code>，参数值那一段<strong>看不见隐式 <code>self</code></strong>（A 的字段被报成
-   "<strong>未定义的变量</strong>"）⇒ 值里写 <code>self.x</code>、或先 <code>new B()</code> 再逐字段赋值 ✓~~
+<li><del>⛔ 在 A 的<strong>方法</strong>里 <code>new B(键=值)</code>，参数值那一段<strong>看不见隐式 <code>self</code></strong>（A 的字段被报成
+   "<strong>未定义的变量</strong>"）⇒ 值里写 <code>self.x</code>、或先 <code>new B()</code> 再逐字段赋值 ✓</del>
    <strong>★ 2026-10-13 已修（M11）⇒ 这条不再需要绕</strong> ✓：真因是<strong>方法体改写器的 switch 白名单
    漏了 <code>AST_STRUCT_INIT</code></strong>（<code>src/semantic/semantic_visit_method.c</code>），<code>new B(键=值)</code> 的<strong>值</strong>
    整段被 <code>default:</code> <strong>静默跳过</strong> ⇒ 值里的裸字段名没被改写成 <code>self.字段</code> ✗。

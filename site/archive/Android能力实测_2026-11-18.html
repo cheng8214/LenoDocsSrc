@@ -168,15 +168,15 @@ PNG/JPEG/WebP 编解码、字体栅格化、音频、FFI 全部实测可用，�
 <tbody>
 <tr>
 <td>SQLite</td>
-<td>随模块分发 <code>libsqlite3.so</code>（<code>build/leno_module/LenoSqlite/lib/android/&lt;abi&gt;/</code>），&lt;br&gt;<code>build_android.sh</code> 自动收进 APK。系统自带的 <code>libsqlite.so</code> <strong>不能</strong> dlopen —— 见下</td>
+<td>随模块分发 <code>libsqlite3.so</code>（<code>build/leno_module/LenoSqlite/lib/android/&lt;abi&gt;/</code>），<br><code>build_android.sh</code> 自动收进 APK。系统自带的 <code>libsqlite.so</code> <strong>不能</strong> dlopen —— 见下</td>
 </tr>
 <tr>
 <td>系统库 FFI</td>
-<td>只能加载 <code>public.libraries.txt</code>（28 个）里的库。<code>libEGL/liblog/libandroid/libOpenSLES/libz</code> 在；&lt;br&gt;<code>libsqlite/libmedia</code> 等私有库被 namespace 拒绝</td>
+<td>只能加载 <code>public.libraries.txt</code>（28 个）里的库。<code>libEGL/liblog/libandroid/libOpenSLES/libz</code> 在；<br><code>libsqlite/libmedia</code> 等私有库被 namespace 拒绝</td>
 </tr>
 <tr>
 <td>HTTPS</td>
-<td>已解决：自带 <code>libcurl.so</code>（curl 8.23.0 + mbedTLS 3.6.8 静态链入），&lt;br&gt;证书运行时由 <code>caBundle()</code> 从 <code>/system/etc/security/cacerts</code> 拼 bundle。见 c16</td>
+<td>已解决：自带 <code>libcurl.so</code>（curl 8.23.0 + mbedTLS 3.6.8 静态链入），<br>证书运行时由 <code>caBundle()</code> 从 <code>/system/etc/security/cacerts</code> 拼 bundle。见 c16</td>
 </tr>
 </tbody>
 </table>

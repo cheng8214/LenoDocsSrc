@@ -248,7 +248,7 @@ struct Msg {
 </blockquote>
 <h3 id="仍未做-明确不做">仍未做（明确不做）</h3>
 <ul>
-<li>~~<code>jsons.fill(enum_value, json)</code> 反向填充~~ ⇒ <strong>2026-11-10 已支持</strong>：与 <code>encode</code> 共用
+<li><del><code>jsons.fill(enum_value, json)</code> 反向填充</del> ⇒ <strong>2026-11-10 已支持</strong>：与 <code>encode</code> 共用
   <code>ObjStructDef.enum_sig</code>（成员名 + 参数名）解码，<code>{"b":{"s":"hi","f":2.5}}</code> ⇒
   <code>tag=1</code> + 对应载荷槽；顶层键对不上任何成员时退回"按隐藏字段名填"（兼容老 JSON）。
   钉子：<code>assert/test_enum_payload_json_fill.leno</code>（单参 / 多参 / 零参 / 嵌套 struct /

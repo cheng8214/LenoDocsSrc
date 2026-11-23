@@ -107,7 +107,7 @@
 <tr>
 <td>TH1</td>
 <td><strong>P0</strong></td>
-<td>~~<strong>struct 实例跨 Channel 传值</strong>~~ ⇒ <strong>已修</strong>（2026-10-12，工作区未提交）：<code>channel_clone_struct</code> 深克隆 + 接收侧按定义重建；编译期误报（拦 struct）撤掉，只留 cstruct</td>
+<td><del><strong>struct 实例跨 Channel 传值</strong></del> ⇒ <strong>已修</strong>（2026-10-12，工作区未提交）：<code>channel_clone_struct</code> 深克隆 + 接收侧按定义重建；编译期误报（拦 struct）撤掉，只留 cstruct</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -116,7 +116,7 @@
 <tr>
 <td>TH2</td>
 <td>P1</td>
-<td>~~<strong>线程入口允许模块函数</strong>~~ ⇒ <strong>已修</strong>（2026-10-12）：根因只有一处 —— 协程首帧漏设 <code>frame-&gt;module</code>，补上即可（不用动模块缓存 / 按需加载）</td>
+<td><del><strong>线程入口允许模块函数</strong></del> ⇒ <strong>已修</strong>（2026-10-12）：根因只有一处 —— 协程首帧漏设 <code>frame-&gt;module</code>，补上即可（不用动模块缓存 / 按需加载）</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -125,7 +125,7 @@
 <tr>
 <td>TH3</td>
 <td>P1</td>
-<td>~~<strong>并行原语</strong>~~ ⇒ <strong>已修</strong>（2026-10-12）：<code>threads.join_all(Array[Thread])</code> / <code>threads.parallel_for(n,f)</code> / <code>threads.map(arr,f)</code>（<strong>未引入新对象类型</strong>，见下）</td>
+<td><del><strong>并行原语</strong></del> ⇒ <strong>已修</strong>（2026-10-12）：<code>threads.join_all(Array[Thread])</code> / <code>threads.parallel_for(n,f)</code> / <code>threads.map(arr,f)</code>（<strong>未引入新对象类型</strong>，见下）</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -134,7 +134,7 @@
 <tr>
 <td>TH4</td>
 <td>P2</td>
-<td>~~<strong><code>Channel[T]</code> 泛型</strong>~~ ⇒ <strong>已修</strong>（2026-10-12）：<code>Channel[T]</code> 语法照 <code>Ptr[T]</code>（<code>element_type</code> 槽，同 <code>Thread[T]</code> 口径），<code>receive()</code> 返回 T；<code>Thread[T]</code> 标注也一并放开</td>
+<td><del><strong><code>Channel[T]</code> 泛型</strong></del> ⇒ <strong>已修</strong>（2026-10-12）：<code>Channel[T]</code> 语法照 <code>Ptr[T]</code>（<code>element_type</code> 槽，同 <code>Thread[T]</code> 口径），<code>receive()</code> 返回 T；<code>Thread[T]</code> 标注也一并放开</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -143,7 +143,7 @@
 <tr>
 <td>TH5</td>
 <td>P2</td>
-<td>~~<strong>线程局部存储</strong>~~ ⇒ <strong>已修</strong>（2026-10-12）：<code>threads.local_get/local_has/local_set</code>（挂在 VM 上 ⇒ 天然每线程一份）；"模块级可变 <code>var</code> 诊断"<strong>建议不做</strong>（见下方理由），改为文档口径表</td>
+<td><del><strong>线程局部存储</strong></del> ⇒ <strong>已修</strong>（2026-10-12）：<code>threads.local_get/local_has/local_set</code>（挂在 VM 上 ⇒ 天然每线程一份）；"模块级可变 <code>var</code> 诊断"<strong>建议不做</strong>（见下方理由），改为文档口径表</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -152,7 +152,7 @@
 <tr>
 <td>TH6</td>
 <td>P3</td>
-<td>~~<strong>文档订正</strong>~~ ⇒ <strong>已修</strong>（2026-10-12）：<code>FFI使用指南.md</code> 的 <code>threads.Mutex</code>（不存在）、<code>threads.join(t)</code>（不存在）、"Ptr 可跨线程传"（<strong>不成立</strong> ✗）三处；跨线程传值硬约束已写进 <code>threads使用指南.md</code>（TH1 时完成）</td>
+<td><del><strong>文档订正</strong></del> ⇒ <strong>已修</strong>（2026-10-12）：<code>FFI使用指南.md</code> 的 <code>threads.Mutex</code>（不存在）、<code>threads.join(t)</code>（不存在）、"Ptr 可跨线程传"（<strong>不成立</strong> ✗）三处；跨线程传值硬约束已写进 <code>threads使用指南.md</code>（TH1 时完成）</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -161,7 +161,7 @@
 <tr>
 <td>TH7</td>
 <td>P3</td>
-<td>~~<strong>FFI 回调多外部线程并发</strong>~~ ⇒ <strong>调研完成 + 两处收口</strong>（2026-10-12）：原担心的"覆盖主 VM 栈"<strong>早已被编组机制覆盖</strong> ✓（文档那段是编组之前的旧描述 ⇒ 已订正）；顺带修掉队列满时<strong>静默返回全 0</strong> ✗</td>
+<td><del><strong>FFI 回调多外部线程并发</strong></del> ⇒ <strong>调研完成 + 两处收口</strong>（2026-10-12）：原担心的"覆盖主 VM 栈"<strong>早已被编组机制覆盖</strong> ✓（文档那段是编组之前的旧描述 ⇒ 已订正）；顺带修掉队列满时<strong>静默返回全 0</strong> ✗</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -170,7 +170,7 @@
 <tr>
 <td>TH8</td>
 <td><strong>P0</strong></td>
-<td>~~<strong>入口脚本全局对象跨线程共享</strong>~~ ⇒ <strong>已修（2026-10-20）</strong>：数据对象（string/Array/Dict/struct/闭包）克隆进子线程堆；module/function/native/cstruct_def/资源句柄仍共享。⚠ 克隆挪到 <code>gc_init()</code> 之后、<code>current_exec_vm</code> 指向子线程；失败回退共享</td>
+<td><del><strong>入口脚本全局对象跨线程共享</strong></del> ⇒ <strong>已修（2026-10-20）</strong>：数据对象（string/Array/Dict/struct/闭包）克隆进子线程堆；module/function/native/cstruct_def/资源句柄仍共享。⚠ 克隆挪到 <code>gc_init()</code> 之后、<code>current_exec_vm</code> 指向子线程；失败回退共享</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -188,7 +188,7 @@
 <tr>
 <td>TH10</td>
 <td>P1</td>
-<td>~~<strong>闭包 / 函数不能跨线程</strong>~~ ⇒ <strong>已修（2026-10-20）</strong>：clone 里加 <code>OBJ_CLOSURE</code>（function 只读共享 + upvalue 递归 clone 成 closed）/ <code>OBJ_FUNCTION</code>（直接共享）</td>
+<td><del><strong>闭包 / 函数不能跨线程</strong></del> ⇒ <strong>已修（2026-10-20）</strong>：clone 里加 <code>OBJ_CLOSURE</code>（function 只读共享 + upvalue 递归 clone 成 closed）/ <code>OBJ_FUNCTION</code>（直接共享）</td>
 <td>已完成</td>
 <td>—</td>
 <td>—</td>
@@ -260,7 +260,7 @@
 <tr>
 <td>TH18</td>
 <td><strong>P0</strong></td>
-<td>~~<strong>spawn 时并发克隆 globals 会崩（0xC0000005）</strong>~~ ⇒ <strong>已修（2026-11-14 压测）</strong>：<code>g_channel_clone_ctx</code> 改成 <code>THREAD_LOCAL</code> + <code>cl</code> 上界钳位；顺带去掉「每个数组元素都构造诊断上下文」的开销（10 万元素 7ms → 0.24ms）</td>
+<td><del><strong>spawn 时并发克隆 globals 会崩（0xC0000005）</strong></del> ⇒ <strong>已修（2026-11-14 压测）</strong>：<code>g_channel_clone_ctx</code> 改成 <code>THREAD_LOCAL</code> + <code>cl</code> 上界钳位；顺带去掉「每个数组元素都构造诊断上下文」的开销（10 万元素 7ms → 0.24ms）</td>
 <td>~25 行</td>
 <td>低</td>
 <td>—</td>
@@ -423,56 +423,18 @@
   实测 string body 过 channel 只有 <strong>208~247 MB/s</strong>（同数据 <code>ffi.memcpy</code> 22 GB/s），
   128KB 一条要 <strong>514 µs</strong>，拷贝本身占不到 10%。
   ⇒ 长串克隆改为<strong>沿用源串的 <code>char_len</code>/<code>hash</code></strong>（它们本来就不在表里，没有快路径可丢）：</p>
-<table>
-<thead>
-<tr>
-<th>body</th>
-<th>改前</th>
-<th>改后</th>
-<th>倍数</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1 KB</td>
-<td>208 MB/s</td>
-<td><strong>784 MB/s</strong></td>
-<td>3.8×</td>
-</tr>
-<tr>
-<td>16 KB</td>
-<td>247</td>
-<td><strong>1534</strong></td>
-<td>6.2×</td>
-</tr>
-<tr>
-<td>128 KB</td>
-<td>243（514 µs/条）</td>
-<td><strong>1842（68 µs/条）</strong></td>
-<td>7.6×</td>
-</tr>
-<tr>
-<td>1 MB</td>
-<td>237</td>
-<td><strong>2410</strong></td>
-<td>10.2×</td>
-</tr>
-<tr>
-<td>4 MB</td>
-<td>175</td>
-<td><strong>1798</strong></td>
-<td>10.3×</td>
-</tr>
-<tr>
-<td><code>struct{body}</code> 128KB</td>
-<td>243</td>
-<td><strong>1639</strong></td>
-<td>6.7×</td>
-</tr>
-</tbody>
-</table>
-<p>  回归：<code>assert\test_channel_long_string.leno</code>（长 ASCII / 长中文多字节 / 40 与 41 阈值 /
-  Array 嵌套），套件 618/0。</p>
+<pre><code> | body | 改前 | 改后 | 倍数 |
+ |---|---|---|---|
+ | 1 KB | 208 MB/s | **784 MB/s** | 3.8× |
+ | 16 KB | 247 | **1534** | 6.2× |
+ | 128 KB | 243（514 µs/条） | **1842（68 µs/条）** | 7.6× |
+ | 1 MB | 237 | **2410** | 10.2× |
+ | 4 MB | 175 | **1798** | 10.3× |
+ | `struct{body}` 128KB | 243 | **1639** | 6.7× |
+
+ 回归：`assert\test_channel_long_string.leno`（长 ASCII / 长中文多字节 / 40 与 41 阈值 /
+ Array 嵌套），套件 618/0。
+</code></pre>
 <h3 id="th1-p0-struct-实例跨-channel-传值-已修-2026-10-12-工作区未提交">TH1（P0）struct 实例跨 Channel 传值 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
 - <code>ch.send(point)</code> 报「不能跨线程传递此类型」（<code>object_thread.c</code> 的 default 分支）。

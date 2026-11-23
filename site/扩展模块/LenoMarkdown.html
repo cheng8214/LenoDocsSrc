@@ -69,19 +69,25 @@ main() {
 <td><code>escape(text)</code></td>
 <td>HTML 转义（<code>&amp; &lt; &gt; "</code>）</td>
 </tr>
+<tr>
+<td><code>scan_unsupported(text)</code></td>
+<td>扫描<strong>本库没实现</strong>的写法（<code>~~~</code> 围栏、引用式链接定义、下划线式标题…），返回人类可读的行号+说明。构建脚本用它把缺口打出来，避免"看着像正常文本"的静默错误</td>
+</tr>
 </tbody>
 </table>
 <h2 id="支持范围">支持范围</h2>
 <p>块级：ATX 标题（<code>#</code>..<code>######</code>，带 id）/ 段落（软换行保留、行尾两空格 → <code>&lt;br&gt;</code>）/
-围栏代码（<code>```lang</code>，语言进 <code>class="language-xx"</code>）/ 表格（GFM，含 <code>:</code> 对齐）/
+围栏代码（<code>```lang</code>，语言进 <code>class="language-xx"</code>，<strong>只认裸 <code>```</code> 闭合</strong>）/
+<strong>缩进代码块</strong>（4 空格或 tab）/ 表格（GFM，含 <code>:</code> 对齐、单元格内 <code>\|</code> 转义）/
 无序与有序列表（含嵌套，遵守 <code>sane_lists</code>：<strong>列表前要有空行</strong>）/ 引用（含嵌套，<strong>引用里也能放代码块</strong>）/
 分隔线 / 原始 HTML 块透传。</p>
-<p>行内：<code>`code`</code> / <code>**粗**</code> / <code>*斜*</code> / <code>[链接](url)</code> / <code>![图](src)</code> / <code>\</code> 转义。</p>
+<p>行内：<code>`code`</code>（<strong>开闭反引号等长</strong>）/ <code>**粗**</code> / <code>*斜*</code> / <code>~~删除线~~</code> /
+<code>[链接](url)</code> / <code>![图](src)</code> / <strong>行内 HTML 透传</strong>（<code>&lt;br&gt;</code> <code>&lt;kbd&gt;</code> <code>&lt;sub&gt;</code>…）/ <code>\</code> 转义。</p>
 <h2 id="刻意不支持">刻意不支持</h2>
 <ul>
 <li>下划线斜体 <code>_x_</code>：Leno 代码里 <code>snake_case</code> 满地都是，误判代价远大于收益；</li>
 <li>引用式链接 <code>[a][ref]</code>、脚注、定义列表、任务列表；</li>
-<li>行内原始 HTML（<strong>块级</strong>会整段原样透传，这是文档站需要的）。</li>
+<li><code>~~~</code> 围栏、下划线式（setext）标题 —— 用 <code>scan_unsupported()</code> 会明确报出来。</li>
 </ul>
 <h2 id="与-python-markdown-的关系">与 python-markdown 的关系</h2>
 <p>输出形状（<code>&lt;th&gt;</code> 一行一个、<code>&lt;hr&gt;</code> 不闭合、代码块结尾换行、行内 <code>&lt;code&gt;</code> 不转义引号…）
@@ -99,6 +105,16 @@ main() {
 <td>引用里的围栏代码 <code>&gt; </code>``leno`</td>
 <td>不认识，退化成段落 + 行内 <code>&lt;code&gt;</code>（文档站为此写了 <code>lift_blockquote_fences</code> 补丁）</td>
 <td>正常渲染成 <code>&lt;pre&gt;&lt;code&gt;</code></td>
+</tr>
+<tr>
+<td><code>~~删除线~~</code></td>
+<td><strong>不支持</strong>，原样输出波浪线</td>
+<td><code>&lt;del&gt;…&lt;/del&gt;</code>（GFM 写法）</td>
+</tr>
+<tr>
+<td>围栏闭合</td>
+<td>宽松：任意 <code>```</code> 都算闭合 ⇒ 漏写一个闭合就奇偶颠倒、整篇被吞</td>
+<td>严格：只认<strong>裸</strong> <code>```</code>（CommonMark）⇒ 出错只影响那一段</td>
 </tr>
 </tbody>
 </table>

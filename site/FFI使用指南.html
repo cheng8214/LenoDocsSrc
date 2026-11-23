@@ -2746,8 +2746,8 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <tr>
 <td><code>load(path)</code></td>
 <td>string</td>
-<td>lib\</td>
-<td>null</td>
+<td>lib|null</td>
+<td>加载动态库</td>
 </tr>
 <tr>
 <td><code>free(x)</code></td>
@@ -3034,8 +3034,8 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <tr>
 <td><code>dlsym(lib, name)</code></td>
 <td>Lib, string</td>
-<td>Ptr\</td>
-<td>null</td>
+<td>Ptr|null</td>
+<td>显式解析符号地址（未找到返回 null）</td>
 </tr>
 </tbody>
 </table>

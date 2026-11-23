@@ -1384,7 +1384,7 @@ func makeLog(): Dict { ... }
 </tr>
 <tr>
 <td><code>const</code> 的保护范围</td>
-<td>编译期：直接赋值 / <code>++</code> / 元素写 / 修改方法（<code>add</code>/<code>set</code>…）/ <strong>字段写</strong>（<code>s.v = 1</code>）/ 字段上的修改方法（<code>s.arr.add(1)</code>）。&lt;br&gt;运行期（2026-10-24 起）：const 声明的容器/struct 会被打上<strong>只读标记</strong>（<code>OP_LOCK_REF</code>，<strong>深层递归</strong>到字段与元素），所以 <code>tryMut(A)</code> 这种"传进函数再改"也会<strong>运行期报错</strong>（"const 数组/字典/对象不可修改"）</td>
+<td>编译期：直接赋值 / <code>++</code> / 元素写 / 修改方法（<code>add</code>/<code>set</code>…）/ <strong>字段写</strong>（<code>s.v = 1</code>）/ 字段上的修改方法（<code>s.arr.add(1)</code>）。<br>运行期（2026-10-24 起）：const 声明的容器/struct 会被打上<strong>只读标记</strong>（<code>OP_LOCK_REF</code>，<strong>深层递归</strong>到字段与元素），所以 <code>tryMut(A)</code> 这种"传进函数再改"也会<strong>运行期报错</strong>（"const 数组/字典/对象不可修改"）</td>
 </tr>
 </tbody>
 </table>
@@ -1579,7 +1579,7 @@ func makeLog(): Dict { ... }
 </tr>
 <tr>
 <td><code>true &amp; 1</code> 报「bool 类型不能参与<strong>算术</strong>运算」—— 源码里根本没有算术</td>
-<td>✅ 2026-10-24：这一组（<code>%</code> / `&amp; \</td>
+<td>✅ 2026-10-24：这一组（<code>%</code> / <code>&amp; | ^ &lt;&lt; &gt;&gt; &gt;&gt;&gt;</code>）的文案按实际算子分「取模」/「位运算」，bool 那条还给出替代写法（<code>and</code> / <code>or</code> / <code>not</code>）</td>
 </tr>
 <tr>
 <td><code>const s = new S8(); s.v = 42</code> / <code>s.arr.add(1)</code> / <code>s.arr[0] = 9</code> <strong>改得动</strong>（字段写路径没有 const 检查）</td>

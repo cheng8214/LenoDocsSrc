@@ -734,7 +734,7 @@
 <tbody>
 <tr>
 <td>现象</td>
-<td><code>threads.start(eng.search_entry, ...)</code> 当场抛错：<code>线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'dl_engine' 里的 'search_entry'（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code> &lt;br&gt;⚠ <strong>2026-10-12：这条硬拦已撤（TH2）</strong> ⇒ 模块函数现在可以直接作入口 ✓（下面的绕法仍可用、已非必需）</td>
+<td><code>threads.start(eng.search_entry, ...)</code> 当场抛错：<code>线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'dl_engine' 里的 'search_entry'（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code> <br>⚠ <strong>2026-10-12：这条硬拦已撤（TH2）</strong> ⇒ 模块函数现在可以直接作入口 ✓（下面的绕法仍可用、已非必需）</td>
 </tr>
 <tr>
 <td>后果</td>
@@ -974,7 +974,7 @@
 </tr>
 <tr>
 <td>但文档<strong>没写</strong>的</td>
-<td>"<strong>入口必须是当前文件的函数</strong>——别的模块的函数不行"。这条只存在于编译器的报错文案里；<code>cleaner_master</code> 的源码注释里也记着同一个坑（"worker 必须具名全局函数"） &lt;br&gt;⚠ <strong>2026-10-12：该限制已撤（TH2）</strong>，<code>threads使用指南.md</code> 相应小节也已改写为"模块函数也能用" ✓</td>
+<td>"<strong>入口必须是当前文件的函数</strong>——别的模块的函数不行"。这条只存在于编译器的报错文案里；<code>cleaner_master</code> 的源码注释里也记着同一个坑（"worker 必须具名全局函数"） <br>⚠ <strong>2026-10-12：该限制已撤（TH2）</strong>，<code>threads使用指南.md</code> 相应小节也已改写为"模块函数也能用" ✓</td>
 </tr>
 <tr>
 <td>代价</td>
@@ -1269,7 +1269,7 @@
 </tr>
 <tr>
 <td>约束</td>
-<td>线程入口必须是<strong>主脚本文件</strong>的具名全局函数（语言硬约束，见 <code>threads.c</code> 的前置校验）⇒ 起线程全在 <code>musicdl_gui.leno</code>，引擎只出"能被线程调的纯函数" ✓ &lt;br&gt;⚠ <strong>2026-10-12：约束已撤（TH2）</strong> ⇒ 引擎以后可以直接自己起线程 ✓（现有分层仍然成立、不必改）</td>
+<td>线程入口必须是<strong>主脚本文件</strong>的具名全局函数（语言硬约束，见 <code>threads.c</code> 的前置校验）⇒ 起线程全在 <code>musicdl_gui.leno</code>，引擎只出"能被线程调的纯函数" ✓ <br>⚠ <strong>2026-10-12：约束已撤（TH2）</strong> ⇒ 引擎以后可以直接自己起线程 ✓（现有分层仍然成立、不必改）</td>
 </tr>
 </tbody>
 </table>
@@ -1373,14 +1373,14 @@
 <hr>
 <h2 id="四-下一步-未做">四、下一步（未做）</h2>
 <ol>
-<li>~~<strong>加网易源</strong>~~ ✅ <strong>已完成（2026-10-08）</strong>：<code>netease_core.leno</code> + <code>netease_crypto.leno</code>（weapi：AES×2 + 1024 位 RSA，
+<li><del><strong>加网易源</strong></del> ✅ <strong>已完成（2026-10-08）</strong>：<code>netease_core.leno</code> + <code>netease_crypto.leno</code>（weapi：AES×2 + 1024 位 RSA，
    用 Leno 的<strong>任意精度 <code>int</code></strong> 直接做模幂，不需要任何大数库 ✓）+ <code>netease_lyric.leno</code>（译文按时间戳并回原文）。
    端点坑与六条服务端事实见 A6；金标回归在 <code>test/test_netease_crypto.leno</code> ✓
    <strong>下一步（可选）</strong>：接登录态（<code>MUSIC_U</code> Cookie）⇒ 才能拿 flac 与付费曲直链（现在是未登录态：只有 320k mp3，付费曲无直链）。
    ⚠ 实测过：<strong>账号非会员时 cookie 也没用</strong>（<code>profile.vipType=0</code> ⇒ 五档仍全降级 320k、付费曲仍 404）——
    无损的真正开关是<strong>会员</strong>，不是 cookie ✓
    （2026-10-08 补充：无损现在<strong>不走官方了</strong> —— 改走第三方聚合接口，见 A8 ✓）</li>
-<li>~~<strong>加酷狗源</strong>~~ ✅ <strong>已完成（2026-10-08）</strong>：<code>kugou_core.leno</code> + <code>kugou_lyric.leno</code>，
+<li><del><strong>加酷狗源</strong></del> ✅ <strong>已完成（2026-10-08）</strong>：<code>kugou_core.leno</code> + <code>kugou_lyric.leno</code>，
    走"移动端搜索 + CDN <code>kgcloudv2</code>"（<strong>免签名、免设备注册、免账号</strong>，免费曲直接给 flac）。
    端点坑与六条服务端事实见 A7；配方回归在 <code>test/test_kugou_cdn.leno</code> ✓
    <strong>顺带</strong>：为它给 <code>LenoCrypto</code> 收录了 <strong>MD5</strong>（<code>crypto_md5.leno</code>，RFC 1321 + 金标回归 ✓）——

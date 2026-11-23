@@ -549,7 +549,7 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <h3 id="优化后剩余差距分析">优化后剩余差距分析</h3>
 <ul>
 <li>B2（734ms）与标量版函数调用（750ms）持平 → <strong>方法分派开销已消除</strong></li>
-<li>~~B - B2 差值 114ns/次为 Hit 分配成本~~ 第四轮 size-class 池实施后
+<li><del>B - B2 差值 114ns/次为 Hit 分配成本</del> 第四轮 size-class 池实施后
   B - B2 差值 = 251ms/3M ≈ <strong>84ns/次，与 Python（79ns/次）完全同级</strong>，
   <strong>Hit 分配差距已消除</strong>（见下节"已实施的优化（第四轮）"）</li>
 </ul>

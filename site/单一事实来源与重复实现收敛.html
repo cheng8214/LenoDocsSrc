@@ -762,7 +762,7 @@ clib / struct 两张表（<code>scan_cstruct.inc</code>）——<strong>漏了 c
 </tr>
 <tr>
 <td>扫描器·cstruct <strong>字段</strong></td>
-<td>~~clib, struct~~ → clib, struct, <strong>cstruct</strong>, <strong>face</strong></td>
+<td><del>clib, struct</del> → clib, struct, <strong>cstruct</strong>, <strong>face</strong></td>
 <td>✅ 本轮（⑧）补的</td>
 </tr>
 <tr>
@@ -2841,7 +2841,7 @@ UTC、不涉及时区；<code>ftLastWriteTime</code> 为 0 时保持默认 0）�
 <code>size</code>/<code>mtime</code> 是 int）⇒ 同质的 Dict 表达不了"这个键 bool、那个键 int" —— 这是"结构体 vs Dict"
 的选型依据，不是偷懒。
 <strong>顺带</strong>：<code>native_dirs_stat</code> 由"造 Dict + 5 次 <code>str_copy</code> 键名"改为"造结构体 + 按名 <code>native_struct_set</code>
-（名字是编译期常量）"⇒ 更少的分配；~~<code>dirs.size()</code> 保留~~ —— ⚠ <strong>同一天又把它删了</strong>（收敛成一条路），
+（名字是编译期常量）"⇒ 更少的分配；<del><code>dirs.size()</code> 保留</del> —— ⚠ <strong>同一天又把它删了</strong>（收敛成一条路），
 见下面的<strong>实例十五</strong>；本条记的是当时的决定（"暂留、因为已有三处 leno_gui 消费方"）。
 <strong>同步的调用点 / 文档</strong>：<code>leno_gui/应用/文件管理器/props_dialog.leno</code>（<code>_int(st.get("mtime", 0))</code>
 → <code>st.mtime</code>、<code>_bool(st.get("exists", false))</code> → <code>st.exists</code>）、<code>examples/dirs/测试 dirs 模块所有功能.leno</code>

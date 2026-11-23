@@ -86,10 +86,10 @@
 <ol>
 <li>✅ <code>gc.c</code> - GC 检查点移到 <code>gc_alloc</code></li>
 <li>✅ <code>vm_run.inc</code> - 移除操作码合法性检查（性能提升明显，整体变快）</li>
-<li>❌ <code>op_type_specialized.inc</code> - ~~类型特化指令使用快速栈操作~~ <strong>已回退</strong> (2026-08-14)</li>
+<li>❌ <code>op_type_specialized.inc</code> - <del>类型特化指令使用快速栈操作</del> <strong>已回退</strong> (2026-08-14)</li>
 <li>✅ <code>op_arith.inc</code> - 算术指令移除不必要的 <code>frame</code> 更新</li>
-<li>❌ <code>op_jump.inc</code> - ~~跳转指令优化~~ <strong>已回退</strong> (2026-05-28)</li>
-<li>❌ <code>op_call.inc</code> - ~~函数调用优化~~ <strong>已回退</strong> (2026-05-28)</li>
+<li>❌ <code>op_jump.inc</code> - <del>跳转指令优化</del> <strong>已回退</strong> (2026-05-28)</li>
+<li>❌ <code>op_call.inc</code> - <del>函数调用优化</del> <strong>已回退</strong> (2026-05-28)</li>
 </ol>
 <h3 id="回退的优化">回退的优化</h3>
 <p>由于稳定性问题，以下优化被回退：</p>
@@ -296,7 +296,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <ol>
 <li><code>FETCH_DISPATCH</code> 的进一步优化（边界检查、异常检查）</li>
 <li>编译优化级别（-O2 到 -O3）</li>
-<li>~~其他文件中的 <code>frame</code> 更新（op_compare.inc, op_property.inc 等）~~ ✅ 已完成</li>
+<li><del>其他文件中的 <code>frame</code> 更新（op_compare.inc, op_property.inc 等）</del> ✅ 已完成</li>
 </ol>
 <hr>
 <h2 id="新增优化-已回退">新增优化（已回退）</h2>
@@ -304,7 +304,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>文件</strong>: <code>src/vm/vminc/op_compare.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
-<li>~~<code>OP_EQ</code>, <code>OP_NEQ</code> - 移除开头的 <code>frame</code> 更新~~ ❌ <strong>已回退</strong></li>
+<li><del><code>OP_EQ</code>, <code>OP_NEQ</code> - 移除开头的 <code>frame</code> 更新</del> ❌ <strong>已回退</strong></li>
 </ul>
 <p><strong>回退原因</strong>: 即使性能无变化，但后续发现其他优化导致性能下降，统一回退</p>
 <hr>
@@ -312,8 +312,8 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>文件</strong>: <code>src/vm/vminc/op_unary.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
-<li>~~<code>OP_NOT</code> - 移除 <code>frame</code> 更新~~ ❌ <strong>已回退</strong></li>
-<li>~~<code>OP_CAST_STRING</code> - 移除 <code>frame</code> 更新~~ ❌ <strong>已回退</strong></li>
+<li><del><code>OP_NOT</code> - 移除 <code>frame</code> 更新</del> ❌ <strong>已回退</strong></li>
+<li><del><code>OP_CAST_STRING</code> - 移除 <code>frame</code> 更新</del> ❌ <strong>已回退</strong></li>
 </ul>
 <p><strong>回退原因</strong>: 统一回退所有 frame 更新移除优化</p>
 <hr>
@@ -321,7 +321,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>文件</strong>: <code>src/vm/vminc/op_string.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
-<li>~~<code>OP_STRING_ADD</code> - 移除 <code>frame</code> 更新~~ ❌ <strong>已回退</strong></li>
+<li><del><code>OP_STRING_ADD</code> - 移除 <code>frame</code> 更新</del> ❌ <strong>已回退</strong></li>
 </ul>
 <p><strong>回退原因</strong>: 移除后性能反而下降（从 187ms 变慢）</p>
 <p><strong>经验</strong>: 即使指令没有错误处理，某些 <code>frame</code> 更新也可能帮助编译器优化，不能随意移除</p>
@@ -498,7 +498,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <ul>
 <li>❌ <strong>不要移除 opcode handler 开头的 <code>frame</code> 更新</strong></li>
 <li>✅ 唯一安全移除 frame 更新的地方是 <code>op_arith.inc</code>（已验证）</li>
-<li>❌ ~~<code>op_type_specialized.inc</code> 快速栈操作~~ <strong>已回退</strong> (2026-08-14，详见 #18)</li>
+<li>❌ <del><code>op_type_specialized.inc</code> 快速栈操作</del> <strong>已回退</strong> (2026-08-14，详见 #18)</li>
 <li>✅ 未来优化方向应转向：JIT、内联缓存深化、超指令合并、字节码内联等</li>
 </ul>
 <hr>

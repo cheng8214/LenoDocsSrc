@@ -210,12 +210,12 @@ strings.lines(&quot;a\nb\r\nc&quot;)       // 按行切，认 \r\n
 <td>收窄成 <code>Dict[string, any]</code> 后手取；或 <code>jsons.dig(data, "user.name")</code></td>
 </tr>
 <tr>
-<td>~~<strong>enum 不能带载荷</strong>~~</td>
+<td><del><strong>enum 不能带载荷</strong></del></td>
 <td>✅ 2026-11-10 已补：<code>enum Msg { progress(int done, int total) }</code> + <code>case Msg.progress(d, t)</code>；跨模块 / <code>==</code> 按值 / <code>jsons.encode</code> 都支持</td>
 <td>带数据的消息优先用它，别再手写 struct + int tag</td>
 </tr>
 <tr>
-<td>~~<strong>没有 <code>Result</code></strong>~~</td>
+<td><del><strong>没有 <code>Result</code></strong></del></td>
 <td>✅ 2026-11-09 已补：<code>import "Result"</code> 提供 <code>Result[T]</code> / <code>Option[T]</code>（<code>ok</code>/<code>code</code>/<code>msg</code>/<code>val</code>，见 AGENTS.md §11）</td>
 <td>新代码一律用它，别再自造 <code>Dict{ok,err}</code> / <code>bool</code> / <code>int -1</code></td>
 </tr>

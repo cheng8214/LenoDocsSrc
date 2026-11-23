@@ -197,7 +197,7 @@ if (vm_ptr-&gt;sp + 256 &gt; vm_ptr-&gt;stack_capacity) {
 <h2 id="开发-lenonet-过程中发现的所有问题">开发 LenoNet 过程中发现的所有问题</h2>
 <p>开发 <code>lib/web_curl_core.leno</code> 和 <code>lib/web_net.leno</code> 时，发现以下编译器和语言层面的问题。</p>
 <hr>
-<h3 id="问题1-ffi_call_impl-的-gc-禁用策略不当-已修复">问题1: ~~<code>ffi_call_impl</code> 的 GC 禁用策略不当~~ （已修复）</h3>
+<h3 id="问题1-ffi_call_impl-的-gc-禁用策略不当-已修复">问题1: <del><code>ffi_call_impl</code> 的 GC 禁用策略不当</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 高
 <strong>类型</strong>: GC 安全性
 <strong>状态</strong>: ✅ 已修复。<code>ffi.c</code> 中已移除所有 <code>gc_set_enabled</code>/<code>gc_clear_deferred</code> 调用，不再永久禁用 GC。</p>
@@ -212,7 +212,7 @@ gc_set_enabled(0);
 gc_set_enabled(saved_gc);
 </code></pre>
 <hr>
-<h3 id="问题2-gc-mark_roots-可能遗漏非活跃模块的全局变量-已修复">问题2: ~~GC <code>mark_roots</code> 可能遗漏非活跃模块的全局变量~~ （已修复）</h3>
+<h3 id="问题2-gc-mark_roots-可能遗漏非活跃模块的全局变量-已修复">问题2: <del>GC <code>mark_roots</code> 可能遗漏非活跃模块的全局变量</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 高
 <strong>类型</strong>: GC 安全性
 <strong>状态</strong>: ✅ 已修复。<code>mark_roots</code> 中新增第 13.5 步 <code>loaded_modules_mark_all()</code>，遍历所有已加载模块并标记其全局变量，不再依赖 <code>current_module_frame</code> 链。</p>
@@ -262,7 +262,7 @@ gc_set_enabled(saved_gc);
 <code>i32 curl_easy_setopt(Ptr handle, i32 option, ...)</code>，
 或允许同名函数重载（不同参数类型）。</p>
 <hr>
-<h3 id="问题5-enum-不支持位运算表达式作为成员值-已修复">问题5: ~~<code>enum</code> 不支持位运算表达式作为成员值~~ （已修复）</h3>
+<h3 id="问题5-enum-不支持位运算表达式作为成员值-已修复">问题5: <del><code>enum</code> 不支持位运算表达式作为成员值</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 低
 <strong>类型</strong>: 语言限制
 <strong>状态</strong>: ✅ 已修复。Parser 层新增 <code>eval_const_expr</code>，支持 <code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>%</code> <code>|</code> <code>&amp;</code> <code>^</code> <code>&lt;&lt;</code> <code>&gt;&gt;</code> <code>~</code> <code>!</code> 和括号分组的编译期常量表达式。</p>
@@ -276,7 +276,7 @@ gc_set_enabled(saved_gc);
 <p><strong>当前绕过</strong>: 使用计算后的具体数值：<code>ANY = 0xFFFFFFFF</code>、<code>ANYSAFE = 0xFFFFFFFD</code></p>
 <p><strong>建议修复</strong>: 支持常量表达式作为 enum 成员值，至少支持位运算（<code>~</code>、<code>|</code>、<code>&amp;</code>）。</p>
 <hr>
-<h3 id="问题6-clib-声明的-str8-参数不接受-leno-string-类型-已修复">问题6: ~~<code>clib</code> 声明的 <code>str8</code> 参数不接受 Leno <code>string</code> 类型~~ （已修复）</h3>
+<h3 id="问题6-clib-声明的-str8-参数不接受-leno-string-类型-已修复">问题6: <del><code>clib</code> 声明的 <code>str8</code> 参数不接受 Leno <code>string</code> 类型</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 中
 <strong>类型</strong>: 语言限制
 <strong>状态</strong>: ✅ 已修复。<code>visit_expr.inc</code> 中已添加 <code>TYPE_STRING ↔ TYPE_STR8/TYPE_STR16</code> 双向兼容检查，<code>string</code> 可直接传给 <code>str8</code> 参数。</p>
@@ -288,7 +288,7 @@ gc_set_enabled(saved_gc);
 <code>ffi.call_ptr(lib(), "curl_slist_append", list, s)</code> 调用。</p>
 <p><strong>建议修复</strong>: 允许 <code>string</code> 类型自动转换为 <code>str8</code>（零摩擦类型转换）。</p>
 <hr>
-<h3 id="问题7-double-不是有效的-leno-类型-已修复">问题7: ~~<code>double</code> 不是有效的 Leno 类型~~ （已修复）</h3>
+<h3 id="问题7-double-不是有效的-leno-类型-已修复">问题7: <del><code>double</code> 不是有效的 Leno 类型</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 低
 <strong>类型</strong>: 错误提示不友好
 <strong>状态</strong>: ✅ 已修复。类型未定义错误中，对 <code>double</code> 追加提示："Leno 中使用 float 代替 double，Leno 的 float 是 64 位双精度浮点数"。</p>
@@ -313,7 +313,7 @@ gc_set_enabled(saved_gc);
 <p><strong>建议修复</strong>: <code>Ptr</code> 类型应能接受 <code>ObjFFICallback</code>（因为 callback 本质上也是函数指针），
 或在类型系统中增加联合类型支持。</p>
 <hr>
-<h3 id="问题9-字符串方法命名与常见语言不同-已修复错误提示">问题9: ~~字符串方法命名与常见语言不同~~ （已修复错误提示）</h3>
+<h3 id="问题9-字符串方法命名与常见语言不同-已修复错误提示">问题9: <del>字符串方法命名与常见语言不同</del> （已修复错误提示）</h3>
 <p><strong>严重程度</strong>: 低
 <strong>类型</strong>: 设计差异
 <strong>状态</strong>: ✅ 已修复错误提示。当 <code>string</code> 类型调用 <code>contains</code> 或 <code>includes</code> 时，提示"是否想用 'has'？（如 s.has(sub)）"。</p>
@@ -322,7 +322,7 @@ gc_set_enabled(saved_gc);
 <p><strong>建议</strong>: 在错误提示中建议：
 "'string' 类型没有方法 'contains'，是否想用 'has'？"</p>
 <hr>
-<h3 id="问题10-curlinfo_size_download-信息码可能不正确-已修复">问题10: ~~<code>CURLINFO_SIZE_DOWNLOAD</code> 信息码可能不正确~~ （已修复）</h3>
+<h3 id="问题10-curlinfo_size_download-信息码可能不正确-已修复">问题10: <del><code>CURLINFO_SIZE_DOWNLOAD</code> 信息码可能不正确</del> （已修复）</h3>
 <p><strong>严重程度</strong>: 中
 <strong>类型</strong>: 待确认
 <strong>状态</strong>: ✅ 已修复。<code>SIZE_DOWNLOAD = 0x300008</code>（<code>CURLINFO_DOUBLE + 8</code>）正确，并新增 <code>SIZE_DOWNLOAD_T = 0x600008</code>（<code>CURLINFO_OFF_T + 8</code>）。</p>
@@ -332,7 +332,7 @@ gc_set_enabled(saved_gc);
 实际可能是 <code>CURLINFO_SSL_ENGINES</code> 而非 <code>SIZE_DOWNLOAD</code>。</p>
 <p><strong>当前绕过</strong>: 使用 <code>resp.body.len()</code> 获取响应体大小。</p>
 <hr>
-<h3 id="问题11-opt-accept_encoding-设为空字符串-的行为-已确认正常">问题11: ~~<code>Opt.ACCEPT_ENCODING</code> 设为空字符串 <code>""</code> 的行为~~ （已确认正常）</h3>
+<h3 id="问题11-opt-accept_encoding-设为空字符串-的行为-已确认正常">问题11: <del><code>Opt.ACCEPT_ENCODING</code> 设为空字符串 <code>""</code> 的行为</del> （已确认正常）</h3>
 <p><strong>严重程度</strong>: 低
 <strong>类型</strong>: 文档缺失
 <strong>状态</strong>: ✅ 已确认正常。<code>setopt_str</code> 传空字符串 <code>""</code> 正确传递给 libcurl，不会当作 null 处理。LenoNet 测试全部通过。</p>

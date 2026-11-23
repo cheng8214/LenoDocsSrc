@@ -196,7 +196,7 @@
 <tr>
 <td>25</td>
 <td>§2.1 <strong>356 处行数组</strong>（首批落地）</td>
-<td>Aria 5 处 + LenoMusic 下载子系统。<strong>磁盘 / wire 格式一律不变</strong>，转换只发生在边界：&lt;br&gt;· Aria 下载队列 → <code>Array[Job]</code> + <code>JobState</code> enum（磁盘仍是对象数组，state/got/total 仍写字符串，旧 <code>downloads.json</code> 原样能读）&lt;br&gt;· LenoMusic → <code>srow.SongRow</code> + <code>from_row</code>/<code>to_row</code>，转换点收在 <code>musicdl_gui.to_jobs</code> 一处；搜索侧与 5 个音源模块<strong>一行没动</strong>&lt;br&gt;两者都做了逐字节 / 逐字符等价性验证（含老数据缺字段、<code>state=5</code> 降级、基名消毒口径）</td>
+<td>Aria 5 处 + LenoMusic 下载子系统。<strong>磁盘 / wire 格式一律不变</strong>，转换只发生在边界：<br>· Aria 下载队列 → <code>Array[Job]</code> + <code>JobState</code> enum（磁盘仍是对象数组，state/got/total 仍写字符串，旧 <code>downloads.json</code> 原样能读）<br>· LenoMusic → <code>srow.SongRow</code> + <code>from_row</code>/<code>to_row</code>，转换点收在 <code>musicdl_gui.to_jobs</code> 一处；搜索侧与 5 个音源模块<strong>一行没动</strong><br>两者都做了逐字节 / 逐字符等价性验证（含老数据缺字段、<code>state=5</code> 降级、基名消毒口径）</td>
 <td><code>778ea4b</code> / <code>1481db3</code></td>
 </tr>
 </tbody>
@@ -241,7 +241,7 @@
 </tr>
 <tr>
 <td><strong>P1</strong></td>
-<td>~~记录类型 + 自动编解码~~ 🟡 <strong>基础设施已通、部分落地</strong></td>
+<td><del>记录类型 + 自动编解码</del> 🟡 <strong>基础设施已通、部分落地</strong></td>
 <td><code>jsons.encode(struct)</code> / <code>jsons.fill</code> / <code>Array[T]</code> 元素类型元数据都已在（<code>a1bbcc00</code>/<code>082a0a0d</code>/<code>bbc58526</code>），Aria 5 处 + LenoMusic 下载子系统已改。<strong>剩</strong>：搜索侧仍用行（<code>search_page</code> 37 / <code>bang_page</code> 23 / 5 个音源模块），且 <code>Table</code> 控件仍吃行</td>
 </tr>
 <tr>
@@ -582,7 +582,7 @@ type(jobs[0])                       → Job   ✓ 类型保留
 <li><a href="file:///d:/CLeno/LenoMusic/musicdl.leno#L141-L153">musicdl.leno:141-153</a>：<code>cli.parse</code> 返回 <code>Dict&lt;string, any&gt;</code>，紧接着 6 连 <code>as bool/as string</code>。</li>
 <li>下载队列的三个状态迁移函数（上文）本质是同一张状态转移表的三次手写。</li>
 <li>六类 <code>parse_*</code> 映射（recent / rank / users / shared / shared_songs / feed）是同一模板的六次手写。</li>
-<li>~~排序也只能手写：<code>sort</code> 不支持自定义比较器~~ ✅ <strong>已处理（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 已支持。<a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269</a> 与 <a href="file:///d:/CLeno/LenoMusic/search_page.leno#L294-L294">search_page.leno:294</a> 已改成 <code>ord.sort(cmp)</code> / <code>sort()</code>。
+<li><del>排序也只能手写：<code>sort</code> 不支持自定义比较器</del> ✅ <strong>已处理（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 已支持。<a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269</a> 与 <a href="file:///d:/CLeno/LenoMusic/search_page.leno#L294-L294">search_page.leno:294</a> 已改成 <code>ord.sort(cmp)</code> / <code>sort()</code>。
   <strong>保留</strong> <a href="file:///d:/CLeno/LenoMusic/player.leno#L742-L752">player.leno:742</a> 的二分插入（O(log n)，改成全量 sort 是倒退）。</li>
 </ul>
 <h3 id="2-4-null-与-any-收窄到处透传">2.4 <code>null</code> 与 <code>any</code> 收窄到处透传</h3>
@@ -766,7 +766,7 @@ var total   = nums.reduce(func(int acc, int x, int i) { return acc + x }, 0)
 </code></pre>
 <p>报错：<code>[语义错误] 调用方法 'sort' 时参数数量不匹配: 期望 0, 实际 1</code>。
 改模块形式 <code>arrays.sort(nums, fn)</code> 同样失败：<code>arrays.sort 参数数量不匹配: 期望 1, 实际 2</code>，并附 <code>参数 2 类型错误: 期望 'int'，但传入 'func(int, int):int'</code>。
-~~<strong>判定：没有。</strong>~~ ✅ <strong>已补（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 现在可用（稳定归并；回调里改数组不会崩）。</p>
+<del><strong>判定：没有。</strong></del> ✅ <strong>已补（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 现在可用（稳定归并；回调里改数组不会崩）。</p>
 <pre><code class="language-leno">arr.sort(func(int a, int b) { return b - a })            // 降序
 arr.sort(func(Song x, Song y) { return x.dur - y.dur })  // 按 struct 字段
 </code></pre>
@@ -825,8 +825,8 @@ func max_of[T](T a, T b): T { if a &gt; b { return a } return b }
 </tr>
 <tr>
 <td>自定义比较器 <code>sort</code></td>
-<td>~~期望 0 参~~ ⇒ 现已支持 <code>sort(cmp)</code></td>
-<td>~~<strong>没有</strong>~~ ⇒ ✅ <strong>已有</strong>（2026-11-09）</td>
+<td><del>期望 0 参</del> ⇒ 现已支持 <code>sort(cmp)</code></td>
+<td><del><strong>没有</strong></del> ⇒ ✅ <strong>已有</strong>（2026-11-09）</td>
 </tr>
 <tr>
 <td>用户泛型（函数 / struct）</td>
@@ -848,7 +848,7 @@ func max_of[T](T a, T b): T { if a &gt; b { return a } return b }
 <tbody>
 <tr>
 <td>约定文件（AGENTS.md / CLAUDE.md / 风格指南）</td>
-<td>~~四项目 + Leno 根目录 <strong>0 个</strong>~~ ⇒ <strong>Leno 根已有 <code>AGENTS.md</code> + <code>docs/idioms.md</code></strong>（2026-11-09，每条都实跑验证过）；<strong>四个项目仍是 0 个</strong></td>
+<td><del>四项目 + Leno 根目录 <strong>0 个</strong></del> ⇒ <strong>Leno 根已有 <code>AGENTS.md</code> + <code>docs/idioms.md</code></strong>（2026-11-09，每条都实跑验证过）；<strong>四个项目仍是 0 个</strong></td>
 <td>Leno 根：<strong>会</strong>；四项目：<strong>仍不会</strong></td>
 </tr>
 <tr>
@@ -1023,7 +1023,7 @@ func max_of[T](T a, T b): T { if a &gt; b { return a } return b }
 </tr>
 </tbody>
 </table>
-<p>缺口集中在“上层契约”而不是“底层能力”：Crypto 无 PBKDF2/argon2（§3 已记）；HTTP 有 46 个函数、0 个结构体（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoHTTP/lib/HTTP.leno#L28-L143">HTTP.leno:28-143</a>），只能 <code>Dict</code> 配 handler；SQLite 无 NULL 语义；没有 <code>Result/Option</code>、~~没有 comparator sort（§3.5）~~（✅ 2026-11-09 已补 <code>arr.sort(cmp)</code>）、没有测试框架；WorkBuddy 只能自己写 <code>retry_delays</code>（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L178">wb_core.leno:178</a>）。</p>
+<p>缺口集中在“上层契约”而不是“底层能力”：Crypto 无 PBKDF2/argon2（§3 已记）；HTTP 有 46 个函数、0 个结构体（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoHTTP/lib/HTTP.leno#L28-L143">HTTP.leno:28-143</a>），只能 <code>Dict</code> 配 handler；SQLite 无 NULL 语义；没有 <code>Result/Option</code>、<del>没有 comparator sort（§3.5）</del>（✅ 2026-11-09 已补 <code>arr.sort(cmp)</code>）、没有测试框架；WorkBuddy 只能自己写 <code>retry_delays</code>（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L178">wb_core.leno:178</a>）。</p>
 <blockquote>
 <p><strong>另外，<code>maths</code> 里的一个同类缺口也已补上（2026-11-09）</strong>：有 <code>pow</code>（浮点）、有 <code>mod</code>（int），
 却没有二者的结合 —— <strong>模幂 <code>pow_mod</code></strong>。RSA/DH/LCG 随机数都要它，于是 LenoMusic 手写了一份。
@@ -1224,8 +1224,8 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
 </tr>
 <tr>
 <td><strong>P4</strong></td>
-<td>enum 载荷 / ~~比较器~~（✅ 已完成）/ 穷尽性</td>
-<td><code>hack_log</code> 并入 <code>LenoLog</code>、<code>web_cdp</code> 改调 <code>FS.rmtree</code>、~~5 处手写排序退场~~（✅ 已退 3 处，2 处保留）</td>
+<td>enum 载荷 / <del>比较器</del>（✅ 已完成）/ 穷尽性</td>
+<td><code>hack_log</code> 并入 <code>LenoLog</code>、<code>web_cdp</code> 改调 <code>FS.rmtree</code>、<del>5 处手写排序退场</del>（✅ 已退 3 处，2 处保留）</td>
 </tr>
 </tbody>
 </table>
@@ -1256,7 +1256,7 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
 </ul>
 </li>
 <li><strong>标准库目录与入口收敛</strong>（与 P0 同源：让已有能力“到达”作者，依据见 §4.5）：<ul>
-<li>~~<strong>README 目录与 import 名映射</strong>~~：✅ <strong>已完成（2026-11-09）</strong> ——
+<li><del><strong>README 目录与 import 名映射</strong></del>：✅ <strong>已完成（2026-11-09）</strong> ——
      <code>build\leno_module\README.md</code> 现在列 <strong>20 个模块</strong>并带 <code>包名 → import 名</code> 对照，20 个 import 名逐个实测；
      同时修正了 <code>module_sys.md</code>（内建 <code>sys</code> vs 模块包 <code>LenoSys</code> 的对照表）与 <code>module_web.md</code>
      （删掉 <code>web_gzip</code> 635 行的历史值，改为 28 行转发壳 + “要 gzip 用 <code>import "Compress"</code>”）。</li>
@@ -1323,14 +1323,14 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
 <h3 id="p4-实测确认的真缺口-原-与-的排序部分">P4 实测确认的真缺口——原 ② 与 ⑤ 的排序部分</h3>
 <ul>
 <li><strong>enum 载荷</strong>：唯一“根本没法写”的状态表达（§3.5 实测 9 条语法错误）。<code>switch</code> 本身能用但<strong>没有穷尽性检查</strong>，两者应一起做：<code>enum JobMsg { Start(id), Progress(done,total), ... }</code> + <code>switch</code> 穷尽性错误。</li>
-<li><strong>比较器 / 稳定排序</strong>：~~<code>sort()</code> 只接受 0 参~~ ⇒ ✅ <strong>已完成（2026-11-09）</strong>。
+<li><strong>比较器 / 稳定排序</strong>：<del><code>sort()</code> 只接受 0 参</del> ⇒ ✅ <strong>已完成（2026-11-09）</strong>。
   <code>arr.sort(cmp)</code> 走稳定归并（相等元素保持原序），回调里改数组不会崩（排序前复制元素）。
   已消掉 <a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269 <code>lrc_sort</code></a>、<a href="file:///d:/CLeno/LenoMusic/search_page.leno#L294-L294">search_page.leno:294</a>、Aria <code>api_notice</code> 的 Top-N 三处；
   <strong><a href="file:///d:/CLeno/LenoMusic/player.leno#L742-L752">player.leno:742 <code>insert_sorted</code></a> 故意不改</strong>（二分插入 O(log n)，全量 sort 会更慢）。</li>
 <li><strong>switch 跳转表</strong>（<code>OP_SWITCH_LOOKUP</code> 空转）是性能问题，不是可用性问题，排在最后。</li>
-<li><strong>库内低成本收尾（§4.5）</strong>：<code>hack_log.leno</code>（非空 158 行）与 <code>LenoLog</code>（非空 85 行）职责重叠（重合量待确认），应并入 ⬜；<code>web_cdp.leno</code> 的 <code>_removeDir</code> 直接 <code>rmdir /s /q</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/web_cdp.leno#L849-L861">849-861</a>），应改用 <code>FS.rmtree</code> ⬜；~~比较器落地后，四项目 5 处手写排序可删~~ ✅ <strong>已删 3 处，2 处保留</strong>（<code>insert_sorted</code> 二分插入、<code>top_rank</code> Top-N）。</li>
+<li><strong>库内低成本收尾（§4.5）</strong>：<code>hack_log.leno</code>（非空 158 行）与 <code>LenoLog</code>（非空 85 行）职责重叠（重合量待确认），应并入 ⬜；<code>web_cdp.leno</code> 的 <code>_removeDir</code> 直接 <code>rmdir /s /q</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/web_cdp.leno#L849-L861">849-861</a>），应改用 <code>FS.rmtree</code> ⬜；<del>比较器落地后，四项目 5 处手写排序可删</del> ✅ <strong>已删 3 处，2 处保留</strong>（<code>insert_sorted</code> 二分插入、<code>top_rank</code> Top-N）。</li>
 </ul>
-<p>其余低成本收尾（<strong>2026-11-09 复核</strong>）：~~格式化（时长 / 字节 / 补零）~~ ⇒
+<p>其余低成本收尾（<strong>2026-11-09 复核</strong>）：<del>格式化（时长 / 字节 / 补零）</del> ⇒
 - <strong>补零 ✅ 已做</strong>：<code>pad2</code> 四份统一到 <code>strings.pad_start</code>（注意：中途我误加过等价的 <code>pad_left</code>，
 发现 <code>pad_start</code> 早就在，已删掉自己加的）。
 - <strong>字节格式化</strong>：<code>strings.fmt_size</code> <strong>本来就有</strong>，四份手写属于绕过已有 API ⇒ 归 P0（可发现性），不是缺口。
@@ -1387,7 +1387,7 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
 <li><strong>LenoTrae</strong>：黄金样例回归 + README 的语言注意事项，等于给编译器写了一份真实用户验收清单。</li>
 <li><strong>语言本身的表达力（已实测）</strong>：<code>cards</code> 的 hook 结构、<code>routes</code> 的声明式表、<code>cli.spec</code>、<code>use</code> 类型导入、<code>if x is T =&gt; binding</code>，以及 §3.5 验证通过的 <code>switch</code> / int <code>enum</code> / <code>map·filter·reduce</code> / 用户泛型，都证明核心语法足以写出“像样”的代码。</li>
 </ul>
-<p><strong>最终判断</strong>：Leno 的语法已经够用，而且比原报告估计的更够用——<code>switch</code>、<code>map/filter/reduce</code>、泛型都实测可用。短板应分成三类：<strong>（A）已存在的能力没有到达作者</strong>（无 AGENTS.md、无惯用示例、编译器/LSP 不提示、<code>--init</code> 模板不示范），这是“生成侧引导缺口”；<strong>（B）确实缺失的能力</strong>：记录类型与编解码、Result、8 位索引、enum 载荷、~~comparator 排序~~（✅ 2026-11-09 已补）；<strong>（C）官方模块库有 20 个模块、53,052 行，却没有成为标准形态</strong>——37 处内部 <code>web_net</code> import 对 0 处 <code>Web</code> 门面 import，~~README 缺 7 个模块且无 import 名映射~~（✅ 已补），77% 库行数不在测试入口内（🟡 已降到 53.9%）。C 与 A 同源，但修复对象是库本身（目录、门面、错误/空值契约、测试入口），不是编译器提示。A 类不补，未来每一段新代码都会继续绕开已有能力；B 类不补，Aria 这类 24.6k 行项目会继续用字符串数组和魔法数字自我补偿；C 类不补，20 个模块就继续以“内部文件”的形式被零散使用，而不会成为四个项目共享的标准入口。先做 A（含 C 的目录/门面部分），再做 B 的前两项，才谈得上“多人、长期、可测试”的可用性。</p>
+<p><strong>最终判断</strong>：Leno 的语法已经够用，而且比原报告估计的更够用——<code>switch</code>、<code>map/filter/reduce</code>、泛型都实测可用。短板应分成三类：<strong>（A）已存在的能力没有到达作者</strong>（无 AGENTS.md、无惯用示例、编译器/LSP 不提示、<code>--init</code> 模板不示范），这是“生成侧引导缺口”；<strong>（B）确实缺失的能力</strong>：记录类型与编解码、Result、8 位索引、enum 载荷、<del>comparator 排序</del>（✅ 2026-11-09 已补）；<strong>（C）官方模块库有 20 个模块、53,052 行，却没有成为标准形态</strong>——37 处内部 <code>web_net</code> import 对 0 处 <code>Web</code> 门面 import，<del>README 缺 7 个模块且无 import 名映射</del>（✅ 已补），77% 库行数不在测试入口内（🟡 已降到 53.9%）。C 与 A 同源，但修复对象是库本身（目录、门面、错误/空值契约、测试入口），不是编译器提示。A 类不补，未来每一段新代码都会继续绕开已有能力；B 类不补，Aria 这类 24.6k 行项目会继续用字符串数组和魔法数字自我补偿；C 类不补，20 个模块就继续以“内部文件”的形式被零散使用，而不会成为四个项目共享的标准入口。先做 A（含 C 的目录/门面部分），再做 B 的前两项，才谈得上“多人、长期、可测试”的可用性。</p>
 <h3 id="7-1-做完一轮之后的再判断-2026-11-09">7.1 做完一轮之后的再判断（2026-11-09）</h3>
 <p>按上面的排序动了一轮（P0 的文档/README/测试部分 + P4 的比较器），结论有三点变化：</p>
 <ol>
@@ -1409,7 +1409,7 @@ LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</co
    而 LenoCSV / LenoCompress / LenoCrypto（本来就有测试）这轮几十组边界探针 <strong>一个 bug 都没找到</strong>。
    对比很直接：<strong>有测试的模块质量好，没测试的模块藏着静默错误</strong>。</li>
 </ol>
-<p><strong>如果只能再做一件事</strong>：~~把 <code>Web</code> 门面（37 : 0）收进正轨~~ ✅ <strong>已做（2026-11-09）</strong>。</p>
+<p><strong>如果只能再做一件事</strong>：<del>把 <code>Web</code> 门面（37 : 0）收进正轨</del> ✅ <strong>已做（2026-11-09）</strong>。</p>
 <p>拆出 <code>WebNet</code> / <code>WebHtml</code> / <code>WebCrawl</code> 三个窄入口后，四个项目 37 处全部改回公共入口
 （<code>import "web_net"</code> 0 次 → <code>import "WebNet"</code> 37 次），<strong>调用点零改动</strong>（别名都是 <code>net</code>）。</p>
 <p>复盘这件事，<strong>根因和我原先的判断不一样</strong>：</p>

@@ -1231,7 +1231,7 @@ resize 通知是一张<strong>硬编码类型表</strong>（只认 <code>Table</
 </code></pre>
 <p>600×400 → <code>show()</code> → <code>setSize(880,580)</code>，然后逐点读像素：
 修前 <code>(640,200)</code> / <code>(300,460)</code> / <code>(820,540)</code> 全是 <code>ffffff</code> ✗ ⇒ 修后 6 个采样点全 <code>878787</code> ✓</p>
-<p>⚠ ~~顺带记一条框架设计债~~ ⇒ <strong>债已还（2026-10-13 ✓）</strong>：窗口那条 resize 通知原来是<strong>硬编码类型表、
+<p>⚠ <del>顺带记一条框架设计债</del> ⇒ <strong>债已还（2026-10-13 ✓）</strong>：窗口那条 resize 通知原来是<strong>硬编码类型表、
 同一份写了 3 遍</strong>（主循环 / 模态窗 / 悬停弹层窗）✗，现已照 <code>_passWindowHandle</code> 的样板收敛到
 <code>sdl_layout._passWindowResize</code> <strong>一处</strong> + <code>setExtraPassResize</code> 扩展钩子（由 <code>sdl_window</code> 注册 ✓）⇒
 <strong>以后新控件想收 resize，只加一处即可</strong> ✓（<code>sdl_window</code> 那三个循环现在一个具体控件类型都不认识了 ✓）</p>
@@ -2227,7 +2227,7 @@ var dlg = SDL3.createVirtualWindow({title: "设置", w: 560, h: 330})   // 主�
 </ul>
 <p>已知边界（先如实写着，别当没看见）：</p>
 <ul>
-<li>~~缩放是整块贴图 ⇒ 文字会略软~~ <strong>已修（2026-11-21 真机实测后）</strong>：离屏纹理现在按
+<li><del>缩放是整块贴图 ⇒ 文字会略软</del> <strong>已修（2026-11-21 真机实测后）</strong>：离屏纹理现在按
   <strong>物理像素</strong>分配（<code>逻辑尺寸 × 父窗口密度</code>，见 <code>_virtEnsureTex</code>），渲染时用同一个倍数缩放，
   合成时再等比缩到屏幕 ⇒ 文字按屏幕原生分辨率栅格化，不再发软 ✓</li>
 <li>弹窗里的 <code>set_widget_opacity</code> 暂不生效（<code>_drawTree</code> 的 opac 数组对虚拟窗口传空 ⇒ 一律 1.0）</li>

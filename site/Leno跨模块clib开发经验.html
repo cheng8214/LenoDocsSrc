@@ -54,7 +54,7 @@ export func myFunc(): Ptr[u8] {
 </code></pre>
 <hr>
 <h2 id="2-返回类型标注限制">2. 返回类型标注限制</h2>
-<p>~~<code>Dict</code> / <code>Dict[...]</code> 不能作为函数返回类型标注~~（✅ 已修复，<code>Dict</code> 和 <code>Dict[K, V]</code> 均可作为返回类型）。</p>
+<p><del><code>Dict</code> / <code>Dict[...]</code> 不能作为函数返回类型标注</del>（✅ 已修复，<code>Dict</code> 和 <code>Dict[K, V]</code> 均可作为返回类型）。</p>
 <pre><code class="language-leno">// ✅ 直接使用 Dict 作为返回类型
 export func captureScreen(): Dict { ... }
 

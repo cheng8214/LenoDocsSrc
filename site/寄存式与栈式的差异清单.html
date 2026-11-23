@@ -546,7 +546,7 @@ async func later(): int {
 <td>仍开 ⇒ <strong>T4</strong>（待拍板）</td>
 </tr>
 <tr>
-<td>~~C11~~</td>
+<td><del>C11</del></td>
 <td><strong>✅ 已修</strong>（T11 ✅）：<code>int? a = null</code> 参与算术 ⇒ <strong>编译错</strong>（另有可空运算警告）；<strong>未赋默认值的值类型字段</strong>参与算术 ⇒ <strong>运行期报错</strong>（不再静默算 0 ✗）。既有用例：<code>test_null_arith_compile_error</code> / <code>test_null_arith_error</code></td>
 <td>已实现</td>
 </tr>
@@ -566,13 +566,13 @@ async func later(): int {
 <tbody>
 <tr>
 <td>C1</td>
-<td>~~函数返回值不按声明类型规范化~~</td>
+<td><del>函数返回值不按声明类型规范化</del></td>
 <td><strong>已修 —— 移入 A 类 A4</strong>（寄存器式已修、栈式仍错）</td>
 <td>与 A1 同源（缺 CAST），A1 修的是<strong>变量</strong>、A4 修的是<strong>返回值</strong></td>
 </tr>
 <tr>
 <td>C2</td>
-<td>~~跨模块 async 完全不支持~~</td>
+<td><del>跨模块 async 完全不支持</del></td>
 <td><strong>已修 —— 移入 A 类 A3</strong>（寄存器式已支持、栈式仍不支持）</td>
 <td>扫描器/解析器/loader 四处都不认 <code>async</code></td>
 </tr>
@@ -596,7 +596,7 @@ async func later(): int {
 </tr>
 <tr>
 <td>C7</td>
-<td>~~多个协程同时失败时 <code>run()</code> 只抛第一个~~</td>
+<td><del>多个协程同时失败时 <code>run()</code> 只抛第一个</del></td>
 <td><strong>已修 —— 移入 A 类 A5</strong>（随 E15 的异常屏障自动正确；栈式仍只抛第一个）</td>
 <td>见 <code>docs/module_asyncs.md</code> 的「路径3」</td>
 </tr>
@@ -608,7 +608,7 @@ async func later(): int {
 </tr>
 <tr>
 <td>C9</td>
-<td>~~文档承诺的 <code>asyncs.current()</code> / <code>is_done()</code> / <code>get_result()</code> 未实现~~</td>
+<td><del>文档承诺的 <code>asyncs.current()</code> / <code>is_done()</code> / <code>get_result()</code> 未实现</del></td>
 <td><strong>已补 —— 移入 A 类 A6</strong>（寄存器式按文档实现；栈式仍报「未找到模块方法」）</td>
 <td><code>docs/module_asyncs.md</code> 第 154/170/196 行列了这三个 API</td>
 </tr>
@@ -797,7 +797,7 @@ async func later(): int {
 build\leno.exe --no-cache assert\test_cross_module_types.leno     # 寄存器式：通过
 </code></pre>
 <blockquote>
-<p>~~差分对照（<code>tools/diff_vs_stack.ps1</code>）~~ <strong>已删除</strong>：不再与栈式对比，本节原内容（归一化清单、
+<p><del>差分对照（<code>tools/diff_vs_stack.ps1</code>）</del> <strong>已删除</strong>：不再与栈式对比，本节原内容（归一化清单、
 <code>TIMEOUT</code> 标记、<code>gc .leno</code> 的 1785 vs 2000+ 之类）随之作废 —— 那条性能项本身还留在
 <code>docs/待办与路线图.md</code> 的现状快照里。</p>
 </blockquote>

@@ -713,7 +713,7 @@ python build\leno_module\LenoHTTP\test\dev_stress_python.py
 <ul>
 <li><code>multipart/form-data</code>（文件上传）</li>
 <li>响应 gzip（接 <code>LenoCompress.deflateRaw</code>）+ 静态文件 ETag/Last-Modified</li>
-<li>~~连接处理下沉到线程~~ ✅ 0.2 已用 <code>fd</code> 交接 + 线程池落地（见 <code>serveWorkers</code>）</li>
+<li><del>连接处理下沉到线程</del> ✅ 0.2 已用 <code>fd</code> 交接 + 线程池落地（见 <code>serveWorkers</code>）</li>
 <li>简单中间件（日志/超时/鉴权）与 <code>:param</code> 路由</li>
 </ul>
 </main>

@@ -422,11 +422,11 @@ case is AnchorBox { c._bind_window(hwnd); return }
 </tr>
 <tr>
 <td><strong>端到端（决定性）</strong></td>
-<td>把§六的绕过<strong>改回绕前写法</strong>（合并 <code>case is HBox, VBox, AnchorBox</code> ✓）+ 在 <code>Edit.set_window</code> 插探针 ✓&lt;br&gt;⇒ 新编译器的入口 <code>.lenb</code> 里 <code>[probe] Edit.set_window null=false</code> ✓、裁剪清单无 <code>_bind_window</code> ✓&lt;br&gt;⇒ <strong>那个绕过不再需要</strong> ✓</td>
+<td>把§六的绕过<strong>改回绕前写法</strong>（合并 <code>case is HBox, VBox, AnchorBox</code> ✓）+ 在 <code>Edit.set_window</code> 插探针 ✓<br>⇒ 新编译器的入口 <code>.lenb</code> 里 <code>[probe] Edit.set_window null=false</code> ✓、裁剪清单无 <code>_bind_window</code> ✓<br>⇒ <strong>那个绕过不再需要</strong> ✓</td>
 </tr>
 <tr>
 <td><strong>正式回归（改回合并写法之后）</strong></td>
-<td>框架 5 处合并 case 已<strong>正式改回</strong> ✓（sdl_layout 1 处 + sdl_window 5 组 ✓），再跑一次同一探针 ⇒ <code>.lenb</code> 里仍是 <code>null=false</code> ✓、链上零裁剪 ✓；&lt;br&gt;断言套件 <strong>432 passed / 0 failed</strong> ✓；编译电池（框架 5 + 用例 1 + 游戏 2 + 应用 2）<strong>10/10 OK、0 警告</strong> ✓</td>
+<td>框架 5 处合并 case 已<strong>正式改回</strong> ✓（sdl_layout 1 处 + sdl_window 5 组 ✓），再跑一次同一探针 ⇒ <code>.lenb</code> 里仍是 <code>null=false</code> ✓、链上零裁剪 ✓；<br>断言套件 <strong>432 passed / 0 failed</strong> ✓；编译电池（框架 5 + 用例 1 + 游戏 2 + 应用 2）<strong>10/10 OK、0 警告</strong> ✓</td>
 </tr>
 </tbody>
 </table>

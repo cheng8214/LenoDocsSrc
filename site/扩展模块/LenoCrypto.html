@@ -166,7 +166,7 @@ padding 也收、空白字符忽略；非法字符则<strong>报错并指出第�
 </tr>
 <tr>
 <td>GCM 应用形态</td>
-<td>key=sha256(密钥串)、12 字节 nonce、AAD=`WB-AAD0\</td>
+<td>key=sha256(密钥串)、12 字节 nonce、AAD=<code>WB-AAD\0|0x01|lp('WBEV1')|lp('sym-v1')|0,0,0,1|lp(keyId)|2,0,0</code>、275 字节明文 ⇒ 密文/标签/往返</td>
 </tr>
 <tr>
 <td>GCM 拒绝篡改</td>

@@ -608,6 +608,7 @@ main() {
 
     Array[Dict[string, any]] docs = []
     var total_bytes = 0
+    var md_warn = 0
     var pos = 0
     while pos < ordered.len() {
         var rel = ordered[pos]
@@ -616,6 +617,13 @@ main() {
         var t = files.read(path)
         if t != null { text = strings.replace(_str(t), "\r\n", "\n") }
         total_bytes += files.size(path)
+
+        // 未支持语法扫描：把"本库没实现 ⇒ 被当普通文本输出"的写法**打印出来**。
+        //   不加这一步，缺口是静默的（页面看着像正常文本，没人会发现少了什么）。
+        for md.scan_unsupported(text) to warn {
+            print("[markdown] " + rel + ": " + warn + "\n")
+            md_warn += 1
+        }
 
         var subdir = strings.starts_with(rel, "扩展模块/") or strings.starts_with(rel, "archive/")
         var body = fix_links(md.to_html(text), subdir)
@@ -756,4 +764,7 @@ main() {
     print("文档 " + _str(docs.len()) + " 篇 | 分类 " + _str(cats.len()) + " 组 | 搜索索引 "
           + _str(files.size(dirs.join(ASSETS, "search-index.js")) / 1024) + " KB\n")
     print("入口: " + dirs.join(OUT, "index.html") + "\n")
+    if md_warn > 0 {
+        print("⚠ 有 " + _str(md_warn) + " 处 Markdown 写法本库不支持（上面逐条列出，已按普通文本输出）\n")
+    }
 }

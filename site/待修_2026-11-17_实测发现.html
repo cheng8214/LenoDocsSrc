@@ -943,12 +943,12 @@ files.delete(name)              // Windows 上句柄没关 ⇒ 返回 false，�
 <tr>
 <td><code>T x = null</code> 粗匹配处数</td>
 <td>Aria 29 / LenoSDL3 31</td>
-<td>`b[A-Z]w<em>s+w+s</em>(=\</td>
+<td><code>\b[A-Z]\w*\s+\w+\s*(=|:)\s*null\b</code></td>
 </tr>
 <tr>
 <td>MenuBar Dict <code>action:</code> 用量</td>
 <td>Aria + LenoTrae 合计 2 处</td>
-<td>`createMenuBar\</td>
+<td><code>createMenuBar|addMenu(|action:</code></td>
 </tr>
 <tr>
 <td><code>leno_version</code> 命中</td>

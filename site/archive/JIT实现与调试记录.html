@@ -952,25 +952,25 @@ movq dst, src              ; 裸 double 位模式直通
 <td>—</td>
 <td>OP_GT_INT_IMM</td>
 <td>2</td>
-<td>&lt;br /&gt;</td>
+<td><br /></td>
 </tr>
 <tr>
 <td>—</td>
 <td>OP_LE_INT_IMM</td>
 <td>2</td>
-<td>&lt;br /&gt;</td>
+<td><br /></td>
 </tr>
 <tr>
 <td>—</td>
 <td>OP_GE_INT_IMM</td>
 <td>2</td>
-<td>&lt;br /&gt;</td>
+<td><br /></td>
 </tr>
 <tr>
 <td>—</td>
 <td>OP_EQ_INT_IMM</td>
 <td>2</td>
-<td>&lt;br /&gt;</td>
+<td><br /></td>
 </tr>
 </tbody>
 </table>
@@ -1435,27 +1435,27 @@ R2 的多批 opcode 已补齐。⇒ <strong>当前剩余缺口的完整清单见
 </thead>
 <tbody>
 <tr>
-<td>~~R4~~</td>
-<td>~~<code>jit_func_cache</code> 冲突驱逐的 <strong>use-after-free 隐患</strong>~~</td>
-<td>~~256 槽 direct-mapped，冲突时 <code>jit_mem_free</code> 掉占用者的机器码 —— 若那个函数<strong>正在 C 栈上执行</strong>（A 调 B、B 的 callout 又编译了撞槽的 C）就是 UAF~~</td>
-<td>~~需要「执行中计数」+ 驱逐时延迟回收~~</td>
-<td>~~高（内存安全）~~</td>
+<td><del>R4</del></td>
+<td><del><code>jit_func_cache</code> 冲突驱逐的 <strong>use-after-free 隐患</strong></del></td>
+<td><del>256 槽 direct-mapped，冲突时 <code>jit_mem_free</code> 掉占用者的机器码 —— 若那个函数<strong>正在 C 栈上执行</strong>（A 调 B、B 的 callout 又编译了撞槽的 C）就是 UAF</del></td>
+<td><del>需要「执行中计数」+ 驱逐时延迟回收</del></td>
+<td><del>高（内存安全）</del></td>
 <td><strong>已完成（§8.60，2026-09-14）</strong>：确认存在（强制碰撞 4/4 崩 <code>0xC0000005</code>）并修复为<strong>机器码延迟释放队列</strong>（安全点判据复用 <code>jit_func_depth</code>/<code>jit_loop_depth</code>）；<code>LENO_JIT_FUNC_CACHE_SMALL=1</code> 做确定性复现，用例 <code>assert/test_jit_func_cache_churn.leno</code></td>
 </tr>
 <tr>
-<td>~~R1~~</td>
-<td>~~<code>OP_SWITCH_LOOKUP</code> 进 JIT~~</td>
-<td>~~file_manager 仅剩的"可做但难"拒收点（×1）。VM 侧是 int/bigint/float/string 四路二分查找；变长编码：<code>const_idx(2) count(2) default_off(4) [case_off(4)]…</code>~~</td>
-<td>~~<code>opcode_size</code> 变长解码 + scan 的多目标前向记账 + codegen 线性比较链~~</td>
-<td>~~中~~</td>
+<td><del>R1</del></td>
+<td><del><code>OP_SWITCH_LOOKUP</code> 进 JIT</del></td>
+<td><del>file_manager 仅剩的"可做但难"拒收点（×1）。VM 侧是 int/bigint/float/string 四路二分查找；变长编码：<code>const_idx(2) count(2) default_off(4) [case_off(4)]…</code></del></td>
+<td><del><code>opcode_size</code> 变长解码 + scan 的多目标前向记账 + codegen 线性比较链</del></td>
+<td><del>中</del></td>
 <td><strong>已完成（§8.61，2026-09-14）</strong>：查找逻辑抽成 <code>switch_lookup_index</code>（VM/JIT 共用，语义唯一来源）+ 变长 <code>opcode_size</code> + 多目标前向记账（内联侧保守拒绝）+ 线性比较链；<code>assert/test_jit_op_switch_lookup.leno</code>；<strong>循环拒收清零</strong>（直方图只剩刻意保留的 <code>138</code>）</td>
 </tr>
 <tr>
-<td>~~R12~~</td>
-<td>~~【内存安全】JIT 下「循环体内<strong>按字面量属性名取值</strong>」堆损坏~~（原描述："dict 取值 + 存局部变量"）</td>
-<td>~~最小形态 100% 复现 <code>0xC0000374</code>；200000 轮正常 / 262144 轮崩~~</td>
-<td>~~一个 <code>pop_bytes</code> 判据~~</td>
-<td>~~高（内存损坏）~~</td>
+<td><del>R12</del></td>
+<td><del>【内存安全】JIT 下「循环体内<strong>按字面量属性名取值</strong>」堆损坏</del>（原描述："dict 取值 + 存局部变量"）</td>
+<td><del>最小形态 100% 复现 <code>0xC0000374</code>；200000 轮正常 / 262144 轮崩</del></td>
+<td><del>一个 <code>pop_bytes</code> 判据</del></td>
+<td><del>高（内存损坏）</del></td>
 <td><strong>已完成（§8.67，2026-09-14）</strong>：根因不是 dict 路径，而是 <strong><code>OP_GET_PROPERTY</code> 独立访问形态没弹 receiver 槽</strong> ⇒ <strong>每次执行泄漏 8 字节</strong> ⇒ 循环里 RSP 单调下漂 ⇒ ~2MB 栈界处 <code>0xC0000374</code>。修法：该分支 <code>pop_bytes</code> 由 <code>0</code> 改为 <code>8</code>。实测漂移 <strong>−8/次 → 0</strong>、该循环 <strong>182ms → 约 20~33ms</strong>、A 形态的 3 次 <code>int48</code> bailout 一并消失；用例 <code>assert/test_jit_op_get_property.leno</code>（40 万轮，必须 &gt; 262144 阈值）</td>
 </tr>
 <tr>
@@ -1467,11 +1467,11 @@ R2 的多批 opcode 已补齐。⇒ <strong>当前剩余缺口的完整清单见
 <td><strong>批次 1（§8.63）</strong>：<code>OP_IS_NULL</code>(48)。<strong>批次 2（§8.64）</strong>：<code>OP_STRING_ADD</code>(76)（由插值 <code>$"..."</code> 产生，不是 <code>+</code>；顺带解开内联侧）。<strong>批次 3（§8.65）</strong>：<code>OP_TYPE_CHECK</code>(93)——抽出 <code>type_check_value</code> 共用，顺带修掉 <code>TYPE_ENUM</code> 的 4 字节长度 bug；实测 <code>FuncCompiled 123 → 289</code>。<strong>下一批候选</strong>（实测排序）：<strong>内联侧</strong>补 <code>OP_GET_METHOD</code>（×36，见 R7；这是"内联能否成立"的问题，不影响循环编译）、<code>94:AS_CAST</code>（带值改写语义，直方图未出现）。注：<code>-d["k"]</code>、<code>x == null</code> 实测走已支持的路径，不必做；<strong>循环级拒收此刻只剩刻意保留项</strong>（<code>138</code>）/ R5 前置（<code>14</code>）/ 维持拒绝（<code>142</code>）</td>
 </tr>
 <tr>
-<td>~~R3~~</td>
-<td>~~L0 诊断收口~~</td>
-<td>~~<code>opcode_size</code> 余项补全；把 scan 的 default 报错区分成 <code>unknown opcode</code>（缺长度）与 <code>unsupported opcode</code>（已收录长度但缺 case）~~</td>
-<td>~~纯诊断，无行为变化~~</td>
-<td>~~极低~~</td>
+<td><del>R3</del></td>
+<td><del>L0 诊断收口</del></td>
+<td><del><code>opcode_size</code> 余项补全；把 scan 的 default 报错区分成 <code>unknown opcode</code>（缺长度）与 <code>unsupported opcode</code>（已收录长度但缺 case）</del></td>
+<td><del>纯诊断，无行为变化</del></td>
+<td><del>极低</del></td>
 <td><strong>已完成（§8.63，2026-09-14）</strong>：补齐约 40 条长度（逐条与 VM 的 <code>READ_*</code>、<code>debug.c</code> 反汇编器交叉核对）；<code>OP_CLOSURE</code> 因长度依赖常量表而<strong>故意保持"未知"</strong>；报错分为 <code>unknown（长度未知）</code>/<code>unsupported（已收录长度、未实现）</code>。<strong>实测收益</strong>：同一负载的拒收清单从"含糊的 138"变成分类可排期（76×4 / 93×3 / 14×2 / 142×2 / 138×49），R2 的下一批因此是测出来的而不是猜的</td>
 </tr>
 <tr>
@@ -1499,19 +1499,19 @@ R2 的多批 opcode 已补齐。⇒ <strong>当前剩余缺口的完整清单见
 <td><strong>② 已完成（§8.68，2026-09-15）</strong>：<code>scan_callee_for_inline</code> 补 <code>OP_GET_METHOD</code>（配对/独立两形态），探针 <code>probe_inline_method_call.leno</code> 2.27~2.40x、用例 <code>test_jit_inline_method_dispatch.leno</code>。<strong>① 已完成（§8.69，同日）</strong>：加「callee 与 caller 同模块」守卫后放行模块变量/函数访问，探针 <code>probe_inline_module_var.leno</code> ≈2~3x、跨模块仍拒绝（安全边界）、用例 <code>test_jit_inline_module_var.leno</code>；assert 298/0。③ 维持拒绝。<strong>④ 已完成（2026-09-16，§8.77）</strong>：内联侧补 <code>OP_CALL</code>(59) 与 <code>OP_GET_GLOBAL_FUNC</code>(18)（"取函数值再调用"形态此前使被调方永不可内联），拒收清零、探针同二进制 A/B <strong>2.72x</strong>、用例 <code>test_jit_inline_call_value.leno</code>、assert 308/0</td>
 </tr>
 <tr>
-<td>~~R8~~</td>
-<td>~~性能基准复盘~~</td>
-<td>~~§9 的数据需要按最新覆盖面重跑（JIT vs <code>LENO_NO_JIT=1</code>），量化"覆盖面增长到底换来多少"~~</td>
-<td>~~纯测量；也顺便验证 R4 的延迟回收没有性能回退~~</td>
-<td>~~极低~~</td>
+<td><del>R8</del></td>
+<td><del>性能基准复盘</del></td>
+<td><del>§9 的数据需要按最新覆盖面重跑（JIT vs <code>LENO_NO_JIT=1</code>），量化"覆盖面增长到底换来多少"</del></td>
+<td><del>纯测量；也顺便验证 R4 的延迟回收没有性能回退</del></td>
+<td><del>极低</del></td>
 <td><strong>已完成（§9 的「R8 基准复盘」小节，2026-09-14）</strong>：新增可复用基准 <code>examples/性能测试/JIT覆盖面基准.leno</code>（8 项，专测本轮补齐的 opcode）；JIT/VM 加速比 2.2x~18.6x，<strong>字符串插值 1.0x（分配主导，非测错）</strong>；与历史基线交叉核对无回退（i++ 75 vs 78 ms/亿、arr.add 620 vs 625 ms/亿）⇒ R4 延迟释放无可测代价</td>
 </tr>
 <tr>
-<td>~~R9~~</td>
-<td>~~<code>OP_SWITCH_LOOKUP</code> 的 callout 开销~~</td>
-<td>~~R9 前的基准显示：JIT 下 switch 每轮一次 callout（+15.5ms/3M 轮），比等价的 if 链慢 3.7 倍~~</td>
-<td>~~编译期分流：case 值全 int 时发内联比较链~~</td>
-<td>~~低（非 int 一律退回原 callout 路径）~~</td>
+<td><del>R9</del></td>
+<td><del><code>OP_SWITCH_LOOKUP</code> 的 callout 开销</del></td>
+<td><del>R9 前的基准显示：JIT 下 switch 每轮一次 callout（+15.5ms/3M 轮），比等价的 if 链慢 3.7 倍</del></td>
+<td><del>编译期分流：case 值全 int 时发内联比较链</del></td>
+<td><del>低（非 int 一律退回原 callout 路径）</del></td>
 <td><strong>已完成（§8.62，2026-09-14）</strong>：int 快路径 + int48 守卫（bailout 交解释器，保住 bigint 值能命中 int case 的语义）+ 重复值排除；switch 的 JIT 时间 30.4 → <strong>15.7 ms</strong>，与 if 同级</td>
 </tr>
 <tr>
@@ -1523,11 +1523,11 @@ R2 的多批 opcode 已补齐。⇒ <strong>当前剩余缺口的完整清单见
 <td>维持</td>
 </tr>
 <tr>
-<td>~~R10~~</td>
-<td>~~Linux 上 <code>jit_mem_free(ptr, 0)</code> 导致可执行内存<strong>永不归还</strong>~~</td>
-<td>~~POSIX 侧 <code>munmap</code> 需要长度，而所有调用点都传 0 ⇒ <code>EINVAL</code>、每次驱逐漏一块；Windows 侧 <code>MEM_RELEASE</code> 忽略 size 所以一直没暴露（也解释了 R4 为何只在 Windows 复现）~~</td>
-<td>~~把尺寸与代码指针一起存~~</td>
-<td>~~低（Windows 行为不变）~~</td>
+<td><del>R10</del></td>
+<td><del>Linux 上 <code>jit_mem_free(ptr, 0)</code> 导致可执行内存<strong>永不归还</strong></del></td>
+<td><del>POSIX 侧 <code>munmap</code> 需要长度，而所有调用点都传 0 ⇒ <code>EINVAL</code>、每次驱逐漏一块；Windows 侧 <code>MEM_RELEASE</code> 忽略 size 所以一直没暴露（也解释了 R4 为何只在 Windows 复现）</del></td>
+<td><del>把尺寸与代码指针一起存</del></td>
+<td><del>低（Windows 行为不变）</del></td>
 <td><strong>已完成（§8.63，2026-09-14）</strong>：<code>JitCacheEntry.code_size</code> / <code>JitFuncCacheEntry.code_size</code> + 两个编译函数的 <code>out_size</code> 出参 + 4 个释放点改用真实长度</td>
 </tr>
 </tbody>
@@ -2925,9 +2925,9 @@ JIT 逐次序言」上，而这两项在循环体内每轮都要付一次。</p>
 <p>完整交接（已完成的、已排除的死路、待办优先级、测量方法）见 <strong><code>docs/GC与分配优化.md</code></strong>。</p>
 </blockquote>
 <ol>
-<li>~~<strong>安全</strong>：<code>struct_instance_new_with_args()</code> —— 实参给出的字段跳过一遍默认值初始化、
+<li><del><strong>安全</strong>：<code>struct_instance_new_with_args()</code> —— 实参给出的字段跳过一遍默认值初始化、
    每个字段只写一次（未给出的字段逐条照搬原默认值逻辑）。预计省 ~30ns/次（2 字段）到
-   ~170ns（6 字段）。<strong>解释器 <code>OP_STRUCT_INIT</code> 不动</strong>，保留参考实现以便 JIT/解释器差分。~~
+   ~170ns（6 字段）。<strong>解释器 <code>OP_STRUCT_INIT</code> 不动</strong>，保留参考实现以便 JIT/解释器差分。</del>
    <strong>❌ 已实测：是负优化，已回滚。</strong> 见下方「§8.31-a 负结果」。</li>
 <li><strong>安全但收益小</strong>：<code>GC_POOL_MEM_LIMIT</code> 4MB → 16/32MB（实测 64MB 折算仅省 ~4ns，
    只在容量能覆盖整段分配时才有效；本质是掩盖第 3 项）。</li>
@@ -3229,8 +3229,8 @@ TOS_PRODUCE();
 </thead>
 <tbody>
 <tr>
-<td>`LENO_GC_YOUNG_THRESHOLD=&lt;bytes\</td>
-<td>KB\</td>
+<td><code>LENO_GC_YOUNG_THRESHOLD=&lt;bytes|KB|MB&gt;</code></td>
+<td>覆盖并<strong>钉住</strong>年轻代阈值（<code>young_threshold_pinned</code>）。<code>gc_minor_collect</code> / <code>gc_major_collect</code> 结尾会把它抬到 <code>max(young_allocated*2, GC_YOUNG_THRESHOLD)</code> —— 不钉住的话覆盖值在第一次回收后立刻失效。</td>
 </tr>
 <tr>
 <td><code>LENO_GC_FORCE_EVERY=&lt;n&gt;</code></td>
@@ -3944,7 +3944,7 @@ int48」。另外静态已知的不匹配（<code>int a = 2.7</code>）会被<st
 <tbody>
 <tr>
 <td>A</td>
-<td><code>GET_LOCAL x</code> `[ADD/SUB_INT_IMM i \</td>
+<td><code>GET_LOCAL x</code> <code>[ADD/SUB_INT_IMM i | SHL/SHR_IMM i | CONST k + BITAND/BITOR/BITXOR]</code> <code>[CAST_INT]</code> <code>SET_LOCAL_POP x</code></td>
 </tr>
 <tr>
 <td>B</td>
@@ -6542,9 +6542,9 @@ build\leno.exe file_manager.leno        # 退出时打印 === JIT 拒收原因 =
 <td><strong>FFI / C 库调用</strong>，同上</td>
 </tr>
 <tr>
-<td>~~20~~ → <strong>0</strong></td>
+<td><del>20</del> → <strong>0</strong></td>
 <td>inline</td>
-<td>~~<code>OP_CALL</code>(59) 内联扫描没有 case~~</td>
+<td><del><code>OP_CALL</code>(59) 内联扫描没有 case</del></td>
 <td><strong>✅ 已解决（2026-09-16，R7④，见下）</strong></td>
 </tr>
 <tr>
@@ -6683,8 +6683,8 @@ file_manager 里同名多实例（各控件模块各有一份 <code>set_pos</cod
 </thead>
 <tbody>
 <tr>
-<td>三个应用的 `loop\</td>
-<td>OP_CLOSURE C3（引用捕获本帧局部）` 计数</td>
+<td>三个应用的 <code>loop|OP_CLOSURE C3（引用捕获本帧局部）</code> 计数</td>
+<td><strong>0 / 0 / 0</strong></td>
 </tr>
 <tr>
 <td>file_manager 60 帧 + <code>LENO_JIT_CLOSURE=1</code> 的闭包形态行总数</td>
@@ -6884,8 +6884,8 @@ loop 4 / func 20 / inline 28 个对象）。这是 R6-c 之后<strong>唯一有�
 <tbody>
 <tr>
 <td><code>OP_AS_CAST(94)</code>（<code>x as T</code> 转换）</td>
-<td>探针 census：`1 loop\</td>
-<td>unsupported opcode 94(OP_AS_CAST)`</td>
+<td>探针 census：<code>1 loop|unsupported opcode 94(OP_AS_CAST)</code></td>
+<td>i32 字段取值<strong>必须</strong>用它（<code>c.v as int</code>）⇒ 含 cstruct 字段读的循环整循环被拒</td>
 </tr>
 <tr>
 <td><code>call_value</code> 对 <strong>native 方法对象</strong></td>
@@ -7611,13 +7611,13 @@ native 绑定方法把<strong>接收者插到 <code>args[0]</code></strong>（�
 被 bailout <strong>拉黑、退化成解释执行</strong>（这也是"JIT 打开却几乎不提速"的成因）。</p>
 <h4 id="顺带留下的事项">顺带留下的事项</h4>
 <ul>
-<li>~~<strong><code>vm_call_value</code> 对 native callee 的陷阱仍在</strong>（本节只在 JIT 侧绕开）：<code>arrays.c:341</code>
+<li><del><strong><code>vm_call_value</code> 对 native callee 的陷阱仍在</strong>（本节只在 JIT 侧绕开）：<code>arrays.c:341</code>
   （<code>arr.map</code> 回调）与 <code>ffi.c:2607</code>（FFI 回调）同样按"成功 ⇒ <code>last_return_value</code> 有效"
-  取结果 ⇒ 若传 native 值会拿到陈值<strong>并</strong>让解释器多跑一段字节码。~~ → <strong>已修（§8.90）</strong>：
+  取结果 ⇒ 若传 native 值会拿到陈值<strong>并</strong>让解释器多跑一段字节码。</del> → <strong>已修（§8.90）</strong>：
   在 <code>vm_call_value</code> 里对 native 类 callee <strong>同步直调 + 发布单返回 + 跳过 <code>vm_run_with_vm</code></strong>，
   一处修掉 <code>arrays.c</code> / <code>ffi.c</code> / JIT 三个调用方；新探针 <code>probe_vm_call_value_native.leno</code>
   用 A/B 证明它在<strong>解释器里也是活的 bug</strong>（改前：6 个运行时错误）。</li>
-<li>~~fm 仍有 <strong>3</strong> 条 bailout（来自别的站点）：用 <code>LENO_JIT_DEBUG=1</code> 定位~~ → <strong>已定位（§8.89）</strong>：
+<li><del>fm 仍有 <strong>3</strong> 条 bailout（来自别的站点）：用 <code>LENO_JIT_DEBUG=1</code> 定位</del> → <strong>已定位（§8.89）</strong>：
   是内层 <strong>float 步长</strong> for 循环的序言检查（<code>OP_FOR_PREP</code>），属<strong>设计限制</strong>、bail 正确；
   并因此补了"bailout 触发指令名"的<strong>常驻诊断</strong>（零成本，替代跑不完的 <code>LENO_JIT_DEBUG</code>）。</li>
 </ul>
@@ -7656,7 +7656,7 @@ native 绑定方法把<strong>接收者插到 <code>args[0]</code></strong>（�
 </tr>
 <tr>
 <td><code>jit_print_stats</code>（jit.c）</td>
-<td>`Bailout: fn=… — &lt;原因&gt; \</td>
+<td><code>Bailout: fn=… — &lt;原因&gt; | 触发指令=OP_xxx</code></td>
 </tr>
 </tbody>
 </table>
@@ -9938,9 +9938,9 @@ bigint ⇒ <code>bigint_neg</code> ✓，其它 ⇒ 返回 null 不猜 ✓）。
 <td>✓</td>
 </tr>
 <tr>
-<td>`a \</td>
-<td>0`</td>
+<td><code>a | 0</code></td>
 <td><code>9223372036854775808</code></td>
+<td>✓</td>
 <td>✓</td>
 </tr>
 <tr>
@@ -9950,10 +9950,10 @@ bigint ⇒ <code>bigint_neg</code> ✓，其它 ⇒ 返回 null 不猜 ✓）。
 <td>✓</td>
 </tr>
 <tr>
-<td>`-1 \</td>
-<td>0`</td>
+<td><code>-1 | 0</code></td>
 <td><code>-1</code></td>
 <td>巨大负数 ✗</td>
+<td>✓</td>
 </tr>
 <tr>
 <td><code>-1 ^ mask</code></td>
@@ -10063,7 +10063,7 @@ i = 49..99  → 000001b5ea3cec80  ✗（裸堆指针；且**恒定**⇒同一对
 </tr>
 <tr>
 <td>新增门禁探针 <code>probe_bigint_const_ops.leno</code></td>
-<td>JIT == NO_JIT ✓（bigint × <strong>常量</strong>运算符 ✓：<code>&gt;&gt;</code>/<code>&lt;&lt;</code>/<code>&amp;</code>/`\</td>
+<td>JIT == NO_JIT ✓（bigint × <strong>常量</strong>运算符 ✓：<code>&gt;&gt;</code>/<code>&lt;&lt;</code>/<code>&amp;</code>/<code>|</code>/<code>^</code> + 比较 ✓）</td>
 </tr>
 <tr>
 <td>新增门禁探针 <code>probe_bitwise_bigint_sign.leno</code>（§8.124 那枚）</td>
@@ -11695,7 +11695,7 @@ callout 路径的绝对耗时仍在同一水平 ⇒ <strong>R4 的延迟释放�
 <hr>
 <h2 id="10-架构瓶颈分析">10. 架构瓶颈分析</h2>
 <p>当前 JIT 是 <strong>loop-body template JIT</strong>，只编译单个循环体、用 push/pop 虚拟栈、单回边。存在三个结构性天花板：</p>
-<h3 id="瓶颈-1-只能编译扁平循环-不能跨控制流-已解决">瓶颈 1：~~只能编译扁平循环，不能跨控制流~~ 已解决</h3>
+<h3 id="瓶颈-1-只能编译扁平循环-不能跨控制流-已解决">瓶颈 1：<del>只能编译扁平循环，不能跨控制流</del> 已解决</h3>
 <p>P1 已完成嵌套循环支持。<code>scan_loop_body</code> 现在接受 <code>OP_FOR_PREP</code>（内层 for 初始化）、mid-body <code>OP_LOOP</code>（内层 while 回边）和 mid-body <code>OP_FOR_LOOP</code>（内层 for 回边）。codegen 通过 <code>offmap_lookup</code> 解析每个回边指令自带的目标偏移，天然支持任意嵌套深度，无需 loop stack。</p>
 <h3 id="瓶颈-2-函数调用-递归-已大幅缓解-仍有深度与形态两个天花板">瓶颈 2：函数调用/递归 —— 已大幅缓解，仍有深度与形态两个天花板</h3>
 <p>历史上这里是「JIT 完全不支持函数调用」。现状（2026-09-13）：</p>
@@ -11794,7 +11794,7 @@ RAX 常驻栈顶，<code>a + b</code> 退化成「pop 一次 + add + 留在 RAX�
 <li>body 中途出现 <code>OP_LOOP</code>/<code>OP_FOR_LOOP</code> 时，记录为内层回边</li>
 </ul>
 <ul>
-<li>~~codegen 需要一个 loop stack（记录每层循环的~~ ~~<code>loop_start_mc</code>~~ ~~和~~ ~~<code>exit_mc</code>）~~ 不需要：每个回边指令自带跳转偏移，通过 <code>offmap_lookup</code> 独立计算目标地址，天然支持任意嵌套深度</li>
+<li><del>codegen 需要一个 loop stack（记录每层循环的</del> <del><code>loop_start_mc</code></del> <del>和</del> <del><code>exit_mc</code>）</del> 不需要：每个回边指令自带跳转偏移，通过 <code>offmap_lookup</code> 独立计算目标地址，天然支持任意嵌套深度</li>
 </ul>
 <ul>
 <li>正确处理内层循环退出后回到外层循环体的跳转</li>
@@ -12101,7 +12101,7 @@ main() {
    （无 scan FAIL 和 codegen FAIL 消息）</li>
 <li><strong>fib_iterative(1000) 3 次 bailout</strong>：斐波那契值约 fib(56) 溢出 int48（超 2^47），
    属预期行为，JIT 的溢出检测正常工作</li>
-<li>~~<strong><code>OP_TAIL_CALL</code> 不在 JIT 支持范围内</strong>（2026-09-13 新增，§8.25 / §11 P4）~~
+<li><del><strong><code>OP_TAIL_CALL</code> 不在 JIT 支持范围内</strong>（2026-09-13 新增，§8.25 / §11 P4）</del>
    —— <strong>✅ 已解决（2026-09-16，R6-b，§8.76）</strong>。
    （历史记录）<code>return f(x)</code> 经编译器尾调用优化发射 <code>OP_TAIL_CALL</code>，它复用当前帧、
    既不经过函数级热入口，也不在 scan 的 opcode 支持列表里。后果：① 尾递归函数无论
@@ -12140,7 +12140,7 @@ main() {
    剩下的只是各比较 opcode 自身仍压裸 0/1。</li>
 </ol>
 <ol>
-<li>~~<strong>对象分配 ~200ns/次，且 JIT 循环内没有 GC 安全点</strong>（2026-09-13 新增，§8.31）~~
+<li><del><strong>对象分配 ~200ns/次，且 JIT 循环内没有 GC 安全点</strong>（2026-09-13 新增，§8.31）</del>
     <strong>✅ 已大幅改善（2026-09-15，§8.74）</strong>：<ul>
 <li><strong>安全点</strong>：§8.37/§8.38 的<strong>回边让出</strong>已落地（10M 次 <code>new</code> 的 ~960MB 泄漏场景解决，
       <code>Yields</code> 会按分配量出现）。</li>
@@ -12173,25 +12173,25 @@ main() {
 <blockquote>
 <p>已关闭的旧条目：</p>
 <ul>
-<li>~~负步长 for 循环无法 JIT~~ → 已支持倒序 for：序言 / <code>FOR_PREP</code> / <code>FOR_LOOP</code>
+<li><del>负步长 for 循环无法 JIT</del> → 已支持倒序 for：序言 / <code>FOR_PREP</code> / <code>FOR_LOOP</code>
   三处按 step 符号分流比较方向（<code>701692d4</code>）</li>
-<li>~~浮点 NaN 比较 bailout~~ → 已按 IEEE 语义：<code>EQ/LT/LE</code> 用 <code>SETNP</code> 屏蔽无序，
+<li><del>浮点 NaN 比较 bailout</del> → 已按 IEEE 语义：<code>EQ/LT/LE</code> 用 <code>SETNP</code> 屏蔽无序，
   <code>GT/GE</code> 的 <code>JA/JAE</code> 天然正确（<code>701692d4</code>）</li>
-<li>~~try/catch 循环不可 JIT~~ → <code>OP_TRY/CATCH/FINALLY/END_TRY</code> 现为 no-op（第 5 节）</li>
-<li>~~含函数调用的循环无法 JIT~~ → 已实现被调函数内联 + 函数级 JIT（13.8）</li>
-<li>~~通用算术/比较遇 float 即 bailout~~ → 已补 float 快路径（8.15）</li>
-<li>~~通用 <code>OP_MUL</code> / <code>OP_MOD</code> / <code>OP_EQ</code> / <code>OP_NEQ</code> 不被 JIT 支持~~ → 已补齐（2026-09-12，
+<li><del>try/catch 循环不可 JIT</del> → <code>OP_TRY/CATCH/FINALLY/END_TRY</code> 现为 no-op（第 5 节）</li>
+<li><del>含函数调用的循环无法 JIT</del> → 已实现被调函数内联 + 函数级 JIT（13.8）</li>
+<li><del>通用算术/比较遇 float 即 bailout</del> → 已补 float 快路径（8.15）</li>
+<li><del>通用 <code>OP_MUL</code> / <code>OP_MOD</code> / <code>OP_EQ</code> / <code>OP_NEQ</code> 不被 JIT 支持</del> → 已补齐（2026-09-12，
   三处同步：<code>jit_scan.c</code> 的 size 表与两处 vstack switch + <code>ops_arith.inc</code> / <code>ops_icmp.inc</code>）</li>
-<li>~~原生方法调用 callout 取实参反序~~ → 已修（2026-09-12，§8.17）：
+<li><del>原生方法调用 callout 取实参反序</del> → 已修（2026-09-12，§8.17）：
   <code>d.get(key, def)</code> 曾变成 <code>d.get(def, key)</code></li>
-<li>~~<code>OP_*_FLOAT</code> 不提升 int 操作数~~ → 已修（2026-09-12，§8.18）：<code>EMIT_FLOAT_ARGS2</code></li>
-<li>~~<code>OP_DIV_FLOAT</code> 除零静默算 inf~~ → 已修（2026-09-12，§8.19）：
+<li><del><code>OP_*_FLOAT</code> 不提升 int 操作数</del> → 已修（2026-09-12，§8.18）：<code>EMIT_FLOAT_ARGS2</code></li>
+<li><del><code>OP_DIV_FLOAT</code> 除零静默算 inf</del> → 已修（2026-09-12，§8.19）：
   与 0.0 比较后 bailout，NaN 除数放行</li>
-<li>~~JIT 下数组越界读被静默跳过~~ → 已修（2026-09-13，§8.28）：<code>OP_INDEX</code> 快路径
+<li><del>JIT 下数组越界读被静默跳过</del> → 已修（2026-09-13，§8.28）：<code>OP_INDEX</code> 快路径
   用 64 位加载读 <code>count</code> 导致越界判定失效；改用 32 位零扩展加载，并把越界改成
   bailout 以对齐解释器的「可被 try/catch 捕获」语义</li>
-<li>~~内联体共用 bc_off 命名空间（aes128 栈溢出）~~ → 已修（2026-09-13，§8.26）</li>
-<li>~~表项溢出等 6 处静默降级~~ → 已改为显式拒绝编译（2026-09-13，§8.27）</li>
+<li><del>内联体共用 bc_off 命名空间（aes128 栈溢出）</del> → 已修（2026-09-13，§8.26）</li>
+<li><del>表项溢出等 6 处静默降级</del> → 已改为显式拒绝编译（2026-09-13，§8.27）</li>
 </ul>
 </blockquote>
 <hr>

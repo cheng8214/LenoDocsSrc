@@ -201,7 +201,7 @@ m.Pt p = m.mk()         // ✗ 类型位置（parser_func.c:662 / parser.c:225 �
 <tr>
 <td><strong>US1</strong></td>
 <td><strong>P0</strong></td>
-<td>~~<strong>类型位置支持模块限定名 <code>m.Pt</code></strong>（<code>m.Pt p</code> / <code>func f(m.Pt x)</code> / <code>: m.Pt</code> / 字段 / <code>Array[m.Pt]</code> / <code>is</code> / <code>as</code> / <code>new</code> 全位置）~~ ⇒ <strong>已修</strong>（2026-10-12，工作区未提交）：解析器记前缀 + 语义层<strong>复用 <code>use</code> 的唯一实现</strong>做隐式 use</td>
+<td><del><strong>类型位置支持模块限定名 <code>m.Pt</code></strong>（<code>m.Pt p</code> / <code>func f(m.Pt x)</code> / <code>: m.Pt</code> / 字段 / <code>Array[m.Pt]</code> / <code>is</code> / <code>as</code> / <code>new</code> 全位置）</del> ⇒ <strong>已修</strong>（2026-10-12，工作区未提交）：解析器记前缀 + 语义层<strong>复用 <code>use</code> 的唯一实现</strong>做隐式 use</td>
 <td>已完成 ✓（10 位置矩阵用例 + 3 条负例 + 模块模式）</td>
 <td>—</td>
 <td>—</td>
@@ -209,8 +209,8 @@ m.Pt p = m.mk()         // ✗ 类型位置（parser_func.c:662 / parser.c:225 �
 </tr>
 <tr>
 <td><strong>US2</strong></td>
-<td>~~P1~~ P2 → <strong>已收口</strong></td>
-<td>~~<strong>报错定位</strong>：漏 <code>use</code>（或用 <code>use m.(A,B)</code> 漏了 C）时，报错<strong>指到真正使用它的那一行</strong>，而不是 <code>use</code> 那一行~~ ⇒ <strong>复核：症状不复现</strong>（2026-10-12，五个声明位置全在使用处，见 §3-US2）</td>
+<td><del>P1</del> P2 → <strong>已收口</strong></td>
+<td><del><strong>报错定位</strong>：漏 <code>use</code>（或用 <code>use m.(A,B)</code> 漏了 C）时，报错<strong>指到真正使用它的那一行</strong>，而不是 <code>use</code> 那一行</del> ⇒ <strong>复核：症状不复现</strong>（2026-10-12，五个声明位置全在使用处，见 §3-US2）</td>
 <td>已完成 ✓（<code>assert/test_use_missing_diag.leno</code>，含<strong>行号</strong>断言 ✓）</td>
 <td>—</td>
 <td>—</td>
@@ -219,7 +219,7 @@ m.Pt p = m.mk()         // ✗ 类型位置（parser_func.c:662 / parser.c:225 �
 <tr>
 <td><strong>US3</strong></td>
 <td>—</td>
-<td>~~<code>use m.*</code> <strong>通配</strong>逃生阀~~ ⇒ <strong>决定不做</strong></td>
+<td><del><code>use m.*</code> <strong>通配</strong>逃生阀</del> ⇒ <strong>决定不做</strong></td>
 <td>—</td>
 <td>—</td>
 <td>—</td>

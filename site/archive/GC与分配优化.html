@@ -141,9 +141,9 @@ Executed 867300 / Bailouts 0）。</p>
    而新增的每字段跳过判定打破了原来「无条件顺序初始化」的可优化形态。
    <strong><code>+28 ns/字段</code> 是「6 字段与 2 字段的耗时差 ÷ 4」，包含实参写入/栈搬运/类型提升等
    全部每字段成本，不能当作「默认值初始化」的单价。</strong></li>
-<li>~~❌ <strong>把 <code>GC_POOL_MEM_LIMIT</code> 从 4MB 放大到 16/32MB</strong>。§8.31 已测：64MB 只省 ~4 ns。
+<li><del>❌ <strong>把 <code>GC_POOL_MEM_LIMIT</code> 从 4MB 放大到 16/32MB</strong>。§8.31 已测：64MB 只省 ~4 ns。
    池必须能覆盖<strong>整段</strong>分配才有效，而 JIT 循环内对象不回收到 free-list，
-   所以小幅度放大只是换个地方撞墙。~~
+   所以小幅度放大只是换个地方撞墙。</del>
    <strong>✅ 本条目已被推翻（2026-09-15，§8.74）—— 不要再把它当负结果。</strong>
    它的前提是"JIT 循环内对象<strong>不会</strong>回收到 free-list"；而 §8.37/§8.38 落地<strong>回边让出</strong>
    之后回收会周期性发生 ⇒ 池只需覆盖<strong>一个让出间隔</strong>内的分配量（实测每 ~3 万次分配
@@ -204,8 +204,8 @@ header 回收链，<code>arr_new</code> 复用时会清 <code>flags</code>，双
 </thead>
 <tbody>
 <tr>
-<td>`LENO_GC_YOUNG_THRESHOLD=&lt;bytes\</td>
-<td>KB\</td>
+<td><code>LENO_GC_YOUNG_THRESHOLD=&lt;bytes|KB|MB&gt;</code></td>
+<td>覆盖并<strong>钉住</strong>年轻代阈值（本来每次回收后会被抬回 <code>max(young_allocated*2, 8MB)</code>，不钉住覆盖值立刻失效）。</td>
 </tr>
 <tr>
 <td><code>LENO_GC_FORCE_EVERY=&lt;n&gt;</code></td>
@@ -403,7 +403,7 @@ del /q build\leno_base.exe build\leno_broken.exe
 <p><strong>要点</strong>：
 - 必须有<strong>未被改动的对照路径</strong>（<code>probe_alloc2</code> 里的「不分配」行；噪声底通常 ±1.5 ns）；
 - 只做<strong>同机同轮</strong>对照，不要跟文档里的历史绝对值比；
-- 改动 <code>src/</code> 后先删 <code>.lenocache</code> 再测：~~缓存不记录编译器二进制身份~~ ⇒
+- 改动 <code>src/</code> 后先删 <code>.lenocache</code> 再测：<del>缓存不记录编译器二进制身份</del> ⇒
 <strong>⚠ 已过时（2026-10-09 实测更正）</strong>：<code>entry_*.lenb.deps</code> 第 2 行 <code>BIN &lt;指纹&gt;</code> <strong>就是</strong>编译器二进制身份
 （2026-09-17 / <code>src/main.c</code> 的 <code>§8.112</code> + <code>ENTRY_DEPS_MAGIC</code>）⇒ <strong>重建 exe 后缓存会自动失效</strong>，
 不必再手删（实测：重建/改 lib 后不删缓存，结果跟着变 ✓ 见 <code>语言陷阱速查.md</code> §一 ①）。
@@ -447,9 +447,9 @@ Compiled: 3   Executed: 28   Bailouts: 0
 <strong>不再作为待办跟踪</strong>。下面三条排查建议随即作废 —— 原因不在 dict 取值路径，
 而在 <code>OP_GET_PROPERTY</code> 独立形态的栈记账（原有建议保留在此仅作过程记录）：</p>
 <ol>
-<li>~~先确认 <code>dict_get</code> 返回的 <code>1.0</code> 在 Value 表示下是否真是 raw double（<code>val_float</code>）；~~</li>
-<li>~~再看 <code>OP_GET_PROPERTY</code> 那条代码路径有没有分支绕过 <code>EMIT_VALUE_TO_RAW()</code>；~~</li>
-<li>~~用 <code>LENO_JIT_DUMP=1</code> 反汇编该循环，确认 <code>EMIT_NUM_TO_XMM</code> 的 <code>jae → tagged</code> 是否真被走到。~~</li>
+<li><del>先确认 <code>dict_get</code> 返回的 <code>1.0</code> 在 Value 表示下是否真是 raw double（<code>val_float</code>）；</del></li>
+<li><del>再看 <code>OP_GET_PROPERTY</code> 那条代码路径有没有分支绕过 <code>EMIT_VALUE_TO_RAW()</code>；</del></li>
+<li><del>用 <code>LENO_JIT_DUMP=1</code> 反汇编该循环，确认 <code>EMIT_NUM_TO_XMM</code> 的 <code>jae → tagged</code> 是否真被走到。</del></li>
 </ol>
 <h3 id="已修-op_eq-对指针-对象身份比较会-bailout">✅ 已修：<code>OP_EQ</code> 对指针 / 对象身份比较会 bailout</h3>
 <p>matrix_rain 的 <code>invalidateRenderer</code> 比较两个 <code>Ptr[u8]</code>，通用 <code>OP_EQ</code> 原来对「任一
