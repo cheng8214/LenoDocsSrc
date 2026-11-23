@@ -1,0 +1,241 @@
+// import_module_docs.leno —— 把 Leno 仓 build/leno_module/<模块>/README.md 导入本仓 扩展模块/*.md
+//
+// 原型是 import_module_docs.py（已删除）。改成 Leno 的理由：
+//   ① 这本身就是压测：dirs / files / strings 全用上；
+//   ② 少一个"要装 Python 才能更新文档"的隐性依赖；
+//   ③ 与 build_html.py 不同，它没有 markdown 生态依赖，转换成本最低。
+//
+// 用法：build\leno.exe import_module_docs.leno
+// 可重复运行：每次覆盖 扩展模块/*.md；总览页 扩展模块/_总览.md 单独维护，不会被覆盖。
+import dirs
+import files
+import strings
+
+// 源仓库（Leno 仓的模块目录）
+const SRC = "D:/CLeno/Leno/build/leno_module"
+// 从 site/扩展模块/xxx.html 出发到 Leno 仓的相对路径（site → LenoDocsSrc → CLeno → Leno）
+const LENOREPO = "../../../Leno/build/leno_module"
+
+// 包名 → 模块目录名 / import 名（与总 README 的「模块一览」一致，防"包名 ≠ import 名"的坑）
+//   两个数组按下标一一对应；用平行数组而不是 struct 数组，是为了让"加一行要改两处"
+//   这件事在 diff 里一眼可见 ✓
+var IMPORTS = ["CLI", "Compress", "Crypto", "CSV", "FS", "Glob", "GameHelper", "HTTP",
+               "Log", "Music", "QR", "Result", "SDL3", "sqlite3", "Stats", "Sys",
+               "UUID", "Win32", "XLSX", "Zip", "Web"]
+var PKGS = ["LenoCLI", "LenoCompress", "LenoCrypto", "LenoCSV", "LenoFS", "LenoGlob",
+            "LenoHack", "LenoHTTP", "LenoLog", "LenoMusic", "LenoQR", "LenoResult",
+            "LenoSDL3", "LenoSqlite", "LenoStats", "LenoSys", "LenoUUID", "LenoWin32",
+            "LenoXLSX", "LenoZip", "LenoWeb"]
+
+// 多入口模块（import 名有几个）
+func imports_of(string name):string {
+    if name == "Web" { return "\"WebNet\" / \"WebHtml\" / \"WebCrawl\" / \"Web\"" }
+    return "\"" + name + "\""
+}
+
+// 有少数包把 README 放在 lib/ 下（其余在包根）
+func readme_rel(string name, string pkg):string {
+    if name == "Music" { return pkg + "/lib/README.md" }
+    if name == "SDL3" { return pkg + "/lib/README.md" }
+    if name == "sqlite3" { return pkg + "/lib/README.md" }
+    return pkg + "/README.md"
+}
+
+// 已归档到 site/archive/ 的文档名（README 里链到它们的要改写成 ../archive/xxx.html）
+Array[string] ARCHIVED = []
+
+func is_archived(string name):bool {
+    for ARCHIVED to a {
+        if a == name { return true }
+    }
+    return false
+}
+
+// ---------------------------------------------------------------- 字符串工具（stdlib 没有"从偏移找"）
+
+func find_from(string s, string needle, int from):int {
+    var n = s.len()
+    if from < 0 { from = 0 }
+    if from >= n { return -1 }
+    var idx = strings.find(s.slice(from, n - 1), needle)
+    if idx < 0 { return -1 }
+    return from + idx
+}
+
+// 在 [0, limit) 里从后往前找最后一个 needle
+func rfind_before(string s, string needle, int limit):int {
+    var best = -1
+    var pos = 0
+    while pos < limit {
+        var idx = find_from(s, needle, pos)
+        if idx < 0 or idx >= limit { break }
+        best = idx
+        pos = idx + 1
+    }
+    return best
+}
+
+// ⚠ 换行归一：Python 的 `read_text()` 默认做"通用换行"（CRLF/CR → LF），
+//   而 Leno 的 `files.read` 是**按字节**读（不翻译）。不归一的话，同一份源 README 会产出
+//   CRLF 副本 ⇒ 与仓库里既有的 LF 文件形成"整文件都变了"的假 diff
+//   （实测 LenoResult.md：3022 → 3095 字节，正好多 73 = 行数）。
+func normalize_newlines(string s):string {
+    if strings.find(s, "\r\n") < 0 { return s }
+    return strings.replace(s, "\r\n", "\n")
+}
+
+func starts_with_any(string s, Array[string] prefixes):bool {
+    for prefixes to p {
+        if strings.starts_with(s, p) { return true }
+    }
+    return false
+}
+
+// ---------------------------------------------------------------- 链接改写
+
+func basename(string path):string {
+    var slash = rfind_before(path, "/", path.len())
+    if slash < 0 { return path }
+    return path.slice(slash + 1, path.len() - 1)
+}
+
+// 指向"文档站 HTML"的旧相对链接：`../../docs/xxx.html` → `../xxx.html`（归档的落 ../archive/）
+func rewrite_docs_link(string label, string target):string {
+    // 形态判定：若干 `../` + `docs/` + 以 .html 结尾
+    var t = target
+    var ups = 0
+    while strings.starts_with(t, "../") {
+        t = t.slice(3, t.len() - 1)
+        ups += 1
+    }
+    if ups == 0 or not strings.starts_with(t, "docs/") { return "" }
+    if not strings.ends_with(t, ".html") { return "" }
+    var name = basename(t)
+    if is_archived(name) { return "[" + label + "](../archive/" + name + ")" }
+    return "[" + label + "](../" + name + ")"
+}
+
+// 指向模块内 examples/ tests/ lib/ docs/ 的相对链接 → Leno 仓路径
+func rewrite_src_link(string label, string target, string pkg):string {
+    Array[string] prefixes = ["examples/", "tests/", "test/", "lib/", "docs/"]
+    if not starts_with_any(target, prefixes) { return "" }
+    return "[" + label + "](" + LENOREPO + "/" + pkg + "/" + target + ")"
+}
+
+// 扫一遍所有 `[label](target)`，命中规则就换掉；不命中保持原样
+func rewrite(string text, string pkg):string {
+    var out = ""
+    var pos = 0
+    var n = text.len()
+    while pos < n {
+        var m = find_from(text, "](", pos)
+        if m < 0 {
+            out += text.slice(pos, n - 1)
+            break
+        }
+        // label 起点：往回找 `[`，中间不许出现 `]`（与 Python 版 `\[([^\]]+)\]` 等价）
+        var lb = rfind_before(text, "[", m)
+        if lb < 0 {
+            out += text.slice(pos, m + 1)
+            pos = m + 2
+            continue
+        }
+        var e = find_from(text, ")", m + 2)
+        if e < 0 {
+            out += text.slice(pos, n - 1)
+            break
+        }
+        var label = text.slice(lb + 1, m - 1)
+        var target = text.slice(m + 2, e - 1)
+        var replaced = rewrite_docs_link(label, target)
+        if replaced == "" { replaced = rewrite_src_link(label, target, pkg) }
+        if replaced == "" {
+            out += text.slice(pos, e)          // 原样（含这个 `)`）
+        } else {
+            out += text.slice(pos, lb - 1) + replaced
+        }
+        pos = e + 1
+    }
+    return out
+}
+
+// ---------------------------------------------------------------- 主流程
+
+func dst_dir():string {
+    return dirs.join(dirs.script_dir(), "扩展模块")
+}
+
+func load_archived():Array[string] {
+    Array[string] result = []
+    var archive_dir = dirs.join(dirs.script_dir(), "site", "archive")
+    if not dirs.is_dir(archive_dir) { return result }
+    var names = dirs.listdir(archive_dir)
+    for names to name {
+        if strings.ends_with(name, ".html") { result.add(name) }
+    }
+    return result
+}
+
+main() {
+    ARCHIVED = load_archived()
+    var dst = dst_dir()
+    dirs.mkdir(dst)
+
+    Array[string] done = []
+    Array[string] skipped = []
+    var i = 0
+    while i < IMPORTS.len() {
+        var import_name = IMPORTS[i]
+        var pkg = PKGS[i]
+        i += 1
+
+        var rel = readme_rel(import_name, pkg)
+        var src = dirs.join(SRC, rel)
+        if not files.exists(src) {
+            skipped.add(pkg + "(" + rel + ")")
+            continue
+        }
+        var text = files.read(src)
+        if text == null {
+            skipped.add(pkg + "(" + rel + ")")
+            continue
+        }
+        // 顶部标准头：import 名 + 指向源 README
+        var header = "> 📦 **扩展模块**（非语言内置标准库）· 包名 `" + pkg + "` · import 名 "
+                     + imports_of(import_name) + "\n"
+                     + "> 源 README：`Leno/build/leno_module/" + pkg + "/README.md`"
+                     + "（本页是同步副本，改请改源）\n\n"
+        var body = normalize_newlines(_str(text))
+        files.write(dirs.join(dst, pkg + ".md"), header + rewrite(body, pkg))
+        done.add(pkg)
+    }
+
+    print("导入 " + _str(done.len()) + " 篇: " + strings.join(done, ", ") + "\n")
+    if skipped.len() > 0 {
+        print("跳过 " + _str(skipped.len()) + " 篇(无 README): " + strings.join(skipped, ", ") + "\n")
+    }
+    sync_sdl3_docs(dst)
+}
+
+// ---------------------------------------------------------------- 模块自带的 docs（站点原来没有）
+
+func sync_sdl3_docs(string dst) {
+    Array[string] src_names = ["SDL3常用API与易踩坑速查.md", "SDL3控件优化清单.md"]
+    Array[string] dst_names = ["LenoSDL3_常用API与易踩坑速查.md", "LenoSDL3_控件优化清单.md"]
+    var dir = dirs.join(SRC, "LenoSDL3", "docs")
+    Array[string] copied = []
+    var i = 0
+    while i < src_names.len() {
+        var src = dirs.join(dir, src_names[i])
+        var dst_name = dst_names[i]
+        i += 1
+        if not files.exists(src) { continue }
+        var text = files.read(src)
+        if text == null { continue }
+        var header = "> 📦 源文件：`Leno/build/leno_module/LenoSDL3/docs/" + src_names[i - 1]
+                     + "`（本页是同步副本，改请改源）\n\n"
+        files.write(dirs.join(dst, dst_name), header + normalize_newlines(_str(text)))
+        copied.add(dst_name)
+    }
+    print("同步 SDL3 docs " + _str(copied.len()) + " 篇: " + strings.join(copied, ", ") + "\n")
+}

@@ -1015,7 +1015,7 @@ SDL_FRect dst = SDL_FRect.malloc(); r.drawTextureRect(tex, null, dst.to_ptr())
 </ul>
 <h3 id="图片-覆盖填满-要裁源-不要裁屏-目标-整卡每帧-0-次-pushcliprect">✅ 图片"覆盖填满"要<strong>裁源</strong>，不要裁屏（目标：整卡每帧 0 次 <code>pushClipRect</code>）</h3>
 <p><code>pushClipRect</code> / <code>popClipRect</code> 每次都先 <code>flushBatches()</code>（<code>sdl_renderer:562,595</code>）⇒ 每张卡每帧 2 次 flush；
-22 张卡 = 44 次/帧，正是 <code>archive/LenoSDL3_裁剪过多导致闪烁排查记录.md</code> 里那条隐患 ✓。
+22 张卡 = 44 次/帧，正是 <code>LenoSDL3_裁剪过多导致闪烁排查记录.md</code> 里那条隐患 ✓。
 正解：把居中裁切算进<strong>源矩形</strong>（<code>image_mode:2</code> / <code>MODE_ASPECT_FILL</code>），dst 就等于图片区
 ⇒ 零裁剪、零溢出、还少画被丢弃的像素 ✓（v1 走裁屏、本仓海报墙 <strong>100% 命中</strong> ✗；v2 改裁源后为 0 ✓）</p>
 <h3 id="容器化-set_content-的两条硬约束">✅ 容器化（<code>set_content</code>）的两条硬约束</h3>
@@ -2115,8 +2115,153 @@ tb.set_rows(rows)</code></p>
 <li>表头仍是给人看的中文：<strong>字段名与列名不强行统一</strong>，映射只写一次，就在表头旁边</li>
 <li>底层是 _field(obj, name)（按名字取 struct 字段，缺失给 null）；语言禁止在 ny 上索引，
   所以这个口子是显式开的，不要用它绕类型检查做别的事</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-窗口与主循环">一、窗口与主循环</a></li><ul class="lv3"><li><a href="#run-需要两个回调">run 需要两个回调 ✓</a></li><li><a href="#三个绘制层的先后-实测确认-不是推测">三个绘制层的先后（实测确认 ✓，不是推测）</a></li><li><a href="#不需要-addtimer-空转">不需要 addTimer 空转</a></li><li><a href="#从-非-onevent-上下文-退出-关闭-两个新入口">从"非 onEvent 上下文"退出 / 关闭：两个新入口 ✓</a></li><li><a href="#关闭到托盘-win-cancelclose-实测">「关闭到托盘」：win.cancelClose() ✓（实测）</a></li></ul><li><a href="#二-控件创建-sdl3-createxxx-与-win-addxxx-的区别">二、控件创建：SDL3.createXxx 与 win.addXxx 的区别 ✓</a></li><li><a href="#三-布局-basis-grow-shrink-align">三、布局 {basis, grow, shrink, align}</a></li><ul class="lv3"><li><a href="#语义-sdl_layout-leno-的-_relayout">语义（sdl_layout.leno 的 _relayout ✓）</a></li><li><a href="#两个最常踩的坑">两个最常踩的坑 ✗</a></li><li><a href="#排障-用-dumplayout-不要靠截图扫像素">排障：用 dumpLayout，不要靠截图扫像素 ✓</a></li></ul><li><a href="#四-抗锯齿-渲染器级">四、抗锯齿（渲染器级）</a></li><li><a href="#五-编译器给出的新提示-读提示-别猜">五、编译器给出的新提示（读提示，别猜 ✓）</a></li><li><a href="#六-系统托盘-sdl3-createtray">六、系统托盘（SDL3.createTray）✓</a></li><ul class="lv3"><li><a href="#最小用法-完整示例见-examples-基础示例-窗口管理-test_tray-leno">最小用法（完整示例见 examples/基础示例/窗口管理/test_tray.leno ✓）</a></li><li><a href="#原生菜单在-windows-上会冻结画面-实测-所以要自绘">⛔ 原生菜单在 Windows 上会冻结画面（实测 ✓）—— 所以要自绘</a></li><li><a href="#开机自启动-注册表-run-键-tray-约定">开机自启动（注册表 Run 键 + --tray 约定）</a></li><li><a href="#多返回值只能解构-不能下标-本模块真崩过一次">⚠ 多返回值只能解构，不能下标（本模块真崩过一次 ✗）</a></li><li><a href="#自检断言别用绝对时刻-实测踩过">自检断言别用绝对时刻 ⚠⇒✗（实测踩过）</a></li></ul><li><a href="#七-回归用例怎么跑">七、回归用例怎么跑</a></li><ul class="lv3"><li><a href="#自检钩子若用-_exit-0-强杀-就永远测不出-退出卡住-2026-10-07-实测">⛔ 自检钩子若用 _exit(0) 强杀，就永远测不出"退出卡住" ✗（2026-10-07 实测）</a></li></ul><li><a href="#八-时间-截图-圆环-本轮实测新增的三条">八、时间 / 截图 / 圆环：本轮实测新增的三条 ✓</a></li><ul class="lv3"><li><a href="#times-now-返回的是-int-时间戳-不是-年-月-日-数组">⛔ times.now() 返回的是 int 时间戳，不是 [年,月,日,…] 数组</a></li><li><a href="#截图-钩子放-setoverlay-且要等重绘">⛔ 截图：钩子放 setOverlay，且要等重绘</a></li><li><a href="#tabcontrol-同页混用两种定位方式时会提示一次-新增">✅ TabControl 同页混用两种定位方式时会提示一次（新增 ✓）</a></li><li><a href="#空-catch-是编译期错误-2026-09-28-由警告升为错误">⛔ 空 catch { } 是编译期错误（2026-09-28 由警告升为错误 ✓）</a></li><li><a href="#as-到容器-struct-不会当场失败-而是-原样带过-实测-新增编译期提示">⛔ as 到容器/struct 不会当场失败，而是"原样带过"（实测 ✓）+ 新增编译期提示</a></li><li><a href="#scrollview-里-子孙会不会跟着滚-三种内容根实测-2026-09-28">📏 ScrollView 里"子孙会不会跟着滚"——三种内容根实测（2026-09-28 ✓）</a></li><li><a href="#ringprogress-新增-多段弧-副行文字-做-已清-跳过-双色环">✅ RingProgress 新增：多段弧 + 副行文字（做"已清 / 跳过"双色环 ✓）</a></li></ul><li><a href="#九-标题栏-自定义动作按钮-actions-2026-10-07-新增">九、标题栏：自定义动作按钮（actions，2026-10-07 新增 ✓）</a></li><ul class="lv3"><li><a href="#位置与顺序-不用自己算坐标">位置与顺序（不用自己算坐标 ✓）</a></li><li><a href="#图标两种给法">图标两种给法</a></li><li><a href="#标题前的应用图标-title_icon-2026-10-07-新增">标题前的应用图标（title_icon，2026-10-07 新增 ✓）</a></li><li><a href="#悬停气泡">悬停气泡</a></li><li><a href="#点击">点击</a></li><li><a href="#运行时增删改-不用重建标题栏">运行时增删改（不用重建标题栏）</a></li><li><a href="#三个坑-都实测过">三个坑（都实测过 ✓）</a></li></ul><li><a href="#附录-b-align-在-hbox-vbox-里的真实语义-2026-10-07-实测">附录 B：align 在 HBox / VBox 里的真实语义（2026-10-07 实测 ✓）</a></li><ul class="lv3"><li><a href="#滚轮方向-wheely-正值-远离用户-往上滚-框架语义-往上滚看更早的内容-2026-10-08-实测">⛔ 滚轮方向：wheelY() 正值 = 远离用户（往上滚）；框架语义 = 往上滚看更早的内容 ✗（2026-10-08 实测）</a></li><li><a href="#懒加载缓存的键-别用-逻辑名-要用-最终资源路径-而且资源可能晚到-2026-10-08-实测">⛔ 懒加载缓存的键：别用"逻辑名"，要用"最终资源路径"；而且资源可能晚到 ✗（2026-10-08 实测）</a></li><li><a href="#截断标签-truncate-放进容器-宽度也会被-冻结在-add-那一刻-2026-10-07-实测">⛔ 截断标签（truncate）放进容器：宽度也会被"冻结在 add 那一刻" ✗（2026-10-07 实测）</a></li><li><a href="#自绘浮层会-穿透-到下层控件-必须登记弹层捕获区-2026-10-07">⛔ 自绘浮层会"穿透"到下层控件 ⇒ 必须登记弹层捕获区（2026-10-07 ✓）</a></li><li><a href="#想做-浮层-弹出面板-下拉-歌单-气泡-用-anchorbox">想做"浮层 / 弹出面板"（下拉、歌单、气泡）⇒ 用 AnchorBox ✓</a></li></ul><li><a href="#附录-c-三个实测坑-点击-断言-自测注入-2026-10-07">附录 C：三个实测坑（点击 / 断言 / 自测注入；2026-10-07 ✓）</a></li><ul class="lv3"><li><a href="#①-listbox-单选-点-已选中那一行-不回调">① ⛔ ListBox（单选）点"已选中那一行"不回调 ✗</a></li><li><a href="#①-b-listbox-也有右击上下文菜单了-2026-10-08-补齐">①-b ★ ListBox 也有右击上下文菜单了（2026-10-08 补齐 ✓）</a></li><li><a href="#①-d-定时器不要补跑积压的周期-电脑睡眠唤醒后会-假死-2026-10-08-实测">①-d ⛔ 定时器不要补跑积压的周期：电脑睡眠唤醒后会"假死" ✗（2026-10-08 实测）</a></li><li><a href="#①-c-别为-绕开类型收窄-把配置结构拍扁-2026-10-08-实测更正">①-c ★ 别为"绕开类型收窄"把配置结构拍扁（2026-10-08 实测更正）</a></li><li><a href="#②-断言别读-lbl-text-它读不到-set_text-之后的新值">② ⛔ 断言别读 lbl.text：它读不到 set_text 之后的新值 ✗</a></li><li><a href="#③-hbox-里-grow-0-连交叉轴一起撑满-进度条会变成圆饼-实测">③ ⛔ HBox 里 grow &gt; 0 连交叉轴一起撑满 ✗（进度条会变成圆饼 ✓ 实测）</a></li><li><a href="#④-5-自绘控件-canvas-默认有不透明底-看着像-自绘的东西带白底">④.5 ⛔ 自绘控件（Canvas）默认有不透明底 ⇒ 看着像"自绘的东西带白底" ✗</a></li><li><a href="#④-button-的-自然宽度-把图标也算进去-容器凭空变宽">④ ⛔ Button 的"自然宽度"把图标也算进去 ⇒ 容器凭空变宽 ✗</a></li><li><a href="#⑤-自测注入点击-先注入一次移动-否则按钮偶发不生效">⑤ ⚠ 自测注入点击：先注入一次移动，否则按钮偶发不生效 ✗</a></li><li><a href="#⑥-图标按钮-没有-hover-background-false-会连-hover-一起跳过">⑥ ⛔ 图标按钮"没有 hover"：background: false 会连 hover 一起跳过 ✗</a></li></ul><li><a href="#附录-a-生成带透明的-png-做图标用-2026-10-07-实测">附录 A：生成带透明的 PNG（做图标用；2026-10-07 实测 ✓）</a></li><li><a href="#十-table-单元格-进度条列-与-自绘回调-2026-10-07-新增">十、Table 单元格：进度条列 与 自绘回调（2026-10-07 新增 ✓）</a></li><ul class="lv3"><li><a href="#进度条列-cell_types">进度条列（cell_types）</a></li><li><a href="#自绘回调-on_cell_draw">自绘回调（on_cell_draw）</a></li><li><a href="#自检-都无头可跑">自检（都无头可跑 ✓）</a></li></ul><li><a href="#附录-c-card-卡片控件-2026-10-13-新增-本轮实测的坑">附录 C：Card 卡片控件（2026-10-13 新增 ✓）—— 本轮实测的坑</a></li><ul class="lv3"><li><a href="#纹理绘制的-dst-必须是-sdl_frect-传-sdl_rect-画面直接-空掉-实测">⛔ 纹理绘制的 dst 必须是 SDL_FRect —— 传 SDL_Rect 画面直接"空掉"（实测 ✓）</a></li><li><a href="#图片-覆盖填满-要裁源-不要裁屏-目标-整卡每帧-0-次-pushcliprect">✅ 图片"覆盖填满"要裁源，不要裁屏（目标：整卡每帧 0 次 pushClipRect）</a></li><li><a href="#容器化-set_content-的两条硬约束">✅ 容器化（set_content）的两条硬约束</a></li><li><a href="#卡片高度是-gridlayout-在-add-时捕获的">⚠ 卡片高度是 GridLayout 在 add 时捕获的</a></li><li><a href="#圆角纹理合成-只乘-alpha-的混合模式要自组-且-sdl_rendergeometry-看纹理自身的-blend-2026-10-13-实测">⛔ 圆角纹理合成：「只乘 alpha」的混合模式要自组，且 SDL_RenderGeometry 看纹理自身的 blend（2026-10-13 实测 ✓）</a></li><li><a href="#软件渲染器建不了离屏-蒙版纹理-圆角静默回退方角-验证必须真机">⛔ 软件渲染器建不了离屏/蒙版纹理 ⇒ 圆角静默回退方角（验证必须真机 ✓）</a></li><li><a href="#win-setrootat-在-run-之后换根以前是静默-no-op-整页切换必踩-2026-10-13-修">⛔ win.setRootAt 在 run() 之后换根以前是静默 no-op（整页切换必踩 ✓ 2026-10-13 修）</a></li><li><a href="#嵌套控件-拿不到窗口尺寸-菜单其实自己会兜底-真正的缺口是-弹出瞬间用了缓存旧值-2026-10-13-实测-已修">⚠ 嵌套控件"拿不到窗口尺寸"：菜单其实自己会兜底，真正的缺口是"弹出瞬间用了缓存旧值"（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-的图标纹理缓存只增不减-显存一路涨-2026-10-13-实测-已修">⛔ Table 的图标纹理缓存只增不减 ⇒ 显存一路涨（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#失焦不收弹层-alt-tab-切走后下拉-菜单留在屏幕上-点不动也关不掉-2026-10-13-实测-已修">⛔ 失焦不收弹层：Alt+Tab 切走后下拉/菜单留在屏幕上、点不动也关不掉（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#spinner-画出来是多边形-段数公式-thick-形参没用上-2026-10-13-实测-已修">⛔ Spinner 画出来是多边形（段数公式 + thick 形参没用上）（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#tabcontrol-二次-set-会把整页内容丢掉-运行时改配色-字号-就会踩-2026-10-13-实测-已修">⛔ TabControl 二次 set() 会把整页内容丢掉（"运行时改配色/字号"就会踩）（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-的自定义格色不跟着数据走-remove_row-后错位一行-set_rows-后残留-2026-10-13-实测-已修">⛔ Table 的自定义格色不跟着数据走：remove_row 后错位一行、set_rows 后残留（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#scrim-模态遮罩-不跟随窗口缩放-拉大窗口后右下露一条-没遮住-还点得动-2026-10-13-实测-已修">⛔ Scrim（模态遮罩）不跟随窗口缩放 ⇒ 拉大窗口后右下露一条"没遮住、还点得动"（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#图表数值标签会丢小数-_fmtnum-拿-_int-v-截断-2026-10-13-实测-已修">⛔ 图表数值标签会丢小数（_fmtNum 拿 _int(v) 截断）—— 2026-10-13 实测 + 已修 ✓</a></li><li><a href="#radiobutton-同组互斥-被挤掉那一项也要有回调-2026-10-13-实测-已修">⛔ RadioButton 同组互斥：被挤掉那一项也要有回调（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#toggle-checkbox-radiobutton-尺寸自量-布局给的尺寸被忽略-2026-10-13-实测">⛔ Toggle / CheckBox / RadioButton：尺寸自量，布局给的尺寸被忽略（2026-10-13 实测 ✓）</a></li><li><a href="#自测-合成点击前必须先投一条鼠标移动-testmoveat-否则被-hover-门吃掉-2026-10-13-实测">⛔ 自测：合成点击前必须先投一条鼠标移动（testMoveAt）—— 否则被 hover 门吃掉（2026-10-13 实测 ✓）</a></li><li><a href="#自测跑法-应用一律带-无人值守-参数-2026-10-13-定规">⭐ 自测跑法：应用一律带"无人值守"参数（2026-10-13 定规 ✓）</a></li><li><a href="#控件选项对账-dochk-本轮把覆盖铺满-2026-10-13">⭐ 控件选项对账（dochk）：本轮把覆盖铺满（2026-10-13 ✓）</a></li><li><a href="#焦点链与键盘导航-2026-10-13-第一批-tab-shift-tab-enter-space">⭐ 焦点链与键盘导航（2026-10-13 第一批 ✓ Tab / Shift+Tab / Enter / Space）</a></li><li><a href="#控件级不透明度-win-set_widget_opacity-w-a-2026-10-13-新增能力">⭐ 控件级不透明度：win.set_widget_opacity(w, a)（2026-10-13 新增能力 ✓）</a></li><li><a href="#运行时切主题-applythemeall-控件-没响应-的两个真洞-2026-10-13-实测-已修">⛔ 运行时切主题（applyThemeAll）：控件"没响应"的两个真洞（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-表头的排序箭头会说谎-换数据分-set_rows-clear-add_row-两条路-2026-10-13-实测-已修">⛔ Table：表头的排序箭头会说谎 —— 换数据分 set_rows / clear+add_row 两条路（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#文本会变的-label-布局里必须给-basis-或-grow-否则-set_text-的文字-溢出去被裁-2026-10-13-实测">⛔ 文本会变的 Label：布局里必须给 basis（或 grow），否则 set_text 的文字"溢出去被裁"（2026-10-13 实测 ✓）</a></li><li><a href="#列表-下拉-菜单的-行高亮-圆角要锚在面板边上-否则底角冒方块-文字出框-2026-10-13-实测">⛔ 列表/下拉/菜单的"行高亮"：圆角要锚在面板边上（否则底角冒方块 + 文字出框 ✓ 2026-10-13 实测）</a></li><li><a href="#原-2026-10-13-已修-在-a-的方法里写-new-b-键-值-值里的裸字段名曾报-未定义变量">✅（原 ⛔，2026-10-13 已修）在 A 的方法里写 new B(键=值)：值里的裸字段名曾报"未定义变量"</a></li><li><a href="#卡片里别留-每帧测量">✅ 卡片里别留"每帧测量"</a></li><li><a href="#光标-按下去变回箭头-markframeredraw-把-要重绘-当成了-鼠标动过-2026-10-13-实测-已修">⛔ 光标"按下去变回箭头"：markFrameRedraw() 把"要重绘"当成了"鼠标动过"（2026-10-13 实测 + 已修 ✓）</a></li></ul><li><a href="#附录-d-选项命名统一-2026-10-13-审计-改名表机制-四个仓库一起迁完">附录 D：选项命名统一（2026-10-13 —— 审计 + 改名表机制 + 四个仓库一起迁完 ✓）</a></li><ul class="lv3"><li><a href="#现状审计-全库-36-个控件-724-个键位-297-个不重名">现状审计（全库 36 个控件 / 724 个键位 / 297 个不重名）</a></li><li><a href="#本轮的机制-改名表-过渡用-当天已撤-过程比结论更值得记">本轮的机制：改名表（过渡用 —— 当天已撤），过程比结论更值得记 ✓</a></li><li><a href="#迁移结果-四个仓库一起迁">迁移结果（四个仓库一起迁 ✓）</a></li><li><a href="#命名规约-新控件照这个写">命名规约（新控件照这个写 ✓）</a></li></ul><li><a href="#附录-e-选项命名统一-第二轮-第②类-同概念不同名-2026-10-13-同日">附录 E：选项命名统一 · 第二轮（第②类"同概念不同名"，2026-10-13 同日 ✓）</a></li><ul class="lv3"><li><a href="#统一的-9-组">统一的 9 组</a></li><li><a href="#刻意保留-不同对象-不同概念-不统一">刻意保留（不同对象 / 不同概念 ⇒ 不统一 ✓）</a></li><li><a href="#本轮踩到并纠正的自己的错-最值得记的一条">⚠ 本轮踩到并纠正的自己的错（最值得记的一条 ✓）</a></li><li><a href="#验收-本轮">验收（本轮）</a></li></ul><li><a href="#文字溢出容器-label-不截断-2026-10-28-实测">文字溢出容器 / Label 不截断（2026-10-28 实测）</a></li><li><a href="#table-直接吃-记录-struct-2026-11-10-p1">Table 直接吃「记录（struct）」（2026-11-10，P1）</a></li></ul></aside>
+</ul>
+<h2 id="附录-f-虚拟子窗口-android-上的-弹窗-2026-11-21">附录 F：虚拟子窗口 —— Android 上的"弹窗"（2026-11-21 ✓）</h2>
+<p><strong>问题</strong>：Android 一个 Activity 只有一个顶层窗口（SurfaceView）。<code>SDL_CreateWindow</code> 拿不到
+第二个<strong>可显示</strong>的窗口 ⇒ 原来的 <code>createDialogWindow</code> 建出来的对话框在 Android 上
+<code>handle == null</code>，而工厂又从不判 <code>ok</code> ⇒ 后面 <code>raise / SDL_SyncWindow / getSize / createRenderer</code>
+全在 null 上跑，布局被压成 0×0 ⇒ 表现是"点了没反应、窗口静默不出现"，且<strong>零日志</strong>。</p>
+<p><strong>结论</strong>：<code>createDialogWindow</code> / <code>createModelessDialog</code> 在 <code>_os() == "android"</code> 时
+自动返回<strong>虚拟子窗口</strong>（不建 OS 窗口，画进离屏纹理，由父窗口合成）。桌面分支一行不动 ——
+真窗口能 Alt-Tab / 独立最小化 / 多显示器 / 系统输入法，这些在浮层里全要重做，不值得换。</p>
+<p><code>leno
+// 应用侧：什么都不用改，还是这两句
+var dlg = SDL3.createDialogWindow({title: "设置", w: 560, h: 330})
+dlg.setRootAt(root, 0, 0)
+dlg.run(onEvent, onRender)</code></p>
+<p>想显式用（桌面也能用来做内嵌弹层）：</p>
+<p><code>leno
+var dlg = SDL3.createVirtualWindow({title: "设置", w: 560, h: 330})   // 主窗口必须已 registerOnly/run</code></p>
+<p>口径（都是实测过的）：</p>
+<ul>
+<li><strong>坐标与尺寸都是它自己的</strong>：<code>getSize()</code> 返回 <code>{w,h}</code> 声明值，不是主窗口的；
+  控件树仍在 <code>0,0</code> 起算 ⇒ 桌面布局原样可用，不需要重排</li>
+<li><strong>合成</strong>：等比缩到父窗口客户区（留 16px 边，只缩不放、最小 0.25）+ 投影 + 1px 描边；
+  模态时先铺 <code>黑色 60%</code> 遮罩。顺序是"控件 → 弹层 → toast/tip → <strong>弹窗</strong> → overlay → present"</li>
+<li><strong>事件</strong>：SDL 事件带的是父窗口 ID ⇒ 框架把 <code>wid</code> 换成子窗口的合成 ID（<code>0x40000000</code> 起，
+  与 SDL 的 windowID 不重叠），并给 <code>Event</code> 设几何偏移（减左上角、除缩放）⇒ 控件命中判断零改动</li>
+<li><strong>模态</strong>：走原来的 <code>pushModal</code>/<code>_modalTop</code>；模态时所有事件都投给弹窗，点弹窗外=没命中任何控件
+  ⇒ 下层主窗口收不到（与非虚拟模态窗一致）</li>
+<li><strong>非模态</strong>：只有落在它矩形内的指针事件才归它，主窗口其余部分照常可点</li>
+<li><strong>销毁</strong>：虚拟窗口的 <code>handle</code>/<code>Renderer</code> 都是<strong>父窗口的</strong> ⇒ 4 条收尾路径统一走
+  <code>_destroyEntry(i)</code>，只销毁自己的纹理，绝不 <code>SDL_DestroyWindow</code></li>
+</ul>
+<p>已知边界（先如实写着，别当没看见）：</p>
+<ul>
+<li>~~缩放是整块贴图 ⇒ 文字会略软~~ <strong>已修（2026-11-21 真机实测后）</strong>：离屏纹理现在按
+  <strong>物理像素</strong>分配（<code>逻辑尺寸 × 父窗口密度</code>，见 <code>_virtEnsureTex</code>），渲染时用同一个倍数缩放，
+  合成时再等比缩到屏幕 ⇒ 文字按屏幕原生分辨率栅格化，不再发软 ✓</li>
+<li>弹窗里的 <code>set_widget_opacity</code> 暂不生效（<code>_drawTree</code> 的 opac 数组对虚拟窗口传空 ⇒ 一律 1.0）</li>
+<li><code>overlay</code>（<code>setOverlay</code>）<strong>在弹窗之上</strong>：截图钩子因此能拍到弹窗（Android 只能靠截图取证 ✓），
+  代价是 HUD 会压在弹窗上 —— 需要反过来就在 overlay 回调里判断 <code>SDL3.isVirtual(wid)</code> 后跳过</li>
+<li>弹窗里的 <code>Edit</code> 要打字：Android 上仍由应用自己调 <code>SDL3.startTextInput(dlg.getHandle())</code>
+  （框架在 <code>registerOnly</code> 里已对 Android 跳过无条件开输入法 ✓）</li>
+<li><code>dlg.hide()/show()/minimize()</code> 等对虚拟窗口是<strong>空操作</strong>（否则会把主窗口藏掉 ✗）</li>
+</ul>
+<p>回归：<code>test/test_virtual_window.leno</code>（6 条行为断言 + 两张 PNG：普通态与模态态）
+<code>leno build\leno_module\LenoSDL3\test\test_virtual_window.leno</code></p>
+<h2 id="附录-g-android-真机实测-密度-弹窗-触摸滚动-2026-11-21">附录 G：Android 真机实测 —— 密度、弹窗、触摸滚动（2026-11-21 ✓）</h2>
+<p>环境：AVD <code>leno</code>，720×1280 / 420dpi（密度 <strong>2.625</strong>），Android 11 (API 30)，x86_64，
+SDL3 3.4.20。以下每条都是<strong>跑出来的</strong>，不是推断。</p>
+<h3 id="g1-屏幕密度-两个-看起来对-的-api-都是假的">G1 屏幕密度：两个"看起来对"的 API 都是假的</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>桌面</th>
+<th>Android（实测）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SDL_GetWindowDisplayScale(win)</code></td>
+<td>真值（1.0 / 1.5）</td>
+<td><strong>恒 1.0</strong>（后端未实现）✗</td>
+</tr>
+<tr>
+<td><code>SDL_DisplayMode.pixel_density</code></td>
+<td>真值</td>
+<td><strong>恒 1.0</strong>（Android 不赋值）✗</td>
+</tr>
+<tr>
+<td>Java <code>getDisplayMetrics().density</code></td>
+<td>—</td>
+<td><strong>2.625</strong> ✓</td>
+</tr>
+</tbody>
+</table>
+<p>而同一时刻 <code>SDL_GetWindowSize</code> 报的是 <strong>720×1217</strong>（物理像素，已扣 24dp 状态栏）——
+所以"尺寸是物理的、密度却报 1.0"，只按 SDL 算就等于什么都没适配：
+13px 字只有 4.95dp、40px 按钮只有 15.2dp（Material 要求最小 48dp）。</p>
+<p><strong>现在的做法</strong>：Java 宿主在 <code>main()</code> 里把密度推进来，走 SDL hint：</p>
+<pre><code>SdlActivity.java:  setAndroidDensity(getResources().getDisplayMetrics().density)
+leno_jni.c:        dlopen(&quot;libSDL3.so&quot;) → SDL_SetHint(&quot;LENO_ANDROID_DENSITY&quot;, &quot;2.6250&quot;)
+sdl_core.leno:     getPlatformDensity() 先读 hint，再退 pixel_density，最后 1.0
+</code></pre>
+<p>为什么用 hint 而不是新 builtin：它只是字符串键值对，两边各一行就通，
+不必为一个 float 去改 VM 的 builtin 表或加一套函数指针缓存。</p>
+<p><strong>桌面一律不换算</strong>（<code>_resolveDensity</code> 里 <code>_os() != "android" ⇒ 1.0</code>）：
+Windows/macOS 的 <code>getSize</code> 已经是逻辑点，再除 1.5 会缩成 2/3 ✗。</p>
+<h3 id="g2-密度层落地后的坐标语义-真机读数">G2 密度层落地后的坐标语义（真机读数）</h3>
+<pre><code>getSize()          = 274 × 464      ← 逻辑（应用只该看这个）
+getSizeInPixels()  = 720 × 1217     ← 物理
+比值 2.6277 ≈ 密度 2.625（差 0.003 是取整：720/274）
+</code></pre>
+<p>三个触点缺一不可：
+1. <code>Window.getSize()</code> 除密度、<code>setSize()</code> 乘密度（否则布局按物理像素算，全错）
+2. <code>Renderer.setDensity(d)</code> ⇒ <code>beginFrame()</code> 把 <code>setScale</code> 设成 <code>dens</code>（或 <code>ssaaScale*dens</code>）
+   ⇒ 所有绘制调用继续用<strong>逻辑坐标</strong>，落到物理像素上自动放大
+3. 事件坐标除密度（<code>event.setGeometryOffset(0,0,dens)</code>）⇒ 控件命中判断零改动</p>
+<h3 id="g3-sdl_setrendertarget-会把渲染缩放重置为-1-0">G3 ★ <code>SDL_SetRenderTarget</code> 会把渲染缩放重置为 1.0</h3>
+<p><strong>这是本轮最难抓的一个</strong>。症状：Android 上虚拟弹窗的内容只画进离屏纹理<strong>左上角 1/dens
+的一块</strong>，其余全黑；桌面（dens=1.0）永远正常。</p>
+<p>根因不在虚拟窗口，在渲染器的 <code>setScale</code> 短路：</p>
+<pre><code>setScale(sx,sy):  if sx == bxSx and sy == bxSy { return true }   // 值没变就不下发
+</code></pre>
+<p><code>SDL_SetRenderTarget()</code> 之后 SDL 侧的 scale 变成 1.0，但 <code>bxSx/bxSy</code> 缓存还是 2.625 ⇒
+调用方 <code>setScale(2.625, 2.625)</code> 被短路 ⇒ SDL 一直停在 1.0 ⇒ 逻辑 420×300 只画进
+1103×788 纹理的左上 420×300。</p>
+<p><strong>修复</strong>：<code>setRenderTarget</code> 里把缓存同步成 SDL 的实际值（<code>bxSx = bxSy = 1.0</code>），
+让缓存永远诚实。不要在调用点写 <code>setScale(1,1); setScale(dens,dens)</code> 绕过 —— 那只是
+把同一颗雷留给下一个调用方。</p>
+<p>同源修正：<code>clear()</code> 的 SSAA 分支原来只设 <code>ssaaScale</code>，漏了密度 ⇒ 一清屏坐标空间就缩回
+1/dens。已改成 <code>ssaaScale * dens</code>（与 <code>enableSSAA</code> / <code>resizeSSAA</code> / <code>beginFrame</code> 一致）。</p>
+<h3 id="g4-触摸拖动滚动-手机上唯一的滚动手势">G4 触摸拖动滚动（手机上唯一的滚动手势）</h3>
+<p>手机上既没有滚轮、也抓不住 12px 宽的滚动条 ⇒ 补"手指按住内容拖动"，抬手带惯性：</p>
+<ul>
+<li>判定：<code>Event.isTouchLike()</code> —— SDL 把触摸合成成鼠标事件时 <code>which == SDL_TOUCH_MOUSEID
+  (0xFFFFFFFF)</code>；motion/button 两个结构里 <code>which</code> 都在偏移 20，可共用</li>
+<li>兜底：<code>_ptrTouch</code>（窗口在 <code>dens &gt; 1</code> 时置位）⇒ 驱动不给标记时也当手指</li>
+<li><strong>桌面不受影响</strong>：鼠标左键拖动在桌面有"拖选"语义，<code>isTouchLike()</code> 为假 ⇒ 拖动滚动不触发
+  （回归测试里专门有一条负向断言：鼠标拖 120px，<code>scrollY</code> 必须纹丝不动）</li>
+<li>阈值 6px：小于它算点击，否则列表行/按钮永远点不中</li>
+<li>惯性：<code>v = 位移/帧</code>，每帧 <code>v *= 0.86</code>，<code>|v| &lt; 0.4</code> 停；撞边界立即归零（否则会"顶着"
+  边界无限请求重绘）；<code>set_scroll()</code> 会掐掉惯性（程序化定位不该被残余速度推走 8px）</li>
+</ul>
+<p>真机验证（<code>adb shell input swipe 360 900 360 400 300</code>）：
+<code>scrollY 0 → 270</code>，截图里列表已滚到"第 4 行 ~ 第 10 行"，文字清晰。</p>
+<h3 id="g5-sdl-的-java-宿主源码必须与-libsdl3-so-完全同版本">G5 SDL 的 Java 宿主源码必须与 <code>libSDL3.so</code> <strong>完全同版本</strong></h3>
+<p>构建脚本要 <code>build/leno_module/LenoSDL3/src/sdl3/android-project/.../org/libsdl/app/*.java</code>。
+这个目录被清掉后如果随手拿最新版 SDL 的 Java 补上，装上去会弹：</p>
+<pre><code>SDL Error
+Error: SDL C/Java version mismatch (expected 3.5.0, got 3.4.20)
+</code></pre>
+<p>且 <code>SdlActivity</code> 直接停在错误弹窗、<strong><code>leno_sdl_main</code> 一行都不跑</strong>（连日志都没有）。
+取的时候要按 <code>.so</code> 的版本取（<code>release-3.4.20</code> 分支），并核对
+<code>SDLActivity.java</code> 里的 <code>SDL_MAJOR/MINOR/MICRO_VERSION</code> 三个常量。</p>
+<h3 id="g6-探针别按帧数计时">G6 探针别按<strong>帧数</strong>计时</h3>
+<p>模拟器是软件渲染（SwiftShader），720×1217 全屏重绘只有 <strong>~2fps</strong>
+（实测：frame 5 → frame 8 花了 1.5 秒）。"跑 130 帧"会变成 60 多秒，
+按 5400 帧更是 45 分钟。<code>s3_vdialog</code> / <code>s4_scroll</code> 已统一改成 <code>getTicks()</code> 计时。</p>
+<h3 id="回归资产">回归资产</h3>
+<pre><code>android/app/assets/s2_scale.leno    密度分岔探针（打印 size / pixels / contentScale / pixelDensity）
+android/app/assets/s3_vdialog.leno  密度 + 虚拟弹窗端到端（6 条 OK/NG，停留 20s 供截图）
+android/app/assets/s4_scroll.leno   真机触摸滚动（配合 input swipe，看 SCROLL 日志）
+
+bash android/build_android.sh                    # 需 ABIS=x86_64 才能在本机模拟器跑
+bash android/run_probes.sh s2_scale s3_vdialog
+</code></pre></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-窗口与主循环">一、窗口与主循环</a></li><ul class="lv3"><li><a href="#run-需要两个回调">run 需要两个回调 ✓</a></li><li><a href="#三个绘制层的先后-实测确认-不是推测">三个绘制层的先后（实测确认 ✓，不是推测）</a></li><li><a href="#不需要-addtimer-空转">不需要 addTimer 空转</a></li><li><a href="#从-非-onevent-上下文-退出-关闭-两个新入口">从"非 onEvent 上下文"退出 / 关闭：两个新入口 ✓</a></li><li><a href="#关闭到托盘-win-cancelclose-实测">「关闭到托盘」：win.cancelClose() ✓（实测）</a></li></ul><li><a href="#二-控件创建-sdl3-createxxx-与-win-addxxx-的区别">二、控件创建：SDL3.createXxx 与 win.addXxx 的区别 ✓</a></li><li><a href="#三-布局-basis-grow-shrink-align">三、布局 {basis, grow, shrink, align}</a></li><ul class="lv3"><li><a href="#语义-sdl_layout-leno-的-_relayout">语义（sdl_layout.leno 的 _relayout ✓）</a></li><li><a href="#两个最常踩的坑">两个最常踩的坑 ✗</a></li><li><a href="#排障-用-dumplayout-不要靠截图扫像素">排障：用 dumpLayout，不要靠截图扫像素 ✓</a></li></ul><li><a href="#四-抗锯齿-渲染器级">四、抗锯齿（渲染器级）</a></li><li><a href="#五-编译器给出的新提示-读提示-别猜">五、编译器给出的新提示（读提示，别猜 ✓）</a></li><li><a href="#六-系统托盘-sdl3-createtray">六、系统托盘（SDL3.createTray）✓</a></li><ul class="lv3"><li><a href="#最小用法-完整示例见-examples-基础示例-窗口管理-test_tray-leno">最小用法（完整示例见 examples/基础示例/窗口管理/test_tray.leno ✓）</a></li><li><a href="#原生菜单在-windows-上会冻结画面-实测-所以要自绘">⛔ 原生菜单在 Windows 上会冻结画面（实测 ✓）—— 所以要自绘</a></li><li><a href="#开机自启动-注册表-run-键-tray-约定">开机自启动（注册表 Run 键 + --tray 约定）</a></li><li><a href="#多返回值只能解构-不能下标-本模块真崩过一次">⚠ 多返回值只能解构，不能下标（本模块真崩过一次 ✗）</a></li><li><a href="#自检断言别用绝对时刻-实测踩过">自检断言别用绝对时刻 ⚠⇒✗（实测踩过）</a></li></ul><li><a href="#七-回归用例怎么跑">七、回归用例怎么跑</a></li><ul class="lv3"><li><a href="#自检钩子若用-_exit-0-强杀-就永远测不出-退出卡住-2026-10-07-实测">⛔ 自检钩子若用 _exit(0) 强杀，就永远测不出"退出卡住" ✗（2026-10-07 实测）</a></li></ul><li><a href="#八-时间-截图-圆环-本轮实测新增的三条">八、时间 / 截图 / 圆环：本轮实测新增的三条 ✓</a></li><ul class="lv3"><li><a href="#times-now-返回的是-int-时间戳-不是-年-月-日-数组">⛔ times.now() 返回的是 int 时间戳，不是 [年,月,日,…] 数组</a></li><li><a href="#截图-钩子放-setoverlay-且要等重绘">⛔ 截图：钩子放 setOverlay，且要等重绘</a></li><li><a href="#tabcontrol-同页混用两种定位方式时会提示一次-新增">✅ TabControl 同页混用两种定位方式时会提示一次（新增 ✓）</a></li><li><a href="#空-catch-是编译期错误-2026-09-28-由警告升为错误">⛔ 空 catch { } 是编译期错误（2026-09-28 由警告升为错误 ✓）</a></li><li><a href="#as-到容器-struct-不会当场失败-而是-原样带过-实测-新增编译期提示">⛔ as 到容器/struct 不会当场失败，而是"原样带过"（实测 ✓）+ 新增编译期提示</a></li><li><a href="#scrollview-里-子孙会不会跟着滚-三种内容根实测-2026-09-28">📏 ScrollView 里"子孙会不会跟着滚"——三种内容根实测（2026-09-28 ✓）</a></li><li><a href="#ringprogress-新增-多段弧-副行文字-做-已清-跳过-双色环">✅ RingProgress 新增：多段弧 + 副行文字（做"已清 / 跳过"双色环 ✓）</a></li></ul><li><a href="#九-标题栏-自定义动作按钮-actions-2026-10-07-新增">九、标题栏：自定义动作按钮（actions，2026-10-07 新增 ✓）</a></li><ul class="lv3"><li><a href="#位置与顺序-不用自己算坐标">位置与顺序（不用自己算坐标 ✓）</a></li><li><a href="#图标两种给法">图标两种给法</a></li><li><a href="#标题前的应用图标-title_icon-2026-10-07-新增">标题前的应用图标（title_icon，2026-10-07 新增 ✓）</a></li><li><a href="#悬停气泡">悬停气泡</a></li><li><a href="#点击">点击</a></li><li><a href="#运行时增删改-不用重建标题栏">运行时增删改（不用重建标题栏）</a></li><li><a href="#三个坑-都实测过">三个坑（都实测过 ✓）</a></li></ul><li><a href="#附录-b-align-在-hbox-vbox-里的真实语义-2026-10-07-实测">附录 B：align 在 HBox / VBox 里的真实语义（2026-10-07 实测 ✓）</a></li><ul class="lv3"><li><a href="#滚轮方向-wheely-正值-远离用户-往上滚-框架语义-往上滚看更早的内容-2026-10-08-实测">⛔ 滚轮方向：wheelY() 正值 = 远离用户（往上滚）；框架语义 = 往上滚看更早的内容 ✗（2026-10-08 实测）</a></li><li><a href="#懒加载缓存的键-别用-逻辑名-要用-最终资源路径-而且资源可能晚到-2026-10-08-实测">⛔ 懒加载缓存的键：别用"逻辑名"，要用"最终资源路径"；而且资源可能晚到 ✗（2026-10-08 实测）</a></li><li><a href="#截断标签-truncate-放进容器-宽度也会被-冻结在-add-那一刻-2026-10-07-实测">⛔ 截断标签（truncate）放进容器：宽度也会被"冻结在 add 那一刻" ✗（2026-10-07 实测）</a></li><li><a href="#自绘浮层会-穿透-到下层控件-必须登记弹层捕获区-2026-10-07">⛔ 自绘浮层会"穿透"到下层控件 ⇒ 必须登记弹层捕获区（2026-10-07 ✓）</a></li><li><a href="#想做-浮层-弹出面板-下拉-歌单-气泡-用-anchorbox">想做"浮层 / 弹出面板"（下拉、歌单、气泡）⇒ 用 AnchorBox ✓</a></li></ul><li><a href="#附录-c-三个实测坑-点击-断言-自测注入-2026-10-07">附录 C：三个实测坑（点击 / 断言 / 自测注入；2026-10-07 ✓）</a></li><ul class="lv3"><li><a href="#①-listbox-单选-点-已选中那一行-不回调">① ⛔ ListBox（单选）点"已选中那一行"不回调 ✗</a></li><li><a href="#①-b-listbox-也有右击上下文菜单了-2026-10-08-补齐">①-b ★ ListBox 也有右击上下文菜单了（2026-10-08 补齐 ✓）</a></li><li><a href="#①-d-定时器不要补跑积压的周期-电脑睡眠唤醒后会-假死-2026-10-08-实测">①-d ⛔ 定时器不要补跑积压的周期：电脑睡眠唤醒后会"假死" ✗（2026-10-08 实测）</a></li><li><a href="#①-c-别为-绕开类型收窄-把配置结构拍扁-2026-10-08-实测更正">①-c ★ 别为"绕开类型收窄"把配置结构拍扁（2026-10-08 实测更正）</a></li><li><a href="#②-断言别读-lbl-text-它读不到-set_text-之后的新值">② ⛔ 断言别读 lbl.text：它读不到 set_text 之后的新值 ✗</a></li><li><a href="#③-hbox-里-grow-0-连交叉轴一起撑满-进度条会变成圆饼-实测">③ ⛔ HBox 里 grow &gt; 0 连交叉轴一起撑满 ✗（进度条会变成圆饼 ✓ 实测）</a></li><li><a href="#④-5-自绘控件-canvas-默认有不透明底-看着像-自绘的东西带白底">④.5 ⛔ 自绘控件（Canvas）默认有不透明底 ⇒ 看着像"自绘的东西带白底" ✗</a></li><li><a href="#④-button-的-自然宽度-把图标也算进去-容器凭空变宽">④ ⛔ Button 的"自然宽度"把图标也算进去 ⇒ 容器凭空变宽 ✗</a></li><li><a href="#⑤-自测注入点击-先注入一次移动-否则按钮偶发不生效">⑤ ⚠ 自测注入点击：先注入一次移动，否则按钮偶发不生效 ✗</a></li><li><a href="#⑥-图标按钮-没有-hover-background-false-会连-hover-一起跳过">⑥ ⛔ 图标按钮"没有 hover"：background: false 会连 hover 一起跳过 ✗</a></li></ul><li><a href="#附录-a-生成带透明的-png-做图标用-2026-10-07-实测">附录 A：生成带透明的 PNG（做图标用；2026-10-07 实测 ✓）</a></li><li><a href="#十-table-单元格-进度条列-与-自绘回调-2026-10-07-新增">十、Table 单元格：进度条列 与 自绘回调（2026-10-07 新增 ✓）</a></li><ul class="lv3"><li><a href="#进度条列-cell_types">进度条列（cell_types）</a></li><li><a href="#自绘回调-on_cell_draw">自绘回调（on_cell_draw）</a></li><li><a href="#自检-都无头可跑">自检（都无头可跑 ✓）</a></li></ul><li><a href="#附录-c-card-卡片控件-2026-10-13-新增-本轮实测的坑">附录 C：Card 卡片控件（2026-10-13 新增 ✓）—— 本轮实测的坑</a></li><ul class="lv3"><li><a href="#纹理绘制的-dst-必须是-sdl_frect-传-sdl_rect-画面直接-空掉-实测">⛔ 纹理绘制的 dst 必须是 SDL_FRect —— 传 SDL_Rect 画面直接"空掉"（实测 ✓）</a></li><li><a href="#图片-覆盖填满-要裁源-不要裁屏-目标-整卡每帧-0-次-pushcliprect">✅ 图片"覆盖填满"要裁源，不要裁屏（目标：整卡每帧 0 次 pushClipRect）</a></li><li><a href="#容器化-set_content-的两条硬约束">✅ 容器化（set_content）的两条硬约束</a></li><li><a href="#卡片高度是-gridlayout-在-add-时捕获的">⚠ 卡片高度是 GridLayout 在 add 时捕获的</a></li><li><a href="#圆角纹理合成-只乘-alpha-的混合模式要自组-且-sdl_rendergeometry-看纹理自身的-blend-2026-10-13-实测">⛔ 圆角纹理合成：「只乘 alpha」的混合模式要自组，且 SDL_RenderGeometry 看纹理自身的 blend（2026-10-13 实测 ✓）</a></li><li><a href="#软件渲染器建不了离屏-蒙版纹理-圆角静默回退方角-验证必须真机">⛔ 软件渲染器建不了离屏/蒙版纹理 ⇒ 圆角静默回退方角（验证必须真机 ✓）</a></li><li><a href="#win-setrootat-在-run-之后换根以前是静默-no-op-整页切换必踩-2026-10-13-修">⛔ win.setRootAt 在 run() 之后换根以前是静默 no-op（整页切换必踩 ✓ 2026-10-13 修）</a></li><li><a href="#嵌套控件-拿不到窗口尺寸-菜单其实自己会兜底-真正的缺口是-弹出瞬间用了缓存旧值-2026-10-13-实测-已修">⚠ 嵌套控件"拿不到窗口尺寸"：菜单其实自己会兜底，真正的缺口是"弹出瞬间用了缓存旧值"（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-的图标纹理缓存只增不减-显存一路涨-2026-10-13-实测-已修">⛔ Table 的图标纹理缓存只增不减 ⇒ 显存一路涨（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#失焦不收弹层-alt-tab-切走后下拉-菜单留在屏幕上-点不动也关不掉-2026-10-13-实测-已修">⛔ 失焦不收弹层：Alt+Tab 切走后下拉/菜单留在屏幕上、点不动也关不掉（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#spinner-画出来是多边形-段数公式-thick-形参没用上-2026-10-13-实测-已修">⛔ Spinner 画出来是多边形（段数公式 + thick 形参没用上）（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#tabcontrol-二次-set-会把整页内容丢掉-运行时改配色-字号-就会踩-2026-10-13-实测-已修">⛔ TabControl 二次 set() 会把整页内容丢掉（"运行时改配色/字号"就会踩）（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-的自定义格色不跟着数据走-remove_row-后错位一行-set_rows-后残留-2026-10-13-实测-已修">⛔ Table 的自定义格色不跟着数据走：remove_row 后错位一行、set_rows 后残留（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#scrim-模态遮罩-不跟随窗口缩放-拉大窗口后右下露一条-没遮住-还点得动-2026-10-13-实测-已修">⛔ Scrim（模态遮罩）不跟随窗口缩放 ⇒ 拉大窗口后右下露一条"没遮住、还点得动"（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#图表数值标签会丢小数-_fmtnum-拿-_int-v-截断-2026-10-13-实测-已修">⛔ 图表数值标签会丢小数（_fmtNum 拿 _int(v) 截断）—— 2026-10-13 实测 + 已修 ✓</a></li><li><a href="#radiobutton-同组互斥-被挤掉那一项也要有回调-2026-10-13-实测-已修">⛔ RadioButton 同组互斥：被挤掉那一项也要有回调（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#toggle-checkbox-radiobutton-尺寸自量-布局给的尺寸被忽略-2026-10-13-实测">⛔ Toggle / CheckBox / RadioButton：尺寸自量，布局给的尺寸被忽略（2026-10-13 实测 ✓）</a></li><li><a href="#自测-合成点击前必须先投一条鼠标移动-testmoveat-否则被-hover-门吃掉-2026-10-13-实测">⛔ 自测：合成点击前必须先投一条鼠标移动（testMoveAt）—— 否则被 hover 门吃掉（2026-10-13 实测 ✓）</a></li><li><a href="#自测跑法-应用一律带-无人值守-参数-2026-10-13-定规">⭐ 自测跑法：应用一律带"无人值守"参数（2026-10-13 定规 ✓）</a></li><li><a href="#控件选项对账-dochk-本轮把覆盖铺满-2026-10-13">⭐ 控件选项对账（dochk）：本轮把覆盖铺满（2026-10-13 ✓）</a></li><li><a href="#焦点链与键盘导航-2026-10-13-第一批-tab-shift-tab-enter-space">⭐ 焦点链与键盘导航（2026-10-13 第一批 ✓ Tab / Shift+Tab / Enter / Space）</a></li><li><a href="#控件级不透明度-win-set_widget_opacity-w-a-2026-10-13-新增能力">⭐ 控件级不透明度：win.set_widget_opacity(w, a)（2026-10-13 新增能力 ✓）</a></li><li><a href="#运行时切主题-applythemeall-控件-没响应-的两个真洞-2026-10-13-实测-已修">⛔ 运行时切主题（applyThemeAll）：控件"没响应"的两个真洞（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#table-表头的排序箭头会说谎-换数据分-set_rows-clear-add_row-两条路-2026-10-13-实测-已修">⛔ Table：表头的排序箭头会说谎 —— 换数据分 set_rows / clear+add_row 两条路（2026-10-13 实测 + 已修 ✓）</a></li><li><a href="#文本会变的-label-布局里必须给-basis-或-grow-否则-set_text-的文字-溢出去被裁-2026-10-13-实测">⛔ 文本会变的 Label：布局里必须给 basis（或 grow），否则 set_text 的文字"溢出去被裁"（2026-10-13 实测 ✓）</a></li><li><a href="#列表-下拉-菜单的-行高亮-圆角要锚在面板边上-否则底角冒方块-文字出框-2026-10-13-实测">⛔ 列表/下拉/菜单的"行高亮"：圆角要锚在面板边上（否则底角冒方块 + 文字出框 ✓ 2026-10-13 实测）</a></li><li><a href="#原-2026-10-13-已修-在-a-的方法里写-new-b-键-值-值里的裸字段名曾报-未定义变量">✅（原 ⛔，2026-10-13 已修）在 A 的方法里写 new B(键=值)：值里的裸字段名曾报"未定义变量"</a></li><li><a href="#卡片里别留-每帧测量">✅ 卡片里别留"每帧测量"</a></li><li><a href="#光标-按下去变回箭头-markframeredraw-把-要重绘-当成了-鼠标动过-2026-10-13-实测-已修">⛔ 光标"按下去变回箭头"：markFrameRedraw() 把"要重绘"当成了"鼠标动过"（2026-10-13 实测 + 已修 ✓）</a></li></ul><li><a href="#附录-d-选项命名统一-2026-10-13-审计-改名表机制-四个仓库一起迁完">附录 D：选项命名统一（2026-10-13 —— 审计 + 改名表机制 + 四个仓库一起迁完 ✓）</a></li><ul class="lv3"><li><a href="#现状审计-全库-36-个控件-724-个键位-297-个不重名">现状审计（全库 36 个控件 / 724 个键位 / 297 个不重名）</a></li><li><a href="#本轮的机制-改名表-过渡用-当天已撤-过程比结论更值得记">本轮的机制：改名表（过渡用 —— 当天已撤），过程比结论更值得记 ✓</a></li><li><a href="#迁移结果-四个仓库一起迁">迁移结果（四个仓库一起迁 ✓）</a></li><li><a href="#命名规约-新控件照这个写">命名规约（新控件照这个写 ✓）</a></li></ul><li><a href="#附录-e-选项命名统一-第二轮-第②类-同概念不同名-2026-10-13-同日">附录 E：选项命名统一 · 第二轮（第②类"同概念不同名"，2026-10-13 同日 ✓）</a></li><ul class="lv3"><li><a href="#统一的-9-组">统一的 9 组</a></li><li><a href="#刻意保留-不同对象-不同概念-不统一">刻意保留（不同对象 / 不同概念 ⇒ 不统一 ✓）</a></li><li><a href="#本轮踩到并纠正的自己的错-最值得记的一条">⚠ 本轮踩到并纠正的自己的错（最值得记的一条 ✓）</a></li><li><a href="#验收-本轮">验收（本轮）</a></li></ul><li><a href="#文字溢出容器-label-不截断-2026-10-28-实测">文字溢出容器 / Label 不截断（2026-10-28 实测）</a></li><li><a href="#table-直接吃-记录-struct-2026-11-10-p1">Table 直接吃「记录（struct）」（2026-11-10，P1）</a></li><li><a href="#附录-f-虚拟子窗口-android-上的-弹窗-2026-11-21">附录 F：虚拟子窗口 —— Android 上的"弹窗"（2026-11-21 ✓）</a></li><li><a href="#附录-g-android-真机实测-密度-弹窗-触摸滚动-2026-11-21">附录 G：Android 真机实测 —— 密度、弹窗、触摸滚动（2026-11-21 ✓）</a></li><ul class="lv3"><li><a href="#g1-屏幕密度-两个-看起来对-的-api-都是假的">G1 屏幕密度：两个"看起来对"的 API 都是假的</a></li><li><a href="#g2-密度层落地后的坐标语义-真机读数">G2 密度层落地后的坐标语义（真机读数）</a></li><li><a href="#g3-sdl_setrendertarget-会把渲染缩放重置为-1-0">G3 ★ SDL_SetRenderTarget 会把渲染缩放重置为 1.0</a></li><li><a href="#g4-触摸拖动滚动-手机上唯一的滚动手势">G4 触摸拖动滚动（手机上唯一的滚动手势）</a></li><li><a href="#g5-sdl-的-java-宿主源码必须与-libsdl3-so-完全同版本">G5 SDL 的 Java 宿主源码必须与 libSDL3.so 完全同版本</a></li><li><a href="#g6-探针别按帧数计时">G6 探针别按帧数计时</a></li><li><a href="#回归资产">回归资产</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../LenoSDL3_三个疑难排查复盘.html">← 上一篇</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

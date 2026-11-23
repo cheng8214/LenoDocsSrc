@@ -7,3 +7,7 @@ __pycache__/
 Thumbs.db
 .DS_Store
 desktop.ini
+# Leno 编译缓存（在本目录跑 leno.exe 时生成，如 import_module_docs.leno）
+.lenocache/
+# build_html.py 失败时的站点备份（成功会自删；失败留着可回滚）
+site.bak/
