@@ -517,13 +517,7 @@
 >     
 >   ⚠ `layout` 是"半接入"陷阱：`add(child, opts)` 那条**早就有对账** ✓、`set()` 这条路**完全没有** ✗；
 >     
->   ② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 `z`（`addXxx` 读它做层级 ✓）**33 份白名单里
->     
->   一个都没有** ✗ ⇒ 在 `sdl_opts` **一处豁免** ✓（`zz` 这类错拼照报 ✓）；`createWindow` 的**门面键**
->     
->   `icon`（`SDL3.createWindow` 收下、再**原样透传**给 `init` ✗）漏在白名单外 ⇒ 把海报墙的合法用法
->     
->   **报了出来** ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；
+>   ② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 `z`（`addXxx` 读它做层级 ✓）**33 份白名单里一个都没有** ✗ ⇒ 在 `sdl_opts` **一处豁免** ✓（`zz` 这类错拼照报 ✓）；`createWindow` 的**门面键** `icon`（`SDL3.createWindow` 收下、再**原样透传**给 `init` ✗）漏在白名单外 ⇒ 把海报墙的合法用法**报了出来** ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；
 >     
 >   ③ "STRICT 前缀"原来只是**注释里的口号** ✗（`take_log()` 存**原文**、前缀只打 stdout ⇒ 断言不到 ✗）
 >     
@@ -705,13 +699,7 @@
 >     
 >   （它本来就是"值变了"的官方出口 ✓）；
 >     
->   ④ 验收（`leno_gui/自测/test_focus_nav.leno` 扩到两行、注入真按键 ✓）：Tab×1→A、Tab×2 **跳过
->     
->   `set_focusable(false)` 的 B** 到 C、Tab×3→复选框（按钮行全 false ✓）、Shift+Tab 反向到 C、
->     
->   Enter/Space 让 `hitsC` 1→2、Tab→开关→Space 让开关值=1（回调=1 ✓）、Tab→单选→Enter 选中（回调=1 ✓）、
->     
->   Tab×6 末尾**回卷到 A** ✓；焦点环客观取色仍为 `accentFocus` ✓；
+>   ④ 验收（`leno_gui/自测/test_focus_nav.leno` 扩到两行、注入真按键 ✓）：Tab×1→A、Tab×2 **跳过 `set_focusable(false)` 的 B** 到 C、Tab×3→复选框（按钮行全 false ✓）、Shift+Tab 反向到 C、Enter/Space 让 `hitsC` 1→2、Tab→开关→Space 让开关值=1（回调=1 ✓）、Tab→单选→Enter 选中（回调=1 ✓）、Tab×6 末尾**回卷到 A** ✓；焦点环客观取色仍为 `accentFocus` ✓；
 >     
 >   ⑤ 回归：海报墙 ✓、opacity 验收件 ✓、清理大师 exit=0 ✓。速查附录 C 已补第二批与"pri 字段只能靠回调"这条 ✓。
 >
@@ -817,11 +805,7 @@
 >     
 >   交回窗口继续下钻 ⇒ 类型表仍只在 `sdl_window` 一处 ✓，也绕开了 `Card._content` 是 `pri` 的问题 ✓）；
 >     
->   ⑤ **验收（新增回归件 `leno_gui/自测/test_theme_switch.leno`）**：同一次运行内截 A(dark) →
->     
->   `applyThemeAll(light)` → 截 B，离线按矩形比区域平均色 ✓。**修前（真机 stash 对照）四个深容器 Δ 全是 0 ✗；
->     
->   修后 202 / 176 / 125 / 186 ✓**（窗口直属 Button 对照组 18 ✓ 两侧一致）✓；
+>   ⑤ **验收（新增回归件 `leno_gui/自测/test_theme_switch.leno`）**：同一次运行内截 A(dark) → `applyThemeAll(light)` → 截 B，离线按矩形比区域平均色 ✓。**修前（真机 stash 对照）四个深容器 Δ 全是 0 ✗；修后 202 / 176 / 125 / 186 ✓**（窗口直属 Button 对照组 18 ✓ 两侧一致）✓；
 >     
 >   ⑥ **第二批（同日补完 ✓）**：`CheckBox / RadioButton / Toggle / ProgressBar / Spinner / Separator /
 >      RingProgress / ImageView / LinkButton` 这 9 个补上 `applyTheme` 并进点名表（`SDLK_window` 还补了

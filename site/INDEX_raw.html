@@ -454,10 +454,7 @@ filename)` ✓ 实时），但 **hover / 补全 / 定义跳转**里的&quot;符�
 <p>① 覆盖缺口（原来<strong>一个都没接</strong> ✗）：<code>Window.init</code>（<code>createWindow</code>）/ <code>layout.set()</code>（建</p>
 <p>HBox/VBox/AnchorBox）/ <code>filedialog</code> 三入口 / <code>popmenu</code> / <code>tray</code> ✓ 全接上；</p>
 <p>⚠ <code>layout</code> 是"半接入"陷阱：<code>add(child, opts)</code> 那条<strong>早就有对账</strong> ✓、<code>set()</code> 这条路<strong>完全没有</strong> ✗；</p>
-<p>② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 <code>z</code>（<code>addXxx</code> 读它做层级 ✓）**33 份白名单里</p>
-<p>一个都没有** ✗ ⇒ 在 <code>sdl_opts</code> <strong>一处豁免</strong> ✓（<code>zz</code> 这类错拼照报 ✓）；<code>createWindow</code> 的<strong>门面键</strong></p>
-<p><code>icon</code>（<code>SDL3.createWindow</code> 收下、再<strong>原样透传</strong>给 <code>init</code> ✗）漏在白名单外 ⇒ 把海报墙的合法用法</p>
-<p><strong>报了出来</strong> ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；</p>
+<p>② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 <code>z</code>（<code>addXxx</code> 读它做层级 ✓）<strong>33 份白名单里一个都没有</strong> ✗ ⇒ 在 <code>sdl_opts</code> <strong>一处豁免</strong> ✓（<code>zz</code> 这类错拼照报 ✓）；<code>createWindow</code> 的<strong>门面键</strong> <code>icon</code>（<code>SDL3.createWindow</code> 收下、再<strong>原样透传</strong>给 <code>init</code> ✗）漏在白名单外 ⇒ 把海报墙的合法用法<strong>报了出来</strong> ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；</p>
 <p>③ "STRICT 前缀"原来只是<strong>注释里的口号</strong> ✗（<code>take_log()</code> 存<strong>原文</strong>、前缀只打 stdout ⇒ 断言不到 ✗）</p>
 <p>⇒ 抽成纯函数 <code>dochk.format_line()</code> ✓ ⇒ 自测<strong>直接断言</strong> ✓；</p>
 <p>④ 新增验收件 <code>leno_gui/自测/test_opts_live.leno</code> ✓（纯逻辑那个件测不到"<strong>哪些入口真的接了</strong>" ✗）：</p>
@@ -548,10 +545,7 @@ filename)` ✓ 实时），但 **hover / 补全 / 定义跳转**里的&quot;符�
 <p>③ 坑：焦点环要用 <code>get_w()/get_h()</code> —— 开关类是<strong>自量尺寸</strong>控件、<strong>没有 <code>w/h</code> 字段</strong> ✗（写 <code>ck.w</code> 直接编译不过 ✓）；</p>
 <p>另：<code>CheckBox.checked</code>/<code>Toggle.on</code> 是 <strong><code>pri</code> 私有</strong> ✗ ⇒ 探针断言一律走<strong>公开回调</strong> <code>on_change</code> ✓</p>
 <p>（它本来就是"值变了"的官方出口 ✓）；</p>
-<p>④ 验收（<code>leno_gui/自测/test_focus_nav.leno</code> 扩到两行、注入真按键 ✓）：Tab×1→A、Tab×2 **跳过</p>
-<p><code>set_focusable(false)</code> 的 B** 到 C、Tab×3→复选框（按钮行全 false ✓）、Shift+Tab 反向到 C、</p>
-<p>Enter/Space 让 <code>hitsC</code> 1→2、Tab→开关→Space 让开关值=1（回调=1 ✓）、Tab→单选→Enter 选中（回调=1 ✓）、</p>
-<p>Tab×6 末尾<strong>回卷到 A</strong> ✓；焦点环客观取色仍为 <code>accentFocus</code> ✓；</p>
+<p>④ 验收（<code>leno_gui/自测/test_focus_nav.leno</code> 扩到两行、注入真按键 ✓）：Tab×1→A、Tab×2 <strong>跳过 <code>set_focusable(false)</code> 的 B</strong> 到 C、Tab×3→复选框（按钮行全 false ✓）、Shift+Tab 反向到 C、Enter/Space 让 <code>hitsC</code> 1→2、Tab→开关→Space 让开关值=1（回调=1 ✓）、Tab→单选→Enter 选中（回调=1 ✓）、Tab×6 末尾<strong>回卷到 A</strong> ✓；焦点环客观取色仍为 <code>accentFocus</code> ✓；</p>
 <p>⑤ 回归：海报墙 ✓、opacity 验收件 ✓、清理大师 exit=0 ✓。速查附录 C 已补第二批与"pri 字段只能靠回调"这条 ✓。</p>
 <p><strong>2026-10-13 追加（二十三）</strong>：<strong>按优先级修 A1 的第一批：焦点链 / 键盘导航</strong>（Tab · Shift+Tab · Enter · Space ✓）：</p>
 <p>① 缺口：全库原来只有 <code>Edit</code> / <code>Canvas</code> 自己管焦点 ⇒ <strong>Tab 键根本不换焦点</strong> ✗（<code>Widget</code> face 只有 7 个</p>
@@ -604,9 +598,7 @@ filename)` ✓ 实时），但 **hover / 补全 / 定义跳转**里的&quot;符�
 <p>④ <strong>修法</strong>：点名表补全 + 补 <code>AnchorBox</code> 递归；<code>sdl_scrollview</code> 补 <code>impl Widget, Themeable</code> + <code>applyTheme</code>；</p>
 <p>新增<strong>主题递归出口</strong> <code>lay.setExtraApplyThemeChild</code>（照 <code>_extraPassResize</code> 样板 ✓，容器把内容控件</p>
 <p>交回窗口继续下钻 ⇒ 类型表仍只在 <code>sdl_window</code> 一处 ✓，也绕开了 <code>Card._content</code> 是 <code>pri</code> 的问题 ✓）；</p>
-<p>⑤ <strong>验收（新增回归件 <code>leno_gui/自测/test_theme_switch.leno</code>）</strong>：同一次运行内截 A(dark) →</p>
-<p><code>applyThemeAll(light)</code> → 截 B，离线按矩形比区域平均色 ✓。**修前（真机 stash 对照）四个深容器 Δ 全是 0 ✗；</p>
-<p>修后 202 / 176 / 125 / 186 ✓**（窗口直属 Button 对照组 18 ✓ 两侧一致）✓；</p>
+<p>⑤ <strong>验收（新增回归件 <code>leno_gui/自测/test_theme_switch.leno</code>）</strong>：同一次运行内截 A(dark) → <code>applyThemeAll(light)</code> → 截 B，离线按矩形比区域平均色 ✓。<strong>修前（真机 stash 对照）四个深容器 Δ 全是 0 ✗；修后 202 / 176 / 125 / 186 ✓</strong>（窗口直属 Button 对照组 18 ✓ 两侧一致）✓；</p>
 <p>⑥ <strong>第二批（同日补完 ✓）</strong>：<code>CheckBox / RadioButton / Toggle / ProgressBar / Spinner / Separator /
   RingProgress / ImageView / LinkButton</code> 这 9 个补上 <code>applyTheme</code> 并进点名表（<code>SDLK_window</code> 还补了</p>
 <p><code>sdl_ring</code> 的 import —— 静态 <code>case</code> 必须显式 import ✓）；映射与各自 <code>set()</code> 的建时取色逐字段对齐 ✓，</p>
