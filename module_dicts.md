@@ -483,26 +483,27 @@ for dict.keys() to key {
 
 ```leno
 main() {
-    // 创建用户字典
-    var user = {}
-    
+    // 创建用户字典（⚠ 空的 `{}` 会被推成 Dict[string, string]，
+    //    要装混合类型请显式写 `Dict[string, any]`）
+    Dict[string, any] user = {}
+
     // 添加信息
     user.set("name", "张三")
     user.set("age", 28)
     user.set("email", "zhangsan@example.com")
-    
+
     print("用户信息:")
     for user.keys() to key {
-        print("  " + key + ": " + user.get(key))
+        print("  " + key + ": " + _str(user.get(key)))
     }
-    
+
     // 更新年龄
     user.set("age", 29)
-    print("更新后年龄: " + user.get("age"))
-    
+    print("更新后年龄: " + _str(user.get("age")))
+
     // 检查字段
     if user.has("phone") {
-        print("电话: " + user.get("phone"))
+        print("电话: " + _str(user.get("phone")))
     } else {
         print("电话未设置")
     }
@@ -536,8 +537,8 @@ main() {
 
 ```leno
 main() {
-    // 默认配置
-    var config = {
+    // 默认配置（嵌套字典 ⇒ 值类型写 any）
+    Dict[string, any] config = {
         "host": "localhost",
         "port": 8080,
         "debug": false,
@@ -548,23 +549,24 @@ main() {
     }
     
     // 读取配置
-    print("服务器: " + config.get("host") + ":" + config.get("port"))
+    print("服务器: " + _str(config.get("host")) + ":" + _str(config.get("port")))
     
     // 修改配置
     config.set("port", 3000)
     config.set("debug", true)
     
     // 获取嵌套配置
-    var db = config.get("database")
-    print("数据库类型: " + db.get("type"))
+    // 取嵌套字典要**逐层 as**（`get` 返回 any；不 as 的话调不了方法）
+    Dict[string, any] db = config.get("database") as Dict[string, any]
+    print("数据库类型: " + _str(db.get("type")))
     
     print("最终配置:")
     for config.keys() to key {
         var value = config.get(key)
-        if value.type == "dict" {
+        if type(value) == "dict" {
             print("  " + key + ": {...}")
         } else {
-            print("  " + key + ": " + value)
+            print("  " + key + ": " + _str(value))
         }
     }
 }
@@ -574,10 +576,10 @@ main() {
 
 ```leno
 // 简单的内存缓存
-var cache = {}
-var cache_stats = {"hits": 0, "misses": 0}
+Dict[string, any] cache = {}
+Dict[string, int] cache_stats = {"hits": 0, "misses": 0}
 
-func cache_get(key) {
+func cache_get(string key): any {
     if cache.has(key) {
         cache_stats.set("hits", cache_stats.get("hits") + 1)
         return cache.get(key)
@@ -586,15 +588,15 @@ func cache_get(key) {
     return null
 }
 
-func cache_set(key, value) {
+func cache_set(string key, any value): void {
     cache.set(key, value)
 }
 
-func cache_remove(key) {
+func cache_remove(string key): void {
     cache.remove(key)
 }
 
-func cache_clear() {
+func cache_clear(): void {
     for cache.keys() to key {
         cache.remove(key)
     }
@@ -607,19 +609,19 @@ main() {
     
     // 命中
     var user1 = cache_get("user:1")
-    print("获取 user:1 = " + user1)
-    
+    print("获取 user:1 = " + _str(user1))
+
     // 命中
     var user1_again = cache_get("user:1")
-    
+
     // 未命中
     var user3 = cache_get("user:3")
-    print("获取 user:3 = " + user3)
-    
+    print("获取 user:3 = " + _str(user3))
+
     print("缓存统计:")
-    print("  命中: " + cache_stats.get("hits"))
-    print("  未命中: " + cache_stats.get("misses"))
-    print("  缓存大小: " + cache.len())
+    print("  命中: " + _str(cache_stats.get("hits")))
+    print("  未命中: " + _str(cache_stats.get("misses")))
+    print("  缓存大小: " + _str(cache.len()))
 }
 ```
 
@@ -648,13 +650,14 @@ main() {
     }
     
     // 按 ID 索引
-    var user_by_id = {}
+    Dict[string, any] user_by_id = {}
     for users to user {
-        user_by_id.set(user.get("id").to_str(), user)
+        user_by_id.set(_str(user.get("id")), user)
     }
     
     print("通过 ID 查找:")
-    print("  ID=2: " + user_by_id.get("2").get("name"))
+    Dict[string, any] hit = user_by_id.get("2") as Dict[string, any]
+    print("  ID=2: " + _str(hit.get("name")))
 }
 ```
 
@@ -667,20 +670,20 @@ main() {
     // JSON 字符串
     var json_str = '{"name": "Product", "price": 99.99, "tags": ["new", "hot"]}'
     
-    // 解析为字典
-    var data = jsons.parse(json_str)
-    
+    // 解析为字典（`decode` 返回 any ⇒ 要 as 成 Dict 才能调方法）
+    Dict[string, any] data = jsons.decode(json_str) as Dict[string, any]
+
     print("产品信息:")
-    print("  名称: " + data.get("name"))
-    print("  价格: " + data.get("price"))
-    
+    print("  名称: " + _str(data.get("name")))
+    print("  价格: " + _str(data.get("price")))
+
     // 修改数据
     data.set("price", 79.99)
     data.set("stock", 100)
-    
-    // 转回 JSON
-    var new_json = jsons.stringify(data)
-    print("更新后 JSON: " + new_json)
+
+    // 转回 JSON（编码叫 `encode`，没有 `stringify`）
+    var new_json = jsons.encode(data)
+    print("更新后 JSON: " + _str(new_json))
 }
 ```
 
