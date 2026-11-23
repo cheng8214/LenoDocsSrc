@@ -409,8 +409,8 @@ print([1, 2.5].sum())  // 3.5
 </table>
 <p>⇒ 别假定"都会抛"✗：<strong>取元素 / 负下标 / remove</strong> 会抛 ✓、<strong>pop / insert</strong> 不会 ✓（用之前自己判长度更稳 ✓）。</p>
 <blockquote>
-<p>📌 <strong>这两套口径是</strong>有意保留<strong>的（B 组第 8 条审完决定</strong>不改<strong> ✓）</strong>，理由：
-<code>pop</code> 的真实用法<strong>几乎都先判长度</strong>（<code>while x.len() &gt; 0 { x.pop() }</code> ✓）⇒ 改成抛错<strong>收益小</strong> ✓
+<p>📌 <strong>这两套口径是</strong>有意保留<strong>的（B 组第 8 条审完决定</strong>不改** ✓）<strong>，理由：
+<code>pop</code> 的真实用法</strong>几乎都先判长度<strong>（<code>while x.len() &gt; 0 { x.pop() }</code> ✓）⇒ 改成抛错</strong>收益小** ✓
 而那是<strong>公开 API 的语义变更</strong> ✗；且这两条<strong>有先例</strong> ✓（JS 的 <code>arr.pop()</code> 同样给 undefined ✓、
 <code>splice</code> 同样夹取 ✓）；真正危险的是"以为会抛 ⇒ 没判长度 ⇒ 静默拿到 null"✗ —— 那是<strong>调用方</strong>
 该判的 ✓（长度编译期看不出来 ⇒ 没有静态判据可加 ✓）。⇒ 于是改成"<strong>把口径钉死</strong>"✓：
@@ -630,10 +630,10 @@ _int_or(&quot;7&quot;, 42)     // 7 ✓      _int_or(&quot;abc&quot;, 42)  // 42
 </tr>
 </tbody>
 </table>
-<p>⚠ <strong><code>packed</code> / <code>align(N)</code> 要写在 <code>cstruct</code> 关键字</strong>前面<strong> ✗</strong>（不是名字后面 ✓）：
+<p>⚠ <strong><code>packed</code> / <code>align(N)</code> 要写在 <code>cstruct</code> 关键字</strong>前面** ✗<strong>（不是名字后面 ✓）：
 <code>packed cstruct X { … }</code> ✓、<code>align(16) cstruct Y { … }</code> ✓
-（我按"名字后加修饰"写了两遍都不对 ✗ —— 报错是「<strong>期望 '{' 开始 cstruct 定义</strong>」✓ 看到它就想这条 ✓）
-⚠ <strong>字段名不能是关键字</strong> ✗：<code>Inner in }</code> ⇒ 报「<strong>期望字段名</strong>」✓（<code>in</code> 是成员测试运算符 ✓）→ 改 <code>inner</code> ✓</p>
+（我按"名字后加修饰"写了两遍都不对 ✗ —— 报错是「</strong>期望 '{' 开始 cstruct 定义<strong>」✓ 看到它就想这条 ✓）
+⚠ **字段名不能是关键字</strong> ✗：<code>Inner in }</code> ⇒ 报「<strong>期望字段名</strong>」✓（<code>in</code> 是成员测试运算符 ✓）→ 改 <code>inner</code> ✓</p>
 <p><strong>指针与内存</strong>：</p>
 <pre><code class="language-leno">ffi.write_int64(p, 1, 42); ffi.read_int64(p, 1)   // 42 ✓ —— **非对齐读写是对的** ✓
 </code></pre>

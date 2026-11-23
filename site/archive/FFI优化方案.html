@@ -39,9 +39,9 @@
 <p>FFI 模块核心路径：
 1. <strong>库加载</strong> (<code>ffi.load</code>) → <code>LoadLibraryW</code>/<code>dlopen</code>，返回 <code>ObjFFILibrary</code>
 2. <strong>函数调用</strong> (<code>ffi.call_*</code> / <code>clib</code>) → <code>ffi_call_impl</code> → <del>每次执行 <code>GetProcAddress</code>/<code>dlsym</code></del> 先查函数地址缓存 → <code>ffi_call</code> → 平台分派 (<code>ffi_call_win64</code>/<code>ffi_call_sysv</code>/<code>ffi_call_aapcs</code>)
-3. <strong>参数转换</strong> → int/bigint 窄化（已合并去重）、float 截断、string→char<em>、cstruct→ptr
-4. </em>*返回值展开<strong> → C 窄类型自动升级为 Leno 宽类型（零摩擦）
-5. </strong>回调** → JIT trampoline 汇编 → <code>callback_dispatch</code> → 线程检测 → 直接执行 / 跨线程编组</p>
+3. <strong>参数转换</strong> → int/bigint 窄化（已合并去重）、float 截断、string→char*、cstruct→ptr
+4. <strong>返回值展开</strong> → C 窄类型自动升级为 Leno 宽类型（零摩擦）
+5. <strong>回调</strong> → JIT trampoline 汇编 → <code>callback_dispatch</code> → 线程检测 → 直接执行 / 跨线程编组</p>
 <h2 id="优化项清单">优化项清单</h2>
 <table>
 <thead>

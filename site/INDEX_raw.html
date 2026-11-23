@@ -455,7 +455,7 @@ filename)` ✓ 实时），但 **hover / 补全 / 定义跳转**里的&quot;符�
 <p>HBox/VBox/AnchorBox）/ <code>filedialog</code> 三入口 / <code>popmenu</code> / <code>tray</code> ✓ 全接上；</p>
 <p>⚠ <code>layout</code> 是"半接入"陷阱：<code>add(child, opts)</code> 那条<strong>早就有对账</strong> ✓、<code>set()</code> 这条路<strong>完全没有</strong> ✗；</p>
 <p>② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 <code>z</code>（<code>addXxx</code> 读它做层级 ✓）**33 份白名单里</p>
-<p>一个都没有<strong> ✗ ⇒ 在 <code>sdl_opts</code> </strong>一处豁免<strong> ✓（<code>zz</code> 这类错拼照报 ✓）；<code>createWindow</code> 的</strong>门面键**</p>
+<p>一个都没有** ✗ ⇒ 在 <code>sdl_opts</code> <strong>一处豁免</strong> ✓（<code>zz</code> 这类错拼照报 ✓）；<code>createWindow</code> 的<strong>门面键</strong></p>
 <p><code>icon</code>（<code>SDL3.createWindow</code> 收下、再<strong>原样透传</strong>给 <code>init</code> ✗）漏在白名单外 ⇒ 把海报墙的合法用法</p>
 <p><strong>报了出来</strong> ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；</p>
 <p>③ "STRICT 前缀"原来只是<strong>注释里的口号</strong> ✗（<code>take_log()</code> 存<strong>原文</strong>、前缀只打 stdout ⇒ 断言不到 ✗）</p>

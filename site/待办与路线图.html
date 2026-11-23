@@ -1419,7 +1419,7 @@ Compare-Object $reg $stk
 原先比较制下会提前/延后终止。断言套件 <strong>358/358</strong> 通过。
 - <strong>门禁</strong>：断言套件 <strong>358/358</strong>；新增回归网 <code>examples/性能测试/for循环隔离微基准.leno</code>
 （空体 / 含上界 / 带数组添加 / 带自增 / 步长2 / 嵌套 / 负步长倒序）。</p>
-<p><strong>⑤-j 结论（负）：K 常量操作数族</strong>不划算<strong> —— 静态计数会骗人</strong></p>
+<p><strong>⑤-j 结论（负）：K 常量操作数族</strong>不划算** —— 静态计数会骗人**</p>
 <ul>
 <li><strong>动机</strong>：Lua 5.5 有一整套 K 型常量操作数（<code>OP_ADDK/MULK/DIVK/IDIVK/MODK</code>、<code>OP_EQK/EQI</code>、
   <code>OP_SHLI/SHRI</code>，<code>lopcodes.h:261-315</code>），右操作数<strong>直接从常量表读</strong>（<code>lvm.c:1013</code> 的 <code>KC(i)</code>），
@@ -5794,7 +5794,7 @@ MOD / 位运算 / 移位在 <code>gen_binary</code> 那边也没有特化变体 
   int48|bigint 二合一、VM 多处 <code>bigint_compact_to_int</code> 自愈、断言 416/0 覆盖整数/大整数转换；
   若要严格逐位等价，可再加"被调方返回点确实发了 CAST"的记账。</li>
 </ul>
-<p><strong>⑤-av 循环入口的 2 条 <code>LOADI</code> 改成立即数（<code>FOR_PREP</code> 10 字节 + </strong>入口<strong>物化步长）—— ✅ 已完成（<code>bc22dd1</code>）：float 调用再 −19.0%，循环侧零回归</strong></p>
+<p><strong>⑤-av 循环入口的 2 条 <code>LOADI</code> 改成立即数（<code>FOR_PREP</code> 10 字节 + **入口</strong>物化步长）—— ✅ 已完成（<code>bc22dd1</code>）：float 调用再 −19.0%，循环侧零回归**</p>
 <ul>
 <li><strong>动机</strong>：<code>for N</code> / <code>for 1 {}</code> 的序言是「<code>LOADI</code> 起始 → <code>MOV</code>/<code>LOADI</code> 上界 → <code>LOADI</code> 步长 → <code>FOR_PREP</code>」——
   起始/步长几乎总是字面量（0/1/-1），那两条 <code>LOADI</code> 每次<strong>进循环</strong>都要付一次派发（≈2.7ns/条）；
@@ -6332,7 +6332,7 @@ CMPJMP 族（LT/LE/GT/GE）与"立即数内联进 C"的编码<strong>早就有</
 ⚠ 原立项文档 <code>docs/待办_寄存器号8位上限.md</code> <strong>已删除</strong>（照上面的修复记录执行完毕 ⇒ 不必再留）。
 后续若还要动这条线，只有"同作用域内 &gt;255 个同时存活变量"这一种情形（见上面的边界说明）。</p>
 <blockquote>
-<p><strong>修复记录（2026-11-04）：错误消息的</strong>误报<strong> —— 字段索引被当成寄存器号</strong></p>
+<p><strong>修复记录（2026-11-04）：错误消息的</strong>误报** —— 字段索引被当成寄存器号**</p>
 <p>现象（Aria 加功能时撞到）：<code>lib/player_tick.leno(996): 寄存器号超出 8 位上限（opcode 137：
 A=12 B=0 C=258）：单个函数的寄存器高水位不能超过 255；请把该函数拆小…</code>
 但给编译器加一次性诊断打印 <code>gen-&gt;max_reg</code> 后，该函数实测 <strong>max_reg=46</strong>（<code>self_test</code> 也只有 32）
@@ -6799,11 +6799,11 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 <p><strong>顺手记下两笔账</strong>（本轮不修）：</p>
 <ul>
 <li><strong>新账（挂 ⑤-g / ⑤-y 这条线下）：寄存器式 codegen 缺函数内联器。</strong>
-  <code>src/codegen/codegen_inline.c</code> 在 <code>0f0cf52</code>（"删除 codegen_inline.c + 36 个栈式 op_<em>.inc"）中被删，
-  至今</em>*未移植<strong>（全仓无 <code>try_inline_call</code> 引用）。后果：</strong>所有脚本函数调用都是真调用<strong>；
-  而栈式那些"空调用 193ms / 1 参调用 611ms"的对拍数字，其实是</strong>内联后剩下的空循环 / 内联体<strong>
+  <code>src/codegen/codegen_inline.c</code> 在 <code>0f0cf52</code>（"删除 codegen_inline.c + 36 个栈式 op_*.inc"）中被删，
+  至今<strong>未移植</strong>（全仓无 <code>try_inline_call</code> 引用）。后果：<strong>所有脚本函数调用都是真调用</strong>；
+  而栈式那些"空调用 193ms / 1 参调用 611ms"的对拍数字，其实是<strong>内联后剩下的空循环 / 内联体</strong>
   （同探针实测：栈式空调用 108.8ms ≈ 空循环 108.6ms，Δ≈0.02ns/次；寄存器式 541.6ms vs 空循环 95.7ms，
-  Δ≈44.6ns/次）。⇒ </strong>判据**：<code>.probe_pvz/bench_call.leno</code> 与
+  Δ≈44.6ns/次）。⇒ <strong>判据</strong>：<code>.probe_pvz/bench_call.leno</code> 与
   <code>examples\性能测试\空调用与自增隔离微基准.leno</code> 的空调用项应降到 ≈空循环量级，
   且"快速排序内层小函数调用"那类负载同步受益（快排"慢 2 倍"很可能就是这个根因，待验）。
   移植必带两处历史坑：<code>inline_return_jump_count</code> 嵌套重置（<code>archive/VM字节码校验与崩溃防护设计方案.md</code>）、
@@ -6996,7 +6996,7 @@ v0.2.0 起<strong>一字未改</strong> ✓（无新 opcode / 无编码变化 / 
 </ol>
 <h3 id="二-行为变更-三条-都是-原来静默给错-现在明说-有意">二、行为变更（三条 —— 都是"原来静默给错 ⇒ 现在明说" ✓ <strong>有意</strong>）</h3>
 <ol>
-<li><strong><code>asyncs.all([...])</code> 里有<em>失败</em>的 Future ⇒ 当场抛错</strong>（T4）✓ —— 原：静默给 <code>null</code> ✗
+<li><strong><code>asyncs.all([...])</code> 里有*失败*的 Future ⇒ 当场抛错</strong>（T4）✓ —— 原：静默给 <code>null</code> ✗
    （与"成功但值是 null"<strong>无法区分</strong> ✗），错误还要拖到 <code>asyncs.run()</code> 才炸 ✗。
    口径与 <code>run()</code> 一致：<strong>单失败抛原错误值 / 多失败抛汇总串</strong>（点名第几个 + 各自消息 ✓）；
    v0.2.1 那条"<strong>未完成</strong> ⇒ 抛错"照旧 ✓</li>
@@ -7482,7 +7482,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<p><strong>追加（2026-11-10 第四轮）：载荷 enum 的</strong>显示<strong> + switch 模式错误</strong>只报根因<strong>（两处打磨）</strong></p>
+<p><strong>追加（2026-11-10 第四轮）：载荷 enum 的</strong>显示** + switch 模式错误<strong>只报根因</strong>（两处打磨）**</p>
 <table>
 <thead>
 <tr>

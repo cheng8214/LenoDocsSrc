@@ -765,8 +765,8 @@ CRC 表的 <code>table_entry(1)</code> 返回 185 / -1 / 0 —— 看起来像�
 <li>✅ 入口脚本的<strong>全局对象</strong>是每线程一份（TH8，2026-10-20）⇒ 并发写它不会互相影响</li>
 <li>⚠ 但<strong>模块级 <code>var</code>（<code>ObjModule.globals</code>）仍是所有线程同一份、且无锁</strong> ⇒ 并发写它就是数据竞争，
   只读或改走 Channel 单点化（见第 2 条末尾）</li>
-<li>⚠ 目前<strong>没有 <code>Mutex</code> / 原子变量</strong>（<code>threads</code> 只提供 start/channel/sleep/join_all/parallel_for/map/local_<em>），
-  共享可变状态的正确写法是 <code>Channel</code> 汇到单点线程，或 `threads.local_</em>` 每线程一份</li>
+<li>⚠ 目前<strong>没有 <code>Mutex</code> / 原子变量</strong>（<code>threads</code> 只提供 start/channel/sleep/join_all/parallel_for/map/local_*），
+  共享可变状态的正确写法是 <code>Channel</code> 汇到单点线程，或 <code>threads.local_*</code> 每线程一份</li>
 </ul>
 <h3 id="5-跨线程能传什么-传值即深拷贝">5. 跨线程能传什么（<strong>传值即深拷贝</strong>）</h3>
 <table>

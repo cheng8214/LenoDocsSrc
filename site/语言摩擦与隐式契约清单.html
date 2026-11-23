@@ -41,12 +41,12 @@ M7 按"既然 enum 能算，就全面支持"落地（含<strong>输出可回读<
 <strong>M9 同日先修（诊断收口）后被 US1 翻案</strong>：限定名在类型位置<strong>从"拦"改成"支持"</strong> ✓
 （<code>m.Pt</code> = 隐式 <code>use m.Pt</code> ⇒ §0.2 那类"漏列 use、报错点错位"的坑整类消失 ✓，
 见 <code>docs/类型可见性与use逃生阀修复追踪.md</code> ✓）。M9 节与 <code>语言陷阱速查</code> ㉝ 均已同步 ✓。
-<strong>M10 已修（2026-10-13）</strong>：跨模块读<strong>没 export 的变量</strong>以前<strong>编译不报错、运行期静默 <code>null</code>
-（LenoTrae 的 PVZ 实测：138 个常量别名全 null，<code>ANIM_N - 1</code> 才崩）⇒ 现在</strong>编译期<strong>就报 ✓
+<strong>M10 已修（2026-10-13）</strong>：跨模块读<strong>没 export 的变量</strong>以前<strong>编译不报错、运行期静默 <code>null</code></strong>
+（LenoTrae 的 PVZ 实测：138 个常量别名全 null，<code>ANIM_N - 1</code> 才崩）⇒ 现在<strong>编译期</strong>就报 ✓
 （<code>语言陷阱速查</code> ㉞ 是它的实操版 ✓）。
-</strong>M11 ✅ 已修（2026-10-13）<strong>：struct </strong>方法<strong>里 <code>new B(键 = 隐式自字段)</code> 以前报「未定义的变量」✗。
-真因是</strong>方法体改写器的 switch 白名单漏了 <code>AST_STRUCT_INIT</code><strong> ⇒ <code>new B(键 = 值)</code> 的</strong>值<strong>整段
-被静默跳过（</strong>不是<strong>"self 上下文"问题 ✗）⇒ 补一个 case、</strong>只递归 <code>field_values[]</code>** ✓。
+<strong>M11 ✅ 已修（2026-10-13）</strong>：struct <strong>方法</strong>里 <code>new B(键 = 隐式自字段)</code> 以前报「未定义的变量」✗。
+真因是<strong>方法体改写器的 switch 白名单漏了 <code>AST_STRUCT_INIT</code></strong> ⇒ <code>new B(键 = 值)</code> 的<strong>值</strong>整段
+被静默跳过（<strong>不是</strong>"self 上下文"问题 ✗）⇒ 补一个 case、<strong>只递归 <code>field_values[]</code></strong> ✓。
 6 条边界全绿 + 全量套件 452/0 ✓（<code>语言陷阱速查</code> ㉟ 是它的实操版 ✓）。
 序号 M1…M11（M = 摩擦）。</p>
 </blockquote>
@@ -406,7 +406,7 @@ lParam 转交回 SDL 后崩在 <code>SDL3.dll</code>（10-03~10-11 共 5 次，�
 <hr>
 <h2 id="m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（<code>模块.类型</code>）不能做类型标注 —— 但<strong>只有 5 个位置</strong>会这么报，其余位置喷一串看不懂的语法错误</h2>
 <blockquote>
-<p>★ <strong>2026-10-12（US1）翻案：这条限制本身</strong>撤掉了<strong> ✓</strong> —— 类型位置<strong>支持</strong>写 <code>m.Pt</code>（等价于隐式
+<p>★ <strong>2026-10-12（US1）翻案：这条限制本身</strong>撤掉了** ✓** —— 类型位置<strong>支持</strong>写 <code>m.Pt</code>（等价于隐式
 <code>use m.Pt</code>），见 <code>docs/类型可见性与use逃生阀修复追踪.md</code> 的 US1 ✓。
 于是本节的诊断<strong>不再会出现</strong>（原来的三条判据已改成正向："三处都必须能跑" ✓）；
 下面的原文保留，用来记住<strong>两次</strong>教训：① 限制只在 5 个位置报 ⇒ 其余位置喷一串看不懂的语法错
