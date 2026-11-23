@@ -1183,11 +1183,16 @@ main() {
 <h3 id="15-3-files-读写文件">15.3 <code>files</code>：读写文件</h3>
 <pre><code class="language-leno">// 完整程序（可直接运行）
 import files
+import dirs
 
 main() {
-    files.write(&quot;笔记.txt&quot;, &quot;今天学了 Leno\n第二行&quot;)
-    var text = files.read(&quot;笔记.txt&quot;)
+    // 写到临时目录，不污染当前目录（换成 &quot;笔记.txt&quot; 就是写到程序所在目录）
+    var path = dirs.join(_tmpdir(), &quot;笔记.txt&quot;)
+
+    files.write(path, &quot;今天学了 Leno\n第二行&quot;)
+    var text = files.read(path)
     print(text)
+    print(files.delete(path))     // true
 }
 </code></pre>
 <p>⚠ 读不存在的文件会<strong>抛错</strong>（不是给你空字符串），所以要么确定它在，要么用 <code>try</code> 包起来。</p>

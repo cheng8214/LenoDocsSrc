@@ -1354,11 +1354,16 @@ main() {
 ```leno
 // 完整程序（可直接运行）
 import files
+import dirs
 
 main() {
-    files.write("笔记.txt", "今天学了 Leno\n第二行")
-    var text = files.read("笔记.txt")
+    // 写到临时目录，不污染当前目录（换成 "笔记.txt" 就是写到程序所在目录）
+    var path = dirs.join(_tmpdir(), "笔记.txt")
+
+    files.write(path, "今天学了 Leno\n第二行")
+    var text = files.read(path)
     print(text)
+    print(files.delete(path))     // true
 }
 ```
 
