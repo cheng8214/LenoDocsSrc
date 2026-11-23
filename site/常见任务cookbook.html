@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 常见任务 cookbook · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="常见任务cookbook.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">01 入门 · 先读这些</a><span class="sep">/</span><span class="here">Leno 常见任务 cookbook</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details open><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html" class="active" aria-current="page">常见任务cookbook</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-常见任务-cookbook">Leno 常见任务 cookbook</h1>
+<blockquote>
+<p><strong>"我要做 X，代码怎么写？"</strong> —— 照抄就能跑。</p>
+<p>每条都是<strong>完整程序</strong>（含 <code>main()</code>），实测跑过、输出写在下面。
+与 <a href="Leno零基础入门.html"><code>Leno零基础入门.md</code></a> 的分工：那篇讲"语言怎么用"，这篇讲"具体任务怎么落地"。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>任务</th>
+<th>用到的模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>读写文本文件</td>
+<td><code>files</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>读写 JSON 配置</td>
+<td><code>jsons</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>读命令行参数</td>
+<td>内置 <code>_args()</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>调用外部命令并拿输出</td>
+<td>内置 <code>_exec()</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>读环境变量</td>
+<td>内置 <code>_env()</code> / <code>_env_or()</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>数组：筛选 / 变换 / 排序 / 求和</td>
+<td>内置方法</td>
+</tr>
+<tr>
+<td>7</td>
+<td>统计词频（字典计数）</td>
+<td>内置</td>
+</tr>
+<tr>
+<td>8</td>
+<td>字符串切分与拼接</td>
+<td>内置方法</td>
+</tr>
+<tr>
+<td>9</td>
+<td>时间戳与格式化</td>
+<td><code>times</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>随机数 / 随机取一个 / 打乱</td>
+<td><code>rands</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>安全除法（失败返回 null 而不是崩）</td>
+<td>内置</td>
+</tr>
+<tr>
+<td>12</td>
+<td>多线程并行处理数组</td>
+<td><code>threads</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>读用户输入（交互）</td>
+<td><code>io</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td>结构体 + 方法（数据和行为放一起）</td>
+<td>内置</td>
+</tr>
+<tr>
+<td>15</td>
+<td>枚举 + <code>switch</code>（状态机）</td>
+<td>内置</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="1-读写文本文件">1. 读写文本文件</h2>
+<pre><code class="language-leno">import files
+import dirs
+
+main() {
+    // 落到临时目录，不污染当前目录（想写到项目里就把 dirs.join 那行换成相对路径）
+    var path = dirs.join(_tmpdir(), &quot;leno_note.txt&quot;)
+
+    // 写（覆盖）。中文没问题，文件是 UTF-8
+    files.write(path, &quot;第一行\n第二行\n&quot;)
+
+    // 读
+    var text = files.read(path)
+    print(text)
+
+    // 按行处理
+    for text.lines() to line {
+        if line != &quot;&quot; {
+            print(&quot;行内容：&quot; + line)
+        }
+    }
+
+    // 用完删掉（失败返回 false，不会抛）
+    print(files.delete(path))          // true
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>第一行
+第二行
+
+行内容：第一行
+行内容：第二行
+true
+</code></pre>
+<blockquote>
+<p>⚠ 读不存在的文件会<strong>抛错</strong>（不返回空串），要容错就用 <code>try</code> 或先 <code>files.exists(path)</code>。
+写文件不需要手动关——<code>files.write/read</code> 内部就关好了；只有 <code>files.open()</code> 那种句柄才要 <code>defer f.close()</code>。</p>
+</blockquote>
+<hr>
+<h2 id="2-读写-json-配置">2. 读写 JSON 配置</h2>
+<pre><code class="language-leno">import jsons
+
+main() {
+    // 造一个对象（字典）再编码
+    var cfg = {&quot;name&quot;: &quot;小工具&quot;, &quot;version&quot;: 2, &quot;debug&quot;: false}
+    var text = jsons.encode(cfg)
+    print(text)
+
+    // 解码回来
+    var back = jsons.decode(text)
+    print(jsons.get_str(back, &quot;name&quot;, &quot;?&quot;))
+    print(jsons.get_int(back, &quot;version&quot;, 0))
+    print(jsons.get_bool(back, &quot;debug&quot;, true))
+
+    // 直接解一段带嵌套的
+    var raw = jsons.decode(&quot;{\&quot;db\&quot;: {\&quot;host\&quot;: \&quot;localhost\&quot;, \&quot;port\&quot;: 5432}}&quot;)
+    var db = jsons.get_obj(raw, &quot;db&quot;)
+    print(jsons.get_str(db, &quot;host&quot;, &quot;?&quot;))
+    print(jsons.get_int(db, &quot;port&quot;, 0))
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>{&quot;name&quot;:&quot;小工具&quot;,&quot;version&quot;:2,&quot;debug&quot;:false}
+小工具
+2
+false
+localhost
+5432
+</code></pre>
+<blockquote>
+<p><code>jsons.decode</code> 的静态类型是 <code>any</code> ⇒ 取值请用 <code>get_str/get_int/get_bool</code>（带默认值，不会因为缺键崩）。</p>
+</blockquote>
+<hr>
+<h2 id="3-读命令行参数">3. 读命令行参数</h2>
+<pre><code class="language-leno">main() {
+    var args = _args()
+    print(&quot;共 &quot; + args.len() + &quot; 个参数&quot;)
+    for args to a {
+        print(&quot; - &quot; + a)
+    }
+}
+</code></pre>
+<p>运行 <code>leno args.leno hello --list</code>（<strong>文件名之后的参数才进 <code>_args()</code></strong>）：</p>
+<pre><code>共 2 个参数
+ - hello
+ - --list
+</code></pre>
+<hr>
+<h2 id="4-调用外部命令并拿输出">4. 调用外部命令并拿输出</h2>
+<pre><code class="language-leno">main() {
+    var r = _exec(&quot;cmd /c echo hello_from_shell&quot;, 10000)
+    if r == null {
+        print(&quot;起不来子进程&quot;)
+        return
+    }
+    print(&quot;退出码：&quot; + r.code)
+    print(&quot;输出：&quot; + r.output.trim())
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>退出码：0
+输出：hello_from_shell
+</code></pre>
+<blockquote>
+<p>第二个参数是<strong>超时毫秒</strong>。超时的退出码是 124（不会和普通失败混在一起）——
+判断时请显式区分，否则"超时"会被当成"命令失败"。</p>
+</blockquote>
+<hr>
+<h2 id="5-读环境变量">5. 读环境变量</h2>
+<pre><code class="language-leno">main() {
+    // 缺失返回 null
+    var home = _env(&quot;USERPROFILE&quot;)
+    if home != null {
+        print(&quot;主目录：&quot; + home)
+    }
+
+    // 缺失给默认值（更常用）
+    print(&quot;端口：&quot; + _env_or(&quot;APP_PORT&quot;, &quot;8080&quot;))
+    print(&quot;模式：&quot; + _env_or(&quot;APP_MODE&quot;, &quot;dev&quot;))
+}
+</code></pre>
+<p>输出（APP_PORT / APP_MODE 未设置时）：</p>
+<pre><code>主目录：C:\Users\Administrator
+端口：8080
+模式：dev
+</code></pre>
+<hr>
+<h2 id="6-数组-筛选-变换-排序-求和">6. 数组：筛选 / 变换 / 排序 / 求和</h2>
+<pre><code class="language-leno">main() {
+    var nums = [5, 3, 8, 1, 9, 2]
+
+    // 只留偶数
+    var evens = nums.filter(func(int x): bool { return x % 2 == 0 })
+    print(evens)                                  // [8, 2]
+
+    // 每个乘 10
+    var tens = nums.map(func(int x): int { return x * 10 })
+    print(tens)                                   // [50, 30, 80, 10, 90, 20]
+
+    // 升序排（原地）
+    nums.sort()
+    print(nums)                                   // [1, 2, 3, 5, 8, 9]
+
+    // 求和（结果是 float）
+    print(nums.sum())                             // 28.0
+    print(_int(nums.sum()))                       // 28
+
+    // 取前三个 / 最后一个
+    print(nums[0:2])                              // [1, 2, 3]
+    print(nums[nums.len() - 1])                   // 9
+}
+</code></pre>
+<blockquote>
+<p>区间是<strong>闭区间</strong>：<code>nums[0:2]</code> 含 0、1、2 三个元素。</p>
+</blockquote>
+<hr>
+<h2 id="7-统计词频-字典计数">7. 统计词频（字典计数）</h2>
+<pre><code class="language-leno">main() {
+    var words = &quot;苹果 香蕉 苹果 橘子 香蕉 苹果&quot;.split(&quot; &quot;)
+    var counts = {}
+
+    for words to w {
+        if counts.has(w) {
+            counts[w] = counts[w] + 1
+        } else {
+            counts[w] = 1
+        }
+    }
+
+    for counts to k {
+        print(k + &quot;：&quot; + counts[k] + &quot; 次&quot;)
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>苹果：3 次
+香蕉：2 次
+橘子：1 次
+</code></pre>
+<blockquote>
+<p>想按次数排序？字典本身不排序，把 <code>{键, 次数}</code> 收进数组再 <code>sort</code>（比较器写法见
+<a href="module_arrays.html"><code>module_arrays.md</code></a> 的 <code>sort(cmp)</code>）。</p>
+</blockquote>
+<hr>
+<h2 id="8-字符串切分与拼接">8. 字符串切分与拼接</h2>
+<pre><code class="language-leno">main() {
+    var csv = &quot; 张三 , 90 , 北京 &quot;
+    var parts = csv.split(&quot;,&quot;)
+
+    for 0:parts.len() - 1 to i {
+        parts[i] = parts[i].trim()
+    }
+
+    print(parts)                                  // [&quot;张三&quot;, &quot;90&quot;, &quot;北京&quot;]
+    print(parts.join(&quot; | &quot;))                      // 张三 | 90 | 北京
+    print(parts[1].pad_start(4, &quot;0&quot;))             // 0090
+    print(&quot;ab&quot;.rep(3))                            // ababab
+    print(csv.replace(&quot;北京&quot;, &quot;上海&quot;).trim())      // 张三 , 90 , 上海
+}
+</code></pre>
+<hr>
+<h2 id="9-时间戳与格式化">9. 时间戳与格式化</h2>
+<pre><code class="language-leno">import times
+
+main() {
+    var now = times.now()                         // 当前时间戳（整数秒）
+    print(times.format(now, &quot;%Y-%m-%d %H:%M:%S&quot;))
+    print(times.format(now, &quot;%Y/%m/%d&quot;))
+}
+</code></pre>
+<p>输出（取决于运行时刻）：</p>
+<pre><code>2026-11-23 15:04:05
+2026/11/23
+</code></pre>
+<blockquote>
+<p>⚠ Windows 上 <code>times.format</code> <strong>不接受 1970 年之前的负时间戳</strong>（会报错并说明原因），
+处理历史日期时要自己判一下。</p>
+</blockquote>
+<hr>
+<h2 id="10-随机数-随机取一个-打乱">10. 随机数 / 随机取一个 / 打乱</h2>
+<pre><code class="language-leno">import rands
+
+main() {
+    rands.seed(42)                                // 固定种子 ⇒ 结果可复现（调试用）
+
+    var dice = rands.ints(1, 6)                   // 1..6 的随机整数
+    print(dice)
+
+    var pick = rands.choice([&quot;石头&quot;, &quot;剪刀&quot;, &quot;布&quot;])
+    print(pick)
+
+    // ⚠ shuffle **返回新数组**，不会原地打乱
+    var deck = [1, 2, 3, 4, 5]
+    var shuffled = rands.shuffle(deck)
+    print(shuffled)
+    print(deck)                                   // 原数组不变
+}
+</code></pre>
+<p>输出（实测）：</p>
+<pre><code>1
+剪刀
+[1, 5, 4, 3, 2]
+[1, 2, 3, 4, 5]
+</code></pre>
+<blockquote>
+<p>说明：前两个数在 <code>seed(42)</code> 下是<strong>稳定</strong>的；<code>shuffle</code> 的结果取决于"前面已经消耗了多少随机数"
+（上面先取了 1 个数、再 <code>choice</code> 一次），所以在别处照抄这一段时排列可能不同——这是正常的，
+不是不确定行为。</p>
+</blockquote>
+<hr>
+<h2 id="11-安全除法-失败返回-null-而不是崩">11. 安全除法（失败返回 null 而不是崩）</h2>
+<pre><code class="language-leno">main() {
+    print(safe_div(10.0, 4.0))     // 2.5
+    print(safe_div(10.0, 0.0))     // null
+
+    var r = safe_div(9.0, 0.0)
+    if r == null {
+        print(&quot;除数为 0，我不算&quot;)
+    } else {
+        print(r)
+    }
+}
+
+func safe_div(float a, float b): float? {
+    if b == 0.0 {
+        return null                             // 显式&quot;没有结果&quot;
+    }
+    return a / b
+}
+</code></pre>
+<blockquote>
+<p>返回类型写 <code>float?</code>（可空），调用方必须 <code>if r == null</code> 判一下才能用——
+不判而直接参与算术，编译器会警告。</p>
+</blockquote>
+<hr>
+<h2 id="12-多线程并行处理数组">12. 多线程并行处理数组</h2>
+<pre><code class="language-leno">import threads
+
+main() {
+    var data = [1, 2, 3, 4, 5, 6, 7, 8]
+
+    // threads.map：每个元素一个线程跑，结果按原顺序回来
+    // ⚠ 回调**必须写两个形参** (元素, 下标) —— 与 `arrays.map` 同口径；
+    //   只写一个形参会在编译期报「实际传了 2 个（多 1 个）」
+    var doubled = threads.map(data, func(int x, int idx): int {
+        return x * 2
+    })
+    print(doubled)                              // [2, 4, 6, 8, 10, 12, 14, 16]
+}
+</code></pre>
+<blockquote>
+<p>线程里<strong>改外部局部变量不会回传</strong>（各线程各一份）——要结果就用返回值（像上面这样）。
+跨线程共享可变状态请用 <code>threads.channel()</code>，详见 <a href="并发选择指引.html"><code>并发选择指引.md</code></a>。</p>
+</blockquote>
+<hr>
+<h2 id="13-读用户输入-交互">13. 读用户输入（交互）</h2>
+<pre><code class="language-leno">import io
+
+main() {
+    var name = io.input(&quot;你叫什么名字？ &quot;)
+    var age = io.input(&quot;你多大了？ &quot;)
+    print(&quot;你好，&quot; + name + &quot;！明年你 &quot; + (_int_or(age, 0) + 1) + &quot; 岁。&quot;)
+}
+</code></pre>
+<p>运行示例（输入 <code>小明</code> 和 <code>12</code>）：</p>
+<pre><code>你叫什么名字？ 小明
+你多大了？ 12
+你好，小明！明年你 13 岁。
+</code></pre>
+<blockquote>
+<p>用 <code>_int_or(age, 0)</code> 而不是 <code>_int(age)</code>：用户随手打字打错了也不会让程序崩。</p>
+</blockquote>
+<hr>
+<h2 id="14-结构体-方法-数据和行为放一起">14. 结构体 + 方法（数据和行为放一起）</h2>
+<pre><code class="language-leno">struct Counter {
+    int value = 0
+
+    func add(int n) {
+        self.value = self.value + n
+    }
+
+    func reset() {
+        self.value = 0
+    }
+
+    func show(): string {
+        return &quot;当前值：&quot; + self.value
+    }
+}
+
+main() {
+    var c = new Counter()
+    c.add(3)
+    c.add(4)
+    print(c.show())        // 当前值：7
+    c.reset()
+    print(c.show())        // 当前值：0
+}
+</code></pre>
+<blockquote>
+<p>⚠ 结构体字段<strong>必须写具体类型</strong>（<code>int value = 0</code>），不能写 <code>var</code>。</p>
+</blockquote>
+<hr>
+<h2 id="15-枚举-switch-状态机">15. 枚举 + switch（状态机）</h2>
+<pre><code class="language-leno">enum State {
+    idle = 0
+    running = 1
+    failed = 2
+}
+
+func describe(int st): string {
+    switch st {
+        case State.idle { return &quot;空闲&quot; }
+        case State.running { return &quot;运行中&quot; }
+        case State.failed { return &quot;失败&quot; }
+    }
+    return &quot;未知&quot;
+}
+
+main() {
+    var s = State.running
+    print(describe(s))                       // 运行中
+
+    var bad = 9
+    print(describe(bad))                     // 未知（switch 全都落空 ⇒ 走到 return &quot;未知&quot;）
+
+    // 带载荷的枚举（成员可带数据 + switch 能查穷尽性）
+    print(msg_text(build_msg()))
+}
+
+enum Msg {
+    progress(int done, int total)
+    finished(string path)
+}
+
+func build_msg(): Msg {
+    return Msg.progress(3, 10)
+}
+
+func msg_text(Msg m): string {
+    switch m {
+        case Msg.progress(d, t) { return &quot;进度 &quot; + d + &quot;/&quot; + t }
+        case Msg.finished(p)    { return &quot;完成：&quot; + p }
+    }
+    return &quot;?&quot;
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>运行中
+未知
+进度 3/10
+</code></pre>
+<hr>
+<h2 id="还想做点什么">还想做点什么？</h2>
+<table>
+<thead>
+<tr>
+<th>想做</th>
+<th>看这篇</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语法还没摸清</td>
+<td><a href="Leno零基础入门.html"><code>Leno零基础入门.md</code></a></td>
+</tr>
+<tr>
+<td>部署/打包/装环境</td>
+<td><a href="安装与第一个项目.html"><code>安装与第一个项目.md</code></a></td>
+</tr>
+<tr>
+<td>某个模块的全部函数</td>
+<td><code>module_*.md</code>（arrays / strings / files / jsons …）</td>
+</tr>
+<tr>
+<td>报错看不懂</td>
+<td><a href="语言陷阱速查.html"><code>语言陷阱速查.md</code></a></td>
+</tr>
+<tr>
+<td>写并发 / 协程</td>
+<td><a href="并发选择指引.html"><code>并发选择指引.md</code></a>、<a href="async_await入门指南.html"><code>async_await入门指南.md</code></a></td>
+</tr>
+<tr>
+<td>调 C 库 / 操作原生内存</td>
+<td><a href="FFI使用指南.html"><code>FFI使用指南.md</code></a>、<a href="module_cstructs.html"><code>module_cstructs.md</code></a></td>
+</tr>
+<tr>
+<td>做图形界面</td>
+<td><a href="LenoSDL3_控件实战教程.html"><code>LenoSDL3_控件实战教程.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<blockquote>
+<p><strong>这篇的每段代码都被机器验过</strong>：<code>verify_doc_code.ps1</code> 会把文档里每个含 <code>main()</code> 的代码块
+抽出来、用真编译器跑一遍，有任何一块不通过就报错。改了本文档请顺手跑：
+</p>
+</blockquote>
+<pre><code class="language-bat">powershell -NoProfile -ExecutionPolicy Bypass -File verify_doc_code.ps1
+</code></pre>
+<blockquote>
+<p>实测当前：<code>ran=86 fail=0</code>（三篇新手文档合计）。</p>
+</blockquote></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-读写文本文件">1. 读写文本文件</a></li><li><a href="#2-读写-json-配置">2. 读写 JSON 配置</a></li><li><a href="#3-读命令行参数">3. 读命令行参数</a></li><li><a href="#4-调用外部命令并拿输出">4. 调用外部命令并拿输出</a></li><li><a href="#5-读环境变量">5. 读环境变量</a></li><li><a href="#6-数组-筛选-变换-排序-求和">6. 数组：筛选 / 变换 / 排序 / 求和</a></li><li><a href="#7-统计词频-字典计数">7. 统计词频（字典计数）</a></li><li><a href="#8-字符串切分与拼接">8. 字符串切分与拼接</a></li><li><a href="#9-时间戳与格式化">9. 时间戳与格式化</a></li><li><a href="#10-随机数-随机取一个-打乱">10. 随机数 / 随机取一个 / 打乱</a></li><li><a href="#11-安全除法-失败返回-null-而不是崩">11. 安全除法（失败返回 null 而不是崩）</a></li><li><a href="#12-多线程并行处理数组">12. 多线程并行处理数组</a></li><li><a href="#13-读用户输入-交互">13. 读用户输入（交互）</a></li><li><a href="#14-结构体-方法-数据和行为放一起">14. 结构体 + 方法（数据和行为放一起）</a></li><li><a href="#15-枚举-switch-状态机">15. 枚举 + switch（状态机）</a></li><li><a href="#还想做点什么">还想做点什么？</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="安装与第一个项目.html">← 上一篇</a><a href="Leno入门教程.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

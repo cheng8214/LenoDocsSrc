@@ -20,6 +20,34 @@ import json
 import shutil
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# 锚点 slug：**保留中文**
+# ---------------------------------------------------------------------------
+# python-markdown 的默认 slugify 会把非 ASCII 全部丢掉 ⇒ 中文标题的 id 退化成
+# `_1` / `5-if` 这类数字，而文档里手写的 `[基础语法](#基础语法)` 就**全部断链**
+# （实测：Leno入门教程 的 18 条目录链接一条都对不上）。
+# 这里改成"字母/数字/汉字都算有效字符，其余压成 -"，与文档里手写的锚点一致。
+def _slug(value: str, separator: str) -> str:
+    out = []
+    for ch in value.strip().lower():
+        if ch.isalnum() or ch in "_-":
+            out.append(ch)
+        else:
+            out.append(separator)
+    s = "".join(out)
+    while separator * 2 in s:
+        s = s.replace(separator * 2, separator)
+    return s.strip(separator) or "_"
+
+
+def _make_md() -> "markdown.Markdown":
+    #   ⚠ `extension_configs` 的键必须与 `extensions` 里写的**字符串完全一致**：
+    #     原来写 "markdown.extensions.toc" 却用键 "toc" ⇒ 配置被静默忽略（实测 id 仍是默认值）。
+    return markdown.Markdown(
+        extensions=["tables", "fenced_code", "toc", "sane_lists"],
+        extension_configs={"toc": {"slugify": _slug, "separator": "-"}},
+        output_format="html5")
+
 SRC = Path(__file__).resolve().parent
 VENDOR = SRC / "_build_vendor"
 if VENDOR.is_dir():
@@ -102,7 +130,8 @@ HOME_TPL = """<!doctype html>
 <main class="home">
   <div class="hero">
     <h1>快速找到你要的那一条</h1>
-    <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面两条主路径进去。全站 {n} 篇。</p>
+    <p>输入关键词直接搜全文（按 <kbd>/</kbd> 聚焦），或从下面几条入口进去 ——
+       <b>第一次来</b>：按 ① → ② → ③ 走。全站 {n} 篇。</p>
   </div>
   <section class="intro">
     <div class="intro-text">
@@ -741,6 +770,8 @@ def toc_html(toc):
 # 每项：(分类名, 折叠?, 一句话说明, [文件名规则])；规则按优先级匹配，先命中先归类。
 CATEGORIES = [
     ("01 入门 · 先读这些", False, "第一次接触 Leno：从教程到惯用写法，按顺序读", [
+        # ★ 2026-11-23：新手三连排最前 —— 零基础 → 装环境/第一个项目 → 抄任务代码
+        "Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md",
         "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md",
         "Leno_规范草稿.md", "区间口径约定.md",
     ]),
@@ -833,7 +864,11 @@ def display_name(stem):
 
 # 首页两条主路径：给"介绍 Leno"和"查 API"各一个直达入口
 PATHS = [
-    ("学 Leno", "从零到写出第一个程序", "Leno入门教程.html", "入门教程"),
+    # ★ 2026-11-23：主入口指向**零基础**那份（从没写过代码也能读）；前三条按 ①→②③ 标了次序
+    ("零基础学 Leno", "从没写过代码？从这里开始", "Leno零基础入门.html", "① 小白入门"),
+    ("装好并跑起来", "拿 exe → 第一个项目 → 打包成 exe", "安装与第一个项目.html", "② 安装上手"),
+    ("抄一段就用", "读写文件 / JSON / 参数 / 线程 15 个现成任务", "常见任务cookbook.html", "③ 任务配方"),
+    ("学 Leno（全貌）", "语法 + 类型系统 + 模块", "Leno入门教程.html", "入门教程"),
     ("看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"),
     ("查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"),
     ("查模块 API", "19 个标准模块的函数清单", "module_strings.html", "模块索引"),
@@ -843,19 +878,30 @@ PATHS = [
 
 def classify(rel):
     """按路径+文件名把 md 归到某个分类；返回分类名。规则按 CATEGORIES 顺序匹配。"""
+    return classify_rank(rel)[0]
+
+
+def classify_rank(rel):
+    """分类 + **规则序号**（同一次匹配算出）。
+
+    为什么要序号：首页卡片原先按文件名的字母序排（`Leno入门教程` 排在 `Leno零基础入门` 前面），
+    而 CATEGORIES 里写的才是**推荐阅读顺序**（零基础 → 全貌 → FAQ → 惯用写法）。
+    ⇒ 按规则序号排，作者在 CATEGORIES 里写的顺序就是读者看到的顺序。
+    `len(rules)` 表示"命中兜底 REST"，排在最后。
+    """
     name = rel.split("/")[-1]
     path = rel.replace("\\", "/")
     for cat, _fold, _desc, rules in CATEGORIES[:-1]:
-        for r in rules:
+        for i, r in enumerate(rules):
             if r.startswith("PREFIX:"):
                 if path.startswith(r[7:]) or name.startswith(r[7:]):
-                    return cat
+                    return cat, i
             elif r.startswith("SUFFIX:"):
                 if name.endswith(r[7:]):
-                    return cat
+                    return cat, i
             elif name == r:
-                return cat
-    return CATEGORIES[-1][0]
+                return cat, i
+    return CATEGORIES[-1][0], 999
 
 
 def parse_index():
@@ -939,11 +985,15 @@ def main():
     for rel in files:
         info = meta.get(rel, {})
         title = re.sub(r"[`*]", "", info.get("desc", "")[:60]) or Path(rel).stem
-        by_name[classify(rel)]["items"].append({
+        cat_name, rank = classify_rank(rel)
+        by_name[cat_name]["items"].append({
             "name": display_name(Path(rel).stem), "file": rel,
             "desc": info.get("desc", "") or DESC_FALLBACK.get(Path(rel).stem, ""),
-            "status": info.get("status", ""),
+            "status": info.get("status", ""), "_rank": rank,
         })
+    # 组内按 CATEGORIES 里的**规则序号**排（作者写的顺序 = 读者看到的顺序），同序号再按名字
+    for c in cats:
+        c["items"].sort(key=lambda it: (it["_rank"], it["name"]))
 
     ordered, cat_of = [], {}
     for c in cats:
@@ -961,9 +1011,7 @@ def main():
         path = SRC / rel
         text = lift_blockquote_fences(path.read_text(encoding="utf-8"))
         is_ext = rel.replace("\\", "/").startswith("扩展模块/")
-        md = markdown.Markdown(
-            extensions=["markdown.extensions.tables", "markdown.extensions.fenced_code",
-                     "markdown.extensions.toc", "markdown.extensions.sane_lists"], output_format="html5")
+        md = _make_md()
         body = fix_links(md.convert(text), subdir=is_ext)
         toc = flatten_tokens(getattr(md, "toc_tokens", []), [])
 
@@ -1007,8 +1055,7 @@ def main():
             "s": split_sections(text, toc),
         })
 
-    md = markdown.Markdown(extensions=["markdown.extensions.tables", "markdown.extensions.fenced_code",
-                     "markdown.extensions.toc", "markdown.extensions.sane_lists"], output_format="html5")
+    md = _make_md()
     # ⚠ 必须叫 INDEX_raw.html，不能叫 INDEX.html：Windows 文件名**不区分大小写**，
     #   `index.html`（门户）与 `INDEX.html`（原始索引）会互相覆盖 —— 实测只活下来一个，
     #   而且"查看原始索引全文"链接指回自己（死循环）。改成不同的基名才两地都对 ✓
@@ -1029,7 +1076,7 @@ def main():
         '</span><strong>' + title + '</strong><span class="pc-desc">' + d + '</span></a>'
         for title, d, href, tag in PATHS
     )
-    paths_html = ('<section class="paths"><h2>两条主路径</h2><div class="path-grid">' +
+    paths_html = ('<section class="paths"><h2>从这里开始</h2><div class="path-grid">' +
                   path_cards + '</div></section>')
 
     sections = []
