@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno Import 使用指南 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="import使用指南.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">03 使用指南</a><span class="sep">/</span><span class="here">Leno Import 使用指南</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details open><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html" class="active" aria-current="page">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-import-使用指南">Leno Import 使用指南</h1>
+<h2 id="快速入门">快速入门</h2>
+<h3 id="基本语法">基本语法</h3>
+<pre><code class="language-leno">// 导入模块并使用默认名称（文件名）
+import &quot;math.leno&quot;
+math.add(1, 2)  // 使用模块名访问
+
+// 导入并指定别名
+import &quot;string_utils.leno&quot; as str
+str.trim(&quot;  hello  &quot;)  // 使用别名访问
+
+// 从子目录导入
+import &quot;utils/array_helper.leno&quot; as arr
+
+// 使用 use 导入类型（支持 struct、clib、face、enum、alias）
+import &quot;point.leno&quot; as pt
+use pt.Point      // 将 Point 类型导入当前作用域
+Point p = new pt.Point()  // 现在可以直接使用 Point 类型
+
+// 批量 use 导入：从同一模块导入多个类型
+import &quot;shape.leno&quot; as shape
+use shape.(Point, Circle, Rect)   // 等价于三行单独的 use 语句
+</code></pre>
+<hr>
+<h2 id="0-三条硬约束-先看这个">0. 三条硬约束（先看这个）</h2>
+<p>这三条不是风格偏好，是会<strong>当场编译失败</strong>或<strong>静默出错</strong>的硬规则 ⚠</p>
+<h3 id="0-1-import-必须写在任何使用它的语句之前-含-const-定义">0.1 <code>import</code> 必须写在任何使用它的语句之前（含 <code>const</code> 定义）</h3>
+<p>模块级初始化按<strong>文本顺序</strong>进行：模块别名在 <code>import</code> 那一行才被绑定。
+把 <code>import</code> 放到文件头的常量定义<strong>之后</strong>，就会报两个误导性错误：</p>
+<pre><code class="language-leno">import &quot;./songrow.leno&quot; as srow
+
+export const int F_ID = srow.F_ID     // ✅ 成立
+</code></pre>
+<pre><code class="language-leno">export const int F_ID = srow.F_ID     // ❌ 「未定义的变量: srow」
+                                     // ❌ 「初始化值类型是 any（期望 int）」
+import &quot;./songrow.leno&quot; as srow      // ← 放在这里就已经晚了
+</code></pre>
+<p>⇒ 约定：<strong><code>import</code> / <code>use</code> 提到文件最前</strong>（常量、注释块都可以排在它们后面）。
+这也是为什么很多模块头部是"文件头注释 → import → 常量 → 函数"的顺序。</p>
+<h3 id="0-2-use-必须列全本文件源码里真正用到的类型">0.2 <code>use</code> 必须列全<strong>本文件源码里真正用到</strong>的类型</h3>
+<p><code>use mod.(A, B)</code> 是把类型引进当前作用域 ⇒ 少列一个，编译期报
+「类型未解析」，而<strong>报错位置在 <code>use</code> 那一行，与真正缺的那个类型毫无关系</strong>。</p>
+<p>最容易漏的是<strong>"传导型"类型</strong>：从另一个模块传进来的类型也算在本文件头上。</p>
+<pre><code class="language-leno">import &quot;SDL3&quot; as SDL3
+use SDL3.(Event, Renderer, Button, Scancode, Window)     // 用了 Window 就必须列 Window
+Window win = SDL3.createWindow(...)                       // 漏了 Window ⇒「类型未解析」✗
+</code></pre>
+<p>⚠ 这类漏列<strong>静态检查 / lint 抓不到</strong>（源码里类型名只出现在 <code>use</code> 里），
+必须<strong>真编译或真运行</strong>才会暴露 ⇒ 写完模块先跑一次 <code>-c</code> 编译验证。</p>
+<blockquote>
+<p>★ <strong>2026-10-12（US1）</strong>：<strong>漏列不再是死路</strong> —— 类型位置可以<strong>直接写限定名</strong>（<code>m.Pt</code>），
+它等价于隐式 <code>use m.Pt</code>（见 §8.2 的规则表与 <a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪.md</a>）。
+所以本节的"必须列全"更准确的表述是：<strong>一旦你写了 <code>use</code>，就得列全</strong> ✓；
+而"不写 <code>use</code>、直接用 <code>m.Pt</code>"现在是<strong>另一条合法出路</strong> ✓（这条正是本节这类坑的逃生阀）。</p>
+</blockquote>
+<h3 id="0-3-模块级只要不加-export-就是文件私有-pri-只用于结构体成员">0.3 模块级只要<strong>不加</strong> <code>export</code> 就是文件私有；<code>pri</code> 只用于结构体成员</h3>
+<ul>
+<li>模块级函数<strong>不能</strong>写 <code>pri func</code> ⇒ 报「语法错误：期望表达式」，错误信息指不到真正病因 ✗</li>
+<li>文件私有 = 不写 <code>export</code>（不是写 <code>pri</code>）：<code>func helper()</code> 只在本文件可见 ✓</li>
+<li>跨文件使用 ⇒ 必须 <code>export</code> + 在使用方 <code>import</code> / <code>use</code></li>
+</ul>
+<pre><code class="language-leno">func helper(): int { return 1 }        // ✅ 文件私有
+export func helper(): int { return 1 } // ✅ 对外可见
+pri func helper(): int { return 1 }    // ❌ 语法错误（pri 只对 struct 成员有意义）
+</code></pre>
+<hr>
+<h2 id="1-导入方式详解">1. 导入方式详解</h2>
+<h3 id="1-1-基本导入">1.1 基本导入</h3>
+<pre><code class="language-leno">// 同一目录下的模块
+import &quot;module.leno&quot;
+
+// 子目录中的模块
+import &quot;subfolder/module.leno&quot;
+
+// 上级目录的模块
+import &quot;../parent_module.leno&quot;
+</code></pre>
+<h3 id="1-2-使用别名">1.2 使用别名</h3>
+<p>当模块名冲突或太长时，使用 <code>as</code> 指定别名：</p>
+<pre><code class="language-leno">import &quot;folder1/utils.leno&quot; as utils1
+import &quot;folder2/utils.leno&quot; as utils2
+
+main() {
+    print(utils1.get_info())  // 使用别名区分
+    print(utils2.get_info())
+}
+</code></pre>
+<h3 id="1-3-特殊字符路径">1.3 特殊字符路径</h3>
+<p>Leno 支持中文路径、空格路径等特殊字符：</p>
+<pre><code class="language-leno">// 中文路径
+import &quot;中文文件夹/中文模块.leno&quot; as cn
+
+// 空格路径（需要引号）
+import &quot;folder with spaces/space module.leno&quot; as sp
+
+// 横线路径
+import &quot;folder-with-dashes/dash-module.leno&quot; as dash
+</code></pre>
+<h3 id="1-4-内置模块名是保留名-2026-11-18-起">1.4 内置模块名是<strong>保留名</strong>（2026-11-18 起）</h3>
+<p><code>io / times / arrays / strings / maths / rands / files / asyncs / dirs / jsons /
+sockets / ffi / threads / regexs</code> 这 14 个名字属于内置模块。裸名导入<strong>永远指向内置模块</strong>，
+不会被当前目录（或搜索路径里）的同名 <code>.leno</code> 抢走：</p>
+<pre><code class="language-leno">// 假设当前目录里恰好有一个 ffi.leno（比如你放了个测试文件）
+import ffi          // ⇒ 内置模块 ffi（编译器会警告：那个 ffi.leno 被忽略）
+import &quot;ffi.leno&quot;   // ⇒ 那个本地文件（带 .leno ⇒ 按文件路径解析）
+</code></pre>
+<p>为什么要立这条规矩：此前裸名 <code>import ffi</code> 会先在本目录命中 <code>ffi.leno</code>，
+于是 <code>ffi</code> 变成那个脚本、<code>ffi.load(...)</code> 在运行期报<strong>「函数未定义」</strong>——
+指向 <code>ffi.load</code> 那一行，与真实原因（模块被同名文件替换）毫无关系，
+桌面和手机上表现一致、只取决于目录里有没有那个文件，极难定位。
+现在内置优先，且被忽略的文件会明确报出来（警告类别 <code>内置模块被同名文件遮蔽</code>）。</p>
+<blockquote>
+<p>与 <code>import … as 别名</code> 的既有规则同口径：别名也不能用内置模块名。</p>
+</blockquote>
+<hr>
+<h2 id="2-模块导出规则">2. 模块导出规则</h2>
+<h3 id="2-1-显式导出">2.1 显式导出</h3>
+<p>Leno 模块使用 <code>export</code> 关键字<strong>显式导出</strong>需要暴露的顶层定义：</p>
+<pre><code class="language-leno">// math.leno
+export func add(int a, int b):int {
+    return a + b
+}
+
+export var PI = 3.14159
+
+export struct Point {
+    int x = 0
+    int y = 0
+}
+</code></pre>
+<p>导入后可以直接使用：</p>
+<pre><code class="language-leno">import &quot;math.leno&quot; as math
+
+var p = new math.Point()      // 使用导出的 struct
+var sum = math.add(1, 2)      // 使用导出的函数
+var pi = math.PI              // 使用导出的变量
+</code></pre>
+<h3 id="2-2-私有成员">2.2 私有成员</h3>
+<p><strong>没有 <code>export</code> 关键字的标识符不会导出</strong>：</p>
+<pre><code class="language-leno">// module.leno
+export var public_var = 42    // ✅ 导出
+var _private_var = 100        // ❌ 不导出（无 export）
+
+export func public_func() { } // ✅ 导出
+func _helper() { }            // ❌ 不导出（无 export）
+</code></pre>
+<h3 id="2-3-导出控制建议">2.3 导出控制建议</h3>
+<pre><code class="language-leno">// ✅ 好的做法：显式控制导出
+export var public_api = &quot;可用&quot;
+var _internal_state = 0       // 内部状态不暴露
+
+export func public_function() {  // 对外接口
+    _helper()
+}
+
+func _helper() {              // 内部辅助函数
+    // ...
+}
+</code></pre>
+<h3 id="2-4-导出变量-读写都是同一份存储-实时">2.4 导出变量：读写都是<strong>同一份存储</strong>（实时）</h3>
+<pre><code class="language-leno">// counter.leno
+export var count = 0
+export const LIMIT = 99
+
+export func bump(): int { count = count + 1; return count }
+</code></pre>
+<pre><code class="language-leno">import &quot;counter.leno&quot; as c
+
+main() {
+    c.bump()
+    c.bump()
+    print(c.count)      // ✅ 2   —— 模块内一改，这里立刻能看到
+
+    c.count = 100       // ✅ 真的写进去了（写穿到模块自己的存储）
+    print(c.count)      // ✅ 100
+    c.count += 5        // ✅ 复合赋值同样生效
+    print(c.bump())     // ✅ 106 —— 模块内部接着从 105 往上加
+
+    c.LIMIT = 1         // ❌ 编译错误：const 变量不可修改
+    c.bump = 1          // ❌ 编译错误：函数不是变量，不能赋值
+}
+</code></pre>
+<ul>
+<li><strong>读</strong>（2026-10-24 起）：<code>m.变量</code> 是<strong>实时值</strong> —— <code>OP_SET_MODULE_VAR</code> 写完模块全局槽后
+  按「槽位 → 导出名」反查表顺手刷新 exports（实现见 <code>10_vars_module.inc</code>）。</li>
+<li><strong>写</strong>（2026-10-25 起）：<code>m.变量 = 值</code> / <code>m.变量 += 值</code> 编译成
+  <code>OP_INDEX_SET(值, 模块对象, "变量名")</code>，VM 按 <code>module-&gt;export_mappings</code> 写穿到
+  <code>module-&gt;globals[槽位]</code> 并同步 exports ⇒ <strong>模块内外是同一份存储</strong>（此前 <code>m.x = v</code> 是
+  "零报错零效果"：赋值指令压根没生成）。</li>
+<li>⚠ <code>m.变量++</code> <strong>不支持</strong>（<code>++</code> 只用于变量或索引）；写 <code>m.变量 += 1</code>。</li>
+<li>⚠ 只能写 <code>export var</code>：<code>const</code> 变量、函数、类型、未导出成员都写不了（编译期拦）。</li>
+<li>⚠ 会按提供端声明的类型做检查（<code>m.count = "hi"</code> ⇒ 编译错误）。</li>
+<li>跨模块改<strong>容器元素</strong>一直是引用语义（<code>c.items.add(1)</code>、<code>c.items[0] = 99</code> 改的是同一个
+  对象 ✓）；<code>c.items = [...]</code> 换整个容器走上面那条写穿路径。</li>
+</ul>
+<hr>
+<h2 id="3-模块使用模式">3. 模块使用模式</h2>
+<h3 id="3-1-命名空间模式">3.1 命名空间模式</h3>
+<p>使用别名创建命名空间，避免命名冲突：</p>
+<pre><code class="language-leno">import &quot;core/math.leno&quot; as math
+import &quot;core/string.leno&quot; as str
+import &quot;core/array.leno&quot; as arr
+
+main() {
+    var nums = [1, 2, 3]
+    var sum = math.add(nums[0], nums[1])
+    var msg = str.format(&quot;Sum: {0}&quot;, sum)
+    arr.add(nums, 4)
+}
+</code></pre>
+<h3 id="3-2-选择性导入">3.2 选择性导入</h3>
+<p>Leno 目前不支持 ES6 式的选择性导入，但可以通过别名实现类似效果：</p>
+<pre><code class="language-leno">// 只使用需要的功能
+import &quot;math.leno&quot; as m
+
+func calculate(int x):int {
+    return m.add(x, 10)
+}
+</code></pre>
+<h3 id="3-3-重导出-re-export">3.3 重导出（Re-export）</h3>
+<p>模块可以聚合其他模块的导出：</p>
+<pre><code class="language-leno">// core.leno - 核心模块聚合
+import &quot;math.leno&quot; as math
+import &quot;string.leno&quot; as str
+import &quot;array.leno&quot; as arr
+
+// 重导出变量
+export var math_add = math.add
+export var PI = math.PI
+
+// 包装后导出
+export func enhanced_add(int a, int b):int {
+    print(&quot;计算中...&quot;)
+    return math.add(a, b)
+}
+</code></pre>
+<p>使用聚合模块：</p>
+<pre><code class="language-leno">import &quot;core.leno&quot; as core
+core.enhanced_add(1, 2)
+</code></pre>
+<h3 id="3-4-导出类型别名-export-alias">3.4 导出类型别名（export alias）</h3>
+<p>模块可以通过 <code>export alias</code> 导出类型别名，让调用方直接使用别名类型：</p>
+<pre><code class="language-leno">// types.leno
+export alias Size = int
+export alias IntList = Array[int]
+export alias StrDict = Dict[string, string]
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;types.leno&quot; as t
+
+main() {
+    Size w = 100              // Size 被识别为 int
+    IntList arr = [1, 2, 3]   // IntList 被识别为 Array[int]
+    StrDict d = {&quot;a&quot;: &quot;hi&quot;}   // StrDict 被识别为 Dict[string,string]
+}
+</code></pre>
+<p>支持的复杂类型：<code>Array[T]</code>、<code>Dict[K,V]</code>、自定义 struct 名等。</p>
+<p><strong>use 导入 alias</strong>：<code>use</code> 也支持导入其他模块的 <code>export alias</code>：</p>
+<pre><code class="language-leno">// types.leno
+export alias MySize = Dict[string,int]
+export alias MyColor = Dict[string,float]
+
+export func makeSize(int w, int h): MySize {
+    return {w: w, h: h}
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;types.leno&quot; as t
+use t.MySize       // 将 MySize 别名导入当前作用域
+
+main() {
+    MySize s = {w: 100, h: 200}   // ✅ 直接使用 MySize 类型名
+    var sz = t.makeSize(50, 75)   // 也可以通过模块调用
+}
+</code></pre>
+<p><strong>alias 作为跨模块函数返回类型</strong>：<code>use</code> 导入的 alias 可以作为 <code>export func</code> 的返回类型：</p>
+<pre><code class="language-leno">// wrapper.leno - 中间层 use alias 并作为返回类型
+import &quot;types.leno&quot; as t
+use t.MySize
+
+export func createSize(int w, int h): MySize {   // ✅ MySize 作为返回类型
+    return t.makeSize(w, h)
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno - 调用方正确推断返回类型
+import &quot;wrapper.leno&quot; as w
+
+main() {
+    var s = w.createSize(100, 200)   // s 被推断为 MySize (即 Dict[string,int])
+    print(s.w)                       // ✅ 可直接访问字段
+}
+</code></pre>
+<p><strong>别名链</strong>——<code>export alias</code> 可以引用同模块内的其他别名：</p>
+<pre><code class="language-leno">// types.leno
+export alias A = int
+export alias B = A          // B → A → int
+
+// main.leno
+import &quot;types.leno&quot; as t
+B val = 42                  // B 最终解析为 int
+</code></pre>
+<h3 id="3-5-导出-face-类型">3.5 导出 face 类型</h3>
+<p>模块可以导出 <code>face</code> 定义，供调用方实现或作为参数类型：</p>
+<pre><code class="language-leno">// shape.leno
+export face Shape {
+    func area():float
+    func name():string
+}
+
+export struct Circle impl Shape {
+    int r = 0
+    func area():float { return 3.14 * r * r }
+    func name():string { return &quot;Circle&quot; }
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;shape.leno&quot; as sm
+use sm.Shape
+
+func print_info(Shape s) {
+    print(s.name() + &quot; 面积=&quot; + s.area())
+}
+
+main() {
+    var c = new sm.Circle(r = 3)
+    print_info(c)
+}
+</code></pre>
+<hr>
+<h2 id="4-循环依赖处理">4. 循环依赖处理</h2>
+<h3 id="4-1-循环依赖支持">4.1 循环依赖支持</h3>
+<p>Leno <strong>支持模块间的循环依赖</strong>：</p>
+<pre><code class="language-leno">// module_a.leno
+import &quot;module_b.leno&quot; as mb
+
+var a_value = 100
+
+func a_func():string {
+    return &quot;A calls B: &quot; + mb.b_value
+}
+</code></pre>
+<pre><code class="language-leno">// module_b.leno
+import &quot;module_a.leno&quot; as ma
+
+var b_value = 200
+
+func b_func():string {
+    return &quot;B calls A: &quot; + ma.a_value
+}
+</code></pre>
+<h3 id="4-2-循环依赖注意事项">4.2 循环依赖注意事项</h3>
+<pre><code class="language-leno">// ⚠️ 避免在模块初始化时相互调用
+
+// module_a.leno - 危险！
+import &quot;module_b.leno&quot; as mb
+var a_value = mb.b_value  // 可能导致未定义行为
+
+// ✅ 安全的做法：通过函数延迟访问
+import &quot;module_b.leno&quot; as mb
+
+var a_value = 100
+
+func get_b_value():int {
+    return mb.b_value  // 运行时调用，安全
+}
+</code></pre>
+<h3 id="4-3-循环依赖最佳实践">4.3 循环依赖最佳实践</h3>
+<pre><code class="language-leno">// ✅ 好的设计：单向依赖优先
+// 如果可能，重构为单向依赖
+
+// utils.leno - 基础工具（无依赖）
+func helper() { }
+
+// module_a.leno - 依赖 utils
+import &quot;utils.leno&quot;
+
+// module_b.leno - 依赖 utils 和 module_a
+import &quot;utils.leno&quot;
+import &quot;module_a.leno&quot;
+</code></pre>
+<hr>
+<h2 id="5-模块缓存机制">5. 模块缓存机制</h2>
+<h3 id="5-1-单例模式">5.1 单例模式</h3>
+<p>Leno 模块是<strong>单例</strong>的，多次导入返回同一实例：</p>
+<pre><code class="language-leno">// counter.leno
+var count = 0
+
+func increment():int {
+    count = count + 1
+    return count
+}
+
+func get_count():int {
+    return count
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;counter.leno&quot; as c1
+import &quot;counter.leno&quot; as c2  // 同一个模块！
+
+main() {
+    c1.increment()  // count = 1
+    c1.increment()  // count = 2
+    print(c2.get_count())  // 输出: 2（共享状态）
+}
+</code></pre>
+<h3 id="5-2-利用缓存实现状态共享">5.2 利用缓存实现状态共享</h3>
+<pre><code class="language-leno">// config.leno - 全局配置
+var settings = {
+    debug: false,
+    timeout: 30
+}
+
+func set_debug(bool value) {
+    settings[&quot;debug&quot;] = value
+}
+
+func get_config():Dict {
+    return settings
+}
+</code></pre>
+<pre><code class="language-leno">// module_a.leno
+import &quot;config.leno&quot; as cfg
+cfg.set_debug(true)
+
+// module_b.leno
+import &quot;config.leno&quot; as cfg
+// 可以看到 module_a 的修改
+print(cfg.get_config()[&quot;debug&quot;])  // true
+</code></pre>
+<hr>
+<h2 id="6-错误处理">6. 错误处理</h2>
+<h3 id="6-1-导入错误类型">6.1 导入错误类型</h3>
+<table>
+<thead>
+<tr>
+<th>错误类型</th>
+<th>示例</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模块不存在</td>
+<td><code>import "not_exist.leno"</code></td>
+<td>编译错误</td>
+</tr>
+<tr>
+<td>语法错误</td>
+<td>模块内有语法错误</td>
+<td>编译错误，指出位置</td>
+</tr>
+<tr>
+<td>运行时错误</td>
+<td>模块初始化失败</td>
+<td>运行时异常</td>
+</tr>
+<tr>
+<td>循环依赖错误</td>
+<td>初始化时循环调用</td>
+<td>可能导致栈溢出</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6-2-防御性导入">6.2 防御性导入</h3>
+<pre><code class="language-leno">// ⚠️ import 是编译期指令，模块不存在会在编译阶段报错，
+//    try-catch 无法捕获&quot;模块文件找不到&quot;这类编译期错误。
+//    try-catch 只能捕获模块初始化时的运行时异常：
+
+import &quot;optional_module.leno&quot; as opt
+
+try {
+    opt.do_something()
+} catch e {
+    print(&quot;模块运行时出错，使用默认行为: &quot; + e)
+    // 使用默认实现
+}
+</code></pre>
+<h3 id="6-3-模块版本检查">6.3 模块版本检查</h3>
+<pre><code class="language-leno">// version.leno
+var VERSION = &quot;1.2.3&quot;
+
+func check_version(string required):bool {
+    // 简单的版本比较
+    return VERSION == required
+}
+</code></pre>
+<pre><code class="language-leno">import &quot;version.leno&quot; as ver
+
+main() {
+    if not ver.check_version(&quot;1.2.3&quot;) {
+        print(&quot;警告：版本不匹配&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h2 id="7-高级用法">7. 高级用法</h2>
+<blockquote>
+<p><strong>💡 编译期语义说明</strong>：<code>import</code> 是<strong>编译期指令</strong>，不是运行时动态加载表达式。编译器会在编译阶段完成路径解析、模块编译和缓存。路径必须是编译期可确定的字符串字面量（如 <code>"db/mysql.leno"</code>），<strong>不支持</strong>用变量动态构造路径（如 <code>import path as plugin</code>）。</p>
+<p>⚠ <strong>源码模块（<code>.leno</code>）的 <code>import</code> 必须写在模块顶层</strong>（2026-11-02 起编译期强制）：
+写在函数体 / <code>if</code> 块内时，别名不会被绑定，运行期拿到的是 <code>null</code>
+（随后 <code>m.foo()</code> 报「下标访问: 对象不支持索引」）。此前这里是<strong>静默通过</strong> ✗。
+<strong>原生模块</strong>（<code>ffi</code> / <code>maths</code> / <code>times</code> 等）不绑定变量，写在函数体内仍是
+<strong>合法惯用法</strong>（仓内回调里大量 <code>import ffi</code>），不受此限 ✓。</p>
+</blockquote>
+<h3 id="7-1-模块条件选择">7.1 模块条件选择</h3>
+<p>源码模块的 <code>import</code> 要提到<strong>顶层</strong>（两个模块都会在编译期加载/缓存），运行期按条件
+选择要用的那个引用：</p>
+<pre><code class="language-leno">// 顶层导入两个实现
+import &quot;db/mysql.leno&quot; as mysql_db
+import &quot;db/sqlite.leno&quot; as sqlite_db
+
+func get_database_module(bool use_mysql) {
+    if use_mysql {
+        return mysql_db
+    }
+    return sqlite_db
+}
+</code></pre>
+<blockquote>
+<p>如果写成"函数内 <code>if</code> 里各 <code>import</code> 一个"，2026-11-02 之前会<strong>编译通过但别名是 null</strong>
+（运行期才发现）；现在编译器会直接报「源码模块 import 只能写在模块顶层」。</p>
+</blockquote>
+<h3 id="7-2-插件系统实现">7.2 插件系统实现</h3>
+<p>由于 <code>import</code> 路径必须是编译期字符串常量，不支持运行时变量路径。插件系统应通过<strong>预注册</strong>模式实现——所有插件在编译期导入，运行时按名称分发：</p>
+<pre><code class="language-leno">// plugin_manager.leno
+// 编译期导入所有已知插件模块
+import &quot;plugins/plugin_a.leno&quot; as pa
+import &quot;plugins/plugin_b.leno&quot; as pb
+
+var plugins = {
+    &quot;plugin_a&quot;: pa,
+    &quot;plugin_b&quot;: pb
+}
+
+func register_plugin(string name) {
+    // 从预注册表中查找插件，而非动态 import
+    if plugins.has(name) {
+        // 插件已可用
+        print(&quot;插件 &quot; + name + &quot; 已注册&quot;)
+    } else {
+        print(&quot;未知插件: &quot; + name)
+    }
+}
+
+func run_all_plugins() {
+    for plugins to name, plugin {
+        plugin.run()
+    }
+}
+</code></pre>
+<blockquote>
+<p><strong>⚠️ 不支持运行时动态路径</strong>：<code>import</code> 的路径必须是字符串字面量（如 <code>"plugins/plugin_a.leno"</code>），不能用变量（如 <code>import path as plugin</code>）。如果需要真正的运行时动态加载，考虑用 FFI 调用 <code>dlopen</code>/<code>LoadLibrary</code> 自行管理。</p>
+</blockquote>
+<h3 id="7-3-模块装饰器模式">7.3 模块装饰器模式</h3>
+<pre><code class="language-leno">// logging_decorator.leno
+import &quot;target_module.leno&quot; as target
+
+func logged_add(int a, int b):int {
+    print(&quot;调用 add({0}, {1})&quot;.format(a, b))
+    var result = target.add(a, b)
+    print(&quot;返回: &quot; + result)
+    return result
+}
+
+// 导出增强版本
+var add = logged_add
+</code></pre>
+<hr>
+<h2 id="8-跨模块类型使用">8. 跨模块类型使用</h2>
+<h3 id="8-1-导出-struct">8.1 导出 Struct</h3>
+<pre><code class="language-leno">// point.leno
+struct Point {
+    int x = 0
+    int y = 0
+
+    func move(int dx, int dy) {
+        x = x + dx
+        y = y + dy
+    }
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;point.leno&quot; as pt
+
+main() {
+    var p = new pt.Point()  // 使用导入的 struct
+    p.move(10, 20)
+    print(p.x)  // 10
+}
+</code></pre>
+<h3 id="8-2-使用-use-语句导入类型">8.2 使用 use 语句导入类型</h3>
+<p>当需要在当前作用域中使用模块的 struct 类型进行变量声明时，可以使用 <code>use</code> 语句：</p>
+<pre><code class="language-leno">// shape.leno
+export struct Point {
+    int x = 0
+    int y = 0
+}
+
+export struct Circle {
+    float radius = 1.0
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;shape.leno&quot; as shape
+use shape.Point      // 将 Point 类型导入当前作用域
+
+main() {
+    // ✅ 现在可以直接使用 Point 类型
+    Point p = new shape.Point()
+    print(p.x)
+
+    // ❌ 没有 use Circle，不能直接用 Circle 类型声明
+    // Circle c = new shape.Circle()  // 错误：Circle 未定义
+
+    // ✅ 可通过模块路径创建实例（无需 use）
+    var c = new shape.Circle()         // 普通 struct
+    var b = new shape.Box[int]()       // 泛型 struct 也支持
+}
+</code></pre>
+<p><strong>use 语句规则：</strong></p>
+<table>
+<thead>
+<tr>
+<th>用法</th>
+<th>支持</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>use module.Struct</code></td>
+<td>✅</td>
+<td>导入后可用 <code>new Struct()</code> 或 <code>new Struct[Type]()</code></td>
+</tr>
+<tr>
+<td><code>use module.CStruct</code></td>
+<td>✅</td>
+<td>导入 cstruct 类型，可用 <code>CStruct.malloc()</code></td>
+</tr>
+<tr>
+<td><code>use module.Clib</code></td>
+<td>✅</td>
+<td>导入 clib 类型到当前作用域，可用 <code>ClibName var = module.loadLib()</code></td>
+</tr>
+<tr>
+<td><code>use module.Face</code></td>
+<td>✅</td>
+<td>导入 face 类型到当前作用域</td>
+</tr>
+<tr>
+<td><code>use module.Alias</code></td>
+<td>✅</td>
+<td>导入类型别名到当前作用域，可直接作为类型名使用</td>
+</tr>
+<tr>
+<td><code>use module.Enum</code></td>
+<td>✅</td>
+<td>导入 enum 类型，可用 <code>EnumName.Member</code> 或链式 <code>import B; use B.Enum</code></td>
+</tr>
+<tr>
+<td><code>use module.(A, B, C)</code></td>
+<td>✅</td>
+<td>批量导入，等价于多行单独 <code>use</code>，支持尾逗号</td>
+</tr>
+<tr>
+<td><code>use module.func</code></td>
+<td>❌</td>
+<td>函数必须通过模块名访问</td>
+</tr>
+<tr>
+<td><code>use module.var</code></td>
+<td>❌</td>
+<td>变量必须通过模块名访问</td>
+</tr>
+<tr>
+<td><strong><code>module.Type</code>（在类型位置直接写，不 <code>use</code>）</strong></td>
+<td>✅</td>
+<td><strong>2026-10-12（US1）起</strong>：等价于<strong>隐式</strong> <code>use module.Type</code> ⇒ 声明 / 形参 / 返回 / 字段 / 泛型实参 / <code>is</code> / <code>as</code> / <code>new</code> 全位置可用 ✓（<strong>一个 <code>use</code> 都不写也能走</strong> ✓）</td>
+</tr>
+<tr>
+<td><strong><code>module.A.B</code>（多级限定）</strong></td>
+<td>❌</td>
+<td>类型位置<strong>最多一级</strong>：<code>模块.类型</code> ✓（多级会报「不支持的模块限定类型名…最多只能写一级」）</td>
+</tr>
+<tr>
+<td><strong><code>module.func</code>（在类型位置）</strong></td>
+<td>❌</td>
+<td>类型位置要的是<strong>类型</strong>；函数/常量请按 <code>module.func(...)</code> 调用 ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>use</code> 与"直接写 <code>module.Type</code>"的关系（2026-10-12 起）</strong>：</p>
+<ul>
+<li><strong><code>use</code> 仍推荐</strong>（出处集中、名字短 ✓），但它<strong>不再是唯一出路</strong> ⇒ 从"义务"变回"便利" ✓</li>
+<li>两者的<strong>语义完全相同</strong>：直接写 <code>module.Type</code> 走的就是 <code>use</code> 的<strong>同一份实现</strong>
+  （所以报错文案、可用性判据、重复导入的宽容度三条<strong>不可能漂移</strong> ✓）</li>
+<li>好处（US1 的动机）：§0.2 那类"漏列一个、报错点在 <code>use</code> 那一行"的坑<strong>整类消失</strong>；
+  库的中间层也不必为了传类型而 <code>use</code> 一个自己用不到的名字 ✓</li>
+<li>⚠ 仍有两条纪律：<strong>多级限定不支持</strong>（最多 <code>模块.类型</code>）✓；
+  <strong>cstruct 跨线程</strong>那条限制与本机制无关（那是跨线程克隆的事 ✓）</li>
+</ul>
+<p><strong>为什么 use 只支持 struct/cstruct/clib/face/alias/enum？</strong></p>
+<ul>
+<li><strong>struct</strong>：编译时类型，需要用于变量声明（如 <code>Point p</code>）</li>
+<li><strong>cstruct</strong>：FFI C 结构体类型，需要用 <code>Type.malloc()</code> 分配内存</li>
+<li><strong>clib</strong>：FFI 库类型，需要用于变量声明（如 <code>core_lib c = module.loadCore()</code>）</li>
+<li><strong>face</strong>：编译时类型，需要用于函数参数（如 <code>func printArea(Shape s)</code>）</li>
+<li><strong>alias</strong>：类型别名，编译期展开为实际类型，需要用于变量声明或返回类型</li>
+<li><strong>enum</strong>：编译时常量类型，导入后可用 <code>EnumName.Member</code> 访问值</li>
+<li><strong>func/var</strong>：运行时实体，必须通过模块名访问（如 <code>module.func()</code>）</li>
+</ul>
+<h3 id="8-2-1-使用-use-导入-enum">8.2.1 使用 use 导入 enum</h3>
+<pre><code class="language-leno">// key.leno
+export enum Key { ESCAPE = 41; SPACE = 44; A = 4 }
+
+// main.leno
+import &quot;key.leno&quot; as k
+use k.Key
+
+main() {
+    if e.scancode() == Key.ESCAPE { print(&quot;退出&quot;) }
+}
+</code></pre>
+<p>enum 支持链式传导——模块 B <code>use a.Key</code> 后，模块 C <code>import B; use B.Key</code> 也可访问 <code>Key.ESCAPE</code>。</p>
+<h3 id="8-3-use-类型链式传导">8.3 use 类型链式传导</h3>
+<p><code>use</code> 的类型可以通过模块链自动传递，无需手动重导出：</p>
+<pre><code class="language-leno">// d.leno - 最底层定义类型
+export struct Vec3 {
+    int x = 0
+    int y = 0
+    int z = 0
+}
+
+// c.leno - use d 的类型
+import &quot;d.leno&quot; as d
+use d.Vec3
+
+// b.leno - use c 中传递的类型
+import &quot;c.leno&quot; as c
+use c.Vec3
+
+// a.leno - use b 中传递的类型
+import &quot;b.leno&quot; as b
+use b.Vec3
+</code></pre>
+<pre><code class="language-leno">// main.leno - 最终使用端
+import &quot;a.leno&quot; as a
+use a.Vec3
+
+main() {
+    Vec3 v = new a.Vec3(x = 1, y = 2, z = 3)
+    print(v.x)    // 1
+}
+</code></pre>
+<blockquote>
+<p><strong>★ 传导式 <code>use</code>（2026-10-12 正式命名，原 US4）</strong></p>
+<p>上面那条链里，<code>c.leno</code> / <code>b.leno</code> <strong>自己并不使用 <code>Vec3</code></strong> —— 它们 <code>use</code> 它的唯一目的是
+<strong>把它传给下游</strong> ✓。这个用法<strong>有正式名字</strong>：<strong>传导式 <code>use</code></strong>（"我不用，我给下游用"）。</p>
+<p>三条纪律：
+1. <strong>允许并推荐</strong>：它与"自用 <code>use</code>"共用同一行语法、同一条实现 ✓（不必绕 <code>export</code>）
+2. <strong>意图靠注释说清</strong>：<code>use c.Vec3</code> 后面写一句 <code>// 传导：给下游用</code> —— 因为语法上区分不出来 ✓
+   （<code>use</code> 只有一种写法；本仓也<strong>没有</strong>"<code>use</code> 了没用"的诊断 ✓ 见 <code>语言陷阱速查</code> ㉝ 一带）
+3. <strong>★ 但</strong>：<strong>2026-10-12（US1）起优先直接写限定名</strong> ✓ —— 下游<strong>不必</strong>再依赖中间层传导：
+   谁是类型的<strong>定义者</strong>就写谁（<code>import "d.leno" as d</code> + <code>d.Vec3 v = …</code> ✓）。
+   ⇒ 传导链只在"想让下游少写一个 import"时才有必要 ✓</p>
+<p><strong>决定：不引入 <code>export use</code></strong>（原 US4 的"另一半"）。理由：Rust 需要 <code>pub use</code> 是因为
+<strong>没有</strong>"类型位置可以全限定"这条路；Leno 有了（US1）⇒ 新增关键字的收益是"少写一个 import"，
+代价是多一条语法与一条"它算导出吗"的规则 ⇒ <strong>不划算</strong> ✗。要重新导出就写普通 <code>use</code> +
+<strong>注释</strong>（上面第 2 条）✓</p>
+</blockquote>
+<p><strong>多个模块的类型可以同时 use</strong>：</p>
+<pre><code class="language-leno">import &quot;point_mod.leno&quot; as pm
+import &quot;color_mod.leno&quot; as cm
+use pm.Point
+use cm.Color
+
+main() {
+    Point p = new pm.Point(x = 10, y = 20)
+    Color c = new cm.Color(r = 255, g = 128, b = 0)
+}
+</code></pre>
+<p><strong>同一模块的多个类型可用批量 use 导入</strong>：</p>
+<pre><code class="language-leno">import &quot;shape_mod.leno&quot; as sm
+use sm.(Point, Circle, Rect, Color)
+
+main() {
+    Point p = new sm.Point(x = 10, y = 20)
+    Circle c = new sm.Circle(r = 5)
+}
+</code></pre>
+<h3 id="8-4-use-类型作为-export-func-返回类型">8.4 use 类型作为 export func 返回类型</h3>
+<p><code>use</code> 导入的 struct/face 类型可以直接作为 <code>export func</code> 的返回类型，调用方能正确推断返回值类型：</p>
+<pre><code class="language-leno">// item.leno - 底层模块定义 struct
+export struct Item {
+    int id = 0
+    string label = &quot;&quot;
+
+    func describe(): string {
+        return &quot;Item(&quot; + id + &quot;:&quot; + label + &quot;)&quot;
+    }
+}
+
+export func makeItem(int id, string label): Item {
+    return new Item(id = id, label = label)
+}
+</code></pre>
+<pre><code class="language-leno">// wrapper.leno - 中间层通过 use 导入 Item 并作为返回类型
+import &quot;item.leno&quot; as item
+use item.Item
+
+export func createItem(int id, string label): Item {
+    return item.makeItem(id, label)
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno - 调用方正确推断返回类型为 Item
+import &quot;wrapper.leno&quot; as wrapper
+
+main() {
+    var it = wrapper.createItem(1, &quot;hello&quot;)   // it 被推断为 Item，不是 any
+    print(it.describe())                       // ✅ 可以直接调用 Item 的方法
+}
+</code></pre>
+<p><strong>face 类型同样支持</strong>：</p>
+<pre><code class="language-leno">// base.leno
+export face Describable {
+    func describe(): string
+}
+
+export struct Item impl Describable {
+    int id = 0
+    func describe(): string { return &quot;Item(&quot; + id + &quot;)&quot; }
+}
+
+export func makeItem(int id): Item {
+    return new Item(id = id)
+}
+</code></pre>
+<pre><code class="language-leno">// mid.leno - use 导入 face 并作为返回类型
+import &quot;base.leno&quot; as base
+use base.Describable
+
+export func getDescribable(): Describable {
+    return base.makeItem(42)
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;mid.leno&quot; as mid
+use mid.Describable
+
+main() {
+    var d = mid.getDescribable()    // d 被推断为 Describable（face 类型）
+    print(d.describe())             // ✅ 可以调用 face 定义的方法
+}
+</code></pre>
+<h3 id="8-5-use-face-类型">8.5 use face 类型</h3>
+<pre><code class="language-leno">// shape_mod.leno
+export face Shape {
+    func area():float
+    func name():string
+}
+
+export struct Circle impl Shape {
+    int r = 0
+    func area():float { return 3.14 * r * r }
+    func name():string { return &quot;Circle&quot; }
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;shape_mod.leno&quot; as sm
+use sm.Shape
+
+// use 之后 face 可直接作为参数类型
+func print_info(Shape s) {
+    print(s.name() + &quot; 面积=&quot; + s.area())
+}
+
+main() {
+    var c = new sm.Circle(r = 2)
+    print_info(c)
+}
+</code></pre>
+<h3 id="8-6-clib-类型跨模块使用">8.6 clib 类型跨模块使用</h3>
+<p><code>use</code> 也支持导入其他模块定义的 clib 类型：</p>
+<pre><code class="language-leno">// sdl_base.leno - 底层模块定义 clib
+import ffi
+
+export clib renderer_lib {
+    i32 do_something(i32 x)
+}
+
+renderer_lib g_renderer = null
+
+export func loadRenderer(): renderer_lib {
+    if g_renderer == null {
+        g_renderer = ffi.load(&quot;mylib.dll&quot;)
+    }
+    return g_renderer
+}
+</code></pre>
+<pre><code class="language-leno">// sdl_wrapper.leno - 中间层 use 底层 clib 并重新导出
+import &quot;sdl_base.leno&quot; as base
+use base.renderer_lib
+
+export func getRenderer(): renderer_lib {
+    return base.loadRenderer()
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno - 最终使用端，只需感知中间层
+import &quot;sdl_wrapper.leno&quot; as sdl
+use sdl.renderer_lib
+
+main() {
+    // ✅ clib 类型正确推断
+    renderer_lib r = sdl.getRenderer()
+    var result = r.do_something(42)  // ✅ clib 返回值自动展开（i32→int），无需 as 转换
+}
+
+</code></pre>
+<blockquote>
+<p><strong>💡 零摩擦 FFI</strong>：clib 函数返回值会根据 C 声明类型<strong>自动展开</strong>为 Leno 原生类型（<code>i32</code>/<code>u32</code>/<code>i64</code>→<code>int</code>，<code>f32</code>/<code>f64</code>→<code>float</code>，<code>str8</code>/<code>str16</code>→<code>string</code>），<strong>无需 <code>as</code> 转换</strong>。详见 <a href="FFI使用指南.html#14-使用-clib-声明式调用推荐零摩擦-ffi">FFI 使用指南 §1.4</a>。cstruct 字段（如 <code>pt.x</code>、<code>e.id</code>）同理自动转换。</p>
+<p><strong>💡 clib 导出的两种方式</strong>：
+- <strong>直接导出</strong>：<code>export clib renderer_lib { ... }</code>，其他模块可直接 <code>use base.renderer_lib</code>
+- <strong>间接导出</strong>：<code>clib sdl3 { ... }</code> + <code>export func lib(): sdl3 { ... }</code>，通过返回该 clib 类型的函数让符号表识别（SDL3 项目 sdl_core.leno 即用此方式）</p>
+</blockquote>
+<p><strong>clib 类型可以用于 struct 字段</strong>：</p>
+<pre><code class="language-leno">import &quot;sdl_base.leno&quot; as base
+use base.renderer_lib
+
+struct RendererHolder {
+    renderer_lib renderer = null
+    string       name     = &quot;&quot;
+}
+
+main() {
+    var h = new RendererHolder(renderer = base.loadRenderer(), name = &quot;main&quot;)
+    renderer_lib r = h.renderer              // ✅ 跨模块后类型正确推断
+    var v = r.do_something(10)               // ✅ 返回值自动展开，无需 as
+}
+</code></pre>
+<blockquote>
+<p><strong>💡 struct 字段 clib 类型跨模块</strong>：使用 <code>use</code> 导入包含 clib 字段的 struct 后，字段类型会自动保留为 clib 类型，不再需要中间变量绕开。</p>
+</blockquote>
+<h3 id="8-7-cstruct-跨模块使用">8.7 cstruct 跨模块使用</h3>
+<p><code>use</code> 也支持导入其他模块定义的 <code>cstruct</code> 类型。cstruct 是 FFI 中用于映射 C 结构体的类型定义，可以通过 <code>use</code> 导入后直接使用：</p>
+<p><strong>方式一：use 导入后直接使用类型名</strong></p>
+<pre><code class="language-leno">// cs_def.leno - 底层模块定义 cstruct
+import ffi
+
+export cstruct TT {
+    u32 id
+    u32 value
+}
+
+export func makeTT(u32 id, u32 value): TT {
+    var t = TT.malloc()
+    t.id = id
+    t.value = value
+    return t
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno - use 导入 cstruct 类型
+import &quot;cs_def.leno&quot; as cs
+use cs.TT
+
+main() {
+    // ✅ 直接使用 TT 类型名创建实例
+    var t = TT.malloc()
+    t.id = 1
+    t.value = 100
+    print(&quot;id=&quot; + t.id + &quot; value=&quot; + t.value)
+    t.free()
+
+    // ✅ 也可以调用模块导出的工厂函数
+    var t2 = cs.makeTT(3, 300)
+    print(&quot;makeTT: id=&quot; + t2.id + &quot; value=&quot; + t2.value)
+    t2.free()
+}
+</code></pre>
+<p><strong>方式二：通过模块路径直接访问</strong></p>
+<p>如果不使用 <code>use</code>，也可以通过模块路径直接访问 cstruct：</p>
+<pre><code class="language-leno">// main.leno - 不用 use，通过模块路径访问
+import &quot;cs_def.leno&quot; as cs
+
+main() {
+    // ✅ 通过模块路径创建实例
+    var t = cs.TT.malloc()
+    t.id = 1
+    t.value = 100
+    print(&quot;id=&quot; + t.id + &quot; value=&quot; + t.value)
+    t.free()
+}
+</code></pre>
+<p><strong>cstruct 跨模块作为返回类型</strong></p>
+<p>与 struct/face 一样，cstruct 也可以作为 <code>export func</code> 的返回类型，调用方能正确推断：</p>
+<pre><code class="language-leno">// wrapper.leno - 中间层 use cstruct 并作为返回类型
+import &quot;cs_def.leno&quot; as cs
+use cs.TT
+
+export func createTT(u32 id, u32 value): TT {
+    return cs.makeTT(id, value)
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno - 调用方正确推断返回类型
+import &quot;wrapper.leno&quot; as w
+
+main() {
+    var t = w.createTT(5, 500)   // t 被推断为 TT 类型
+    print(&quot;id=&quot; + t.id + &quot; value=&quot; + t.value)  // ✅ 可以直接访问字段
+    t.free()
+}
+</code></pre>
+<blockquote>
+<p><strong>⚠️ 注意</strong>：cstruct 字段值是 C 类型（<code>u32</code>、<code>i32</code>、<code>f64</code> 等），参与 Leno 运算时会自动转换为 <code>int</code>/<code>float</code>。</p>
+</blockquote>
+<h3 id="8-8-类型守卫与跨模块类型">8.8 类型守卫与跨模块类型</h3>
+<pre><code class="language-leno">// shape.leno
+struct Circle {
+    float radius = 1.0
+}
+
+struct Rectangle {
+    float width = 1.0
+    float height = 1.0
+}
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;shape.leno&quot; as shape
+
+func process(var obj) {
+    if obj is shape.Circle {
+        print(&quot;圆，半径: &quot; + obj.radius)
+    } else if obj is shape.Rectangle {
+        print(&quot;矩形，面积: &quot; + (obj.width * obj.height))
+    }
+}
+</code></pre>
+<hr>
+<h2 id="9-性能考虑">9. 性能考虑</h2>
+<h3 id="9-1-导入开销">9.1 导入开销</h3>
+<ul>
+<li><strong>首次导入</strong>：编译并执行模块代码</li>
+<li><strong>后续导入</strong>：从缓存读取，开销极小</li>
+<li><strong>建议</strong>：大胆使用模块，不必担心性能</li>
+</ul>
+<h3 id="9-2-大型项目组织">9.2 大型项目组织</h3>
+<pre><code>project/
+├── main.leno           # 入口文件
+├── core/               # 核心模块
+│   ├── config.leno
+│   ├── logger.leno
+│   └── utils.leno
+├── modules/            # 功能模块
+│   ├── user/
+│   │   ├── model.leno
+│   │   └── service.leno
+│   └── order/
+│       ├── model.leno
+│       └── service.leno
+└── vendor/             # 第三方模块
+    └── third_party.leno
+</code></pre>
+<h3 id="9-3-避免过度模块化">9.3 避免过度模块化</h3>
+<pre><code class="language-leno">// ❌ 过度拆分
+import &quot;math/add.leno&quot;
+import &quot;math/sub.leno&quot;
+import &quot;math/mul.leno&quot;
+
+// ✅ 合理聚合
+import &quot;math.leno&quot;
+</code></pre>
+<hr>
+<h2 id="10-最佳实践总结">10. 最佳实践总结</h2>
+<h3 id="推荐做法">✅ 推荐做法</h3>
+<ol>
+<li>
+<p><strong>使用有意义的别名</strong>
+   <code>leno
+   import "string_utilities.leno" as str  // 简洁明了</code></p>
+</li>
+<li>
+<p><strong>控制导出范围</strong>
+   <code>leno
+   var _internal = 0  // 不导出内部状态
+   var public_api = {}  // 只导出必要的</code></p>
+</li>
+<li>
+<p><strong>避免循环依赖</strong>
+   <code>leno
+   // 优先单向依赖，循环依赖作为最后手段</code></p>
+</li>
+<li>
+<p><strong>利用模块缓存</strong>
+   <code>leno
+   // 需要共享状态时使用模块级变量</code></p>
+</li>
+<li>
+<p><strong>版本管理</strong>
+   <code>leno
+   // 在模块中导出版本信息
+   var VERSION = "1.0.0"</code></p>
+</li>
+</ol>
+<h3 id="避免的做法">❌ 避免的做法</h3>
+<ol>
+<li>
+<p><strong>运行时动态构造导入路径</strong>
+   <code>leno
+   // ❌ 语法错误！import 路径必须是编译期字符串字面量，不接受表达式
+   import ("module_" + suffix + ".leno")  // 编译报错</code></p>
+</li>
+<li>
+<p><strong>模块间紧密耦合</strong>
+   <code>leno
+   // 避免模块 A 依赖 B，B 依赖 C，C 又依赖 A</code></p>
+</li>
+<li>
+<p><strong>在模块初始化时执行复杂逻辑</strong>
+   <code>leno
+   // 避免在模块加载时做大量计算
+   var result = heavy_computation()  // 不推荐</code></p>
+</li>
+</ol>
+<hr>
+<h2 id="11-常见问题">11. 常见问题</h2>
+<h3 id="q-如何查看模块导出了什么">Q: 如何查看模块导出了什么？</h3>
+<p>A: 目前 Leno 没有内省功能，建议查看模块源码或文档。</p>
+<h3 id="q-模块可以热重载吗">Q: 模块可以热重载吗？</h3>
+<p>A: 目前不支持，模块在程序启动时加载并缓存。</p>
+<h3 id="q-如何处理模块版本冲突">Q: 如何处理模块版本冲突？</h3>
+<p>A: 使用不同别名导入不同版本：</p>
+<pre><code class="language-leno">import &quot;lib/v1/api.leno&quot; as api_v1
+import &quot;lib/v2/api.leno&quot; as api_v2
+</code></pre>
+<h3 id="q-相对路径的基准是什么">Q: 相对路径的基准是什么？</h3>
+<p>A: 相对于当前文件所在的目录。</p>
+<hr>
+<h2 id="12-示例项目结构">12. 示例项目结构</h2>
+<pre><code class="language-leno">// main.leno
+import &quot;config.leno&quot; as cfg
+import &quot;routes.leno&quot; as routes
+import &quot;db/connection.leno&quot; as db
+
+main() {
+    cfg.load()
+    db.connect()
+    routes.start()
+}
+</code></pre>
+<pre><code class="language-leno">// config.leno
+var _settings = {}
+
+func load() {
+    _settings = {
+        port: 8080,
+        debug: true
+    }
+}
+
+func get(string key) {
+    return _settings[key]
+}
+</code></pre>
+<pre><code class="language-leno">// routes.leno
+import &quot;config.leno&quot; as cfg
+
+func start() {
+    var port = cfg.get(&quot;port&quot;)
+    print(&quot;服务器启动在端口: &quot; + port)
+}
+</code></pre>
+<hr>
+<blockquote>
+<p><strong>核心原则</strong>：模块是组织代码的基本单元，合理使用可以让代码更清晰、更可维护。</p>
+</blockquote></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#快速入门">快速入门</a></li><ul class="lv3"><li><a href="#基本语法">基本语法</a></li></ul><li><a href="#0-三条硬约束-先看这个">0. 三条硬约束（先看这个）</a></li><ul class="lv3"><li><a href="#0-1-import-必须写在任何使用它的语句之前-含-const-定义">0.1 import 必须写在任何使用它的语句之前（含 const 定义）</a></li><li><a href="#0-2-use-必须列全本文件源码里真正用到的类型">0.2 use 必须列全本文件源码里真正用到的类型</a></li><li><a href="#0-3-模块级只要不加-export-就是文件私有-pri-只用于结构体成员">0.3 模块级只要不加 export 就是文件私有；pri 只用于结构体成员</a></li></ul><li><a href="#1-导入方式详解">1. 导入方式详解</a></li><ul class="lv3"><li><a href="#1-1-基本导入">1.1 基本导入</a></li><li><a href="#1-2-使用别名">1.2 使用别名</a></li><li><a href="#1-3-特殊字符路径">1.3 特殊字符路径</a></li><li><a href="#1-4-内置模块名是保留名-2026-11-18-起">1.4 内置模块名是保留名（2026-11-18 起）</a></li></ul><li><a href="#2-模块导出规则">2. 模块导出规则</a></li><ul class="lv3"><li><a href="#2-1-显式导出">2.1 显式导出</a></li><li><a href="#2-2-私有成员">2.2 私有成员</a></li><li><a href="#2-3-导出控制建议">2.3 导出控制建议</a></li><li><a href="#2-4-导出变量-读写都是同一份存储-实时">2.4 导出变量：读写都是同一份存储（实时）</a></li></ul><li><a href="#3-模块使用模式">3. 模块使用模式</a></li><ul class="lv3"><li><a href="#3-1-命名空间模式">3.1 命名空间模式</a></li><li><a href="#3-2-选择性导入">3.2 选择性导入</a></li><li><a href="#3-3-重导出-re-export">3.3 重导出（Re-export）</a></li><li><a href="#3-4-导出类型别名-export-alias">3.4 导出类型别名（export alias）</a></li><li><a href="#3-5-导出-face-类型">3.5 导出 face 类型</a></li></ul><li><a href="#4-循环依赖处理">4. 循环依赖处理</a></li><ul class="lv3"><li><a href="#4-1-循环依赖支持">4.1 循环依赖支持</a></li><li><a href="#4-2-循环依赖注意事项">4.2 循环依赖注意事项</a></li><li><a href="#4-3-循环依赖最佳实践">4.3 循环依赖最佳实践</a></li></ul><li><a href="#5-模块缓存机制">5. 模块缓存机制</a></li><ul class="lv3"><li><a href="#5-1-单例模式">5.1 单例模式</a></li><li><a href="#5-2-利用缓存实现状态共享">5.2 利用缓存实现状态共享</a></li></ul><li><a href="#6-错误处理">6. 错误处理</a></li><ul class="lv3"><li><a href="#6-1-导入错误类型">6.1 导入错误类型</a></li><li><a href="#6-2-防御性导入">6.2 防御性导入</a></li><li><a href="#6-3-模块版本检查">6.3 模块版本检查</a></li></ul><li><a href="#7-高级用法">7. 高级用法</a></li><ul class="lv3"><li><a href="#7-1-模块条件选择">7.1 模块条件选择</a></li><li><a href="#7-2-插件系统实现">7.2 插件系统实现</a></li><li><a href="#7-3-模块装饰器模式">7.3 模块装饰器模式</a></li></ul><li><a href="#8-跨模块类型使用">8. 跨模块类型使用</a></li><ul class="lv3"><li><a href="#8-1-导出-struct">8.1 导出 Struct</a></li><li><a href="#8-2-使用-use-语句导入类型">8.2 使用 use 语句导入类型</a></li><li><a href="#8-2-1-使用-use-导入-enum">8.2.1 使用 use 导入 enum</a></li><li><a href="#8-3-use-类型链式传导">8.3 use 类型链式传导</a></li><li><a href="#8-4-use-类型作为-export-func-返回类型">8.4 use 类型作为 export func 返回类型</a></li><li><a href="#8-5-use-face-类型">8.5 use face 类型</a></li><li><a href="#8-6-clib-类型跨模块使用">8.6 clib 类型跨模块使用</a></li><li><a href="#8-7-cstruct-跨模块使用">8.7 cstruct 跨模块使用</a></li><li><a href="#8-8-类型守卫与跨模块类型">8.8 类型守卫与跨模块类型</a></li></ul><li><a href="#9-性能考虑">9. 性能考虑</a></li><ul class="lv3"><li><a href="#9-1-导入开销">9.1 导入开销</a></li><li><a href="#9-2-大型项目组织">9.2 大型项目组织</a></li><li><a href="#9-3-避免过度模块化">9.3 避免过度模块化</a></li></ul><li><a href="#10-最佳实践总结">10. 最佳实践总结</a></li><ul class="lv3"><li><a href="#推荐做法">✅ 推荐做法</a></li><li><a href="#避免的做法">❌ 避免的做法</a></li></ul><li><a href="#11-常见问题">11. 常见问题</a></li><ul class="lv3"><li><a href="#q-如何查看模块导出了什么">Q: 如何查看模块导出了什么？</a></li><li><a href="#q-模块可以热重载吗">Q: 模块可以热重载吗？</a></li><li><a href="#q-如何处理模块版本冲突">Q: 如何处理模块版本冲突？</a></li><li><a href="#q-相对路径的基准是什么">Q: 相对路径的基准是什么？</a></li></ul><li><a href="#12-示例项目结构">12. 示例项目结构</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="FFI使用指南.html">← 上一篇</a><a href="threads使用指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

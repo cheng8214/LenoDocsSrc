@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>module_web —— LenoWeb（HTTP / HTML / 字符集 / gzip / 爬虫 / 无头浏览器） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_web.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">02 模块 API 参考</a><span class="sep">/</span><span class="here">module_web —— LenoWeb（HTTP / HTML / 字符集 / gzip / 爬虫 / 无头浏览器）</span></span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details open><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html" class="active" aria-current="page">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="module_web-lenoweb-http-html-字符集-gzip-爬虫-无头浏览器">module_web —— LenoWeb（HTTP / HTML / 字符集 / gzip / 爬虫 / 无头浏览器）</h1>
+<blockquote>
+<p><strong>位置</strong>：<code>build/leno_module/LenoWeb/lib/</code>；<strong>入口有 4 个，按需选最轻的</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>入口</th>
+<th>依赖规模</th>
+<th>冷缓存编译</th>
+<th>用在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>import "WebNet"</code></td>
+<td>2256 行</td>
+<td><strong>31 ms</strong></td>
+<td>只要 HTTP 客户端（最常用）</td>
+</tr>
+<tr>
+<td><code>import "WebHtml"</code></td>
+<td>2650 行</td>
+<td>32 ms</td>
+<td>只要 HTML 解析 / CSS 选择器 / 字符集 / gzip</td>
+</tr>
+<tr>
+<td><code>import "WebCrawl"</code></td>
+<td>3841 行</td>
+<td>56 ms</td>
+<td>URL 工具 / robots / sitemap / 爬虫骨架</td>
+</tr>
+<tr>
+<td><code>import "Web"</code></td>
+<td>8510 行</td>
+<td>59 ms</td>
+<td>要 CDP 无头浏览器 / WebSocket，或多块能力</td>
+</tr>
+</tbody>
+</table>
+<p>⚠ 下面正文里的 <code>web.xxx</code> 示例对<strong>四个入口都成立</strong>（<code>WebNet</code> 覆盖 <code>web_net</code> 的全部 54 个导出）。
+<code>web_net.leno</code> / <code>web_html.leno</code> / <code>web_crawler.leno</code> 等是<strong>内部文件，不要直接 import</strong>。</p>
+<p>★ 2026-11-09：原先只有 <code>Web</code> 一个入口，它一次绑定 8510 行依赖（编译是 <code>WebNet</code> 的 1.9 倍），
+于是四个项目全部绕去 <code>import "web_net"</code>（37 次对门面 0 次）。拆出窄入口后已全部改回公共入口。
+<strong>本文补于 2026-10-14</strong>：这是 LenoWeb 的<strong>第一份参考文档</strong>。此前它的能力只写在模块源码头注释与
+几份开发记录里（<code>archive/移植音乐下载器实录与待办.md</code> 等），
+从 <code>docs/</code> 入口<strong>根本发现不了</strong> —— 实际后果之一是"Leno 有没有 gzip"被误判成"没有"
+（<code>web_gzip.leno</code> 就在那儿，纯 Leno 实现，但文档层没有任何入口提及它）。</p>
+<p>⚠ <strong>2026-11-09 更新</strong>：<code>web_gzip.leno</code> 已从 635 行收编成 <strong>28 行转发壳</strong>
+（2026-10-17 把实现归到 <code>LenoCompress</code>，gzip 的压缩与解压统一走那边）。
+所以现在要 gzip <strong>请用 <code>import "Compress" as z</code> → <code>z.gzip(...)</code> / <code>z.gunzip(...)</code></strong>；
+<code>web_gzip</code> 只为向后兼容保留。文件名里的"635 行"是历史值，别据此判断能力。</p>
+</blockquote>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#一入口与子模块">一、入口与子模块</a></li>
+<li><a href="#二快速上手">二、快速上手</a></li>
+<li><a href="#三api">三、API</a></li>
+<li><a href="#web_nethttp-客户端--会话--代理池--批抓">web_net：HTTP 客户端 / 会话 / 代理池 / 批抓</a></li>
+<li><a href="#web_gzipgzip--deflate--zlib-解压纯-leno">web_gzip：gzip / DEFLATE / zlib 解压（纯 Leno）</a></li>
+<li><a href="#web_charset字符集探测与转码">web_charset：字符集探测与转码</a></li>
+<li><a href="#web_htmlhtml-解析与-css-选择器">web_html：HTML 解析与 CSS 选择器</a></li>
+<li><a href="#web_crawlerurl--robots--sitemap--爬虫框架--csv">web_crawler：URL / robots / sitemap / 爬虫框架 / CSV</a></li>
+<li><a href="#web_wswebsocket-客户端">web_ws：WebSocket 客户端</a></li>
+<li><a href="#web_cdp无头浏览器chrome--edge">web_cdp：无头浏览器（Chrome / Edge）</a></li>
+<li><a href="#web_genericresult--stack--linkedlist">web_generic：Result / Stack / LinkedList</a></li>
+<li><a href="#四注意事项平台差异--外部依赖--坑">四、注意事项：平台差异 · 外部依赖 · 坑</a></li>
+<li><a href="#五已知缺口--待办">五、已知缺口 / 待办</a></li>
+</ul>
+<hr>
+<h2 id="一-入口与子模块">一、入口与子模块</h2>
+<p><code>Web.leno</code>（266 行）本身就是一行"转发层"：<code>import</code> 子模块 → <code>use</code> 重新导出类型 → <code>export func</code> 转发函数。</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>角色</th>
+<th>主要导出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Web.leno</code></td>
+<td><strong>统一入口</strong>（用户面）</td>
+<td>上面那套 <code>get/post/...</code>、HTML、爬虫、gzip、渲染</td>
+</tr>
+<tr>
+<td><code>web_curl_core.leno</code></td>
+<td>libcurl 低层绑定（FFI）</td>
+<td><code>Code</code> / <code>Opt</code> / <code>Info</code> / <code>Global</code> / <code>HttpVersion</code> / <code>SslVersion</code> 枚举 + <code>setopt_*</code> / <code>perform</code> / <code>multi*</code> / <code>mime*</code></td>
+</tr>
+<tr>
+<td><code>web_net.leno</code></td>
+<td>HTTP 客户端与会话</td>
+<td><code>HttpClient</code> / <code>Response</code> / <code>Session</code> / <code>ProxyPool</code> / <code>BatchResult</code> / <code>fetchAll</code></td>
+</tr>
+<tr>
+<td><code>web_html.leno</code></td>
+<td>HTML 解析 + CSS 选择器（纯 Leno）</td>
+<td><code>HtmlNode</code> / <code>parse</code> / <code>select</code> / <code>extractTable</code> / <code>htmlToText</code></td>
+</tr>
+<tr>
+<td><code>web_charset.leno</code></td>
+<td>字符集探测与转码</td>
+<td><code>detect</code> / <code>decode</code> / <code>encode</code> / <code>toUtf8</code> / <code>isValidUtf8</code></td>
+</tr>
+<tr>
+<td><code>web_gzip.leno</code></td>
+<td><strong>gzip / DEFLATE / zlib 解压（纯 Leno）</strong></td>
+<td><code>Result[Inflated]</code> / <code>gunzip</code> / <code>inflateRaw</code> / <code>inflateZlib</code> / <code>isGzip</code> / <code>rfcTableCheck</code></td>
+</tr>
+<tr>
+<td><code>web_crawler.leno</code></td>
+<td>URL / robots / sitemap / 爬虫框架 / CSV</td>
+<td><code>Url</code> / <code>parseUrl</code> / <code>Crawler</code> / <code>createCrawler</code> / <code>writeCsv</code></td>
+</tr>
+<tr>
+<td><code>web_ws.leno</code></td>
+<td>WebSocket 客户端（自写，供 CDP 用）</td>
+<td><code>WsClient</code> / <code>connect</code> / <code>sendText</code> / <code>recvMessage</code></td>
+</tr>
+<tr>
+<td><code>web_cdp.leno</code></td>
+<td>无头 Chrome/Edge 驱动（CDP）</td>
+<td><code>Browser</code> / <code>launch</code> / <code>render*</code> / <code>evaluate</code> / 截图</td>
+</tr>
+<tr>
+<td><code>web_generic.leno</code></td>
+<td>泛型小工具</td>
+<td><code>Result[T]</code> / <code>Stack[T]</code> / <code>LinkedList[T]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="入口没有转发的通道">入口<strong>没有</strong>转发的通道</h3>
+<p><code>import "Web" as web</code> 拿不到的东西，要直接引子模块：</p>
+<table>
+<thead>
+<tr>
+<th>想要</th>
+<th>写法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gzip 自检 <code>rfcTableCheck()</code></td>
+<td><code>import "web_gzip" as gz</code>（入口只转发了 <code>Result[Inflated]</code> + 4 个解压函数）</td>
+</tr>
+<tr>
+<td><strong>WebSocket 的任何函数</strong></td>
+<td><code>import "web_ws" as ws</code>（入口只转发了 3 个类型，函数一个都没转）</td>
+</tr>
+<tr>
+<td>CDP 低层（<code>evaluate</code> / <code>clickReal</code> / <code>captureScreenshot</code> / <code>createTargets</code> …）</td>
+<td><code>import "web_cdp" as cdp</code></td>
+</tr>
+<tr>
+<td>HTML 的选择器部件 <code>SelectorPart</code></td>
+<td><code>import "web_html" as htmls</code></td>
+</tr>
+<tr>
+<td>libcurl 低层绑定</td>
+<td><code>import "web_curl_core" as core</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="二-快速上手">二、快速上手</h2>
+<pre><code class="language-leno">import &quot;Web&quot; as web
+
+// ① 一次 GET（模块级便捷函数：每次新建/销毁 client，开销换线程安全）
+var r = web.get(&quot;https://example.com&quot;)
+if r.ok() {
+    print(r.statusCode, r.body.len())
+} else {
+    print(&quot;失败:&quot;, r.error, &quot;curlCode=&quot;, r.curlCode)
+}
+
+// ② 会话（仿 requests.Session）：一次设头，多次复用
+var s = web.createSession()
+web.sessionSetTimeout(s, 10000)
+web.sessionSetHeader(s, &quot;Authorization&quot;, &quot;Bearer xxx&quot;)
+var r1 = web.sessionGet(s, &quot;https://example.com/a&quot;)
+var r2 = web.sessionPostJson(s, &quot;https://example.com/b&quot;, &quot;{\&quot;k\&quot;:1}&quot;)
+web.sessionClose(s)
+
+// ③ HTML 解析
+var doc = web.parse(r.body)
+print(web.getTitle(doc))
+for web.select(doc, &quot;div.item &gt; a[href]&quot;) to a {
+    print(web.attr(a, &quot;href&quot;), web.text(a))
+}
+
+// ④ 响应体是 gzip 字节（服务端没带 Content-Encoding，libcurl 不会自动解）
+var gz = web.gunzip(web.get(&quot;https://example.com/sitemap.xml.gz&quot;).rawBody())
+if gz.ok { print(&quot;解出 &quot; + _str(gz.outBytes) + &quot; 字节&quot;) }
+</code></pre>
+<hr>
+<h2 id="三-api">三、API</h2>
+<h3 id="web_net-http-客户端-会话-代理池-批抓">web_net：HTTP 客户端 / 会话 / 代理池 / 批抓</h3>
+<p><strong><code>Response</code></strong>（<code>web_net.leno</code>；字段 + 方法）</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>statusCode</code> / <code>body</code> / <code>headers</code> / <code>contentType</code></td>
+<td>状态码 / 正文（可能已按字符集转码）/ 原始响应头 / Content-Type</td>
+</tr>
+<tr>
+<td><code>_raw</code> / <code>charset</code> / <code>effectiveUrl</code></td>
+<td>原始字节 / 探测到的字符集 / 最终 URL（跟随重定向后）</td>
+</tr>
+<tr>
+<td><code>totalSize</code> / <code>totalTime</code> / <code>connectTime</code> / <code>downloadSpeed</code></td>
+<td>字节数 / 总耗时 / 连接耗时 / 速度</td>
+</tr>
+<tr>
+<td><code>error</code> / <code>curlCode</code></td>
+<td>失败原因 / libcurl 错误码</td>
+</tr>
+</tbody>
+</table>
+<p>方法：<code>rawBody()</code> / <code>bytes()</code>（<strong>原始字节，下载/落盘必须用它</strong>）、<code>wasDecoded()</code>、<code>ok()</code>、<code>isRedirect()</code>、
+<code>isClientError()</code>、<code>isServerError()</code>、<code>isError()</code>、<code>json()</code>、<code>getHeader(name)</code>、<code>str()</code>、<code>reset()</code>。</p>
+<p><strong><code>HttpClient</code></strong>：<code>init()</code> / <code>close()</code> / <code>reset()</code>、<code>setTimeout(ms)</code>、<code>setConnectTimeout(ms)</code>、<code>setUserAgent(ua)</code>、
+<code>setFollowRedirect(follow, max)</code>、<code>setSSLVerify(peer, host)</code>、<code>setHttpVersion(v)</code>、<code>setProxy(p)</code>、
+<code>setCredentials(user, pass)</code>、<code>replaceHeaders(arr)</code>（<strong>整表替换</strong>）/ <code>addHeaders(arr)</code>（追加）、<code>headers()</code>、
+<code>setVerbose(b)</code>、<code>setCustomRequest(m)</code>、<code>setCAInfo(path)</code>、<code>setCipherList(l)</code>、<code>setTls13Ciphers(l)</code>、
+<code>setEcCurves(l)</code>、<code>setBrowserHeaders(ua, lang)</code>、<code>setResumeFrom(offset)</code>、
+<code>get/post/postJson/put/patch/del/head(url)</code>、<code>setCookie</code> / <code>setCookieFile</code> / <code>setCookieJar</code> / <code>setBearerToken</code>、
+<code>getHandle()</code>、<code>isOk()</code>、<code>lastError()</code>、<code>downloadResume(url, savePath)</code>。</p>
+<p><strong>模块级函数</strong></p>
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>函数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>便捷动词</td>
+<td><code>get</code> / <code>post</code> / <code>postJson</code> / <code>postJSON</code> / <code>put</code> / <code>patch</code> / <code>del</code> / <code>getWithParams</code> / <code>postForm</code></td>
+</tr>
+<tr>
+<td>重试与下载</td>
+<td><code>getWithRetry(url, retries, delayMs)</code> / <code>postWithRetry</code> / <code>download(url, path)</code> / <code>remoteSize(url)</code> / <code>downloadResume</code></td>
+</tr>
+<tr>
+<td>多部分表单</td>
+<td><code>formField(name, value)</code> / <code>formFile(name, path, fileName, mime)</code> / <code>postMultipart</code> / <code>putMultipart</code></td>
+</tr>
+<tr>
+<td>会话</td>
+<td><code>createSession</code> / <code>sessionGet|Post|PostJson|PostJSON|Put|Del|Patch|Head</code> / <code>sessionSetHeader|Cookie|Credentials|Timeout|Proxy</code> / <code>sessionLoadCookies</code> / <code>sessionSaveCookies</code> / <code>sessionClose</code></td>
+</tr>
+<tr>
+<td>并发批抓</td>
+<td><code>fetchAll(urls, concurrency = 8, userAgent = "", proxy = "", timeoutMs = 30000): Array[BatchResult]</code></td>
+</tr>
+<tr>
+<td>反爬基础</td>
+<td><code>chromeUA()</code> / <code>browserHeaders(ua, lang)</code> / <code>getWithBrowserHeaders(url, ua)</code> / <code>getVia(url, proxy)</code> / <code>createProxyPool</code> / <code>proxyPoolFromFile</code> / <code>sessionSetProxyPool</code> / <code>sessionReportResult</code> / <code>sessionCoolDownProxy</code></td>
+</tr>
+<tr>
+<td>URL / 全局</td>
+<td><code>urlEncode</code> / <code>urlDecode</code> / <code>formEncode(dict)</code> / <code>buildQuery(dict)</code> / <code>version()</code> / <code>globalInit(flags)</code> / <code>globalCleanup()</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>ProxyPool</code>：<code>next()</code>（全在冷却 ⇒ <code>""</code>）、<code>reportOk</code> / <code>reportFail</code>、<code>coolDown(proxy, ms)</code>、<code>add</code> / <code>remove</code>、
+<code>available()</code>（当前可用数）、<code>stats()</code>。有池的场景<strong>别硬打</strong>：池全冷却时 <code>fetchAll</code> / 爬虫当轮直接跳过。</p>
+</blockquote>
+<h3 id="web_gzip-gzip-deflate-zlib-解压-纯-leno">web_gzip：gzip / DEFLATE / zlib 解压（纯 Leno）</h3>
+<pre><code class="language-leno">// ★ 2026-11-09（P2）：返回值统一成 Result[Inflated]（原来是自己的一套 GzipResult）
+export struct Inflated {
+    string data;                   // 解压后的**字节**（当字符串用）
+    int inBytes; int outBytes;     // 输入 / 输出字节数
+}
+// 失败：Result.code = ErrCode.PARSE，msg 是可读原因
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>认什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gunzip(raw)</code></td>
+<td>gzip（RFC1952）：10 字节头（含可选字段）+ DEFLATE + 8 字节 trailer</td>
+</tr>
+<tr>
+<td><code>inflateRaw(raw)</code></td>
+<td><strong>裸 DEFLATE</strong>（没有头/trailer）</td>
+</tr>
+<tr>
+<td><code>inflateZlib(raw)</code></td>
+<td>zlib（RFC1950）：2 字节头 + DEFLATE + 4 字节 adler32</td>
+</tr>
+<tr>
+<td><code>isGzip(raw)</code></td>
+<td>只看魔数 <code>1f 8b</code> ⇒ <strong>只作答"像不像"，不做完整性判断</strong></td>
+</tr>
+<tr>
+<td><code>rfcTableCheck()</code></td>
+<td>自检：算出的 Huffman 表逐项对照 RFC1951 数值（<code>""</code> = 全对）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>解码范围与取舍</strong>（改它之前先读这段）</p>
+<ul>
+<li>✅ 支持：<code>stored(00)</code> / <code>fixed(01)</code> / <code>dynamic(10)</code> 三种块、<strong>多块流</strong>、
+  gzip 头的可选字段 <code>FEXTRA</code> / <code>FNAME</code> / <code>FCOMMENT</code> / <code>FHCRC</code> 跳过。</li>
+<li>✅ 校验：头部魔数与保留位、stored 块的 <code>LEN/NLEN</code>、Huffman 码长合法性、回拷距离越界、
+  gzip trailer 的 <code>ISIZE</code> ⇒ 截断与大部分损坏<strong>都能报出来</strong>（报错可读，不静默返回空）。</li>
+<li>❌ <strong>不做 CRC32 校验</strong>（ISIZE 已能挡住截断与大部分损坏）。</li>
+<li>❌ <strong>不支持多成员的"连接式" gzip</strong>：只解第一个成员，尾部多余字节不参与。</li>
+<li>❌ <code>inflateZlib</code> <strong>不校验 adler32</strong>，也<strong>不查</strong> RFC1950 的 FCHECK（<code>(CMF*256+FLG)%31</code>）。</li>
+<li>❌ <strong>没有压缩产出侧</strong>（只解不压）。</li>
+</ul>
+<p><strong>为什么是纯 Leno 而不是 zlib</strong>：系统里没有独立 zlib（PATH / System32 / Git usr/bin 都查过）；
+libcurl 也不导出 <code>gzopen</code> / <code>inflate*</code>（它自己的 gzip 解码是内部静态链接的）；随模块分发 zlib 要维护
+两套二进制 ⇒ 自写反而<strong>零依赖、跨平台、可重入</strong>（状态全挂 struct，无模块级变量 ⇒ 多线程可同时解）。</p>
+<p><strong>性能</strong>：Huffman 解码走 9 位快查表 + 慢路径兜底；解 1 MB 左右 XML 约几百毫秒。</p>
+<p><strong>典型用法：<code>base64(gzip(json))</code> 这种本地文件</strong></p>
+<pre><code class="language-leno">import strings
+import files
+import &quot;web_gzip&quot; as gz
+
+var b64 = strings.trim(files.read(&quot;some.info&quot;))
+Result[Inflated] r = gz.gunzip(b64.from_base64())
+if r.isOk() { print(r.val.data) } else { print(&quot;解压失败: &quot; + r.errText()) }
+</code></pre>
+<blockquote>
+<p>⚠ <strong>二进制串上 <code>len()</code> 是字符数、不是字节数</strong>：错的字节序列经 <code>len()</code> 会得到一个偏小的数字
+（实测：146 字节的 gzip 数据 <code>len()</code> 报 127，而 <code>byte_len()</code> 是 146、与 <code>gunzip(...).val.inBytes</code>
+对得上）⇒ 处理这些解出来的字节时，<strong>一律用 <code>byte_len()</code> / <code>byte()</code> / <code>byte_slice()</code></strong>。
+这与 <code>web_charset.leno</code> 文件头第 13-18 行记的是同一条口径（那边同样全程走 <code>byte_*</code>）。</p>
+</blockquote>
+<h3 id="web_charset-字符集探测与转码">web_charset：字符集探测与转码</h3>
+<p>API：<code>backend()</code>（<code>"windows"</code> / <code>"iconv"</code> / <code>"none"</code>）、<code>normalize</code> / <code>codepage</code> / <code>needsDecode</code>、
+<code>charsetFromBom</code> / <code>charsetFromContentType</code> / <code>charsetFromMeta</code>、<code>isValidUtf8</code>、<code>isTextual</code>、
+<code>defaultCharset</code>、<code>detect(raw, contentType)</code>、<code>decode(raw, charset)</code>、<code>toUtf8(raw, contentType)</code>、
+<code>encode(text, charset)</code>、<code>canEncode(charset)</code>。</p>
+<p>探测顺序：<strong>BOM → Content-Type → <code>&lt;meta charset&gt;</code> → UTF-8 校验 → 系统 ANSI 兜底</strong>（与 requests 对齐）。</p>
+<ul>
+<li><code>charsetFromMeta</code> <strong>只在 <code>&lt;meta&gt;</code> 标签内部</strong>认 charset：GBK 双字节的尾字节可能落在 <code>0x40~0x7E</code>，
+  全文裸搜必然误判。</li>
+<li>后端：Windows = <code>kernel32</code>（自带、零依赖）；POSIX = libc <code>iconv</code>（macOS/musl 回退 <code>libiconv.so</code>）；
+  <strong>两者都没有 ⇒ 原样返回</strong>（宁可不转，也不搞坏内容）。</li>
+<li>⚠ <code>isValidUtf8</code> <strong>不能用 Leno 逐字节循环</strong>（1 MB ≈ 38 ms）；无后端时退回"只扫前 8 KB"。</li>
+</ul>
+<h3 id="web_html-html-解析与-css-选择器">web_html：HTML 解析与 CSS 选择器</h3>
+<p><code>HtmlNode</code>：<code>tag</code>（普通元素小写、文本节点 <code>"#text"</code>、根 <code>"#document"</code>）、<code>attrs</code>、<code>children</code>、<code>text</code>、<code>_parent</code>；
+方法 <code>attr</code> / <code>hasAttr</code> / <code>text()</code> / <code>allText()</code> / <code>isTextNode()</code> / <code>isElement()</code> / <code>tagName()</code> / <code>classes()</code> /
+<code>hasClass</code> / <code>childCount()</code> / <code>select</code> / <code>selectOne</code> / <code>remove(selector)</code> / <code>parent</code> / <code>closest</code> /
+<code>siblings</code> / <code>nextSibling</code> / <code>prevSibling</code>。</p>
+<p>模块级：<code>parse(html)</code>、<code>tag</code> / <code>text</code> / <code>allText</code> / <code>textContent</code> / <code>cleanText</code> / <code>htmlToText</code> / <code>stripTags</code>、
+<code>extractTable(root)</code>（th 优先，与 pandas <code>read_html</code> 一致）、<code>extractForm(root)</code>（input/select/textarea）、
+<code>getTitle</code> / <code>getMeta</code> / <code>getMetas</code>、<code>getLinks(html)</code>、<code>getElementById</code> / <code>getElementsByTag</code> /
+<code>getElementsByClass</code> / <code>findAll</code>、<code>select</code> / <code>selectOne</code> / <code>removeElement</code>。</p>
+<ul>
+<li>纯 Leno 实现；支持实体解码（XML 基本 5 个 + ISO-8859-1 全集，含 <code>nbsp</code> = U+00A0）、DOCTYPE、CDATA、容错解析。</li>
+<li>选择器组合器只支持 <code>" "</code>（后代）/ <code>"&gt;"</code>（子）/ <code>"+"</code>（紧随兄弟）/ <code>"~"</code>（后续兄弟）；
+  <code>[ ]</code> 与 <code>( )</code> 内部的空格不算分隔符；伪类可叠加、位置类伪类只数<strong>元素</strong>子节点；
+  <strong>未知伪类不拦</strong>（写错的伪类不会静默返回空）。</li>
+<li>⚠ <code>select</code> 结果去重是 O(m²)（调用点已按"是否可能重复"过滤）。</li>
+<li>⚠ 解析状态用<strong>模块级全局变量</strong>管理 ⇒ 多线程同时解析同一份 HTML 需谨慎（见 <code>archive/多线程struct与模块全局变量问题记录.md</code>）。</li>
+</ul>
+<h3 id="web_crawler-url-robots-sitemap-爬虫框架-csv">web_crawler：URL / robots / sitemap / 爬虫框架 / CSV</h3>
+<p><code>Url</code>：<code>scheme</code> / <code>host</code> / <code>port</code> / <code>path</code> / <code>query</code> / <code>fragment</code> / <code>isAbsolute</code> + <code>str()</code> / <code>authority()</code> /
+<code>effectivePort()</code> / <code>normalizedPath()</code> / <code>withoutQuery()</code> / <code>queryParam(k)</code> / <code>resolve(ref)</code> / <code>normalize()</code>。</p>
+<p><code>Crawler</code>（<code>createCrawler(config)</code>）：字段含 <code>start_urls</code> / <code>allowed_domains</code> / <code>max_pages</code> / <code>max_depth</code> /
+<code>delay_ms</code> / <code>user_agent</code> / <code>respect_robots</code> 以及一组渲染回退配置（<code>render</code> / <code>render_mode</code>（<code>auto|always|never</code>）/
+<code>render_selector</code> / <code>render_stealth</code> / <code>render_timeout_ms</code> / <code>render_proxy</code> / <code>render_user_data_dir</code>）。
+方法：<code>start()</code> / <code>nextUrl()</code> / <code>markVisited(url)</code> / <code>enqueue(url, depth, priority)</code> / <code>shouldStop()</code> / <code>stop()</code> /
+<code>throttle()</code> / <code>effectiveDelay()</code>（<code>crawl-delay</code> 与 <code>delay_ms</code> 取较大者）/ <code>setRobots(text)</code> / <code>saveState(path)</code> /
+<code>loadState(path)</code> / <code>resume()</code> / <code>fetchItem(item)</code> / <code>closeBrowser()</code> / <code>setProxyPool(pool)</code>。</p>
+<p>URL / robots / sitemap：<code>parseUrl</code>（=<code>urlParse</code>）/ <code>buildUrl</code> / <code>buildUrlDict</code> / <code>domain</code> / <code>baseUrl</code> /
+<code>resolveUrl</code> / <code>normalizeUrl</code> / <code>getQueryParam</code> / <code>stripQuery</code>；<code>parseRobots</code> / <code>parseCrawlDelay</code> /
+<code>isRobotsAllowed</code>；<code>parseSitemapEntries</code> / <code>parseSitemap</code> / <code>parseSitemapIndex</code> / <code>isSitemapIndex</code> /
+<code>sitemapUrl</code> / <code>robotsUrl</code> / <code>fetchRobots</code> / <code>fetchSitemapUrls</code> / <code>fetchSitemapUrlsDeep</code> / <code>fetchSitemapReport</code>。</p>
+<p>CSV：<code>csvField(v)</code> / <code>toCsv(rows)</code>（CRLF，Excel 友好）/ <code>writeCsv(path, rows, header, withBom = true)</code> /
+<code>writeCsvRows(path, rows, withBom = true)</code>。</p>
+<ul>
+<li>依赖链：<code>web_crawler</code> → <code>web_net</code> + <code>web_html</code> + <code>web_gzip</code>（<code>.gz</code> sitemap）+ <code>web_cdp</code>（SPA 回退渲染）。</li>
+<li><code>SitemapReport</code> 刻意<strong>不用模块级状态</strong> ⇒ 多线程安全；单个 sitemap 抓失败不中断整体（错误进 <code>errors</code>）。</li>
+<li>⚠ <strong>爬完记得 <code>closeBrowser()</code></strong>（否则留下浏览器进程与临时 profile 目录）。</li>
+</ul>
+<h3 id="web_ws-websocket-客户端">web_ws：WebSocket 客户端</h3>
+<p><code>connect(url, timeoutMs): WsClient</code>、<code>sendText(c, text)</code>、<code>recvMessage(c): WsMessage</code>（自动拼延续帧、
+自动回 pong、忽略 pong）、<code>recvText(c)</code>、<code>setTimeout(c, ms)</code>、<code>close(c)</code>、<code>parseWsUrl(url)</code>、
+<code>lastError()</code>，以及自检用 <code>sha1Hex</code> / <code>base64</code> / <code>base64Decode</code>。</p>
+<ul>
+<li>支持：客户端握手（校验 <code>Sec-WebSocket-Accept</code>）、文本/二进制/延续帧、分片重组、ping 自动回 pong、
+  close 帧、出站帧加掩码、读超时。<strong>不做</strong>扩展协商（permessage-deflate 等）。</li>
+<li>自写理由：语言没有 websockets 模块，而 libcurl 的 <code>curl_ws_*</code> 要配 multi 驱动 + <code>CURLE_AGAIN</code> 轮询
+  ⇒ 与 <code>web_gzip</code> 同一取舍（零依赖、可离线测试，底层用 <code>sockets</code>）。</li>
+<li>⚠ <code>WsUrl</code> / <code>WsMessage</code> 用 struct 而不是数组（数组元素类型不齐会被判成 <code>Array[any]</code>，与声明冲突）。</li>
+</ul>
+<h3 id="web_cdp-无头浏览器-chrome-edge">web_cdp：无头浏览器（Chrome / Edge）</h3>
+<p><code>findBrowser(): string</code>（按 <code>LENO_BROWSER</code> 环境变量 → Edge → Chrome → 常见路径）、
+<code>launch(BrowserConfig)</code>、<code>render(url, timeoutMs)</code>（一次性：起浏览器→渲染→关掉）、
+<code>renderWith(b, url, waitLoadMs, settleMs)</code>、<code>renderAdvanced(b, url, RenderOptions)</code>、
+<code>renderOn(b, targetId, url, opt)</code>、<code>renderMany(b, urls, opt, tabs)</code>；客户端交互：<code>evaluate</code> / <code>waitForSelector</code> /
+<code>clickSelector</code> / <code>clickReal</code> / <code>typeText</code> / <code>scrollToBottom</code> / <code>captureScreenshot</code> / <code>createTarget</code> /
+<code>closeTarget</code> / <code>waitNetworkIdle</code>；收尾 <code>close(b)</code>。</p>
+<ul>
+<li>⚠ <strong>需要系统装 Chrome/Edge</strong>；<code>Chrome/Edge 136+</code> 起 <code>--remote-debugging-port</code> 对<strong>默认用户目录不再生效</strong>，
+  必须配 <code>--user-data-dir=&lt;独立目录&gt;</code>（本模块本就建临时目录）。</li>
+<li>⚠ <strong>绝不能 <code>taskkill /IM msedge.exe</code></strong>（会连用户自己的浏览器一起杀）——模块按 <code>--user-data-dir</code>
+  核对"这是不是自己拉起的那个"。</li>
+<li>进程管理走 <code>_spawn(exe, args)</code> + <code>_kill(handle)</code>（Job Object）⇒ 只杀自己 spawn 的；
+  Leno 进程退出（含崩溃/强杀）时内核连它一起收。</li>
+<li><code>BrowserConfig.minFreeCommitMb</code>（默认 1024 MB）是<strong>可用提交内存闸门</strong>：低于闸门<strong>拒绝启动</strong>
+  （2026-10-07 两次 <code>0xEF CRITICAL_PROCESS_DIED</code> 都发生在批量拉起浏览器那一下）。</li>
+<li><code>renderMany</code> 结果<strong>按输入顺序</strong>返回，但它是<strong>顺序</strong>执行多 tab 轮转；真并发要自己起线程。</li>
+</ul>
+<h3 id="web_generic-result-stack-linkedlist">web_generic：Result / Stack / LinkedList</h3>
+<p><code>Result[T]</code>（<code>isOk()</code> / <code>isError()</code> / <code>unwrapOr(v)</code> / <code>getError()</code> / <code>getData()</code>）+ <code>Ok(v)</code> / <code>Err(msg)</code>、
+<code>map</code> / <code>filter</code> / <code>reduce</code> / <code>forEach</code>、<code>Stack[T]</code>（<code>push</code> / <code>pop</code> / <code>peek</code> / <code>isEmpty</code>）、
+<code>LinkedList[T]</code>（<code>append</code> / <code>prepend</code> / <code>shift</code> / <code>first</code> / <code>contains</code> / <code>get</code> / <code>toArray</code>）。</p>
+<p>⚠ 空栈 / 越界的 <code>pop</code> / <code>peek</code> / <code>shift</code> / <code>first</code> / <code>get</code> <strong>返回 <code>null</code></strong>（不是抛错）；
+<code>LinkedList.contains</code> / <code>get</code> 是 O(n)。<code>Web.leno</code> 也转发了一套同名函数（见"已知缺口"）。</p>
+<hr>
+<h2 id="四-注意事项-平台差异-外部依赖-坑">四、注意事项：平台差异 · 外部依赖 · 坑</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>libcurl 动态库</strong></td>
+<td>Windows 用随模块分发的 <code>libcurl-x64.dll</code>；POSIX 用随模块分发的 <code>libcurl.so</code>（curl 8.21.0，TLS 静态链 mbedTLS 3.5.2），失败回退系统 <code>libcurl.so.4</code></td>
+</tr>
+<tr>
+<td><strong>TLS 指纹</strong></td>
+<td>想要真浏览器指纹需换 <strong>curl-impersonate</strong> 版 libcurl；<code>setCipherList</code> / <code>setEcCurves</code> 只是"看起来不像脚本"那层</td>
+</tr>
+<tr>
+<td><strong>brotli</strong></td>
+<td>浏览器头里声明 <code>br</code> 时依赖 libcurl 后端支持 brotli，否则收到解不开的正文</td>
+</tr>
+<tr>
+<td><strong>重定向后正文</strong></td>
+<td>下载/落盘一律用 <code>rawBody()</code> / <code>bytes()</code>（<code>body</code> 可能已被字符集转码）</td>
+</tr>
+<tr>
+<td><strong><code>remoteSize</code></strong></td>
+<td>返回 <code>-1</code> 是"<strong>未知</strong>"不是错误 ⇒ 未知时不要做完整性校验</td>
+</tr>
+<tr>
+<td><strong><code>fetchAll</code></strong></td>
+<td>结果按<strong>输入顺序</strong>返回；<code>concurrency</code> 建议 4~16；<code>multiInit</code> 失败时整批返回带 <code>resp.error</code> 的占位结果</td>
+</tr>
+<tr>
+<td><strong>回调上限</strong></td>
+<td><code>ffi.callback</code> 同时存活上限 <strong>256</strong>；<code>HttpClient.close()</code> 必须释放自己建的 2 个回调，否则第 128 次请求起失败</td>
+</tr>
+<tr>
+<td><strong>线程安全</strong></td>
+<td>每线程各用各的 <code>HttpClient</code> ✓；同一 client 跨线程共用<strong>不安全</strong>（用户责任）；<code>curl_global_init</code> 已改为模块加载时做一次</td>
+</tr>
+<tr>
+<td><strong>模块级全局</strong></td>
+<td><code>web_html</code> 用模块级全局管解析状态；<code>ObjModule.globals</code> <strong>不随 <code>threads.start()</code> 深拷贝</strong>（见 <code>archive/多线程struct与模块全局变量问题记录.md</code>）⇒ 多线程共用一个模块的全局要当心</td>
+</tr>
+<tr>
+<td><strong>charset 后端</strong></td>
+<td>Windows <code>kernel32</code> / POSIX <code>iconv</code>；<strong>两者都不可用 ⇒ 原样返回</strong>；POSIX（iconv）路径<strong>未在 Windows 实测</strong>，需在 Linux/macOS 跑一遍</td>
+</tr>
+<tr>
+<td><strong>sitemap 接口分两种</strong></td>
+<td><code>parseSitemap</code> 只取 <code>&lt;loc&gt;</code>（兼容旧接口）；要 lastmod/changefreq/priority 用 <code>parseSitemapEntries</code>；索引文件先用 <code>isSitemapIndex</code> 判</td>
+</tr>
+<tr>
+<td><strong>CSV</strong></td>
+<td><code>toCsv</code> 行尾是 CRLF（Excel 友好）；<code>writeCsv</code> 默认带 BOM</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="五-已知缺口-待办">五、已知缺口 / 待办</h2>
+<ol>
+<li><strong><code>Web.leno</code> 有两处 <code>version()</code></strong>（70 行返回 <code>core.version()</code>、126 行返回 <code>net.version()</code>，行为等价）
+   —— 同一入口重复定义，建议只留一个。</li>
+<li><strong><code>Ok</code> / <code>Err</code> / <code>map</code> / <code>filter</code> / <code>reduce</code> / <code>forEach</code> 双重转发</strong>：既 <code>use generic.(...)</code> 又写了一遍
+   <code>export func</code>（237-266 行），同样是重复来源。</li>
+<li><strong>入口未转发的函数</strong>（见上表）：WebSocket 的<strong>全部函数</strong>、CDP 低层、<code>web_gzip.rfcTableCheck</code>、
+   <code>web_html.SelectorPart</code> —— 用户面想看齐"一个 import 全都有"就得补齐转发。</li>
+<li><strong>gzip 只解不压</strong>：需要"把结果写回 gzip 文件"的场景目前没有产出侧。</li>
+<li><strong><code>web_cdp</code> 需要系统装浏览器</strong>：CI / 干净机器上要显式 <code>LENO_BROWSER</code> 指定，否则只能走静态抓取。</li>
+<li>本文件是 LenoWeb 的<strong>首份参考文档</strong>，API 清单以 2026-10-14 的源码为准；改模块时请同步本文件
+   （尤其新函数要补 <code>export</code> 与转发）。</li>
+</ol>
+<hr>
+<h2 id="相关文档">相关文档</h2>
+<ul>
+<li><a href="archive/LenoNet_崩溃问题排查记录.html"><code>archive/LenoNet_崩溃问题排查记录.md</code></a> —— libcurl 绑定期的<strong>堆损坏</strong>排查过程（LenoNet 已并入本模块）</li>
+<li><a href="archive/移植音乐下载器实录与待办.html"><code>archive/移植音乐下载器实录与待办.md</code></a> —— 实战用例（zlib + gb18030 那类）</li>
+<li><a href="语言陷阱速查.html"><code>语言陷阱速查.md</code></a> —— <code>len()</code> vs <code>byte_len()</code> 等语言层坑</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#一-入口与子模块">一、入口与子模块</a></li><ul class="lv3"><li><a href="#入口没有转发的通道">入口没有转发的通道</a></li></ul><li><a href="#二-快速上手">二、快速上手</a></li><li><a href="#三-api">三、API</a></li><ul class="lv3"><li><a href="#web_net-http-客户端-会话-代理池-批抓">web_net：HTTP 客户端 / 会话 / 代理池 / 批抓</a></li><li><a href="#web_gzip-gzip-deflate-zlib-解压-纯-leno">web_gzip：gzip / DEFLATE / zlib 解压（纯 Leno）</a></li><li><a href="#web_charset-字符集探测与转码">web_charset：字符集探测与转码</a></li><li><a href="#web_html-html-解析与-css-选择器">web_html：HTML 解析与 CSS 选择器</a></li><li><a href="#web_crawler-url-robots-sitemap-爬虫框架-csv">web_crawler：URL / robots / sitemap / 爬虫框架 / CSV</a></li><li><a href="#web_ws-websocket-客户端">web_ws：WebSocket 客户端</a></li><li><a href="#web_cdp-无头浏览器-chrome-edge">web_cdp：无头浏览器（Chrome / Edge）</a></li><li><a href="#web_generic-result-stack-linkedlist">web_generic：Result / Stack / LinkedList</a></li></ul><li><a href="#四-注意事项-平台差异-外部依赖-坑">四、注意事项：平台差异 · 外部依赖 · 坑</a></li><li><a href="#五-已知缺口-待办">五、已知缺口 / 待办</a></li><li><a href="#相关文档">相关文档</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="module_types.html">← 上一篇</a><a href="FFI使用指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

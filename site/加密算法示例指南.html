@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>加密算法示例指南 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="加密算法示例指南.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">03 使用指南</a><span class="sep">/</span><span class="here">加密算法示例指南</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details open><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html" class="active" aria-current="page">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="加密算法示例指南">加密算法示例指南</h1>
+<p>Leno 在 <code>examples/crypto/</code> 目录下提供了一套完整的纯 Leno 实现密码学算法示例，涵盖编码、哈希、对称加密、非对称加密、密钥派生和古典密码。所有实现均可在 Leno 虚拟机上直接运行，既是学习参考，也可作为项目中的加密工具库。</p>
+<blockquote>
+<p><strong>Base64 已不在示例之列</strong>（2026-10-07）：它是标量编解码、不是密码学原语，已归<strong>核心标准库</strong>
+<code>strings.to_base64</code> / <code>strings.from_base64</code> ⇒ <code>examples/crypto/base64.leno</code> 已删除（见下方该节）。</p>
+</blockquote>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#哈希算法">哈希算法</a></li>
+<li><a href="#md5">MD5</a></li>
+<li><a href="#sha-1">SHA-1</a></li>
+<li><a href="#sha-256">SHA-256</a></li>
+<li><a href="#hmac-sha256">HMAC-SHA256</a></li>
+<li><a href="#对称加密">对称加密</a></li>
+<li><a href="#aes-128">AES-128</a></li>
+<li><a href="#chacha20">ChaCha20</a></li>
+<li><a href="#rc4">RC4</a></li>
+<li><a href="#tea--xtea">TEA / XTEA</a></li>
+<li><a href="#非对称加密">非对称加密</a></li>
+<li><a href="#rsa">RSA</a></li>
+<li><a href="#密钥派生">密钥派生</a></li>
+<li><a href="#pbkdf2">PBKDF2</a></li>
+<li><a href="#古典密码">古典密码</a></li>
+<li><a href="#凯撒密码">凯撒密码</a></li>
+<li><a href="#维吉尼亚密码">维吉尼亚密码</a></li>
+<li><a href="#仿射密码">仿射密码</a></li>
+</ul>
+<hr>
+<h2 id="base64-编码-解码">Base64 编码/解码</h2>
+<p><strong>已归核心标准库</strong>（2026-10-07）：<code>strings.to_base64</code> / <code>strings.from_base64</code>（与 <code>to_hex</code> / <code>from_hex</code> 同族）。
+原 <code>examples/crypto/base64.leno</code>（纯 Leno 实现）<strong>已删除</strong> —— 同一算法在仓库里曾有<strong>四份</strong>独立实现
+（LenoCrypto、examples、LenoWeb 的 <code>web_ws</code>、两个应用各一份），现收敛为一处 ✓</p>
+<pre><code class="language-leno">strings.to_base64(&quot;Hello, Leno!&quot;)         // ⇒ &quot;SGVsbG8sIExlbm8h&quot;
+strings.from_base64(&quot;SGVsbG8sIExlbm8h&quot;)   // ⇒ &quot;Hello, Leno!&quot;
+strings.to_base64(&quot;Hello, Leno!&quot;, true)   // URL-safe：`+` / `/` ⇒ `-` / `_`
+</code></pre>
+<p><strong>特性</strong>: 标准字母表（可选 URL-safe）、完整 <code>=</code> padding、UTF-8 字节编码；解码<strong>两种字母表都认</strong>、
+缺 padding 也收、空白忽略，非法字符报错并指出第几位。详见 <code>docs/module_strings.md</code> ✓</p>
+<hr>
+<h2 id="哈希算法">哈希算法</h2>
+<h3 id="md5">MD5</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/md5.leno"><code>examples/crypto/md5.leno</code></a></p>
+<p>RFC 1321 标准实现，生成 128 位（16 字节）哈希值。</p>
+<pre><code class="language-leno">var hash = md5(&quot;abc&quot;)
+print(hash)  // 900150983cd24fb0d6963f7d28e17f72
+</code></pre>
+<blockquote>
+<p><strong>安全提示</strong>: MD5 已不推荐用于安全场景（如密码存储、数字签名），仅作学习演示或校验和用途。</p>
+</blockquote>
+<h3 id="sha-1">SHA-1</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/sha1.leno"><code>examples/crypto/sha1.leno</code></a></p>
+<p>FIPS 180-4 标准实现，生成 160 位（20 字节）哈希值。</p>
+<pre><code class="language-leno">var hash = sha1(&quot;abc&quot;)
+print(hash)  // a9993e364706816aba3e25717850c26c9cd0d89d
+</code></pre>
+<blockquote>
+<p><strong>安全提示</strong>: SHA-1 已被证明存在碰撞攻击，不推荐用于新系统的安全场景。</p>
+</blockquote>
+<h3 id="sha-256">SHA-256</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/sha256.leno"><code>examples/crypto/sha256.leno</code></a></p>
+<p>FIPS 180-4 标准实现，生成 256 位（32 字节）哈希值，目前仍被认为是安全的哈希算法。</p>
+<pre><code class="language-leno">var hash = sha256(&quot;abc&quot;)
+print(hash)  // ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+</code></pre>
+<h3 id="hmac-sha256">HMAC-SHA256</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/hmac_sha256.leno"><code>examples/crypto/hmac_sha256.leno</code></a></p>
+<p>RFC 2104 标准实现，基于 SHA-256 的消息认证码，用于验证消息的完整性和真实性。</p>
+<pre><code class="language-leno">var mac = hmac_sha256(&quot;secret_key&quot;, &quot;message to authenticate&quot;)
+print(mac)
+</code></pre>
+<p><strong>应用场景</strong>: API 签名、JWT、OAuth 消息验证。</p>
+<hr>
+<h2 id="对称加密">对称加密</h2>
+<h3 id="aes-128">AES-128</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/aes128.leno"><code>examples/crypto/aes128.leno</code></a></p>
+<p>FIPS-197 标准 AES-128 实现，包含完整的 SubBytes、ShiftRows、MixColumns、AddRoundKey 和密钥扩展。</p>
+<pre><code class="language-leno">var key = &quot;0123456789abcdef&quot;        // 16 字节密钥
+var plaintext = &quot;Hello, AES-128!&quot;
+
+var ciphertext = aes128_encrypt(key, plaintext)
+print(ciphertext)  // hex 编码密文
+
+var decrypted = aes128_decrypt(key, ciphertext)
+print(decrypted)   // Hello, AES-128!
+</code></pre>
+<p><strong>特性</strong>:
+- ECB 模式 + PKCS7 填充
+- 完整的 NIST 测试向量验证
+- 支持任意长度字符串（自动分块）
+- 中文 UTF-8 支持</p>
+<h3 id="chacha20">ChaCha20</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/chacha20.leno"><code>examples/crypto/chacha20.leno</code></a></p>
+<p>Daniel J. Bernstein 设计的现代流加密算法，被广泛用于 TLS 1.3、WireGuard、SSH。</p>
+<pre><code class="language-leno">var key = &quot;01234567890123456789012345678901&quot;  // 32 字节
+var nonce = &quot;012345678901&quot;                     // 12 字节
+var text = &quot;Hello, ChaCha20!&quot;
+
+var enc = chacha20_encrypt(key, 0, nonce, text)
+var dec = chacha20_decrypt(key, 0, nonce, enc)
+</code></pre>
+<p><strong>特性</strong>:
+- 256 位密钥 + 96 位 nonce + 32 位计数器
+- 20 轮 Quarter Round 混合
+- 输出 hex 编码避免 null 字节截断
+- 多块自动处理（每块 64 字节）</p>
+<h3 id="rc4">RC4</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/rc4.leno"><code>examples/crypto/rc4.leno</code></a></p>
+<p>经典流密码，加密和解密使用相同操作（密钥流 XOR）。</p>
+<pre><code class="language-leno">var encrypted = rc4(&quot;password&quot;, &quot;Hello, Leno!&quot;)
+var decrypted = rc4(&quot;password&quot;, encrypted)
+</code></pre>
+<blockquote>
+<p><strong>安全提示</strong>: RC4 已不被推荐用于生产环境，仅作学习演示。</p>
+</blockquote>
+<h3 id="tea-xtea">TEA / XTEA</h3>
+<p><strong>文件</strong>:
+- <a href="../../Leno/examples/crypto/tea.leno"><code>examples/crypto/tea.leno</code></a>
+- <a href="../../Leno/examples/crypto/xtea.leno"><code>examples/crypto/xtea.leno</code></a></p>
+<p>TEA (Tiny Encryption Algorithm) 是一种微型块加密算法，64 位数据块 + 128 位密钥，32 轮 Feistel 网络。</p>
+<pre><code class="language-leno">var key = &quot;0123456789abcdef&quot;
+var text = &quot;Hello, TEA!&quot;
+
+var enc = tea_encrypt(key, text)
+var dec = tea_decrypt(key, enc)
+</code></pre>
+<p>XTEA 是 TEA 的改进版，修复了等价密钥问题，算法更简洁，推荐使用 XTEA 替代 TEA。</p>
+<pre><code class="language-leno">var enc = xtea_encrypt(key, text)
+var dec = xtea_decrypt(key, enc)
+</code></pre>
+<p><strong>特性</strong>:
+- ECB 模式 + PKCS7 填充
+- 密钥不足 16 字节自动空格填充
+- Hex 编解码便捷接口
+- 中文支持</p>
+<hr>
+<h2 id="非对称加密">非对称加密</h2>
+<h3 id="rsa">RSA</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/rsa.leno"><code>examples/crypto/rsa.leno</code></a></p>
+<p>PKCS#1 v1.5 风格的 RSA 实现，包含密钥生成、加密、解密、签名和验签。</p>
+<pre><code class="language-leno">// 使用已知密钥
+var key = new RSAKey()
+key.n = 3233
+key.e = 17
+key.d = 2753
+
+var ciphertext = rsa_encrypt(42, key)
+var plaintext = rsa_decrypt(ciphertext, key)
+
+// 签名验证
+var signature = rsa_sign(42, key)
+var verified = rsa_verify(signature, key)
+</code></pre>
+<p><strong>特性</strong>:
+- 快速模幂运算（平方-乘法算法）
+- 扩展欧几里得算法求模逆元
+- Miller-Rabin 素性测试
+- 随机素数生成</p>
+<blockquote>
+<p><strong>安全提示</strong>: 此实现仅用于学习演示，生产环境请使用经过审计的密码库。</p>
+</blockquote>
+<hr>
+<h2 id="密钥派生">密钥派生</h2>
+<h3 id="pbkdf2">PBKDF2</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/pbkdf2.leno"><code>examples/crypto/pbkdf2.leno</code></a></p>
+<p>RFC 2898 标准实现，基于 HMAC-SHA256 的密钥派生函数，通过加盐和多次迭代抵抗暴力破解。</p>
+<pre><code class="language-leno">var derived_key = pbkdf2_hmac_sha256(&quot;password&quot;, &quot;salt&quot;, 100000, 32)
+print(derived_key)  // 64 字符 hex 字符串
+</code></pre>
+<p><strong>参数说明</strong>:
+- <code>password</code>: 密码字符串
+- <code>salt</code>: 盐字符串（随机唯一）
+- <code>iterations</code>: 迭代次数（推荐 100000+）
+- <code>dk_len</code>: 派生密钥长度（字节数）</p>
+<p><strong>应用场景</strong>: 密码存储、磁盘加密、Wi-Fi WPA2。</p>
+<hr>
+<h2 id="古典密码">古典密码</h2>
+<h3 id="凯撒密码">凯撒密码</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a></p>
+<p>最古老的替换密码之一，将每个字母在字母表中偏移固定位置。</p>
+<pre><code class="language-leno">var encrypted = caesar_enc(&quot;Hello, World!&quot;, 3)
+var decrypted = caesar_dec(encrypted, 3)
+
+// ROT13（偏移13，加密即解密）
+var rot = rot13(&quot;Hello, ROT13!&quot;)
+</code></pre>
+<p><strong>额外功能</strong>:
+- 暴力破译（枚举 26 种偏移）
+- 基于频率分析的自动破译
+- 仿射密码（Affine Cipher）实现</p>
+<h3 id="维吉尼亚密码">维吉尼亚密码</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/vigenere.leno"><code>examples/crypto/vigenere.leno</code></a></p>
+<p>多表替换密码，使用关键词重复地对明文字母进行不同偏移的凯撒替换。</p>
+<pre><code class="language-leno">var encrypted = vigenere_enc(&quot;LEMON&quot;, &quot;ATTACKATDAWN&quot;)
+print(encrypted)  // LXFOPVEFRNHR
+var decrypted = vigenere_dec(&quot;LEMON&quot;, encrypted)
+</code></pre>
+<p><strong>额外功能</strong>:
+- 重合指数（IC）计算
+- Kasiski 测试猜测密钥长度
+- 基于频率分析的自动破译</p>
+<h3 id="仿射密码">仿射密码</h3>
+<p><strong>文件</strong>: <a href="../../Leno/examples/crypto/caesar.leno"><code>examples/crypto/caesar.leno</code></a>（与凯撒密码同文件）</p>
+<p>凯撒密码的推广，使用 <code>E(x) = (ax + b) mod 26</code>。</p>
+<pre><code class="language-leno">var encrypted = affine_encrypt(&quot;HELLO AFFINE&quot;, 5, 8)
+var decrypted = affine_decrypt(encrypted, 5, 8)
+</code></pre>
+<hr>
+<h2 id="算法速查表">算法速查表</h2>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>类型</th>
+<th>密钥长度</th>
+<th>输出</th>
+<th>安全等级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base64</td>
+<td>编码</td>
+<td>-</td>
+<td>字符串</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MD5</td>
+<td>哈希</td>
+<td>-</td>
+<td>128 bit</td>
+<td>已淘汰</td>
+</tr>
+<tr>
+<td>SHA-1</td>
+<td>哈希</td>
+<td>-</td>
+<td>160 bit</td>
+<td>已淘汰</td>
+</tr>
+<tr>
+<td>SHA-256</td>
+<td>哈希</td>
+<td>-</td>
+<td>256 bit</td>
+<td>安全</td>
+</tr>
+<tr>
+<td>HMAC-SHA256</td>
+<td>MAC</td>
+<td>任意</td>
+<td>256 bit</td>
+<td>安全</td>
+</tr>
+<tr>
+<td>AES-128</td>
+<td>对称块加密</td>
+<td>128 bit</td>
+<td>密文</td>
+<td>安全</td>
+</tr>
+<tr>
+<td>ChaCha20</td>
+<td>对称流加密</td>
+<td>256 bit</td>
+<td>密文</td>
+<td>安全</td>
+</tr>
+<tr>
+<td>RC4</td>
+<td>对称流加密</td>
+<td>可变</td>
+<td>密文</td>
+<td>已淘汰</td>
+</tr>
+<tr>
+<td>TEA</td>
+<td>对称块加密</td>
+<td>128 bit</td>
+<td>密文</td>
+<td>弱</td>
+</tr>
+<tr>
+<td>XTEA</td>
+<td>对称块加密</td>
+<td>128 bit</td>
+<td>密文</td>
+<td>中等</td>
+</tr>
+<tr>
+<td>RSA</td>
+<td>非对称</td>
+<td>可变</td>
+<td>密文</td>
+<td>安全（位数足够）</td>
+</tr>
+<tr>
+<td>PBKDF2</td>
+<td>密钥派生</td>
+<td>密码+盐</td>
+<td>可变</td>
+<td>安全</td>
+</tr>
+<tr>
+<td>凯撒/维吉尼亚</td>
+<td>古典替换</td>
+<td>-</td>
+<td>密文</td>
+<td>已淘汰</td>
+</tr>
+<tr>
+<td>仿射密码</td>
+<td>古典替换</td>
+<td>a, b</td>
+<td>密文</td>
+<td>已淘汰</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="位宽转换函数">位宽转换函数</h2>
+<p>Leno 提供了一组固定位宽转换函数，在加密算法中用于模拟 C 语言的固定位宽环绕运算。这些函数是所有加密算法实现的基础工具。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回范围</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_int32(x)</code></td>
+<td>-2147483648 ~ 2147483647</td>
+<td>32 位有符号环绕（AES、TEA、MD5 等）</td>
+</tr>
+<tr>
+<td><code>_uint32(x)</code></td>
+<td>0 ~ 4294967295</td>
+<td>32 位无符号位运算（MD5、SHA、PBKDF2 等）</td>
+</tr>
+<tr>
+<td><code>_int64(x)</code></td>
+<td>-9223372036854775808 ~ 9223372036854775807</td>
+<td>64 位有符号运算</td>
+</tr>
+<tr>
+<td><code>_uint64(x)</code></td>
+<td>0 ~ 18446744073709551615</td>
+<td>64 位无符号位运算、FFI 交互</td>
+</tr>
+<tr>
+<td><code>_uint8(x)</code> / <code>_byte(x)</code></td>
+<td>0 ~ 255</td>
+<td>字节操作、协议解析</td>
+</tr>
+</tbody>
+</table>
+<p><strong>典型用法：</strong></p>
+<pre><code class="language-leno">// 32 位环绕加法（MD5、SHA 等哈希算法的核心操作）
+_int32(a + b)                    // 加法结果截断到 32 位
+
+// 32 位无符号位运算（避免算术右移的符号扩展）
+_int32(_uint32(x) &amp; _uint32(y))  // 无符号 AND
+_int32(_uint32(x) ^ _uint32(y))  // 无符号 XOR
+
+// 32 位循环左移（MD5、SHA 的核心旋转操作）
+_int32(_uint32(x) &lt;&lt; n | _uint32(x) &gt;&gt; (32 - n))
+
+// 字节提取（ChaCha20、AES 的序列化/反序列化）
+_byte(value)          // 最低字节
+_byte(value &gt;&gt; 8)     // 次低字节
+_byte(value &gt;&gt; 24)    // 最高字节
+</code></pre>
+<blockquote>
+<p><strong>💡 为什么加密算法需要这些函数？</strong></p>
+<p>C 语言的 <code>uint32_t</code> 等类型天然支持环绕运算，而 Leno 的 <code>int</code> 是任意精度大整数，运算结果不会溢出。<code>_int32()</code>/<code>_uint32()</code> 模拟了 C 语言的固定位宽行为，使得加密算法的 Leno 实现与 C 参考实现行为一致。</p>
+</blockquote>
+<hr>
+<h2 id="运行测试">运行测试</h2>
+<p>所有示例文件均包含内置测试，直接运行即可验证：</p>
+<pre><code class="language-bash">leno examples/crypto/aes128.leno
+leno examples/crypto/sha256.leno
+leno examples/crypto/rsa.leno
+# ... 其他文件同理
+</code></pre>
+<p>这些纯 Leno 实现充分展示了语言的位运算、数组操作、字符串处理和算法表达能力。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#base64-编码-解码">Base64 编码/解码</a></li><li><a href="#哈希算法">哈希算法</a></li><ul class="lv3"><li><a href="#md5">MD5</a></li><li><a href="#sha-1">SHA-1</a></li><li><a href="#sha-256">SHA-256</a></li><li><a href="#hmac-sha256">HMAC-SHA256</a></li></ul><li><a href="#对称加密">对称加密</a></li><ul class="lv3"><li><a href="#aes-128">AES-128</a></li><li><a href="#chacha20">ChaCha20</a></li><li><a href="#rc4">RC4</a></li><li><a href="#tea-xtea">TEA / XTEA</a></li></ul><li><a href="#非对称加密">非对称加密</a></li><ul class="lv3"><li><a href="#rsa">RSA</a></li></ul><li><a href="#密钥派生">密钥派生</a></li><ul class="lv3"><li><a href="#pbkdf2">PBKDF2</a></li></ul><li><a href="#古典密码">古典密码</a></li><ul class="lv3"><li><a href="#凯撒密码">凯撒密码</a></li><li><a href="#维吉尼亚密码">维吉尼亚密码</a></li><li><a href="#仿射密码">仿射密码</a></li></ul><li><a href="#算法速查表">算法速查表</a></li><li><a href="#位宽转换函数">位宽转换函数</a></li><li><a href="#运行测试">运行测试</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="Leno跨模块clib开发经验.html">← 上一篇</a><a href="F2_非可空与可空类型设计.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

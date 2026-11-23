@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoSDL3 窗口与控件参考 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="LenoSDL3_窗口与控件参考.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">05 GUI · 平台</a><span class="sep">/</span><span class="here">LenoSDL3 窗口与控件参考</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details open><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html" class="active" aria-current="page">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="lenosdl3-窗口与控件参考">LenoSDL3 窗口与控件参考</h1>
+<blockquote>
+<p>本文按 <strong>先窗口、后通用约定、再逐个控件</strong> 的顺序，把 Leno 的桌面 GUI 能力讲清楚。
+全部内容以 <code>Leno/leno_gui</code> 下的<strong>官方活文档与实测用例</strong>为准（<code>控件/总览/showcase.leno</code> 一窗展示全部控件，按控件分类的 <code>test_*.leno</code> 逐个验证属性），创建参数对照 <code>SDL3.leno</code> 门面的 <code>@optkeys</code> 白名单。代码照着改就能跑。
+按项目搭建顺序的实战路线见 <a href="LenoSDL3_控件实战教程.html">LenoSDL3 控件实战教程</a>；实测坑点见 <a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">SDL3 常用 API 与易踩坑速查</a>；官方用例清单见文末<a href="#十官方活文档导览leno_gui">第十章</a>。</p>
+</blockquote>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#一创建窗口">一、创建窗口</a></li>
+<li><a href="#二通用约定读控件前必看">二、通用约定（读控件前必看）</a></li>
+<li><a href="#三文字与按钮">三、文字与按钮</a></li>
+<li><a href="#四输入与选择">四、输入与选择</a></li>
+<li><a href="#五容器与布局">五、容器与布局</a></li>
+<li><a href="#六列表与表格">六、列表与表格</a></li>
+<li><a href="#七图片与图形进度">七、图片与图形进度</a></li>
+<li><a href="#八反馈与浮层">八、反馈与浮层</a></li>
+<li><a href="#九窗口增强">九、窗口增强</a></li>
+<li><a href="#十官方活文档导览leno_gui">十、官方活文档导览（leno_gui）</a></li>
+</ul>
+<hr>
+<h2 id="一-创建窗口">一、创建窗口</h2>
+<h3 id="1-1-最小可运行骨架">1.1 最小可运行骨架</h3>
+<pre><code class="language-leno">import &quot;SDL3&quot; as SDL3
+use SDL3.Event
+use SDL3.Renderer
+
+main() {
+    SDL3.ttfInit()                        // 用文字控件就必须先初始化字体子系统
+
+    var win = SDL3.createWindow({title: &quot;我的窗口&quot;, w: 800, h: 600, resizable: true})
+    if not win.ok { SDL3.ttfQuit(); return }   // 建窗失败时后续操作全部无效
+
+    win.addLabel({x: 24, y: 24, text: &quot;你好，Leno&quot;, font_size: 18})
+    var btn = win.addButton({x: 24, y: 60, w: 120, h: 36, text: &quot;点我&quot;, type: &quot;primary&quot;})
+    btn.on_click(func() { print(&quot;被点了&quot;) })
+
+    win.run(
+        func(Event ev): bool {
+            if ev.isQuit() or ev.isWindowClose() { return false }  // 返回 false 结束主循环
+            return true
+        },
+        func(Renderer r) {
+            r.clearColor(#F5F6F8FF)       // 每帧清屏（最底层）
+        }
+    )
+    SDL3.ttfQuit()
+}
+</code></pre>
+<p>四件事缺一不可：</p>
+<ol>
+<li><strong><code>SDL3.ttfInit()</code> / <code>SDL3.ttfQuit()</code></strong>：只要用到文字（Label/Button/Edit…）就要一对；<code>showcase.leno</code> 和每个测试文件都这么写。</li>
+<li><strong><code>if not win.ok { ...; return }</code></strong>：无显示环境、DLL 缺失时 <code>createWindow</code> 返回 <code>ok=false</code> 的窗口，继续用它必崩。</li>
+<li><strong><code>run()</code> 必须传两个回调</strong>：事件回调 <code>(Event) -&gt; bool</code> 和渲染回调 <code>(Renderer)</code>。只给一个会报"只能调用函数（不是对象类型）"，看不出缺哪个。</li>
+<li><strong>事件回调返回 <code>false</code> 才退出</strong>：主循环本来就一直跑，不需要额外 <code>addTimer</code> 空转。</li>
+</ol>
+<h3 id="1-2-createwindow-的参数">1.2 <code>createWindow</code> 的参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>窗口标题</td>
+</tr>
+<tr>
+<td><code>w</code> / <code>h</code></td>
+<td>客户区宽高</td>
+</tr>
+<tr>
+<td><code>resizable</code></td>
+<td>是否可缩放。<code>showcase</code> / <code>settings</code> 都用 <code>resizable: true</code></td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>SDL 窗口标志。可写 <code>WindowFlag.RESIZABLE</code>（需 <code>use SDL3.WindowFlag</code>），老代码也用 <code>0x20</code></td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>窗口图标 PNG 路径。跨平台必须显式传（Windows 靠 exe 资源，Linux/macOS 没有）</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">import dirs
+var icon = dirs.join(dirs.res_dir(), &quot;images/app.png&quot;)
+var win = SDL3.createWindow({title: &quot;应用&quot;, w: 800, h: 600, icon: icon, resizable: true})
+</code></pre>
+<p>⚠ 图标路径用 <code>dirs.res_dir()</code> 拼，不要用 <code>script_dir()</code>（打包后只有 <code>res_dir</code> 指向释放出的资源）。</p>
+<h3 id="1-3-主题-在创建控件之前设置">1.3 主题：在创建控件之前设置</h3>
+<p><code>test_theme.leno</code> 演示了完整的主题系统——<strong>顺序很关键：先设主题，再建窗口和控件</strong>。</p>
+<pre><code class="language-leno">SDL3.setTheme(SDL3.darkTheme())     // 或 SDL3.lightTheme()
+var win = SDL3.createWindow({title: &quot;主题测试&quot;, w: 880, h: 580})  // 不传 bg_color
+// onRender 回调留空：让窗口内部用主题背景色清屏，别硬编码黑色
+win.run(func(Event ev): bool { ... }, func(Renderer r) {})
+</code></pre>
+<p>要点：设置主题在<strong>创建控件之前</strong>；窗口<strong>不传 <code>bg_color</code></strong>、<code>onRender</code> 留空，主题背景色才生效。</p>
+<h3 id="1-4-窗口常用方法">1.4 窗口常用方法</h3>
+<p>显示与状态：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>show()</code> / <code>hide()</code></td>
+<td>显示 / 隐藏</td>
+</tr>
+<tr>
+<td><code>maximize()</code> / <code>minimize()</code> / <code>restore()</code></td>
+<td>最大化 / 最小化 / 还原</td>
+</tr>
+<tr>
+<td><code>setFullscreen(bool)</code></td>
+<td>全屏切换</td>
+</tr>
+<tr>
+<td><code>setResizable(bool)</code> / <code>setBordered(bool)</code></td>
+<td>可缩放 / 有边框</td>
+</tr>
+<tr>
+<td><code>setAlwaysOnTop(bool)</code> / <code>setOpacity(float)</code></td>
+<td>置顶 / 整体透明度</td>
+</tr>
+<tr>
+<td><code>setMinSize(w, h)</code> / <code>setSize(w, h)</code> / <code>setPosition(x, y)</code></td>
+<td>尺寸与位置</td>
+</tr>
+<tr>
+<td><code>getSize()</code> / <code>getPosition()</code> / <code>getID()</code> / <code>getHandle()</code></td>
+<td>读取尺寸 / 位置 / 窗口 id / 原生句柄（<code>handle</code> 也可当字段用）</td>
+</tr>
+</tbody>
+</table>
+<p>绘制与交互：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setRoot(widget)</code> / <code>setRootAt(widget, ox, oy)</code></td>
+<td>设置根布局（整窗交给一个容器）</td>
+</tr>
+<tr>
+<td><code>addXxx({...})</code></td>
+<td>用绝对坐标直接往窗口加控件（见 2.1）</td>
+</tr>
+<tr>
+<td><code>setOverlay(func(Renderer r) {...})</code></td>
+<td>顶层自绘，盖住所有控件</td>
+</tr>
+<tr>
+<td><code>setContextMenu(bar, ctx)</code></td>
+<td>注册窗口级右击菜单，由 <code>run</code> 统一接管弹出</td>
+</tr>
+<tr>
+<td><code>addShortcut("Ctrl+C", func(){...})</code> / <code>removeShortcut(...)</code></td>
+<td>快捷键</td>
+</tr>
+<tr>
+<td><code>setShortcutGuard(func():bool {...})</code></td>
+<td>返回 true 时屏蔽快捷键（如输入框正在编辑）</td>
+</tr>
+<tr>
+<td><code>addTimer(ms, func(){...})</code> / <code>addTimerOnce(...)</code></td>
+<td>定时器</td>
+</tr>
+<tr>
+<td><code>dumpLayout()</code></td>
+<td>打印整窗布局诊断（见 2.4）</td>
+</tr>
+<tr>
+<td><code>redraw()</code> / <code>setMaxFPS(n)</code></td>
+<td>主动重绘 / 限帧</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-5-退出与关闭的四个入口">1.5 退出与关闭的四个入口</h3>
+<table>
+<thead>
+<tr>
+<th>入口</th>
+<th>用在哪</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>onEvent</code> 里 <code>return false</code></td>
+<td>事件回调内</td>
+<td>结束主循环</td>
+</tr>
+<tr>
+<td><code>win.requestClose()</code></td>
+<td>任意位置</td>
+<td>投递一条"关窗请求"，和点 X 走同一条 <code>onEvent</code> 路径；关不关由 <code>onEvent</code> 决定</td>
+</tr>
+<tr>
+<td><code>win.cancelClose()</code></td>
+<td><code>onEvent</code> 里配合 <code>isWindowClose()</code></td>
+<td>拦下这次销毁 → 做"关闭到托盘"</td>
+</tr>
+<tr>
+<td><code>SDL3.requestExit()</code></td>
+<td>托盘回调、定时器、渲染回调</td>
+<td>请求主循环收尾（下一轮生效），销毁所有窗口</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">win.run(func(Event ev): bool {
+    if ev.isWindowClose() {
+        if tray == null { return false }   // 没托盘就别拦，否则没入口恢复
+        win.hide()
+        win.cancelClose()
+        return true
+    }
+    return true
+}, func(Renderer r) {})
+</code></pre>
+<p>⚠ <strong>不要用 <code>SDL3.quit()</code> 退出程序</strong>：它只关 SDL 子系统，<strong>主循环还在跑</strong>，进程不会退出（自更新替换 exe 会失败）。用 <code>requestExit()</code>。</p>
+<h3 id="1-6-三层绘制顺序">1.6 三层绘制顺序</h3>
+<pre><code>① onRender（run 的第二个回调） —— 最底层，在控件之下
+② 控件树（setRoot 根布局 + addXxx 注册的控件）
+③ setOverlay 回调            —— 最上层，盖住一切
+</code></pre>
+<p>想让自绘盖在控件之上，必须放 <code>setOverlay</code>；放 <code>onRender</code> 里会被控件盖掉。</p>
+<hr>
+<h2 id="二-通用约定-读控件前必看">二、通用约定（读控件前必看）</h2>
+<h3 id="2-1-两种创建方式-别混用">2.1 两种创建方式，别混用</h3>
+<p>这是 <code>leno_gui</code> 里最一致的约定，也是新手最常踩的坑：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>注册进窗口</th>
+<th>谁绘制</th>
+<th>用在哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SDL3.createXxx({...})</code></td>
+<td>✗</td>
+<td>交给容器（<code>box.add(...)</code> / <code>panel.add(...)</code> / <code>tab.addToPage(...)</code>）</td>
+<td><strong>放进布局/容器的控件</strong></td>
+</tr>
+<tr>
+<td><code>win.addXxx({...})</code></td>
+<td>✓</td>
+<td>窗口自动绘制</td>
+<td>用绝对坐标直接摆的控件</td>
+</tr>
+</tbody>
+</table>
+<p>⚠ 混用会让同一控件被窗口画一次、又被容器摆一次——重复绘制、位置打架。</p>
+<p><strong><code>showcase.leno</code> 开头的注释把例外写得很清楚</strong>：</p>
+<ul>
+<li><code>MenuBar</code> / <code>ComboBox</code> 必须用 <code>win.addXxx</code>（依赖窗口的<strong>第二遍弹层绘制</strong>）。</li>
+<li>Panel 边框卡片里，子控件用 <code>SDL3.createXxx</code> + <code>panel.add</code>。</li>
+<li>ScrollView / TabControl / HBox / VBox / AnchorBox 本身是顶层容器，内部用 <code>createXxx</code>。</li>
+<li>例外中的例外：ComboBox 经 <code>tab.addToPage</code> 添加时，靠 <code>sdl_combobox</code> 的<strong>全局注册表</strong>兜底画下拉层（<code>settings.leno</code> 就这么用）。</li>
+</ul>
+<p>一句话：<strong>顶层绝对定位用 <code>win.addXxx</code>，容器内用 <code>createXxx</code> + <code>add</code>；MenuBar 和顶层 ComboBox 走 <code>win.addXxx</code>。</strong></p>
+<h3 id="2-2-通用参数与颜色">2.2 通用参数与颜色</h3>
+<p>几乎所有 <code>createXxx</code> 都支持这些键：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x</code> / <code>y</code> / <code>w</code> / <code>h</code></td>
+<td>位置与尺寸（放进布局时 <code>x/y</code> 一般省略）</td>
+</tr>
+<tr>
+<td><code>visible</code> / <code>enabled</code></td>
+<td>可见 / 可交互</td>
+</tr>
+<tr>
+<td><code>cursor</code></td>
+<td>悬停光标：<code>SDL3.SystemCursor.POINTER/WAIT/TEXT/CROSSHAIR/MOVE/NOT_ALLOWED</code>，<code>-1</code> = 不改变</td>
+</tr>
+<tr>
+<td><code>tip</code></td>
+<td>悬停提示文字（要 <code>SDL3.setTipDelay(ms)</code> 设延迟）</td>
+</tr>
+<tr>
+<td><code>bg_color</code> / <code>border_color</code> / <code>text_color</code></td>
+<td>背景 / 边框 / 文字颜色</td>
+</tr>
+<tr>
+<td><code>radius</code></td>
+<td>圆角半径（<code>0</code> 直角，越大越圆）</td>
+</tr>
+<tr>
+<td><code>font_size</code> / <code>font_path</code> / <code>font_style</code></td>
+<td>字体三件套。<code>font_style</code> 用数字：<code>1</code> 粗体、<code>2</code> 斜体、<code>4</code> 下划线，可按位组合</td>
+</tr>
+</tbody>
+</table>
+<p>颜色统一写 <code>#RRGGBBAA</code>，例如 <code>#282A32FF</code>（不透明）、<code>#00000000</code>（全透明）、<code>#FF6E8240</code>（半透明红）。</p>
+<p>⚠ 少数 API 用<strong>不带 alpha 的 <code>0xRRGGBB</code> 整数</strong>，如 <code>Table.set_row_color(i, 0xFF6060)</code>、<code>set_row_color(i, RED)</code>；两者别混。</p>
+<h3 id="2-3-弹性布局四参数-grow-shrink-basis-align">2.3 弹性布局四参数 <code>grow/shrink/basis/align</code></h3>
+<p><code>test_layout.leno</code> 是这套语义的完整实测。容器 <code>add(widget, opts)</code>：</p>
+<pre><code class="language-leno">HBox row = win.addHBox({x: 10, y: 44, w: 800, h: 46, spacing: 8, pad_x: 6, pad_y: 6})
+row.add(SDL3.createButton({text: &quot;grow:2&quot;, w: 80, h: 34}), {grow: 2})   // 占 2/4
+row.add(SDL3.createButton({text: &quot;grow:1&quot;, w: 80, h: 34}), {grow: 1})   // 各占 1/4
+row.add(SDL3.createButton({text: &quot;grow:1&quot;, w: 80, h: 34}), {grow: 1})
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grow</code></td>
+<td><strong>权重，不是像素</strong>。按权重分剩余空间；<code>grow:2 : grow:1 : grow:1</code> = 2:1:1</td>
+</tr>
+<tr>
+<td><code>shrink</code></td>
+<td>空间不足时按 <code>shrink × basis</code> 比例收缩；<code>shrink:0</code> 不收缩、允许溢出（默认 1）</td>
+</tr>
+<tr>
+<td><code>basis</code></td>
+<td>主轴分配基数，<strong>不是固定宽度</strong>。不写时用控件加入那一刻的自然尺寸，事后 <code>set_size</code> 改了也不影响</td>
+</tr>
+<tr>
+<td><code>align</code></td>
+<td>交叉轴 <code>0=start / 1=center / 2=end / 3=stretch</code></td>
+</tr>
+<tr>
+<td><code>minW</code> / <code>maxW</code> / <code>minH</code> / <code>maxH</code></td>
+<td>最小/最大尺寸约束（<code>{grow:1, maxW:120}</code>、<code>{grow:1, minH:60}</code>）</td>
+</tr>
+<tr>
+<td><code>justify</code></td>
+<td>主轴分布：<code>0</code> 起始 / <code>1</code> 居中 / <code>3</code> space-between（<code>test_layout</code> 实测）</td>
+</tr>
+<tr>
+<td><code>expand: true</code></td>
+<td>老写法，等价 <code>grow:1</code>，向后兼容</td>
+</tr>
+</tbody>
+</table>
+<p>想钉死宽度写 <code>{basis: w, grow: 0, shrink: 0}</code>。排障用 <code>win.dumpLayout()</code> 或 <code>SDL3.dumpLayout(容器)</code>，它会提示"<code>free 未被吸收</code>"——正是"没铺开"的最常见根因。</p>
+<p><strong>AnchorBox 用锚点参数</strong>，不是上面那套：<code>{left:8, top:8}</code>、<code>{right:8, top:8}</code>、<code>{centerX:true, centerY:true}</code>、<code>{right:8, bottom:8}</code>。</p>
+<h3 id="2-4-回调签名-按实测-别猜">2.4 回调签名（按实测，别猜）</h3>
+<pre><code class="language-leno">btn.on_click(func() { ... })                              // 绝大多数控件：无参
+cv.on_click(func(float lx, float ly) { ... })              // Canvas：局部坐标
+cb.on_change(func(bool v) { ... })                         // CheckBox/Toggle/Radio
+sl.on_change(func(float v) { ... })                        // Slider/SpinBox/ProgressBar
+cbx.on_change(func(int idx) { ... })                       // ComboBox
+lb.on_change(func(Array[int] idxs) { ... })                // ListBox：选中下标数组
+tab.on_change(func(int idx) { ... })                       // TabControl
+bar.on_select(func(string menu, string id) { ... })        // MenuBar：菜单名 + 项 id
+tbl.on_select(func(int row) { ... })                       // Table
+tbl.on_check(func(int col, Array[int] checked) { ... })    // Table 勾选列
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) { ... })
+</code></pre>
+<p>事件对象常用方法：<code>ev.isQuit()</code>、<code>ev.isWindowClose()</code>、<code>ev.isKeyDown()</code> + <code>ev.scancode()</code>、<code>ev.isMouseButtonDown()</code>、<code>ev.mousePos()</code>、<code>ev.isMouseWheel()</code> + <code>ev.wheelY()</code>（<strong>正值 = 往上滚看更早内容</strong>）、<code>ev.isWindowResized()</code>。</p>
+<p>窗口缩放若要自己重排绝对定位的容器，在 <code>isWindowResized()</code> 分支里 <code>getSize()</code> 后逐个 <code>set_size()</code> / <code>set_pos()</code>（<code>test_layout.leno</code> 就是这么做的）。</p>
+<hr>
+<h2 id="三-文字与按钮">三、文字与按钮</h2>
+<h3 id="3-1-label-文字标签">3.1 Label —— 文字标签</h3>
+<pre><code class="language-leno">Label lb = SDL3.createLabel({text: &quot;歌曲名&quot;, font_size: 14, text_color: #333333FF,
+                             align: 0, tip: &quot;完整标题&quot;})
+lb.set_text(&quot;新标题&quot;)
+box.add(lb, {grow: 1, align: 1})
+</code></pre>
+<p><strong>主要参数</strong>：<code>text</code>、<code>font_size</code>、<code>font_path</code>、<code>font_style</code>、<code>text_color</code>、<code>hover_color</code>、<code>align</code>（<code>left</code>/<code>center</code>/<code>right</code>）、<code>cursor</code>、<code>hover_shift</code>、<code>tip</code>、<code>max_w</code>、<code>truncate</code>、<code>wrap</code>、<code>wrap_w</code>、<code>scroll_always</code>、<code>visible</code>、<code>enabled</code>。</p>
+<p><strong>常用方法</strong>：<code>set_text()</code>、<code>set_text_color()</code>、<code>set_hover_color()</code>、<code>set_font_size()</code>、<code>set_font_path()</code>、<code>set_align()</code>、<code>set_max_w()</code>、<code>set_truncate()</code>、<code>set_wrap()</code>、<code>set_wrap_w()</code>、<code>get_text()</code>、<code>get_lines()</code>、<code>measure_w()</code>、<code>measure_h()</code>、<code>on_click()</code>。</p>
+<h3 id="3-2-button-按钮">3.2 Button —— 按钮</h3>
+<p><code>test_button_v3.leno</code> 逐项测了类型、颜色、外观开关、光标、字体样式和动态方法。</p>
+<pre><code class="language-leno">// 五种预设
+Button b = win.addButton({text: &quot;Primary&quot;, x: 30, y: 55, w: 130, h: 40,
+                          type: &quot;primary&quot;, tip: &quot;主要操作&quot;})
+b.on_click(func() { do_it() })
+
+// 纯图标按钮：不传 text（默认 &quot;&quot;），只给 image_path
+Button icon = SDL3.createButton({image_path: ui.ico(&quot;menu_delete_all.png&quot;),
+                                 image_size: 16, w: 26, h: 26, radius: 6, background: false})
+</code></pre>
+<p><strong>主要参数</strong>：<code>text</code>（默认 <code>""</code>）、<code>type</code>（<code>primary</code>/<code>danger</code>/<code>success</code>/<code>warning</code>/<code>dark</code>/<code>normal</code>）、<code>w</code>/<code>h</code>、<code>radius</code>、<code>bg_color</code>、<code>text_color</code>、<code>hover_color</code>、<code>pressed_color</code>、<code>border</code>、<code>border_color</code>、<code>shadow</code>、<code>background</code>、<code>font_size</code>、<code>font_path</code>、<code>font_style</code>、<code>padding</code>、<code>align</code>、<code>image_path</code>、<code>image_size</code>、<code>image_pos</code>、<code>image_gap</code>、<code>image_mode</code>、<code>image_alpha</code>、<code>image_tint</code>、<code>image_path_hover</code>、<code>image_path_pressed</code>、<code>image_path_disabled</code>、<code>bg_image</code>、<code>cursor</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。</p>
+<p><strong>常量</strong>：<code>Button.IMG_LEFT/RIGHT/TOP/BOTTOM</code>、<code>Button.IMG_ASPECT_FIT/STRETCH/ASPECT_FILL</code>、<code>Button.ALIGN_LEFT/CENTER/RIGHT</code>；<code>cursor</code> 用 <code>SDL3.SystemCursor.*</code>。</p>
+<p><strong>动态方法</strong>（全是实测）：<code>set_text()</code>、<code>set_type()</code>、<code>set_bg_color()</code>、<code>set_text_color()</code>、<code>set_hover_color()</code>、<code>set_font_size()</code>、<code>set_font_style()</code>、<code>set_radius()</code>、<code>set_border()</code>、<code>set_shadow()</code>、<code>set_background()</code>、<code>set_cursor()</code>、<code>set_image()</code>、<code>set_image_pos()</code>、<code>set_image_mode()</code>、<code>set_enabled()</code>、<code>set_visible()</code>、<code>set_pos()</code>、<code>set_size()</code>、<code>get_text()</code>、<code>get_x()/get_y()/get_w()/get_h()</code>、<code>focus()</code>、<code>blur()</code>、<code>activate()</code>、<code>on_click()</code>。</p>
+<p>⚠ <code>background: false</code> 的纯图标按钮会连 hover 效果一起跳过。</p>
+<h3 id="3-3-linkbutton-链接按钮">3.3 LinkButton —— 链接按钮</h3>
+<p><strong>主要参数</strong>：<code>text</code>、<code>url</code>、<code>color</code>、<code>hover_color</code>、<code>visited</code>、<code>underline</code>、<code>underline_hover</code>、<code>font_size</code>、<code>font_path</code>、<code>tip</code>、<code>visible</code>、<code>enabled</code>。</p>
+<p><strong>方法</strong>：<code>set_text()</code>、<code>set_url()</code>、<code>set_visited()</code>、<code>set_underline()</code>、<code>set_text_color()</code>、<code>set_hover_color()</code>、<code>on_click()</code>、<code>get_text()</code>、<code>get_url()</code>。</p>
+<p>⚠ <code>url</code> 字段<strong>只用于显示</strong>，控件内部只回调 <code>onClick</code>——不绑回调点了没反应。</p>
+<h3 id="3-4-checkbox-复选框">3.4 CheckBox —— 复选框</h3>
+<pre><code class="language-leno">var cb = win.addCheckBox({text: &quot;我同意用户协议&quot;, x: 40, y: 40, checked: false})
+cb.on_change(func(bool v) { print(&quot;复选框 -&gt; &quot; + v) })
+bool v = cb.is_checked()
+</code></pre>
+<p><strong>主要参数</strong>：<code>text</code>、<code>checked</code>、<code>box</code>、<code>gap</code>、<code>checked_color</code>、<code>unchecked_color</code>、<code>border_color</code>、<code>font_size</code>、<code>font_path</code>、<code>font_style</code>、<code>text_color</code>、<code>cursor</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。
+<strong>方法/回调</strong>：<code>set_checked()</code>、<code>is_checked()</code>、<code>set_text()</code>、<code>on_change(func(bool v){...})</code>。</p>
+<h3 id="3-5-radiobutton-单选框">3.5 RadioButton —— 单选框</h3>
+<p>同 <code>group</code> 字符串的为一组，组内互斥；不同 <code>group</code> 互不影响。</p>
+<pre><code class="language-leno">win.addRadioButton({text: &quot;选项 A&quot;, x: 40, y: 100, group: &quot;mode&quot;, checked: true})
+win.addRadioButton({text: &quot;选项 B&quot;, x: 40, y: 140, group: &quot;mode&quot;})
+</code></pre>
+<p><strong>参数/方法</strong>同 CheckBox，多一个 <code>group</code>；回调 <code>on_change(func(bool v){...})</code>——<strong>只在被选中时处理 <code>if v</code></strong>，取消选中那次也会回调。</p>
+<h3 id="3-6-toggle-开关">3.6 Toggle —— 开关</h3>
+<pre><code class="language-leno">var tg = win.addToggle({text: &quot;Wi-Fi&quot;, x: 240, y: 200, on: true, anim: true})
+tg.on_change(func(bool v) { ... })
+bool on = tg.is_on()
+</code></pre>
+<p><strong>主要参数</strong>：<code>on</code>、<code>text</code>、<code>anim</code>、<code>on_color</code>、<code>off_color</code>、<code>w</code>/<code>h</code>、<code>font_size</code>、<code>text_color</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。
+<strong>方法/回调</strong>：<code>set_on()</code>、<code>is_on()</code>、<code>on_change(func(bool v){...})</code>。</p>
+<hr>
+<h2 id="四-输入与选择">四、输入与选择</h2>
+<h3 id="4-1-edit-单行-多行输入框">4.1 Edit —— 单行 / 多行输入框</h3>
+<p><code>showcase.leno</code> 的"文本输入"卡片给了三种典型用法；<code>settings.leno</code> 演示了 IME 句柄下发。</p>
+<pre><code class="language-leno">// 单行 / 密码 / 多行
+win.addEdit({x: 90, y: 322, w: 220, h: 30, placeholder: &quot;请输入姓名&quot;})
+win.addEdit({x: 90, y: 362, w: 220, h: 30, password: true, placeholder: &quot;密码&quot;})
+win.addEdit({x: 90, y: 402, w: 220, h: 80, multiline: true,
+             text: &quot;多行编辑框\n支持换行、选区、撤销/重做、IME&quot;})
+
+// 放进容器时，若要用 IME/右键菜单，必须下发窗口句柄
+var ed = SDL3.createEdit({placeholder: &quot;用户名&quot;, tip: &quot;支持右键菜单：复制/粘贴/全选&quot;})
+ed.set_window(win.handle)
+panel.add(ed)
+
+ed.on_change(func(string s) { ... })
+ed.on_enter(func() { ... })
+</code></pre>
+<p><strong>主要参数</strong>：<code>text</code>、<code>placeholder</code>、<code>placeholder_color</code>、<code>multiline</code>、<code>wordWrap</code>、<code>password</code>、<code>readonly</code>、<code>pad_x</code>、<code>radius</code>、<code>border</code>、<code>border_color</code>、<code>bg_color</code>、<code>draw_bg</code>、<code>focus_color</code>、<code>font_size</code>、<code>font_path</code>、<code>font_style</code>、<code>text_color</code>、<code>w</code>/<code>h</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。</p>
+<p><strong>方法</strong>：<code>set_text()</code>、<code>get_text()</code>、<code>get_text_length()</code>、<code>set_readonly()</code>、<code>set_password()</code>、<code>set_multiline()</code>、<code>set_word_wrap()</code>、<code>set_placeholder()</code>、<code>set_pad_x()</code>、<code>set_window(handle)</code>、<code>set_window_size()</code>、<code>focus()</code>、<code>blur()</code>、<code>get_scroll_y()</code>、<code>get_max_scroll_y()</code>、<code>on_change()</code>、<code>on_enter()</code>、<code>set_context_menu_enabled()</code>、<code>on_context_select()</code>。</p>
+<h3 id="4-2-spinbox-数字输入框">4.2 SpinBox —— 数字输入框</h3>
+<pre><code class="language-leno">var sp = SDL3.createSpinBox({x: 590, y: 286, w: 120, min: 10, max: 20,
+                             value: 14, step: 1, int_mode: true})
+sp.on_change(func(float v) { ... })
+</code></pre>
+<p><strong>主要参数</strong>：<code>value</code>、<code>min</code>、<code>max</code>、<code>step</code>、<code>decimals</code>、<code>int_mode</code>、<code>arrow_color</code>、<code>arrow_w</code>、<code>focus_color</code>、<code>bg_color</code>、<code>border_color</code>、<code>font_size</code>、<code>placeholder</code>、<code>tip</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_value()</code>、<code>get_value()</code>、<code>set_range()</code>、<code>set_step()</code>、<code>set_int_mode()</code>、<code>set_decimals()</code>、<code>on_change(func(float v){...})</code>、<code>get_text()</code>。</p>
+<h3 id="4-3-slider-滑块">4.3 Slider —— 滑块</h3>
+<pre><code class="language-leno">var sl = win.addSlider({x: 470, y: 96, w: 240, h: 24, min: 0, max: 100, value: 40, tip: &quot;拖动调节&quot;})
+sl.on_change(func(float v) { status.set_text(&quot;滑块 = &quot; + (v as string)) })
+
+var vertical = win.addSlider({x: 470, y: 140, w: 24, h: 150, min: 0, max: 10, value: 3, vertical: true})
+</code></pre>
+<p><strong>主要参数</strong>：<code>value</code>、<code>min</code>、<code>max</code>、<code>step</code>、<code>vertical</code>、<code>show_value</code>、<code>track_color</code>、<code>fill_color</code>、<code>thumb_color</code>、<code>text_color</code>、<code>font_size</code>、<code>tip</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_value()</code>、<code>get_value()</code>、<code>set_range()</code>、<code>set_track_gradient()</code>、<code>clear_track_gradient()</code>、<code>on_change(func(float v){...})</code>。</p>
+<h3 id="4-4-progressbar-进度条">4.4 ProgressBar —— 进度条</h3>
+<pre><code class="language-leno">var pg = win.addProgressBar({x: 560, y: 140, w: 240, h: 22, value: 30, clickable: true})
+pg.on_change(func(float v) { ... })
+pg.set_value(pg.get_value() + 20.0)
+</code></pre>
+<p><strong>主要参数</strong>：<code>value</code>、<code>min</code>、<code>max</code>、<code>show_text</code>、<code>clickable</code>、<code>fill_color</code>、<code>track_color</code>、<code>text_color</code>、<code>font_size</code>、<code>anim_speed</code>、<code>hit_pad_y</code>、<code>tip</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_value()</code>、<code>get_value()</code>、<code>get_display_value()</code>、<code>on_change()</code>、<code>on_hover(func(float v){...})</code>。</p>
+<h3 id="4-5-calendar-日历">4.5 Calendar —— 日历</h3>
+<p>月历网格 + 每天状态色 + 可选点选/切月。<code>on_pick</code> / <code>on_month_change</code> 回调；<code>set_mark()</code> / <code>set_marks()</code> / <code>clear_marks()</code> 标记日期；<code>weekdayName(y, m, d, names)</code> 的星期名由调用方给，控件不预设语言。</p>
+<p><strong>主要参数</strong>：<code>year</code>、<code>month</code>、<code>today</code>、<code>month_fmt</code>、<code>week_start</code>、<code>marks</code>、<code>cell_min</code>、<code>cell_max</code>、<code>cell_radius</code>、<code>filled_color</code>、<code>plain_color</code>、<code>today_color</code>、<code>alert_color</code>、<code>font_size_day/head/week/legend</code>、<code>show_header</code>、<code>pad</code>、<code>gap</code>、<code>w</code>/<code>h</code>。</p>
+<h3 id="4-6-pickcolor-颜色选择对话框">4.6 pickColor —— 颜色选择对话框</h3>
+<p>跨平台自带 8 色板 + RGBA 滑杆 + 实时预览 + 十六进制值，不依赖系统色板。</p>
+<pre><code class="language-leno">SDL3.pickColor({color: 当前色, title: &quot;选个颜色&quot;}, func(Color c) { 当前色 = c })
+</code></pre>
+<p>⚠ 结果走<strong>第二个形参的回调</strong>——主循环已跑时 <code>runModal</code> 只注册不阻塞，别读返回值；也别把回调塞进 Dict（<code>opts.get(...) as func(Color):void</code> 实测恒为 null）。</p>
+<hr>
+<h2 id="五-容器与布局">五、容器与布局</h2>
+<h3 id="5-1-hbox-vbox-anchorbox">5.1 HBox / VBox / AnchorBox</h3>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>排列方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HBox</code></td>
+<td>子控件沿主轴横向排</td>
+</tr>
+<tr>
+<td><code>VBox</code></td>
+<td>子控件沿主轴纵向排</td>
+</tr>
+<tr>
+<td><code>AnchorBox</code></td>
+<td>按锚点精确落点</td>
+</tr>
+</tbody>
+</table>
+<p><strong>HBox / VBox 参数</strong>：<code>x</code>/<code>y</code>/<code>w</code>/<code>h</code>、<code>pad_x</code>/<code>pad_y</code>（或 <code>padTop</code>/<code>padBottom</code>/<code>padLeft</code>/<code>padRight</code>）、<code>spacing</code>、<code>justify</code>、<code>bg_color</code>、<code>bg_radius</code>、<code>clip</code>、<code>visible</code>、<code>enabled</code>。
+<strong>方法</strong>：<code>add(widget, opts)</code>、<code>remove()</code>、<code>clear()</code>、<code>reset()</code>、<code>set_bg_color()</code>、<code>set_pos()</code>、<code>set_size()</code>、<code>measure_w()</code>、<code>measure_h()</code>。</p>
+<pre><code class="language-leno">// AnchorBox：锚点定位，不是 grow/basis
+var ab = win.addAnchorBox({x: 410, y: 410, w: 390, h: 350, pad_x: 8, pad_y: 8})
+ab.add(SDL3.createLabel({text: &quot;左上&quot;}), {left: 8, top: 8})
+ab.add(SDL3.createLabel({text: &quot;居中&quot;}), {centerX: true, centerY: true})
+ab.add(SDL3.createButton({text: &quot;右下&quot;, w: 90, h: 32}), {right: 8, bottom: 8})
+</code></pre>
+<p>布局细节见 2.3 和<a href="布局配方.html">布局配方</a>。</p>
+<h3 id="5-2-gridlayout-网格布局">5.2 GridLayout —— 网格布局</h3>
+<p><strong>参数</strong>：<code>cols</code>（列数）、<code>col_weights</code>、<code>col_spacing</code>、<code>row_spacing</code>、<code>spacing</code>、<code>pad_x</code>/<code>pad_y</code>、<code>min_col_width</code>、<code>align</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>add(widget, {align: 1})</code>、<code>set_cols()</code>、<code>remove()</code>、<code>clear()</code>、<code>count()</code>、<code>measure_h()</code>、<code>measure_w()</code>。</p>
+<pre><code class="language-leno">GridLayout grid = SDL3.createGridLayout({cols: 2, col_weights: [1, 2], spacing: 8})
+grid.add(SDL3.createLabel({text: &quot;名称&quot;}), {align: 1})
+grid.add(SDL3.createLabel({text: &quot;值&quot;}),   {align: 1})
+</code></pre>
+<h3 id="5-3-panel-面板">5.3 Panel —— 面板</h3>
+<p><code>showcase</code> 和 <code>settings</code> 都用一个 <code>card()</code> 构建器做"边框卡片 + 标题"——<strong>容器加入布局用 <code>createPanel</code> + <code>tab.addToPage</code>，顶层用 <code>win.addPanel</code></strong>：</p>
+<pre><code class="language-leno">// showcase：顶层卡片
+func card(Window win, float x, float y, float w, float h, string title): Panel {
+    var p = win.addPanel({x:x, y:y, w:w, h:h, bg_color: #1C1E26FF, radius:10, border_color: #5A5F6EFF})
+    p.add(SDL3.createLabel({x:x+14, y:y+12, text:title, font_size:16, text_color: #B4C8FFFF}))
+    return p
+}
+</code></pre>
+<p><strong>参数</strong>：<code>bg_color</code>、<code>border</code>、<code>border_color</code>、<code>border_alpha</code>、<code>radius</code>、<code>clip</code>、<code>w</code>/<code>h</code>、<code>enabled</code>、<code>visible</code>。
+<strong>方法</strong>：<code>add()</code>、<code>remove()</code>、<code>clear_children()</code>、<code>setLayout()</code>、<code>setLayoutPadded()</code>、<code>set_bg_color()</code>。</p>
+<h3 id="5-4-groupbox-分组框">5.4 GroupBox —— 分组框</h3>
+<p>带标题的边框容器，可嵌套（<code>test_new_widgets.leno</code> 有完整属性实测）。</p>
+<p><strong>参数</strong>：<code>title</code>、<code>title_pad</code>、<code>title_color</code>、<code>radius</code>、<code>border_alpha</code>、<code>border_color</code>、<code>bg_color</code>、<code>clip</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_title()</code>、<code>add()</code>、<code>remove()</code>、<code>clear_children()</code>、<code>setLayout()</code>、<code>setLayoutPadded()</code>、<code>set_bg_color()</code>。</p>
+<h3 id="5-5-scrollview-滚动视图">5.5 ScrollView —— 滚动视图</h3>
+<p><code>showcase</code> 的标准写法：容器注册进窗口，内容用一个 <code>createVBox</code> 自适应。</p>
+<pre><code class="language-leno">var sv = win.addScrollView({x: 878, y: 426, w: 372, h: 180, content_w: 340, content_h: 520})
+var svBox = SDL3.createVBox({pad_x: 10, pad_y: 10, spacing: 8})
+for 12 to i {
+    svBox.add(SDL3.createButton({text: &quot;条目 &quot; + i, h: 32}), {})
+}
+sv.set_content(svBox)
+</code></pre>
+<p><strong>参数</strong>：<code>content_w</code>/<code>content_h</code>、<code>fit_w</code>/<code>fit_h</code>、<code>w</code>/<code>h</code>、<code>smooth</code>、<code>step</code>、<code>bar_w</code>、<code>bar_color</code>、<code>bar_auto_hide</code>、<code>bar_hover_color</code>、<code>bg_color</code>、<code>border</code>、<code>border_color</code>、<code>border_alpha</code>、<code>radius</code>、<code>clip</code>。
+<strong>方法</strong>：<code>set_content()</code>、<code>set_content_size()</code>、<code>set_scroll()</code>、<code>scroll_to()</code>、<code>scroll_by()</code>、<code>ensure_visible()</code>、<code>near_bottom()</code>、<code>get_scroll_x()</code>、<code>get_scroll_y()</code>、<code>get_max_scroll_y()</code>、<code>get_layout_epoch()</code>。</p>
+<p>⚠ 子孙跟不跟着滚，取决于内容根是哪种控件，有三种情况；命中裁剪另见 <code>自测/test_scrollview_hitclip.leno</code>。</p>
+<h3 id="5-6-tabcontrol-标签页">5.6 TabControl —— 标签页</h3>
+<p>⚠ <strong>页内坐标是"相对内容区左上角"</strong>：内容区原点 = <code>(tab.x, tab.y + tab_h)</code>，<code>settings.leno</code> 里的 <code>card()</code> 就是这么换算的。</p>
+<pre><code class="language-leno">var tab = win.addTabControl({x: 878, y: 684, w: 372, h: 250,
+                             tabs: [&quot;基础&quot;, &quot;高级&quot;], active: 0, tab_h: 30})
+tab.addToPage(0, SDL3.createLabel({text: &quot;基础设置&quot;}), 20, 20)      // (widget, dx, dy)
+tab.addToPageLayout(0, widget, {grow: 1})
+tab.setPageLayout(1, SDL3.createVBox({}))
+tab.set_active(0) / tab.get_active()
+tab.on_change(func(int idx) { ... })
+</code></pre>
+<p><strong>参数</strong>：<code>tabs</code>、<code>tab_icons</code>、<code>active</code>、<code>tab_h</code>、<code>tab_radius</code>、<code>tab_icon_size</code>、<code>underline</code>、<code>show_header</code>、<code>accent_color</code>、<code>active_color</code>、<code>active_text_color</code>、<code>bar_color</code>、<code>tab_color</code>、<code>bg_color</code>、<code>border</code>、<code>clip</code>、<code>font_size</code>、<code>w</code>/<code>h</code>。</p>
+<p>⚠ 同页混用绝对定位和 <code>addToPageLayout</code> 会提示一次（警告，不是错误）。</p>
+<h3 id="5-7-splitter-card">5.7 Splitter / Card</h3>
+<ul>
+<li><strong>Splitter</strong>（可拖分割条）：参数 <code>first</code>、<code>second</code>、<code>orientation</code>、<code>ratio</code>、<code>min_first</code>、<code>min_second</code>、<code>sep_color</code>、<code>sep_width</code>、<code>hover_color</code>、<code>hit_pad</code>、<code>w</code>/<code>h</code>；方法 <code>set_first()</code>、<code>set_second()</code>、<code>set_ratio()</code>、<code>get_ratio()</code>。常量 <code>SDL3.SPLIT_HORIZONTAL</code> / <code>SPLIT_VERTICAL</code>。事件实测见 <code>自测/test_splitter_events.leno</code>。</li>
+<li><strong>Card</strong>（海报/商品卡）：参数 <code>image_path</code>、<code>image_mode</code>、<code>image_aspect</code>、<code>image_h</code>、<code>image_radius</code>、<code>title</code>、<code>title_size</code>、<code>subtitle</code>、<code>badge</code>/<code>badges</code>、<code>badge_pos</code>、<code>pad</code>、<code>gap</code>、<code>text_align</code>、<code>hover_lift</code>、<code>bare</code>、<code>selected</code>、<code>sel_color</code>、<code>bg_color</code>、<code>radius</code>、<code>w</code>/<code>h</code>；方法 <code>set_image()</code>、<code>set_texture(tex, own)</code>、<code>set_title()</code>、<code>set_subtitle()</code>、<code>add_badge()</code>、<code>set_content()</code>、<code>set_selected()</code>、<code>on_click()</code>。设计细节见 <a href="LenoSDL3_Card卡片控件设计文档.html">Card 卡片控件设计文档</a>。</li>
+</ul>
+<p>⚠ <code>set_texture(tex, own)</code> 的 <code>own:false</code> 表示借用共享纹理，销毁时不要重复释放。</p>
+<hr>
+<h2 id="六-列表与表格">六、列表与表格</h2>
+<h3 id="6-1-listbox-列表">6.1 ListBox —— 列表</h3>
+<pre><code class="language-leno">var lb = SDL3.createListBox({x: 470, y: 396, w: 160, h: 150,
+                             items: [&quot;苹果&quot;, &quot;香蕉&quot;, &quot;橘子&quot;], selected: 0})
+lb.on_change(func(Array[int] idxs) { status.set_text(&quot;选中 &quot; + idxs.len() + &quot; 项&quot;) })
+
+var multi = SDL3.createListBox({items: [&quot;红&quot;, &quot;绿&quot;, &quot;蓝&quot;], mode: 1})   // mode:1 多选
+</code></pre>
+<p>⚠ <code>on_change</code> 收的是 <strong><code>Array[int]</code> 选中下标数组</strong>，不是单个 int。单选时点已选中的那一行不回调。</p>
+<p><strong>参数</strong>：<code>items</code>、<code>selected</code>、<code>item_h</code>、<code>mode</code>、<code>image_path</code>、<code>image_size</code>、<code>image_gap</code>、<code>image_pad</code>、<code>sel_color</code>、<code>hover_color</code>、<code>bg_color</code>、<code>border_color</code>、<code>scroll_color</code>、<code>bar_auto_hide</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_items()</code>、<code>add_item()</code>、<code>append_item()</code>、<code>append_bottom()</code>、<code>remove_item()</code>、<code>clear()</code>、<code>set_selected()</code>、<code>set_selected_indices()</code>、<code>select_all()</code>、<code>clear_selection()</code>、<code>get_selected_index()</code>、<code>get_selected_indices()</code>、<code>get_selected_text()</code>、<code>scroll_to_bottom()</code>、<code>is_at_bottom()</code>、<code>index_at()</code>、<code>on_change(func(Array[int] idxs){...})</code>、<code>on_activate()</code>。</p>
+<h3 id="6-2-combobox-下拉框">6.2 ComboBox —— 下拉框</h3>
+<p>顶层<strong>必须 <code>win.addComboBox</code></strong>；放进 Tab/容器时用 <code>createComboBox</code> + <code>add</code>（靠全局注册表画弹层）。</p>
+<pre><code class="language-leno">var cbx = win.addComboBox({x: 470, y: 700, w: 240, h: 32,
+                           items: [&quot;选项一&quot;, &quot;选项二&quot;], placeholder: &quot;请选择&quot;,
+                           selected: 1, tip: &quot;下拉演示&quot;})
+cbx.on_change(func(int idx) { status.set_text(&quot;下拉: &quot; + cbx.get_selected_text()) })
+</code></pre>
+<p>⚠ <code>on_change</code> 收 <strong><code>int</code> 下标</strong>——和 ListBox 不同。</p>
+<p><strong>参数</strong>：<code>items</code>、<code>selected</code>、<code>editable</code>、<code>placeholder</code>、<code>item_h</code>、<code>popup_h</code>、<code>item_images</code>、<code>icon</code>、<code>icon_size</code>、<code>image_size</code>、<code>image_gap</code>、<code>show_arrow</code>、<code>sel_color</code>、<code>hover_color</code>、<code>bg_color</code>、<code>border</code>、<code>radius</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_items()</code>、<code>set_items_with_images()</code>、<code>add_item()</code>、<code>clear()</code>、<code>set_selected()</code>、<code>get_selected()</code>、<code>get_selected_text()</code>、<code>set_editable()</code>、<code>set_suggestions()</code>、<code>open_list()</code>、<code>close()</code>、<code>on_change(func(int idx){...})</code>、<code>on_text_change()</code>、<code>on_enter()</code>。</p>
+<h3 id="6-3-table-表格">6.3 Table —— 表格</h3>
+<p><code>test_table_features.leno</code> 演示了复选框列、行级颜色和空状态。</p>
+<pre><code class="language-leno">Array[string] headers = [&quot;&quot;, &quot;任务&quot;, &quot;状态&quot;, &quot;耗时&quot;]
+Array[int] aligns = [1, 0, 1, 2]
+Array[Array[string]] rows = [[&quot;&quot;, &quot;编译模块A&quot;, &quot;成功&quot;, &quot;1.2s&quot;], ...]
+
+var tbl = win.addTable({
+    x: 30, y: 64, w: 580, h: 280,
+    headers: headers, aligns: aligns, header_aligns: [1,1,1,1], rows: rows,
+    col_widths: [40, 220, 140, 100],
+    check_col: 0,                       // 第 0 列为复选框列
+    sortable: true, resizable: true, zebra: true, item_h: 28, header_h: 28,
+    empty_text: &quot;暂无数据 — 点击\&quot;添加行\&quot;恢复&quot;
+})
+
+int RED = 0xFF6060                       // ⚠ 行级颜色是 0xRRGGBB 整数，不是 #RRGGBBAA
+for rows.len() to i {
+    if rows[i][2] == &quot;错误&quot; { tbl.set_row_color(i, RED) }
+}
+tbl.on_check(func(int col, Array[int] checked) { print(&quot;勾选 &quot; + checked.len() + &quot; 行&quot;) })
+
+tbl.set_headers(headers); tbl.set_rows(rows); tbl.add_row([...], &quot;&quot;)
+tbl.set_cell(row, col, &quot;值&quot;); tbl.get_cell(row, col)
+tbl.get_selected_row() / tbl.get_selected_rows()
+tbl.sort_by(col); tbl.check_all(); tbl.uncheck_all(); tbl.clear_row_colors()
+tbl.set_col_cell_type(col, &quot;progress&quot;)   // 进度条列
+tbl.on_cell_draw(func(Renderer r, int row, int col, float x, float y, float w, float h) { ... })
+tbl.on_select(func(int row) { ... })
+tbl.on_edit_commit(func(int row, int col, string v) { ... })
+</code></pre>
+<p><strong>参数（节选）</strong>：<code>headers</code>、<code>rows</code>、<code>aligns</code>、<code>header_aligns</code>、<code>col_widths</code>/<code>col_ratios</code>、<code>item_h</code>、<code>header_h</code>、<code>row_numbers</code>、<code>zebra</code>、<code>sortable</code>、<code>multi_select</code>、<code>cell_select</code>、<code>editable</code>、<code>editable_cols</code>、<code>frozen_cols</code>、<code>cell_types</code>、<code>numeric_cols</code>、<code>image_col</code>、<code>check_col</code>、<code>empty_text</code>、<code>sel_color</code>、<code>hover_color</code>、<code>row_radius</code>、<code>sep_color</code>、<code>w</code>/<code>h</code>。</p>
+<p>⚠ 表格方法 100+ 个，全部见 <code>lib/sdl_table.leno</code>；单选时点已选行不回调、进度条列与自绘回调的细节见速查。</p>
+<h3 id="6-4-treeview-树形列表">6.4 TreeView —— 树形列表</h3>
+<p><strong>参数</strong>：<code>items</code>、<code>text</code>、<code>image</code>、<code>image_expanded</code>、<code>image_mode</code>、<code>image_size</code>、<code>checkable</code>、<code>show_check</code>、<code>show_lines</code>、<code>indent</code>、<code>item_h</code>、<code>line_color</code>、<code>check_color</code>、<code>sel_color</code>、<code>hover_color</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_items()</code>、<code>add_child()</code>、<code>remove_node()</code>、<code>expand()</code>、<code>expand_all()</code>、<code>collapse_all()</code>、<code>set_checked()</code>、<code>get_checked_ids()</code>、<code>get_selected_id()</code>、<code>get_selected_node()</code>、<code>set_data()</code>、<code>get_data()</code>、<code>on_change()</code>、<code>on_activate()</code>、<code>on_toggle()</code>、<code>on_check()</code>、<code>on_context()</code>。占位符行为见 <code>自测/test_treeview_placeholder.leno</code>。</p>
+<h3 id="6-5-virtualgrid-虚拟网格">6.5 VirtualGrid —— 虚拟网格</h3>
+<p>只构建可见项，成千上万条也不卡（长列表/卡片墙用）。</p>
+<p><strong>参数</strong>：<code>count</code>、<code>item_w</code>/<code>item_h</code>、<code>cols</code>、<code>gap_x</code>/<code>gap_y</code>、<code>pad_x</code>/<code>pad_y</code>、<code>scroll_color</code>、<code>bar_w</code>、<code>bar_auto_hide</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_count()</code>、<code>get_count()</code>、<code>set_builder(func(int idx): Widget {...})</code>、<code>set_scroll_y()</code>、<code>get_scroll_y()</code>。</p>
+<hr>
+<h2 id="七-图片与图形进度">七、图片与图形进度</h2>
+<h3 id="7-1-imageview-图片展示">7.1 ImageView —— 图片展示</h3>
+<pre><code class="language-leno">ImageView iv = SDL3.createImageView({image_path: path, image_mode: 0,
+                                     border: true, radius: 8,
+                                     cursor: SDL3.SystemCursor.POINTER, tip: &quot;封面&quot;})
+iv.set_image(newPath)
+iv.on_click(func() { ... })
+</code></pre>
+<p><code>image_mode</code>：<code>0</code>=aspectFit 完整显示，<code>1</code>=stretch 拉伸，<code>2</code>=aspectFill 覆盖裁剪。
+<strong>其他参数</strong>：<code>overlay_path</code>、<code>overlay_hover_only</code>、<code>overlay_size</code>、<code>overlay_scale</code>、<code>alpha</code>、<code>image_tint</code>、<code>rotation</code>、<code>spin</code>、<code>radius</code>、<code>border</code>、<code>border_color</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_image()</code>、<code>set_overlay()</code>、<code>set_mode()</code>、<code>set_rotation()</code>、<code>set_spin()</code>、<code>set_alpha()</code>、<code>set_tint()</code>、<code>set_border()</code>、<code>set_radius()</code>、<code>on_click()</code>、<code>get_image_path()</code>。</p>
+<p>⚠ 同路径图片走共享纹理缓存（<code>imageCacheCount()</code> / <code>setImageCacheMax(n)</code>）；旋转实测见 <code>自测/test_imageview_spin.leno</code>。</p>
+<h3 id="7-2-canvas-自绘画布">7.2 Canvas —— 自绘画布</h3>
+<p><code>test_canvas_tab.leno</code> 把 Canvas 的坐标、裁剪、持久像素层讲得很清楚。</p>
+<pre><code class="language-leno">Canvas cv = SDL3.createCanvas({w: 26, h: 26, pad: 0, bg_color: #00000000, border: false})
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
+    // 局部坐标：(0,0)=左上角，(cw,ch)=右下角；越界图元会被裁剪到画布内
+    r.setColor(#58A0FFFF)
+    r.fillCircle(cw * 0.3, ch * 0.42, 60.0)
+    r.drawText(font, &quot;Canvas 局部坐标&quot;, 12.0, ch - 26.0, #FFFFFFE6)
+})
+cv.on_click(func(float lx, float ly) { ... })   // ⚠ 收局部坐标，不是无参
+</code></pre>
+<p><strong>持久画布</strong>：Canvas 自身<strong>没有</strong>像素级方法（旧的 <code>persist</code>/<code>set_pixel</code> 那套已不存在）。持久层用 <code>PixelBuffer</code> + <code>Renderer.blitBuffer</code>：</p>
+<pre><code class="language-leno">PixelBuffer buf = new PixelBuffer()
+buf.init(260, 190)
+cv.on_click(func(float lx, float ly) {
+    buf.fillRect(_int(lx*0.5) - 2, _int(ly*0.5) - 2, 5, 5, 255, 170, 80, 255)
+    SDL3.markFrameRedraw()               // 改了像素层要主动请求重绘
+})
+cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
+    r.blitBuffer(buf, ox, oy, cw, ch)     // 先上传持久层
+    // 再画每帧声明式内容（不写进持久层）
+})
+</code></pre>
+<p><strong>参数</strong>：<code>bg_color</code>、<code>border</code>、<code>border_color</code>、<code>border_w</code>、<code>pad</code>、<code>clip</code>、<code>focusable</code>、<code>focus_border</code>、<code>cursor</code>、<code>w</code>/<code>h</code>。
+<strong>回调</strong>：<code>on_draw(Renderer, ox, oy, cw, ch)</code>、<code>on_click(float lx, float ly)</code>、<code>on_mouse_down()</code>、<code>on_mouse_up()</code>、<code>on_mouse_move()</code>、<code>on_drag()</code>、<code>on_wheel()</code>、<code>on_mouse_enter()</code>、<code>on_mouse_leave()</code>、<code>on_key()</code>、<code>on_dispose()</code>。</p>
+<p>⚠ Canvas 默认有<strong>不透明底</strong>，想透明必须 <code>bg_color: #00000000</code> + <code>border: false</code>。</p>
+<h3 id="7-3-separator-分隔线">7.3 Separator —— 分隔线</h3>
+<p><strong>参数</strong>：<code>dir</code>（<code>0</code> 水平 / <code>1</code> 垂直）、<code>thickness</code>、<code>margin</code>、<code>color</code>、<code>alpha</code>、<code>w</code>/<code>h</code>。
+<strong>方法</strong>：<code>set_horizontal()</code>、<code>set_vertical()</code>、<code>set_thickness()</code>、<code>set_color()</code>、<code>set_alpha()</code>、<code>set_margin()</code>。</p>
+<h3 id="7-4-badge-steps-alert">7.4 Badge / Steps / Alert</h3>
+<ul>
+<li><strong>Badge</strong>（胶囊徽标，不可点）：<code>text</code>、<code>bg_color</code>、<code>border_color</code>、<code>text_color</code>、<code>font_size</code>、<code>align</code>、<code>pad_x</code>/<code>pad_y</code>、<code>radius</code>、<code>w</code>/<code>h</code>；方法 <code>set_text()</code>、<code>set_bg_color()</code>、<code>set_text_color()</code>。</li>
+<li><strong>Steps</strong>（步骤条）：<code>SDL3.createSteps({steps, active, dir, title_side, ...})</code>，方法 <code>add_step()</code>、<code>set_active()</code>、<code>set_state()</code>、<code>count()</code>。</li>
+<li><strong>Alert</strong>（提示条）：<code>SDL3.createAlert({kind, text, ...})</code>，<code>kind</code> 取 info/warn/danger/success；方法 <code>set_kind()</code>、<code>set_text()</code>。要"停留到用户处理"用 Alert，不要用 Toast。</li>
+</ul>
+<h3 id="7-5-ringprogress-spinner-图表">7.5 RingProgress / Spinner / 图表</h3>
+<ul>
+<li><strong>RingProgress</strong>（圆环进度，donut 图）：参数 <code>value</code>、<code>mode</code>（idle/sweep/value）、<code>size</code>、<code>thickness</code>、<code>track_color</code>、<code>fill_color</code>、<code>segments</code>、<code>show_text</code>、<code>text_fn</code>、<code>sub_text_fn</code>、<code>font_size</code>、<code>sweep_speed</code>、<code>tip</code>；方法 <code>set_value()</code>、<code>set_mode()</code>、<code>set_segments()</code>、<code>on_click()</code>。</li>
+<li><strong>Spinner</strong>（加载动画）：参数 <code>size</code>、<code>thickness</code>、<code>speed</code>、<code>color</code>、<code>track_color</code>、<code>track_alpha</code>、<code>full_track</code>、<code>running</code>、<code>tip</code>；方法 <code>start()</code>、<code>stop()</code>、<code>is_running()</code>、<code>set_color()</code>、<code>set_speed()</code>。</li>
+<li><strong>图表</strong>：<code>createBarChart</code> / <code>createLineChart</code> / <code>createPieChart</code>，共用 <code>data</code>（<code>set_data()</code>）、<code>title</code>、<code>show_grid</code>、<code>show_points</code>、<code>show_values</code>、<code>font_size</code>、<code>w</code>/<code>h</code>。独立测试见 <code>控件/图表/test_charts.leno</code>。</li>
+</ul>
+<hr>
+<h2 id="八-反馈与浮层">八、反馈与浮层</h2>
+<h3 id="8-1-toast-轻提示">8.1 Toast —— 轻提示</h3>
+<p>一次操作的"回声"，不占布局、不吃事件、自动淡出。</p>
+<pre><code class="language-leno">SDL3.toast(&quot;已复制&quot;)
+SDL3.toastKind(&quot;保存失败&quot;, SDL3.TOAST_ERROR)
+SDL3.toastFull(&quot;正在解析…&quot;, SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
+</code></pre>
+<p>常量：<code>TOAST_INFO/SUCCESS/WARN/ERROR</code>、<code>TOAST_BOTTOM/TOP/BOTTOM_RIGHT</code>。
+设置：<code>setToastDuration(ms)</code>、<code>setToastPosition()</code>、<code>setToastMaxWidth()</code>、<code>setToastFontSize()</code>。</p>
+<h3 id="8-2-tooltip-悬停提示">8.2 Tooltip —— 悬停提示</h3>
+<p>控件通用的 <code>tip</code> 参数就够用；<code>SDL3.setTipDelay(400)</code> 设全局延迟。内容随光标变化时用 <code>tipReportEx("owner", text, ax, ay)</code> + <code>tipClearEx("owner")</code>。</p>
+<p>⚠ 手动弹气泡必须用带 owner 的版本；用无条件 <code>tipClear</code> 会把别人的提示一起清掉。</p>
+<h3 id="8-3-menubar-右击菜单">8.3 MenuBar / 右击菜单</h3>
+<p><strong>MenuBar 是构建器写法</strong>，先 <code>addMenu</code> 拿 int id，再往 id 里加项（<code>showcase.leno</code> / <code>settings.leno</code> 一致）：</p>
+<pre><code class="language-leno">var bar = win.addMenuBar({x: 0, y: 0, w: 920, h: 30, font_size: 14})
+
+int mFile = bar.addMenu(&quot;文件&quot;)
+bar.addItem(mFile, {label: &quot;新建&quot;, id: &quot;new&quot;, shortcut: &quot;Ctrl+N&quot;, image: imgPath(&quot;new.png&quot;)})
+bar.addItem(mFile, {label: &quot;打开&quot;, id: &quot;open&quot;})
+bar.addSeparator(mFile)
+int mEdit = bar.addMenu(&quot;编辑&quot;)
+int mMore = bar.addItem(mEdit, {label: &quot;更多&quot;})              // 返回子菜单 id
+bar.addSubmenuItem(mEdit, mMore, {label: &quot;设置 A&quot;, id: &quot;setA&quot;})
+
+bar.on_select(func(string menu, string id) {                // 两个 string 参数
+    print(&quot;菜单选择: &quot; + menu + &quot; -&gt; &quot; + id)
+})
+
+// 窗口级右击菜单：底层 run 统一接管弹出，无需在 onEvent 里处理右键
+int ctx = bar.addContextMenu(&quot;ctx&quot;)
+bar.addContextItem(ctx, {label: &quot;复制&quot;, id: &quot;copy&quot;})
+bar.addContextSeparator(ctx)
+bar.addContextItem(ctx, {label: &quot;属性&quot;, id: &quot;prop&quot;})
+win.setContextMenu(bar, ctx)
+</code></pre>
+<p>⚠ MenuBar <strong>必须 <code>win.addMenuBar()</code></strong>；用 <code>createMenuBar</code> + <code>win.add</code> 时标题会显示、点击有反应，但下拉菜单永远不弹。</p>
+<h3 id="8-4-popmenu-自绘弹出菜单">8.4 PopMenu —— 自绘弹出菜单</h3>
+<p>无边框、置顶、非模态；图标传图片路径。</p>
+<pre><code class="language-leno">PopMenu pm = SDL3.createPopMenu({})
+pm.addItem(&quot;隐藏窗口&quot;, imgPath, func() { ... })
+pm.addCheck(&quot;窗口置顶&quot;, imgPath, false, func() { ... })
+pm.addSeparator()
+pm.beginSubmenu(&quot;显示设置&quot;)                 // 下一级，可嵌套
+pm.addCheck(&quot;12 小时制&quot;, imgPath, false, func() { ... })
+pm.endSubmenu()
+pm.showAt(x, y)
+pm.poll()                                   // 主循环里调：点菜单外自动收起
+</code></pre>
+<p><strong>方法</strong>：<code>addItem()</code>、<code>addCheck()</code>、<code>addSeparator()</code>、<code>beginSubmenu()</code>、<code>endSubmenu()</code>、<code>setChecked()</code>、<code>setText()</code>、<code>setIcon()</code>、<code>showAt()</code>、<code>hide()</code>、<code>poll()</code>、<code>clickItem(idx)</code>（无头自测）。</p>
+<p>⚠ 子菜单是另一块独立面板，各面板必须紧贴（窗口透明，留缝会透出桌面）。Windows 上原生托盘菜单会冻结画面，所以托盘用这套自绘方案（见速查第六节）。</p>
+<h3 id="8-5-scrim-遮罩层">8.5 Scrim —— 遮罩层</h3>
+<p>半透明遮罩，常用于模态浮层后面。<strong>参数</strong>：<code>color</code>、<code>alpha</code>、<code>w</code>/<code>h</code>；<strong>方法</strong>：<code>show()</code>、<code>hide()</code>、<code>set_alpha()</code>、<code>on_window_resize()</code>。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 <code>自测/test_scrim_resize.leno</code>。</p>
+<hr>
+<h2 id="九-窗口增强">九、窗口增强</h2>
+<h3 id="9-1-titlebar-自绘标题栏">9.1 TitleBar —— 自绘标题栏</h3>
+<p>无边框窗口自己画标题栏，支持最小化/最大化/关闭、自绘图标、动作按钮、居中控件。</p>
+<p><strong>参数</strong>：<code>title</code>、<code>h</code>、<code>bg_color</code>、<code>text_color</code>、<code>hover_color</code>、<code>close_hover_color</code>、<code>icon_color</code>、<code>sep_color</code>、<code>show_minimize</code>/<code>show_maximize</code>/<code>show_close</code>、<code>title_align</code>、<code>btn_align</code>、<code>actions</code>、<code>title_icon</code>、<code>icon_minimize</code>/<code>icon_maximize</code>/<code>icon_restore</code>/<code>icon_close</code>。
+<strong>方法</strong>：<code>set_title()</code>、<code>on_close()</code>、<code>on_minimize()</code>、<code>on_maximize()</code>、<code>on_action()</code>、<code>add_action()</code>、<code>set_maximized()</code>、<code>set_center_widget()</code>、<code>bind_window()</code>。</p>
+<h3 id="9-2-dialog-对话框">9.2 Dialog —— 对话框</h3>
+<pre><code class="language-leno">// 模态确认：结果走回调，不要读返回值
+SDL3.msgBox(&quot;确认&quot;, [&quot;删除后无法恢复&quot;], &quot;删除&quot;, &quot;取消&quot;, true, func() { do_delete() })
+
+// 自定义模态窗
+var dlg = SDL3.createDialogWindow({title: &quot;设置&quot;, w: 480, h: 320})
+var done = false
+dlg.addLabel({x: 30, y: 36, text: &quot;这是一个模态对话框&quot;, font_size: 16})
+dlg.addButton({x: 60, y: 120, w: 100, h: 36, text: &quot;确定&quot;, type: &quot;primary&quot;})
+    .on_click(func():void { done = true })
+SDL3.runModal(dlg,
+    func(Event ev): bool { if ev.isQuit() or done { return false } return true },
+    func(Renderer r) { r.clearColor(#282A32FF) })
+</code></pre>
+<p>⚠ <strong><code>runModal</code> 不保证阻塞到窗口关闭</strong>：主循环已在跑时它只注册窗口就返回 ⇒ 结果必须由按钮/关闭回调交出，不要写 <code>if runModal(...) {}</code>（恒判 false）。<code>SDL3.quit()</code> 也不是退出程序（见 1.5）。</p>
+<h3 id="9-3-其它">9.3 其它</h3>
+<ul>
+<li><strong>系统托盘</strong>：<code>SDL3.createTray({icon, tooltip})</code> → <code>getMenu()</code> → <code>addButton()</code> / <code>addCheckbox()</code> / <code>addSeparator()</code>，必须靠 <code>win.run()</code> 驱动；Windows 上改用 <code>interceptTrayClick()</code> + <code>createPopMenu</code> 自绘（详见速查第六节）。</li>
+<li><strong>文件对话框</strong>：<code>showOpenFileDialog()</code>、<code>showSaveFileDialog()</code>、<code>showOpenFolderDialog()</code>。</li>
+<li><strong>拖拽提示</strong>：<code>SDL3.createDragHint({...})</code> + <code>show()</code> / <code>updatePos()</code> / <code>hide()</code>。</li>
+<li><strong>窗口穿透</strong>：<code>win.setClickThrough(bool)</code> / <code>isClickThrough()</code>。</li>
+<li><strong>屏幕可用区</strong>：<code>SDL3.getDisplayUsableAt(x, y)</code> 返回 <code>[x, y, w, h]</code>（扣掉任务栏，多屏可用），取不到时 w/h 为 0，调用方自己兜底。</li>
+</ul>
+<hr>
+<h2 id="十-官方活文档导览-leno_gui">十、官方活文档导览（leno_gui）</h2>
+<p><code>Leno/leno_gui/</code> 是控件库的"活文档"——每个 <code>test_*.leno</code> 都能直接 <code>leno 文件名</code> 跑起来。按你要找的东西直接翻对应目录：</p>
+<table>
+<thead>
+<tr>
+<th>想找什么</th>
+<th>去哪个文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>一个窗口看全部控件 + 三种布局 + 菜单/右击/模态/滚动/Tab</strong></td>
+<td><code>控件/总览/showcase.leno</code> ⭐ 先看这个</td>
+</tr>
+<tr>
+<td>主题（深色/浅色）切换</td>
+<td><code>控件/总览/test_theme.leno</code></td>
+</tr>
+<tr>
+<td>按钮全部属性与动态方法</td>
+<td><code>控件/按钮/test_button_v3.leno</code>（类型/颜色/光标/字体/动态）、<code>test_button_new.leno</code>、<code>test_button_image.leno</code></td>
+</tr>
+<tr>
+<td>Label / Edit / Canvas</td>
+<td><code>控件/标签/test_label.leno</code>、<code>控件/编辑框/test_edit*.leno</code>、<code>控件/画布/test_canvas_tab.leno</code></td>
+</tr>
+<tr>
+<td>弹性布局 grow/shrink/basis/justify/align/锚点</td>
+<td><code>控件/布局/test_layout.leno</code> ⭐</td>
+</tr>
+<tr>
+<td>复选/单选/开关</td>
+<td><code>控件/选择控件/test_check_radio_toggle.leno</code>、<code>test_toggle_anim.leno</code></td>
+</tr>
+<tr>
+<td>滑块 / 进度条 / SpinBox</td>
+<td><code>控件/数值控件/test_slider_progress.leno</code>、<code>test_progress_anim.leno</code>、<code>test_spinbox.leno</code></td>
+</tr>
+<tr>
+<td>ListBox / ComboBox / TreeView / Panel / ScrollView</td>
+<td><code>控件/复合控件/选择类/</code>、<code>控件/复合控件/容器类/</code></td>
+</tr>
+<tr>
+<td>Tab × Canvas / Table / 重置</td>
+<td><code>控件/复合控件/布局类/test_tab_*.leno</code></td>
+</tr>
+<tr>
+<td>Table 全部能力</td>
+<td><code>控件/表格/test_table*.leno</code>（features / advanced / cells / image / keyboard_tooltip）</td>
+</tr>
+<tr>
+<td>菜单 / 右击菜单 / 提示</td>
+<td><code>控件/复合控件/菜单/</code>、<code>控件/复合控件/提示类/test_tooltip.leno</code></td>
+</tr>
+<tr>
+<td>一整个设置面板怎么拼</td>
+<td><code>控件/设置面板/settings.leno</code> ⭐</td>
+</tr>
+<tr>
+<td>边界与回归（焦点链/裁剪/缓存/缩放）</td>
+<td><code>自测/</code> 下 30+ 个 <code>test_*.leno</code></td>
+</tr>
+<tr>
+<td><strong>完整真实应用</strong></td>
+<td><code>应用/数据看板/dashboard.leno</code>、<code>应用/影视海报墙/movie_wall.leno</code>、<code>应用/文件管理器/file_manager.leno</code>、<code>应用/模拟时钟/clock.leno</code>、<code>应用/IDE布局/ide_layout.leno</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>这些文件和 <code>Leno/build/leno_module/LenoSDL3/examples/</code> 的 40+ 用例合起来，覆盖了每个控件的全部属性。查某个具体参数时，搜文件名比猜 API 快。</p>
+</blockquote>
+<hr>
+<h2 id="附-控件-创建函数速查">附：控件 → 创建函数速查</h2>
+<table>
+<thead>
+<tr>
+<th>控件</th>
+<th>创建函数</th>
+<th>分类</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Label</code> / <code>Button</code> / <code>LinkButton</code></td>
+<td><code>createLabel</code> / <code>createButton</code> / <code>createLinkButton</code></td>
+<td>文字按钮</td>
+</tr>
+<tr>
+<td><code>CheckBox</code> / <code>RadioButton</code> / <code>Toggle</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>选择</td>
+</tr>
+<tr>
+<td><code>Edit</code> / <code>SpinBox</code> / <code>Slider</code> / <code>ProgressBar</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>输入数值</td>
+</tr>
+<tr>
+<td><code>Calendar</code> / <code>pickColor</code></td>
+<td><code>createCalendar</code> / <code>pickColor</code></td>
+<td>选择</td>
+</tr>
+<tr>
+<td><code>HBox</code> / <code>VBox</code> / <code>AnchorBox</code> / <code>GridLayout</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>布局</td>
+</tr>
+<tr>
+<td><code>Panel</code> / <code>GroupBox</code> / <code>ScrollView</code> / <code>TabControl</code> / <code>Splitter</code> / <code>Card</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>容器</td>
+</tr>
+<tr>
+<td><code>ListBox</code> / <code>ComboBox</code> / <code>Table</code> / <code>TreeView</code> / <code>VirtualGrid</code></td>
+<td>同名 <code>createXxx</code>（ComboBox 顶层用 <code>win.addComboBox</code>）</td>
+<td>列表</td>
+</tr>
+<tr>
+<td><code>ImageView</code> / <code>Canvas</code> / <code>Separator</code> / <code>Badge</code> / <code>RingProgress</code> / <code>Spinner</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>图形进度</td>
+</tr>
+<tr>
+<td><code>BarChart</code> / <code>LineChart</code> / <code>PieChart</code></td>
+<td>同名 <code>createXxx</code></td>
+<td>图表</td>
+</tr>
+<tr>
+<td><code>Toast</code> / <code>Tooltip</code> / <code>MenuBar</code> / <code>PopMenu</code> / <code>Scrim</code> / <code>Tray</code></td>
+<td><code>toast()</code> / <code>tipReport()</code> / <code>win.addMenuBar</code> / <code>createPopMenu</code> / <code>createScrim</code> / <code>createTray</code></td>
+<td>反馈浮层</td>
+</tr>
+<tr>
+<td><code>TitleBar</code> / Dialog</td>
+<td><code>createTitleBar</code> / <code>createDialogWindow</code> + <code>runModal</code></td>
+<td>窗口增强</td>
+</tr>
+</tbody>
+</table></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#一-创建窗口">一、创建窗口</a></li><ul class="lv3"><li><a href="#1-1-最小可运行骨架">1.1 最小可运行骨架</a></li><li><a href="#1-2-createwindow-的参数">1.2 createWindow 的参数</a></li><li><a href="#1-3-主题-在创建控件之前设置">1.3 主题：在创建控件之前设置</a></li><li><a href="#1-4-窗口常用方法">1.4 窗口常用方法</a></li><li><a href="#1-5-退出与关闭的四个入口">1.5 退出与关闭的四个入口</a></li><li><a href="#1-6-三层绘制顺序">1.6 三层绘制顺序</a></li></ul><li><a href="#二-通用约定-读控件前必看">二、通用约定（读控件前必看）</a></li><ul class="lv3"><li><a href="#2-1-两种创建方式-别混用">2.1 两种创建方式，别混用</a></li><li><a href="#2-2-通用参数与颜色">2.2 通用参数与颜色</a></li><li><a href="#2-3-弹性布局四参数-grow-shrink-basis-align">2.3 弹性布局四参数 grow/shrink/basis/align</a></li><li><a href="#2-4-回调签名-按实测-别猜">2.4 回调签名（按实测，别猜）</a></li></ul><li><a href="#三-文字与按钮">三、文字与按钮</a></li><ul class="lv3"><li><a href="#3-1-label-文字标签">3.1 Label —— 文字标签</a></li><li><a href="#3-2-button-按钮">3.2 Button —— 按钮</a></li><li><a href="#3-3-linkbutton-链接按钮">3.3 LinkButton —— 链接按钮</a></li><li><a href="#3-4-checkbox-复选框">3.4 CheckBox —— 复选框</a></li><li><a href="#3-5-radiobutton-单选框">3.5 RadioButton —— 单选框</a></li><li><a href="#3-6-toggle-开关">3.6 Toggle —— 开关</a></li></ul><li><a href="#四-输入与选择">四、输入与选择</a></li><ul class="lv3"><li><a href="#4-1-edit-单行-多行输入框">4.1 Edit —— 单行 / 多行输入框</a></li><li><a href="#4-2-spinbox-数字输入框">4.2 SpinBox —— 数字输入框</a></li><li><a href="#4-3-slider-滑块">4.3 Slider —— 滑块</a></li><li><a href="#4-4-progressbar-进度条">4.4 ProgressBar —— 进度条</a></li><li><a href="#4-5-calendar-日历">4.5 Calendar —— 日历</a></li><li><a href="#4-6-pickcolor-颜色选择对话框">4.6 pickColor —— 颜色选择对话框</a></li></ul><li><a href="#五-容器与布局">五、容器与布局</a></li><ul class="lv3"><li><a href="#5-1-hbox-vbox-anchorbox">5.1 HBox / VBox / AnchorBox</a></li><li><a href="#5-2-gridlayout-网格布局">5.2 GridLayout —— 网格布局</a></li><li><a href="#5-3-panel-面板">5.3 Panel —— 面板</a></li><li><a href="#5-4-groupbox-分组框">5.4 GroupBox —— 分组框</a></li><li><a href="#5-5-scrollview-滚动视图">5.5 ScrollView —— 滚动视图</a></li><li><a href="#5-6-tabcontrol-标签页">5.6 TabControl —— 标签页</a></li><li><a href="#5-7-splitter-card">5.7 Splitter / Card</a></li></ul><li><a href="#六-列表与表格">六、列表与表格</a></li><ul class="lv3"><li><a href="#6-1-listbox-列表">6.1 ListBox —— 列表</a></li><li><a href="#6-2-combobox-下拉框">6.2 ComboBox —— 下拉框</a></li><li><a href="#6-3-table-表格">6.3 Table —— 表格</a></li><li><a href="#6-4-treeview-树形列表">6.4 TreeView —— 树形列表</a></li><li><a href="#6-5-virtualgrid-虚拟网格">6.5 VirtualGrid —— 虚拟网格</a></li></ul><li><a href="#七-图片与图形进度">七、图片与图形进度</a></li><ul class="lv3"><li><a href="#7-1-imageview-图片展示">7.1 ImageView —— 图片展示</a></li><li><a href="#7-2-canvas-自绘画布">7.2 Canvas —— 自绘画布</a></li><li><a href="#7-3-separator-分隔线">7.3 Separator —— 分隔线</a></li><li><a href="#7-4-badge-steps-alert">7.4 Badge / Steps / Alert</a></li><li><a href="#7-5-ringprogress-spinner-图表">7.5 RingProgress / Spinner / 图表</a></li></ul><li><a href="#八-反馈与浮层">八、反馈与浮层</a></li><ul class="lv3"><li><a href="#8-1-toast-轻提示">8.1 Toast —— 轻提示</a></li><li><a href="#8-2-tooltip-悬停提示">8.2 Tooltip —— 悬停提示</a></li><li><a href="#8-3-menubar-右击菜单">8.3 MenuBar / 右击菜单</a></li><li><a href="#8-4-popmenu-自绘弹出菜单">8.4 PopMenu —— 自绘弹出菜单</a></li><li><a href="#8-5-scrim-遮罩层">8.5 Scrim —— 遮罩层</a></li></ul><li><a href="#九-窗口增强">九、窗口增强</a></li><ul class="lv3"><li><a href="#9-1-titlebar-自绘标题栏">9.1 TitleBar —— 自绘标题栏</a></li><li><a href="#9-2-dialog-对话框">9.2 Dialog —— 对话框</a></li><li><a href="#9-3-其它">9.3 其它</a></li></ul><li><a href="#十-官方活文档导览-leno_gui">十、官方活文档导览（leno_gui）</a></li><li><a href="#附-控件-创建函数速查">附：控件 → 创建函数速查</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="LenoSDL3_控件实战教程.html">← 上一篇</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

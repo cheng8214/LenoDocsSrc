@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F2 非可空 / 可空：语义设计与迁移方案（2026-11-18） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="F2_非可空与可空类型设计.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">04 语言设计与实现</a><span class="sep">/</span><span class="here">F2 非可空 / 可空：语义设计与迁移方案（2026-11-18）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details open><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html" class="active" aria-current="page">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="f2-非可空-可空-语义设计与迁移方案-2026-11-18">F2 非可空 / 可空：语义设计与迁移方案（2026-11-18）</h1>
+<blockquote>
+<p>状态：<strong>L0 + L1 + L2 + L3 已落地</strong>（2026-11-18）：<code>T x = null</code> <strong>已是编译错误</strong>，
+仓内 1313 文件 + 11 个同级项目全部迁移干净。仅 L4（<code>struct == null</code> 升错误）未做 —— 见第八节。
+上游台账：<code>docs/待修_2026-11-17_实测发现.md</code> 的 F2 条目。
+结论先行：<strong><code>?</code> 今天只是"声明意图"，没有任何强制力</strong>；只禁 <code>T x = null</code> 是无效的
+（可从 <code>T?</code> 隐式流回去）。要做就按 L1→L4 分层上线，且必须先给"天然可空"的类型开豁免，
+否则一次性返工 149 处<strong>语义上本来正确</strong>的句柄写法。</p>
+</blockquote>
+<hr>
+<h2 id="一-要解决的两个现场">一、要解决的两个现场</h2>
+<table>
+<thead>
+<tr>
+<th>现场</th>
+<th>症状</th>
+<th>根因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aria 桌面歌词</td>
+<td><code>Window dlWin = null</code> 之后 <code>dlWin != null</code> 恒真 ⇒ 用 <code>bool dlOpen</code> 伴生字段兜</td>
+<td>非可空类型接受 <code>null</code>，且比较<strong>不报错</strong>（只在"确定非空"时警告）</td>
+</tr>
+<tr>
+<td>Aria 托盘</td>
+<td><code>Tray trayObj = null</code> 同理（<code>trayOn</code> 伴生）</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<p>两个 bug 的共性：<strong>"有没有"这件事靠人手维护一个 <code>bool</code> 伴生字段</strong>，忘同步就静默错。</p>
+<hr>
+<h2 id="二-现状实测-v0-2-4-2026-11-17-的编译产物">二、现状实测（v0.2.4 + 2026-11-17 的编译产物）</h2>
+<pre><code class="language-leno">struct P { int x = 0 }
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>编译期</th>
+<th>运行期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>P g = null</code>（非可空 ← null）</td>
+<td><strong>静默通过</strong></td>
+<td><code>g</code> 就是 null</td>
+</tr>
+<tr>
+<td><code>P? g2 = null</code></td>
+<td>通过</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>P w = q</code>（<code>q: P?</code>，可空 → 非可空）</td>
+<td><strong>静默通过</strong></td>
+<td><code>w</code> 是 null</td>
+</tr>
+<tr>
+<td><code>take(q)</code>（形参 <code>P</code>，实参 <code>P?</code>）</td>
+<td><strong>静默通过</strong></td>
+<td>形参是 null</td>
+</tr>
+<tr>
+<td><code>func f(): P { return null }</code></td>
+<td><strong>静默通过</strong></td>
+<td>返回 null</td>
+</tr>
+<tr>
+<td><code>q.x</code>（<code>q</code> 为 null，<strong>不用</strong> <code>?.</code>）</td>
+<td>通过</td>
+<td>运行期报错：<code>字段访问需要结构体对象</code></td>
+</tr>
+<tr>
+<td><code>q?.x</code> / <code>q ?? new P()</code></td>
+<td>通过</td>
+<td><code>null</code> / 兜底值</td>
+</tr>
+<tr>
+<td><code>n + 1</code>（<code>n: int?</code> 且确定为 null）</td>
+<td><strong>报错</strong>（"确定为 null 不能参与算术"）</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>p == null</code>（<code>p</code> 确定非空）</td>
+<td><strong>警告</strong>（<code>WARN_STRUCT_EQ_NULL</code>，2026-11-17 修过误报）</td>
+<td>恒 false</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键事实 1</strong>：<code>P</code> 与 <code>P?</code> 运行期<strong>同构</strong>（struct 是堆对象引用，null 是合法值）。
+⇒ <code>?</code> 若要"有保证"，只能靠<strong>静态检查</strong>，不可能靠运行时表示。</p>
+<p><strong>关键事实 2</strong>：只禁 <code>T x = null</code> <strong>无效</strong> —— <code>P? q = null; P w = q;</code> 两行就把 null 洗成非空类型。
+⇒ 必须同时管住<strong>四条通路</strong>：赋值 / 实参 / <code>return</code> / 字段写入（读侧另有 <code>while</code>/<code>for</code> 条件）。</p>
+<p><strong>关键事实 3（决定分期方式）</strong>：存量里"显式类型 <code>= null</code>"的分布（口径：排除 <code>var</code>，
+统计 <code>类型 名字 = null</code>；已带 <code>?</code> 的单独算）：</p>
+<table>
+<thead>
+<tr>
+<th>仓库</th>
+<th style="text-align: right;">显式 <code>= null</code></th>
+<th style="text-align: right;">已写 <code>?</code></th>
+<th style="text-align: right;">非可空</th>
+<th style="text-align: right;">其中句柄类（L0 豁免）</th>
+<th style="text-align: right;"><strong>真正要改</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aria</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">4（<code>Ptr</code> ×2、<code>Channel</code>）</td>
+<td style="text-align: right;"><strong>4</strong>（<code>Window</code>/<code>Font</code>/<code>Tray</code>/<code>PopMenu</code>）</td>
+</tr>
+<tr>
+<td>LenoSDL3 + leno_gui</td>
+<td style="text-align: right;">152</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">113</td>
+<td style="text-align: right;">78（<code>Ptr</code> / cLib / <code>sdl3</code> / <code>sdl3_ttf</code> …）</td>
+<td style="text-align: right;"><strong>35</strong></td>
+</tr>
+<tr>
+<td>合计</td>
+<td style="text-align: right;">168</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;"><strong>39</strong></td>
+</tr>
+</tbody>
+</table>
+<p>真正要改的 39 处里，绝大多数是<strong>懒初始化缓存</strong>与<strong>测试夹具</strong>，不是"概念错了"：</p>
+<ul>
+<li><code>Dict lineWCache = null</code>（<code>sdl_edit.leno:114</code>）、<code>Array[string] _phLines = null</code>（<code>sdl_edit.leno:128</code>）
+  → <code>Dict?</code> / <code>Array[string]?</code>，判空后懒建</li>
+<li><code>Font g_fontBig = null</code>（<code>test_filedialog.leno:25</code>）、<code>Window a = null</code>（<code>test_mark_attribution.leno:25</code>）
+  → <code>Font?</code> / <code>Window?</code>（测试里本来就是"稍后创建"）</li>
+<li>FFI 懒加载句柄（<code>kernel32 _krnl = null</code>、<code>sdl3 g_lib = null</code>）<strong>属于 L0 豁免，不用改</strong></li>
+</ul>
+<p>⇒ 一刀切禁止会把 82 处<strong>语义正确</strong>的句柄写法一起判红，而真正的迁移面只有 39 处。
+这就是必须先有 L0 豁免清单的原因。</p>
+<p>现有的 <code>?</code> 声明基数：<strong>LenoSDL3/gui 160 处、Aria 9 处</strong>（说明 <code>?</code> 已经在用，只是没人强制）。</p>
+<hr>
+<h2 id="三-规则设计-分层上线-每层独立可回退">三、规则设计（分层上线，每层独立可回退）</h2>
+<h3 id="l0-定义-天然可空-豁免清单-先定死">L0 定义"天然可空"（豁免清单，先定死）</h3>
+<p>下列类型的变量<strong>允许</strong> <code>= null</code>，且<strong>不参与</strong> L1/L2 的检查（它们的存在意义就是"可能没有"）：</p>
+<p><code>Ptr[...]</code> / <code>Ptr</code> / cLib 句柄（<code>kernel32</code> 这类）/ <code>Channel</code> / <code>Thread</code> / <code>Future</code> / <code>File</code> / <code>Socket</code> / <code>func(...)</code> / <code>cstruct</code> 指针</p>
+<p>判据写在编译器一处（<code>kind_accepts_null_ref</code> 已有类似清单，复用它 + 补 <code>cstruct</code>），
+<strong>不再逐处特判</strong>。<code>struct</code> / <code>face</code> / <code>enum</code> / 数值 / <code>string</code> / <code>Array</code> / <code>Dict</code> <strong>不豁免</strong>。</p>
+<blockquote>
+<p>为什么 <code>string</code> 不豁免：<code>string s = null</code> 是"空字符串"的假象，用 <code>""</code> 才对。</p>
+</blockquote>
+<h3 id="l1-非可空类型-null-字面量-警告-不是错误">L1 非可空类型 ← <code>null</code> 字面量 ⇒ <strong>警告</strong>（不是错误）</h3>
+<p>覆盖 5 个位置：变量声明 / 赋值 / 实参 / <code>return</code> / struct 字段默认值。</p>
+<pre><code>[警告] 'dlWin' 声明为 Window（非可空），却赋了 null
+        提示: 这个值之后取字段会运行期报错（&quot;字段访问需要结构体对象&quot;）
+        提示: 要表达&quot;可能没有&quot;请写 `Window? dlWin = null`，并用 `if dlWin != null { … }` 收窄
+        提示: 句柄类（Ptr / cLib / Channel / File …）不受此限
+</code></pre>
+<p><strong>先警告不报错</strong>的理由：存量 121 处要按 L0 分类过一遍 —— 82 处句柄类自动豁免，
+剩下 39 处（Aria 4 / SDL3+gui 35）里既有真问题（<code>Window dlWin = null</code>），也有该顺手改成 <code>?</code> 的
+懒初始化缓存。先跑一段警告、确认"剩下的都是真问题"，再升错误，比一次性断掉存量安全得多。</p>
+<h3 id="l2-t-t-的隐式流失-警告">L2 <code>T?</code> → <code>T</code> 的隐式流失 ⇒ <strong>警告</strong></h3>
+<p>四条通路（赋值 / 实参 / <code>return</code> / 字段写入）。<strong>没有这一层，L1 就是纸糊的</strong>（关键事实 2）。</p>
+<pre><code>[警告] 'q' 是 P?（可能为 null），却直接传给了要求非可空的形参 'p'
+        提示: 三种修法 —— ① `if q != null { take(q) }`（分支内收窄）
+                          ② `take(q ?? 默认值)`
+                          ③ 形参本身改成 `P?`，在函数内部判空
+</code></pre>
+<p>前置条件：<strong><code>if x != null</code> 的收窄要真的能收</strong>（<code>is</code> 守卫已有收窄机制，<code>null</code> 守卫要补上同等能力），
+否则 L2 会逼用户到处写 <code>?? 默认值</code>。</p>
+<h3 id="l3-l1-升错误">L3 L1 升<strong>错误</strong></h3>
+<p>只把"非可空 ← <code>null</code> 字面量"升成错误（L0 豁免不变）。这时 <code>T x = null</code> 彻底写不出来。</p>
+<h3 id="l4-struct-null-升错误">L4 <code>struct == null</code> 升<strong>错误</strong></h3>
+<p>必须排在 L1+L2 <strong>之后</strong> —— 只有"非可空真的非空、可空不会偷偷流回去"成立，
+"<code>p == null</code> 恒为 false"才是一个<strong>永远</strong>的逻辑错误而不是碰运气。</p>
+<blockquote>
+<p>L4 之前的过渡态：维持现在的 <code>WARN_STRUCT_EQ_NULL</code>（已修过误报：初值是 <code>null</code> 的变量不再被警告）。</p>
+</blockquote>
+<h3 id="版本与逃生阀">版本与逃生阀</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>版本</th>
+<th>形态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1 + L2 + 收窄</td>
+<td>0.3.0（minor）</td>
+<td>警告，可用 <code>@allow_null</code> 局部豁免（可选）</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>0.4.0（minor）</td>
+<td>错误</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>0.4.0 同上</td>
+<td>错误</td>
+</tr>
+</tbody>
+</table>
+<p><strong>不做</strong> <code>LENO_ALLOW_NULL=1</code> 这类全局运行时开关：编译期规则不该有环境变量后门（与"单一事实来源"冲突）。
+需要豁免就写 <code>T?</code> 或加段级注解。</p>
+<hr>
+<h2 id="四-迁移范式-真实代码-前后对照">四、迁移范式（真实代码，前后对照）</h2>
+<h3 id="a-aria-桌面歌词-window-bool-伴生-window">A. Aria 桌面歌词：<code>Window + bool</code> 伴生 → <code>Window?</code></h3>
+<pre><code class="language-leno">// 现在（desktop_lyric.leno:64 附近）
+Window dlWin = null
+bool   dlOpen = false
+…
+if not dlOpen { dlWin = … ; dlOpen = true }
+if dlOpen { dlWin.set_always_on_top(true) }     // ← 忘同步就静默错
+</code></pre>
+<pre><code class="language-leno">// L1/L2 之后
+Window? dlWin = null
+…
+if dlWin == null { dlWin = … }
+if dlWin != null { dlWin.set_always_on_top(true) }   // 收窄，不用再维护 dlOpen
+</code></pre>
+<p><strong>收益</strong>：删掉 <code>dlOpen</code> 这个手工 Option；<code>if dlWin != null</code> 由编译器保证收窄（L2 只会在这里放行）。</p>
+<h3 id="b-aria-托盘-同上">B. Aria 托盘：同上</h3>
+<pre><code class="language-leno">Tray    trayObj  = null        // tray.leno:44
+PopMenu trayMenu = null        // tray.leno:45
+bool    trayOn   = false
+</code></pre>
+<p>→ <code>Tray?</code> / <code>PopMenu?</code>，删 <code>trayOn</code>，用 <code>if trayObj != null</code> 收窄。</p>
+<h3 id="c-lenosdl3-ffi-懒加载-保持原样-l0-豁免">C. LenoSDL3 FFI 懒加载：<strong>保持原样</strong>（L0 豁免）</h3>
+<pre><code class="language-leno">kernel32 _krnl = null                       // w32_memory.leno:103
+if _krnl == null { _krnl = ffi.load(&quot;kernel32&quot;) }
+</code></pre>
+<p>→ 不动。cLib 句柄天然可空。<strong>如果</strong>将来想把"加载失败"也建模进去，再写 <code>kernel32?</code>；
+但没必要 —— <code>ffi.load</code> 失败本身就会报错，句柄只有"加载过/没加载过"两态。</p>
+<h3 id="d-非可空返回-null">D. 非可空返回 null</h3>
+<pre><code class="language-leno">func findUser(int id): User { return null }        // 现在：静默
+</code></pre>
+<pre><code class="language-leno">func findUser(int id): User? { return null }       // L1 之后：必须这样写
+…
+var u = findUser(7)
+if u != null { … }
+</code></pre>
+<h3 id="e-可空传非可空形参">E. 可空传非可空形参</h3>
+<pre><code class="language-leno">P? q = someMaybe()
+var a = take(q)                                     // 现在：静默把 null 传进去
+</code></pre>
+<pre><code class="language-leno">if q != null { var a = take(q) }                    // L2 认这条（分支内收窄）
+// 或
+var a = take(q ?? new P())                          // 明确兜底
+</code></pre>
+<h3 id="f-可选-不推荐大面积用-显式抉择">F. （可选，不推荐大面积用）显式抉择</h3>
+<p><code>Option[T]</code>（LenoResult 已有 <code>Option</code> / <code>some</code> / <code>none</code>）适合"错误通道"场景（<code>Result[Option[T]]</code> 组合），
+<strong>不建议</strong>用来替代 <code>T?</code>：多一层装箱、写法更长，而且 <code>T?</code> 已经在 169 处存量里用着了。</p>
+<hr>
+<h2 id="五-判据与回归-每层落地时必须带的用例">五、判据与回归（每层落地时必须带的用例）</h2>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>正向</th>
+<th>误报守卫</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td><code>P g = null</code> 报警告；<code>P? g = null</code> 不报</td>
+<td><code>kernel32 _k = null</code>、<code>Ptr[u8] p = null</code>、<code>Channel c = null</code>、<code>Window? w = null</code> 全不报</td>
+</tr>
+<tr>
+<td>L2</td>
+<td><code>P w = q</code> / <code>take(q)</code> / <code>return q</code> / <code>obj.f = q</code> 各报一条</td>
+<td><code>if q != null { take(q) }</code> 不报；<code>take(q ?? d)</code> 不报；<code>q?.f</code> 不报；<code>q ??=</code> 之后不报</td>
+</tr>
+<tr>
+<td>L3</td>
+<td><code>P g = null</code> 报错；文案含 <code>P?</code> 改法</td>
+<td>豁免类仍编译通过</td>
+</tr>
+<tr>
+<td>L4</td>
+<td><code>p == null</code>（p 非可空）报错</td>
+<td><code>q == null</code>（q 可空）不报；<code>p == null</code> 里 p 来自 <code>x as P</code>（可能 null）不报</td>
+</tr>
+</tbody>
+</table>
+<p>另需一条<strong>跨仓回归</strong>：Aria <code>--check aria.leno</code> + LenoSDL3 全量 <code>--check</code>（本轮 F3 用的同一套），
+要求 <strong>0 错误</strong>、警告数可解释（每条都能对上"真问题"）。</p>
+<hr>
+<h2 id="六-未决问题-需要拍板">六、未决问题（需要拍板）</h2>
+<ol>
+<li><strong>收窄能力</strong>：<code>if x != null</code> 之后要不要把 <code>x</code> 视为非空（L2 的前提）。
+   现有 <code>is</code> 守卫有收窄、<code>??=</code> 有"之后非空"，<code>null</code> 守卫补齐是一致的做法 —— 但要处理
+   <code>while</code>/<code>and</code>/<code>or</code> 的组合（<code>or</code> 条件下不收窄，与 <code>is</code> 的既有口径一致）。</li>
+<li><strong>数组/字典元素</strong>：<code>Array[P]</code> 的 <code>arr[i]</code> 是否算"可能为空"？
+   建议<strong>不算</strong>（与今天一致，避免给所有容器访问加噪声）；要严格就写 <code>Array[P?]</code>。</li>
+<li><strong>泛型</strong>：<code>func f[T](T v)</code> 里的 <code>T</code> 是否可空？建议：<strong>跟随实参</strong>，不做额外约束。</li>
+<li><strong>非空断言</strong>：要不要 <code>p!</code>？建议<strong>不做</strong>（与"不发明运算符"原则一致）；
+   需要"我知道它不会为空"时用 <code>p ?? 兜底</code> 或把类型改成非可空并保证赋值路径。</li>
+<li><strong><code>string</code> 的豁免</strong>：<code>string s = null</code> 现在是合法的（运行时当空串？还是 null？）——
+   L1 要不要管它？建议<strong>管</strong>（写成 <code>""</code>），但要先确认现有代码里没有依赖 <code>null</code> 字符串的地方。</li>
+<li><strong>迁移谁来写</strong>：Aria 只有 <strong>4 处</strong>（<code>Window</code>/<code>Font</code>/<code>Tray</code>/<code>PopMenu</code>），我可以直接给 patch；
+   LenoSDL3 的 82 处按 L0 豁免<strong>不动</strong>，剩下 35 处多是测试夹具与懒缓存，可随下个版本顺手改。</li>
+</ol>
+<hr>
+<h2 id="七-实施记录-2026-11-18-l0-l1-已落地">七、实施记录（2026-11-18：L0 + L1 已落地）</h2>
+<p><strong>代码</strong>（<code>src/semantic/semantic_visit_ast.c</code> 的 <code>type_null_literal_ok</code> / <code>warn_null_literal</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>挂点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>变量声明</td>
+<td><code>visit_var.inc</code> 的 <code>AST_VAR_DECL</code>（alias 解析之后）</td>
+<td><code>P g = null</code></td>
+</tr>
+<tr>
+<td>赋值</td>
+<td><code>visit_var.inc</code> 的 <code>AST_ASSIGN</code></td>
+<td><code>g = null</code>；目标名从 <code>targets[]</code> <strong>或</strong> <code>names[]</code> 取（实测简单赋值只有 names，漏过一版）</td>
+</tr>
+<tr>
+<td>实参</td>
+<td><code>visit_expr.inc</code> 的参数类型检查循环内</td>
+<td><code>take(null)</code></td>
+</tr>
+<tr>
+<td><code>return</code></td>
+<td><code>visit_stmt.inc</code> 的 <code>AST_RETURN</code></td>
+<td><code>func f(): P { return null }</code></td>
+</tr>
+<tr>
+<td>字段默认值</td>
+<td><code>visit_type_def.inc</code></td>
+<td><code>struct B { P inner = null }</code></td>
+</tr>
+</tbody>
+</table>
+<p>新增警告类 <code>WARN_NULL_LITERAL</code>（<code>leno_types.h</code> + <code>error.c</code> 的类别名"非可空类型赋了 null"）。
+<code>T?</code> / <code>any</code> / 未标注 / <strong>泛型形参（TYPE_GENERIC_PARAM）</strong> / 句柄类 ⇒ 一律放行。</p>
+<p><strong>回归</strong>：<code>assert/test_null_literal.leno</code>（4 组）：
+五个位置各报一条 / 字段默认值 / <strong>豁免清单一条都不许报</strong>（<code>P?</code>、<code>Ptr</code>、<code>Channel</code>、
+<code>var</code>、泛型字段、<code>Ptr</code> 形参）/ 变量来源不判（<code>P a = maybe() as P</code> 不报）。
+断言套件 <strong>645 / 0</strong>；模块测试 <strong>52 / 0</strong>；1240 文件编译检查 <strong>0 失败</strong>；Aria <code>--check</code> <strong>0 错误</strong>。</p>
+<p><strong>自身代码的迁移清单（L1 上线后的实测，共 69 处）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th style="text-align: right;">处数</th>
+<th>典型位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict</code> / <code>Array</code></td>
+<td style="text-align: right;">15 / 5</td>
+<td><code>sdl_edit.leno</code> 的 <code>lineWCache</code> / <code>_phLines</code>、<code>sdl_font.leno</code> 的 <code>texIdx</code>/<code>chWCache</code>、<code>sdl_window.leno</code> 的 <code>_keyNameMap</code>（懒初始化缓存）</td>
+</tr>
+<tr>
+<td><code>Node</code></td>
+<td style="text-align: right;">14</td>
+<td><code>examples/struct/struct test/简单的链表*.leno</code> 的 <code>next</code> / <code>head</code></td>
+</tr>
+<tr>
+<td><code>Window</code> / <code>Renderer</code> / <code>Button</code> / <code>Font</code> / <code>TabControl</code> 等</td>
+<td style="text-align: right;">20</td>
+<td>资源句柄字段（<code>Window a = null</code>）、测试夹具</td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td style="text-align: right;">3</td>
+<td><code>string s = null</code></td>
+</tr>
+<tr>
+<td>返回值 <code>return null</code></td>
+<td style="text-align: right;">12</td>
+<td><code>examples/minilang/minilang.leno</code> 的 <code>peek</code> / <code>parse_*</code>；<code>sdl_menu.leno</code> 的 <code>_getActiveMenu</code></td>
+</tr>
+<tr>
+<td>其它（<code>Engine</code> 等）</td>
+<td style="text-align: right;">5</td>
+<td><code>examples/import/edge_cases/mid.leno</code></td>
+</tr>
+</tbody>
+</table>
+<p>这些都是"该写成 <code>T?</code>"的地方 ⇒ 迁移方式见第四节（把声明/字段/返回类型改成 <code>T?</code>，
+L2 落地后再补收窄）。<strong>这批迁移不与规则同批提交</strong>，单独一轮做，避免"规则 + 69 处改动"混在一个 diff 里。</p>
+<h2 id="八-迁移与-l2-现状-2026-11-18-第二轮">八、迁移与 L2 现状（2026-11-18 第二轮）</h2>
+<h3 id="8-1-自身代码迁移-已完成-69-处-0-仅剩-1-条有意保留">8.1 自身代码迁移：<strong>已完成</strong>（69 处 → 0，仅剩 1 条有意保留）</h3>
+<p>一次性脚本（<code>变量/字段 ⇒ 类型后加 ?</code>、<code>return null ⇒ 改签名</code>）改了 <strong>37 个文件 / 63 处</strong>，
+其余 6 处人工处理。结果：全仓 1313 个 <code>.leno</code> 编译检查 <strong>0 失败</strong>、L1 警告 <strong>仅 1 条</strong>
+（<code>examples/工具/leno-replace.leno</code> 的 <code>read_raw</code>，它需要"早退收窄"才敢写 <code>string?</code>）。</p>
+<p>迁移中踩到的两点（都已修）：</p>
+<ol>
+<li><strong>字段赋值被误判成"宿主对象赋 null"</strong>：<code>a.raw = null</code> 的目标是字段访问，
+   而我的检查对 <code>targets[]</code> 为空时回退到 <code>names[0]</code>（拿到 <code>a</code>）⇒ 报"变量 'a'（Anim）赋了 null"。
+   修法：<code>targets[0]</code> 存在且不是裸变量时<strong>不再回退</strong>（3 条误报消失）。</li>
+<li><strong><code>catch e { inner = null }</code> 被插成了 <code>catch e {? inner = null }</code></strong>：脚本按行尾 <code>name = null</code>
+   插 <code>?</code>，撞上单行 <code>try/catch</code>。⇒ 迁移脚本只适合"声明行"，遇到单行复合语句要人工核。</li>
+</ol>
+<h3 id="8-2-l2-t-t-的流失-已开启-2026-11-18-修完崩溃根因">8.2 L2（<code>T?</code> → <code>T</code> 的流失）：<strong>已开启</strong>（2026-11-18 修完崩溃根因）</h3>
+<p>实现内容（代码都在，留着待定位后一行打开）：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>挂点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规则</td>
+<td><code>warn_nullable_flow()</code>（semantic_visit_ast.c）：目标非可空+非句柄、值只认<strong>裸变量</strong>且静态带 <code>?</code></td>
+</tr>
+<tr>
+<td>四个通路</td>
+<td>变量声明 / 赋值 / 实参 / <code>return</code></td>
+</tr>
+<tr>
+<td>收窄（分支内）</td>
+<td>复用既有 <code>apply_null_narrowing()</code> 的影子符号（<code>nullable=0</code>）⇒ <code>if q != null { f(q) }</code> 不报 ✓</td>
+</tr>
+<tr>
+<td>收窄（早退）</td>
+<td><code>if q == null { return }</code> 之后：<code>null_narrow_names[]</code> 名字集合，L2 与 native 可空检查各查一次</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证过</strong>（<code>build/tmp_l2.leno</code>）：该报的 3 处全报、<code>if q != null</code> 分支与早退之后都不报、
+native 可空形参在早退之后放行 ✓。</p>
+<p><strong>崩溃根因（2026-11-18 已修）</strong>：打开后 <strong>391 个文件</strong>编译期崩 <code>0xC0000005</code>。
+真凶<strong>不在</strong>检查函数里，而是：</p>
+<pre><code>semantic_init() 没有清 s-&gt;null_narrow_count
+</code></pre>
+<p><code>Semantic</code> 是 <code>main.c</code> 的<strong>栈变量</strong>、<code>semantic_init</code> 逐字段初始化（不是整体 memset）——
+漏了这个新字段 ⇒ 计数是栈上垃圾（实测读数 <strong>291879179</strong>）⇒ <code>sem_null_narrowed()</code> 的循环
+按 2.9 亿次越界读 <code>null_narrow_names[]</code>，在 <code>strcmp</code> 上炸。</p>
+<p>排查路径（记录下来省下一次）：把崩溃文件按行数排序找到 3 行的最小样例 →
+在 <code>warn_nullable_flow</code> 入口打印 <code>s / s-&gt;current / s-&gt;null_narrow_count</code> ⇒ 一眼看到垃圾计数。
+中途误判过 <code>scope_resolve</code>／<code>infer_expr_type</code>／类型名悬垂（都已顺手加固，但不是根因）。</p>
+<p>修法两条：
+1. <code>semantic_init()</code> 里 <code>s-&gt;null_narrow_count = 0;</code>（根因）；
+2. <code>sem_null_narrowed()</code> 里再夹一道 <code>count ∈ [0, 8]</code>（坏状态最多退化成"不收窄"，绝不越界）。</p>
+<p><strong>顺带修的真 bug</strong>：<code>semantic_check_native_arg()</code> 的 5 个调用点全都传<strong>整个调用节点</strong>
+（<code>AST_MODULE_CALL</code> / <code>AST_CALL</code>），而不是出问题的那个<strong>实参</strong> ⇒ 报错位置指向调用的列、
+而且"值是不是裸变量"永远判不出来（收窄豁免失效）。现在传 <code>args.items[i]</code>：
+报错指到实参、收窄能认出变量、<code>examples/工具/leno-replace.leno</code> 的
+<code>if raw == null { return }</code> + <code>strings.byte_slice(raw, …)</code> 也终于编得过 ✓</p>
+<p><strong>验证</strong>：<code>assert/test_nullable_flow.leno</code>（5 组：三条通路各报一条 / 分支收窄放行 /
+早退收窄放行 / 早退后 native 实参放行 / 没有 if 的文件不崩）。
+全仓 1313 文件 <strong>0 失败 0 警告</strong>（自身代码已按 L1/L2 迁移干净）；断言 <strong>646/0</strong>、
+模块测试 <strong>52/0</strong>；Aria <code>--check</code> <strong>0 错误</strong>。</p>
+<h3 id="8-3-l3-t-x-null-升错误-已开启-2026-11-18">8.3 L3（<code>T x = null</code> 升<strong>错误</strong>）：已开启（2026-11-18）</h3>
+<p><strong>前置迁移</strong>（升错误之前先清零存量）：仓内 1313 文件早已 0 警告；<strong>同级目录的 5 个项目</strong>
+另有 25 处，按 L1 的告警逐条迁移：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th style="text-align: right;">处数</th>
+<th>形态 → 改法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aria</td>
+<td style="text-align: right;">15</td>
+<td>11 处 <code>func f(): Dict { … return null }</code> → <code>Dict?</code>；<code>Window/Font/Tray/PopMenu = null</code> → <code>?</code></td>
+</tr>
+<tr>
+<td>AriaDeployd</td>
+<td style="text-align: right;">1</td>
+<td><code>return null</code> → <code>Dict?</code></td>
+</tr>
+<tr>
+<td>LenoDumate</td>
+<td style="text-align: right;">1</td>
+<td><code>ApiResp resp = null</code> → <code>ApiResp?</code></td>
+</tr>
+<tr>
+<td>LenoTrae</td>
+<td style="text-align: right;">3</td>
+<td><code>Window/PopMenu/Tray _xxx = null</code> → <code>?</code></td>
+</tr>
+<tr>
+<td>LenoWorkBuddy</td>
+<td style="text-align: right;">3</td>
+<td><code>return null</code> → <code>Dict[string, any]?</code></td>
+</tr>
+</tbody>
+</table>
+<p>迁移后：<strong>11 个项目 / 203 个 .leno 逐文件编译，L3 相关失败 0</strong>
+（另有 20 个<strong>与本次无关</strong>的历史失败：LenoMusic 的模块版本要求 <code>&gt;=2.0.0</code>、LenoGame 的
+<code>struct Anim</code> 与 SDL3 导出同名、LenoCleaner 的重复模块级变量 —— 都是 v0.2.4 之前的陈旧项目）。</p>
+<p><strong>升错误本身</strong>：<code>warn_null_literal()</code> → <code>check_null_literal()</code>，改发 <code>ERR_TYPE_MISMATCH</code>；
+<code>WARN_NULL_LITERAL</code> 从 <code>WarnType</code> 里删掉（枚举值不落盘，删除安全）。5 个位置全覆盖，
+豁免口径不变（<code>T?</code> / any / 未标注 / 泛型形参 / 句柄类）。</p>
+<p><strong>顺带修的两处"编译器自己生成 null"</strong>（否则 L3 会把编译器产物判红）：</p>
+<ol>
+<li><strong>带载荷 enum 的槽位</strong>：降级出的 struct 字段 <code>p0/p6/...</code> 默认值是 <code>null</code>，但字段类型照抄
+   载荷类型（<code>Pt</code>）⇒ L3 报"字段 p0 是 Pt，不能赋 null" ⇒ 所有带 struct 载荷的 enum 编不过 ✗。
+   修法：<code>semantic.c</code>（AST 侧）与 <code>enum_payload.inc</code>（符号表侧）<strong>同时</strong>把这些槽的类型标成
+   <code>nullable = 1</code>（只标"要造 null 默认值"的那几类 kind：struct/face/Ptr/cstruct/泛型形参；
+   <code>int/float/bool/string</code> 槽仍走零值、保持非可空）。</li>
+<li><strong>断言用例</strong>：9 个用例原来用 <code>P g = null</code> / <code>string s = null</code> / <code>Array a = null</code> 演示
+   "旧语义"，已改成 <code>?</code> 并更新注释（<code>test_var_null_semantics</code> 的教程口径同步改为
+   "引用型也要 <code>?</code> 才能清空"）。</li>
+</ol>
+<p><strong>验证</strong>：断言 <strong>646/0</strong>、模块测试 <strong>52/0</strong>、仓库 1313 文件 <strong>0 失败</strong>、11 个项目 203 文件
+<strong>L3 失败 0</strong>、编译器 <strong>0 warning</strong>。</p>
+<h2 id="九-工作量">九、工作量</h2>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>内容</th>
+<th>估时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0</td>
+<td>编译器里把"天然可空"清单收敛成一处函数（复用 <code>kind_accepts_null_ref</code>）</td>
+<td>0.5 天</td>
+</tr>
+<tr>
+<td>L1</td>
+<td>5 个位置的检查 + 文案 + 用例</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>收窄</td>
+<td><code>if x != null</code> / <code>while x != null</code> 的分支内收窄</td>
+<td>1~1.5 天</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>4 条通路的检查 + 用例</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td>迁移</td>
+<td>Aria 4 处 + SDL3/gui 35 处（其中一半是测试夹具/懒缓存）+ 文档</td>
+<td>0.5~1 天</td>
+</tr>
+<tr>
+<td>L3 / L4</td>
+<td>两处升错误 + 全仓复验</td>
+<td>各 0.5 天</td>
+</tr>
+</tbody>
+</table>
+<p>总计约 <strong>5 天</strong>，可分三次提交（L0+L1 → 收窄+L2 → L3+L4）。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-要解决的两个现场">一、要解决的两个现场</a></li><li><a href="#二-现状实测-v0-2-4-2026-11-17-的编译产物">二、现状实测（v0.2.4 + 2026-11-17 的编译产物）</a></li><li><a href="#三-规则设计-分层上线-每层独立可回退">三、规则设计（分层上线，每层独立可回退）</a></li><ul class="lv3"><li><a href="#l0-定义-天然可空-豁免清单-先定死">L0 定义"天然可空"（豁免清单，先定死）</a></li><li><a href="#l1-非可空类型-null-字面量-警告-不是错误">L1 非可空类型 ← null 字面量 ⇒ 警告（不是错误）</a></li><li><a href="#l2-t-t-的隐式流失-警告">L2 T? → T 的隐式流失 ⇒ 警告</a></li><li><a href="#l3-l1-升错误">L3 L1 升错误</a></li><li><a href="#l4-struct-null-升错误">L4 struct == null 升错误</a></li><li><a href="#版本与逃生阀">版本与逃生阀</a></li></ul><li><a href="#四-迁移范式-真实代码-前后对照">四、迁移范式（真实代码，前后对照）</a></li><ul class="lv3"><li><a href="#a-aria-桌面歌词-window-bool-伴生-window">A. Aria 桌面歌词：Window + bool 伴生 → Window?</a></li><li><a href="#b-aria-托盘-同上">B. Aria 托盘：同上</a></li><li><a href="#c-lenosdl3-ffi-懒加载-保持原样-l0-豁免">C. LenoSDL3 FFI 懒加载：保持原样（L0 豁免）</a></li><li><a href="#d-非可空返回-null">D. 非可空返回 null</a></li><li><a href="#e-可空传非可空形参">E. 可空传非可空形参</a></li><li><a href="#f-可选-不推荐大面积用-显式抉择">F. （可选，不推荐大面积用）显式抉择</a></li></ul><li><a href="#五-判据与回归-每层落地时必须带的用例">五、判据与回归（每层落地时必须带的用例）</a></li><li><a href="#六-未决问题-需要拍板">六、未决问题（需要拍板）</a></li><li><a href="#七-实施记录-2026-11-18-l0-l1-已落地">七、实施记录（2026-11-18：L0 + L1 已落地）</a></li><li><a href="#八-迁移与-l2-现状-2026-11-18-第二轮">八、迁移与 L2 现状（2026-11-18 第二轮）</a></li><ul class="lv3"><li><a href="#8-1-自身代码迁移-已完成-69-处-0-仅剩-1-条有意保留">8.1 自身代码迁移：已完成（69 处 → 0，仅剩 1 条有意保留）</a></li><li><a href="#8-2-l2-t-t-的流失-已开启-2026-11-18-修完崩溃根因">8.2 L2（T? → T 的流失）：已开启（2026-11-18 修完崩溃根因）</a></li><li><a href="#8-3-l3-t-x-null-升错误-已开启-2026-11-18">8.3 L3（T x = null 升错误）：已开启（2026-11-18）</a></li></ul><li><a href="#九-工作量">九、工作量</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="加密算法示例指南.html">← 上一篇</a><a href="类型收窄与绑定语法改进.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,1753 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 零基础入门 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="Leno零基础入门.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">01 入门 · 先读这些</a><span class="sep">/</span><span class="here">Leno 零基础入门</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details open><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html" class="active" aria-current="page">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-零基础入门">Leno 零基础入门</h1>
+<blockquote>
+<p>这份教程假设你<strong>从没写过代码</strong>。不需要懂 C、Java、Python，只要能打开记事本、会存文件就行。</p>
+<p>写法参考 Python 官方教程的路子：<strong>先让你跑起来，再解释为什么</strong>；每节都有能直接运行的小程序、
+真实输出、以及"新手最容易写错的那几种写法"。</p>
+<p>想要查某个细节（某个函数的全部参数、某个报错怎么修），看 <a href="Leno入门教程.html"><code>Leno入门教程.md</code></a>
+和 <a href="语言陷阱速查.html"><code>语言陷阱速查.md</code></a>；这份只管"把你从零带到能自己写小工具"。</p>
+<p>文中标了 <strong><code>// 完整程序（可直接运行）</code></strong> 的代码块，是可以整段复制、存成 <code>.leno</code> 文件后
+直接跑的；没标的通常是"片段"，只用来演示某一行。</p>
+</blockquote>
+<hr>
+<h2 id="目录">目录</h2>
+<ol>
+<li><a href="#1-先跑起来-你的第一个程序">先跑起来：你的第一个程序</a></li>
+<li><a href="#2-变量-把东西装进盒子">变量：把东西装进盒子</a></li>
+<li><a href="#3-基本类型-数字-文字-真假-空">基本类型：数字、文字、真假、空</a></li>
+<li><a href="#4-运算-算数-比较-串门">运算：算数、比较、串门</a></li>
+<li><a href="#5-让程序做选择-if">让程序做选择：if</a></li>
+<li><a href="#6-让程序重复做事-循环">让程序重复做事：循环</a></li>
+<li><a href="#7-一排盒子-数组">一排盒子：数组</a></li>
+<li><a href="#8-查字典-字典">查字典：字典</a></li>
+<li><a href="#9-字符串的日常操作">字符串的日常操作</a></li>
+<li><a href="#10-函数-给一段代码起名字">函数：给一段代码起名字</a></li>
+<li><a href="#11-结构体-把相关的东西捆在一起">结构体：把相关的东西捆在一起</a></li>
+<li><a href="#12-枚举-一组固定的选项">枚举：一组固定的选项</a></li>
+<li><a href="#13-出错怎么办-try-catch-defer">出错怎么办：try / catch / defer</a></li>
+<li><a href="#14-拆成多个文件-模块">拆成多个文件：模块</a></li>
+<li><a href="#15-常用工具箱-几个够用的模块">常用工具箱：几个够用的模块</a></li>
+<li><a href="#16-读懂报错-leno-的报错会告诉你怎么改">读懂报错：Leno 的报错会告诉你怎么改</a></li>
+<li><a href="#17-十个练习-带答案">十个练习（带答案）</a></li>
+<li><a href="#18-速查表">速查表</a></li>
+</ol>
+<hr>
+<h2 id="1-先跑起来-你的第一个程序">1. 先跑起来：你的第一个程序</h2>
+<h3 id="1-1-装什么">1.1 装什么</h3>
+<p>你只需要一个东西：<strong><code>leno.exe</code></strong>（在仓库的 <code>build\</code> 目录里）。它同时是编译器、也是运行器。</p>
+<p>确认能用：打开"命令提示符"（Win+R 输入 <code>cmd</code> 回车），敲：</p>
+<pre><code class="language-bat">leno.exe --version
+</code></pre>
+<p>能打出版本号，就说明装好了。<strong>如果提示"不是内部或外部命令"</strong>，说明它不在 PATH 里，
+那就用完整路径调用，比如：</p>
+<pre><code class="language-bat">D:\CLeno\Leno\build\leno.exe 我的程序.leno
+</code></pre>
+<p>下面为了简洁，一律写 <code>leno</code>，你心里替换成完整路径即可。</p>
+<h3 id="1-2-第一个程序">1.2 第一个程序</h3>
+<p>新建一个文件，名字叫 <code>hello.leno</code>（<strong>扩展名必须是 <code>.leno</code></strong>），内容照抄：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;你好，世界！&quot;)
+}
+</code></pre>
+<p>然后在命令行里：</p>
+<pre><code class="language-bat">leno hello.leno
+</code></pre>
+<p>屏幕上出现：</p>
+<pre><code>你好，世界！
+</code></pre>
+<p>恭喜，你已经写了一个程序。下面把这三行拆开看：</p>
+<table>
+<thead>
+<tr>
+<th>你写的</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>// 完整程序（可直接运行）</code></td>
+<td>注释。<code>//</code> 后面到行尾都是给人看的，电脑完全不理它</td>
+</tr>
+<tr>
+<td><code>main() { … }</code></td>
+<td><strong>程序入口</strong>。程序总是从 <code>main</code> 里的第一行开始执行</td>
+</tr>
+<tr>
+<td><code>print("你好，世界！")</code></td>
+<td>往屏幕上打印一行字。<code>print</code> 是 Leno 自带的功能</td>
+</tr>
+</tbody>
+</table>
+<p>三个必须记住的小规矩：</p>
+<ol>
+<li><strong>中文标点会报错</strong>：<code>print("你好")</code> 里的引号必须是英文 <code>"</code>，用中文引号 <code>“”</code> 会报"语法错误"。</li>
+<li><strong>括号、引号要成对</strong>：少一个 <code>)</code> 或 <code>"</code>，报错会告诉你大概第几行。</li>
+<li><strong><code>main()</code> 后面的大括号 <code>{ }</code> 圈出"这个程序包含哪些步骤"</strong>，里面的东西要往里缩进（按 Tab 或 4 个空格）。</li>
+</ol>
+<h3 id="1-3-让程序说更多">1.3 让程序说更多</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;我叫 Leno&quot;)
+    print(&quot;我今年&quot;, 1, &quot;岁&quot;)
+    print(&quot;这一行&quot;)
+    printf(&quot;不换行&quot;)
+    printf(&quot;，接着上一行写\n&quot;)
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>我叫 Leno
+我今年 1 岁
+这一行
+不换行，接着上一行写
+</code></pre>
+<ul>
+<li><code>print(...)</code> 会自动换行；<code>printf(...)</code> 不换行，<code>\n</code> 是"换行符"。</li>
+<li><code>print("我今年", 1, "岁")</code> 里用<strong>逗号</strong>分隔多个东西，它们之间会自动加一个空格。</li>
+</ul>
+<hr>
+<h2 id="2-变量-把东西装进盒子">2. 变量：把东西装进盒子</h2>
+<p>变量就是一个<strong>贴了名字的盒子</strong>，你把值放进去，以后用名字就能取出来。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var name = &quot;小明&quot;     // 造一个盒子叫 name，装&quot;小明&quot;
+    var age = 12          // 再造一个，装 12
+
+    print(name)
+    print(age)
+    print(name + &quot;今年&quot; + age + &quot;岁&quot;)   // 盒子可以拼起来用
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>小明
+12
+小明今年12岁
+</code></pre>
+<h3 id="2-1-var-和-写清楚类型">2.1 <code>var</code> 和"写清楚类型"</h3>
+<p><code>var</code> 的意思是"你帮我看看右边是什么，就装什么"（自动推断）。你也可以<strong>自己写清楚</strong>：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = 10          // 自动推断成整数
+    int b = 20          // 明确写&quot;这是一个整数&quot;
+    string c = &quot;文字&quot;    // 明确写&quot;这是一段文字&quot;
+    float d = 1.5       // 小数
+
+    print(a + b)
+    print(c)
+    print(d)
+}
+</code></pre>
+<p>两种写法都对。<strong>新手建议先用 <code>var</code></strong>，等你想让程序"更早发现写错类型"时再手写类型——
+手写类型的好处是：如果你不小心把文字塞进 <code>int</code> 盒子，程序会在运行前就报错，而不是跑到一半出问题。</p>
+<h3 id="2-2-名字可以改-但类型不能乱换">2.2 名字可以改，但类型不能乱换</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var score = 60
+    print(score)        // 60
+    score = 90          // 换个值
+    print(score)        // 90
+    score = score + 10  // 自己算自己
+    print(score)        // 100
+}
+</code></pre>
+<p>不能做的事：把一段文字塞进已经是数字的盒子。</p>
+<pre><code class="language-leno">var score = 60
+score = &quot;满分&quot;     // ❌ 编译期报错：类型不匹配
+</code></pre>
+<p>报错大概长这样（Leno 会直接说清哪里不对）：</p>
+<pre><code>error: [类型不匹配] 无法将值赋值给变量 'score'
+期望类型: int
+实际类型: string
+</code></pre>
+<blockquote>
+<p><strong>Leno 的脾气</strong>：能在你运行之前发现的问题，它一定在运行之前报出来。
+这是它和脚本类语言最大的不同，习惯之后你会很省心。</p>
+</blockquote>
+<h3 id="2-3-一次造好几个">2.3 一次造好几个</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = 1, b = 2, c = 3
+    print(a + b + c)
+
+    int x, y, z          // 只说&quot;我要三个整数盒子&quot;，先不装东西
+    x = 10
+    y = 20
+    z = 30
+    print(x + y + z)
+}
+</code></pre>
+<h3 id="2-4-名字的规矩">2.4 名字的规矩</h3>
+<ul>
+<li>可以用字母、数字、下划线，<strong>不能以数字开头</strong>。</li>
+<li>区分大小写：<code>age</code> 和 <code>Age</code> 是两个不同的盒子。</li>
+<li><strong>可以用中文命名</strong>（这点和多数语言不同，验证过）：</li>
+</ul>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var 名字 = &quot;小红&quot;
+    var 年龄 = 9
+    print(名字 + &quot;今年&quot; + 年龄 + &quot;岁&quot;)
+}
+</code></pre>
+<p>能跑，但<strong>建议还是用英文</strong>：以后查资料、和别人交流都方便。</p>
+<hr>
+<h2 id="3-基本类型-数字-文字-真假-空">3. 基本类型：数字、文字、真假、空</h2>
+<p>Leno 里你会天天见到的就这几种：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>长什么样</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code></td>
+<td>整数</td>
+<td><code>42</code>、<code>-7</code>、<code>0</code></td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>小数</td>
+<td><code>3.14</code>、<code>-0.5</code>、<code>1.0</code></td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td>文字（字符串）</td>
+<td><code>"你好"</code>、<code>"abc"</code>、<code>""</code>（空文字）</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td>真 / 假</td>
+<td><code>true</code>、<code>false</code></td>
+</tr>
+<tr>
+<td><code>Array[...]</code></td>
+<td>一排东西</td>
+<td><code>[1, 2, 3]</code></td>
+</tr>
+<tr>
+<td><code>Dict[...]</code></td>
+<td>键值对表</td>
+<td><code>{"a": 1}</code></td>
+</tr>
+<tr>
+<td><code>null</code></td>
+<td>"什么都没有"</td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<p>想知道某个盒子里到底是什么，用 <code>type()</code>：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(type(1))          // int
+    print(type(1.5))        // float
+    print(type(&quot;你好&quot;))     // string
+    print(type(true))       // bool
+    print(type([1, 2, 3]))  // Array[int]
+    print(type({&quot;a&quot;: 1}))   // Dict[string, int]
+}
+</code></pre>
+<h3 id="3-1-数字-整数和小数的区别很重要">3.1 数字：整数和小数的区别很重要</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(7 / 2)      // 3       ← 两个整数相除，结果还是整数（余数丢掉）
+    print(7 % 2)      // 1       ← % 是&quot;求余数&quot;
+    print(7.0 / 2)    // 3.5     ← 有一个是小数，结果就是小数
+    print(2 + 3 * 4)  // 14      ← 先乘除后加减
+    print((2 + 3) * 4)// 20      ← 括号最优先
+}
+</code></pre>
+<p>新手最常踩的坑：<strong><code>7 / 2</code> 得到 <code>3</code>，不是 <code>3.5</code></strong>。想要小数就写 <code>7.0 / 2</code>。</p>
+<h3 id="3-2-整数没有上限-会自动变大">3.2 整数没有上限（会自动变大）</h3>
+<p>多数语言里整数超过 21 亿左右就会"溢出"变成负数。Leno 不会：<strong>它自动换成更大的数字类型</strong>，
+所以你可以放心算大数。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var big = 9223372036854775807   // 这是一个很大的整数
+    print(big + 1)                  // 9223372036854775808，照样正确
+    print(2 * 1000000000000)        // 2000000000000
+}
+</code></pre>
+<h3 id="3-3-文字-字符串">3.3 文字（字符串）</h3>
+<p>用<strong>双引号</strong>包起来。想要引号本身出现在文字里，用反斜杠转义：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;他说：\&quot;你好\&quot;&quot;)   // 他说：&quot;你好&quot;
+    print(&quot;第一行\n第二行&quot;)   // \n 是换行
+    print(&quot;制表\t空一格&quot;)     // \t 是一个制表位
+}
+</code></pre>
+<p>"原样输出"的写法（里面什么都不转义，适合写路径、正则）：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(@&quot;C:\Users\me\文件.txt&quot;)   // @ 开头的字符串：里面的 \ 就是普通反斜杠
+}
+</code></pre>
+<h3 id="3-4-真假-bool">3.4 真假（bool）</h3>
+<p>只有两个值：<code>true</code>（真）和 <code>false</code>（假）。通常由比较得出：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(3 &gt; 2)        // true
+    print(3 == 4)       // false
+    print(&quot;abc&quot; == &quot;abc&quot;)  // true（文字也能比）
+}
+</code></pre>
+<h3 id="3-5-空-null">3.5 空（null）</h3>
+<p><code>null</code> 表示"这里什么都没有"。<strong>新手最重要的规则</strong>：</p>
+<blockquote>
+<p>只有<strong>可空类型</strong>（类型后面加 <code>?</code>）才允许装 <code>null</code>。</p>
+</blockquote>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    int? maybe = null      // ✅ 允许：int? 就是&quot;可能是整数，也可能是空&quot;
+    if maybe == null {
+        print(&quot;现在它是空的&quot;)
+    }
+
+    int sure = 10          // ✅ 非可空：一定有值
+    print(sure + 1)
+
+    // int bad = null      // ❌ 编译期报错：非可空类型不能赋 null
+}
+</code></pre>
+<p>把 <code>// int bad = null</code> 前面的 <code>//</code> 去掉试一下，你会立刻看到报错——<strong>这就是"不静默"</strong>：
+它不会让你的程序带着空值跑到一半崩掉，而是当场告诉你。</p>
+<hr>
+<h2 id="4-运算-算数-比较-串门">4. 运算：算数、比较、串门</h2>
+<h3 id="4-1-算术">4.1 算术</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(10 + 3)   // 13
+    print(10 - 3)   // 7
+    print(10 * 3)   // 30
+    print(10 / 3)   // 3     ← 整数除法
+    print(10 % 3)   // 1     ← 余数
+    print(10.0 / 3) // 3.3333333333333335
+}
+</code></pre>
+<h3 id="4-2-比较-结果是-true-false">4.2 比较（结果是 true / false）</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(5 &gt; 3)     // true
+    print(5 &gt;= 5)    // true
+    print(5 == 5)    // true    ← 相等是两个等号！
+    print(5 != 4)    // true    ← 不相等
+    print(&quot;a&quot; &lt; &quot;b&quot;) // true    ← 文字按字母序比
+}
+</code></pre>
+<p><strong>新手最常犯的错</strong>：判断相等写成 <code>=</code>（一个等号）。一个等号是"赋值"（放进盒子），
+两个等号才是"问它们相等吗"。</p>
+<h3 id="4-3-逻辑-and-or-not">4.3 逻辑：and / or / not</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var 下雨 = true
+    var 有伞 = false
+
+    print(下雨 and 有伞)   // false  ← 两个都真才真
+    print(下雨 or 有伞)    // true   ← 一个真就真
+    print(not 有伞)        // true   ← 取反
+}
+</code></pre>
+<h3 id="4-4-把文字接起来">4.4 把文字接起来</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var name = &quot;小明&quot;
+    var age = 12
+    print(&quot;我叫&quot; + name)           // 我叫小明
+    print(name + &quot;今年&quot; + age + &quot;岁&quot;)  // 小明今年12岁  ← 数字会自动变成文字
+}
+</code></pre>
+<h3 id="4-5-更方便的拼接-插值-变量">4.5 更方便的拼接：插值 <code>$"...{变量}..."</code></h3>
+<p>字符串前面加 <code>$</code>，里面的 <code>{ }</code> 就会被<strong>换成变量的值</strong>：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var name = &quot;小明&quot;
+    var age = 12
+    var pi = 3.14159
+
+    print($&quot;我叫{name}，今年{age}岁&quot;)   // 我叫小明，今年12岁
+    print($&quot;圆周率约等于 {pi:.2f}&quot;)      // 圆周率约等于 3.14（:.2f = 保留两位小数）
+}
+</code></pre>
+<p>常用的小数格式：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>意思</th>
+<th>例子（值 3.14159）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{pi}</code></td>
+<td>原样</td>
+<td><code>3.14159</code></td>
+</tr>
+<tr>
+<td><code>{pi:.2f}</code></td>
+<td>保留 2 位小数</td>
+<td><code>3.14</code></td>
+</tr>
+<tr>
+<td><code>{pi:.0f}</code></td>
+<td>不要小数</td>
+<td><code>3</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-6-一行内做选择-if-then-else">4.6 一行内做选择：<code>if ... then ... else</code></h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = 10
+    var b = 20
+    var max = if a &gt; b then a else b
+    print(&quot;大的那个是 &quot; + max)     // 大的那个是 20
+}
+</code></pre>
+<p>它的意思就是"如果 a &gt; b 就取 a，否则取 b"，可以嵌进赋值里用（Python 里写作 <code>a if a &gt; b else b</code>）。</p>
+<hr>
+<h2 id="5-让程序做选择-if">5. 让程序做选择：if</h2>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var score = 85
+
+    if score &gt;= 90 {
+        print(&quot;优秀&quot;)
+    } else if score &gt;= 60 {
+        print(&quot;及格&quot;)
+    } else {
+        print(&quot;不及格&quot;)
+    }
+}
+</code></pre>
+<p>输出：<code>及格</code></p>
+<p>规则：</p>
+<ul>
+<li><code>if 条件 { … }</code>：条件为真才执行大括号里的东西。</li>
+<li><code>else if 条件 { … }</code>：前面不成立时，再看这个条件。</li>
+<li><code>else { … }</code>：前面都不成立时执行。</li>
+<li><strong>大括号不能省</strong>（不像某些语言可以省）。</li>
+</ul>
+<blockquote>
+<p>还有个等价写法 <code>eif</code>，作用和 <code>else if</code> 完全一样（<code>eif</code> 是懒人版，打起来快）。
+看到别人的代码用 <code>eif</code> 不要奇怪。</p>
+</blockquote>
+<h3 id="5-1-判断-是不是空">5.1 判断"是不是空"</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    string? name = null
+
+    if name == null {
+        print(&quot;还没有名字&quot;)
+    } else {
+        print(&quot;名字是 &quot; + name)
+    }
+
+    name = &quot;Leno&quot;
+    if name != null {
+        print(&quot;现在有名字了：&quot; + name)
+    }
+}
+</code></pre>
+<p>写 <code>if name != null { … }</code> 之后，大括号里面 Leno 就<strong>知道它不是空的了</strong>，可以直接用。</p>
+<h3 id="5-2-多个条件">5.2 多个条件</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var age = 20
+    var has_ticket = true
+
+    if age &gt;= 18 and has_ticket {
+        print(&quot;可以进场&quot;)
+    } else {
+        print(&quot;不能进场&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h2 id="6-让程序重复做事-循环">6. 让程序重复做事：循环</h2>
+<h3 id="6-1-for-数数-最常用">6.1 <code>for</code> 数数（最常用）</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    for 1:5 to i {
+        print(&quot;第 &quot; + i + &quot; 次&quot;)
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>第 1 次
+第 2 次
+第 3 次
+第 4 次
+第 5 次
+</code></pre>
+<p><strong>重点：<code>1:5</code> 是"从 1 到 5，两头都算"，一共 5 次</strong>（很多语言是"到 5 但不含 5"，
+Leno 统一成"闭区间"，你只要记住"两头都算"）。</p>
+<p><code>to</code> 后面那个 <code>i</code> 是你起的名字，每轮它会变成当前数字。</p>
+<h3 id="6-2-想跳着数-倒着数">6.2 想跳着数 / 倒着数</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;偶数：&quot;)
+    for 0:10:2 to i {          // 第三个数是&quot;步长&quot;
+        print(i)
+    }
+
+    print(&quot;倒着数：&quot;)
+    for 3:1:-1 to i {          // 步长写 -1 就是倒着数
+        print(i)
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>偶数：
+0
+2
+4
+6
+8
+10
+倒着数：
+3
+2
+1
+</code></pre>
+<p>⚠ <strong>新手大坑</strong>：写 <code>for 3:1 to i</code>（忘了 <code>:-1</code>）<strong>一次都不会执行</strong>。Leno 会给你一条警告：</p>
+<pre><code>warning: [空循环] for 3:1 是**空区间**（一次都不执行）：本语言的 for 是升序闭区间，倒序要显式写 `for 3:1:-1`
+</code></pre>
+<p>看到这条警告就知道自己忘了写步长。</p>
+<h3 id="6-3-把一排东西挨个过一遍">6.3 把一排东西挨个过一遍</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var fruits = [&quot;苹果&quot;, &quot;香蕉&quot;, &quot;橘子&quot;]
+    for fruits to f {
+        print(&quot;我喜欢吃&quot; + f)
+    }
+}
+</code></pre>
+<p>字符串也能这样过（会按<strong>字符</strong>一个个给）：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    for &quot;abc&quot; to ch {
+        print(ch)
+    }
+}
+</code></pre>
+<p>会打印 <code>a</code>、<code>b</code>、<code>c</code> 三行。</p>
+<h3 id="6-4-while-条件成立就一直做">6.4 <code>while</code>：条件成立就一直做</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var n = 1
+    while n &lt;= 3 {
+        print(&quot;n = &quot; + n)
+        n = n + 1        // ← 千万别忘这句，否则永远循环下去（死循环）
+    }
+}
+</code></pre>
+<p><code>for</code> 和 <code>while</code> 的分工：<strong>知道要做几次就 <code>for</code>，只知道"做到满足条件为止"就 <code>while</code></strong>。</p>
+<h3 id="6-5-提前退出-跳过这一轮">6.5 提前退出 / 跳过这一轮</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    for 1:10 to i {
+        if i == 3 {
+            continue        // 跳过本轮剩下的，直接下一轮
+        }
+        if i == 6 {
+            break           // 整个循环到此结束
+        }
+        print(i)
+    }
+}
+</code></pre>
+<p>输出：<code>1</code>、<code>2</code>、<code>4</code>、<code>5</code></p>
+<p>（<code>3</code> 被 <code>continue</code> 跳过，到 <code>6</code> 时 <code>break</code> 让整个循环结束。）</p>
+<hr>
+<h2 id="7-一排盒子-数组">7. 一排盒子：数组</h2>
+<p>数组就是"一排编了号的小抽屉"，编号（下标）<strong>从 0 开始</strong>。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var fruits = [&quot;苹果&quot;, &quot;香蕉&quot;, &quot;橘子&quot;]
+
+    print(fruits[0])        // 苹果   ← 第 0 个
+    print(fruits[1])        // 香蕉
+    print(fruits[2])        // 橘子
+    print(fruits.len())     // 3      ← 一共几个
+    print(fruits)           // [&quot;苹果&quot;, &quot;香蕉&quot;, &quot;橘子&quot;]
+}
+</code></pre>
+<p><strong>新手大坑</strong>：<code>fruits[3]</code> 会报错（只有 0、1、2）。Leno 的报错会直接说清：</p>
+<pre><code>[错误] 数组索引越界: 索引 3, 长度 3
+</code></pre>
+<p>取最后一个，惯用写法是 <code>fruits[fruits.len() - 1]</code>。</p>
+<h3 id="7-1-增-删-改">7.1 增、删、改</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = [10, 20, 30]
+
+    a.add(40)            // 末尾加一个
+    print(a)             // [10, 20, 30, 40]
+
+    a[0] = 99            // 改第 0 个
+    print(a)             // [99, 20, 30, 40]
+
+    var last = a.pop()   // 拿出末尾那个（数组变短）
+    print(last)          // 40
+    print(a)             // [99, 20, 30]
+
+    var removed = a.remove(1)   // 删掉&quot;下标 1&quot;那个，返回被删的值
+    print(removed)       // 20
+    print(a)             // [99, 30]
+
+    a.insert(1, 55)      // 在下标 1 处插入 55
+    print(a)             // [99, 55, 30]
+}
+</code></pre>
+<p>⚠ <code>remove(...)</code> 收的是<strong>下标</strong>，不是值。想"删掉值为 20 的那个"，得先查它的位置：</p>
+<pre><code class="language-leno">var pos = a.index_of(20)    // 找不到会给 -1
+if pos &gt;= 0 {
+    a.remove(pos)
+}
+</code></pre>
+<h3 id="7-2-切片-一次拿一段">7.2 切片：一次拿一段</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = [1, 2, 3, 4, 5]
+
+    print(a[1:3])    // [2, 3, 4]   ← 还是&quot;两头都算&quot;！
+    print(a[:2])     // [1, 2, 3]   ← 从开头到 2
+    print(a[3:])     // [4, 5]      ← 从 3 到结尾
+    print(a[:])      // [1, 2, 3, 4, 5]  ← 整个复制一份
+}
+</code></pre>
+<h3 id="7-3-常用操作">7.3 常用操作</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var a = [3, 1, 2]
+
+    a.sort()                    // 从小到大
+    print(a)                    // [1, 2, 3]
+
+    a.reverse()                 // 倒过来
+    print(a)                    // [3, 2, 1]
+
+    print(a.has(2))             // true    ← 有没有 2
+    print(a.index_of(2))        // 1       ← 2 在哪（没有给 -1）
+    print(a.sum())              // 6.0     ← 求和（注意：结果是小数）
+    print(a.join(&quot;-&quot;))          // 3-2-1   ← 用 - 连成一个字符串
+}
+</code></pre>
+<h3 id="7-4-对每个元素做同一件事-map-filter-reduce">7.4 对每个元素做同一件事：map / filter / reduce</h3>
+<p>这是数组最好用的三个工具，写法是"传一个<strong>函数</strong>进去"：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var nums = [1, 2, 3, 4, 5]
+
+    // map：每个都变一次（这里是乘 2）
+    var doubled = nums.map(func(int x): int {
+        return x * 2
+    })
+    print(doubled)                 // [2, 4, 6, 8, 10]
+
+    // filter：只留下满足条件的（偶数的）
+    var evens = nums.filter(func(int x): bool {
+        return x % 2 == 0
+    })
+    print(evens)                   // [2, 4]
+
+    // reduce：把它们合成一个（这里是求和）
+    var total = nums.reduce(func(int acc, int x): int {
+        return acc + x
+    }, 0)
+    print(total)                   // 15
+}
+</code></pre>
+<p><code>func(...): 类型 { ... }</code> 就是"临时写一个没有名字的函数"（后面第 10 章讲函数）。
+看不懂没关系，先照抄用着，它是数组里最省事的写法。</p>
+<hr>
+<h2 id="8-查字典-字典">8. 查字典：字典</h2>
+<p>字典存的是<strong>"键 → 值"</strong>的对应关系，像真字典：查"apple"得到"苹果"。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var 价格 = {&quot;苹果&quot;: 5, &quot;香蕉&quot;: 3}
+
+    print(价格[&quot;苹果&quot;])        // 5    ← 用键取值
+    价格[&quot;橘子&quot;] = 4           // 加一条
+    print(价格)                // {苹果: 5, 香蕉: 3, 橘子: 4}
+
+    print(价格[&quot;西瓜&quot;])        // null ← 没有这个键，给你 null（不报错）
+}
+</code></pre>
+<p>⚠ <strong>"没有这个键"返回 <code>null</code></strong>，这是个容易踩的地方。想区分"没这个键"和"值是空"，
+可以用 <code>has()</code> 先问一下，或者用 <code>get()</code> 给个默认值：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var 库存 = {&quot;苹果&quot;: 5}
+
+    print(库存.has(&quot;苹果&quot;))          // true
+    print(库存.has(&quot;西瓜&quot;))          // false
+
+    // get(键, 默认值)：没有就给默认值，不会给你 null
+    print(库存.get(&quot;西瓜&quot;, 0))       // 0
+    print(库存.get(&quot;苹果&quot;, 0))       // 5
+}
+</code></pre>
+<h3 id="8-1-遍历字典">8.1 遍历字典</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var scores = {&quot;语文&quot;: 90, &quot;数学&quot;: 95}
+
+    for scores to 科目 {           // 每轮拿到&quot;键&quot;
+        print(科目 + &quot;：&quot; + scores[科目] + &quot; 分&quot;)
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>语文：90 分
+数学：95 分
+</code></pre>
+<h3 id="8-2-改-删-数">8.2 改、删、数</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var d = {&quot;a&quot;: 1, &quot;b&quot;: 2}
+
+    d[&quot;a&quot;] = 100          // 改
+    print(d[&quot;a&quot;])         // 100
+    print(d.len())        // 2     ← 几条
+
+    d.remove(&quot;b&quot;)         // 删
+    print(d)              // {a: 100}
+}
+</code></pre>
+<blockquote>
+<p>一个提醒：<strong>不要在 <code>for d to k</code> 的循环体里删/加键</strong>。Leno 会警告你（<code>[遍历中修改]</code>），
+因为那样会漏掉元素。要删就先把键收集起来，循环结束后再删。</p>
+</blockquote>
+<hr>
+<h2 id="9-字符串的日常操作">9. 字符串的日常操作</h2>
+<p>字符串自带很多方法，用 <code>字符串.方法()</code> 调用：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var s = &quot;Hello, Leno&quot;
+
+    print(s.len())               // 11        长度
+    print(s.to_upper())          // HELLO, LENO
+    print(s.to_lower())          // hello, leno
+    print(s.has(&quot;Leno&quot;))         // true      包含？
+    print(s.find(&quot;Leno&quot;))        // 7         在哪（没有给 -1）
+    print(s.replace(&quot;Leno&quot;, &quot;World&quot;))   // Hello, World
+    print(s.slice(0, 4))         // Hello     取一小段（两头都算）
+    print(s.split(&quot;, &quot;))         // [&quot;Hello&quot;, &quot;Leno&quot;]  按分隔符切开
+    print(&quot;  x  &quot;.trim())        // x         去掉两头空白
+}
+</code></pre>
+<h3 id="9-1-拼-重复-补位">9.1 拼、重复、补位</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;a&quot; + &quot;b&quot;)              // ab
+    print(&quot;ab&quot;.rep(3))            // ababab    ← 重复 3 次（注意：不能写 &quot;ab&quot; * 3）
+    print(&quot;5&quot;.pad_start(3, &quot;0&quot;))  // 005       ← 不足 3 位前面补 0
+    print(&quot;5&quot;.pad_end(3, &quot;0&quot;))    // 500
+}
+</code></pre>
+<h3 id="9-2-一条一条看">9.2 一条一条看</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var text = &quot;苹果,香蕉,橘子&quot;
+    var parts = text.split(&quot;,&quot;)
+    for parts to p {
+        print(&quot;我买了 &quot; + p)
+    }
+}
+</code></pre>
+<h3 id="9-3-文字和数字互转">9.3 文字和数字互转</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(_int(&quot;42&quot;) + 1)         // 43    ← 文字转整数
+    print(_float(&quot;1.5&quot;) * 2)      // 3.0   ← 文字转小数
+    print(_str(42) + &quot;!&quot;)         // 42!   ← 数字转文字
+
+    // _int(&quot;abc&quot;) 会直接报错（不给你 0），
+    // 想要&quot;转不了就给默认值&quot;，用 _int_or：
+    print(_int_or(&quot;abc&quot;, -1))     // -1
+    print(_int_or(&quot;12&quot;, -1))      // 12
+}
+</code></pre>
+<hr>
+<h2 id="10-函数-给一段代码起名字">10. 函数：给一段代码起名字</h2>
+<p>函数就是"打包好的一段代码"，起个名字，以后叫名字就能用。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(add(2, 3))       // 5
+    print(add(10, 20))     // 30
+
+    var r = area(3.0)      // 有返回值的函数，可以把结果存起来
+    print(r)               // 28.274333882308138
+}
+
+func add(int a, int b): int {
+    return a + b           // return 把结果交回去
+}
+
+func area(float radius): float {
+    return 3.14159 * radius * radius
+}
+</code></pre>
+<p>要看懂的三件事：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>func add(int a, int b)</code></td>
+<td>叫 <code>add</code>，需要两个整数（分别叫 <code>a</code>、<code>b</code>）</td>
+</tr>
+<tr>
+<td><code>: int</code></td>
+<td>它会还给你一个整数（返回类型）</td>
+</tr>
+<tr>
+<td><code>return a + b</code></td>
+<td>把 <code>a + b</code> 交回去</td>
+</tr>
+</tbody>
+</table>
+<p><strong>程序员约定</strong>：函数写在 <code>main</code> 的<strong>下面</strong>或上面都行（Leno 允许先调用后定义），
+但为了好读，通常把 <code>main</code> 放最上面，其它函数放下面。</p>
+<h3 id="10-1-不需要返回值">10.1 不需要返回值</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    打招呼(&quot;小明&quot;)
+    打招呼(&quot;小红&quot;)
+}
+
+func 打招呼(string name) {
+    print(&quot;你好，&quot; + name + &quot;！&quot;)
+}
+</code></pre>
+<p>不写 <code>: 类型</code> 就是"不还东西"。</p>
+<h3 id="10-2-参数可以有默认值">10.2 参数可以有默认值</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(greet(&quot;小明&quot;))            // 你好，小明
+    print(greet(&quot;小明&quot;, &quot;早上好&quot;))  // 早上好，小明
+}
+
+func greet(string name, string word = &quot;你好&quot;): string {
+    return word + &quot;，&quot; + name
+}
+</code></pre>
+<p>调用时不写第二个参数，就用默认的 <code>"你好"</code>。</p>
+<h3 id="10-3-一次还两个值">10.3 一次还两个值</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var[int, int](q, r) = divmod(17, 5)
+    print(&quot;17 ÷ 5 = &quot; + q + &quot; 余 &quot; + r)     // 17 ÷ 5 = 3 余 2
+}
+
+func divmod(int a, int b): [int, int] {
+    return a / b, a % b
+}
+</code></pre>
+<p>注意两个地方：返回类型写成<strong>方括号</strong> <code>[int, int]</code>；接收时写 <code>var[int, int](q, r) = ...</code>
+（方括号里是类型，圆括号里是名字）。</p>
+<h3 id="10-4-函数也是-可以装进盒子的东西-闭包">10.4 函数也是"可以装进盒子的东西"（闭包）</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    var base = 10
+
+    var addBase = func(int n): int {
+        return n + base          // 用到了外面的 base
+    }
+
+    print(addBase(5))            // 15
+}
+</code></pre>
+<p><code>func(...) { ... }</code> 这样写出来的是一个"值"，可以存进变量、传给 <code>map</code>。它能记住外面的变量（<code>base</code>），
+这个能力叫<strong>闭包</strong>。</p>
+<hr>
+<h2 id="11-结构体-把相关的东西捆在一起">11. 结构体：把相关的东西捆在一起</h2>
+<p>写程序久了你会发现"名字、年龄、成绩"总是要一起出现。<strong>结构体</strong>（<code>struct</code>）就是
+"自己造一个新类型，把几样东西捆成一个"。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+struct Dog {
+    string name = &quot;&quot;
+    int age = 0
+}
+
+main() {
+    var d = new Dog(name = &quot;Lucky&quot;, age = 3)
+
+    print(d.name)        // Lucky
+    print(d.age)         // 3
+
+    d.age = 4            // 改它的字段
+    print($&quot;它现在 {d.age} 岁了&quot;)
+}
+</code></pre>
+<p>要点：</p>
+<ul>
+<li><code>struct Dog { … }</code> 定义"一只狗有哪些字段"，<code>= ""</code>、<code>= 0</code> 是<strong>默认值</strong>。</li>
+<li>造一只狗要写 <code>new Dog(...)</code>，字段可以用 <code>字段名 = 值</code> 指定（顺序随意）。</li>
+<li>用 <code>d.name</code> 这样的"点"访问字段。</li>
+<li>⚠ <strong>字段必须写具体类型</strong>（<code>int age = 0</code>、<code>Array[int] scores = [0]</code>），<strong>不能写 <code>var</code></strong>：
+  写 <code>var</code> 编译器会直接说「struct 字段不能使用 var，必须使用具体类型」。</li>
+</ul>
+<h3 id="11-1-让狗会叫-方法">11.1 让狗会叫：方法</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+struct Dog {
+    string name = &quot;&quot;
+    int age = 0
+
+    func bark(): string {
+        return self.name + &quot;：汪汪！&quot;
+    }
+
+    func birthday() {
+        self.age = self.age + 1
+    }
+}
+
+main() {
+    var d = new Dog(name = &quot;Lucky&quot;, age = 3)
+    print(d.bark())      // Lucky：汪汪！
+    d.birthday()
+    print(d.age)         // 4
+}
+</code></pre>
+<ul>
+<li>写在 struct 里的 <code>func</code> 叫<strong>方法</strong>，用 <code>d.bark()</code> 调用。</li>
+<li><code>self</code> 就是"这只狗自己"，<code>self.name</code> 读它自己的字段，<code>self.age = …</code> 改它自己。</li>
+</ul>
+<h3 id="11-2-结构体是-同一个东西-不是复制">11.2 结构体是"同一个东西"，不是复制</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+struct Point {
+    int x = 0
+    int y = 0
+}
+
+main() {
+    var a = new Point(x = 1)
+    var b = a              // b 和 a 指向**同一只** Point
+    b.x = 99
+    print(a.x)             // 99  ← 改 b 就是改 a
+}
+</code></pre>
+<p>新手注意：<code>var b = a</code> <strong>不是复制一份</strong>。真要复制，就新建一个再把字段抄过去。</p>
+<hr>
+<h2 id="12-枚举-一组固定的选项">12. 枚举：一组固定的选项</h2>
+<p>有些东西天生只有几个值：星期几、订单状态、颜色。用<strong>枚举</strong>（<code>enum</code>）比用数字清楚得多。</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+enum Color {
+    red
+    green
+    blue
+}
+
+main() {
+    var c = Color.green
+    print(c)                 // 1   ← 底下是编号，从 0 开始
+
+    if c == Color.green {
+        print(&quot;是绿色&quot;)
+    }
+
+    switch c {
+        case Color.red {
+            print(&quot;红&quot;)
+        }
+        case Color.green {
+            print(&quot;绿&quot;)
+        }
+        case Color.blue {
+            print(&quot;蓝&quot;)
+        }
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>1
+是绿色
+绿
+</code></pre>
+<p>要点：</p>
+<ul>
+<li>成员<strong>一行一个</strong>（或同一行用 <code>;</code> 分隔，<strong>不能用逗号</strong>）。</li>
+<li>用 <code>Color.green</code> 这样"类型名.成员"访问。</li>
+<li>想自己指定编号：<code>enum Page { HOME = 0; SEARCH = 1; LYRIC = 2 }</code>。</li>
+</ul>
+<h3 id="12-1-让选项带上数据-很有用">12.1 让选项带上数据（很有用）</h3>
+<p>有时你希望"失败"这个选项顺便说明原因。Leno 的枚举成员<strong>可以带参数</strong>：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+enum 结果 {
+    ok(int 分数)
+    fail(string 原因)
+}
+
+main() {
+    var r = 结果.ok(95)
+
+    switch r {
+        case 结果.ok(分数) {
+            print(&quot;考了 &quot; + 分数 + &quot; 分&quot;)
+        }
+        case 结果.fail(原因) {
+            print(&quot;没过，原因：&quot; + 原因)
+        }
+    }
+}
+</code></pre>
+<p><code>switch</code> 会按"是哪个成员 + 把参数解出来"。<strong>这比"用一个数字表示状态，把原因存在别处"安全得多</strong>，
+因为编译器能检查你有没有漏掉某个成员。</p>
+<hr>
+<h2 id="13-出错怎么办-try-catch-defer">13. 出错怎么办：try / catch / defer</h2>
+<p>有些错误是"运行时才知道"的：文件不存在、数组越界、除以 0。这些用 <code>try</code> 抓：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    try {
+        var a = [1, 2]
+        print(a[10])              // 这里会出错
+        print(&quot;这行不会执行&quot;)
+    } catch e {
+        print(&quot;出错了：&quot; + e)      // 接住错误，程序继续
+    }
+
+    print(&quot;程序还在继续跑&quot;)
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>出错了：数组索引越界: 索引 10, 长度 2
+程序还在继续跑
+</code></pre>
+<p><code>catch e</code> 里的 <code>e</code> 就是"错误信息"。</p>
+<h3 id="13-1-主动报错-throw">13.1 主动报错：<code>throw</code></h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(取钱(100, 30))    // 70
+    try {
+        取钱(100, 200)      // 余额不够，会 throw
+    } catch e {
+        print(&quot;失败：&quot; + e)  // 失败：余额不足
+    }
+}
+
+func 取钱(int 余额, int 要取): int {
+    if 要取 &gt; 余额 {
+        throw &quot;余额不足&quot;            // 主动抛出错误
+    }
+    return 余额 - 要取
+}
+</code></pre>
+<h3 id="13-2-finally-不管成功失败都执行">13.2 <code>finally</code>：不管成功失败都执行</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    try {
+        print(&quot;开门&quot;)
+        throw &quot;出事了&quot;
+    } catch e {
+        print(&quot;处理：&quot; + e)
+    } finally {
+        print(&quot;关门&quot;)            // 一定执行
+    }
+}
+</code></pre>
+<h3 id="13-3-defer-离开这一块时再做">13.3 <code>defer</code>：离开这一块时再做</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+main() {
+    print(&quot;开始&quot;)
+    defer {
+        print(&quot;结束时清理&quot;)       // main 快结束时执行
+    }
+    print(&quot;做正事&quot;)
+}
+</code></pre>
+<p>输出：</p>
+<pre><code>开始
+做正事
+结束时清理
+</code></pre>
+<p><code>defer</code> 适合"打开文件 → 记得关"这类收尾动作。正常结束、<code>return</code>、出错，它都会执行。</p>
+<hr>
+<h2 id="14-拆成多个文件-模块">14. 拆成多个文件：模块</h2>
+<p>程序变大后不能都塞进一个文件。Leno 的做法：<strong>一个文件就是一个模块</strong>，用 <code>import</code> 拿来用。</p>
+<p>先写一个工具文件 <code>mylib.leno</code>：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）—— 文件名：mylib.leno
+export var 版本 = &quot;1.0&quot;
+
+export func double(int n): int {
+    return n * 2
+}
+
+export func shout(string s): string {
+    return s.to_upper() + &quot;!&quot;
+}
+</code></pre>
+<p>再写主程序 <code>main.leno</code>（和它<strong>放在同一个文件夹</strong>）：</p>
+<pre><code class="language-leno">// 完整程序（可直接运行）—— 文件名：main.leno
+import &quot;mylib.leno&quot; as lib
+
+main() {
+    print(lib.double(21))     // 42
+    print(lib.版本)            // 1.0
+    print(lib.shout(&quot;hello&quot;)) // HELLO!
+}
+</code></pre>
+<p>三个要点：</p>
+<table>
+<thead>
+<tr>
+<th>要点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>export</code></td>
+<td>只有标了 <code>export</code> 的东西才能被别的文件用（不标就是"内部私有"）</td>
+</tr>
+<tr>
+<td><code>import "mylib.leno" as lib</code></td>
+<td>引号里是<strong>文件名</strong>，<code>as lib</code> 是你给它起的简称</td>
+</tr>
+<tr>
+<td><code>lib.double(21)</code></td>
+<td>用"简称.名字"访问</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>为什么必须 <code>export</code>？因为 Leno 想让你明确"这个函数是给别人用的"。没写 <code>export</code> 就调用，
+报错会直接说"XX 没有导出"，而不是让你猜。</p>
+</blockquote>
+<hr>
+<h2 id="15-常用工具箱-几个够用的模块">15. 常用工具箱：几个够用的模块</h2>
+<p>Leno 自带一批模块，用之前 <code>import</code>，然后 <code>模块名.函数()</code>。</p>
+<h3 id="15-1-maths-数学">15.1 <code>maths</code>：数学</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+import maths
+
+main() {
+    print(maths.sqrt(16.0))    // 4.0     开平方
+    print(maths.abs(-7.0))     // 7.0     绝对值
+    print(maths.floor(3.8))    // 3.0     向下取整
+    print(maths.ceil(3.2))     // 4.0     向上取整
+    print(maths.round(3.5))    // 4.0     四舍五入
+    print(maths.max(3.0, 9.0)) // 9.0     大的那个
+    print(maths.min(3.0, 9.0)) // 3.0
+    print(maths.pow(2.0, 10.0))// 1024.0  乘方
+}
+</code></pre>
+<blockquote>
+<p>注意：<code>maths</code> 的函数<strong>都收小数</strong>，整数要先变小数（<code>maths.sqrt(16)</code> 也能过，但你心里要知道它是 float 世界）。</p>
+</blockquote>
+<h3 id="15-2-times-时间">15.2 <code>times</code>：时间</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+import times
+
+main() {
+    var now = times.now()                      // 现在的时间戳（整数秒）
+    print(times.format(now, &quot;%Y-%m-%d %H:%M:%S&quot;))   // 2026-11-23 15:04:05
+}
+</code></pre>
+<h3 id="15-3-files-读写文件">15.3 <code>files</code>：读写文件</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+import files
+import dirs
+
+main() {
+    // 写到临时目录，不污染当前目录（换成 &quot;笔记.txt&quot; 就是写到程序所在目录）
+    var path = dirs.join(_tmpdir(), &quot;笔记.txt&quot;)
+
+    files.write(path, &quot;今天学了 Leno\n第二行&quot;)
+    var text = files.read(path)
+    print(text)
+    print(files.delete(path))     // true
+}
+</code></pre>
+<p>⚠ 读不存在的文件会<strong>抛错</strong>（不是给你空字符串），所以要么确定它在，要么用 <code>try</code> 包起来。</p>
+<h3 id="15-4-io-输入">15.4 <code>io</code>：输入</h3>
+<pre><code class="language-leno">// 完整程序（可直接运行）
+import io
+
+main() {
+    var name = io.input(&quot;你叫什么名字？ &quot;)
+    print(&quot;你好，&quot; + name)
+}
+</code></pre>
+<p>运行后程序会停下来等你打字、回车。</p>
+<h3 id="15-5-想查更多">15.5 想查更多</h3>
+<p>每个模块都有专门文档（<code>module_arrays.md</code>、<code>module_strings.md</code>、<code>module_maths.md</code>…），
+在仓库根目录就能找到。<strong>新手阶段不用背</strong>，写到哪查到哪。</p>
+<hr>
+<h2 id="16-读懂报错-leno-的报错会告诉你怎么改">16. 读懂报错：Leno 的报错会告诉你怎么改</h2>
+<p>这是 Leno 最省心的地方：<strong>报错不只说"错了"，还说"该改成什么"。</strong> 学会读它，效率翻倍。</p>
+<h3 id="16-1-报错长什么样">16.1 报错长什么样</h3>
+<pre><code>C:\code\hello.leno(8,17): error: [类型不匹配] 变量 'a' 是 int（非可空），不能赋 null
+</code></pre>
+<p>拆开看：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>C:\code\hello.leno</code></td>
+<td>哪个文件</td>
+</tr>
+<tr>
+<td><code>(8,17)</code></td>
+<td><strong>第 8 行、第 17 列</strong> ← 先看行，再看列</td>
+</tr>
+<tr>
+<td><code>error:</code></td>
+<td>错误（<code>warning:</code> 是警告，程序照样能跑）</td>
+</tr>
+<tr>
+<td><code>[类型不匹配]</code></td>
+<td>错误类型（方便你判断是哪一类问题）</td>
+</tr>
+<tr>
+<td>后面的中文</td>
+<td>具体原因，通常带"请改成…"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="16-2-新手最常遇到的-7-个报错">16.2 新手最常遇到的 7 个报错</h3>
+<p><strong>① 忘了写引号 / 用了中文引号</strong></p>
+<pre><code>error: [语法错误] 期望表达式
+</code></pre>
+<blockquote>
+<p>检查：字符串是不是用了英文 <code>"</code>，括号是否成对。</p>
+</blockquote>
+<p><strong>② 类型对不上</strong></p>
+<pre><code>error: [类型不匹配] 无法将值赋值给变量 'score'
+期望类型: int
+实际类型: string
+</code></pre>
+<blockquote>
+<p>意思：盒子是装整数的，你塞了文字。改成 <code>score = 90</code> 或把盒子改成 <code>string</code>。</p>
+</blockquote>
+<p><strong>③ 把 null 塞进"一定有值"的盒子</strong></p>
+<pre><code>error: [类型不匹配] 变量 'a' 是 int（非可空），不能赋 null
+</code></pre>
+<blockquote>
+<p>要么别塞 null，要么把类型写成 <code>int?</code>（表示"允许空"）。</p>
+</blockquote>
+<p><strong>④ 数组越界（运行期）</strong></p>
+<pre><code>[错误] hello.leno:6: 数组索引越界: 索引 10, 长度 3
+[调用栈]
+#0 main @ hello.leno:6
+</code></pre>
+<blockquote>
+<p>下标从 0 开始，长度 3 的数组只有 0/1/2。</p>
+</blockquote>
+<p><strong>⑤ 除以 0（运行期）</strong></p>
+<pre><code>[错误] hello.leno:4: 除零错误：除数为 0
+[操作] 除法 (/)
+[操作数a] type=int, value=10
+</code></pre>
+<blockquote>
+<p>Leno 会连"被除数是多少"都告诉你，方便你回推哪一步把它算成 0 了。</p>
+</blockquote>
+<p><strong>⑥ 方法名写错</strong></p>
+<pre><code>error: [语义错误] 类型 'string' 没有方法 'len2'
+</code></pre>
+<blockquote>
+<p>大多数情况它会顺带列出"可用的方法"，照着抄就行。</p>
+</blockquote>
+<p><strong>⑦ 插值的格式符写错</strong></p>
+<pre><code>error: [语法错误] 插值的格式说明符不合法：转换符 `y` 不认识 —— 可用：
+f 小数 / d 整数 / s 字符串 / x 十六进制 / X 大写十六 / o 八进制 / b 二进制 /
+e E g G 科学计数与通用 / c 字符 / % 百分号
+</code></pre>
+<blockquote>
+<p>直接把可用的全列出来——这类报错是"照着改就行"的。</p>
+</blockquote>
+<h3 id="16-3-警告-warning-也要看">16.3 警告（warning）也要看</h3>
+<p>警告不影响运行，但<strong>往往预示着你写错了</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>警告</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[空循环]</code></td>
+<td>你这个 for 一次都不执行（常见：倒序忘了 <code>:-1</code>）</td>
+</tr>
+<tr>
+<td><code>[不可达代码]</code></td>
+<td><code>return</code> 之后还写了语句，永远执行不到</td>
+</tr>
+<tr>
+<td><code>[漏写 return]</code></td>
+<td>有的分支没返回，调用方可能拿到 null</td>
+</tr>
+<tr>
+<td><code>[未使用变量]</code></td>
+<td>造了盒子从没用过（可能打错名字了）</td>
+</tr>
+<tr>
+<td><code>[遍历中修改]</code></td>
+<td>一边遍历容器一边增删，会漏元素</td>
+</tr>
+<tr>
+<td><code>[defer后改值]</code></td>
+<td><code>defer</code> 里用的变量在之后被改了，<code>defer</code> 拿到的不是你想要的旧值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="16-4-三个通用排查步骤">16.4 三个通用排查步骤</h3>
+<ol>
+<li><strong>先看行号</strong>，再看报错类型，最后读那句中文——它通常已经写了改法。</li>
+<li><strong>一次只改一个地方</strong>，改完重跑。Leno 一次会把同类错误合并显示，别被条数吓到。</li>
+<li>实在看不懂，就把可疑的那一行<strong>注释掉</strong>（前面加 <code>//</code>）重跑，看错误是否消失——
+   快速定位"到底哪一行惹的祸"。</li>
+</ol>
+<hr>
+<h2 id="17-十个练习-带答案">17. 十个练习（带答案）</h2>
+<p>每题都给了答案，<strong>但请先自己写</strong>，写完对一下哪里不同。全部答案都实际跑过。</p>
+<p><strong>练习 1</strong>：打印 1 到 10 的平方。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    for 1:10 to i {
+        print(i * i)
+    }
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 2</strong>：判断一个数是奇数还是偶数（用 <code>%</code>）。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var n = 7
+    if n % 2 == 0 {
+        print(n + &quot; 是偶数&quot;)
+    } else {
+        print(n + &quot; 是奇数&quot;)
+    }
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 3</strong>：求 1 到 100 的和。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var total = 0
+    for 1:100 to i {
+        total = total + i
+    }
+    print(total)     // 5050
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 4</strong>：把数组 <code>[5, 3, 8, 1]</code> 从小到大排序并打印。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var a = [5, 3, 8, 1]
+    a.sort()
+    print(a)         // [1, 3, 5, 8]
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 5</strong>：统计一段文字里出现了几个逗号。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var text = &quot;苹果,香蕉,橘子,西瓜&quot;
+    print(text.count(&quot;,&quot;))   // 3
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 6</strong>：把一句话里的每个词倒序（比如 <code>"我 爱 学 习"</code> → <code>"习 学 爱 我"</code>）。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var words = &quot;我 爱 学 习&quot;.split(&quot; &quot;)
+    var result = &quot;&quot;
+    for 0:words.len() - 1 to i {
+        var w = words[words.len() - 1 - i]
+        if i &gt; 0 {
+            result = result + &quot; &quot;
+        }
+        result = result + w
+    }
+    print(result)     // 习 学 爱 我
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 7</strong>：写一个函数 <code>is_even(int n): bool</code>。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    print(is_even(4))    // true
+    print(is_even(7))    // false
+}
+
+func is_even(int n): bool {
+    return n % 2 == 0
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 8</strong>：用字典统计每个字出现的次数（<code>"aabbb"</code> → a:2, b:3）。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    var text = &quot;aabbb&quot;
+    var counts = {}
+
+    for text to ch {
+        if counts.has(ch) {
+            counts[ch] = counts[ch] + 1
+        } else {
+            counts[ch] = 1
+        }
+    }
+
+    for counts to k {
+        print(k + &quot; 出现 &quot; + counts[k] + &quot; 次&quot;)
+    }
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 9</strong>：写一个"学生"结构体，有姓名和三门成绩，并算平均分。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">struct Student {
+    string name = &quot;&quot;
+    Array[int] scores = [0, 0, 0]     // ← 字段必须写具体类型，不能写 var
+
+    func average(): float {
+        var sum = 0
+        for self.scores to s {
+            sum = sum + s
+        }
+        return sum / 3.0
+    }
+}
+
+main() {
+    var s = new Student(name = &quot;小明&quot;, scores = [90, 80, 70])
+    print(s.name + &quot; 的平均分是 &quot; + s.average())   // 小明 的平均分是 80.0
+}
+</code></pre>
+
+</details>
+
+<p><strong>练习 10</strong>：写一个安全的除法：除数为 0 时返回 null 而不是崩溃。</p>
+<details><summary>答案</summary>
+
+
+<pre><code class="language-leno">main() {
+    print(safe_div(10, 2))    // 5.0
+    print(safe_div(10, 0))    // null
+}
+
+func safe_div(float a, float b): float? {
+    if b == 0.0 {
+        return null
+    }
+    return a / b
+}
+</code></pre>
+
+</details>
+
+<h3 id="接下来写点什么">接下来写点什么</h3>
+<p>从<strong>能用起来的小工具</strong>开始最有效，比如：</p>
+<ul>
+<li>记账：把每天花费写进文件，读出来求和（<code>files</code> + 数字）</li>
+<li>待办清单：命令行里加/删/列出（数组 + <code>io.input</code>）</li>
+<li>词频统计：读一个 txt，统计出现最多的 10 个词（<code>files</code> + 字典 + <code>sort</code>）</li>
+<li>猜数字：<code>rands</code> 生成随机数 + <code>io.input</code> 猜（<code>while</code> + <code>if</code>）</li>
+</ul>
+<hr>
+<h2 id="18-速查表">18. 速查表</h2>
+<h3 id="18-1-骨架">18.1 骨架</h3>
+<pre><code class="language-leno">// 注释这样写
+/* 也可以这样写多行 */
+
+import &quot;其它文件.leno&quot; as 别名
+
+struct 类型名 {
+    int 字段 = 0
+    func 方法(): int { return self.字段 }
+}
+
+enum 选项 { 甲
+           乙 }
+
+func 函数名(int 参数): int { return 参数 + 1 }
+
+main() {
+    var 变量 = 1
+    print(变量)
+}
+</code></pre>
+<h3 id="18-2-常用语法一张表">18.2 常用语法一张表</h3>
+<table>
+<thead>
+<tr>
+<th>想做的事</th>
+<th>写法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>造变量</td>
+<td><code>var x = 1</code> / <code>int x = 1</code></td>
+</tr>
+<tr>
+<td>打印</td>
+<td><code>print(...)</code> / <code>printf(...)</code>（不换行）</td>
+</tr>
+<tr>
+<td>拼接文字</td>
+<td><code>"a" + x</code> 或 <code>$"a{x}"</code></td>
+</tr>
+<tr>
+<td>格式小数</td>
+<td><code>$"{x:.2f}"</code></td>
+</tr>
+<tr>
+<td>判断</td>
+<td><code>if 条件 { } else if 条件 { } else { }</code></td>
+</tr>
+<tr>
+<td>一行选择</td>
+<td><code>var m = if a &gt; b then a else b</code></td>
+</tr>
+<tr>
+<td>数数循环</td>
+<td><code>for 1:10 to i { }</code>（两头都算）</td>
+</tr>
+<tr>
+<td>跳步 / 倒序</td>
+<td><code>for 0:10:2 to i { }</code> / <code>for 10:1:-1 to i { }</code></td>
+</tr>
+<tr>
+<td>遍历数组/文字</td>
+<td><code>for arr to x { }</code> / <code>for "abc" to ch { }</code></td>
+</tr>
+<tr>
+<td>遍历字典</td>
+<td><code>for dict to k { }</code>（拿到键）</td>
+</tr>
+<tr>
+<td>条件循环</td>
+<td><code>while 条件 { }</code></td>
+</tr>
+<tr>
+<td>跳过/跳出</td>
+<td><code>continue</code> / <code>break</code></td>
+</tr>
+<tr>
+<td>数组</td>
+<td><code>[1, 2, 3]</code>，<code>a[0]</code>、<code>a.add(x)</code>、<code>a.len()</code>、<code>a.sort()</code></td>
+</tr>
+<tr>
+<td>切片（闭区间）</td>
+<td><code>a[1:3]</code>（含 1 和 3）</td>
+</tr>
+<tr>
+<td>字典</td>
+<td><code>{"k": 1}</code>，<code>d["k"]</code>、<code>d.get("k", 默认)</code>、<code>d.has("k")</code></td>
+</tr>
+<tr>
+<td>枚举</td>
+<td><code>enum E { a  b }</code> → <code>E.a</code></td>
+</tr>
+<tr>
+<td>结构体</td>
+<td><code>struct S { int x = 0 }</code> → <code>var s = new S(x = 1)</code></td>
+</tr>
+<tr>
+<td>异常</td>
+<td><code>try { } catch e { } finally { }</code></td>
+</tr>
+<tr>
+<td>主动报错</td>
+<td><code>throw "原因"</code></td>
+</tr>
+<tr>
+<td>收尾</td>
+<td><code>defer { ... }</code></td>
+</tr>
+<tr>
+<td>可空类型</td>
+<td><code>int? x = null</code>，用之前 <code>if x != null { }</code></td>
+</tr>
+<tr>
+<td>类型转换</td>
+<td><code>_int(s)</code>、<code>_float(s)</code>、<code>_str(n)</code>、<code>_int_or(s, 默认)</code></td>
+</tr>
+<tr>
+<td>看类型</td>
+<td><code>type(x)</code></td>
+</tr>
+<tr>
+<td>多返回值</td>
+<td><code>func f(): [int, int]</code> + <code>var[int, int](a, b) = f()</code></td>
+</tr>
+<tr>
+<td>退出程序</td>
+<td><code>_exit(0)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="18-3-和-python-的几处主要不同">18.3 和 Python 的几处主要不同</h3>
+<table>
+<thead>
+<tr>
+<th>你熟悉的 Python</th>
+<th>Leno</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>缩进决定块</td>
+<td><strong>大括号 <code>{ }</code></strong> 决定块（缩进只是给人看）</td>
+</tr>
+<tr>
+<td><code>if x &gt;= 60:</code></td>
+<td><code>if x &gt;= 60 {</code></td>
+</tr>
+<tr>
+<td><code>for i in range(1, 10):</code></td>
+<td><code>for 1:9 to i {</code> ← <strong>两头都算</strong>，所以是 9 不是 10</td>
+</tr>
+<tr>
+<td><code>len(a)</code></td>
+<td><code>a.len()</code></td>
+</tr>
+<tr>
+<td><code>a.append(x)</code></td>
+<td><code>a.add(x)</code></td>
+</tr>
+<tr>
+<td><code>d["k"]</code> 缺键抛 KeyError</td>
+<td><code>d["k"]</code> 缺键给 <strong>null</strong>（要默认值用 <code>d.get(k, 默认)</code>）</td>
+</tr>
+<tr>
+<td><code>True</code> / <code>False</code> / <code>None</code></td>
+<td><code>true</code> / <code>false</code> / <code>null</code></td>
+</tr>
+<tr>
+<td><code>and</code> / <code>or</code> / <code>not</code></td>
+<td><code>and</code> / <code>or</code> / <code>not</code>（一样）</td>
+</tr>
+<tr>
+<td><code>print(f"{x}")</code></td>
+<td><code>print($"{x}")</code></td>
+</tr>
+<tr>
+<td><code>x = 1 if c else 2</code></td>
+<td><code>var x = if c then 1 else 2</code></td>
+</tr>
+<tr>
+<td>列表切片 <code>a[1:3]</code> 不含 3</td>
+<td><code>a[1:3]</code> <strong>含 3</strong></td>
+</tr>
+<tr>
+<td><code>def f(x):</code></td>
+<td>`func f(int x): int {</td>
+</tr>
+<tr>
+<td>return x</td>
+<td></td>
+</tr>
+<tr>
+<td>}` ← 参数和返回值都要写类型</td>
+<td></td>
+</tr>
+<tr>
+<td>整数无限精度</td>
+<td>也无限（会自动变大，不用 <code>int</code> / <code>long</code> 区分）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="18-4-三条最值钱的经验">18.4 三条最值钱的经验</h3>
+<ol>
+<li><strong>报错先看行号，再读中文</strong>：Leno 的报错几乎都写好了改法。</li>
+<li><strong><code>7 / 2</code> 是 <code>3</code></strong>：想要小数请写 <code>7.0 / 2</code>。</li>
+<li><strong>区间都是"两头都算"</strong>：<code>for 1:5</code> 是 5 次，<code>a[1:3]</code> 是 3 个元素。这一点贯穿全语言。</li>
+</ol>
+<hr>
+<blockquote>
+<p>学到这里，你已经能读大部分 Leno 代码、写自己的小工具了。接下来按需查：</p>
+<ul>
+<li>想抠细节 / 查某个函数的所有参数 → <a href="Leno入门教程.html"><code>Leno入门教程.md</code></a></li>
+<li>遇到诡异现象 → <a href="语言陷阱速查.html"><code>语言陷阱速查.md</code></a></li>
+<li>写并发/线程 → <a href="并发选择指引.html"><code>并发选择指引.md</code></a></li>
+<li>想看看真实项目怎么写 → 仓库的 <code>examples/</code> 目录（800 多个例子，按主题分文件夹）</li>
+</ul>
+</blockquote></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#1-先跑起来-你的第一个程序">1. 先跑起来：你的第一个程序</a></li><ul class="lv3"><li><a href="#1-1-装什么">1.1 装什么</a></li><li><a href="#1-2-第一个程序">1.2 第一个程序</a></li><li><a href="#1-3-让程序说更多">1.3 让程序说更多</a></li></ul><li><a href="#2-变量-把东西装进盒子">2. 变量：把东西装进盒子</a></li><ul class="lv3"><li><a href="#2-1-var-和-写清楚类型">2.1 var 和"写清楚类型"</a></li><li><a href="#2-2-名字可以改-但类型不能乱换">2.2 名字可以改，但类型不能乱换</a></li><li><a href="#2-3-一次造好几个">2.3 一次造好几个</a></li><li><a href="#2-4-名字的规矩">2.4 名字的规矩</a></li></ul><li><a href="#3-基本类型-数字-文字-真假-空">3. 基本类型：数字、文字、真假、空</a></li><ul class="lv3"><li><a href="#3-1-数字-整数和小数的区别很重要">3.1 数字：整数和小数的区别很重要</a></li><li><a href="#3-2-整数没有上限-会自动变大">3.2 整数没有上限（会自动变大）</a></li><li><a href="#3-3-文字-字符串">3.3 文字（字符串）</a></li><li><a href="#3-4-真假-bool">3.4 真假（bool）</a></li><li><a href="#3-5-空-null">3.5 空（null）</a></li></ul><li><a href="#4-运算-算数-比较-串门">4. 运算：算数、比较、串门</a></li><ul class="lv3"><li><a href="#4-1-算术">4.1 算术</a></li><li><a href="#4-2-比较-结果是-true-false">4.2 比较（结果是 true / false）</a></li><li><a href="#4-3-逻辑-and-or-not">4.3 逻辑：and / or / not</a></li><li><a href="#4-4-把文字接起来">4.4 把文字接起来</a></li><li><a href="#4-5-更方便的拼接-插值-变量">4.5 更方便的拼接：插值 $"...{变量}..."</a></li><li><a href="#4-6-一行内做选择-if-then-else">4.6 一行内做选择：if ... then ... else</a></li></ul><li><a href="#5-让程序做选择-if">5. 让程序做选择：if</a></li><ul class="lv3"><li><a href="#5-1-判断-是不是空">5.1 判断"是不是空"</a></li><li><a href="#5-2-多个条件">5.2 多个条件</a></li></ul><li><a href="#6-让程序重复做事-循环">6. 让程序重复做事：循环</a></li><ul class="lv3"><li><a href="#6-1-for-数数-最常用">6.1 for 数数（最常用）</a></li><li><a href="#6-2-想跳着数-倒着数">6.2 想跳着数 / 倒着数</a></li><li><a href="#6-3-把一排东西挨个过一遍">6.3 把一排东西挨个过一遍</a></li><li><a href="#6-4-while-条件成立就一直做">6.4 while：条件成立就一直做</a></li><li><a href="#6-5-提前退出-跳过这一轮">6.5 提前退出 / 跳过这一轮</a></li></ul><li><a href="#7-一排盒子-数组">7. 一排盒子：数组</a></li><ul class="lv3"><li><a href="#7-1-增-删-改">7.1 增、删、改</a></li><li><a href="#7-2-切片-一次拿一段">7.2 切片：一次拿一段</a></li><li><a href="#7-3-常用操作">7.3 常用操作</a></li><li><a href="#7-4-对每个元素做同一件事-map-filter-reduce">7.4 对每个元素做同一件事：map / filter / reduce</a></li></ul><li><a href="#8-查字典-字典">8. 查字典：字典</a></li><ul class="lv3"><li><a href="#8-1-遍历字典">8.1 遍历字典</a></li><li><a href="#8-2-改-删-数">8.2 改、删、数</a></li></ul><li><a href="#9-字符串的日常操作">9. 字符串的日常操作</a></li><ul class="lv3"><li><a href="#9-1-拼-重复-补位">9.1 拼、重复、补位</a></li><li><a href="#9-2-一条一条看">9.2 一条一条看</a></li><li><a href="#9-3-文字和数字互转">9.3 文字和数字互转</a></li></ul><li><a href="#10-函数-给一段代码起名字">10. 函数：给一段代码起名字</a></li><ul class="lv3"><li><a href="#10-1-不需要返回值">10.1 不需要返回值</a></li><li><a href="#10-2-参数可以有默认值">10.2 参数可以有默认值</a></li><li><a href="#10-3-一次还两个值">10.3 一次还两个值</a></li><li><a href="#10-4-函数也是-可以装进盒子的东西-闭包">10.4 函数也是"可以装进盒子的东西"（闭包）</a></li></ul><li><a href="#11-结构体-把相关的东西捆在一起">11. 结构体：把相关的东西捆在一起</a></li><ul class="lv3"><li><a href="#11-1-让狗会叫-方法">11.1 让狗会叫：方法</a></li><li><a href="#11-2-结构体是-同一个东西-不是复制">11.2 结构体是"同一个东西"，不是复制</a></li></ul><li><a href="#12-枚举-一组固定的选项">12. 枚举：一组固定的选项</a></li><ul class="lv3"><li><a href="#12-1-让选项带上数据-很有用">12.1 让选项带上数据（很有用）</a></li></ul><li><a href="#13-出错怎么办-try-catch-defer">13. 出错怎么办：try / catch / defer</a></li><ul class="lv3"><li><a href="#13-1-主动报错-throw">13.1 主动报错：throw</a></li><li><a href="#13-2-finally-不管成功失败都执行">13.2 finally：不管成功失败都执行</a></li><li><a href="#13-3-defer-离开这一块时再做">13.3 defer：离开这一块时再做</a></li></ul><li><a href="#14-拆成多个文件-模块">14. 拆成多个文件：模块</a></li><li><a href="#15-常用工具箱-几个够用的模块">15. 常用工具箱：几个够用的模块</a></li><ul class="lv3"><li><a href="#15-1-maths-数学">15.1 maths：数学</a></li><li><a href="#15-2-times-时间">15.2 times：时间</a></li><li><a href="#15-3-files-读写文件">15.3 files：读写文件</a></li><li><a href="#15-4-io-输入">15.4 io：输入</a></li><li><a href="#15-5-想查更多">15.5 想查更多</a></li></ul><li><a href="#16-读懂报错-leno-的报错会告诉你怎么改">16. 读懂报错：Leno 的报错会告诉你怎么改</a></li><ul class="lv3"><li><a href="#16-1-报错长什么样">16.1 报错长什么样</a></li><li><a href="#16-2-新手最常遇到的-7-个报错">16.2 新手最常遇到的 7 个报错</a></li><li><a href="#16-3-警告-warning-也要看">16.3 警告（warning）也要看</a></li><li><a href="#16-4-三个通用排查步骤">16.4 三个通用排查步骤</a></li></ul><li><a href="#17-十个练习-带答案">17. 十个练习（带答案）</a></li><ul class="lv3"><li><a href="#接下来写点什么">接下来写点什么</a></li></ul><li><a href="#18-速查表">18. 速查表</a></li><ul class="lv3"><li><a href="#18-1-骨架">18.1 骨架</a></li><li><a href="#18-2-常用语法一张表">18.2 常用语法一张表</a></li><li><a href="#18-3-和-python-的几处主要不同">18.3 和 Python 的几处主要不同</a></li><li><a href="#18-4-三条最值钱的经验">18.4 三条最值钱的经验</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><span></span><a href="安装与第一个项目.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

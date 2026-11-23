@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>待办：Leno 易用性痛点清单（来自 TraeSign 移植实录） · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/易用性痛点（TraeSign 移植实录）.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">待办：Leno 易用性痛点清单（来自 TraeSign 移植实录）</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html" class="active" aria-current="page">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="待办-leno-易用性痛点清单-来自-traesign-移植实录">待办：Leno 易用性痛点清单（来自 TraeSign 移植实录）</h1>
+<blockquote>
+<p>⚠ <strong>含 JIT 时代结论（2026-10-02 注）</strong>：文中若干"复核结论"是用 JIT 的性能口径判过的
+（例如把"真实热点被 <code>OP_CAST_INT</code> bail 拉黑"记成 <strong>JIT 性能</strong>问题）。
+<strong>JIT 已不在代码中</strong>（<code>git ls-files "*jit*"</code> 为空）⇒ 这类判据失去意义；
+痛点清单本身（易用性、报错措辞、类型收窄等）<strong>仍是现行待办</strong>。</p>
+<p><strong>来源</strong>：2026-09-18 用 Leno 从零移植 TraeSign（读 Trae <strong>加密</strong>登录态 → 派生解密拿 token → 真 HTTPS
+签到）的全过程逐步踩坑记录。素材现场：
+<code>leno_module/LenoSDL3/examples/应用示例/Trae签到/</code>（<code>trae_crypto.leno</code> / <code>trae_sign.leno</code> / <code>README.md</code>）。</p>
+<p><strong>与其他文档的关系（做了去重，避免重复维护）</strong>：
+- 类型收窄体系本身见 <code>类型收窄与绑定语法改进.md</code> ⇒ 本文 P1 <strong>不是机制缺失</strong>，而是"报错/文档引导不到位"✗；
+- 报错文案的总体改进见 <code>archive/Leno报错提示改进计划.md</code>；语言级建议总表见 <code>Leno语言改进建议.md</code>；
+- 本文只记<strong>这次实测中新发现、或上面文档没覆盖</strong>的项 ✓。</p>
+</blockquote>
+<h2 id="清单-按-消掉卡顿-的性价比排序">清单（按"消掉卡顿"的性价比排序）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>痛点</th>
+<th>层面</th>
+<th>优先级</th>
+<th>本次实际成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td><code>any</code> 收窄报错<strong>没说必须收窄到带泛型参数的容器</strong></td>
+<td>报错文案</td>
+<td>高</td>
+<td>5~6 轮编译失败 ✗</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>解释器把脚本的 <code>--xxx</code> 当<strong>自己的</strong>旗标 ⇒ 打印帮助、脚本不跑</td>
+<td>工具链</td>
+<td>高</td>
+<td>逼改全部子命令 ✗</td>
+</tr>
+<tr>
+<td>P3</td>
+<td><code>LenoWeb.setHeaders</code> <strong>替换</strong>语义，静默覆盖（且示例在教错误用法）</td>
+<td>模块 API</td>
+<td>高</td>
+<td>误判成 token 过期 ✗✗</td>
+</tr>
+<tr>
+<td>P4</td>
+<td>空数组 <code>var a = []</code> 元素类型是 <code>any</code>，报错点离现场很远</td>
+<td>类型系统</td>
+<td>中</td>
+<td>2 轮 ✗</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>只有 <code>_env</code>（读），<strong>没有 <code>_setenv</code></strong></td>
+<td>标准库</td>
+<td>中</td>
+<td>写门禁时绕 shell ✗</td>
+</tr>
+<tr>
+<td>P6</td>
+<td><code>_exec</code> 与 <code>assert/run_tests.leno</code> <strong>都没有超时</strong></td>
+<td>工具链</td>
+<td>中</td>
+<td>只能外部兜 ✗</td>
+</tr>
+<tr>
+<td>P7</td>
+<td>跨模块相对路径冗长 ＋ <strong>示例腐化</strong>（硬编码别机器路径）</td>
+<td>工程</td>
+<td>中</td>
+<td>若干 ✗</td>
+</tr>
+<tr>
+<td>P8</td>
+<td><code>files.read</code> 失败语义未写明（<code>""</code> 还是 <code>null</code>）</td>
+<td>文档</td>
+<td>低</td>
+<td>1 轮 ✗</td>
+</tr>
+<tr>
+<td>P9</td>
+<td><code>build_vm.bat</code> 与 <code>build.bat</code> 是<strong>两套源码清单</strong>，且它是 GBK 文件</td>
+<td>构建</td>
+<td>中</td>
+<td>一次全断 ✗✗</td>
+</tr>
+<tr>
+<td>J1</td>
+<td>真实热点 <code>sha512_bytes</code> 被 <code>OP_CAST_INT</code> bail 拉黑</td>
+<td>JIT 性能</td>
+<td>中</td>
+<td>签到工具每次都要算 SHA-512</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="复核结论-2026-09-18-逐条实测-读码-含-哪些已过期">复核结论（2026-09-18 逐条实测/读码，含"哪些已过期"）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>状态</th>
+<th>结论与证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td><strong>部分修复</strong></td>
+<td>两条 any 访问字段/索引的提示已各补一句「收窄到<strong>裸</strong>容器取出的元素仍是 any；要按类型取元素请收窄到<strong>带泛型参数的</strong>容器（<code>Dict[string, any]</code> / <code>Array[string]</code>）」（<code>semantic_type.c</code> 两处），转换提示改成"any 需显式转换，或收窄到带泛型参数的容器"（<code>semantic_type_utils.c</code> + <code>visit_var.inc</code> 缓冲提到 1024），<code>module_jsons.md</code> 补了"<code>decode</code> 返回 <code>any</code>、需按泛型容器收窄"。<strong>⚠ 附带教训</strong>：提示是要<strong>追加进调用方 <code>msg</code> 缓冲</strong>的 —— 第一版写长后被截断成「…（如」✗（报文尾部丢字比没有提示更糟）⇒ 提示文案必须短，且落点缓冲要够。<strong>⚠ 关键更正（2026-09-19）</strong>：提示现已<strong>点名语言既有的 <code>x as T</code> 安全转换</strong>（<code>leno_ast.h</code> 原话"<strong>安全类型转换</strong>"：匹配返回目标类型、<strong>不匹配返回 null</strong>、静态类型即目标类型）⇒ <code>Dict[string, any] d = raw as Dict[string, any]</code> 一步到位 ✓（实测通过）。<strong>明确不做</strong>：<code>_Dict()</code> / <code>_Array()</code> —— 曾加过又<strong>撤掉</strong>：多余，且"不匹配就抛错"与语言既有"安全转换返回 null"<strong>规矩相反</strong> ✗（正是"同一件事第二份实现"）；<code>jsons.decode</code> 仍注册为 <code>TYPE_ANY</code>（<code>jsons.c:745</code>，<strong>不改</strong>：它本就可能是数组/数字/字符串/null，声明成 Dict 会骗人 ✗）。用例 <code>test_type_casts.leno</code>（6 判据，含"缺 <code>as</code> 必须报错、且提示要点名 <code>as</code>"这条守卫）</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><strong>已修复</strong> ✓</td>
+<td>修法（与 <code>_args()</code> 对齐成<strong>同一条边界</strong>）：脚本路径<strong>之后</strong>的 <code>-</code> 开头参数原样交给脚本；<code>--</code> 可显式终止解释器选项；未知旗标写在脚本<strong>之前</strong>仍报错（提示没丢）。实测：<code>x.leno --list</code> ⇒ 脚本照跑 ✓、<code>-- x.leno --list</code> ✓、<code>--nope x.leno</code> ⇒ exit 64 +「未知选项」✓。用例 <code>assert/test_cli_script_args.leno</code>（4 判据，含两条守卫）；<code>module_sys.md</code> 补了边界规则表。README 里的"位置子命令"绕法现在<strong>不必需</strong>了（但保留兼容 ✓）。<strong>2026-09-26 彻底化</strong>：与<strong>内置名撞名</strong>的旗标（<code>-v/-h/--help/-c/-p/-o/--debug/--pause/--no-cache…</code>）写在脚本路径之后<strong>也曾被吃掉</strong> —— <code>x.leno -v</code> ⇒ 打印版本、脚本不跑 ✗、<code>x.leno --no-cache</code> ⇒ 双重生效 ✗ ⇒ 现在判定统一为「<strong>内置旗标写在脚本路径之前</strong>」（见本文 P2 段的"已修（分两步）"，判据 ⑤⑥ 已补进 <code>assert/test_cli_script_args.leno</code>）</td>
+</tr>
+<tr>
+<td>P3</td>
+<td><strong>已修复</strong> ✓（2026-10-07）</td>
+<td>前次：<code>custom_headers.leno</code> 改为<strong>一次给全</strong>；<code>web_net.leno</code> 注释写明替换语义 + 1001 误判风险。<strong>本次落实</strong>（你已拍板）：API 拆成两个"名字即语义"的方法 —— <code>replaceHeaders</code>（整表替换）+ <code>addHeaders</code>（追加）+ <code>headers()</code>（回读），<code>setHeaders</code> 这个名字<strong>移除</strong>；<strong>20 处调用点全量改名</strong>（库 2 文件、示例 5 文件、Trae 工具 2 文件）。顺带修掉两处隐性缺陷：① <code>setBearerToken</code> 自己造 slist 绕过 <code>_headers</code>（随后一个 <code>addHeaders</code> 就会把 Authorization 冲掉）② slist <strong>从不释放</strong>（每次设头漏一份；现在换表即释放旧表、<code>close</code>/<code>reset</code> 收尾）。新增门禁 <code>examples/tests/test_headers_api.leno</code>（17 判据）⇒ 套件 <strong>17/17</strong> ✓</td>
+</tr>
+<tr>
+<td>P4</td>
+<td><strong>部分修复（本文此条前半已过期）</strong></td>
+<td>「从<strong>首个 <code>.add</code></strong> 推断元素类型」<strong>已实现</strong> —— 实测 <code>var acc=[]</code> + <code>acc.add(123)</code> + 传给 <code>string</code> 形参 ⇒ 报「实际 <strong>int</strong>」（代码：<code>visit_module.inc:700</code>、<code>semantic_type_utils.c:532</code>）⇒ 原文"必须显式写 <code>Array[string]</code>"<strong>已不准确</strong> ✗。<strong>残留</strong>：元素类型<strong>真无从推断</strong>（完全没有 <code>.add</code>）时，仍在使用处报「实际 <code>any</code>」，声明处<strong>无提示</strong></td>
+</tr>
+<tr>
+<td>P5</td>
+<td><strong>已修复</strong> ✓</td>
+<td><code>_env(name, value)</code> 已支持<strong>写</strong>（<code>sys.c:183-201</code>，Win <code>_putenv_s</code> / POSIX <code>setenv</code>）—— 名字不叫 <code>_setenv</code>，但能力齐 ⇒ 可从待办划掉</td>
+</tr>
+<tr>
+<td>P6</td>
+<td><strong>已修复</strong> ✓</td>
+<td><code>_exec(cmd, timeout_ms)</code>：Windows 走 <code>CreateProcessW</code> + <code>WaitForSingleObject</code> + <code>TerminateProcess</code>，POSIX 用 coreutils <code>timeout</code> 包一层；<strong>超时退出码 124</strong>（GNU 惯例）。<code>assert/run_tests.leno</code> 每个测试都带超时（默认 120 s，可用 <code>LENO_TEST_TIMEOUT_MS</code> 覆盖；<code>0</code> = 不限制），超时单独打印「<strong>超时（已被杀掉）</strong>」并计 FAIL。用例 <code>assert/test_exec_timeout.leno</code>（3 判据：超时须 1 s 内返回且码 124 / 正常命令带超时照常成功 / 不传超时=旧行为）；<code>module_sys.md</code> 补了用法与 124 约定。<strong>顺带</strong>：语义侧的 native 参数个数表也要跟着放（<code>_exec</code> 从 1 个参数改成可接受 2 个）—— 这次就是它先报的「参数数量不匹配: 期望 1, 实际 2」</td>
+</tr>
+<tr>
+<td>P7</td>
+<td><strong>已修复</strong> ✓</td>
+<td>三个 <code>examples/jsons/*</code> 示例<strong>全部修好</strong>（<strong>编译 + 真跑</strong>都 exit=0）：新增示例共用的取值层 <code>examples/jsons/json_any.leno</code>（<code>jstr/jobj/jat/jats/jlen/jshow</code> —— 把"显式类型收窄"收在一处，写法与 <code>trae_core.leno</code> 的 <code>json_get/json_obj</code> 同源），三个示例改用它；硬编码路径改<strong>仓库相对</strong>；落盘一律改 <code>_tmpdir()</code>（不再往仓库根写垃圾）。另修一处既有坑：<code>var d = {}</code> 的值类型被<strong>首个插入</strong>推成 <code>string</code> ⇒ 之后塞子字典 / <code>4999</code> 报「字典值类型不匹配」✗ ⇒ 改显式 <code>Dict[string, any]</code> + 子字典先建成变量再整体塞入。<strong>并落地"示例冒烟门禁"</strong>（原文建议）：<code>assert/examples_smoke.list</code>（只编译）+ <code>assert/examples_smoke_run.list</code>（编译 + 运行）+ <code>assert/test_examples_smoke.leno</code>，<strong>15 个示例入册</strong>（12 + 3），<strong>只放本来就绿的</strong>（扩清单 = 承诺不许坏）。顺带扫出 <code>examples/array/</code> 仍有 <strong>2 个编译不过</strong>的示例（<code>方法调用测试.leno</code>、<code>测试 map + 匿名函数 .leno</code>）—— <strong>已登记、未修</strong>，也未入清单。⚠ <strong>后续（2026-09-27）</strong>：<code>examples/array/</code> 与 <code>examples/dict/</code> <strong>两个目录已整体删除</strong> —— 那批示例是"纯 print、零断言"的手工演示（覆盖已被 <code>assert/test_arrays_module</code> / <code>test_array_methods</code> / <code>test_array_ref</code> / <code>test_array_bounds</code> / <code>test_dict*</code> 等超过），其中一个（<code>深拷贝功能.leno</code>）更是<strong>坏的</strong>（<code>original.copy()</code> 运行期报"类型 object 上不存在方法 'copy'"）；连同那 2 个编译不过的示例一起消失 ⇒ 本条"未修"的残留<strong>随之作废</strong>。唯一值得抢救的"嵌套容器类型不变性"已收进 <code>assert/test_diag_static_errors.leno</code>；<code>examples_smoke.list</code> 里对应的 6 行也一并摘掉（门禁会断言文件存在，留着就红）</td>
+</tr>
+<tr>
+<td>P8</td>
+<td><strong>已补齐</strong> ✓</td>
+<td><code>module_files.md</code> 写明实测语义：<code>files.read</code> 失败<strong>抛运行时错误「无法打开文件」</strong>（带行号）—— <strong>既不是 <code>""</code> 也不是 <code>null</code></strong></td>
+</tr>
+<tr>
+<td>P9</td>
+<td><strong>已根治</strong> ✓</td>
+<td>源清单<strong>只剩三份数据文件</strong>：<code>sources_core.txt</code>（52，共享核心）/ <code>sources_compiler.txt</code>（33，编译器专属）/ <code>sources_vm.txt</code>（1，VM 入口 <code>vm_main.c</code> —— 与 <code>src\main.c</code> 互斥，必须单独一份）。<code>build.bat</code>、<code>build_vm.bat</code>、<strong><code>build.sh</code></strong> 全改成<strong>读它们</strong>（此前三份各自内联 ✗，<code>build.sh</code> 的注释甚至写着"以 build.bat 为准"却已漂移）；平台/架构相关的两项（Windows FFI、JIT 后端）不进清单，仍由各脚本按平台追加。两个 <code>.bat</code> 现为<strong>纯 ASCII</strong>（<code>build.bat</code> 那 1 行中文注释译成英文 ⇒ GBK 陷阱清零）。新增门禁 <code>assert/test_build_lists.leno</code>：清单非空 / 路径<strong>真实存在</strong>（改名忘更新即红）/ <strong>不许跨清单重复</strong> / 两个 <code>.bat</code> 必须纯 ASCII 且<strong>确实读清单</strong>（防内联回潮）。<strong>验证</strong>：<code>build.bat</code> ✓、<code>build_vm.bat</code>（console+gui 两个产物）✓、端到端 <code>leno.exe -c</code> → <code>leno_vm.exe</code> 真跑 <code>RAN_OK</code> ✓（证明 VM 清单完整）、门禁 passed（core=52/compiler=33/vm=1）、套件 <strong>332/0</strong>。<strong>未验证</strong>：<code>build.sh</code> —— 本机<strong>没有 bash</strong>（改动只是"同读清单"，等价物无法在此自动跑，已如实登记）。<strong>顺带</strong>：非 ASCII 检测<strong>没用 shell</strong>（先写 findstr/grep 版，实测引号玄学 + 把纯 ASCII 文件误判成含非 ASCII ✗），改成纯 Leno 的 <code>strings.byte_len(s) != s.len()</code>，并用含中文的 <code>build.sh</code> 做<strong>阳性对照</strong> ✓</td>
+</tr>
+<tr>
+<td>J1</td>
+<td><strong>仍暂缓</strong>（未动）</td>
+<td>本文自带量化结论：JIT 39.88 s vs 关 JIT 38.38 s ⇒ 该热路径 <strong>JIT 零收益（反而慢 4%）</strong>；修法方向（<code>OP_CAST_INT</code> 的整数来源通道）已写在文末附 B</td>
+</tr>
+</tbody>
+</table>
+<p><strong>"别改坏的东西"那 5 条</strong>（报错带行列+修法提示、<code>Bailout: … 触发指令=OP_xxx</code>、<code>LENO_*</code> 开关、assert 自动发现、<code>§</code> 编号复盘）在 2026-09-18 复核时<strong>都还在</strong> ✓。</p>
+<hr>
+<h2 id="p1-any-收窄的报错提示缺了最关键的一句-机制已有-只是没引导到位">P1 <code>any</code> 收窄的报错提示缺了最关键的一句（机制已有，只是没引导到位）</h2>
+<p><strong>实测三条真实报错</strong>（<code>trae_sign.leno</code> 编译期）：</p>
+<ol>
+<li><code>不能在 any 类型 'd' 上直接访问字段 'token'</code>
+   ＋ 提示 <code>使用 if d is Type { d.token } 进行类型收窄</code>；</li>
+<li>照提示加窄后仍然失败：
+   <code>类型错误：变量 'ad' 声明类型与初始化值类型不匹配 / 期望类型: Dict[unknown, unknown]，实际类型: any</code>
+   ＋ 提示 <code>any 类型需要显式转换后才能赋值给具体类型变量</code>；</li>
+<li>想找显式转换：<code>types</code> 模块只注册了
+   <code>_bool/_byte/_float/_int/_int32/_int64/_ptr/_str/_uint32/_uint64/_uint8</code> ⇒ <strong>没有 <code>_dict()</code>/<code>_array()</code></strong> ✗。</li>
+</ol>
+<p><strong>真相</strong>（<code>类型收窄与绑定语法改进.md</code> 第 10~17 行）：收窄成<strong>裸 <code>Dict</code></strong>，取出的元素仍是 <code>any</code> ✗；
+<strong>必须收窄/声明成带泛型参数的</strong>（<code>Dict[string, any]</code> / <code>Array[int]</code> …）取出来才带类型 ✓。</p>
+<p><strong>建议（都很小、收益很大）</strong>：
+- 报错 1 的提示补一句：<code>收窄到裸 Dict 取元素仍是 any；请用 Dict[string, any]（见 docs/类型收窄与绑定语法改进.md）</code>；
+- 报错 2 把"需要显式转换"改成"<strong>转换成带泛型参数的容器类型</strong>（如 <code>Dict[string, any]</code>）"；
+- （可选）提供 <code>_dict(x)</code> / <code>_array(x)</code> 强转；或让 <code>jsons.decode</code> 返回 <code>Dict[string, any]</code>；
+- <code>module_jsons.md</code> 的 <code>decode</code> 小节加一句"返回 <code>any</code>；取值需 <code>Dict[string, any]</code> 收窄"。</p>
+<p><strong>本次绕法（30 行，供参考）</strong>：把收窄集中到一层 —— <code>json_get / json_obj / json_keys</code>
+（业务代码只跟 <code>string</code> / <code>Array[string]</code> 打交道 ✓）。<strong>工作量大头全在这里</strong>，去掉它这次能省一半时间 ✓。</p>
+<h2 id="p2-解释器吃掉脚本的-xxx-旗标">P2 解释器吃掉脚本的 <code>--xxx</code> 旗标</h2>
+<p><strong>实测</strong>：<code>build\leno.exe trae_sign.leno --list</code> ⇒ <strong>打印解释器自己的帮助、脚本根本没跑</strong> ✗
+（参考件 <code>trae-checkin.js</code> 的 CLI 全是 <code>--status/--json/--list</code> ⇒ 照抄必踩 ✗）。</p>
+<p><strong>建议</strong>：遇到<strong>第一个非旗标参数（脚本路径）后停止解析自己的旗标</strong>；或支持 <code>--</code> 终止符；或整体透传 ✓。</p>
+<p><strong>本次绕法</strong>：改成位置子命令 <code>list/status/diag/json/app</code> ✓（已写进工具 README ✓）。</p>
+<p><strong>已修（分两步）</strong>：
+- <strong>2026-09-18（一半）</strong>：脚本路径之后<strong>不认识</strong>的 <code>--xxx</code> 一律原样传给脚本（<code>src/main.c</code> 的
+  "★ P2 修复"）；<code>_args()</code> 同步是"脚本路径之后整段原样切片" ✓。
+- <strong>2026-09-26（彻底）</strong>：与<strong>内置名撞名</strong>的参数仍被吃掉 ⇒ <code>leno x.leno -v</code> 会打印版本、
+  <strong>脚本永不执行</strong> ✗；<code>x.leno --no-cache</code> 还会"双重生效"（脚本收到 + 解释器也照做）✗。
+  现在判定统一为「<strong>内置旗标写在脚本路径之前</strong>」—— 见到脚本路径（或 <code>--</code>）之后，解析循环
+  一律 <code>continue</code> 交给脚本。实测：<code>test_args.leno -v</code> ⇒ 脚本收到 <code>-v</code> ✓；
+  <code>test_args.leno --no-cache --nodash</code> ⇒ 两个都只进脚本 ✓；<code>-v</code>/<code>-c</code> 写在<strong>前面</strong>行为不变 ✓；
+  断言 376 passed / 0 failed ✓。帮助文案同步（说明行 + <code>-p -o release test.leno</code> 例子）。</p>
+<h2 id="p3-lenoweb-setheaders-是替换语义-静默覆盖-服务端误导性错误">P3 <code>LenoWeb.setHeaders</code> 是替换语义 —— 静默覆盖 ＋ 服务端误导性错误</h2>
+<p><strong>实测</strong>：分两次调用 <code>setHeaders</code>（第二次只补 <code>X-User-Region</code>）⇒ 前三个头（<code>Content-Type</code> /
+<code>Authorization: Cloud-IDE-JWT …</code> / <code>x-device-id</code>）<strong>被覆盖</strong>⇒ 服务端收到未鉴权请求，回
+<code>HTTP 200 {"code":1001,"message":"...not able to authenticate you..."}</code> —— <strong>看起来完全像"token 过期"</strong> ✗✗
+（差点误判；实测 token 与参考实现逐字相同 ✓）。</p>
+<p><strong>加重问题</strong>：<code>leno_module/LenoWeb/examples/custom_headers.leno</code> <strong>自己就分了两次</strong> <code>setHeaders</code>
+（先设 5 个头，再单独补 <code>Referer</code>）⇒ <strong>示例在教一个会丢头的用法</strong> ✗。</p>
+<p><strong>建议</strong>：
+- 改追加语义；或保留替换但改名 <code>replaceHeaders</code>，另提供 <code>addHeader</code>；
+- 修 <code>custom_headers.leno</code>；<code>docs/</code> 里补一句语义说明；
+- 服务端 401/业务 1001 这类"鉴权失败"，模块层若能给出"是否真的发出了 Authorization 头"的诊断会更好 ✓。</p>
+<p><strong>本次绕法</strong>：按有无 region 走<strong>两条完整头列表</strong>、只调一次 <code>setHeaders</code> ✓（并在工具里写了注释警告 ✓）。</p>
+<h3 id="2026-10-07-已落实-用户拍板">✅ 2026-10-07 已落实（用户拍板）</h3>
+<p><code>web_net.leno</code> 的请求头 API 拆成两个"名字即语义"的方法（<code>setHeaders</code> 这个名字<strong>不再存在</strong>，从根上消掉误导）：</p>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>replaceHeaders([...])</code></td>
+<td><strong>整表替换</strong>（= CURLOPT_HTTPHEADER）—— 要设多个头就一次给全</td>
+</tr>
+<tr>
+<td><code>addHeaders([...])</code></td>
+<td><strong>追加</strong>（保留已设的头）—— "补一个头"用这个</td>
+</tr>
+<tr>
+<td><code>headers()</code></td>
+<td>回读当前头表（自检/诊断）</td>
+</tr>
+</tbody>
+</table>
+<p>调用点<strong>全量改名</strong>（20 处）：<code>lib/web_net.leno</code>（含 <code>setBrowserHeaders</code>、<code>_sessionPrepare</code>）、
+<code>lib/web_crawler.leno</code>、<code>examples/01_HTTP基础/{custom_headers,post_json}.leno</code>、
+<code>examples/07_综合测试/full_test.leno</code>、<code>examples/09_实战验证/{bilibili_download,audius_music}.leno</code>、
+<code>leno_gui/应用/Trae签到/{trae_core,trae_sign}.leno</code>。
+<code>custom_headers.leno</code> 现在<strong>同时演示两种语义</strong>（6 个头用 <code>replaceHeaders</code> 一次给全，再 <code>addHeaders</code> 补一个）
+⇒ 示例不再教坏用法 ✓。</p>
+<p>顺带修掉两处<strong>隐性缺陷</strong>：</p>
+<ol>
+<li><strong><code>setBearerToken</code> 绕过头表</strong>：原实现自己 <code>curl_slist_append</code> 后直接 setopt，既不同步 <code>_headers</code>
+   （⇒ 随后任何一个 <code>addHeaders</code> 都会把 Authorization 冲掉），那份 slist 也从不释放。现改走
+   <code>replaceHeaders</code>，与 <code>_headers</code> 同一份状态 ✓</li>
+<li><strong>slist 从不释放</strong>：<code>curl_easy_setopt(CURLOPT_HTTPHEADER, …)</code> <strong>不接管所有权</strong>，原实现每次设头都新建一份
+   且永不 <code>curl_slist_free_all</code> ⇒ 每个客户端漏一份。现在 <code>_applyHeaders</code> 换表后<strong>释放旧表</strong>、
+   <code>close()</code>/<code>reset()</code> 收尾（⚠ <code>reset</code> 里顺序必须是 <code>easyReset</code> <strong>之后</strong>才放，否则 use-after-free）。</li>
+</ol>
+<p><strong>验证</strong>：新增用例 <code>test_headers_api.leno</code>（17 判据：替换覆盖 / 追加保留 / 回读 / <strong>500 次反复替换</strong>
+/ 空表 / reset / close / 新客户端独立），已入 <code>run_tests.leno</code> 清单 ⇒ 套件 <strong>17/17 通过</strong> ✓；
+Trae 工具数据层自测 <code>test_core_and_history.leno</code> 改名后照常全过 ✓。</p>
+<p><strong>遗留（有意）</strong>：<code>replaceHeaders([])</code> 现为"<strong>不碰 handle</strong>"（它可能仍引用旧 slist，此时释放 = use-after-free）
+⇒ 真要清空已设的头，目前请<strong>重建客户端</strong>。空表极罕见，不值得为它引内存风险 ✓</p>
+<h2 id="p4-空数组-var-a-元素类型-any-报错点离现场很远">P4 空数组 <code>var a = []</code> ⇒ 元素类型 <code>any</code>，报错点离现场很远</h2>
+<p><strong>实测</strong>：<code>Array[string] acc = []</code> 才对；写 <code>var acc = []</code> 之后 <code>emit_json(acc[0], …)</code> 报
+<code>期望 string，实际 any</code> ✗ —— 报错在<strong>使用处</strong>，而修法在<strong>声明处</strong> ✗。</p>
+<p><strong>建议</strong>：空数组字面量的元素类型<strong>从首次 <code>.add(v)</code> 推断</strong>；或在声明处给"元素类型未定，后续只能当 any 用"的提示 ✓。</p>
+<h2 id="p5-只有-_env-读-没有-_setenv-写">P5 只有 <code>_env</code>（读），没有 <code>_setenv</code>（写）</h2>
+<p><strong>实测</strong>：给子进程设环境变量只能借 shell —— Windows <code>set X=v&amp;&amp; …</code>（<code>&amp;&amp;</code> 前不能留空格，否则值带尾空格 ✗）、
+POSIX <code>X=v cmd</code> ⇒ 平台分支 ＋ 引号坑 ✓（写 <code>assert/test_plane_war_headless.leno</code> 时踩过 ✓）。</p>
+<p><strong>建议</strong>：加 <code>_setenv(name, value)</code>；或 <code>_exec(cmd, env_dict)</code> ✓。</p>
+<h2 id="p6-_exec-与测试运行器都没有超时">P6 <code>_exec</code> 与测试运行器都没有超时</h2>
+<p><strong>实测</strong>：子进程挂住 ⇒ 父进程／整套断言一起挂 ✗（本次只能用 <code>Start-Process + WaitForExit</code> 从<strong>外部</strong>兜 ✓）。</p>
+<p><strong>建议</strong>：<code>_exec(cmd, timeout_ms)</code>；<code>assert/run_tests.leno</code> 给每个测试加超时，超时计 FAIL 并 kill ✓
+（现在一个挂死的 GUI 测试会拖死整个套件 ✗）。</p>
+<h2 id="p7-跨模块相对路径冗长-示例腐化">P7 跨模块相对路径冗长 ＋ 示例腐化</h2>
+<p><strong>实测</strong>：从 <code>应用示例/Trae签到/</code> 引 LenoWeb 要写 <code>../../../../LenoWeb/lib/web_net.leno</code> ✗；
+<code>examples/jsons/复杂json解析.leno</code> 硬编码了<strong>另一台机器</strong>的路径 <code>D:\CLeno\Leno\test\jsons\cs.json</code> ✗
+⇒ 示例已经在腐化，且它是 <code>jsons</code> 的"示范用例"之一 ⇒ 会误导（我就是先被它误导过一次 ✓）。</p>
+<p><strong>建议</strong>：模块路径支持包名解析（<code>import "LenoWeb"</code>，与 <code>--install</code> 体系打通）；示例一律用<strong>仓库相对路径</strong>；
+加一个"示例可运行"冒烟门禁（跑一遍 <code>examples/**</code> 里的小脚本，失败即报）✓。</p>
+<h2 id="p8-files-read-失败语义没写清">P8 <code>files.read</code> 失败语义没写清</h2>
+<p><strong>实测</strong>：写 fixture 冒烟测试时得靠 <code>enc.len() &lt; 32</code> 兜底 ✗；<code>module_files.md</code> 没写失败返回值 ✓。</p>
+<p><strong>建议</strong>：文档写明；或提供 <code>files.read_or(path, default)</code> / 失败返回 <code>null</code> 且类型上可见 ✓。</p>
+<h2 id="p9-构建-build_vm-bat-与-build-bat-是两套源码清单-且-build_vm-bat-是-gbk-文件">P9 构建：<code>build_vm.bat</code> 与 <code>build.bat</code> 是<strong>两套源码清单</strong>；且 <code>build_vm.bat</code> 是 GBK 文件</h2>
+<p><strong>现象</strong>（2026-09-18，本机）：</p>
+<pre><code>module_symbol_table.c:(.text+...): undefined reference to `parser_eval_const_expr_text'
+jit_scan.c:(.text+...):           undefined reference to `opcode_name'   ×6（jit.c 还有）
+collect2.exe: error: ld returned 1 exit status
+VM build failed
+</code></pre>
+<p><strong>真因</strong>（两条都是<strong>清单漏项</strong>，不是代码错 ✗）：</p>
+<ol>
+<li><code>src\debug.c</code> 被 <code>build.bat</code> 收录、被 <code>build_vm.bat</code> <strong>漏掉</strong> —— 而 <code>debug.c</code> 不只有反汇编函数，
+   它还是 <code>opcode_name()</code> 的<strong>唯一</strong>定义点，JIT 拒收直方图直接用（<code>jit_scan.c</code> ×5、<code>jit.c</code> ×3）✓。
+   <code>build_vm.bat</code> 里原本写着"debug.c 仅包含反汇编函数 ⇒ 通过 LENO_VM_ONLY 条件编译排除" ✗，
+   <strong>但 <code>debug.c</code> 从来没有这个守卫</strong>（<code>LENO_VM_ONLY</code> 只出现在 <code>type.c</code> / <code>leno_vm.h</code>）⇒ 注释与事实不符。</li>
+<li>整个 <code>src\parser\</code> 不在 VM 清单里（这是"no compiler"的<strong>本意</strong> ✓），但 <code>module_symbol_table.c</code> 的
+   <strong>扫描链</strong>（<code>inc/sym_table_scan.inc → inc/scan/*.inc → scan_enum.inc</code>）在 Phase 1 收敛后
+   开始调用真 parser 的 <code>parser_eval_const_expr_text</code> ✗ ⇒ VM-only 链接缺符号。</li>
+</ol>
+<p><strong>修法</strong>（已做）：</p>
+<ul>
+<li><code>build_vm.bat</code> 补 <code>src\debug.c</code> ✓（反汇编在 VM 里没人调，链进去无害，<code>-s</code> 会剥符号 ✓）；</li>
+<li><code>parser_eval_const_expr_text</code>：VM 运行时<strong>不做源码扫描</strong>（<code>module_symbol_table_scan</code> 的唯一外部
+  调用方是语义分析 <code>src/semantic/visitinc/visit_module.inc</code>；VM 侧 <code>module_loader.c</code> / <code>vm.c</code> /
+  <code>serialize.c</code> 都不碰 <code>module_symbol_table_*</code>，它靠<strong>反序列化</strong>符号表 + 吃 <code>.lenb</code> ✓）⇒ VM-only 下
+  给占位实现，<strong>够不到就硬失败</strong>（<code>abort()</code> + <code>[fatal]</code>：宁可炸，也不要静默给错枚举值 ✓）；</li>
+<li><strong>验证手段</strong>（可照抄）：链接后拿<strong>只存在于 <code>debug.c</code> 的枚举名</strong>当探针，在 exe 字节流里搜
+  <code>OP_CMPJMP_LI_INT</code> ⇒ <code>True</code> 才说明表真链进去了 ✓（只看 <code>build successful</code> 会被下面的坑骗 ✗）；
+  再加端到端 <code>leno.exe -c x.leno</code> → <code>leno_vm.exe x.lenb</code> 真跑一遍 ✓。</li>
+</ul>
+<p><strong>附带踩到（比上面阴得多）</strong>：<code>build_vm.bat</code> 原本是 <strong>GBK</strong> 文件，我用编辑器改一次 ⇒ <strong>整个文件被重写成
+UTF-8</strong> ✗ ⇒ cmd 按 GBK 控制台解码 ⇒ 中文注释被切碎、碎片被当命令执行：</p>
+<pre><code>'ebug.c' 不是内部或外部命令
+'defined' 不是内部或外部命令
+'入此版本，启动时无黑窗口' 不是内部或外部命令
+</code></pre>
+<p>却因为<strong>功能性的 <code>set</code> 行都是 ASCII</strong> 而照样 <code>VM build successful</code> ✗✗ —— 最危险的"看起来成功了"。
+⇒ 该文件现已<strong>纯 ASCII</strong> ✓（文件头写明原因 ✓）；<strong><code>build.bat</code> 里也有中文注释、同样是 GBK</strong> ✗，
+下次谁用 UTF-8 编辑器改它就会复现 ✓。</p>
+<p><strong>建议（根治）</strong>：① 两份清单<strong>合一</strong>（抽 <code>sources_core.txt</code> / <code>sources_compiler.txt</code>：<code>build.bat</code>
+= 两者相加、<code>build_vm.bat</code> = 前者，或让 VM 清单由全量清单<strong>减去</strong>编译器清单生成 ✓）；
+② 加<strong>构建门禁</strong>：改了公共文件就至少 <code>build_vm.bat</code> 必须能过（这次是"只跑了 <code>build.bat</code>" ⇒ VM-only
+静默腐化 ✓）；③ <code>.bat</code> 一律 ASCII 注释（中文解释放文档/源码注释 ✓，或用 <code>chcp 65001</code> 且确保无 BOM ✓）。</p>
+<h2 id="j1-jit-性能向-非正确性-真实热点-sha512_bytes-被-op_cast_int-bail-拉黑">J1 JIT（性能向，非正确性）：真实热点 <code>sha512_bytes</code> 被 <code>OP_CAST_INT</code> bail 拉黑</h2>
+<blockquote>
+<p><strong>状态：已记录 · 暂缓（2026-09-18）</strong> —— 本机太慢（<code>_jit_bugs/bench_sha512.leno</code> 的 2000 次
+SHA-512 基准要跑 ~40 s），<strong>暂不动 JIT 代码</strong> ✓。量化数据与修法方向见文末<strong>附 B</strong>；
+影响面已实测：对 TraeSign 签到本身只有 ~60 ms（≈无感），只有<strong>批量哈希</strong>负载才明显 ✓。</p>
+</blockquote>
+<p>跑签到工具时的真实统计：</p>
+<pre><code>Bailouts: 6
+Bailout: fn='sha512_bytes' loop_bc=650 x3 — 非溢出类 @bc_off=716 | 触发指令=OP_CAST_INT
+Bailout: fn='sha512_bytes' loop_bc=821 x3 — 非溢出类 @bc_off=886 | 触发指令=OP_CAST_INT
+</code></pre>
+<p>⇒ 两个循环各 3 次后<strong>被拉黑</strong> ⇒ 纯 Leno 的 SHA-512 <strong>从 JIT 掉回解释器</strong> ✓（结果正确 ✓，纯性能）。
+签到工具每次都要算 SHA-512（派生密钥要两次 SHA-512）⇒ 值得单独当一条 JIT 案例（补 <code>OP_CAST_INT</code> 覆盖）✓。</p>
+<p><strong>顺带：本轮验证有效的"修法范式"（建议固化成 JIT 规则）</strong>
+1. <strong>类型只能来自"产出者"</strong>：产出指令白名单 / 序言按 slot 建的位图 / callout 的 Value→raw 转换点标志 ✓；
+   <strong>不要用值域猜</strong> ✗ —— 任何 int48 raw 同时都是合法 double 位型（小=次正规、大=正规）⇒ 值域判据<strong>必错一半</strong>
+   （<code>§8.103 / §8.105 / §8.126 / §8.127</code> 四处同族缺陷的总根因 ✓）；
+2. <strong>优先在"转换点"修、不要在"是否编译"上修</strong> ✗✗ —— 后者命中即 bail ⇒ 解释器重做整轮、JIT 半轮副作用
+   不回滚 ⇒ <strong>副作用执行两遍的数据污染</strong>（<code>§8.126</code> 实测 <code>G.len()=204</code> 应为 201 ✓）；
+3. 写 JIT×VM 分叉探针时，<strong>RHS 必须依赖循环变量</strong> ✗ —— 否则 LICM 把循环不变量提升出循环，测试<strong>假绿</strong>
+   （<code>§8.128</code> 的教训：5 个形态全空结论 ✓）。</p>
+<h2 id="别改坏的东西-这次实测里明确-好用-的部分">别改坏的东西（这次实测里明确"好用"的部分）</h2>
+<ol>
+<li><strong>报错带行列 ＋ 原因 ＋ 修法提示</strong> ✓（<code>提示: 使用 if x is Type { … }</code> 这类是真的省时间 ✓ —— 只需按 P1 补一句）；</li>
+<li><strong>JIT 统计里的 <code>Bailout: fn=… 触发指令=OP_xxx</code></strong> ✓ —— 这次一眼定位 sha512 的拉黑点，硬资产 ✓；</li>
+<li><strong><code>LENO_*</code> 诊断开关</strong>（<code>LENO_NO_JIT</code> / <code>LENO_JIT_CLOG</code> / <code>LENO_GC_FORCE_EVERY</code> / <code>LENO_NO_JIT_YIELD</code> …）✓；</li>
+<li><strong><code>assert</code> 套件自动发现 <code>test_*.leno</code></strong> ＋ <code>jit_probes</code> 门禁 ＋ 绝对期望值断言的纪律 ✓；</li>
+<li><strong><code>§编号</code> 式复盘文档</strong>（<code>docs/archive/JIT实现与调试记录.md</code>）✓ —— 这个项目最值钱的习惯，别丢 ✓。</li>
+</ol>
+<h2 id="落地顺序建议">落地顺序建议</h2>
+<ol>
+<li><strong>P1 / P2 / P3</strong>：都是小改，直接消掉"卡住人"的体验（一次提交能全做完 ✓）；</li>
+<li><strong>P5 / P6</strong>：工具链必备（写测试、写工具都要用）✓；</li>
+<li><strong>P4 / P7 / P8</strong> ＋ <strong>J1</strong>（<code>OP_CAST_INT</code> 覆盖）✓；</li>
+<li>例行的<strong>示例冒烟门禁</strong>（防 P7 复发）✓。</li>
+</ol>
+<hr>
+<h2 id="附-两项-根治类-方案的性价比实测-2026-09-18">附：两项"根治类"方案的性价比实测（2026-09-18）</h2>
+<h3 id="a-全量运行期类型位图-覆盖所有-vstack-槽-所有局部量-结论-不做">A. 全量运行期类型位图（覆盖所有 vstack 槽 + 所有局部量）—— <strong>结论：不做</strong></h3>
+<p><strong>成本</strong>（代码清点，不是估计）：</p>
+<ul>
+<li>局部量写点：<code>EMIT_STORE_LOCAL</code> 宏<strong>只有 8 个调用点</strong>
+  （<code>x86_64.c:1254</code>、<code>ops_loop.inc:59/77/102/287/348</code>、<code>ops_stack.inc:155/164</code>）⇒ 改 1 个宏即可覆盖 ✓；</li>
+<li>但有 <strong>6 处不走该宏</strong>：<code>ops_local.inc</code> 的 <code>OP_INC/DEC_LOCAL</code>、<code>OP_INC/DEC_LOCAL_NOPUSH</code>、
+  <code>OP_PRE_INC/PRE_DEC_LOCAL</code>（§8.44 寄存器折叠路径），再加 <code>OP_MOVE_LOCAL/_POP</code>、<code>OP_SET_LOCAL_CONST</code>、
+  <code>OP_CLEAR_LOCAL_RANGE</code> ⇒ <strong>共约 10~12 处</strong>；</li>
+<li>每处 +1 条指令（<code>BTS</code>/<code>BTR</code> 常量位号），但局部量写点在<strong>热路径</strong>上（每次循环迭代都可能命中）✗；</li>
+<li>"来源未知"的写点只能保守 <code>BTR</code>（清位）⇒ 多数写点白付 ✗。</li>
+</ul>
+<p><strong>收益</strong>（逐项核对）：</p>
+<table>
+<thead>
+<tr>
+<th>期望收益</th>
+<th>实测结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修掉"写回把裸 int48 当 float 存进 <code>frame-&gt;locals</code>"（静默错值）</td>
+<td><strong>无已证错值</strong> ✗ —— 静态类型局部量不可能变型（<code>float→int</code> 编译期报错、<code>int→float</code> 隐式转换后存的仍是 double），<code>any</code> 型局部量存的是<strong>装箱 Value</strong> ⇒ 写回两条分支都安全（§8.128 已记录）</td>
+</tr>
+<tr>
+<td>撤掉 §8.127 的"局部量在循环内不被写入"限制</td>
+<td><strong>唯一确定收益</strong>，但只是<strong>精度</strong>：<code>±0.0 / 次正规</code>元素的类型标签（数值相同 ✓）</td>
+</tr>
+<tr>
+<td>覆盖 <code>arr[i]</code> / callout 返回值</td>
+<td>已由 §8.128 的"callout 转换点标志"覆盖 ✓（1 条 <code>setne</code>/callout，比全量位图便宜两个数量级）</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ <strong>成本压在热路径、收益只是窄精度</strong> ⇒ 不做 ✓。要"统一语义"就继续走
+"<strong>在转换点 / 产出点顺手记类型</strong>"这条路（§8.127 静态通道 + RBX 位图、§8.128 callout 标志
+都是这个模式，边际成本 0~1 条指令 ✓）。</p>
+<h3 id="b-j1-sha512_bytes-的-op_cast_int-bailout-已量化">B. J1（<code>sha512_bytes</code> 的 <code>OP_CAST_INT</code> bailout）—— <strong>已量化</strong></h3>
+<p>新增 <code>_jit_bugs/bench_sha512.leno</code>（2000 × SHA-512(64B)，自报耗时；两模式 checksum 必须一致）：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>checksum</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JIT（默认）</td>
+<td>388000 ✓</td>
+<td><strong>39.88 s</strong>（<code>sha512_bytes</code> 两个循环被 <code>触发指令=OP_CAST_INT</code> bail ×3 拉黑）</td>
+</tr>
+<tr>
+<td><code>LENO_NO_JIT=1</code></td>
+<td>388000 ✓</td>
+<td><strong>38.38 s</strong></td>
+</tr>
+</tbody>
+</table>
+<p>⇒ <strong>JIT 在这条真实热路径上是零收益（反而慢 4%）</strong> ✗：热循环被拉黑后整段掉回解释器，
+只剩下 JIT 的进出 / 写回开销 ✓。</p>
+<p><strong>影响面（如实）</strong>：TraeSign 每次签到只算 2~3 次 SHA-512（≈60 ms）⇒ 对<strong>签到工具</strong>几乎无感 ✗；
+对<strong>批量哈希</strong>类负载（<code>examples/crypto/file_encrypt</code>、大文件校验）才明显 ✓。</p>
+<p><strong>可行修法方向</strong>（<strong>不是</strong>全量位图）：给 <code>OP_CAST_INT</code> 一条<strong>整数来源通道</strong> —— <code>&amp; | ^ &lt;&lt; &gt;&gt;</code> 这类
+在"两个操作数都已是 int"时结果必为 int（JIT 若走了 int 路径，就说明两个操作数已经是 int ✓）
+⇒ 按<strong>逐 opcode 的来源规则</strong>扩展 provenance 格，<strong>不需要在每个写点付指令</strong> ✓。
+动手前要先确认这几条 opcode 在 JIT 里是否单路径（§8.116 的教训：只信单路径 ✓）。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#清单-按-消掉卡顿-的性价比排序">清单（按"消掉卡顿"的性价比排序）</a></li><li><a href="#复核结论-2026-09-18-逐条实测-读码-含-哪些已过期">复核结论（2026-09-18 逐条实测/读码，含"哪些已过期"）</a></li><li><a href="#p1-any-收窄的报错提示缺了最关键的一句-机制已有-只是没引导到位">P1 any 收窄的报错提示缺了最关键的一句（机制已有，只是没引导到位）</a></li><li><a href="#p2-解释器吃掉脚本的-xxx-旗标">P2 解释器吃掉脚本的 --xxx 旗标</a></li><li><a href="#p3-lenoweb-setheaders-是替换语义-静默覆盖-服务端误导性错误">P3 LenoWeb.setHeaders 是替换语义 —— 静默覆盖 ＋ 服务端误导性错误</a></li><ul class="lv3"><li><a href="#2026-10-07-已落实-用户拍板">✅ 2026-10-07 已落实（用户拍板）</a></li></ul><li><a href="#p4-空数组-var-a-元素类型-any-报错点离现场很远">P4 空数组 var a = [] ⇒ 元素类型 any，报错点离现场很远</a></li><li><a href="#p5-只有-_env-读-没有-_setenv-写">P5 只有 _env（读），没有 _setenv（写）</a></li><li><a href="#p6-_exec-与测试运行器都没有超时">P6 _exec 与测试运行器都没有超时</a></li><li><a href="#p7-跨模块相对路径冗长-示例腐化">P7 跨模块相对路径冗长 ＋ 示例腐化</a></li><li><a href="#p8-files-read-失败语义没写清">P8 files.read 失败语义没写清</a></li><li><a href="#p9-构建-build_vm-bat-与-build-bat-是两套源码清单-且-build_vm-bat-是-gbk-文件">P9 构建：build_vm.bat 与 build.bat 是两套源码清单；且 build_vm.bat 是 GBK 文件</a></li><li><a href="#j1-jit-性能向-非正确性-真实热点-sha512_bytes-被-op_cast_int-bail-拉黑">J1 JIT（性能向，非正确性）：真实热点 sha512_bytes 被 OP_CAST_INT bail 拉黑</a></li><li><a href="#别改坏的东西-这次实测里明确-好用-的部分">别改坏的东西（这次实测里明确"好用"的部分）</a></li><li><a href="#落地顺序建议">落地顺序建议</a></li><li><a href="#附-两项-根治类-方案的性价比实测-2026-09-18">附：两项"根治类"方案的性价比实测（2026-09-18）</a></li><ul class="lv3"><li><a href="#a-全量运行期类型位图-覆盖所有-vstack-槽-所有局部量-结论-不做">A. 全量运行期类型位图（覆盖所有 vstack 槽 + 所有局部量）—— 结论：不做</a></li><li><a href="#b-j1-sha512_bytes-的-op_cast_int-bailout-已量化">B. J1（sha512_bytes 的 OP_CAST_INT bailout）—— 已量化</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/性能测试总结_Leno_vs_Python.html">← 上一篇</a><a href="../archive/枚举求值与模块符号表问题.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

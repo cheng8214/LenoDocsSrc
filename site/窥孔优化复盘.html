@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>窥孔优化 Bug 复盘与未来重写注意事项 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="窥孔优化复盘.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">窥孔优化 Bug 复盘与未来重写注意事项</span></span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html" class="active" aria-current="page">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="窥孔优化-bug-复盘与未来重写注意事项">窥孔优化 Bug 复盘与未来重写注意事项</h1>
+<blockquote>
+<p>⚠ <strong>局部过时（2026-10-02 注）</strong>：文中 <code>.lenocache</code> 是当时的编译缓存目录名，现为
+<code>.lenomc</code> / <code>.lenosymc</code> / <code>entry_*.lenb</code>；窥孔的实现细节属<strong>栈式 codegen</strong>，寄存器式改造时
+<code>codegen_*.c</code> 已整体重写 ⇒ <code>file:line</code> 与函数名多已对不上。
+<strong>"窥孔改动必须双向交替 A/B + 用 <code>--debug</code> 盯字节码实证"的方法论仍然有效</strong>，
+这是本文留档的主要价值。</p>
+</blockquote>
+<h2 id="1-bug-概述">1. Bug 概述</h2>
+<p><strong>现象</strong>：<code>test_table_advanced.leno</code> 运行时报错 <code>cstruct 字段名必须是字符串，但实际类型为 'float'</code>，随后发现是常量池越界（<code>OP_CONST const_idx=152</code>，但 <code>const_cnt=144</code>）。</p>
+<p><strong>根因</strong>：<code>gen_expr_stmt</code> 中的窥孔优化通过检查 <code>code[len-1]</code> 的字节值来判断最后发射的指令是否为 <code>OP_DICT_SET</code>（1 字节指令），从而跳过 <code>OP_POP</code>。但 <code>code[len-1]</code> 可能是前一条<strong>多字节指令的最后一个操作数字节</strong>，其数值恰好等于 <code>OP_DICT_SET</code> 的枚举值，导致误判。误判后跳过了 <code>OP_POP</code>，栈上多留一个值，后续所有操作全部错位，最终引发各种看似无关的运行时错误。</p>
+<h2 id="2-排查为何耗时如此之久">2. 排查为何耗时如此之久</h2>
+<h3 id="2-1-错误现象与根因之间隔了十万八千里">2.1 错误现象与根因之间隔了十万八千里</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户可见</td>
+<td><code>cstruct 字段名必须是字符串，但实际类型为 'float'</code></td>
+</tr>
+<tr>
+<td>第一层推测</td>
+<td>常量池越界，<code>const_idx=152</code> 但 <code>const_cnt=144</code></td>
+</tr>
+<tr>
+<td>第二层推测</td>
+<td>编译器常量池生成 bug，struct 方法编译未执行</td>
+</tr>
+<tr>
+<td>第三层推测</td>
+<td>模块缓存（<code>.lenocache</code>）自动重建导致跳过编译</td>
+</tr>
+<tr>
+<td><strong>实际根因</strong></td>
+<td>窥孔优化误匹配操作数字节 → 跳过 OP_POP → 栈错位</td>
+</tr>
+</tbody>
+</table>
+<p>从"类型错误"到"栈错位"到"窥孔优化"，中间隔了 5 层推理，每层都有看似合理的解释和排查方向，导致大量时间花在了错误的方向上。</p>
+<h3 id="2-2-模块缓存干扰调试">2.2 模块缓存干扰调试</h3>
+<ul>
+<li><code>.lenocache</code> 会在第一次运行后自动生成，第二次运行命中缓存直接跳过编译器</li>
+<li>加诊断 print 到编译器后，第二次运行看不到任何输出，误以为编译器代码没执行</li>
+<li>用 <code>LENO_NO_CACHE=1</code> 禁用缓存又会因为大模块全量编译导致超时（120秒）</li>
+<li><strong>教训</strong>：调试编译器问题时，每次运行前必须清空 <code>.lenocache</code>，或确认缓存不会干扰诊断输出</li>
+</ul>
+<h3 id="2-3-字节码修补型优化的隐蔽性">2.3 字节码修补型优化的隐蔽性</h3>
+<p>窥孔优化的本质是<strong>先发射正常字节码，再回头修改已发射的字节</strong>。这种"事后修改"有几个致命的隐蔽特性：</p>
+<ol>
+<li><strong>修改发生在字节码层面，不是 AST 层面</strong>：从 AST 结构完全看不出问题，必须看最终生成的字节码才能发现</li>
+<li><strong>误匹配的条件极其苛刻</strong>：需要前一条指令的操作数字节恰好等于目标 opcode 的枚举值，只在特定代码路径组合下触发</li>
+<li><strong>错误传播距离远</strong>：跳过一个 <code>OP_POP</code> 不会立即报错，而是让后续所有操作在错位的栈上运行，最终在某个完全不相关的位置崩溃</li>
+<li><strong>难以复现</strong>：依赖特定的代码序列组合，删一行代码或改一个变量名就可能让 bug 消失或出现</li>
+</ol>
+<h3 id="2-4-中间走了的弯路">2.4 中间走了的弯路</h3>
+<ul>
+<li>怀疑序列化/反序列化 bug → 加 <code>#if 0</code> 禁用主程序序列化路径 → bug 仍在</li>
+<li>怀疑模块编译路径 struct 方法预编译有问题 → 加 <code>[DBG-FUNC]</code> / <code>[DBG-MODULE]</code> 诊断 → 发现 struct 方法编译未出现在输出中 → 以为是编译器没走到那个分支</li>
+<li>实际上是模块缓存命中导致整个编译被跳过，诊断输出自然也没有</li>
+<li>怀疑常量池生成逻辑 → 加 <code>chunk_add_const</code> 诊断 → 但问题根本不在常量池生成，而在字节码被错误修补导致执行流错乱</li>
+</ul>
+<h2 id="3-已删除的窥孔优化清单">3. 已删除的窥孔优化清单</h2>
+<p>以下是通过"先发射正常字节码，再回头修改"方式实现的优化，已全部删除：</p>
+<table>
+<thead>
+<tr>
+<th>优化</th>
+<th>原理</th>
+<th>危险点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OP_CALL_NATIVE → OP_CALL_NATIVE_VOID</code></td>
+<td>检查 <code>code[len-5]</code> 是否为 <code>OP_CALL_NATIVE</code>，改为 VOID 变体省掉 OP_POP</td>
+<td>5字节指令，opcode 在固定位置，相对安全但仍有风险</td>
+</tr>
+<tr>
+<td><code>OP_DICT_SET → OP_DICT_SET_NOPUSH</code></td>
+<td>检查 <code>code[len-1]</code> 是否为 <code>OP_DICT_SET</code>，改为 NOPUSH 变体</td>
+<td><strong>1字节指令，code[len-1] 极易与操作数字节碰撞，这就是 bug 根源</strong></td>
+</tr>
+<tr>
+<td><code>OP_SET_LOCAL → OP_SET_LOCAL_POP</code></td>
+<td>复合赋值后检查 <code>code[len-3]</code> 是否为 <code>OP_SET_LOCAL</code></td>
+<td>3字节指令，操作数字节可能碰撞</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-保留的-ast-级前置优化-安全-无-bug">4. 保留的 AST 级前置优化（安全，无 bug）</h2>
+<p>以下优化是在 AST 层面直接判断模式并生成优化字节码，<strong>不回看已生成的字节码</strong>，不存在误匹配风险：</p>
+<ul>
+<li><code>OP_SET_LOCAL_POP</code> — 赋值语句到局部变量，直接生成</li>
+<li><code>OP_MOVE_LOCAL_POP</code> — 局部变量间复制，直接生成</li>
+<li><code>OP_INDEX_SET_NOPUSH</code> — 索引赋值语句，直接生成</li>
+<li><code>OP_INC_LOCAL_NOPUSH</code> / <code>OP_DEC_LOCAL_NOPUSH</code> — i++/i-- 语句，直接生成</li>
+<li><code>OP_ARRAY_APPEND_NOPUSH</code> — arr.add(x) 语句，直接生成</li>
+</ul>
+<p><strong>原则：在 AST 层面做决策，直接发射目标字节码，永远不要回头修改已发射的字节。</strong></p>
+<h2 id="5-未来重写窥孔优化的注意事项">5. 未来重写窥孔优化的注意事项</h2>
+<p>如果未来需要重新引入窥孔优化以恢复性能，必须遵循以下原则：</p>
+<h3 id="5-1-绝对禁止-检查-code-len-n-的字节值">5.1 绝对禁止：检查 <code>code[len-N]</code> 的字节值</h3>
+<pre><code class="language-c">// 禁止：code[len-1] 可能是多字节指令的操作数字节
+if (gen-&gt;chunk-&gt;code[gen-&gt;chunk-&gt;len - 1] == OP_DICT_SET) { ... }
+
+// 禁止：即使检查 code[len-5]，如果中间有变长指令也无法保证位置正确
+if (gen-&gt;chunk-&gt;code[gen-&gt;chunk-&gt;len - 5] == OP_CALL_NATIVE) { ... }
+</code></pre>
+<p>操作数字节是任意值，任何字节值都可能出现在 <code>code</code> 数组中，无法通过字节值区分 opcode 和 operand。</p>
+<h3 id="5-2-推荐方案-a-ast-级前置优化-当前已采用">5.2 推荐方案 A：AST 级前置优化（当前已采用）</h3>
+<p>在 <code>gen_expr_stmt</code> 入口处根据 AST 节点类型直接决定生成哪个字节码，不生成后再修改：</p>
+<pre><code class="language-c">// 正确：在 AST 层面判断，直接生成目标字节码
+if (is_dict_set_pattern(expr)) {
+    emit_byte(gen, OP_DICT_SET_NOPUSH, line);  // 直接生成 NOPUSH 版本
+    return;
+}
+gen_expr(gen, expr);
+emit_byte(gen, OP_POP, line);
+</code></pre>
+<h3 id="5-3-推荐方案-b-结构化追踪-如果前置优化不可行">5.3 推荐方案 B：结构化追踪（如果前置优化不可行）</h3>
+<p>在 <code>CodeGen</code> 中维护结构化的"最后发射的指令"信息，而非检查原始字节：</p>
+<pre><code class="language-c">typedef struct {
+    OpCode opcode;      // 最后发射的 opcode（枚举值，非字节）
+    int offset;         // 该 opcode 在 code[] 中的偏移
+    int total_len;      // 该指令的总长度（含操作数）
+} LastEmission;
+
+// 在 CodeGen 结构体中
+LastEmission last_emission;
+
+// 在每个 emit_xxx 函数末尾设置
+void emit_call_native(CodeGen* gen, ...) {
+    emit_byte(gen, OP_CALL_NATIVE, line);
+    emit_byte(gen, ...);
+    gen-&gt;last_emission = (LastEmission){ OP_CALL_NATIVE, gen-&gt;chunk-&gt;len - 5, 5 };
+}
+</code></pre>
+<p>然后在窥孔优化中检查结构化信息而非原始字节：</p>
+<pre><code class="language-c">// 安全：检查的是枚举值，不是字节值
+if (gen-&gt;last_emission.opcode == OP_CALL_NATIVE) {
+    gen-&gt;chunk-&gt;code[gen-&gt;last_emission.offset] = OP_CALL_NATIVE_VOID;
+    return;
+}
+</code></pre>
+<p><strong>关键</strong>：<code>last_emission</code> 必须在每次 <code>emit_byte</code> 调用后被正确更新，且在 <code>gen_expr</code> 等复杂路径中也要传播。如果中间有任何路径发射了字节码但没有更新 <code>last_emission</code>，追踪就会失效。</p>
+<h3 id="5-4-推荐方案-c-两遍编译">5.4 推荐方案 C：两遍编译</h3>
+<p>第一遍正常编译生成所有字节码（含 <code>OP_POP</code>），第二遍扫描字节码流做优化替换。这种方式可以完整看到每条指令的边界，不会误匹配操作数字节。代价是多一遍扫描，但只对最终 chunk 做一次，不影响编译过程中的逻辑。</p>
+<h3 id="5-5-测试要求">5.5 测试要求</h3>
+<p>重写窥孔优化后，必须通过以下测试：</p>
+<ol>
+<li><strong>全量测试套件</strong>：<code>build/leno.exe assert/run_tests.leno</code> — 246 个测试全部通过</li>
+<li><strong>清缓存后重跑</strong>：删除所有 <code>.lenocache</code> 后重新运行，排除缓存干扰</li>
+<li><strong>Table 控件测试</strong>：<code>test_table_advanced.leno</code> — 这是触发本次 bug 的场景，必须通过</li>
+<li><strong>大量 dict.set / native call 语句的场景</strong>：构造密集使用 <code>dict[k]=v</code> 和 <code>print()</code> 等表达式语句的测试用例，验证栈深度正确</li>
+</ol>
+<h3 id="5-6-代码审查检查清单">5.6 代码审查检查清单</h3>
+<p>引入任何字节码修补型优化时，逐条确认：</p>
+<ul>
+<li>[ ] 是否检查了 <code>code[len-N]</code> 的字节值？如果是，<strong>停止</strong>，改用其他方案</li>
+<li>[ ] 优化的触发条件是否依赖特定指令长度？如果指令集未来新增变长指令，条件是否仍然安全？</li>
+<li>[ ] 操作数字节的取值范围是否与目标 opcode 的枚举值有重叠？（必然有，因为操作数字节是 0-255 全覆盖）</li>
+<li>[ ] 优化跳过 <code>OP_POP</code> 后，是否在所有可能的代码路径组合下都保证栈平衡？</li>
+<li>[ ] 是否有对应的 <code>_NOPUSH</code> / <code>_VOID</code> opcode 在 VM 端实现？</li>
+<li>[ ] 优化是否被 <code>.lenocache</code> 缓存？缓存失效后重新编译是否仍然正确？</li>
+</ul>
+<h2 id="6-时间线">6. 时间线</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>耗时</th>
+<th>做了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初期排查</td>
+<td>较长</td>
+<td>定位到常量池越界，怀疑编译器常量池生成 bug</td>
+</tr>
+<tr>
+<td>诊断迷途</td>
+<td>较长</td>
+<td>加 OP_INDEX 诊断、DBG-FUNC、DBG-MODULE 诊断，被模块缓存误导</td>
+</tr>
+<tr>
+<td>序列化排查</td>
+<td>中等</td>
+<td>禁用序列化路径，确认 bug 在编译器本身</td>
+</tr>
+<tr>
+<td>缓存干扰</td>
+<td>较长</td>
+<td>发现模块缓存自动重建导致诊断失效，尝试 LENO_NO_CACHE 超时</td>
+</tr>
+<tr>
+<td>用户定位</td>
+<td>极短</td>
+<td>用户直接指出窥孔优化是根因</td>
+</tr>
+<tr>
+<td>修复验证</td>
+<td>较短</td>
+<td>删除窥孔优化，编译测试通过</td>
+</tr>
+<tr>
+<td>VM 清理</td>
+<td>较短</td>
+<td>删除 OP_CALL_NATIVE_VOID / OP_DICT_SET_NOPUSH 的 VM 实现</td>
+</tr>
+<tr>
+<td>颜色测试修复</td>
+<td>较短</td>
+<td>test_color_literal.leno 从 #AARRGGBB 改为 #RRGGBBAA</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最大教训</strong>：当错误现象与根因之间隔了多层间接性时，不要在中间层反复加诊断，而应该回到最基础的问题——"字节码是否正确"。直接 dump 出问题函数的完整字节码（含常量池索引和操作数），人工逐步模拟栈操作，是最快定位栈错位类 bug 的方法。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-bug-概述">1. Bug 概述</a></li><li><a href="#2-排查为何耗时如此之久">2. 排查为何耗时如此之久</a></li><ul class="lv3"><li><a href="#2-1-错误现象与根因之间隔了十万八千里">2.1 错误现象与根因之间隔了十万八千里</a></li><li><a href="#2-2-模块缓存干扰调试">2.2 模块缓存干扰调试</a></li><li><a href="#2-3-字节码修补型优化的隐蔽性">2.3 字节码修补型优化的隐蔽性</a></li><li><a href="#2-4-中间走了的弯路">2.4 中间走了的弯路</a></li></ul><li><a href="#3-已删除的窥孔优化清单">3. 已删除的窥孔优化清单</a></li><li><a href="#4-保留的-ast-级前置优化-安全-无-bug">4. 保留的 AST 级前置优化（安全，无 bug）</a></li><li><a href="#5-未来重写窥孔优化的注意事项">5. 未来重写窥孔优化的注意事项</a></li><ul class="lv3"><li><a href="#5-1-绝对禁止-检查-code-len-n-的字节值">5.1 绝对禁止：检查 code[len-N] 的字节值</a></li><li><a href="#5-2-推荐方案-a-ast-级前置优化-当前已采用">5.2 推荐方案 A：AST 级前置优化（当前已采用）</a></li><li><a href="#5-3-推荐方案-b-结构化追踪-如果前置优化不可行">5.3 推荐方案 B：结构化追踪（如果前置优化不可行）</a></li><li><a href="#5-4-推荐方案-c-两遍编译">5.4 推荐方案 C：两遍编译</a></li><li><a href="#5-5-测试要求">5.5 测试要求</a></li><li><a href="#5-6-代码审查检查清单">5.6 代码审查检查清单</a></li></ul><li><a href="#6-时间线">6. 时间线</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="archive/移植音乐下载器实录与待办.html">← 上一篇</a><a href="编译器崩溃排查手册.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

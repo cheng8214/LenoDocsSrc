@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 写 Android app：能力实测报告 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/Android能力实测_2026-11-18.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">05 GUI · 平台</a><span class="sep">/</span><span class="here">Leno 写 Android app：能力实测报告</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details open><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html" class="active" aria-current="page">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-写-android-app-能力实测报告">Leno 写 Android app：能力实测报告</h1>
+<blockquote>
+<p>测试日期：2026-11-18 · 设备：Android 10（API 30）x86_64 模拟器
+产物：<code>libleno.so</code>（arm64-v8a 965KB / x86_64 1.1MB）、APK 3.8MB
+口径：<strong>11 个探针 / 100 条断言，全部在设备上真跑</strong>，输出经 logcat（tag <code>leno_jni</code>）回收
+探针源码：<code>android/app/assets/c*.leno</code> · 一键复跑：<code>bash android/run_probes.sh</code></p>
+</blockquote>
+<h2 id="一句话结论">一句话结论</h2>
+<p><strong>逻辑层已经齐了：语言、文件、JSON、正则、时间、并发、网络（含 HTTPS）、SQLite、二维码、
+PNG/JPEG/WebP 编解码、字体栅格化、音频、FFI 全部实测可用，纯 <code>.leno</code> 标准库也能直接用。
+缺的只剩"界面（开窗）"和"系统集成（剪贴板/通知/权限/Toast）"这两层。</strong></p>
+<h2 id="第一档-实测可用-写-app-的日常">第一档：实测可用（写 app 的日常）</h2>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>实测证据</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>struct / dict / 闭包</td>
+<td>14 条语言断言全过</td>
+<td><code>new X()</code>、<code>{k: v}</code>、<code>map/filter</code></td>
+</tr>
+<tr>
+<td>try / catch / throw</td>
+<td>含<strong>数组越界</strong>这类运行期错误也能捕获</td>
+<td>这是"不闪退"的地基</td>
+</tr>
+<tr>
+<td>switch 区间、可选类型、多返回值</td>
+<td><code>case 60:89</code>、<code>string? = null</code>、<code>var[int,int](a,b)=</code></td>
+<td></td>
+</tr>
+<tr>
+<td>字符串 / 数组</td>
+<td>split/join/format/replace/byte_len</td>
+<td></td>
+</tr>
+<tr>
+<td>文件与目录</td>
+<td>写读追加、逐行读、mkdir_p、listdir、stat、walk、删除</td>
+<td>落在 <code>/data/user/0/com.leno.app/files</code></td>
+</tr>
+<tr>
+<td>4 字节 UTF-8</td>
+<td><code>🎵🎉🚀</code> 往返 12 字节无损</td>
+<td>JNI 侧走 byte[]，绕开 <code>NewStringUTF</code> 的坑</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>encode/decode/pretty/get_str/get_int/落盘往返</td>
+<td>非法 JSON 返回 null（不抛错，需判空）</td>
+</tr>
+<tr>
+<td>正则</td>
+<td>match/extract/replace_all/split/extract_all</td>
+<td><strong>参数是 <code>(文本, 模式)</code>；不支持 <code>{}</code> 量词</strong></td>
+</tr>
+<tr>
+<td>时间 / 随机</td>
+<td>格式化、<code>ms()</code>+<code>sleep(120)</code> 实测 121ms、洗牌元素不丢</td>
+<td><code>sleep</code>/<code>set_timeout</code> 单位都是<strong>毫秒</strong></td>
+</tr>
+<tr>
+<td>线程</td>
+<td>4 个 100ms 任务并发实耗 <strong>106ms</strong>（真并行）</td>
+<td>channel 跨线程传值、parallel_for、threads.map</td>
+</tr>
+<tr>
+<td>协程</td>
+<td><code>async func</code> + <code>asyncs.run()</code></td>
+<td>事件循环每进程一个，只能在主线程</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>DNS 解析、TCP 连接、<strong>手写 HTTP/1.1 GET 返回 200 OK / 931 字节</strong></td>
+<td>只需 socket 原语，不必依赖库</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>自带 <code>libsqlite3.so</code>（3.46.1）建库→插两条→报错可读→重开可查；<strong>模块级（<code>import</code> LenoSqlite）同样通过</strong></td>
+<td>8192 字节 db 落在 filesDir</td>
+</tr>
+<tr>
+<td>二维码</td>
+<td><code>LenoQR</code> 编码 → 灰度 → quirc 解码<strong>逐字相符</strong>：<code>hello leno</code> / 中文 / emoji 混排，v21~v25、四档纠错</td>
+<td>自带 <code>libquirc.so</code>（纯 C、零依赖）</td>
+</tr>
+<tr>
+<td>图片编解码</td>
+<td>SDL3_image：建 surface → 填充 → PNG 编码（164B）→ <code>IMG_Load</code> 读回成功</td>
+<td>png/jpeg/webp/zlib <strong>静态链入</strong></td>
+</tr>
+<tr>
+<td>字体栅格化</td>
+<td>SDL_ttf 用 <code>/system/fonts/NotoSansCJK-Regular.ttc</code> 渲染「Leno 在安卓上」= 182×41</td>
+<td>freetype + harfbuzz <strong>静态链入</strong></td>
+</tr>
+<tr>
+<td>音频</td>
+<td>miniaudio <code>ma_version()=2841</code>（0.11.25）、<code>hasVorbis()=true</code></td>
+<td><strong>出声未测</strong>（模拟器 <code>-no-audio</code>）</td>
+</tr>
+<tr>
+<td>HTTPS</td>
+<td>libcurl 8.23.0 + mbedTLS 3.6.8：<code>https://example.com</code> → <strong>200 / 577 字节</strong>，curlCode=0</td>
+<td>证书运行时从系统 CA 拼 bundle</td>
+</tr>
+<tr>
+<td>FFI</td>
+<td>libc/libm/liblog/libEGL/libandroid 全部 dlopen 成功</td>
+<td>高地址指针 <code>0x7cf…</code> 往返不丢位</td>
+</tr>
+<tr>
+<td>多文件模块</td>
+<td><code>import "lib/util.leno" as u</code>，跨文件 struct/函数/常量</td>
+<td>app 代码组织没问题</td>
+</tr>
+<tr>
+<td>纯 <code>.leno</code> 标准库</td>
+<td><code>Crypto</code> 的 sha256/md5/hmac 通过<strong>已知答案</strong>校验</td>
+<td>编译器把库内联进 <code>.lenb</code>，不依赖磁盘路径</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>Crypto</code> 这条特别值得记：<code>LenoCrypto / LenoResult / LenoCSV / LenoZip / LenoGlob / LenoUUID</code>
+这些<strong>零 C 依赖</strong>的库，在 Android 上开箱可用，不需要移植。</p>
+</blockquote>
+<h2 id="第二档-有条件可用">第二档：有条件可用</h2>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SQLite</td>
+<td>随模块分发 <code>libsqlite3.so</code>（<code>build/leno_module/LenoSqlite/lib/android/&lt;abi&gt;/</code>），<br><code>build_android.sh</code> 自动收进 APK。系统自带的 <code>libsqlite.so</code> <strong>不能</strong> dlopen —— 见下</td>
+</tr>
+<tr>
+<td>系统库 FFI</td>
+<td>只能加载 <code>public.libraries.txt</code>（28 个）里的库。<code>libEGL/liblog/libandroid/libOpenSLES/libz</code> 在；<br><code>libsqlite/libmedia</code> 等私有库被 namespace 拒绝</td>
+</tr>
+<tr>
+<td>HTTPS</td>
+<td>已解决：自带 <code>libcurl.so</code>（curl 8.23.0 + mbedTLS 3.6.8 静态链入），<br>证书运行时由 <code>caBundle()</code> 从 <code>/system/etc/security/cacerts</code> 拼 bundle。见 c16</td>
+</tr>
+</tbody>
+</table>
+<h2 id="第三档-现在做不了-按工作量排">第三档：现在做不了（按工作量排）</h2>
+<table>
+<thead>
+<tr>
+<th>缺口</th>
+<th>现状</th>
+<th>补法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>界面（开窗）</strong></td>
+<td>✅ <strong>已解决（2026-11-19）</strong>：宿主 <code>com.leno.app.SdlActivity</code> 继承官方 <code>org.libsdl.app.SDLActivity</code>，SDL3 由 <code>System.loadLibrary</code> 加载、VM 跑在 SDL 主线程 ⇒ <code>SDL_Init(VIDEO)</code> / 窗口 / 渲染器 / 触摸 / 软键盘输入全部可用。详见 <code>docs/Android正经App路线.md</code> 5.4，探针 <code>s1_sdlwin</code>（6/6）</td>
+<td>另两条路：WebView（<code>ui=web</code>）、JNI 反射桥 + 原生 View/Compose</td>
+</tr>
+<tr>
+<td><strong>系统能力</strong></td>
+<td>剪贴板、通知、震动、传感器、权限、Toast、Intent 全无</td>
+<td>JNI <strong>反射桥</strong>：<code>FindClass/GetMethodID/Call*</code>，约 600–1000 行 C，写一次全部 API 通</td>
+</tr>
+<tr>
+<td><strong>图片编解码</strong></td>
+<td>已解决：<code>libSDL3_image.so</code> 提供 PNG/JPEG/WebP/GIF/BMP… 读写（c14 实测编解码往返）</td>
+<td>若不想带 SDL3，可退回 <code>libjnigraphics</code>/Bitmap</td>
+</tr>
+<tr>
+<td><strong>单文件打包</strong></td>
+<td><code>-p --onefile</code> 依赖"读自身 exe 尾部"，APK 里没有这个概念</td>
+<td>现在是 assets + 解包到 <code>filesDir</code>（本轮已跑通）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="本轮顺带修掉的两个运行时缺陷">本轮顺带修掉的两个运行时缺陷</h2>
+<p>这两个是<strong>任何 app 都绕不过</strong>的，之前一直没人踩到，因为桌面端 <code>_script()</code> 有 argv 兜着：</p>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_script()</code> 返回 <code>null</code></td>
+<td>它只从 <code>argv</code> 取"第一个非选项参数"，而 JNI 调 <code>lenolang_run_lenb(path)</code> 时<strong>没有 argv</strong></td>
+<td>新增 <code>leno_set_script_path()</code>；<code>lenolang_run_lenb()</code> 入口自动写入</td>
+</tr>
+<tr>
+<td><code>_tmpdir()</code> 返回 <code>/tmp</code></td>
+<td>POSIX 分支在没有 <code>TMPDIR</code> 时硬编码 <code>"/tmp"</code>，Android 沙箱里既不存在也不可写</td>
+<td>新增 <code>leno_set_data_dir()</code>；宿主在 <code>onCreate</code> 里传 <code>getFilesDir()</code></td>
+</tr>
+</tbody>
+</table>
+<p>修完的效果（设备实测）：</p>
+<pre><code>_tmpdir() = /data/user/0/com.leno.app/files
+_script() = /data/user/0/com.leno.app/files/app.lenb
+dirs.mkdir_p → files.write → files.read → dirs.stat → dirs.walk → 删除  全通过
+</code></pre>
+<h2 id="模块-leno_module-在-android-上的可用性">模块（<code>leno_module/</code>）在 Android 上的可用性</h2>
+<p><strong>结论：模块的 <code>.leno</code> 部分开箱可用，但模块里"找动态库"的那一步是平台相关的，
+必须逐个检查 —— <code>LenoSqlite</code> 就踩了这个坑。</strong></p>
+<p>先说清一个容易误解的点：这个精简 VM（<code>sources_core.txt</code> 里没有 parser / package / compiler）
+<strong>不做运行时 <code>import</code> 解析</strong>。<code>import "LenoSqlite/lib/sqlite3.leno"</code> 是<strong>桌面编译时</strong>就把模块
+源码内联进 <code>.lenb</code> 了 ⇒ 运行时不存在"模块目录找不到"的问题，<code>LenoResult / LenoCrypto /
+LenoSqlite</code> 这类纯 <code>.leno</code> 或薄 FFI 封装的模块，只要能编过就能在设备上跑。</p>
+<p>真正会挂的是<strong>模块自己去 dlopen 的那一刻</strong>。</p>
+<h3 id="库文件按平台分目录-2026-11-18-起的布局">库文件按平台分目录（2026-11-18 起的布局）</h3>
+<pre><code>build/leno_module/LenoSqlite/lib/
+├── sqlite3.leno / sqlite3_core.leno
+├── win/sqlite3.dll                  Windows
+├── linux/sqlite3.so                 Linux 桌面
+└── android/arm64-v8a/libsqlite3.so  Android（构建 APK 的输入）
+    android/x86_64/libsqlite3.so
+</code></pre>
+<p>原来是 <code>lib/</code> 下平铺，只有 <code>sqlite3.dll</code> + <code>sqlite3.so</code> 两个文件。改成子目录是因为
+<strong>Android 的库必须按 ABI 各带一份</strong>（<code>arm64-v8a</code> / <code>x86_64</code> 是两份不同的 ELF），
+平铺在一个目录里只能占一个文件名 ⇒ 两份互相覆盖。</p>
+<p>配套要改两处，否则分目录根本加载不到：</p>
+<table>
+<thead>
+<tr>
+<th>改动</th>
+<th>位置</th>
+<th>为什么必须</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ffi.load</code> 支持<strong>带子目录的相对路径</strong></td>
+<td><code>src/module/ffi/ffi.c</code>（新增 2a-2 步；2c 遍历也补上）</td>
+<td>原实现会把路径<strong>剥成纯文件名</strong>（<code>filename = last_sep + 1</code>）再拼模块目录 ⇒ <code>win/sqlite3.dll</code> 永远命中不了</td>
+</tr>
+<tr>
+<td><code>_os()</code> 在 Android 上返回 <code>"android"</code></td>
+<td><code>src/module/sys/sys.c</code> 的 <code>native_os</code></td>
+<td>bionic 同时定义 <code>__linux__</code>，原来报 <code>"linux"</code>，与桌面无法区分；<code>__ANDROID__</code> 必须排在 <code>__linux__</code> <strong>之前</strong>判断</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>ffi.c</code> 里最关键的其实是 <strong>2c 那一轮</strong>（遍历所有已加载模块目录），不是 2a-2：
+模块被编译期内联后 <code>current_module_frame</code> 的 <code>source_path</code> 可能为空 ⇒ <code>mod_dir</code> 取不到
+⇒ 2a/2a-2/2b 整段跳过。实测就是 2c 把分目录救回来的。</p>
+</blockquote>
+<p><code>leno.toml</code> 的 <code>[native-libs]</code> 也要跟着改（<code>win = "lib/win/sqlite3.dll"</code>），
+否则 <code>run_all_tests.leno</code> 的 <code>missing_lib()</code> 会判定"缺原生库"直接 <strong>SKIP</strong> 整个模块 ——
+这个跳过是静默的，汇总里只多一个 SKIP，很容易当成"跑过了"。</p>
+<p>Android 那一份<strong>不写进 <code>leno.toml</code></strong>：一个平台键只能指一个路径，装不下两个 ABI。
+<code>build_android.sh</code> 第 5 步直接读 <code>lib/android/&lt;abi&gt;/</code>，优先于 <code>app/jniLibs/&lt;abi&gt;/</code>（旧布局兜底）。
+<code>app/jniLibs/*/*.so</code> 因此已 gitignore —— 库的真实源在模块里，两份二进制进仓库只会悄悄走岔。</p>
+<h3 id="为什么-android-运行时加载的是-裸文件名">为什么 Android 运行时加载的是"裸文件名"</h3>
+<p>即使模块里有 <code>android/&lt;abi&gt;/libsqlite3.so</code>，设备上也<strong>不会</strong>从那里加载：当前 VM 不做运行时
+<code>import</code>，模块目录在设备上并不存在。真正生效的是 <code>ffi.load("libsqlite3.so")</code> 这条裸名 ——
+APK 的 <code>jniLibs/&lt;abi&gt;/</code> 由打包器落到 <code>/data/app/.../lib/&lt;abi&gt;/</code>，与 <code>libleno.so</code> 同目录，
+<code>dlopen</code> 按裸名直接命中。<strong>不能拼绝对路径</strong>：Android linker 的 namespace 只放行白名单库名
+与自己 lib 目录里的裸名，拼出来的路径反而会被拒。</p>
+<p>系统目录里只有 <code>/system/lib64/libsqlite.so</code> —— <strong>另一个库名</strong>，且不在 <code>public.libraries.txt</code>
+白名单 ⇒ 按名、按路径都 dlopen 不了；<code>libsqlite3.so*</code> 一个都没有（<code>ls</code> 实测确认）。</p>
+<p><code>lib()</code> 的候选顺序因此是"逐级降级"，每一级失败都靠 <code>try</code> 兜住再试下一个；
+命中错误平台的库不会造成"能加载但行为诡异"——ELF 架构/magic 不符时 dlopen 直接失败。</p>
+<p><strong>验证证据</strong>（<code>c12_module_sqlite</code> 探针，走模块 API 而非裸 FFI）：</p>
+<pre><code>桌面： _os()=windows  libversion() = 3.53.4   ← 模块自带的 win/sqlite3.dll
+设备： _os()=android  libversion() = 3.46.1   ← APK 里 NDK 编的那份
+两边都是 14 项断言全过（建表/参数绑定/多行读/NULL 语义/事务回滚/错误文案/关库重开）
+</code></pre>
+<p>写这类模块探针时会被 Leno 的三条语法卡住（都是编译器现状，不是 Android 的问题）：</p>
+<ol>
+<li>被导入模块<strong>不传递</strong>它自己的 <code>import</code> ⇒ 探针里要自己再 <code>import dirs</code> / <code>import files</code>；</li>
+<li><code>Result[Statement]</code> 的 <code>unwrap()</code> 静态类型是 <code>T</code>，<strong>泛型不单态化</strong> ⇒ <code>r.unwrap().bind(…)</code>
+   报「类型 T 没有方法 bind」。拆两步：<code>prepareResult</code> 只验成功契约，取句柄用 <code>db.prepare()</code>；</li>
+<li>回调参数必须写具体类型 <code>func(sqlite3.Statement st)</code>；写 <code>func(var st)</code> 会报
+   「参数不能使用 var 类型」，写 <code>any</code> 则不允许直接调方法。</li>
+</ol>
+<h2 id="五个模块的-android-产物-2026-11-19-补齐">五个模块的 Android 产物（2026-11-19 补齐）</h2>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>原生库</th>
+<th>版本</th>
+<th>双 ABI 大小（arm64 / x86_64）</th>
+<th>设备实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LenoSqlite</td>
+<td><code>libsqlite3.so</code></td>
+<td>3.46.1（NDK 编）</td>
+<td>929K / 916K</td>
+<td>c8 + c12 共 23 项</td>
+</tr>
+<tr>
+<td>LenoQR</td>
+<td><code>libquirc.so</code></td>
+<td>quirc 1.0（vendored）</td>
+<td>35K / 43K</td>
+<td>c13 共 10 项</td>
+</tr>
+<tr>
+<td>LenoMusic</td>
+<td><code>libminiaudio.so</code></td>
+<td>miniaudio 0.11.25</td>
+<td>691K / 758K</td>
+<td>c15 共 3 项</td>
+</tr>
+<tr>
+<td>LenoSDL3</td>
+<td><code>libSDL3.so</code> + <code>_image</code> + <code>_ttf</code></td>
+<td>3.4.20 / 3.4.8 / 3.2.2</td>
+<td>2.2M+223K+1.6M / 2.4M+240K+1.7M</td>
+<td>c14 共 10 项</td>
+</tr>
+<tr>
+<td>LenoWeb</td>
+<td><code>libcurl.so</code></td>
+<td>8.23.0 + mbedTLS 3.6.8</td>
+<td>1.6M / 1.7M</td>
+<td>c16 共 7 项</td>
+</tr>
+</tbody>
+</table>
+<p>每个模块的 <code>src/</code> 下都有 <code>build_android.sh</code> 和<strong>上游源码</strong>（裁掉测试/示例/IDE 工程，
+总计约 104MB），所以是自包含的：拿到模块目录就能离线重编，不用向仓库另要二进制。
+<code>lib/android/&lt;abi&gt;/</code> 是产物；<code>android/build_android.sh</code> 会遍历<strong>所有</strong>模块的这个目录打包，
+新增模块不需要回来改脚本。</p>
+<h3 id="各模块的取舍">各模块的取舍</h3>
+<p><strong>LenoQR</strong> —— 纯 C、零外部依赖，<code>clang -shared -fPIC</code> 一步出，最适合当"验证打包链路"的样板。</p>
+<p><strong>LenoMusic</strong> —— miniaudio 是单头文件库。Android 后端是 AAudio（API 26+）/ OpenSL ES（API 21+），
+两者都由 miniaudio <strong>运行时 dlopen</strong> ⇒ 链接时不需要 <code>-lOpenSLES -lAAudio</code>，只留 <code>-lm -llog</code>。</p>
+<p><strong>LenoSDL3</strong> —— 唯一需要 CMake 全家桶的。三个库都走 <code>vendored</code>：png/jpeg/webp/zlib/
+freetype/harfbuzz 全部静态链入，所以 <code>libSDL3_image.so</code> / <code>libSDL3_ttf.so</code> 的 <code>NEEDED</code>
+里只有 <code>libSDL3.so</code>（Windows 侧还要另外摆三个 <code>libwebp-*.dll</code>，Android 侧不用）。
+⚠ 开窗渲染<strong>做不到</strong>，见坑 #8。</p>
+<p><strong>LenoWeb</strong> —— curl 8.23.0 + mbedTLS 3.6.8，TLS 静态链入（系统 BoringSSL 不在
+<code>public.libraries.txt</code> 白名单，<code>dlopen</code> 会被拒）。
+证书<strong>不随包</strong>：<code>caBundle()</code> 首次用到时把 <code>/system/etc/security/cacerts/*.0</code>
+（每个文件就是一张 PEM）拼成 741KB 的 bundle 落到临时目录，
+<code>HttpClient.init()</code> 自动设 <code>CURLOPT_CAINFO</code> ⇒ 证书跟着系统更新走，不会过期。</p>
+<h2 id="十一个必须记住的坑-都是实测撞出来的">十一个必须记住的坑（都是实测撞出来的）</h2>
+<ol>
+<li><strong><code>set_timeout</code> 是毫秒</strong>。写成 <code>set_timeout(8)</code> 以为是 8 秒，实际 8ms ⇒ <code>recv</code> 立刻返回 null，
+   表现成"对端没发数据"，排查方向完全错。</li>
+<li><strong><code>regexs</code> 的参数顺序是 <code>(文本, 模式)</code></strong>，而且引擎只支持 <code>* + ?</code>，<strong>没有 <code>{n}</code> 量词</strong>。
+   手机号校验写不出 <code>\d{11}</code>，得展开成 <code>[0-9][0-9]…</code>。</li>
+<li><strong><code>import "Crypto"</code> 用库文件名，不是包目录名</strong>。写 <code>import LenoCrypto</code> 会报"未知的原生模块"；
+   写 <code>import "LenoResult"</code> 也不行（目录下是 <code>Result.leno</code>）。</li>
+<li><strong><code>adb logcat -c</code> 是异步的</strong>。清空后立刻回读，读到的是没清掉的旧数据 ⇒
+   探针脚本如果"清完就抓"，会把上一轮输出算进本轮（实测汇总数虚高到 357，实际 100）。
+   正确做法：<code>-c</code> 之后等约 0.5s 再回读验证，不干净就重试。
+   反过来，用<strong>固定 sleep 等探针跑完</strong>也不可靠：<code>c6_net</code> 在 10s 窗口下只抓到 3 条（实际 6 条），
+   汇总数偏低。现在 <code>run_probes.sh</code> 是"轮询等探针自己打印结果行"。</li>
+<li><strong><code>_os()</code> 在 Android 上现在返回 <code>"android"</code></strong>（2026-11-18 改，此前伪装成 <code>"linux"</code>）。
+   这是<strong>行为变更</strong>：原来写 <code>_os() == "linux"</code> 的代码在设备上会失效
+   （本仓库 <code>LenoSys.isLinux()</code> 因此返回 false —— 语义上是对的）。要表达"POSIX 就行"，
+   得写 <code>_os() == "linux" or _os() == "android"</code>。</li>
+<li><strong><code>leno.exe</code> 和 <code>leno_vm.exe</code> 各自内嵌一份 VM</strong>。改了 <code>src/</code> 下的 C 代码（<code>ffi.c</code> / <code>sys.c</code> / …）
+   必须 <code>bash build.sh</code> <strong>和</strong> <code>bash build_vm.sh</code> 都跑一遍。否则会出现
+   "<code>leno_vm.exe</code> 跑 <code>.lenb</code> 正常、<code>leno.exe</code> 跑 <code>.leno</code> 却报库加载失败"这种极难归因的现象
+   —— 本轮就因为只重编了 VM，<code>run_all_tests.leno</code> 里 LenoSqlite 一路报错。</li>
+<li>
+<p><strong><code>run_all_tests.leno</code> 要用 <code>leno.exe</code> 跑，不能用 <code>leno_vm.exe</code></strong>。它内部用
+   <code>_executable()</code> 拼子进程命令，而 VM 只吃 <code>.lenb</code> ⇒ 拿 VM 当 runner 会全线 <code>exit=1</code>
+   （看着像"所有模块都挂了"，其实是一个都用错了工具）。</p>
+</li>
+<li>
+<p><strong><code>dlopen</code> 不会触发 <code>JNI_OnLoad</code></strong>。SDL3 的 JavaVM 是靠<strong>它自己的</strong> <code>JNI_OnLoad</code>
+   缓存的，而那个钩子只有 <code>System.loadLibrary</code> 才会被调 ⇒ <code>ffi.load("libSDL3.so")</code> 之后
+   <code>SDL_Init</code> 一律失败：<code>Failed, there is no JavaVM</code>。
+   <strong>不要</strong>试图手动调它的 <code>JNI_OnLoad</code> —— 里面 <code>FindClass("org/libsdl/app/SDLActivity")</code>
+   找不到就抛 pending exception，ART 的 <code>AssertNoPendingException</code> 直接杀进程
+   （实测 tombstone：<code>ClassLinker::FindClass</code> → <code>Thread::Abort</code>）。
+   正路是把宿主改成 SDL 官方的 <code>android-project</code> 形态（Java 继承 <code>SDLActivity</code>）。</p>
+</li>
+<li>
+<p><strong>mbedTLS 3.6 的 git 源码树不含生成文件</strong>。GitHub 上按 tag/branch 下载是 git 检出，
+   没有 <code>error.c</code> / <code>version_features.c</code> / <code>ssl_debug_helpers_generated.c</code> /
+   <code>psa_crypto_driver_wrappers.{h,c}</code> ⇒ 必须 <code>-DGEN_FILES=ON</code> 现场生成
+   （要 Perl + Python + jsonschema + jinja2）。官方 <strong>release 压缩包</strong>里才带这些文件。</p>
+</li>
+<li>
+<p><strong>CMake 会自己挑 Python</strong>。脚本里检查的是 PATH 上那个，<code>find_package(Python3)</code>
+    可能挑到另一个（实测 3.13.12 vs <code>Program Files</code> 下的 3.13.2）⇒ 必须在 configure 时
+    显式 <code>-DPython3_EXECUTABLE=...</code>，否则要等 build 阶段才报 <code>No module named 'jsonschema'</code>。</p>
+</li>
+<li>
+<p><strong>删上游目录前先确认 CMake 是否引用</strong>。curl 的 <code>add_subdirectory(scripts)</code> 是<strong>无条件</strong>的；
+    libpng 的 <code>scripts/cmake/*.cmake</code>、libwebp 的 <code>cmake/</code>、freetype 的 <code>builds/</code>
+    都是 CMake 的输入。剪枝只删 <code>test/ examples/ docs/ Xcode/ VisualC/</code> 是安全的。</p>
+</li>
+</ol>
+<h2 id="怎么复跑">怎么复跑</h2>
+<pre><code class="language-bash">bash android/build_android.sh                 # 出 APK（含 assets 自动重编）
+adb install -r android/build/leno-demo.apk
+bash android/run_probes.sh                    # 跑全部探针并汇总
+bash android/run_probes.sh c6_net             # 只跑一个
+</code></pre>
+<p>输出长这样（真实结果）：</p>
+<pre><code>探针           OK     NG  备注
+c1_lang          14      0
+...
+c11_stdlib        5      0
+c12_module_sqlite 14      0
+c13_qr           10      0
+c14_sdl3         10      0
+c15_audio         3      0
+c16_curl          7      0
+合计          144      0
+=&gt; 全部通过
+</code></pre>
+<h2 id="下一步建议">下一步建议</h2>
+<ol>
+<li><strong>想尽快看到"像 app 的东西"</strong> → 走 SDL3 路线：把 <code>import "SDL3"</code> 换成 <code>libSDL3.so</code>，
+   全屏自绘，能直接复用 <code>leno_gui/控件</code> 里的按钮/卡片。触摸和返回键要补。</li>
+<li><strong>想做正经 app</strong> → 先写 JNI 反射桥（<code>java.class("android.widget.Toast")</code> 这种），
+   再补 Image/Bitmap 与权限，UI 交给原生 View。</li>
+<li><strong>无论哪条路</strong>，先把 <code>libsqlite3.so</code> 这一步固化进构建脚本（本轮已加），
+   因为离线缓存是几乎所有 app 的共同需求。</li>
+</ol></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一句话结论">一句话结论</a></li><li><a href="#第一档-实测可用-写-app-的日常">第一档：实测可用（写 app 的日常）</a></li><li><a href="#第二档-有条件可用">第二档：有条件可用</a></li><li><a href="#第三档-现在做不了-按工作量排">第三档：现在做不了（按工作量排）</a></li><li><a href="#本轮顺带修掉的两个运行时缺陷">本轮顺带修掉的两个运行时缺陷</a></li><li><a href="#模块-leno_module-在-android-上的可用性">模块（leno_module/）在 Android 上的可用性</a></li><ul class="lv3"><li><a href="#库文件按平台分目录-2026-11-18-起的布局">库文件按平台分目录（2026-11-18 起的布局）</a></li><li><a href="#为什么-android-运行时加载的是-裸文件名">为什么 Android 运行时加载的是"裸文件名"</a></li></ul><li><a href="#五个模块的-android-产物-2026-11-19-补齐">五个模块的 Android 产物（2026-11-19 补齐）</a></li><ul class="lv3"><li><a href="#各模块的取舍">各模块的取舍</a></li></ul><li><a href="#十一个必须记住的坑-都是实测撞出来的">十一个必须记住的坑（都是实测撞出来的）</a></li><li><a href="#怎么复跑">怎么复跑</a></li><li><a href="#下一步建议">下一步建议</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../Android正经App路线.html">← 上一篇</a><a href="../LenoWeb能力缺口与修复路线.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIT 闭包与 upvalue 设计（roadmap R5） · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/JIT闭包与upvalue设计_R5.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">JIT 闭包与 upvalue 设计（roadmap R5）</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html" class="active" aria-current="page">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="jit-闭包与-upvalue-设计-roadmap-r5">JIT 闭包与 upvalue 设计（roadmap R5）</h1>
+<blockquote>
+<p>⛔ <strong>已归档（2026-10-02）—— JIT 已不在代码中，本文仅供考古。</strong>
+本仓库历史（427 个提交，最早 <code>e8ccc46 2026-09-20 Initial commit</code>）里<strong>从未有过</strong>任何
+<code>jit</code> 命名文件：<code>git ls-files "*jit*"</code> 与 <code>git log --all --diff-filter=AD -- "*jit*"</code>
+均为空 ⇒ 文中 <code>src/jit/*</code>、<code>LENO_NO_JIT=1</code>、<code>JIT_HOT_THRESHOLD</code> 等<strong>别去当前源码里找</strong>。
+现行实现是寄存器式解释器（<code>src/vm/vminc/run/*.inc</code>）；现行性能结论与待办见 <code>docs/待办与路线图.md</code>。</p>
+<p>状态：<strong>设计稿，未动手</strong>（2026-09-15）
+本文只交付「设计不变量 + 分阶段计划」，不含实现。
+前置阅读：<code>docs/archive/JIT实现与调试记录.md</code> §11 roadmap R5 / §12 未解决问题。
+文中所有 <code>file:line</code> 均取自当前工作区的源码实测，不是推测；凡未核实的一律标注「待核实」。</p>
+</blockquote>
+<hr>
+<h2 id="0-摘要">0. 摘要</h2>
+<p>R5 的难点<strong>不在"补 4 条 opcode 的 codegen"</strong>，而在于：JIT（尤其循环 JIT）根本没有「可被外部长期引用的 locals 槽」——locals 活在 scratch / 机器栈 / pinned 寄存器上，迭代即复用、退出即失效，而 GC 又看不见它们。而 upvalue 机制的核心恰恰要求一个<strong>存活期内地址不变</strong>的 <code>Value*</code>。</p>
+<p>因此本设计把问题切成「捕获形态」而不是「opcode 类型」，并确立一条主线不变量：</p>
+<blockquote>
+<p><strong>I1（主线）：JIT 永不制造新的 open upvalue。</strong></p>
+</blockquote>
+<p>JIT 只做两件事：
+1. 创建 <strong>closed</strong> upvalue（值捕获 <code>is_value_capture=1</code>）——<code>location</code> 指向它自己的 <code>closed</code> 字段，与 JIT 栈无关；
+2. <strong>复用</strong>既有的 <code>Upvalue*</code>（by-upvalue 捕获 <code>is_local=0</code>）——生命周期归它的创建者（外层帧或它自己的 closed 字段）。</p>
+<p>只要 I1 成立，「open upvalue 的关闭时机 / 悬空 location / bailout 回滚 open 状态 / <code>vm_grow_frames</code> 地址重映射」这一整类问题<strong>被结构性消除</strong>，而不是被小心地绕开。</p>
+<blockquote>
+<p><strong>I1 的第三条下游依赖（2026-09-15 补）</strong>：<code>OP_TAIL_CALL</code> 的 JIT 实现（<code>docs/archive/JIT实现与调试记录.md</code> §8.76）<strong>依赖 I1 + C3 拒绝</strong>。VM 的尾调用必须"关闭本帧全部 upvalue"（因为它复用当前帧，<code>op_call.inc:42-46</code>），而 JIT 侧不复用帧 —— 之所以可以不做这一步，正是因为 I1 保证 JIT 永不创建 open upvalue、C3 拒绝保证 JIT 函数不引用本帧 locals ⇒ 被跳过的"关闭"恒为空操作。
+<strong>⇒ 若 P4（C3 提升槽）将来落地，必须重新审查 <code>OP_TAIL_CALL</code>。</strong>（前两条下游依赖见 §3 的 C1 与 §7 第 4 条。）</p>
+</blockquote>
+<p>收益侧同样乐观：语义分析已经保证「<strong>循环体内的变量 ⇒ 值捕获</strong>」（<code>src/semantic/semantic_upvalue.c:200</code>：<code>is_value_capture = target_sym-&gt;is_in_loop</code>），也就是说真实负载里「循环里建闭包捕获循环变量」这一最高频形态，<strong>正好落在最安全的 C2 上</strong>。</p>
+<hr>
+<h2 id="1-范围">1. 范围</h2>
+<h3 id="1-1-目标">1.1 目标</h3>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OP_CLOSURE</code></td>
+<td>在循环 JIT / 函数级 JIT / 内联体内创建闭包</td>
+</tr>
+<tr>
+<td><code>OP_GET_UPVALUE</code> / <code>OP_SET_UPVALUE</code></td>
+<td>闭包体内（被 JIT 化时）读写捕获变量</td>
+</tr>
+<tr>
+<td><code>opcode_size</code></td>
+<td>让扫描器能解析 <code>OP_CLOSURE</code> 的变长操作数（R3 故意留的坑）</td>
+</tr>
+<tr>
+<td>ABI</td>
+<td>函数级 JIT 增加 closure 通道</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-2-非目标-明确不做-或另立项">1.2 非目标（明确不做，或另立项）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OP_CLOSE_UPVALUE</code></td>
+<td><strong>编译器从不发射</strong>（全仓 <code>src/codegen/**</code> 零引用，仅存在于枚举/分发表/VM 实现/反汇编表/长度表）⇒ 继续维持 scan 侧拒绝</td>
+</tr>
+<tr>
+<td>引用捕获本帧 locals（<code>is_local=1 &amp; is_value_capture=0</code>）</td>
+<td>唯一需要「改 locals 布局」的重活，见 P4；默认<strong>拒绝</strong></td>
+</tr>
+<tr>
+<td><code>has_captures</code> 门控语义错配、<code>SET_UPVALUE</code> 无写屏障、异常展开不 <code>close_upvalues</code></td>
+<td>VM 侧既有疑点，<strong>不在 R5 夹带</strong>，见 §7</td>
+</tr>
+<tr>
+<td>多返回值 / <code>OP_TAIL_CALL</code></td>
+<td>属 R6，排在 R5 之后</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-现状取证">2. 现状取证</h2>
+<h3 id="2-1-vm-侧闭包语义-决定了-jit-必须复刻什么">2.1 VM 侧闭包语义（决定了 JIT 必须复刻什么）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V1</td>
+<td><code>OP_CLOSURE</code> 操作数 = <code>func_const(2)</code> + 每条捕获 <code>is_local(2) index(2) is_value_capture(2)</code>，<strong>捕获描述表内联在字节码流里</strong>，条数取自 <code>function-&gt;upvalue_count</code></td>
+<td><code>src/vm/vminc/op_call.inc:556-616</code>；<code>src/debug.c:198-218</code></td>
+</tr>
+<tr>
+<td>V2</td>
+<td>捕获本帧局部槽 = <code>&amp;frame-&gt;locals[index]</code>；<code>frame-&gt;locals == NULL</code> 的帧（模块初始化临时帧）退化到 <code>&amp;vm.stack[stack_base + index]</code></td>
+<td><code>op_call.inc:575-598</code></td>
+</tr>
+<tr>
+<td>V3</td>
+<td>值捕获 = <code>new_upvalue(val_null())</code> 后写 <code>closed</code>、<code>location = &amp;closed</code>、并 <code>gc_write_barrier</code> —— <strong>不加入 open 链表</strong></td>
+<td><code>op_call.inc:577-581</code>；<code>src/vm/vminc/vm_upvalue.inc:60-67</code></td>
+</tr>
+<tr>
+<td>V4</td>
+<td>引用捕获 = <code>capture_upvalue(&amp;locals[index])</code>：按 <code>location</code> 地址在 <code>vm.open_upvalues</code> 里<strong>去重复用</strong>，链表按地址降序；同一槽全局只有一个 open upvalue（闭包共享可变状态的基础）</td>
+<td><code>vm_upvalue.inc:70-100</code></td>
+</tr>
+<tr>
+<td>V5</td>
+<td>关闭只发生在<strong>函数返回</strong>：<code>OP_RETURN</code> / <code>OP_RETURN_MULTI</code> / <code>OP_TAIL_CALL</code>，且都是<strong>无条件</strong>关闭（先判 <code>vm.open_upvalues != NULL</code>）<code>close_upvalues(locals, local_count, 1)</code></td>
+<td><code>op_call.inc:680-682</code> / <code>784-786</code> / <code>44-46</code></td>
+</tr>
+<tr>
+<td>V6</td>
+<td>locals 是<strong>每帧独立数组</strong>（≤32 槽走帧内 <code>inline_locals</code>，否则 <code>malloc</code>），不是操作数栈</td>
+<td><code>src/include/leno_vm.h:277-302</code>；<code>src/vm/vminc/vm_call.inc:88-98</code></td>
+</tr>
+<tr>
+<td>V7</td>
+<td><code>vm.frames</code> 扩容时对 open 链表做<strong>整块地址重映射</strong>（旧块范围内的 <code>location</code> 按 delta 平移）</td>
+<td><code>vm_upvalue.inc:23-57</code></td>
+</tr>
+<tr>
+<td>V8</td>
+<td>GC：<code>OBJ_CLOSURE</code> 标 function + 前 <code>upvalue_count</code> 个 upvalue；<code>OBJ_UPVALUE</code> 标 <code>*location</code> 与 <code>closed</code>；open 链表本身是根；帧 <code>locals[0..local_count)</code> 是根</td>
+<td><code>src/gc.c:566-637</code>、<code>gc.c:1052-1057</code>、<code>gc.c:1011-1015</code></td>
+</tr>
+<tr>
+<td>V9</td>
+<td><code>gc_alloc</code> 三条路径（池复用 / 新块切割 / 裸 malloc）<strong>都整套 <code>memset 0</code></strong> ⇒ JIT callout 只需照抄 VM 的字段初始化，<code>upvalues[n..255]</code> 自动为 NULL</td>
+<td><code>src/gc.c:396 / 406 / 415 / 424</code></td>
+</tr>
+<tr>
+<td>V10</td>
+<td>编译器<strong>无条件发射</strong> <code>OP_CLOSURE</code>（<code>upvalue_count == 0</code> 也发射，没有"无捕获就跳过"的优化）；struct 方法另有「预创建闭包」旁路（仅 <code>upvalue_count == 0</code> 时预创建）</td>
+<td><code>src/codegen/codegen_func.c:352-367</code>、<code>codegen_expr.c:2159-2185</code>；<code>op_struct.inc:124-134</code>、<code>src/serialize/serialize.c:1169-1176</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-2-jit-侧结构-决定了能做在哪一层">2.2 JIT 侧结构（决定了能做在哪一层）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事实</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J1</td>
+<td>ABI 现在是 <code>int (*)(Value* locals, Value* globals)</code>，注释即契约 <code>RCX = locals</code>；shim 把 System V 的 RDI/RSI 搬到 RCX/RDX，然后 <code>R9 = globals</code></td>
+<td><code>src/jit/jit.h:14-17, 41</code>；<code>src/jit/backend/x86_64.c:894-910, 928</code></td>
+</tr>
+<tr>
+<td>J2</td>
+<td>函数级 JIT 快路径<strong>不压 VM 帧</strong>，实参装进 <code>jit_func_locals_pool[JIT_FUNC_MAX_DEPTH][JIT_MAX_LOCALS]</code> 后直接 C 调机器码 ⇒ 体内任何 <code>frame-&gt;…</code> 读到的都是<strong>调用方</strong>的帧</td>
+<td><code>src/jit/jit_priv.h:308-309</code>；<code>src/jit/jit.c:504-508</code>；<code>jit_callout.c:1377-1414</code></td>
+</tr>
+<tr>
+<td>J3</td>
+<td>函数级 JIT 的 locals 进 scratch 后<strong>不写回</strong>（<code>func_mode</code> 分支明确跳过）</td>
+<td><code>x86_64.c:1418-1426</code></td>
+</tr>
+<tr>
+<td>J4</td>
+<td>循环 JIT 的 locals 在 scratch（<code>[RBP - 8*(i+1)]</code>，pinned 槽在 R12~R15），<code>frame-&gt;locals</code> 执行期是<strong>过期值</strong>；进出各一次拷贝 / 写回</td>
+<td><code>x86_64.c:38-39, 61-63, 480-500, 936-1040, 1320-1406</code></td>
+</tr>
+<tr>
+<td>J5</td>
+<td>栈深只在<strong>编译期</strong>用局部 <code>int vstack</code> 记账（scan 与 codegen 各一份），物理调整靠各 case 里的局部 <code>pop_bytes</code>；曾有 <code>OP_GET_PROPERTY</code> 独立形态漏算 8 字节导致 RSP 下漂（R12/§8.67）</td>
+<td><code>x86_64.c:1155</code>；<code>jit_scan.c:690</code>；<code>ops_callout.inc:1083-1103</code></td>
+</tr>
+<tr>
+<td>J6</td>
+<td>两个扫描器<strong>都拿得到 chunk</strong>：<code>scan_loop_body(..., Chunk* chunk)</code>、<code>scan_callee_for_inline(Chunk* cc, ...)</code>；但 <code>opcode_size(ip)</code> 只有 <code>ip</code>，故 <code>OP_CLOSURE</code> 故意返回 <code>-1</code>（"宁可不编，不要猜"）</td>
+<td><code>jit_scan.c:676-677</code>、<code>408-412</code>、<code>376-380</code>、<code>311-312</code></td>
+</tr>
+<tr>
+<td>J7</td>
+<td>闭包 4 条 opcode 的当前落点：<code>OP_CLOSURE</code> → <code>unknown opcode</code>（size&lt;0）拒收；<code>GET/SET/CLOSE_UPVALUE</code> → 已登记长度（3/3/1 字节）但无 case ⇒ <code>default</code> 的 <code>unsupported</code> 拒收；内联侧同理</td>
+<td><code>jit_scan.c:703-710</code> / <code>426-432</code>；<code>jit_scan.c:1437-1444</code> / <code>650-654</code>；<code>340</code>、<code>316</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-3-冲突根因">2.3 冲突根因</h3>
+<p>一句话：<strong>VM 的 upvalue 锚在 <code>Value*</code>（帧 locals 槽的地址）上，而 JIT 的 locals 没有这样的地址。</strong></p>
+<p>具体四处对不上：</p>
+<ol>
+<li><strong>地址</strong>：JIT locals 在 scratch（机器栈）或 pinned 寄存器里，取不到"存活期内不变"的 <code>Value*</code>（J4）。</li>
+<li><strong>可见性</strong>：<code>mark_roots</code> 只扫 <code>vm.stack</code> 与各帧 <code>locals</code>，<strong>看不到 JIT scratch / 机器栈</strong>；现行契约是「JIT 帧内绝不就地回收，只置让出标志」（<code>src/gc.c:429-442</code>）。</li>
+<li><strong>帧</strong>：函数级 JIT 快路径不压帧（J2），而 <code>OP_CLOSURE</code> / <code>GET/SET_UPVALUE</code> 全靠 <code>frame-&gt;locals</code> / <code>frame-&gt;closure</code> ⇒ 必须由 ABI 显式带入。</li>
+<li><strong>回退</strong>：循环 bailout 从<strong>循环头重跑本轮</strong>、函数级 bailout <strong>重跑整个调用</strong>（<code>jit.c:511-519</code>），而"建闭包"是<strong>堆副作用</strong>——这是 §12 已登记取舍的新增受害面。</li>
+</ol>
+<hr>
+<h2 id="3-形态分解-本设计的核心表">3. 形态分解（本设计的核心表）</h2>
+<p>按「捕获种类 × JIT 层级」穷举，只有 4 个形态可安全支持，其中 2 个覆盖真实负载的绝大多数。</p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>形态</th>
+<th>需要的新机制</th>
+<th>安全性</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>C0</strong></td>
+<td><code>upvalue_count == 0</code> 的 <code>OP_CLOSURE</code>（捕获描述表为空）</td>
+<td>长度解析 + 一个分配 callout</td>
+<td>✅ 无 upvalue，无地址问题</td>
+<td><strong>P1 做</strong></td>
+</tr>
+<tr>
+<td><strong>C1</strong></td>
+<td>全部捕获都是 <code>is_local=0</code>（<strong>by-upvalue</strong>，捕获外层闭包的 upvalue）</td>
+<td>closure 通道（读 <code>frame-&gt;closure-&gt;upvalues[i]</code>，纯指针复制）</td>
+<td>✅ 复用既有 <code>Upvalue*</code>，生命周期归创建者</td>
+<td><strong>P2 做</strong></td>
+</tr>
+<tr>
+<td><strong>C2</strong></td>
+<td><code>is_local=1 &amp; is_value_capture=1</code>（<strong>值捕获</strong>）</td>
+<td>从 scratch 读值 → <code>new_upvalue()</code>（closed 形态）</td>
+<td>✅ <code>location</code> 指向自身 <code>closed</code>，与 JIT 栈无关</td>
+<td><strong>P3 做（收益主体）</strong></td>
+</tr>
+<tr>
+<td><strong>C3</strong></td>
+<td><code>is_local=1 &amp; is_value_capture=0</code>（<strong>引用捕获本帧 locals</strong>）</td>
+<td>需把被捕获槽提升为 JIT 托管的稳定地址 + 复刻 close 语义</td>
+<td>❌ 破坏 I1；需改 locals 布局</td>
+<td><strong>默认拒绝；P4 视度量决定</strong></td>
+</tr>
+<tr>
+<td><strong>U1</strong></td>
+<td><code>GET/SET_UPVALUE</code> 在<strong>函数级</strong> JIT 体内</td>
+<td>closure 通道</td>
+<td>✅ 纯指针链（<code>closure→upvalues[i]→location→值</code>）</td>
+<td><strong>P2 做</strong></td>
+</tr>
+<tr>
+<td><strong>U2</strong></td>
+<td><code>GET/SET_UPVALUE</code> 在<strong>循环级</strong> JIT 体内</td>
+<td>closure 通道（<code>jit_try_hot_loop</code> 入参里已有 <code>frame</code> ⇒ 入口可取 <code>frame-&gt;closure</code>）</td>
+<td>✅ 同上</td>
+<td><strong>P2 做</strong></td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>OP_CLOSE_UPVALUE</code></td>
+<td>—</td>
+<td>编译器不发射</td>
+<td><strong>维持拒绝</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>两条容易被忽略的连带结论</strong>：</p>
+<ul>
+<li>C1 的前提正是 I1：如果 JIT 自己会造 open upvalue，那么「外层闭包」可能是<strong>正在执行的 JIT 帧</strong>，它的 open upvalue 会指向 JIT scratch ⇒ C1 也一起变得不安全。<strong>I1 同时保护了 C1。</strong></li>
+<li>U1/U2 必须<strong>每次重新取 <code>upvalue-&gt;location</code></strong>（不可缓存）：open→closed 转换会改写 <code>location</code>（V5、<code>vm_upvalue.inc:122</code>）。</li>
+</ul>
+<hr>
+<h2 id="4-设计不变量-i1-i8">4. 设计不变量（I1–I8）</h2>
+<p>每条给：陈述 / 依据 / 破坏后果 / 验证方式。<strong>这 8 条是实现的验收标准，也是 review 时唯一需要盯的东西。</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>不变量</th>
+<th>依据</th>
+<th>破坏后果</th>
+<th>验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>I1</strong></td>
+<td><strong>JIT 永不创建 open upvalue</strong>（绝不调用 <code>capture_upvalue</code>；只造 closed 值捕获、只复用既有 upvalue）</td>
+<td>V3/V4、J4</td>
+<td>悬空 <code>location</code>（指向已弹出的机器栈）→ 随机内存损坏；且 <code>vm_grow_frames</code> 的重映射覆盖不到 JIT 区</td>
+<td>代码级：callout 里 grep 不到 <code>capture_upvalue</code>；用例：JIT/<code>LENO_NO_JIT=1</code> 结果与「闭包调用后仍可读」全部一致</td>
+</tr>
+<tr>
+<td><strong>I2</strong></td>
+<td><strong>不缓存 <code>Upvalue*</code> 与 <code>location</code></strong>：闭包体内每次访问都重新取链</td>
+<td>V5、<code>vm_upvalue.inc:122</code></td>
+<td>open→closed 后仍写旧栈槽 ⇒ 语义静默错误（读到过期值/写丢）</td>
+<td>用例：闭包先被 open 引用、外层返回后再调用，结果与解释器一致</td>
+</tr>
+<tr>
+<td><strong>I3</strong></td>
+<td><strong>值捕获逐字复刻 VM 的字段初始化与写屏障顺序</strong>：<code>new_upvalue(val_null())</code> → <code>closed = value</code> → <code>gc_write_barrier</code> → <code>location = &amp;closed</code></td>
+<td>V3、<code>op_call.inc:577-581</code></td>
+<td>漏写屏障 ⇒ 老年代 upvalue 指年轻代值跨代漏标（<code>gc.c</code> 的 remembered set 不修）</td>
+<td>用例：老年代 upvalue 被写入新分配对象 + 强制 <code>gc_collect</code> 后仍可达</td>
+</tr>
+<tr>
+<td><strong>I4</strong></td>
+<td><strong>每次执行 <code>OP_CLOSURE</code> 都新建闭包</strong>（与 VM 一致，不做"同缓存复用"）；唯一例外是 struct 方法预创建闭包那条旁路<strong>不动</strong></td>
+<td>V10、<code>op_struct.inc:124-134</code></td>
+<td>身份语义与 VM 分叉（<code>closure == closure</code> 跨执行变成 true）</td>
+<td>用例：循环里建 N 个闭包，两两身份比较与解释器逐位一致</td>
+</tr>
+<tr>
+<td><strong>I5</strong></td>
+<td><strong>JIT 新建的闭包在离开 JIT 前必须落到 GC 可见处</strong>（locals 写回 / 语法上已压入 vstack 干净点）；依赖「JIT 帧内不就地回收」既有契约</td>
+<td>V8、<code>src/gc.c:429-442</code></td>
+<td>让出/退出时闭包只在寄存器里 ⇒ 解释器侧回收后使用已释放对象</td>
+<td>用例：热循环内建闭包 + 触发 GC 让出（参考 §8.37 的做法），结果不变</td>
+</tr>
+<tr>
+<td><strong>I6</strong></td>
+<td><strong>scan 期拒绝优先于运行期 bailout 兜底</strong>：凡是不能静态证明安全的形态，直接 <code>capable=0</code>，不靠 bailout 补救</td>
+<td>§12 取舍「bailout 重跑无法回滚堆副作用」</td>
+<td>bailout 重跑会<strong>重复建闭包</strong>（若已被存进堆容器，就是可见的重复元素）</td>
+<td>用例：拒绝形态在 <code>LENO_JIT_DEBUG=1</code> 下必须打印 <code>unsupported/unknown</code>，且不出现 bailout</td>
+</tr>
+<tr>
+<td><strong>I7</strong></td>
+<td><strong>closure 通道必须嵌套安全</strong>：按调用深度/帧保存-恢复，禁止用单一全局裸槽</td>
+<td>J2、<code>jit_func_locals_pool</code> 的深度索引先例</td>
+<td>A 的 closure 被 B 覆盖 ⇒ A 体内 <code>GET_UPVALUE</code> 静默读错环境</td>
+<td>用例：闭包 A 调闭包 B、B 内再读写自己的 upvalue，交叉验证</td>
+</tr>
+<tr>
+<td><strong>I8</strong></td>
+<td><strong>内联体与 upvalue 互斥</strong>（见 P2 说明）：inline scan 维持「含 upvalue 相关 opcode 则拒绝内联」</td>
+<td><code>jit_scan.c:650-654</code> 现状即拒绝</td>
+<td>内联后"当前 closure"归属不清（caller 的 vs callee 的）⇒ 读错环境</td>
+<td>用例：被内联方含 <code>GET_UPVALUE</code> 时必须 <code>inline-scan FAIL</code>，且不影响外层循环编译</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>一句话记法：<strong>I1 管生命周期，I2 管解引用，I3/I4 管语义逐字对齐，I5 管 GC，I6 管失败模式，I7/I8 管"当前闭包是谁"。</strong></p>
+</blockquote>
+<hr>
+<h2 id="5-分阶段计划">5. 分阶段计划</h2>
+<p>设计原则：<strong>每个阶段都能独立验收、独立回退，且不依赖后一阶段</strong>；先做「零风险地基」，再做「收益主体」，把唯一的重活（C3）压到最后并按度量决定是否做。</p>
+<h3 id="p0-度量与基线-纯诊断-无行为变化">P0 —— 度量与基线（纯诊断，无行为变化）</h3>
+<p><strong>目的</strong>：先拿到形态直方图，避免做「没有实测入口的复杂度」（R3 的方法学）。</p>
+<ul>
+<li>在 scan 侧（两套扫描器共用的一条路径即可）<strong>只读</strong>解析 <code>OP_CLOSURE</code> 的捕获描述表，在 <code>LENO_JIT_DEBUG=1</code> 下打印形态计数：
+  <code>[JIT-DEBUG] CLOSURE caps=N local=x value=y byup=z</code></li>
+<li>真实负载至少覆盖：<code>file_manager</code> 交互负载、SDL3 UI（回调密集型）、<code>examples/性能测试</code>。</li>
+<li>新增 4 支探针（见 §8），并建立「JIT vs <code>LENO_NO_JIT=1</code> 逐位一致」的对拍脚本口径。</li>
+</ul>
+<p><strong>验收</strong>：一张 2026-09-15 的形态表（C0/C1/C2/C3 各自出现次数与所在负载）。
+<strong>Gate</strong>：若 <strong>C3 占比 ≈ 0</strong>（大概率，因为循环变量已被语义分析转成值捕获），P4 直接永久拒绝。
+<strong>风险</strong>：无（只加打印）。<strong>回退</strong>：删打印。</p>
+<p><strong>实测（2026-09-15，<code>file_manager</code> + 其全部依赖模块）</strong>：</p>
+<ul>
+<li><strong>测量手段（可复用，且不开窗、不需交互）</strong>：<code>--debug-out &lt;file&gt;</code> 会在<strong>执行之前</strong>把主程序 +
+  所有已加载模块的字节码写盘（<code>src/main.c:83-98</code> 的 <code>debug_dump_all_bytecode</code>）；
+  配合 <code>SDL_VIDEODRIVER=dummy</code>（无窗口）+ 之后强杀，就能安全拿到整份反汇编，
+  且其中带 <code>[up(i): local=N idx=X val=Y]</code> 捕获描述 ⇒ 形态普查不需要让程序跑热。</li>
+<li><strong>静态普查结果</strong>（全程序 <strong>404</strong> 个 <code>OP_CLOSURE</code>）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>数量</th>
+<th>占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C0 零捕获</td>
+<td><strong>357</strong></td>
+<td>88%</td>
+</tr>
+<tr>
+<td>C3 引用捕获（本帧局部）</td>
+<td><strong>57</strong> 条捕获</td>
+<td>12%</td>
+</tr>
+<tr>
+<td>C2 值捕获</td>
+<td><strong>0</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>C1 by-upvalue</td>
+<td><strong>0</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>热代码侧的观测</strong>：把应用跑到<strong>优雅退出</strong>（发 <code>WM_CLOSE</code>，stderr 才会 flush）后，
+  <code>LENO_JIT_CLOSURE=1</code> 的输出里<strong>一行闭包形态都没有</strong> ⇒ 这个应用的闭包<strong>全部活在冷路径</strong>
+  （初始化、事件回调注册），被编译的热循环/函数里没有任何闭包指令。</li>
+</ul>
+<hr>
+<h3 id="p1-长度解析-c0-零捕获闭包">P1 —— 长度解析 + C0（零捕获闭包）</h3>
+<p><strong>改动点</strong>
+1. <strong>chunk 感知的长度解析</strong>：新增 <code>opcode_size_in_chunk(Chunk* chunk, const uint8_t* ip)</code>，<strong>只对 <code>OP_CLOSURE</code> 特殊处理</strong>（<code>2 + 6 * upvalue_count</code>，<code>upvalue_count</code> 从 <code>chunk-&gt;constants[const_idx]</code> 的函数对象取），其余转发现有 <code>opcode_size(ip)</code> —— 保持原函数的契约不变（R3 的"宁可不编，不要猜"由此被正经满足，而不是绕过）。
+   两处调用点都已持有 chunk（J6），改动面最小。
+2. <strong>两套 scan 各加 <code>OP_CLOSURE</code> case</strong>：解析出 <code>n = upvalue_count</code>；<strong>仅当 <code>n == 0</code> 时放行</strong>，否则按 C1/C2/C3 分派（P1 阶段一律 <code>capable=0</code> / <code>inline-scan FAIL</code>，但仍要正确<strong>跳过</strong>操作数字节，避免走错字节流）。
+3. <strong>callout</strong>：<code>jit_callout_make_closure(Value func_val)</code>（零捕获版），照 <code>jit_callout_get_method</code> 的分配模式（<code>gc_alloc</code> → 设 <code>function</code> / <code>upvalue_count</code>），失败置 <code>jit_callout_failed</code> 交解释器报错。
+4. <strong>codegen</strong>：<code>OP_CLOSURE</code> case（弹 0 压 1：<code>TOS_PRODUCE(); vstack++</code>）。</p>
+<p><strong>验收判据</strong>
+- <code>jit_probes/probe_closure_nocap.leno</code>：热循环内建零捕获闭包并调用 ⇒ <code>capable=1</code>、<code>unsupported:61</code> 从直方图消失；
+- 新用例 <code>assert/test_jit_op_closure.leno</code>：身份比较（I4）、闭包被存入数组后逐次调用、<code>LENO_NO_JIT=1</code> 对拍一致；
+- 编译 0 warning。</p>
+<p><strong>风险</strong>：低。<strong>回退</strong>：scan 里删 case 即回到旧行为（callout 与 codegen 代码保留无害）。
+<strong>独立价值</strong>：即使 R5 就此停下，这一步也把 <code>61:OP_CLOSURE</code> 从 <code>unknown</code> 变成 <code>capable</code>，并补上 R3 留下的长度缺口。</p>
+<hr>
+<h3 id="p2-closure-通道-u1-u2-c1-by-upvalue-捕获">P2 —— closure 通道 + U1/U2 + C1（by-upvalue 捕获）</h3>
+<p><strong>这是 ABI 阶段，也是文档 roadmap 里点名的「(a) func-JIT ABI 要加 closure 通道」。</strong></p>
+<p><strong>改动点</strong>
+1. <strong>ABI 第三参</strong>：<code>jfn(Value* locals, Value* globals, ObjClosure* closure)</code>。
+   - 入口 shim 已存在（<code>x86_64.c:894-910</code>），多搬一个寄存器即可；
+   - <strong>推荐形态</strong>：prologue 把该参数<strong>存进本帧的一个固定 scratch 合成槽</strong>（而不是常驻某个通用寄存器）——理由：通用寄存器已被 locals/globals/scratch/pinned 占满，且存进本帧栈<strong>天然嵌套安全</strong>（满足 I7），不引入全局槽的保存-恢复问题；
+   - <strong>两条入口都要传</strong>：<code>jit_try_hot_func_call</code> 手里就有 <code>closure</code>（<code>jit.h:143</code>）；<code>jit_try_hot_loop</code> 手里有 <code>frame</code> ⇒ <code>frame-&gt;closure</code>（<code>jit.h:116</code>）。
+2. <strong>U1/U2 codegen（纯指针链，无需 callout）</strong>：
+   <code>closure → [ObjClosure.upvalues + slot*8] → Upvalue* → [Upvalue.location] → Value</code>
+   读走 <code>GET_UPVALUE</code>，写走 <code>SET_UPVALUE</code>（<strong>注意语义：<code>OP_SET_UPVALUE</code> 是 <code>peek</code> 不弹栈</strong>，<code>op_variables.inc:170-179</code>）。
+   防御性守卫（不满足即 bailout）：<code>closure == NULL</code>、<code>slot &gt;= upvalue_count</code>、<code>upvalue == NULL</code>。
+   ⚠ <strong>必须每次重新取 <code>location</code></strong>（I2）。<code>SET</code> 是否补写屏障<strong>照抄 VM（当前 VM 没有）</strong>，疑点记入 §7。
+3. <strong>C1 的 <code>OP_CLOSURE</code></strong>：<code>is_local=0</code> 时直接复制 <code>frame-&gt;closure-&gt;upvalues[index]</code>（越界则 bailout 交解释器报错）。
+4. <strong>I8 落地</strong>：inline scan 的 <code>GET/SET_UPVALUE</code> <strong>继续拒绝</strong>（现状即拒），并在注释里写明理由（"当前闭包归属"在内联体里不成立）。</p>
+<p><strong>验收判据</strong>
+- <code>jit_probes/probe_closure_upvalue.leno</code>：闭包体内热循环读写 upvalue ⇒ 闭包体进函数级 JIT（<code>FuncCompiled</code> 增长）、结果与 <code>LENO_NO_JIT=1</code> 逐位一致；
+- I2 专项用例：闭包捕获 open 变量 → 外层返回 → 再调用，读到的值正确；
+- I7 专项用例：闭包 A 调闭包 B、B 内读写自己的 upvalue；
+- 既有全套 assert 无回退（ABI 改动影响面最大，必须全跑）。</p>
+<p><strong>实现记录（P2a，2026-09-15）</strong>：
+- ABI：<code>JitLoopFn</code> 加第三参 <code>ObjClosure*</code>；5 个入口全部传值（循环入口传 <code>frame-&gt;closure</code>、
+  解释器侧函数入口传 <code>closure</code>、三个 callout 快路径分别传 <code>closure</code> / <code>callee</code> /
+  <code>callee</code>-或-NULL）。后端序言把它存进<strong>本帧固定槽</strong> <code>closure_disp</code>
+  （<code>-8*(total_locals + max_vstack + 7)</code>，帧尺寸 +8）；SysV 的 shim 必须<strong>先</strong>搬
+  arg3（RDX→R8）再覆盖 RDX，Win64 的 arg3 本来就在 R8。
+- <code>GET/SET_UPVALUE</code> 走 callout（<code>jit_callout_upvalue_get/set</code>）：纯指针链 + 三级守卫，
+  每次重新取 <code>location</code>（I2）。<code>SET</code> 的顺序是"先 TOS_SPILL 保住原始表示，再 PEEK 出来
+  装箱"，避免 RAW→VALUE 转换污染内存栈里的裸 int48/裸 double。
+- <strong><code>GET/SET_UPVALUE</code> 在函数级体与循环体里都放行</strong>；<strong>内联体仍拒绝</strong>（I8）。
+- 实测：<code>probe_closure_upvalue</code> → 循环进 JIT、<code>Bailouts: 0</code>、<code>u1=200000 / u2=400000</code>
+  与 <code>LENO_NO_JIT=1</code> 一致；<code>assert/test_jit_closure_upvalue_rw.leno</code> 覆盖四种语义
+  （closed / open / 两闭包共享同一 upvalue / 热循环里的函数级 SET）；全套 assert <strong>305/0</strong>。
+- 仍未做：<strong>C1（by-upvalue 捕获）</strong>——留到 P2b。</p>
+<hr>
+<h3 id="p3-c2-值捕获-收益主体-循环内建闭包捕获循环变量">P3 —— C2 值捕获（收益主体：循环内建闭包捕获循环变量）</h3>
+<p><strong>为什么这是主体</strong>：<code>semantic_upvalue.c:200</code> 把「循环体内的变量」一律标为值捕获 ⇒ <strong>真实负载里循环建闭包的形态就是 C2</strong>，而 C2 是最安全的一类（<code>location</code> 指向 upvalue 自身的 <code>closed</code>）。</p>
+<p><strong>改动点</strong>
+- scan 放行 <code>n &gt; 0</code> 且<strong>所有</strong>捕获都是 (<code>is_local=0</code>) 或 (<code>is_local=1 &amp; is_value_capture=1</code>) 的 <code>OP_CLOSURE</code>；出现任一 C3 捕获即整条 <code>capable=0</code>（I6：宁可拒收，不靠 bailout）。
+- callout：<code>jit_callout_make_closure_caps(func_val, n, Value* captured_values)</code> —— 内部按 V3 逐条 <code>new_upvalue</code>（I3 的字段顺序 + 写屏障）；
+  - 值来源：<code>is_value_capture=1 &amp; is_local=1</code> → 从 <strong>scratch 槽</strong>读（<code>EMIT_LOAD_LOCAL</code>）；
+  - <code>is_local=0</code> → 从<strong>当前 closure 的 upvalues</strong> 读（P2 的链）；
+- vstack 记账：<code>OP_CLOSURE</code> 为弹 0 压 1，不引入新的栈深风险（对照 J5 的教训：这里没有可变 <code>pop_bytes</code>）。</p>
+<p><strong>验收判据</strong>
+- 语义金标准用例 <code>assert/test_jit_closure_loop_capture.leno</code>：<code>for</code> 循环建 N 个闭包存入数组，逐个调用 ⇒ <strong>每轮独立值</strong>（Leno 值捕获语义，而非全部等于最后一个值）；与 <code>LENO_NO_JIT=1</code> 逐位一致；
+- 直方图：<code>61:CLOSURE</code> 在实际负载上转为 <code>capable</code>；
+- 让出/GC 用例（I5）：热循环内建闭包 + 触发 GC 让出后结果不变。</p>
+<p><strong>风险</strong>：中低。<strong>回退</strong>：scan 收紧到只放行 C0/C1。</p>
+<p><strong>实现记录（P3，2026-09-15）</strong>：
+- <strong>scan</strong>：放行条件从"零捕获或全 by-upvalue"放宽为 <strong><code>ref_local == 0</code></strong>（即 C0 / C1 / C2 都放行，只拒 C3）。
+  新增一处 <strong><code>max_vstack</code> 峰值记账</strong>：C2 的值必须压到 JIT 栈上才能交给 callout，
+  压入/弹出虽在同一指令内平衡，但<strong>峰值</strong>会临时抬高 vstack ⇒ 若不计入 <code>max_vstack</code>，
+  帧尺寸不够、压栈会踩进 tmp/co/closure 区（内存安全）。
+- <strong>codegen</strong>：把描述表里 <code>is_local=1</code> 的局部槽按捕获下标<strong>降序</strong>用 <code>EMIT_LOAD_LOCAL</code> 压栈
+  （降序 ⇒ 压完后 <code>vstack_top[0]</code> 正好是第 0 条本帧捕获，callout 顺序消费即可），
+  把 RSP 存进 <code>tmp3_disp</code> 传作第四参；callout 返回后再 <code>add rsp, n_local*8</code>。
+  被捕获槽若在 scan 里没被映射（<code>cur_local_map[slot] &lt; 0</code>）⇒ <strong>编译期放弃</strong>（<code>return 0</code>），
+  绝不发一条读错槽的指令。
+- <strong>callout</strong>：<code>jit_callout_make_closure_caps(func_val, cur, desc, vstack_top)</code> 统一处理 C1 + C2；
+  值捕获走内部小工具 <code>jit_new_closed_upvalue()</code>（复刻 <code>new_upvalue</code> + 写屏障 + <code>location=&amp;closed</code>，
+  I3 的字段顺序）；C3 条目在 callout 里<strong>兜底拒绝</strong>（不建半成品闭包）。
+- <strong>实测</strong>：<code>probe_closure_value_capture</code> → <code>scan:ALLOW-C2</code>、<code>c2=1400000</code>、<strong>0 bailout</strong>；
+  <code>assert/test_jit_closure_value_capture.leno</code> 两条金标准判据 ——
+  ① <strong>每轮独立取值</strong>：<code>collect(1000)</code> 必须 = 20（若错误地共享一份 upvalue 会得 40，用例立刻失败）；
+  ② <strong>C1 + C2 混合捕获</strong>：一个闭包同时捕获外层 upvalue 与循环内局部，<code>mixed(1000) = 599500</code>。
+  全套 assert <strong>307/0</strong>。
+- 仍未做：<strong>C3（引用捕获本帧局部）</strong>（P4，默认不做）；<strong>内联体内的闭包/upvalue 一律仍拒绝</strong>（I8）。</p>
+<hr>
+<h3 id="p4-c3-引用捕获本帧-locals-默认不做-需-p0-度量授权">P4 —— C3（引用捕获本帧 locals）：默认不做，需 P0 度量授权</h3>
+<p><strong>若 P0 显示 C3 有可观占比</strong>，才进入本阶段；否则<strong>永久拒绝并写进文档</strong>（保持"不留没有证据的复杂度"）。</p>
+<p>两条候选路线：</p>
+<table>
+<thead>
+<tr>
+<th>路线</th>
+<th>做法</th>
+<th>必须同时解决</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(a) <strong>提升槽</strong></td>
+<td>scan 发现本帧存在 C3 捕获时，把这些 slot 从 scratch 提升到一块 <strong>JIT 托管的稳定 <code>Value</code> 数组</strong>（随本帧机器码生命周期管理，登记给 GC / 或确保退出前关闭）</td>
+<td>① 关闭时机必须复刻 V5 的无条件关闭（含 <code>gc_write_barrier</code> + 摘链）；② 让出/bailout 边界：bailout 不写回 locals，而 open upvalue 已建 ⇒ 需与 I6 的"重跑"语义对齐；③ <code>vm_grow_frames</code> 的地址重映射覆盖不到 JIT 托管区 ⇒ 地址排序不变量（V4 的降序假设）要重新论证</td>
+</tr>
+<tr>
+<td>(b) <strong>拒绝</strong></td>
+<td>维持现状</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gate（进入条件）</strong>：P0 形态表里 C3 出现次数 ≥ 阈值（建议按"是否出现在真实负载的热循环/热函数体内"判断，而非绝对条数）。</p>
+<p><strong>Gate 实测数据（2026-09-15）</strong>：<code>file_manager</code> + 其全部模块的静态普查给出 <strong>C3 = 57 条捕获</strong>
+（占全部捕获条目的 <strong>100%</strong>，因为 C1/C2 均为 0）⇒ <strong>C3 在真实代码里绝不是"少数派"</strong>，
+它是这个应用里<strong>唯一</strong>的捕获形态（回调闭包在循环外创建、捕获外层局部）。
+<strong>但</strong>同一应用的<strong>热代码</strong>里闭包指令为 0 ⇒ 这 57 处全部落在冷路径（初始化 / 回调注册），
+做成 P4 也<strong>体现不出收益</strong> ⇒ <strong>维持"不做 P4"</strong>。
+同时把这条数据记为<strong>触发条件</strong>：一旦出现「热循环里创建/注册回调」的写法
+（例如按列表项批量 <code>arr.add(func(){...})</code>），P4 的收益就有落点，应当优先做。</p>
+<p><strong>第二次确认（2026-09-16，热代码口径）</strong>：用 §8.77 的 <code>LENO_JIT_GAPS=1</code>（按编译对象去重）
+在三个真实应用（file_manager / cache_cleaner / 五子棋，headless 300 帧）上量到
+<code>OP_CLOSURE C3</code> 拒收 <strong>0 / 0 / 0</strong>；file_manager 另开 <code>LENO_JIT_CLOSURE=1</code> 跑 60 帧，
+<strong>闭包形态行为 0</strong>（连放行的 C0/C1/C2 都不出现）⇒ 热循环里根本没有闭包指令。
+与上面的静态普查（57 处全在冷路径）<strong>互为独立证据</strong>，结论一致：
+<strong>P4 永久拒绝</strong>（除非触发条件出现）。详见 <code>docs/archive/JIT实现与调试记录.md</code> §8.79。</p>
+<hr>
+<h3 id="p5-收口">P5 —— 收口</h3>
+<ul>
+<li><code>LENO_JIT_DUMP</code> 反汇编补 <code>OP_CLOSURE</code> / <code>GET/SET_UPVALUE</code> 的可读输出（排查必备）。</li>
+<li>更新 <code>docs/archive/JIT实现与调试记录.md</code>：新增本轮小节、roadmap R5 行改为「完成（§x.xx）」、§12 补「bailout 重跑会把建闭包这一堆副作用一并重放」。</li>
+<li><code>jit_probes/README.md</code> 登记新探针与基线判据。</li>
+</ul>
+<hr>
+<h2 id="6-需要拍板的决策">6. 需要拍板的决策</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>决策点</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>ABI 第三参 + 存帧内合成槽（推荐）vs 全局 closure 槽</td>
+<td><strong>推荐前者</strong>：嵌套安全（I7）不需额外保存-恢复；后者省一次搬迁但引入 I7 的实现负担</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>P3 是否在线</td>
+<td><strong>做</strong>：它是真实负载的绝大多数形态，且是安全形态</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>C3 是否永久拒绝</td>
+<td><strong>先拒绝</strong>，P0 度量后再定（P4 的 gate）</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>是否顺带修 §7 的 3 个 VM 侧疑点</td>
+<td><strong>不夹带</strong>，单独立项（避免把"JIT 支持"和"VM 修正"混在一个提交里，出问题无法二分）</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>U 访问的防御性守卫（NULL 检查）是否保留</td>
+<td><strong>保留</strong>：代价是一条比较指令，换来"宁可 bailout 交解释器报错，不做 NULL 解引用"</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-顺带发现的-vm-侧疑点-本轮不修-记录备查">7. 顺带发现的 VM 侧疑点（本轮不修，记录备查）</h2>
+<ol>
+<li><strong><code>has_captures</code> 门控语义错配</strong>：<code>has_captures</code> 的语义是「本帧是否捕获了<strong>父层</strong>」（<code>vm_call.inc:148</code>：<code>closure-&gt;upvalue_count &gt; 0</code>），但 <code>OP_CLOSE_UPVALUE</code>（<code>op_variables.inc:183</code>）与 try-return 路径（<code>op_exception.inc:144</code>）把它当作「本帧的 locals 是否<strong>被</strong>别人捕获」来门控关闭 ⇒ 这两条路径可能漏关闭。<code>OP_RETURN</code>/<code>OP_TAIL_CALL</code> 是正确写法（无条件关闭）。
+   ⚠ <strong>JIT 侧不要沿用这个门控</strong>（JIT 不关闭任何东西，见 I1，天然免疫）。</li>
+<li><strong><code>OP_SET_UPVALUE</code> 无写屏障</strong>（<code>op_variables.inc:170-179</code>）：close 时（<code>vm_upvalue.inc:121</code>）有屏障、<code>OP_CLOSURE</code> 值捕获（<code>op_call.inc:580/594</code>）有屏障，唯独 set 没有。老年代 upvalue 写入年轻代对象时存在跨代漏标的理论隐患。<strong>本轮 JIT 照抄现状</strong>（bug-for-bug 对齐），修正另立项。</li>
+<li><strong>异常展开路径不 <code>close_upvalues</code></strong>：<code>op_exception.inc:223-229</code>、<code>vm_exception.inc:379-385</code>、<code>op_coroutine.inc:94-98</code>、<code>src/vm/vm.c:805-809</code> 这些"释放中间帧"的循环只 <code>free</code> 动态 locals，未关闭其上的 open upvalue ⇒ 可能悬空/脏值。与 JIT 无直接关系，但任何"整帧消失但不走 <code>OP_RETURN</code>"的新路径（包括未来若给 JIT 加 open upvalue 支持）都会继承这个坑 —— 这是 I1 的另一条保险。</li>
+<li><strong>方法闭包的 upvalue 填充</strong>（P2 前置，<strong>已核实 2026-09-15</strong>）：
+   - <strong>语言允许</strong> struct 方法捕获外层变量。实测（<code>build/</code> 下临时程序，已删）：
+     <code>leno
+     func make(int base): int {
+         struct S { int x = 1; func add(): int { return x + base } }
+         var s = new S()
+         return s.add()
+     }</code>
+     反汇编显示 <code>S.add</code> 的方法体是 <code>OP_GET_FIELD_FAST slot=0 field=0</code> + <strong><code>OP_GET_UPVALUE 0</code></strong>
+     ⇒ 该方法 <code>func-&gt;upvalue_count == 1</code>。
+   - 而创建路径（<code>op_struct.inc:124-134</code> 明确"需要 upvalue 的方法，标记为 NULL，在运行时
+     动态创建"；<code>op_property.inc:111-121</code>、<code>op_struct.inc:949-955</code> / <code>1114-1120</code>、
+     <code>jit_callout_get_method</code>）新建时把 <code>upvalues[0..n)</code> <strong>一律置 NULL</strong>。
+   - <strong>该形态在解释器侧当前另有问题</strong>：上述程序运行到 <code>s.add()</code> 时报
+     「尝试在非 struct 类型上调用方法 'add'」（属 VM 侧另一处缺陷，本轮未追）。
+   - <strong>结论（已落地）</strong>：JIT 侧<strong>不依赖</strong>"方法闭包一定无捕获"这一假设，<code>GET/SET_UPVALUE</code>
+     一律做三级守卫（<code>closure == NULL</code> / <code>slot &gt;= upvalue_count</code> / <code>upvalues[slot] == NULL</code>）
+     —— 任一不满足即 bailout 交解释器。JIT 在这里比 VM 更保守是正确的：宁可回退，
+     也不要 NULL 解引用（P2a 已实现，见 §P2 的实现记录）。</li>
+</ol>
+<hr>
+<h2 id="8-探针与用例清单-待建">8. 探针与用例清单（待建）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>形态</th>
+<th>判据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jit_probes/probe_closure_nocap.leno</code></td>
+<td>C0：热循环内建零捕获闭包并调用</td>
+<td><code>capable=1</code>；<code>unsupported:61</code> 消失；与 <code>LENO_NO_JIT=1</code> 一致</td>
+</tr>
+<tr>
+<td><code>jit_probes/probe_closure_upvalue.leno</code></td>
+<td>U1/U2：闭包体内热循环读+写 upvalue</td>
+<td>闭包体进函数级 JIT；值逐位一致</td>
+</tr>
+<tr>
+<td><code>jit_probes/probe_closure_value_capture.leno</code></td>
+<td>C2：循环内建闭包捕获循环变量</td>
+<td>每轮独立值；<code>capable=1</code></td>
+</tr>
+<tr>
+<td><code>jit_probes/probe_closure_byupvalue.leno</code></td>
+<td>C1：嵌套闭包捕获外层 upvalue</td>
+<td>指针复用正确；与解释器一致</td>
+</tr>
+<tr>
+<td><code>jit_probes/probe_closure_c3_reject.leno</code></td>
+<td>C3：非循环局部被引用捕获</td>
+<td><strong>必须</strong> <code>unsupported/unknown</code> 拒收，且无 bailout（I6）</td>
+</tr>
+<tr>
+<td><code>assert/test_jit_op_closure.leno</code></td>
+<td>P1 验收</td>
+<td>身份语义（I4）+ 存入容器后逐次调用</td>
+</tr>
+<tr>
+<td><code>assert/test_jit_closure_loop_capture.leno</code></td>
+<td>P3 验收（语义金标准）</td>
+<td>每轮独立值，逐位一致</td>
+</tr>
+<tr>
+<td><code>assert/test_jit_closure_upvalue_rw.leno</code></td>
+<td>P2 验收</td>
+<td>读写 upvalue 交叉验证；含 I2/I7 两个专项</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="附-为什么-先设计不变量-是对的-本次取证的净收获">附：为什么"先设计不变量"是对的（本次取证的净收获）</h2>
+<ul>
+<li>原本 roadmap 的表述是两条前置（ABI closure 通道、循环 JIT locals 布局）。取证后发现真正的<strong>第一性问题只有一个</strong>：JIT 没有稳定 <code>Value*</code>；而它可以用 I1 从语义上绕开，而不必解决"布局"问题。</li>
+<li>剩下三件事（<code>opcode_size</code> 的 chunk 化、ABI 第三参、GC 可见性）都有现成先例可抄：<code>switch_lookup</code> 的变长解析（§8.61）、<code>jit_func_locals_pool</code> 的深度索引（J2）、<code>jit_callout_get_method</code> 的"callout 里 gc_alloc 闭包"（<code>jit_callout.c:1089-1099</code>）。</li>
+<li>形态表（§3）把工作量从"4 条 opcode"重估为"1 个长度解析 + 1 个 ABI 参数 + 3 个 callout + 1 组指针链 codegen"，<strong>且其中 P1 有独立价值、P4 可以永久不做</strong>。</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-摘要">0. 摘要</a></li><li><a href="#1-范围">1. 范围</a></li><ul class="lv3"><li><a href="#1-1-目标">1.1 目标</a></li><li><a href="#1-2-非目标-明确不做-或另立项">1.2 非目标（明确不做，或另立项）</a></li></ul><li><a href="#2-现状取证">2. 现状取证</a></li><ul class="lv3"><li><a href="#2-1-vm-侧闭包语义-决定了-jit-必须复刻什么">2.1 VM 侧闭包语义（决定了 JIT 必须复刻什么）</a></li><li><a href="#2-2-jit-侧结构-决定了能做在哪一层">2.2 JIT 侧结构（决定了能做在哪一层）</a></li><li><a href="#2-3-冲突根因">2.3 冲突根因</a></li></ul><li><a href="#3-形态分解-本设计的核心表">3. 形态分解（本设计的核心表）</a></li><li><a href="#4-设计不变量-i1-i8">4. 设计不变量（I1–I8）</a></li><li><a href="#5-分阶段计划">5. 分阶段计划</a></li><ul class="lv3"><li><a href="#p0-度量与基线-纯诊断-无行为变化">P0 —— 度量与基线（纯诊断，无行为变化）</a></li><li><a href="#p1-长度解析-c0-零捕获闭包">P1 —— 长度解析 + C0（零捕获闭包）</a></li><li><a href="#p2-closure-通道-u1-u2-c1-by-upvalue-捕获">P2 —— closure 通道 + U1/U2 + C1（by-upvalue 捕获）</a></li><li><a href="#p3-c2-值捕获-收益主体-循环内建闭包捕获循环变量">P3 —— C2 值捕获（收益主体：循环内建闭包捕获循环变量）</a></li><li><a href="#p4-c3-引用捕获本帧-locals-默认不做-需-p0-度量授权">P4 —— C3（引用捕获本帧 locals）：默认不做，需 P0 度量授权</a></li><li><a href="#p5-收口">P5 —— 收口</a></li></ul><li><a href="#6-需要拍板的决策">6. 需要拍板的决策</a></li><li><a href="#7-顺带发现的-vm-侧疑点-本轮不修-记录备查">7. 顺带发现的 VM 侧疑点（本轮不修，记录备查）</a></li><li><a href="#8-探针与用例清单-待建">8. 探针与用例清单（待建）</a></li><li><a href="#附-为什么-先设计不变量-是对的-本次取证的净收获">附：为什么"先设计不变量"是对的（本次取证的净收获）</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/JIT模块调用优化与bailout排查记录.html">← 上一篇</a><a href="../LENB-format-reverse-notes.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 真实项目可用性评估 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/Leno真实项目可用性评估_2026-11-08.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">Leno 真实项目可用性评估</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html" class="active" aria-current="page">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-真实项目可用性评估">Leno 真实项目可用性评估</h1>
+<blockquote>
+<p>范围：d:\CLeno\Aria、LenoMusic、LenoTrae、LenoWorkBuddy（只读，未修改任何项目代码）；§4.5 另审 <code>build\leno_module</code> 标准库（20 个模块，同样只读）。
+方法：144 个 <code>.leno</code>、49,769 行全量抽读 + 关键模式计数；另用 <code>build\leno.exe</code> 在临时目录做最小用例实测（§3.5），并审计生成侧引导（§3.6）。计数口径：<strong>包含该模式的行数</strong>（一行多次只算 1 次），含注释/签名/内嵌字符串；<code>as</code> 只统计非 <code>import</code>/<code>use</code> 别名、非纯注释的代码行。用于看趋势，不作为精确值。
+参照：LenoGame / LenoCleaner 仅作横向对照。</p>
+</blockquote>
+<hr>
+<h2 id="处理台账-2026-11-09-复核">处理台账（2026-11-09 复核）</h2>
+<blockquote>
+<p>本节是<strong>后加的</strong>：原报告只做评估、不动代码。2026-11-09 按本报告的建议做了一轮修复，
+这里逐条记录"已处理 / 未处理 / 不打算做"，以及<strong>原文哪几条现在已不成立</strong>。
+复核方式：重新统计四个项目 + 模块库的当前代码，并对关键结论做实测。</p>
+</blockquote>
+<h3 id="已处理-共-25-项">✅ 已处理（共 25 项）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>原报告位置</th>
+<th>处理</th>
+<th>提交</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>§4.5.3 README 漏 7 个模块、无 import 名映射</td>
+<td>补成 20 个模块的完整表，含 <code>包名 → import 名</code>（<code>LenoFS</code>→<code>"FS"</code> 等），并 20 个 import 名逐个实测</td>
+<td><code>73f3622d</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>§3.5 ③ / §6 P0-6 <code>reduce</code> 返回值文档写 <code>any</code></td>
+<td>实测是<strong>元素类型</strong>（<code>Array[int]</code>⇒<code>int</code>），<code>module_arrays.md</code> 两处改正</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>3</td>
+<td>§3.5 ④ / §6 P4 <strong>比较器排序缺失</strong></td>
+<td><strong>新增 <code>arr.sort(cmp)</code></strong>（稳定归并；回调里改数组不崩）。改了 3 处手写排序：<code>lrc_sort</code>×2、<code>search_page</code> 格式下拉、<code>api_notice</code> 的 Top-N</td>
+<td><code>d31a94f2</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>§2.5 / §4.5.4 <code>pad2</code> 四份</td>
+<td>曾误加 <code>strings.pad_left</code>，后发现 <strong><code>pad_start</code> 早就存在</strong>⇒删掉自己加的，四份 <code>pad2</code> 统一改 <code>strings.pad_start</code></td>
+<td><code>81de2d3e</code>→<code>4bdd30b8</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>§2.5 <code>trae_sign</code> 手拼 JSON 未转义</td>
+<td>改 <code>jsons.encode</code>。用 Python <code>json.loads</code> 严格验证：旧输出<strong>解析失败</strong>，新输出正确</td>
+<td><code>8af4d72</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>§4.5.4 <code>jsonescape</code> 三份（LenoMusic）</td>
+<td>三份逐字相同、且<strong>漏转义换行/制表符</strong>；4 处调用改 <code>jsons.encode</code>，三份定义删除</td>
+<td><code>f161c93</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>§4.5.4 <code>powmod/hex2int/int2hex</code> 两份</td>
+<td>抽到 <code>crypto_math.leno</code>；后来 <code>powmod</code> 升级成标准库 <code>maths.pow_mod</code></td>
+<td><code>bb7d12a</code>/<code>30f02944</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>§3 集合「缺 comparator / 稳定排序」</td>
+<td>同 #3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>9</td>
+<td>§4.5.1 文件头注释与实现相反</td>
+<td>实测 <code>zip(compress=true)</code> 2000 字节→<strong>124 字节</strong>，四处过期注释全改（<code>Compress</code> / <code>Zip</code> / <code>zip_write</code> / <code>XLSX</code>）</td>
+<td><code>3c956810</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>§4.5.5-1 <code>module_sys.md</code> 对不上号</td>
+<td>加对照表：<strong>内建 <code>sys</code> 全局</strong> vs <strong>模块包 <code>LenoSys</code></strong>（<code>import "Sys"</code>）是两回事</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>11</td>
+<td>§4.5.5-1 <code>module_web.md</code> 写 <code>web_gzip</code> 635 行</td>
+<td>实际 <strong>28 行</strong>转发壳（已收编到 <code>LenoCompress</code>），改正并给出"要 gzip 用 <code>import "Compress"</code>"</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>12</td>
+<td>§4.5.4 / §4.5.3 <strong>LenoWeb 0 测试</strong></td>
+<td>从 0 → <strong>3 个测试</strong>。补测<strong>当天就抓到真 bug</strong>：<code>parseUrl("/rel/path")</code> 的 scheme 污染成整串、path 恒为 <code>/</code>（见下）</td>
+<td><code>d7b76dc1</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>（补测发现的 bug）</td>
+<td><code>parseUrl</code> 相对路径修复。影响：站内链接全是相对路径 ⇒ 爬虫会反复抓首页，且<strong>不报错</strong></td>
+<td>同上</td>
+</tr>
+<tr>
+<td>14</td>
+<td>§4.5.3 5 个模块完全没测试</td>
+<td>降到 <strong>1 个</strong>（只剩 <code>LenoSDL3</code>，需真实窗口）。新增：<code>LenoHack</code>（OffsetConfig）、<code>LenoMusic</code>（music_tag 往返）、<code>LenoSys</code>（sys_parse 717 行）、<code>LenoWin32</code></td>
+<td>多次</td>
+</tr>
+<tr>
+<td>15</td>
+<td>§3.6 / §6 P0-1、P0-2 <strong>无 AGENTS.md、无惯用示例</strong></td>
+<td>新建 <code>AGENTS.md</code>（命令式默认形态）+ <code>docs/idioms.md</code>（反例→正例→实测证据）。<strong>每条都在 <code>leno.exe</code> 上实跑验证过</strong></td>
+<td><code>699a3a1f</code>/<code>7fc212d0</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td>§6 P0-6 <strong>教程"switch 一律线性比较链"劝退</strong></td>
+<td><code>Leno入门教程:11636</code> 改成"冷路径 / 分支 ≤ 十来个时<strong>照用</strong>，只有热路径且 case 很多才值得手写分档"</td>
+<td><code>4067fe68</code></td>
+</tr>
+<tr>
+<td>17</td>
+<td>§3.5 ①②③④ 的 0 使用</td>
+<td><code>switch</code> 0→<strong>4 处</strong>、<code>map/filter</code> 0→<strong>4 处</strong>（模块库另加 2 处）</td>
+<td>多次</td>
+</tr>
+<tr>
+<td>18</td>
+<td>§4.5.2 "没有 comparator sort"</td>
+<td>同 #3</td>
+<td>—</td>
+</tr>
+<tr>
+<td>19</td>
+<td>§6 P0-4 <strong><code>leno --init</code> 模板看不到任何惯用样例</strong></td>
+<td><code>src/main.leno</code> 改成<strong>可运行的 5 种惯用写法样例</strong>（struct+数组 / enum / switch / map-filter / Result）；另外生成 <code>AGENTS.md</code> 与 <code>test/smoke.leno</code></td>
+<td><code>4067fe68</code></td>
+</tr>
+<tr>
+<td>20</td>
+<td>（改 <code>--init</code> 时发现的<strong>既有 bug</strong>）</td>
+<td>默认包名 <code>my-package</code> 带连字符，<code>as my-package</code> 不是合法标识符 ⇒ <strong>生成的项目从来编译不过</strong>。加 <code>to_ident()</code>：<code>my-package</code>→<code>my_package</code>、<code>2fa</code>→<code>_2fa</code></td>
+<td>同上</td>
+</tr>
+<tr>
+<td>21</td>
+<td>§3.6 / §6 P0-1 <strong>四个项目也没有 AGENTS.md</strong></td>
+<td><code>Aria</code> / <code>LenoMusic</code> / <code>LenoTrae</code> / <code>LenoWorkBuddy</code> 各建一份：5 条默认写法 + 标准库已有清单 + <strong>本项目"遗留不要扩散"</strong> + 自检命令</td>
+<td>四仓各一提交</td>
+</tr>
+<tr>
+<td>22</td>
+<td>§4.5.4 / §6 P0-7 <strong><code>Web</code> 门面 37 : 0</strong></td>
+<td>拆出 <code>WebNet</code> / <code>WebHtml</code> / <code>WebCrawl</code> 三个窄入口（<code>Web</code> 保留为"全都有"）。<strong>四个项目 37 处全部改回公共入口</strong>，调用点零改动。迁移后 <code>import "web_net"</code> <strong>0 次</strong>、<code>import "WebNet"</code> <strong>37 次</strong></td>
+<td><code>c60e3566</code> + 四仓</td>
+</tr>
+<tr>
+<td>23</td>
+<td>§4.5.3 / §6 P0 <strong><code>examples/tests</code> 的测试 runner 看不见</strong></td>
+<td>先按「是否真联网」把 19 个分成两半：<strong>9 个纯离线</strong>（charset_unit / crawler_queue / crawler_state / ffi_callback_thread / gzip / priority_queue / selector_ext / sitemap_deep / utf8_text）迁进 <code>test/</code>，<strong>10 个真联网/开浏览器</strong>的留在 <code>examples/tests</code>。<code>_testkit.leno</code> 收敛成 <code>test/</code> 里唯一一份（其余 10 个改相对路径 import）。runner 可见测试 <strong>39 → 48</strong>，其中 LenoWeb 从 3 → <strong>12</strong></td>
+<td><code>239a34ae</code></td>
+</tr>
+<tr>
+<td>24</td>
+<td>§6 P1 <strong>记录类型 + 自动编解码（基础设施）</strong></td>
+<td>① <code>jsons.encode(struct)</code> 以前<strong>静默返回字符串 <code>"null"</code></strong>（编码器 default 分支）⇒ 数据无声丢失，跑测试也发现不了；现在按字段名写成 JSON 对象。② 新增 <code>jsons.fill(target, src)</code>，源可以是 JSON 字符串<strong>或 Dict</strong>（DB 行/CSV 行）。③ 实测发现 <strong>SQLite <code>column_text</code> / CSV 的列全是字符串</strong> ⇒ 补了字符串→数字的严格解析（否则 <code>fill</code> 在 DB 场景完全失效），但<strong>数字→字符串不做</strong>（那个方向没有"解析"的意义）。④ 改编译器让 <code>StructFieldInfo</code> 记录 <code>Array[T]</code> 的元素类型（字节码 + 模块缓存<strong>双版本 bump</strong>）—— 否则 <code>Array[Item]</code> 字段会被填成 <code>Array[Dict]</code>，声明类型被静默破坏</td>
+<td><code>a1bbcc00</code> / <code>082a0a0d</code> / <code>bbc58526</code></td>
+</tr>
+<tr>
+<td>25</td>
+<td>§2.1 <strong>356 处行数组</strong>（首批落地）</td>
+<td>Aria 5 处 + LenoMusic 下载子系统。<strong>磁盘 / wire 格式一律不变</strong>，转换只发生在边界：<br>· Aria 下载队列 → <code>Array[Job]</code> + <code>JobState</code> enum（磁盘仍是对象数组，state/got/total 仍写字符串，旧 <code>downloads.json</code> 原样能读）<br>· LenoMusic → <code>srow.SongRow</code> + <code>from_row</code>/<code>to_row</code>，转换点收在 <code>musicdl_gui.to_jobs</code> 一处；搜索侧与 5 个音源模块<strong>一行没动</strong><br>两者都做了逐字节 / 逐字符等价性验证（含老数据缺字段、<code>state=5</code> 降级、基名消毒口径）</td>
+<td><code>778ea4b</code> / <code>1481db3</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>顺带修的上游问题（不在原报告里）</strong>：
+- 20 个模块的 <code>compute</code> 跨模块未声明返回类型（类型检查收紧后编不过）→ 批量补 <code>: int</code>
+- <code>LenoCompress</code> 补 5 组"垃圾输入不崩溃"断言（解压是解析<strong>外部</strong>数据）
+- <code>LenoCSV</code> 补"往返"与"空字段/前导引号"（15→17 组）
+- <code>LenoCrypto</code> 补 AES 的 <strong>NIST 官方向量</strong>（FIPS-197 C.1 单块 + CBC 往返）
+- 新增 <code>maths.pow_mod(base, exp, m)</code>（原报告未提，但它是"有 <code>pow</code>、有 <code>mod</code>、没有二者结合"的洞）</p>
+<h3 id="不打算做-1-项-附理由">❌ 不打算做（1 项，附理由）</h3>
+<table>
+<thead>
+<tr>
+<th>原报告位置</th>
+<th>建议</th>
+<th>为什么不做的理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§6 P0-3 <strong>编译器加 3 类"可改写法"警告</strong></td>
+<td>默认开、可关</td>
+<td>这条我明确反对：它要<strong>猜意图</strong>（手写索引循环有时就是要索引）、误报率高（报告自己写了），而且会占用编译器警告通道。Leno 一路修下来正是因为"不猜"才没出大问题。要做就放 <strong>LSP codeAction</strong>（用户主动触发），不进编译器</td>
+</tr>
+</tbody>
+</table>
+<h3 id="未处理-按原报告优先级">⬜ 未处理（按原报告优先级）</h3>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>VSCode snippets + LSP codeAction</td>
+<td>需要改 <code>vscode-leno</code> / <code>lsp</code> 子项目（未碰）</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>~~记录类型 + 自动编解码~~ 🟡 <strong>基础设施已通、部分落地</strong></td>
+<td><code>jsons.encode(struct)</code> / <code>jsons.fill</code> / <code>Array[T]</code> 元素类型元数据都已在（<code>a1bbcc00</code>/<code>082a0a0d</code>/<code>bbc58526</code>），Aria 5 处 + LenoMusic 下载子系统已改。<strong>剩</strong>：搜索侧仍用行（<code>search_page</code> 37 / <code>bang_page</code> 23 / 5 个音源模块），且 <code>Table</code> 控件仍吃行</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Result/Option + SQLite NULL 语义 + 统一错误/空值契约</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td>
+<td>宽索引（256 字段 / 255 局部量）</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td>enum 载荷 + switch 穷尽性</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td><code>hack_log</code> 并入 <code>LenoLog</code>、<code>web_cdp</code> 改 <code>FS.rmtree</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td><code>strings.rfind</code> / <code>stem</code></td>
+<td>确认仍缺（<code>split</code>/<code>format</code>/<code>fmt_size</code>/<code>lines</code> <strong>本来就有</strong>）</td>
+</tr>
+<tr>
+<td>§2.1</td>
+<td>356 处 <code>Array[Array[string]]</code></td>
+<td>只把<strong>前提推翻</strong>了（见下），代码一行没动</td>
+</tr>
+<tr>
+<td>§2.2</td>
+<td><code>curNav</code> 90 处魔法整数、<code>"0".."5"</code> 状态码</td>
+<td>引导已写，代码未动</td>
+</tr>
+<tr>
+<td>§2.6</td>
+<td>模块/导入税（45 import、<code>use</code> 不导函数/常量）</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§2.8</td>
+<td>8 种错误写法 / 4 类空值哨兵</td>
+<td>未动（P2）</td>
+</tr>
+<tr>
+<td>§4.5.1</td>
+<td><code>postJson</code>/<code>postJSON</code>、<code>parseUrl</code>/<code>urlParse</code> 双份命名；<code>aes_encrypt_block</code> 与 <code>aes128_cbc</code> 参数顺序不一致</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§4.5.4</td>
+<td>手写 CLI 四处、WorkBuddy 自建 JSON 取值</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§5.1</td>
+<td>Aria 无 <code>test/</code> 目录、<code>assert</code> 0 次；17 个测试里 13 处各抄一份 <code>check</code></td>
+<td>最大的项目测试最薄，仍未解决</td>
+</tr>
+<tr>
+<td>§5.1</td>
+<td>无测试框架 / 断言库；window 无程序化关闭 API</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§5.2</td>
+<td>GUI 无 <code>print</code>，各项目自建日志通道</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§5.3</td>
+<td><code>leno.toml</code> 的 <code>[requires]</code> 2/4 项目没有；按"日期"选运行时版本</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§5.4</td>
+<td>手拼 <code>"\\"</code> 路径（<code>trae_history:34</code>、<code>player_core:2571</code>）</td>
+<td>未动</td>
+</tr>
+<tr>
+<td>§5.4</td>
+<td>LenoSDL3（31,279 行）仍 <strong>0 测试</strong></td>
+<td>需要真实窗口，是目前唯一无测试的模块</td>
+</tr>
+</tbody>
+</table>
+<h3 id="原文已不成立的几条-复核后必须更正">⚠ 原文已不成立的几条（复核后必须更正）</h3>
+<table>
+<thead>
+<tr>
+<th>原文位置</th>
+<th>原文说法</th>
+<th>现在的事实</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§0 line 29</td>
+<td><code>switch</code> 0 处、<code>map/filter/reduce</code> 0 处</td>
+<td><strong>4 处 / 4 处</strong>（本轮改造）</td>
+</tr>
+<tr>
+<td>§0 line 33</td>
+<td>77% 的库行数不在测试入口内</td>
+<td><strong>53.9%</strong>；无测试模块从 5 个降到 <strong>1 个</strong>（<code>LenoSDL3</code>）</td>
+</tr>
+<tr>
+<td>§3 表格</td>
+<td>「集合：缺 comparator / 稳定排序」</td>
+<td><strong>已补</strong>（<code>arr.sort(cmp)</code>，稳定归并）</td>
+</tr>
+<tr>
+<td>§3.5 ④ / §3.5 表格 line 273</td>
+<td>「自定义比较器 <code>sort</code> —— 没有」</td>
+<td><strong>现在有</strong>；且已用它改掉 3 处手写排序</td>
+</tr>
+<tr>
+<td>§3 line 242</td>
+<td>文档写 <code>reduce</code> 返回 <code>any</code></td>
+<td>文档已改正为<strong>元素类型</strong></td>
+</tr>
+<tr>
+<td>§3 表格</td>
+<td>「字符串：无 <code>rfind</code>/<code>split</code> 模块函数」</td>
+<td><strong><code>split</code> 有</strong>（<code>strings.split</code>）；<code>format</code>/<code>fmt_size</code>/<code>lines</code>/<code>pad_start</code>/<code>pad_end</code> <strong>也都有</strong> ⇒ 原报告把"绕过已有 API"误判为"没有 API"。<strong>只有 <code>rfind</code>/<code>stem</code> 确实缺</strong></td>
+</tr>
+<tr>
+<td>§3.6 line 282</td>
+<td>约定文件（AGENTS.md）<strong>0 个</strong></td>
+<td>Leno 根已有 <code>AGENTS.md</code> + <code>docs/idioms.md</code>；<strong>四个项目仍 0 个</strong></td>
+</tr>
+<tr>
+<td>§4.5.3 line 348-350</td>
+<td>README 列 13 个模块、5 个模块没测试</td>
+<td>README 已列 <strong>20 个</strong>；无测试模块 <strong>1 个</strong></td>
+</tr>
+<tr>
+<td>§4.5.4 / §0 line 33</td>
+<td>「<code>Web</code> 门面 0 次 / <code>web_net</code> 37 次」</td>
+<td><strong>已解决</strong>：拆出 <code>WebNet</code>/<code>WebHtml</code>/<code>WebCrawl</code>，四项目 37 处全改回公共入口（<code>web_net</code> 0 次）。实测原因是门面<strong>重 1.9 倍</strong>（59ms vs 31ms），不是"不知道有门面"</td>
+</tr>
+<tr>
+<td>§6 P0-4 / §3.6</td>
+<td>「<code>--init</code> 模板只有 <code>print("Hello")</code>」</td>
+<td><strong>已改</strong>：5 种惯用写法的可运行样例 + <code>AGENTS.md</code> + <code>test/smoke.leno</code>；顺带修了"默认包名 <code>my-package</code> 让模板编不过"的既有 bug</td>
+</tr>
+<tr>
+<td>§6 P0-1 / §3.6 line 282</td>
+<td>「四个项目 AGENTS.md 0 个」</td>
+<td><strong>已补</strong>：四个项目各一份（含"本项目遗留不要扩散"）</td>
+</tr>
+<tr>
+<td>§6 P4 line 492</td>
+<td>「比较器 / 稳定排序」待做</td>
+<td><strong>已完成</strong></td>
+</tr>
+<tr>
+<td>§6 P4 line 494</td>
+<td>「5 处手写排序可删」</td>
+<td>已删 3 处；<strong>另 2 处故意保留</strong>（<code>insert_sorted</code> 是二分插入 O(log n)、<code>top_rank</code> 是 Top-N O(n×lim)，改成全量 sort 都是倒退）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="复核时新发现的两点">🔍 复核时新发现的两点</h3>
+<ol>
+<li><strong>§2.1 的前提是错的</strong>（这条最重要）：原文引用 Aria <code>downloads.leno:446</code> 的注释
+   "为什么用行而不是 struct 数组：<strong>字段要原地更新</strong>"。实测 <code>Array[struct]</code> <strong>完全支持</strong>原地更新：</li>
+</ol>
+<p><code>jobs[0].status = 1                  → 1     ✓
+   jobs[0].progress = 0.9（再改一次）   → 0.9   ✓ 不是副本
+   for jobs to j { j.status = 2 }      → 22    ✓
+   bump(Job j) { j.status = 77 }       → 77    ✓ 传参改（引用语义）
+   Job j2 = jobs[1]; j2.status = 99    → 99    ✓
+   type(jobs[0])                       → Job   ✓</code></p>
+<p>⇒ 356 处行数组是<strong>引导缺口</strong>（没人示范），不是能力缺口。这与 §6 的 P0 判断一致，
+   但<strong>根因更明确</strong>：只要有一份能照着写的示例就能改变。</p>
+<ol start="2">
+<li><strong><code>strings.fmt_size</code> 本来就有</strong>（<code>1536</code> → <code>"1 KB"</code>）。原报告 §2.5 把"字节格式化 4 份"
+   算成缺口，实际是<strong>没人知道标准库里有</strong>。同类还有 <code>split</code> / <code>lines</code> / <code>format</code>。
+   ⇒ 这强化了 §6 的 P0 判断：<strong>问题不是缺 API，是 API 不可发现</strong>。</li>
+</ol>
+<hr>
+<h2 id="0-总判断">0. 总判断</h2>
+<p><strong>Leno 已经跨过“能写真实产品”的门槛，但还没跨过“规模化维护”的门槛。</strong></p>
+<p>正面证据是硬的：四个项目都完成打包分发；Aria 24,614 行，里面是一个真正的 HTTP 服务端（线程池 + SQLite + 鉴权 + 管理后台）；LenoMusic 有 17 个可离线运行的测试并产出 Linux 构建；WorkBuddy 有 <code>doctor</code>、离线 stub 和成体系的错误码；LenoTrae 有黄金样例回归。单文件 exe 约 10–12MB，目标机不需要装运行时（<a href="file:///d:/CLeno/LenoWorkBuddy/README.html#L16">WorkBuddy README:16</a>），这条工程链路是通的。</p>
+<p><strong>但成本集中在四个“边界”上，而不是语法：</strong></p>
+<ol>
+<li>数据一旦要跨线程、上表格或落盘，类型就蒸发，退回 <code>Array[Array[string]]</code> / <code>Dict</code> + <code>_str</code>；</li>
+<li>状态要么编码成魔法整数/字符串码（int <code>enum</code> 本可用，但无约定/提示），要么受限于 enum 不能带载荷，逻辑分散到多个文件；</li>
+<li>严格解析和可分类的错误没有标准类型，每个项目自己造一套 <code>Result</code>/<code>Parse</code>——标准库自己也有 8 种错误写法、4 类空值哨兵（§4.5）；</li>
+<li>模块与 VM 的实现细节（<code>extend</code> 模块级、256 字段、255 局部量）直接改写应用的架构。</li>
+</ol>
+<p>关键计数：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>.leno</th>
+<th>行数</th>
+<th>import/use</th>
+<th><code>Array[Array[string]]</code></th>
+<th>null 判断</th>
+<th><code>as</code> 收窄</th>
+<th><code>_str()</code></th>
+<th>测试</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aria</td>
+<td>70</td>
+<td>24,614</td>
+<td>615 / 161</td>
+<td>148</td>
+<td>354</td>
+<td>132</td>
+<td>≈900</td>
+<td>8 个手动探针，<code>assert</code> 0 次</td>
+</tr>
+<tr>
+<td>LenoMusic</td>
+<td>46</td>
+<td>16,379</td>
+<td>212 / 50</td>
+<td>189</td>
+<td>175</td>
+<td>96</td>
+<td>≈366</td>
+<td>17 个离线断言脚本</td>
+</tr>
+<tr>
+<td>LenoTrae</td>
+<td>12</td>
+<td>3,454</td>
+<td>62 / 23</td>
+<td>13</td>
+<td>21</td>
+<td>36</td>
+<td>≈115</td>
+<td>2</td>
+</tr>
+<tr>
+<td>LenoWorkBuddy</td>
+<td>16</td>
+<td>5,322</td>
+<td>92 / 9</td>
+<td>5</td>
+<td>115</td>
+<td>46</td>
+<td>≈194</td>
+<td>5 个测试（另有 1 个 GUI stub）</td>
+</tr>
+</tbody>
+</table>
+<p>另有：<code>switch</code> 0 处、<code>enum</code> 0 处、<code>face/impl</code> 0 处、用户自定义泛型 0 处、<code>map/filter/reduce</code> 0 处、真正的 <code>async func</code> 0 处。</p>
+<blockquote>
+<p>✅ <strong>已处理（2026-11-09）</strong>：<code>switch</code> <strong>4 处</strong>、<code>map/filter/reduce</code> <strong>4 处</strong>（模块库另加 2 处 + 4 处 switch）。
+<code>enum</code> / <code>face</code> / 用户泛型 / <code>async</code> 仍为 0（引导类，未动代码）。</p>
+</blockquote>
+<p><strong>但这 6 个 0 需要分开看</strong>：<code>build\leno.exe</code> 最小用例实测（见 §3.5）表明 <code>switch</code>（int/string/enum）、int <code>enum</code>、<code>map/filter/reduce</code>、用户泛型都能编译并正确运行；<code>face/impl</code> 与 <code>async func</code> <strong>未实测</strong>，不能据此断言可用。在已测项里，真正缺失的只有 <strong>enum 载荷</strong> 和 <strong>比较器排序</strong>。0 使用改变的是病因判断，不是语言能力判断（见 §3.6、§6）。</p>
+<p><strong>标准库这一层把同一个判断放大了一倍。</strong> <code>build\leno_module</code> 有 20 个模块、53,052 行非空 lib 代码（含空行 58,011）、663 个按“每模块单门面文件”口径统计的导出函数（若统计所有 lib 顶层 <code>export func</code> 则为 1,590）——HTTP 客户端、JSON、日志、文件遍历、表格读写都在里面，能力层是真实存在的。但四个项目 import 公共门面 <code>Web</code> <strong>0 次</strong>，import 它的内部文件 <code>web_net.leno</code> <strong>37 次</strong>；77% 的库行数不在 <code>run_all_tests.leno</code> 的可见范围内。也就是说，标准库"有能力，但没有成为标准形态"（详见 §4.5）。</p>
+<blockquote>
+<p><strong>复核（2026-11-09）</strong>：<code>import "Web"</code> <strong>仍是 0 次</strong>、<code>web_net</code> <strong>仍是 37 次</strong>（这一条没动）。
+但测试覆盖已改善：不可见行数 <strong>77% → 53.9%</strong>，无测试模块 <strong>5 个 → 1 个</strong>（只剩 <code>LenoSDL3</code>）。</p>
+</blockquote>
+<p><strong>一句话：语言的核心表达力（含 <code>switch</code> / int <code>enum</code> / <code>map·filter·reduce</code> / 泛型）经实测是够用的；问题在"标准数据形态、标准错误形态"缺席——标准库有 20 个模块却同样没有提供这两种形态，生成侧也没有任何机制把作者推向惯用写法。最大的单点天花板仍是 8 位索引限额，已测项里真正缺失的语法只剩 enum 载荷、比较器排序和穷尽性检查（<code>face/impl</code>、<code>async</code> 未实测）。</strong></p>
+<hr>
+<h2 id="1-哪些代码像-正常语言写出来的">1. 哪些代码像“正常语言写出来的”</h2>
+<h3 id="1-1-结构体-方法-一等函数字段-cards-leno">1.1 结构体 + 方法 + 一等函数字段：<code>cards.leno</code></h3>
+<p><a href="file:///d:/CLeno/Aria/lib/cards.leno#L33-L81">CardSize</a> 是纯数据结构 + 方法，<a href="file:///d:/CLeno/Aria/lib/cards.leno#L85-L97">CardHooks</a> 用函数字段表达可选回调，<a href="file:///d:/CLeno/Aria/lib/cards.leno#L108-L135">song_card</a> 用字典传样式、用闭包挂事件：</p>
+<pre><code class="language-leno">if h.onPlay != null {
+    Song s = sg
+    c.on_click(func() { h.onPlay(s) })
+}
+</code></pre>
+<p>这段没有框架味，也不需要“组件基类”。它证明 Leno 的 <code>struct + methods + function values + closure</code> 足以写出可组合的 UI 组件。这是全仓最像“正常语言”的一段。</p>
+<h3 id="1-2-数据即代码-routes-leno">1.2 数据即代码：<code>routes.leno</code></h3>
+<p><a href="file:///d:/CLeno/Aria/server/routes.leno#L23-L72">路由表</a> 直接是一个 <code>Array[Dict]</code>，handler 是函数值，加接口只改一处：</p>
+<pre><code class="language-leno">{method: &quot;GET&quot;,  path: &quot;/api/square&quot;, handler: rep.api_square, auth: true},   // 广场（需登录）
+</code></pre>
+<p>这类 DSL 写法比手写 <code>if path == ...</code> 好得多，说明语言在“声明式配置 + 闭包”这个方向上是够用的。</p>
+<h3 id="1-3-纯逻辑分层-lenomusic-player-leno">1.3 纯逻辑分层：<code>LenoMusic/player.leno</code></h3>
+<p>它刻意不 import SDL3，只依赖 <code>Music</code> 与 <code>parsing</code>（<a href="file:///d:/CLeno/LenoMusic/player.leno#L1-L30">player.leno:1-30</a>），注释直接写明“纯逻辑 ✓ 能离线单测”。<code>Lrc</code> 用结构体 + 方法组织（<a href="file:///d:/CLeno/LenoMusic/player.leno#L130-L140">130-140</a>）。<strong>这是四个项目里可测试性设计最好的一处</strong>：把“能测的部分”从 UI 里剥出来。</p>
+<h3 id="1-4-any-边界集中处理-wb_core-leno">1.4 <code>any</code> 边界集中处理：<code>wb_core.leno</code></h3>
+<p>把 JSON/环境变量/CLI 的 <code>any</code> 收在一层转换里：<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L251-L276">Num</a>、<code>try_float</code>、<code>is_int_str</code>、<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L278-L290">as_int/as_str</a>。虽然这是手写 Result，但写法本身干净、可读、可复用。</p>
+<h3 id="1-5-线程边界-net_workers-leno">1.5 线程边界：<code>net_workers.leno</code></h3>
+<p>后台入口是模块级函数、结果走 <code>Channel</code>、UI 线程 <code>try_receive</code> 轮询（<a href="file:///d:/CLeno/Aria/lib/net_workers.leno#L641-L655">641-655</a>）。在“一个独立 VM + 一个通道 + 主线程收”的模型下，这段是自然的，且被 Aria/LenoMusic 两个项目一致采用。</p>
+<h3 id="1-6-标准库的高光-cli-spec">1.6 标准库的高光：<code>cli.spec</code></h3>
+<p><a href="file:///d:/CLeno/LenoMusic/musicdl.leno#L127-L136">musicdl.leno:127-136</a> 用声明式 spec 定义参数，比手写 <code>argv</code> 循环好一个档次。这是“标准库做对了”的证据，也反衬出下方 <code>cli.parse</code> 返回值丢掉类型的遗憾。</p>
+<hr>
+<h2 id="2-哪些地方明显在和语言较劲">2. 哪些地方明显在和语言较劲</h2>
+<h3 id="2-1-数据只能住在字符串数组里-最大的样板来源">2.1 数据只能住在字符串数组里（最大的样板来源）</h3>
+<p><a href="file:///d:/CLeno/Aria/lib/downloads.leno#L446-L449">Aria downloads.leno:446-449</a> 自己写明了行协议：</p>
+<pre><code class="language-leno">// 一行 = [id, 歌名, 歌手, 状态, 说明, 格式, 已下字节, 总字节, 音源]
+// 状态： &quot;0&quot; 排队 / &quot;1&quot; 完成 / &quot;2&quot; 失败 / &quot;3&quot; 已暂停 / &quot;5&quot; 下载中
+// 为什么用行而不是 struct 数组：字段要原地更新（状态 0→1、进度 0→N），字符串行最好改
+</code></pre>
+<p>紧接着是 <code>len()</code> 守卫、下标读写、<code>_int</code>/<code>_str</code> 转换：<a href="file:///d:/CLeno/Aria/lib/downloads.leno#L462-L476">462-476</a>、<a href="file:///d:/CLeno/Aria/lib/downloads.leno#L558-L602">558-602</a>（<code>pause_all</code> / <code>resume_all</code> / <code>toggle_pause</code> 三段同构循环）。落盘时又要换成对象数组：</p>
+<blockquote>
+<p><code>存成对象数组而不是行数组：JSON 读回来的是 Array[any]，按行下标取要反复收窄，字段名一改就静默错位</code> —— <a href="file:///d:/CLeno/Aria/lib/downloads.leno#L604-L606">604-606</a></p>
+</blockquote>
+<p><strong>同一份数据在内存、协议、磁盘里有三种形态，转换代码全部手写。</strong> 这不是业务复杂度，是语言缺少“记录 ↔ 序列化”的闭环。</p>
+<blockquote>
+<p>⚠ <strong>但引用的那句理由不成立（2026-11-09 实测）</strong>：<code>downloads.leno</code> 的注释写
+“为什么用行而不是 struct 数组：<strong>字段要原地更新</strong>”。实测 <code>Array[struct]</code> <strong>完全支持</strong>原地更新：
+</p>
+</blockquote>
+<pre><code>jobs[0].status = 1                  → 1     ✓ 原地改
+jobs[0].progress = 0.9（再改一次）   → 0.9   ✓ 不是副本
+for jobs to j { j.status = 2 }      → 22    ✓ 循环里改
+bump(Job j) { j.status = 77 }       → 77    ✓ 传参改（引用语义）
+Job j2 = jobs[1]; j2.status = 99    → 99    ✓ 取出元素再改
+type(jobs[0])                       → Job   ✓ 类型保留
+</code></pre>
+<blockquote>
+<p>⇒ “字段要原地更新”<strong>不是</strong>用行数组的理由。356 处行数组属于<strong>引导缺口</strong>（没人示范），
+不是能力缺口 —— 真正缺的只有“记录 ↔ JSON/表格”的<strong>自动编解码</strong>（P1）。</p>
+</blockquote>
+<p>同类证据：</p>
+<ul>
+<li><a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L1663-L1754">parse_recent → parse_feed</a>：<strong>六个</strong>同构的 <code>Array[Array[string]]</code> 映射（五个从 <code>any</code> 收窄，<code>parse_shared</code> 接收 <code>Array[Dict]</code>），每个字段一次 <code>_str(e.get(...))</code>。</li>
+<li><a href="file:///d:/CLeno/LenoMusic/dl_engine.leno#L47-L61">dl_engine.leno:47-61</a>：十个 <code>F_*</code> 常量逐条 re-export，只为跨模块共享列号。</li>
+<li><a href="file:///d:/CLeno/LenoWorkBuddy/wb_gui.leno#L51-L56">wb_gui.leno:51-56</a>：<code>ACCOUNTS</code> 每项 <code>[uid, 展示名, 凭据路径]</code>，每次取值都重复 <code>CUR bounds</code> 检查。</li>
+<li><a href="file:///d:/CLeno/LenoTrae/trae_accounts.leno#L57">trae_accounts.leno:57</a> 用数组当二元组；<a href="file:///d:/CLeno/LenoTrae/trae_history.leno#L67-L71">trae_history.leno:67-71</a> 用字符串记录 + <code>field(rec, idx)</code> 取值。</li>
+</ul>
+<p>四项目共 355 处 <code>Array[Array[string]]</code>。<strong>这不是个别项目水平问题，是语言没有更好的默认选择。</strong></p>
+<h3 id="2-2-状态机被拆散-魔法整数-字符串-tag-散落的-if-链">2.2 状态机被拆散：魔法整数 + 字符串 tag + 散落的 if 链</h3>
+<ul>
+<li><code>curNav</code> 用 <code>-12 / -11 / -6 / -3 / -2 / -1</code> 表示不同页面（原始定义见 <a href="file:///d:/CLeno/Aria/lib/player_core.leno#L1797-L1900">player_core.leno:1797 起</a>）；各种 <code>curNav ==</code> 判断共 90 处、跨 10 个文件（其中 <code>curNav == -12</code> 就有 19 次）；<code>page_name</code> 再把整数翻译成标题（<a href="file:///d:/CLeno/Aria/lib/page_lyric.leno#L1039-L1055">page_lyric.leno:1039-1055</a>），页面渲染又写一遍（<a href="file:///d:/CLeno/Aria/lib/page_lyric.leno#L289-L341">289-341</a>）。</li>
+<li>导航重置逻辑被抄了三份：<code>set_nav</code>、<a href="file:///d:/CLeno/Aria/lib/player_core.leno#L1863-L1885">open_last_search</a>、<a href="file:///d:/CLeno/Aria/lib/player_core.leno#L1887-L1905">open_downloads</a> 里的清空列表、清空 <code>netRows</code>、重置按钮样式几乎逐行相同。</li>
+<li>下载状态是字符串码 <code>"0".."5"</code>；下载线程消息是 <code>["start", ...] / ["progress", ...] / ["done", ...] / ["fail", ...]</code>（<a href="file:///d:/CLeno/LenoMusic/dl_flow.leno#L273-L306">dl_flow.leno:273-306</a>）；音源分派是 <code>if src == "netease" ...</code>（<a href="file:///d:/CLeno/LenoMusic/thirdparty.leno#L270-L274">thirdparty.leno:270-274</a>）。</li>
+</ul>
+<p>语言里的 <code>enum</code> 只能存 int 常量（§3.5 实测可用），不能带载荷、也没有穷尽检查。四项目 <strong>0 使用</strong>有两个原因：<code>curNav</code>、<code>"0".."5"</code> 这类纯状态本可以用 int enum 表达，但没有任何约定或诊断提示这么做（<strong>引导缺口</strong>）；而 <code>Progress(已下, 总长)</code> 这种带载荷消息确实无法表达（<strong>能力缺口</strong>）。结果就是：<strong>状态在 A 处、数据在 B 处，改一处漏一处</strong>——<a href="file:///d:/CLeno/Aria/lib/page_lyric.leno#L95-L95">page_lyric.leno:95</a> 记录了“歌词是《真的爱你》、标题栏却写《美丽的神话》”的真实用户故障，<a href="file:///d:/CLeno/Aria/lib/page_lyric.leno#L295-L300">295</a> 则是标题写死“首页”导致的返工。</p>
+<h3 id="2-3-手写分派-重复模式">2.3 手写分派 / 重复模式</h3>
+<ul>
+<li><a href="file:///d:/CLeno/LenoTrae/trae_sign.leno#L69-L90">trae_sign.leno:69-90</a>：手写位置子命令 + 三个别名；<a href="file:///d:/CLeno/LenoWorkBuddy/wb_sign.leno#L254-L260">wb_sign.leno:254-260</a> 手写 <code>args</code> 循环。LenoMusic 则用了 <code>cli</code>——<strong>同一问题四种解法</strong>（见第 4 节）。</li>
+<li><a href="file:///d:/CLeno/LenoMusic/musicdl.leno#L141-L153">musicdl.leno:141-153</a>：<code>cli.parse</code> 返回 <code>Dict&lt;string, any&gt;</code>，紧接着 6 连 <code>as bool/as string</code>。</li>
+<li>下载队列的三个状态迁移函数（上文）本质是同一张状态转移表的三次手写。</li>
+<li>六类 <code>parse_*</code> 映射（recent / rank / users / shared / shared_songs / feed）是同一模板的六次手写。</li>
+<li>~~排序也只能手写：<code>sort</code> 不支持自定义比较器~~ ✅ <strong>已处理（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 已支持。<a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269</a> 与 <a href="file:///d:/CLeno/LenoMusic/search_page.leno#L294-L294">search_page.leno:294</a> 已改成 <code>ord.sort(cmp)</code> / <code>sort()</code>。
+  <strong>保留</strong> <a href="file:///d:/CLeno/LenoMusic/player.leno#L742-L752">player.leno:742</a> 的二分插入（O(log n)，改成全量 sort 是倒退）。</li>
+</ul>
+<h3 id="2-4-null-与-any-收窄到处透传">2.4 <code>null</code> 与 <code>any</code> 收窄到处透传</h3>
+<p><a href="file:///d:/CLeno/LenoWorkBuddy/wb_tray.leno#L116-L169">tray.leno:116-169</a> 同一个函数族里出现四次 <code>var m = _pm; if m == null { return }</code>；<a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L1680-L1685">parse_rank</a> 是 <code>as Array</code> → <code>as Dict</code> → <code>_str</code> 三层；<a href="file:///d:/CLeno/LenoMusic/musicdl.leno#L141-L153">cli 取值</a> 每个字段一次 <code>as</code>；<a href="file:///d:/CLeno/LenoTrae/trae_history.leno#L109-L113">trae_history.leno:109-113</a> 先 <code>var d = ...</code> 再判空。</p>
+<p>全仓 665 处 null 判断、310 处 <code>as</code>、约 1,575 处 <code>_str()</code>（口径见表注）。<strong><code>T?</code> 和 <code>any</code> 是两套空安全世界</strong>，每跨一次边界（JSON、env、CLI、线程消息）就要手写一遍“收窄 + 判空 + 默认值”。</p>
+<h3 id="2-5-字符串拼接代替结构化数据">2.5 字符串拼接代替结构化数据</h3>
+<p><a href="file:///d:/CLeno/LenoTrae/trae_sign.leno#L50-L51">trae_sign.leno:50-51</a> 直接拼 JSON：</p>
+<pre><code class="language-leno">print(&quot;{\&quot;success\&quot;:&quot; + ok ... + &quot;,\&quot;brand\&quot;:\&quot;&quot; + brand + &quot;\&quot;,\&quot;username\&quot;:\&quot;&quot; + username + &quot;\&quot; ...&quot;)
+</code></pre>
+<p><code>msg</code> / <code>username</code> / <code>brand</code> 都未转义——只要含 <code>"</code> 或换行就是坏 JSON（<a href="file:///d:/CLeno/LenoTrae/trae_sign.leno#L83-L90">87 行</a> 的账号列表同样手拼）。这是“没有结构化序列化”导致的真实正确性风险，不只是难看。</p>
+<blockquote>
+<p>✅ <strong>已修（2026-11-09）</strong>：字符串字段改走 <code>jsons.encode</code>。<strong>用 Python 的 <code>json.loads</code> 严格验证</strong>（不靠 Leno 自己的宽容解码器）：
+<code>username="al\"ice"</code> 时旧输出解析 <strong>FAIL</strong>（<code>Expecting ',' delimiter</code>），新输出正常且值能还原。
+普通输入下新旧输出<strong>字节完全一致</strong>，下游不受影响。</p>
+<p>同类问题在 LenoMusic 也有：三份逐字相同的 <code>jsonescape</code>（只转义 <code>"</code> 和 <code>\</code>，<strong>漏了换行/制表符</strong>），
+已全部改用 <code>jsons.encode</code>，三份定义删除。</p>
+</blockquote>
+<p>其他：复合键 <code>"brand|user|field"</code>（<a href="file:///d:/CLeno/LenoTrae/trae_history.leno#L3-L5">trae_history.leno:3</a>）；时长格式化、字节格式化、<code>pad2</code> 4 份；<code>rfind</code> 不存在，只能 <code>find</code> 循环回退（<a href="file:///d:/CLeno/LenoMusic/player.leno#L100-L113">LenoMusic player.leno:100-113</a>）。</p>
+<blockquote>
+<p><strong>复核（2026-11-09）—— 这几条一半是“数错了”，一半是“绕过已有 API”</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>原文说法</th>
+<th>实测</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>时长格式化 <strong>5 份</strong></td>
+<td><strong>2 份</strong>（<code>dl_history.fmt_time</code> 是<strong>时间戳</strong>格式化，不是时长；<code>Aria fmtTime</code> 是 <code>mm:ss</code> 补零、<code>player_bar.fmt_time</code> 是 <code>m:ss</code> 不补零）</td>
+<td><strong>口径不同，不该合并</strong></td>
+</tr>
+<tr>
+<td>字节格式化 <strong>4 份</strong></td>
+<td><strong><code>strings.fmt_size</code> 本来就有</strong>（<code>1536</code>→<code>"1 KB"</code>）</td>
+<td>不是缺 API，是<strong>没人知道有</strong></td>
+</tr>
+<tr>
+<td><code>pad2</code> <strong>4 份</strong></td>
+<td>确认 4 份，逐字相同</td>
+<td>✅ 已统一到 <code>strings.pad_start</code></td>
+</tr>
+<tr>
+<td><code>rfind</code> 不存在</td>
+<td><strong>确认缺</strong></td>
+<td>仍缺（候选补充项）</td>
+</tr>
+<tr>
+<td><code>split</code> 不存在（§3 表格）</td>
+<td><strong><code>strings.split</code> 本来就有</strong></td>
+<td>同 <code>fmt_size</code>，原文误判</td>
+</tr>
+</tbody>
+</table>
+<p>这条差别很重要：<strong>“绕过已有 API”和“缺 API”要用不同办法修</strong> —— 前者靠文档/可发现性
+（P0），后者才要写代码。</p>
+</blockquote>
+<h3 id="2-6-模块-导入税">2.6 模块/导入税</h3>
+<p>作者自己在 <a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L13-L18">player_tick.leno:13-18</a> 写明：</p>
+<blockquote>
+<p><code>extend</code> 是<strong>模块级</strong>的……B 文件若不 import A 就调不到 fa……这些 import <strong>不能精简</strong>；也不要因为“单文件太大”继续拆——拆得越多这张图越密。</p>
+</blockquote>
+<p>于是：单个文件 <a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L20-L64">45 个 import</a>，<code>row_view</code>/<code>page_widgets</code> 重复 import（<a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L26-L26">26/54</a>、<a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L28-L28">28/59</a>）；全 Aria 615 条 import、161 条 use。<code>use</code> 只导类型，常量和函数仍要限定名或手写 re-export（<a href="file:///d:/CLeno/LenoMusic/dl_engine.leno#L47-L61">dl_engine:47-61</a>）。循环依赖只能靠复制常量解决（<a href="file:///d:/CLeno/Aria/lib/cards.leno#L15-L29">cards.leno:15-29</a> 自述“与主文件同步的常量”）。</p>
+<h3 id="2-7-vm-硬上限直接改写架构">2.7 VM 硬上限直接改写架构</h3>
+<p><a href="file:///d:/CLeno/Aria/lib/player.leno#L183-L190">player.leno:183-190</a>：</p>
+<blockquote>
+<p><code>OP_GET_FIELD / SET_FIELD</code> 的字段索引最多 256 个成员，而 <code>Player</code> 已经有 250 个 ⇒ 再摊 14 个字段就编不过（实测报“结构体字段数超出 8 位上限”）。</p>
+</blockquote>
+<p>后果是 <code>SquareState</code> 子结构体被逼出来，并且把 <code>loginOpen</code>、<code>updCh</code> 这些<strong>不属于广场的东西</strong>也塞进去，作者自评“语义不完美”（<a href="file:///d:/CLeno/Aria/lib/player.leno#L186-L193">186-193</a>、<a href="file:///d:/CLeno/Aria/lib/player.leno#L359-L364">359-364</a>）。另一边 <a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L1276-L1277">player_tick:1276-1277</a>：<code>on_tick</code> 贴着“单函数寄存器 ≤255”，再添局部变量就报“寄存器号超出 8 位上限”。</p>
+<p><strong>这是四个项目里唯一“再往下写就写不动”的硬墙</strong>，不是风格问题。</p>
+<h3 id="2-8-错误处理-字符串当异常">2.8 错误处理：字符串当异常</h3>
+<p><a href="file:///d:/CLeno/LenoWorkBuddy/wb_envelope.leno#L71-L96">wb_envelope.leno:71-96</a> 有 10 种完全不同的校验失败（该区间共 10 处 <code>throw "INVALID_FORMAT"</code>），调用方无法区分；<a href="file:///d:/CLeno/Aria/lib/account.leno#L189-L210">account.leno:189-210</a> 的 <code>catch e</code> 只做 <code>print(... + _str(e))</code>，错误信息被压成一行日志。三个项目各自造 Result：<code>AuthResult</code>（<a href="file:///d:/CLeno/Aria/lib/account.leno#L44-L54">account.leno:44-54</a>）、<code>Num</code>（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L251-L276">wb_core:251</a>）、<code>parse_uint: [int, bool]</code>（<a href="file:///d:/CLeno/LenoMusic/parsing.leno#L59-L61">parsing.leno:59-61</a>）。</p>
+<p><code>LenoMusic/parsing.leno</code> 的文件头把问题写得最清楚（<a href="file:///d:/CLeno/LenoMusic/parsing.leno#L4-L56">4-56</a>）：<code>_int</code> 失败抛异常、<code>_int_or(null)</code> 返回 0 而不是默认值、<code>as</code> 只认 <code>any</code>、int 是任意精度但 <code>_int_or</code> 走 int64。<strong>三种转换语义互不一致，却没有一个 <code>parseInt</code> 返回 Result。</strong></p>
+<hr>
+<h2 id="3-抽象能力盘点与实测复核">3. 抽象能力盘点与实测复核</h2>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>现状</th>
+<th>评价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>函数/闭包</td>
+<td>一等函数字段、闭包捕获、默认参数都在用</td>
+<td><strong>好</strong>；但跨线程闭包捕获 <code>self</code> 会炸，入口必须模块级函数（<a href="file:///d:/CLeno/Aria/lib/net_workers.leno#L4-L7">net_workers:4</a>）</td>
+</tr>
+<tr>
+<td>结构体</td>
+<td>方法、<code>extend</code>、默认值、值语义</td>
+<td><strong>能用但痛</strong>：256 字段上限；数组元素更新常写成“整行取出→改→写回”（<a href="file:///d:/CLeno/Aria/lib/downloads.leno#L562-L569">downloads:562-569</a>）；<code>extend</code> 的 import 税</td>
+</tr>
+<tr>
+<td>模块/导入</td>
+<td><code>import</code> 文件、<code>import 模块</code>、<code>use</code> 类型</td>
+<td><strong>痛</strong>：函数/常量不随 <code>use</code> 导入；无 re-export；循环依赖靠复制；<code>extend</code> 可见性按模块算</td>
+</tr>
+<tr>
+<td>错误处理</td>
+<td><code>throw</code>/<code>catch</code> 任意值</td>
+<td><strong>痛</strong>：无 Result/Option、无错误类型、<code>catch</code> 常退化成打日志</td>
+</tr>
+<tr>
+<td>泛型</td>
+<td>实测可用：泛型函数 / 泛型 struct / 比较运算均通过（比较时给 <code>[泛型无约束]</code> 提醒）</td>
+<td><strong>能力有、生态无</strong>：0 用户使用属引导问题</td>
+</tr>
+<tr>
+<td>枚举</td>
+<td>int 常量可用（§3.5 实测通过），无载荷、无穷尽检查</td>
+<td><strong>半能用</strong>：常量状态够用，消息载荷不够；0 使用属引导问题</td>
+</tr>
+<tr>
+<td>接口 <code>face</code></td>
+<td>有 <code>face</code>/<code>impl</code> 语法（教程有说明）</td>
+<td><strong>有能力、0 使用</strong>：跨模块回调用 <code>any</code> + <code>is</code> 模拟（<a href="file:///d:/CLeno/LenoMusic/dl_flow.leno#L99-L103">dl_flow:101</a>）</td>
+</tr>
+<tr>
+<td>集合</td>
+<td><code>Array/Dict</code> + <code>sort</code>/<code>filter</code>/<code>map</code>/<code>reduce</code>（实测可用，<code>map</code> 返回 <code>Array[int]</code>）</td>
+<td><strong>基本够用</strong>：缺 comparator / 稳定排序（<code>lrc_sort</code> 手写）；0 使用属引导问题</td>
+</tr>
+<tr>
+<td>字符串</td>
+<td>切片、<code>take</code>、<code>find</code>、<code>join</code>、<code>format</code></td>
+<td><strong>够但弱</strong>：无 <code>rfind</code>/<code>split</code> 模块函数/严格 parse；<code>format</code> 0 使用，普遍 <code>+</code> 与 <code>_str</code></td>
+</tr>
+<tr>
+<td>并发</td>
+<td><code>threads</code> + <code>Channel</code> + 线程局部存储</td>
+<td><strong>能用</strong>：隔离 VM、<code>Ptr</code> 不能跨线程、模块 <code>var</code> 共享无锁 ⇒ 每 worker 重建 app、句柄重开（<a href="file:///d:/CLeno/Aria/server/server.leno#L23-L37">server.leno:23-37</a>）</td>
+</tr>
+</tbody>
+</table>
+<p>补一刀：安全库也不完整——<code>LenoCrypto</code> 没有 PBKDF2/argon2，Aria 只能 <code>sha256("v1:"+salt+":"+pass)</code>，作者自己标注“够用但不算理想”（<a href="file:///d:/CLeno/Aria/server/server.leno#L34-L35">server.leno:34-35</a>）。</p>
+<p><strong>“根本没法写”的很少，但“规模一大就写不下去”的很明确：</strong>
+- &gt;256 成员的领域模型（硬编译错误）；
+- 带载荷的消息（只能 <code>any</code>/字符串数组）；
+- 单函数 &gt;255 局部量；
+- 可分类的错误（只能自己造 Result）。</p>
+<p>其余都是“能写但痛”。</p>
+<h3 id="3-5-用-build-leno-exe-实测-哪些是-没写-哪些是-没有">3.5 用 <code>build\leno.exe</code> 实测：哪些是“没写”，哪些是“没有”</h3>
+<p>方法：在临时目录（<code>build\_probe</code>，用后删除）用 <code>leno.exe</code> 直接编译运行最小用例，不依赖四个项目的任何代码。本节结论对应 2026-11-08 的 <code>build\leno.exe</code> 快照；<code>src/</code> 正在并发修改，若源码已变需重测。</p>
+<p><strong>① <code>switch</code> —— 能用（但不做穷尽检查）</strong></p>
+<pre><code class="language-leno">func classify(int n): string {
+    switch n {
+        case 1 { return &quot;one&quot; }
+        case 2 { return &quot;two&quot; }
+        default { return &quot;other&quot; }
+    }
+}
+</code></pre>
+<p>运行结果：<code>int switch: one,two,other</code>；字符串版 <code>str switch: A,B,?</code>；enum 值版 <code>enum switch: ok,nf,err</code>。
+<code>--debug</code> 反汇编显示每个 case 是一条 <code>OP_EQ</code>（<code>OP_EQ A=3 B=1 C=2</code>），确认是线性比较链，但功能正确。
+<strong>判定：能用</strong>。补充：enum 的 <code>switch</code> 不写 <code>default</code> 也能编译、无任何警告（<code>switch c { case Color.red ... case Color.green ... }</code> 输出 <code>red</code>）⇒ <strong>穷尽性检查：没有</strong>。</p>
+<p><strong>② <code>enum</code> —— 半能用（只有 int 常量）</strong></p>
+<pre><code class="language-leno">enum Status { ok = 200 not_found = 404 error = 500 }
+</code></pre>
+<p><code>_str(Status.not_found)</code> 输出 <code>404</code>，可用于 <code>switch</code>。但带载荷的定义：</p>
+<pre><code class="language-leno">enum JobMsg {
+    Start(int id)
+    Progress(int done, int total)
+    Done(int id)
+}
+</code></pre>
+<p>直接报 9 条语法错误（<code>期望 enum 成员名称</code>、<code>期望 ')'</code>、<code>期望 '}' 结束 enum 定义</code> 等）。
+<strong>判定：int 常量能用；载荷没有。</strong> 这正是四项目把消息写成 <code>["progress", 已下, 总长]</code> 的原因之一。</p>
+<p><strong>③ <code>map</code> / <code>filter</code> / <code>reduce</code> —— 能用，且类型没有丢</strong></p>
+<pre><code class="language-leno">var doubled = nums.map(func(int x, int i) { return x * 2 })
+var evens   = nums.filter(func(int x, int i) { return x % 2 == 0 })
+var total   = nums.reduce(func(int acc, int x, int i) { return acc + x }, 0)
+</code></pre>
+<p>输出：<code>map type=Array[int] value=[6, 2, 4]</code>、<code>filter type=Array[int] value=[2]</code>、<code>reduce type=int value=6</code>；链式 <code>filter().map().reduce()</code> 输出 <code>13</code>。
+<strong>判定：能用</strong>。注意文档 <code>module_arrays.md:51-52</code> 写“<code>reduce</code> 的返回类型暂为 <code>any</code>”，而实测运行时 <code>type()</code> 是 <code>int</code>；文档说的是类型标注、实测取的是运行时值，<strong>不能据此判定文档过时（待确认，静态类型未验证）</strong>，但该描述确实容易劝退使用者。</p>
+<p><strong>④ 自定义比较器 <code>sort</code> —— 没有</strong></p>
+<pre><code class="language-leno">nums.sort(func(int a, int b) { return b - a })
+</code></pre>
+<p>报错：<code>[语义错误] 调用方法 'sort' 时参数数量不匹配: 期望 0, 实际 1</code>。
+改模块形式 <code>arrays.sort(nums, fn)</code> 同样失败：<code>arrays.sort 参数数量不匹配: 期望 1, 实际 2</code>，并附 <code>参数 2 类型错误: 期望 'int'，但传入 'func(int, int):int'</code>。
+~~<strong>判定：没有。</strong>~~ ✅ <strong>已补（2026-11-09）</strong>：<code>arr.sort(cmp)</code> 现在可用（稳定归并；回调里改数组不会崩）。</p>
+<pre><code class="language-leno">arr.sort(func(int a, int b) { return b - a })            // 降序
+arr.sort(func(Song x, Song y) { return x.dur - y.dur })  // 按 struct 字段
+</code></pre>
+<p>契约与 C <code>qsort</code> / Java <code>Comparator</code> 同口径（负数⇒a 前、0⇒等、正数⇒b 前）。取消失败时的原话是
+“期望 0 参”，现已支持 0 或 1 参。</p>
+<blockquote>
+<p>原文说的两处手写已按此处理：<a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269 <code>lrc_sort</code></a> 与 Aria <code>lib/lyric.leno</code> 的同名函数都改成了 <code>ord.sort(cmp)</code>。
+<strong>但 <a href="file:///d:/CLeno/LenoMusic/player.leno#L742-L752">player.leno:742 <code>insert_sorted</code></a> 故意保留</strong> —— 它是"往已排序数组插一个"（二分 + 一次移动，O(log n)），改成全量 sort 会退化成 O(n² log n)。
+同理 Aria <code>api_report.top_rank</code> 的 Top-N 选择排序（O(n×lim)）也保留。</p>
+</blockquote>
+<p><strong>⑤ 用户泛型 —— 能用</strong></p>
+<pre><code class="language-leno">struct Box[T] { T value }
+func identity[T](T v): T { return v }
+func max_of[T](T a, T b): T { if a &gt; b { return a } return b }
+</code></pre>
+<p>输出 <code>identity=42</code>、<code>unbox=7</code>、<code>max=9</code>，并给一条 <code>warning: [泛型无约束] 泛型参数 'T' 参与比较运算无约束</code>。警告只提醒，不阻止编译。
+<strong>判定：能用</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>实测结果</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>switch</code>（int / string / enum）</td>
+<td>全部命中正确</td>
+<td><strong>能用</strong>（线性比较链）</td>
+</tr>
+<tr>
+<td><code>enum</code> 常量 + <code>switch</code> 匹配</td>
+<td>通过</td>
+<td><strong>能用</strong></td>
+</tr>
+<tr>
+<td><code>enum</code> 穷尽性</td>
+<td>缺 <code>default</code> 静默通过</td>
+<td><strong>没有</strong></td>
+</tr>
+<tr>
+<td><code>enum</code> 载荷</td>
+<td>9 条语法错误</td>
+<td><strong>没有</strong></td>
+</tr>
+<tr>
+<td><code>map</code> / <code>filter</code></td>
+<td><code>Array[int]</code>，值正确</td>
+<td><strong>能用</strong></td>
+</tr>
+<tr>
+<td><code>reduce</code></td>
+<td>运行时 <code>int</code>，值正确；静态类型是否 <code>any</code> 未验证</td>
+<td><strong>能用</strong></td>
+</tr>
+<tr>
+<td>自定义比较器 <code>sort</code></td>
+<td>~~期望 0 参~~ ⇒ 现已支持 <code>sort(cmp)</code></td>
+<td>~~<strong>没有</strong>~~ ⇒ ✅ <strong>已有</strong>（2026-11-09）</td>
+</tr>
+<tr>
+<td>用户泛型（函数 / struct）</td>
+<td>通过</td>
+<td><strong>能用</strong>（附提醒）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实测结论：四个项目里 <code>switch / enum / map / filter / reduce / 泛型</code> 的 0 使用，不能用“语言不支持”来解释。</strong> 只有 enum 载荷与 comparator sort 是真正的“没有”。</p>
+<h3 id="3-6-生成侧有没有任何机制把作者推向这些形态">3.6 生成侧有没有任何机制把作者推向这些形态</h3>
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>现状</th>
+<th>会不会推动惯用写法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>约定文件（AGENTS.md / CLAUDE.md / 风格指南）</td>
+<td>~~四项目 + Leno 根目录 <strong>0 个</strong>~~ ⇒ <strong>Leno 根已有 <code>AGENTS.md</code> + <code>docs/idioms.md</code></strong>（2026-11-09，每条都实跑验证过）；<strong>四个项目仍是 0 个</strong></td>
+<td>Leno 根：<strong>会</strong>；四项目：<strong>仍不会</strong></td>
+</tr>
+<tr>
+<td>项目模板 <code>leno --init</code></td>
+<td>生成 <code>leno.toml</code>、<code>src/main.leno</code>（<code>initproj.hello()</code>）、<code>lib/&lt;pkg&gt;.leno</code>（<code>print("Hello from initproj!")</code>）；<code>examples/</code>、<code>test/</code> 为空目录；无 AGENTS.md</td>
+<td><strong>不会</strong>：新项目看不到 struct / enum / switch / map 任何样例</td>
+</tr>
+<tr>
+<td>示例库</td>
+<td>README 称示例 1016 个；<code>examples/</code> 确有 <code>switch</code>、<code>enum</code>、<code>struct</code>、<code>泛型系统</code>、<code>jsons</code> 等目录，但内容以特性测试与 benchmark 为主（如 <code>examples/switch/benchmark_if_vs_switch.leno</code>），没有按任务组织的“JSON→struct / 状态机 / 消息分派 / 错误 Result”样例；README:426 只写“示例代码（1016 个文件）”，不做索引</td>
+<td><strong>有素材，无索引</strong></td>
+</tr>
+<tr>
+<td>LSP</td>
+<td>capabilities 只有 completion / hover / definition / diagnostics / documentSymbol / signatureHelp / references / rename / folding；<strong>无 <code>codeActionProvider</code></strong></td>
+<td><strong>不会</strong>：没有“把循环转成 map”这类修复</td>
+</tr>
+<tr>
+<td>VSCode 扩展</td>
+<td>contributes 只有 commands / menus / languages / grammars / configuration；<strong>无 snippets</strong></td>
+<td><strong>不会</strong></td>
+</tr>
+<tr>
+<td>编译器诊断</td>
+<td>30+ 类 warning（<code>src/error.c:531-567</code>）全是正确性/性能类；有相似名提示（<code>src/native.c:2198</code> 的 <code>提示: Leno 里它叫 'len' ✓</code>、<code>:2220</code> 的 <code>提示: 是否想用 '%s'？</code>）和 <code>[泛型无约束]</code></td>
+<td><strong>只纠错，不教写法</strong>：没有“这串 <code>if</code> 可改 <code>switch</code>”“这个循环可改 <code>map</code>”“这个 int 状态可改 <code>enum</code>”</td>
+</tr>
+<tr>
+<td>文档本身</td>
+<td>11k 行教程里 <code>switch</code> 的说明还附带劝退：“一律展开成<strong>线性比较链</strong>……case 很多且集中在末尾时请自己分档”（<code>Leno入门教程:11636</code>）</td>
+<td><strong>反向推动</strong>：读到这段的模型更不敢用 <code>switch</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>判定：一个不了解 Leno 的模型在这里写代码，没有任何机制会把它推向 <code>map / switch / enum / 泛型</code>；它只能靠碰巧检索到教程里的某一段。</strong> 因此“0 使用”是结构性原因，不是模型懒惰，也不是语言缺表达力。</p>
+<hr>
+<h2 id="4-一致性-同一问题-四个项目四种解法">4. 一致性：同一问题，四个项目四种解法</h2>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>Aria</th>
+<th>LenoMusic</th>
+<th>LenoTrae</th>
+<th>LenoWorkBuddy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI 参数</td>
+<td>无（GUI）</td>
+<td><code>cli.spec</code> 声明式</td>
+<td>手写 <code>argv</code> + 别名 if 链</td>
+<td>手写 <code>args</code> 循环</td>
+</tr>
+<tr>
+<td>应用状态</td>
+<td><code>struct Player</code> + 魔法 int</td>
+<td><code>struct Player</code> + 字符串码</td>
+<td>模块级全局 <code>var</code></td>
+<td>模块级全局 <code>var</code></td>
+</tr>
+<tr>
+<td>表格/列表行</td>
+<td><code>Array[Array[string]]</code></td>
+<td>行 + <code>SongRow</code> 访问器</td>
+<td><code>field(rec, idx)</code> 字符串记录</td>
+<td><code>Array[Array[string]]</code></td>
+</tr>
+<tr>
+<td>错误</td>
+<td><code>AuthResult</code></td>
+<td><code>[int, bool]</code> + 抛字符串</td>
+<td>抛字符串</td>
+<td><code>Num</code> + 字符串错误码</td>
+</tr>
+<tr>
+<td>JSON 输出</td>
+<td>Dict 字面量 + <code>jsons</code></td>
+<td>Dict 字面量 + <code>jsons</code></td>
+<td>手拼字符串（未转义）</td>
+<td>Dict 字面量 + <code>jsons</code></td>
+</tr>
+<tr>
+<td>时长/大小格式化</td>
+<td><code>fmt_size</code>、<code>fmtTime</code></td>
+<td>3 份 <code>fmtsize</code>/<code>pad2</code></td>
+<td><code>fmt_hm</code></td>
+<td>自带</td>
+</tr>
+<tr>
+<td>线程协作</td>
+<td>Channel + tick 轮询</td>
+<td>Channel + tick 轮询</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>线程这一行是<strong>两个使用线程的项目之间唯一一致的</strong>（Aria 与 LenoMusic；另两个项目不用线程）——不是因为有统一文档，而是因为 Channel 的用法足够简单。其余六行都是“每个项目自己发明方言”。补充：六行差异里大部分<strong>不是能力差异</strong>（<code>switch</code>/<code>map</code>/<code>enum</code> 都实测可用，§3.5），而是没有统一惯用法与提示（§3.6）——同一件事本可以有同一个默认写法。</p>
+<p>甚至连“十六进制字面量能不能用”都没有共识：Aria 在卡片样式里直接用 <code>#FFFFFFFF</code>（<a href="file:///d:/CLeno/Aria/lib/cards.leno#L124-L124">cards:124</a>），LenoMusic 却在注释里写“十六进制字面量在这个语言里没把握 ✗ 别赌”并全部改十进制（<a href="file:///d:/CLeno/LenoMusic/player.leno#L26-L26">player.leno:26</a>）。这不是能力缺失，是<strong>文档/示例/惯用法缺位</strong>。</p>
+<p><strong>结论：语言缺的不是能力，是“官方惯用法”。</strong> 当一个语言让四个团队把同一件事做出四种样子，标准库和示例就该背锅。跨项目复制也印证了这一点：Aria 和 LenoMusic 各自维护一份 <code>kuwo_core</code>；字节格式化 Aria 1 份、LenoMusic 3 份，<code>pad2</code> 则是 LenoMusic 3 份、LenoTrae 1 份（Aria 无）。</p>
+<blockquote>
+<p><strong>本节前提已被 §4.5 修订</strong>：此前的说法暗示"标准库/示例缺位，于是各项目自己重写"。对 <code>build\leno_module</code> 的审计证明<strong>能力层并不缺</strong>——HTTP、JSON、日志、文件遍历都有模块；四个项目也没有重写 HTTP/JSON/日志，而是直接 import 了 LenoWeb 的内部文件 <code>web_net.leno</code>（37 次），绕开公共门面 <code>Web</code>（0 次）。因此"背锅"应精确为：<strong>标准库把已有能力组织成了不可发现、不可默认采用的形态</strong>，而不是没有能力。</p>
+</blockquote>
+<hr>
+<h2 id="4-5-标准库-能力层已存在-形态层缺席">4.5 标准库：能力层已存在，形态层缺席</h2>
+<blockquote>
+<p>本节是对 <code>build\leno_module</code>（20 个模块、53,052 行 lib 代码、663 个门面导出函数）的单独审计。方法与正文一致：抽读门面与子模块实现，并在四个真实项目里统计 import 落点。</p>
+</blockquote>
+<h3 id="4-5-1-一致性-8-种错误-4-类空值-2-套命名">4.5.1 一致性：8 种错误、4 类空值、2 套命名</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>证据</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命名</td>
+<td>同一文件内 <code>clearBindings</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoSqlite/lib/sqlite3.leno#L81">sqlite3.leno:81</a>）与 <code>bind_int</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoSqlite/lib/sqlite3.leno#L90">90</a>）并存；<code>postJson</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/Web.leno#L111">Web.leno:111</a>）与 <code>postJSON</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/Web.leno#L112">112</a>）双份；<code>parseUrl</code>/<code>urlParse</code> 双份</td>
+<td>调用不能靠直觉，必须翻头文件</td>
+</tr>
+<tr>
+<td>参数顺序</td>
+<td><code>aes_encrypt_block(plaintext, key)</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoCrypto/lib/Crypto.leno#L52">Crypto.leno:52</a>）vs <code>aes128_cbc_encrypt_bytes(key16, iv16, pt)</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoCrypto/lib/Crypto.leno#L57">57</a>）；<code>createWaveform(f,c,s,t,a,fr)</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoMusic/lib/Music.leno#L76">Music.leno:76</a>）vs <code>createNoise(f,c,t,s,a)</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoMusic/lib/Music.leno#L79">79</a>，s/t 换位）</td>
+<td>位置参数写反是静默错误</td>
+</tr>
+<tr>
+<td>错误</td>
+<td>至少 8 种：<code>Dict{ok,err}</code>、<code>bool</code>、<code>int -1</code>、typed <code>Result</code> struct、<code>error</code> 字段、<code>throw</code>、<code>Result[T]</code>、<code>Response.ok()</code></td>
+<td>每换一个模块重学一遍错误处理</td>
+</tr>
+<tr>
+<td>空值</td>
+<td>4 类哨兵：<code>null</code>、<code>""</code>、<code>0</code>/<code>0.0</code>、<code>[]</code>；SQLite 把 NULL 压成 0/<code>""</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoSqlite/lib/sqlite3.leno#L208-L230">sqlite3.leno:208-230</a>），Stats 空数组返回 <code>0.0</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoStats/lib/Stats.leno#L37">Stats.leno:37</a>）</td>
+<td>调用方无法区分“空”与“零”</td>
+</tr>
+</tbody>
+</table>
+<p>文件头注释还有 3 处与实现相反：<code>Compress.leno</code> 仍写“DEFLATE 压缩下一步”（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoCompress/lib/Compress.leno#L3-L6">L3-6</a>，实际已导出 <code>deflateRaw/gzip/zlib</code>）；<code>Zip.leno</code> 仍写“写 stored”（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoZip/lib/Zip.leno#L22-L23">L22-23</a>，实际 <code>encode(entries, compress=true)</code>）；<code>XLSX.leno</code> 仍写“LenoZip 写的是 stored”（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoXLSX/lib/XLSX.leno#L19">L19</a>）。<strong>这一点上模块注释不可信，与 §3.6 的“文档反向劝退”同源。</strong></p>
+<h3 id="4-5-2-覆盖-薄壳-重绑定-和真正的缺口">4.5.2 覆盖：薄壳、重绑定、和真正的缺口</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>模块</th>
+<th>行数</th>
+<th>判断</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>薄壳</td>
+<td>CLI 266、Stats 176、Glob 157、FS 115、UUID 88、Log 85、CSV 258（7 个）</td>
+<td>1,145</td>
+<td>一层转发或简单校验</td>
+</tr>
+<tr>
+<td>中等</td>
+<td>Crypto 1,442、Music 1,314、QR 1,196、Compress 882、Sqlite 677、XLSX 573、Zip 314（7 个）</td>
+<td>6,398</td>
+<td>有真实的编解码逻辑</td>
+</tr>
+<tr>
+<td>重型</td>
+<td>SDL3 28,964、Web 8,031、Sys 2,445、Hack 2,071、Win32 2,070、HTTP 1,928（6 个）</td>
+<td>45,509</td>
+<td>本质是 SDK 绑定层</td>
+</tr>
+</tbody>
+</table>
+<p>缺口集中在“上层契约”而不是“底层能力”：Crypto 无 PBKDF2/argon2（§3 已记）；HTTP 有 46 个函数、0 个结构体（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoHTTP/lib/HTTP.leno#L28-L143">HTTP.leno:28-143</a>），只能 <code>Dict</code> 配 handler；SQLite 无 NULL 语义；没有 <code>Result/Option</code>、~~没有 comparator sort（§3.5）~~（✅ 2026-11-09 已补 <code>arr.sort(cmp)</code>）、没有测试框架；WorkBuddy 只能自己写 <code>retry_delays</code>（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L178">wb_core.leno:178</a>）。</p>
+<blockquote>
+<p><strong>另外，<code>maths</code> 里的一个同类缺口也已补上（2026-11-09）</strong>：有 <code>pow</code>（浮点）、有 <code>mod</code>（int），
+却没有二者的结合 —— <strong>模幂 <code>pow_mod</code></strong>。RSA/DH/LCG 随机数都要它，于是 LenoMusic 手写了一份。
+现在 <code>maths.pow_mod(base, exp, m)</code> 是原生的（int64 快路径 + bignum 路径），
+小模数比手写版快 <strong>8–12 倍</strong>，1024 位 RSA 逐位对齐 Python <code>pow()</code> 金标。</p>
+</blockquote>
+<h3 id="4-5-3-测试与文档-77-的代码不在任何入口内">4.5.3 测试与文档：77% 的代码不在任何入口内</h3>
+<p><code>run_all_tests.leno</code> 只扫 <code>*/test/test_*.leno</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/run_all_tests.leno#L132-L141">L132-141</a>），于是：</p>
+<table>
+<thead>
+<tr>
+<th>事实</th>
+<th>数字（2026-11-08）</th>
+<th><strong>复核（2026-11-09）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--list</code> 能看到的测试</td>
+<td>31 个 / 15 个模块</td>
+<td><strong>48 个</strong></td>
+</tr>
+<tr>
+<td>README 模块表列出的模块</td>
+<td>13 个（缺 Hack、Music、SDL3、Sqlite、Sys、Web、Win32）</td>
+<td>✅ <strong>20 个</strong>（含 import 名映射）</td>
+</tr>
+<tr>
+<td>被 runner 跳过的 lib 行数</td>
+<td>77%</td>
+<td><strong>53.9%</strong></td>
+</tr>
+<tr>
+<td>完全没有测试的模块</td>
+<td>5 个 / 20（25%）</td>
+<td><strong>1 个</strong>（只剩 <code>LenoSDL3</code>，需真实窗口）</td>
+</tr>
+<tr>
+<td>LenoWeb 的 19 个测试</td>
+<td>放在 <code>examples/tests</code>，runner 永远看不到</td>
+<td>新写 3 个已在 <code>test/</code>；<strong>旧的 19 个仍未迁移</strong></td>
+</tr>
+<tr>
+<td>断言写法</td>
+<td>内建 <code>assert_eq</code> 7 个文件，自写 <code>fail</code>/<code>eqInt</code> 17 个，两者皆无 8 个（有 1 个文件两套都用，故合计 31）</td>
+<td>未动（仍无测试框架）</td>
+</tr>
+</tbody>
+</table>
+<p>README 也没有“包名 → import 名”映射（包是 <code>LenoFS</code> / <code>LenoWeb</code> / <code>LenoSQLite</code>，导入是 <code>"FS"</code> / <code>"Web"</code> / <code>"sqlite3"</code>），也没有解释 Hack 的 <code>GameHelper</code> 为什么能 import 到 Win32 的 <code>w32_*.leno</code>（跨包依赖未在清单中声明，属于打包边界隐患）。</p>
+<blockquote>
+<p>✅ <strong>已修（2026-11-09）</strong>：<code>build/leno_module/README.md</code> 现在列 <strong>20 个模块</strong>，含
+<code>包名 → import 名</code> 对照（<code>LenoFS</code>→<code>"FS"</code>、<code>LenoSQLite</code>→<code>"sqlite3"</code>、<code>LenoHack</code>→<code>"GameHelper"</code>、
+<code>LenoMusic</code>→<code>"Music"</code> …），并写明“import 名是 <code>lib/</code> 下的入口文件名，不是 <code>[package] name</code>”。
+<strong>20 个 import 名逐个实测通过</strong>（13 个纯 Leno 一起 import，另 7 个需原生库的单独 import）。
+⬜ <code>GameHelper</code> 跨包依赖 <code>w32_*.leno</code> 这件事仍未在清单里说明。文档层的同名冲突更直接：<a href="file:///d:/CLeno/Leno/docs/module_sys.html#L1-L3">module_sys.md:1-3</a> 描述的是内建 <code>sys</code> 全局，不是 <code>import "Sys"</code>；<a href="file:///d:/CLeno/Leno/docs/module_web.html#L7">module_web.md:7</a> 仍写 <code>web_gzip</code> 635 行（历史值），实际已是 28 行转发壳（2026-10-17 收编到 <code>Compress</code>）（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/web_gzip.leno#L1-L28">web_gzip.leno:1-28</a>）。</p>
+</blockquote>
+<h3 id="4-5-4-交叉验证-不是-各自重写-是-绕开门面">4.5.4 交叉验证：不是“各自重写”，是“绕开门面”</h3>
+<table>
+<thead>
+<tr>
+<th>导入落点</th>
+<th>四项目合计</th>
+<th>分布</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Web</code> 公共门面</td>
+<td><strong>0</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>web_net.leno</code>（LenoWeb 内部文件）</td>
+<td><strong>37</strong></td>
+<td>Aria 20 / LenoMusic 15 / LenoTrae 1 / LenoWorkBuddy 1</td>
+</tr>
+<tr>
+<td>LenoSDL3</td>
+<td>36</td>
+<td>Aria 28 / LenoMusic 5 / LenoTrae 3 / LenoWorkBuddy 0</td>
+</tr>
+<tr>
+<td>LenoMusic</td>
+<td>10</td>
+<td>Aria 9 / LenoMusic 1</td>
+</tr>
+<tr>
+<td>LenoHTTP</td>
+<td>10</td>
+<td>全部在 Aria 服务端</td>
+</tr>
+<tr>
+<td>LenoCrypto</td>
+<td>6</td>
+<td></td>
+</tr>
+<tr>
+<td>LenoUUID</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>LenoSys / LenoLog</td>
+<td>2 / 2</td>
+<td></td>
+</tr>
+<tr>
+<td>CLI / Compress / sqlite3</td>
+<td>1 / 1 / 1</td>
+<td></td>
+</tr>
+<tr>
+<td>FS / Glob / CSV / Zip / XLSX / Stats / QR / Win32 / GameHelper</td>
+<td><strong>0</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>重复量未逐行统计（待确认），但可指认的重复点如下（<strong>2026-11-09 已处理 3 组，标记在行尾</strong>）：
+<code>hack_log.leno</code>（189 行，非空 158）与 <code>LenoLog</code>（96 行，非空 85）职责重叠，具体重合行数待确认（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoHack/lib/hack_log.leno">hack_log.leno</a>）⬜；
+LenoMusic 里 <code>jsonescape</code> 三份（<a href="file:///d:/CLeno/LenoMusic/qq_core.leno#L75">qq_core:75</a>、<a href="file:///d:/CLeno/LenoMusic/netease_core.leno#L66">netease_core:66</a>、<a href="file:///d:/CLeno/LenoMusic/qq_crypto.leno#L117">qq_crypto:117</a>）✅ <strong>已删（三份都漏转义换行，改用 <code>jsons.encode</code>）</strong>；
+<code>powmod/hex2int/int2hex</code> 两份（<a href="file:///d:/CLeno/LenoMusic/qq_crypto.leno#L45">qq_crypto:45</a> 与 <a href="file:///d:/CLeno/LenoMusic/netease_crypto.leno#L38">netease_crypto:38</a>）✅ <strong>已抽到 <code>crypto_math.leno</code>，<code>powmod</code> 进一步升级为 <code>maths.pow_mod</code></strong>；
+手写 CLI 四处（Aria <a href="file:///d:/CLeno/Aria/server/server.leno#L77">server:77</a>、Trae <a href="file:///d:/CLeno/LenoTrae/trae_sign.leno#L62">trae_sign:62</a>/<a href="file:///d:/CLeno/LenoTrae/trae_gui.leno#L577">trae_gui:577</a>、WB <a href="file:///d:/CLeno/LenoWorkBuddy/wb_sign.leno#L249">wb_sign:249</a>）⬜；
+WorkBuddy 自建 JSON 取值（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_growth.leno#L223">wb_growth:223</a>/<a href="file:///d:/CLeno/LenoWorkBuddy/wb_growth.leno#L342">342</a>）⬜；
+5 处手写排序（§2.3 已列其中 3 处）✅ <strong>已改 3 处，2 处故意保留</strong>；
+<code>web_cdp</code> 的 <code>_removeDir</code> 直接 <code>rmdir /s /q</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/web_cdp.leno#L849-L861">849-861</a>）⬜。</p>
+<p><strong>这不是“每个项目重写了一遍 HTTP/JSON/日志”</strong>：这些能力都来自 LenoWeb，只是从内部文件名进入。真正的问题是公共门面一次性绑定了 9 个子模块（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/Web.leno#L6-L14">Web.leno:6-14</a>），而应用通常只需要一两个，于是作者绕开它——这是入口设计问题，不是能力问题。</p>
+<h3 id="4-5-5-结论与待确认">4.5.5 结论与待确认</h3>
+<p><strong>判定：标准库是能力层，不是标准形态。</strong> 原因按出现频率排：</p>
+<ol>
+<li><strong>不知道</strong>：README 少 7 个模块、无 import 映射、<code>module_sys.md</code> 对不上号、文件头注释与实现相反、<code>module_web.md</code> 自述“文档入口 2026-10-14 才补”；</li>
+<li><strong>不好用</strong>：Web 门面 9 合 1、三种错误模型并存、<code>postJson</code>/<code>postJSON</code> 双份、<code>HTTP</code> 与 <code>Web</code> 两套命名；</li>
+<li><strong>不够用</strong>：没有比较器排序、Result/Option、typed HTTP app、SQLite NULL、TestKit、重试预算。</li>
+</ol>
+<p><strong>待确认（不作定论）</strong>：</p>
+<ul>
+<li><code>d:\CLeno\LenoVersion\v0.2.2</code> / <code>v0.2.3</code> 的 <code>leno_module</code> 各有 8 个模块，共 114,209 行（54,840 + 59,369），<strong>是否为有意归档</strong>无法仅从代码判断，未计入上述采用率。</li>
+<li><code>Web</code> 门面与各项目 <code>web_net</code> import 的<strong>先后顺序</strong>没有查 git 历史：无法确认是“门面晚于应用”（历史包袱），还是“门面早于应用、但文档没让人知道”。</li>
+</ul>
+<hr>
+<h2 id="5-工程化">5. 工程化</h2>
+<h3 id="5-1-可测试性">5.1 可测试性</h3>
+<p><strong>正面样板是 LenoMusic</strong>：纯逻辑模块不 import SDL3（<a href="file:///d:/CLeno/LenoMusic/player.leno#L1-L8">player.leno:1-8</a>），17 个测试直接 <code>leno test\xxx.leno</code> 跑，不需要窗口；UI 用环境变量注入真实点击、无头截图核对（<a href="file:///d:/CLeno/LenoMusic/README.html#L49-L74">README:49-74</a>），并真的用它复现过用户报的 bug（<a href="file:///d:/CLeno/LenoMusic/README.html#L62-L66">README:62-66</a>）。WorkBuddy 的 <a href="file:///d:/CLeno/LenoWorkBuddy/test/wb_stub.leno">wb_stub</a> + 子进程无头测试也是同类好实践。</p>
+<p><strong>最弱的是 Aria</strong>：70 个文件、24.6k 行，没有 <code>test/</code> 目录，只有 8 个 <code>tools/test_*.leno</code> 探针；它们连真实服务端、覆盖本地 <code>account.json</code>、全文 <code>assert</code> 0 次（只靠 <code>print</code> 人工核对），且 <a href="file:///d:/CLeno/Aria/tools/test_account.leno#L22-L26">test_account.leno:22-26</a> 的注释记录了接口从 3 参改 5 参后曾长期编译不过（2026-11-05 已补成 5 参调用）。<strong>最大的项目测试最薄，这是最值得警惕的信号。</strong></p>
+<p>共性缺口：没有测试框架/断言库，17 个 LenoMusic 测试里有 13 处各自复制的 <code>check</code>/<code>checkf</code> 定义（<code>check</code> 12 处 + <code>checkf</code> 1 处，分布在 12 个文件）（<a href="file:///d:/CLeno/LenoMusic/test/test_lrc_parse.leno#L18-L30">test_lrc_parse.leno:18</a>）；UI 测试只能把环境变量探针<strong>编译进生产代码</strong>（Aria 39 处 <code>_env</code>、36 个 <code>ARIA_*</code>；LenoMusic 20+ 个 <code>D*</code> flag）。另外 window 没有程序化关闭 API，无头测试只能靠定时器 + <code>_exit()</code>（<a href="file:///d:/CLeno/LenoTrae/README.html#L321-L323">LenoTrae README:321-323</a>）。</p>
+<p><strong>标准库自己也没有解决这个问题</strong>：<code>run_all_tests.leno</code> 只扫 <code>*/test/test_*.leno</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/run_all_tests.leno#L132-L141">132-141</a>），<code>--list</code> 实际只能看到 31 个测试 / 15 个模块，README 却写 13 个；LenoWeb 的 19 个测试放在 <code>examples/tests</code>，runner 永远发现不了；77% 的 lib 行数不在任何测试入口内，5 个模块（25%）完全没有测试。断言同样分裂：内建 <code>assert_eq</code> 7 个文件、自写 <code>fail</code>/<code>eqInt</code> 17 个、两者皆无 8 个。</p>
+<blockquote>
+<p>🟡 <strong>复核（2026-11-09）</strong>：测试数 <strong>31 → 48</strong>（其中 LenoWeb 3 → 12）；不可见行数 <strong>77% → 53.9%</strong>；无测试模块 <strong>5 → 1</strong>（只剩 <code>LenoSDL3</code>，需真实窗口）。
+LenoWeb 从 0 → 3 个测试，<strong>补测当天就抓到 <code>parseUrl</code> 的相对路径 bug</strong>（scheme 被整串污染、path 恒为 <code>/</code>，站内链接会让爬虫反复抓首页）。
+⬜ 断言分裂（无测试框架）、<code>examples/tests</code> 的 19 个旧测试、Aria 无 <code>test/</code> 目录 —— 都未动。</p>
+</blockquote>
+<h3 id="5-2-可调试性">5.2 可调试性</h3>
+<p>GUI 程序看不到 <code>print</code>，于是每个项目都自己造诊断通道：Aria 写文件日志（<a href="file:///d:/CLeno/Aria/lib/player_core.leno#L730-L747">player_core:730-747</a>、<a href="file:///d:/CLeno/Aria/lib/login_win.leno#L28-L33">login_win:28</a>、<a href="file:///d:/CLeno/Aria/lib/avatar_crop.leno#L43-L48">avatar_crop:43</a>），WorkBuddy 写 <code>signin.log</code>（<a href="file:///d:/CLeno/LenoWorkBuddy/wb_core.leno#L377-L382">wb_core:377</a>），LenoTrae 同时用 <code>auto.log</code>（<a href="file:///d:/CLeno/LenoTrae/trae_auto.leno#L266-L268">trae_auto:266</a>）和环境变量开关的控制台诊断（<a href="file:///d:/CLeno/LenoTrae/trae_sign.leno#L183-L187">trae_sign:183-187</a>）。实际调试手段 = 打印/日志 + 环境变量探针 + 截图，没有断点式调试的痕迹。配合 887 行的 <code>on_tick</code>（<a href="file:///d:/CLeno/Aria/lib/player_tick.leno#L1804-L2690">player_tick.leno:1804-2690</a>）和匿名行数据，定位成本很高。</p>
+<h3 id="5-3-构建与依赖">5.3 构建与依赖</h3>
+<ul>
+<li><code>leno.toml</code> 的 <code>[requires]</code> 只约束随发行包的内置模块，且 <strong>2/4 项目干脆没有</strong>（LenoTrae / WorkBuddy）。</li>
+<li>运行时版本按“日期”选：<a href="file:///d:/CLeno/LenoMusic/README.html#L23-L27">LenoMusic README:23-27</a> 要求“2026-10-21 之后”，否则报 <code>struct Table 没有方法 'source_row'</code>。这类 API 变更一次，所有项目一起坏。</li>
+<li>有包管理器，但四项目零第三方依赖；跨项目复用仍靠复制文件。</li>
+</ul>
+<h3 id="5-4-打包-跨平台">5.4 打包 / 跨平台</h3>
+<p>单文件 exe（10–12MB）、资源与 DLL 处理、Linux 构建（LenoMusic <code>dist</code>）都跑通了，<strong>这是 Leno 最有竞争力的部分</strong>。但跨平台靠人工自律：<code>trae_history.leno:34</code> 手拼 <code>"\\history.json"</code>，<code>player_core.leno:2571</code> 按 <code>"\\"</code> 切路径，测试里 <code>import "..\\wb_auth.leno"</code>——Windows 习惯会漏到 Linux。</p>
+<hr>
+<h2 id="6-修正后的优先级-先补引导-再补真缺口">6. 修正后的优先级：先补引导，再补真缺口</h2>
+<blockquote>
+<p>本节是对原结论的修订。原先把 <code>switch / enum / map / filter</code> 的 0 使用当成“能力缺口”，§3.5 实测推翻了这一判断：它们都能用。真正的缺口只剩 <strong>enum 载荷、比较器排序、穷尽性检查</strong>，以及记录 / Result / 宽索引。</p>
+<p>排序基准不变：<strong>P0 生成侧引导，P1 记录类型</strong>。标准库相关的动作不另起一条线，而是挂进这个排序（§4.5 的发现只改变每级的“配套动作”，不改变先后）。</p>
+</blockquote>
+<p><strong>优先级总表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>主项</th>
+<th>标准库侧配套动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>生成侧引导包</td>
+<td>README 20 模块目录 + import 名映射；<code>Web</code> 门面拆分 / 入口收敛；测试入口收编</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>记录类型 + 自动编解码</td>
+<td>用库内 CSV / XLSX / JSON 能力做“记录 ↔ 序列化”模板</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Result / Option</td>
+<td>统一错误契约（8 种 → 1–2 种）与空值契约（4 类 → 1 类）</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td>
+<td>宽索引</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td>enum 载荷 / ~~比较器~~（✅ 已完成）/ 穷尽性</td>
+<td><code>hack_log</code> 并入 <code>LenoLog</code>、<code>web_cdp</code> 改调 <code>FS.rmtree</code>、~~5 处手写排序退场~~（✅ 已退 3 处，2 处保留）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="p0-生成侧引导包-不是语言特性-优先级最高">P0 生成侧引导包（不是语言特性，优先级最高）</h3>
+<p><strong>要交付什么</strong>：</p>
+<ol>
+<li><strong>仓库根 + 四个项目的 <code>AGENTS.md</code></strong>：只写“默认形态”，每条 5–10 行可复制样例 + 一个反例：
+   - 数据：<code>struct</code> + <code>Array[struct]</code>，不要 <code>Array[Array[string]]</code>；
+   - 状态：<code>enum</code> int 常量，不要魔法整数 / 字符串码；
+   - 分支：≥3 个同值比较用 <code>switch</code>，热路径再考虑手写；
+   - 集合变换：<code>map / filter / reduce</code>，不要手写索引循环；
+   - 可空：<code>T?</code> + <code>if x is T =&gt; binding</code>，不要 <code>any</code> + <code>null</code> 双检；
+   - 错误：<code>Result</code> 形态（P2 落地前，先给一个 20 行的项目内约定实现）。</li>
+<li><strong><code>docs/idioms.md</code></strong>（或在入门教程加一章“惯用写法”）：按任务给 20 个最小样例——JSON→struct、表格行、下载消息、CLI 解析、错误 Result、状态机、排序、日志。可直接拿本报告 §2 的反例做 before/after。</li>
+<li><strong>编译器加 3 类“可改写法”警告</strong>（新增 <code>WARN_*</code>，默认开、可 <code>--no-lint</code> 关）：
+   - 手写索引循环只做 <code>add(expr)</code> / 条件 <code>add</code>，且无 break、无外部副作用 ⇒ 建议 <code>map / filter</code>；
+   - 同一变量连续 <code>==</code> 常量 ≥3 个分支 ⇒ 建议 <code>switch</code>；
+   - <code>int</code> / <code>string</code> 字段被赋 <code>"0".."5"</code> 一类常量并参与相等比较 ⇒ 建议 <code>enum</code>（误报率高，可先只给 LSP 提示）。</li>
+<li><strong><code>leno --init</code> 模板升级</strong>：<code>src/main.leno</code> 直接放 5 个惯用样例（struct+Array、enum 状态、switch、map/filter、Result），并生成 <code>AGENTS.md</code>；<code>examples/</code> 不要留空。</li>
+<li><strong>编辑器侧</strong>：VSCode 加 5 组 snippets（<code>struct</code> / <code>enum</code> / <code>switch</code> / <code>mapf</code> / <code>result</code>）；LSP 增加 <code>codeActionProvider</code>，先做“把选中的索引循环转成 map/filter”一个动作。</li>
+<li><strong>文档修正两处</strong>：<code>module_arrays.md:51-52</code> 说 <code>reduce</code> 的“返回类型暂为 <code>any</code>”，但实测运行时 <code>type()</code> 是 <code>int</code>（两者口径不同，静态类型待验证）；<code>Leno入门教程:11636</code> 的“switch 一律线性比较链”应标注“冷路径优先 switch，热路径才手写分档”。
+   - ✅ <strong>前半已改（2026-11-09）</strong>：<code>module_arrays.md</code> 两处改成“返回类型与<strong>元素类型</strong>一致（<code>Array[int]</code>⇒<code>int</code>），不是 <code>any</code>”。
+   - ⬜ <strong>后半未改</strong>：教程 11636 行仍在，<code>grep</code> 仍是原文。</li>
+<li><strong>标准库目录与入口收敛</strong>（与 P0 同源：让已有能力“到达”作者，依据见 §4.5）：
+   - ~~<strong>README 目录与 import 名映射</strong>~~：✅ <strong>已完成（2026-11-09）</strong> ——
+     <code>build\leno_module\README.md</code> 现在列 <strong>20 个模块</strong>并带 <code>包名 → import 名</code> 对照，20 个 import 名逐个实测；
+     同时修正了 <code>module_sys.md</code>（内建 <code>sys</code> vs 模块包 <code>LenoSys</code> 的对照表）与 <code>module_web.md</code>
+     （删掉 <code>web_gzip</code> 635 行的历史值，改为 28 行转发壳 + “要 gzip 用 <code>import "Compress"</code>”）。
+   - ⬜ <strong>Web 门面拆分</strong>（<strong>未做</strong>）：<code>Web.leno</code> 一次性 import 9 个子模块（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/Web.leno#L6-L14">6-14</a>），三种错误模型并存、<code>postJson</code>/<code>postJSON</code> 双份。拆出 <code>Web.net</code> / <code>Web.html</code> / <code>Web.crawl</code> 三个公开入口，或至少在 README 标注 <code>web_net.leno</code> 是内部文件、应用不应直接 import（复核：现状仍是 <strong>37 次内部 import 对 0 次门面 import</strong>）。
+   - 🟡 <strong>测试入口收编</strong>（<strong>部分</strong>）：新写的 3 个 LenoWeb 测试已直接放 <code>test/</code>，<code>--list</code> 能看到（总测试数 31→<strong>39</strong>）；
+     <strong>旧的 19 个仍在 <code>examples/tests</code>，未迁移</strong>。README 的模块数已改成 20（不是 runner 数字）。</li>
+</ol>
+<p><strong>每一条各自消掉哪类样板</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>直接消掉</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AGENTS.md</code> 默认形态</td>
+<td><code>curNav</code> 90 处魔法比较、<code>"0".."5"</code> 状态码、<code>if src ==</code> 链；把状态/配置类行数组换成 <code>struct</code> 数组（剩余序列化部分仍需 P1）</td>
+</tr>
+<tr>
+<td><code>docs/idioms.md</code></td>
+<td>同一问题四种解法（CLI 4 种、错误 3 种）、<code>parse_rank/parse_users</code> 类映射循环、<code>trae_sign</code> 手拼 JSON 的写法</td>
+</tr>
+<tr>
+<td>3 类编译器警告</td>
+<td>可 <code>map/filter</code> 的手写索引循环、≥3 分支的 <code>==</code> 链、未命名状态码</td>
+</tr>
+<tr>
+<td><code>--init</code> 模板</td>
+<td>新项目“从零自创方言”（看不到 struct / enum / switch / map）</td>
+</tr>
+<tr>
+<td>snippets + codeAction</td>
+<td>手写样板本身（每次生成少想一步、少敲一段）</td>
+</tr>
+<tr>
+<td>文档修正</td>
+<td>因“switch 慢”“reduce 返回 any”而绕开已有能力的决策</td>
+</tr>
+<tr>
+<td>标准库目录/门面/测试入口</td>
+<td>“不知道有这个模块”与“绕过 <code>Web</code> 直接 import 内部文件”两类采用失败</td>
+</tr>
+</tbody>
+</table>
+<p><strong>这是唯一能提升“所有未来代码”、而不是“某一处代码”的一项。</strong></p>
+<p><strong>验收</strong>：给一个不了解 Leno 的模型只喂 <code>AGENTS.md</code> + <code>--init</code> 模板，要求写“下载队列”，产出中 <code>struct</code> 行、<code>enum</code> 状态、<code>switch</code> 分派、<code>map/filter</code> 各至少出现一次。</p>
+<h3 id="p1-记录类型-自动编解码-json-表格-通道-原-①-仍是最大行数来源">P1 记录类型 + 自动编解码（JSON / 表格 / 通道）——原 ①，仍是最大行数来源</h3>
+<p><strong>缺什么</strong>：没有“字段有名字、可序列化、可作为表格行”的记录；没有 <code>decode&lt;Song&gt;</code>；没有按列名绑定。
+<strong>消掉</strong>：355 处行协议、<code>F_*</code> 列号常量、六个 <code>parse_*</code> 同构映射、<code>len()&gt;=4</code> 防御、<code>field(rec, idx)</code>、内存行 vs 磁盘对象的双形态转换、<code>trae_sign</code> 的手拼 JSON。
+<strong>验收</strong>：<code>record Song { ... }</code> + <code>jsons.decode(Song, text)</code> + <code>Table</code> 直接吃 <code>Array[Song]</code>；<code>Aria downloads</code> 的队列改成 <code>Array[Job]</code> 后行数应显著下降。</p>
+<h3 id="p2-result-option-严格解析-类型化错误-原-③">P2 Result / Option + 严格解析 + 类型化错误——原 ③</h3>
+<p><strong>缺什么</strong>：没有标准 <code>Result</code>；<code>_int</code> 失败抛、<code>_int_or</code> 把 <code>null</code> 变 0、<code>as</code> 只认 <code>any</code>。
+<strong>标准库先行（§4.5）</strong>：把现有 8 种错误写法（<code>Dict{ok,err}</code>、<code>bool</code>、<code>int -1</code>、typed <code>Result</code> struct、<code>error</code> 字段、<code>throw</code>、<code>Result[T]</code>、<code>Response.ok()</code>）收敛到 1–2 种；空值 4 类哨兵（<code>null</code> / <code>""</code> / <code>0</code>/<code>0.0</code> / <code>[]</code>）收敛到 <code>T?</code> / <code>Option</code> 一类。SQLite 的 <code>column_int/text</code> 必须先把 NULL 与 0/<code>""</code> 区分开（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoSqlite/lib/sqlite3.leno#L208-L230">sqlite3.leno:208-230</a>），否则上层永远无法判断“查到了空值”。
+<strong>消掉</strong>：<code>parsing.leno</code> 整文件、<code>wb_core</code> 的 <code>is_int_str/Num</code>、Aria <code>util.to_int</code>、<code>AuthResult</code>、<code>throw "INVALID_FORMAT"</code> 十连、<code>catch e</code> 只打日志、<code>cli/jsons/env</code> 后的 310 处 <code>as</code>。
+<strong>验收</strong>：<code>strings.parseInt(s): Result[int, ParseError]</code>；<code>try { ... } catch (e: AuthError)</code>；<code>cli.parse</code> 返回 typed options 而非 <code>Dict&lt;string, any&gt;</code>。</p>
+<h3 id="p3-宽索引-解除-256-字段-255-局部量-原-④">P3 宽索引：解除 256 字段 / 255 局部量——原 ④</h3>
+<p><strong>缺什么</strong>：<code>OP_GET_FIELD</code> 的字段索引 8 位、单函数局部寄存器 8 位。
+<strong>消掉</strong>：<code>Player</code> 250 字段 + <code>SquareState</code> 的语义妥协、把一个类型拆成 5 个文件、每文件 45 条 import、<code>on_tick</code> 的寄存器腾挪。
+<strong>验收</strong>：字段/寄存器索引至少 16 位；或编译器给出“超过上限，建议拆分为 X/Y”的结构化诊断，而不是让作者自己发现。</p>
+<h3 id="p4-实测确认的真缺口-原-②-与-⑤-的排序部分">P4 实测确认的真缺口——原 ② 与 ⑤ 的排序部分</h3>
+<ul>
+<li><strong>enum 载荷</strong>：唯一“根本没法写”的状态表达（§3.5 实测 9 条语法错误）。<code>switch</code> 本身能用但<strong>没有穷尽性检查</strong>，两者应一起做：<code>enum JobMsg { Start(id), Progress(done,total), ... }</code> + <code>switch</code> 穷尽性错误。</li>
+<li><strong>比较器 / 稳定排序</strong>：~~<code>sort()</code> 只接受 0 参~~ ⇒ ✅ <strong>已完成（2026-11-09）</strong>。
+  <code>arr.sort(cmp)</code> 走稳定归并（相等元素保持原序），回调里改数组不会崩（排序前复制元素）。
+  已消掉 <a href="file:///d:/CLeno/LenoMusic/player.leno#L269-L300">player.leno:269 <code>lrc_sort</code></a>、<a href="file:///d:/CLeno/LenoMusic/search_page.leno#L294-L294">search_page.leno:294</a>、Aria <code>api_notice</code> 的 Top-N 三处；
+  <strong><a href="file:///d:/CLeno/LenoMusic/player.leno#L742-L752">player.leno:742 <code>insert_sorted</code></a> 故意不改</strong>（二分插入 O(log n)，全量 sort 会更慢）。</li>
+<li><strong>switch 跳转表</strong>（<code>OP_SWITCH_LOOKUP</code> 空转）是性能问题，不是可用性问题，排在最后。</li>
+<li><strong>库内低成本收尾（§4.5）</strong>：<code>hack_log.leno</code>（非空 158 行）与 <code>LenoLog</code>（非空 85 行）职责重叠（重合量待确认），应并入 ⬜；<code>web_cdp.leno</code> 的 <code>_removeDir</code> 直接 <code>rmdir /s /q</code>（<a href="file:///d:/CLeno/Leno/build/leno_module/LenoWeb/lib/web_cdp.leno#L849-L861">849-861</a>），应改用 <code>FS.rmtree</code> ⬜；~~比较器落地后，四项目 5 处手写排序可删~~ ✅ <strong>已删 3 处，2 处保留</strong>（<code>insert_sorted</code> 二分插入、<code>top_rank</code> Top-N）。</li>
+</ul>
+<p>其余低成本收尾（<strong>2026-11-09 复核</strong>）：~~格式化（时长 / 字节 / 补零）~~ ⇒
+- <strong>补零 ✅ 已做</strong>：<code>pad2</code> 四份统一到 <code>strings.pad_start</code>（注意：中途我误加过等价的 <code>pad_left</code>，
+  发现 <code>pad_start</code> 早就在，已删掉自己加的）。
+- <strong>字节格式化</strong>：<code>strings.fmt_size</code> <strong>本来就有</strong>，四份手写属于绕过已有 API ⇒ 归 P0（可发现性），不是缺口。
+- <strong>时长格式化</strong>：实测只有 2 份，且<strong>口径不同</strong>（<code>mm:ss</code> 补零 vs <code>m:ss</code> 不补零）⇒ <strong>不该合并</strong>。</p>
+<p>字符串：<code>split</code> <strong>已有</strong>（原文误判）；<strong><code>rfind</code> / <code>stem</code> 确实缺</strong> ⬜。日志、常量/函数 re-export ⬜。</p>
+<p><strong>降级表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>原结论</th>
+<th>修正后</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>switch 0 使用 ⇒ 缺表达力</td>
+<td>能用 ⇒ 补引导</td>
+<td>§3.5：int / string / enum 全部通过</td>
+</tr>
+<tr>
+<td>enum 0 使用 ⇒ 根本不够用</td>
+<td>常量能用（补引导），载荷才缺</td>
+<td>§3.5：定义/匹配通过，载荷语法错误</td>
+</tr>
+<tr>
+<td>map/filter/reduce 0 使用 ⇒ 生态无</td>
+<td>能用且类型保留 ⇒ 补引导</td>
+<td>§3.5：<code>Array[int]</code> / <code>int</code></td>
+</tr>
+<tr>
+<td>用户泛型 0 使用 ⇒ 生态无</td>
+<td>能用 ⇒ 补引导</td>
+<td>§3.5：identity / unbox / max 通过</td>
+</tr>
+<tr>
+<td>comparator 排序 ⇒ 标准库缺口</td>
+<td>保留 P4（确实没有）</td>
+<td>§3.5：期望 0 参</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>如果只能做两件：<strong>P0 + P1</strong>。P0 决定未来所有代码是否用上已有能力，P1 决定数据形态的样板量。P2 决定错误面正确性，P3 决定项目规模上限，P4 是剩余真缺口。</p>
+</blockquote>
+<h3 id="不建议优先做">不建议优先做</h3>
+<p>更多语法糖、更多 GUI 控件。四个项目从头到尾没有被 <code>for</code> / <code>if</code> / 闭包卡住；卡住它们的全是数据形态、错误形态和 8 位索引。也<strong>不要为了“让统计好看”而加语法糖</strong>——先把已存在的 <code>switch / enum / map / filter / 泛型</code> 推到生成侧。</p>
+<hr>
+<h2 id="7-明确值得肯定的设计">7. 明确值得肯定的设计</h2>
+<ul>
+<li><strong>LenoMusic</strong>：四个项目里工程化最成熟的。纯逻辑与 UI 分离、17 个离线测试、README 把自检命令与已知坑写得可以直接照做、还产出了 Linux 构建。</li>
+<li><strong>Aria 服务端</strong>：线程池 + 每 worker 独立 SQLite 连接 + 线程局部限流 + 声明式路由表，是在“隔离 VM、Ptr 不能跨线程、模块 var 无锁”这套约束下做出的正确设计（<a href="file:///d:/CLeno/Aria/server/server.leno#L23-L37">server.leno:23-37</a>）。</li>
+<li><strong>WorkBuddy</strong>：<code>doctor</code> 子命令、离线 stub、人话错误码（<code>AUTH_ERROR</code> / <code>HELPER_TIMEOUT</code> / <code>HELPER_PROTOCOL</code>），说明作者在没有 typed error 的情况下仍把错误面做清楚了。</li>
+<li><strong>LenoTrae</strong>：黄金样例回归 + README 的语言注意事项，等于给编译器写了一份真实用户验收清单。</li>
+<li><strong>语言本身的表达力（已实测）</strong>：<code>cards</code> 的 hook 结构、<code>routes</code> 的声明式表、<code>cli.spec</code>、<code>use</code> 类型导入、<code>if x is T =&gt; binding</code>，以及 §3.5 验证通过的 <code>switch</code> / int <code>enum</code> / <code>map·filter·reduce</code> / 用户泛型，都证明核心语法足以写出“像样”的代码。</li>
+</ul>
+<p><strong>最终判断</strong>：Leno 的语法已经够用，而且比原报告估计的更够用——<code>switch</code>、<code>map/filter/reduce</code>、泛型都实测可用。短板应分成三类：<strong>（A）已存在的能力没有到达作者</strong>（无 AGENTS.md、无惯用示例、编译器/LSP 不提示、<code>--init</code> 模板不示范），这是“生成侧引导缺口”；<strong>（B）确实缺失的能力</strong>：记录类型与编解码、Result、8 位索引、enum 载荷、~~comparator 排序~~（✅ 2026-11-09 已补）；<strong>（C）官方模块库有 20 个模块、53,052 行，却没有成为标准形态</strong>——37 处内部 <code>web_net</code> import 对 0 处 <code>Web</code> 门面 import，~~README 缺 7 个模块且无 import 名映射~~（✅ 已补），77% 库行数不在测试入口内（🟡 已降到 53.9%）。C 与 A 同源，但修复对象是库本身（目录、门面、错误/空值契约、测试入口），不是编译器提示。A 类不补，未来每一段新代码都会继续绕开已有能力；B 类不补，Aria 这类 24.6k 行项目会继续用字符串数组和魔法数字自我补偿；C 类不补，20 个模块就继续以“内部文件”的形式被零散使用，而不会成为四个项目共享的标准入口。先做 A（含 C 的目录/门面部分），再做 B 的前两项，才谈得上“多人、长期、可测试”的可用性。</p>
+<h3 id="7-1-做完一轮之后的再判断-2026-11-09">7.1 做完一轮之后的再判断（2026-11-09）</h3>
+<p>按上面的排序动了一轮（P0 的文档/README/测试部分 + P4 的比较器），结论有三点变化：</p>
+<ol>
+<li><strong>A 类（引导缺口）的证据更强了</strong>。三个独立发现指向同一件事：
+   - <code>Array[struct]</code> <strong>本来就能原地更新</strong>，"所以只能用行数组"是误判；
+   - <code>strings.fmt_size</code> / <code>split</code> / <code>lines</code> / <code>pad_start</code> <strong>本来就有</strong>，"所以手写 4 份"是绕过；
+   - <code>switch</code> / <code>map</code> / <code>filter</code> <strong>本来就能用</strong>，"所以 0 使用"是没人示范。</li>
+</ol>
+<p>⇒ 缺口不在语言，在<strong>可发现性</strong>。补 <code>AGENTS.md</code> + README 的 import 名映射，比加任何语法都便宜。</p>
+<ol start="2">
+<li>
+<p><strong>B 类在缩小</strong>。这轮补掉的 comparator 排序是原报告认定的"真缺口"之一；顺带发现
+   <code>maths</code> 缺 <code>pow_mod</code>（有 <code>pow</code> 有 <code>mod</code> 没有二者结合），也已补。
+   剩下的大项仍是 <strong>记录类型（P1）</strong> 和 <strong>Result（P2）</strong> —— 这两项确实是工程级投入，不是补个 API。</p>
+</li>
+<li>
+<p><strong>补测试的性价比最高</strong>。LenoWeb 0→3 个测试，<strong>第一天就抓到 <code>parseUrl</code> 的静默 bug</strong>；
+   而 LenoCSV / LenoCompress / LenoCrypto（本来就有测试）这轮几十组边界探针 <strong>一个 bug 都没找到</strong>。
+   对比很直接：<strong>有测试的模块质量好，没测试的模块藏着静默错误</strong>。</p>
+</li>
+</ol>
+<p><strong>如果只能再做一件事</strong>：~~把 <code>Web</code> 门面（37 : 0）收进正轨~~ ✅ <strong>已做（2026-11-09）</strong>。</p>
+<p>拆出 <code>WebNet</code> / <code>WebHtml</code> / <code>WebCrawl</code> 三个窄入口后，四个项目 37 处全部改回公共入口
+（<code>import "web_net"</code> 0 次 → <code>import "WebNet"</code> 37 次），<strong>调用点零改动</strong>（别名都是 <code>net</code>）。</p>
+<p>复盘这件事，<strong>根因和我原先的判断不一样</strong>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>原判断</th>
+<th>实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>为什么绕开门面</td>
+<td>"不知道有门面"</td>
+<td><strong>门面太重</strong>：<code>Web</code> 绑 8510 行依赖 = 59ms，<code>web_net</code> 只有 2256 行 = 31ms（<strong>1.9 倍</strong>）</td>
+</tr>
+<tr>
+<td><code>Web</code> 缺能力吗</td>
+<td>怀疑缺</td>
+<td><strong>不缺</strong>：覆盖 <code>web_net</code> 全部 54 个导出（差集 0）</td>
+</tr>
+</tbody>
+</table>
+<p>所以这不是"引导缺口"，是<strong>入口设计缺口</strong> —— 而它正好解释了为什么"补文档"对这条无效：
+文档写十遍"请用 <code>Web</code>"，只要它比内部文件慢一倍，大家还是会 import 内部文件。
+<strong>能靠文档解决的是"不知道"，解决不了"不好用"。</strong> 这条区分值得记住。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#处理台账-2026-11-09-复核">处理台账（2026-11-09 复核）</a></li><ul class="lv3"><li><a href="#已处理-共-25-项">✅ 已处理（共 25 项）</a></li><li><a href="#不打算做-1-项-附理由">❌ 不打算做（1 项，附理由）</a></li><li><a href="#未处理-按原报告优先级">⬜ 未处理（按原报告优先级）</a></li><li><a href="#原文已不成立的几条-复核后必须更正">⚠ 原文已不成立的几条（复核后必须更正）</a></li><li><a href="#复核时新发现的两点">🔍 复核时新发现的两点</a></li></ul><li><a href="#0-总判断">0. 总判断</a></li><li><a href="#1-哪些代码像-正常语言写出来的">1. 哪些代码像“正常语言写出来的”</a></li><ul class="lv3"><li><a href="#1-1-结构体-方法-一等函数字段-cards-leno">1.1 结构体 + 方法 + 一等函数字段：cards.leno</a></li><li><a href="#1-2-数据即代码-routes-leno">1.2 数据即代码：routes.leno</a></li><li><a href="#1-3-纯逻辑分层-lenomusic-player-leno">1.3 纯逻辑分层：LenoMusic/player.leno</a></li><li><a href="#1-4-any-边界集中处理-wb_core-leno">1.4 any 边界集中处理：wb_core.leno</a></li><li><a href="#1-5-线程边界-net_workers-leno">1.5 线程边界：net_workers.leno</a></li><li><a href="#1-6-标准库的高光-cli-spec">1.6 标准库的高光：cli.spec</a></li></ul><li><a href="#2-哪些地方明显在和语言较劲">2. 哪些地方明显在和语言较劲</a></li><ul class="lv3"><li><a href="#2-1-数据只能住在字符串数组里-最大的样板来源">2.1 数据只能住在字符串数组里（最大的样板来源）</a></li><li><a href="#2-2-状态机被拆散-魔法整数-字符串-tag-散落的-if-链">2.2 状态机被拆散：魔法整数 + 字符串 tag + 散落的 if 链</a></li><li><a href="#2-3-手写分派-重复模式">2.3 手写分派 / 重复模式</a></li><li><a href="#2-4-null-与-any-收窄到处透传">2.4 null 与 any 收窄到处透传</a></li><li><a href="#2-5-字符串拼接代替结构化数据">2.5 字符串拼接代替结构化数据</a></li><li><a href="#2-6-模块-导入税">2.6 模块/导入税</a></li><li><a href="#2-7-vm-硬上限直接改写架构">2.7 VM 硬上限直接改写架构</a></li><li><a href="#2-8-错误处理-字符串当异常">2.8 错误处理：字符串当异常</a></li></ul><li><a href="#3-抽象能力盘点与实测复核">3. 抽象能力盘点与实测复核</a></li><ul class="lv3"><li><a href="#3-5-用-build-leno-exe-实测-哪些是-没写-哪些是-没有">3.5 用 build\leno.exe 实测：哪些是“没写”，哪些是“没有”</a></li><li><a href="#3-6-生成侧有没有任何机制把作者推向这些形态">3.6 生成侧有没有任何机制把作者推向这些形态</a></li></ul><li><a href="#4-一致性-同一问题-四个项目四种解法">4. 一致性：同一问题，四个项目四种解法</a></li><li><a href="#4-5-标准库-能力层已存在-形态层缺席">4.5 标准库：能力层已存在，形态层缺席</a></li><ul class="lv3"><li><a href="#4-5-1-一致性-8-种错误-4-类空值-2-套命名">4.5.1 一致性：8 种错误、4 类空值、2 套命名</a></li><li><a href="#4-5-2-覆盖-薄壳-重绑定-和真正的缺口">4.5.2 覆盖：薄壳、重绑定、和真正的缺口</a></li><li><a href="#4-5-3-测试与文档-77-的代码不在任何入口内">4.5.3 测试与文档：77% 的代码不在任何入口内</a></li><li><a href="#4-5-4-交叉验证-不是-各自重写-是-绕开门面">4.5.4 交叉验证：不是“各自重写”，是“绕开门面”</a></li><li><a href="#4-5-5-结论与待确认">4.5.5 结论与待确认</a></li></ul><li><a href="#5-工程化">5. 工程化</a></li><ul class="lv3"><li><a href="#5-1-可测试性">5.1 可测试性</a></li><li><a href="#5-2-可调试性">5.2 可调试性</a></li><li><a href="#5-3-构建与依赖">5.3 构建与依赖</a></li><li><a href="#5-4-打包-跨平台">5.4 打包 / 跨平台</a></li></ul><li><a href="#6-修正后的优先级-先补引导-再补真缺口">6. 修正后的优先级：先补引导，再补真缺口</a></li><ul class="lv3"><li><a href="#p0-生成侧引导包-不是语言特性-优先级最高">P0 生成侧引导包（不是语言特性，优先级最高）</a></li><li><a href="#p1-记录类型-自动编解码-json-表格-通道-原-①-仍是最大行数来源">P1 记录类型 + 自动编解码（JSON / 表格 / 通道）——原 ①，仍是最大行数来源</a></li><li><a href="#p2-result-option-严格解析-类型化错误-原-③">P2 Result / Option + 严格解析 + 类型化错误——原 ③</a></li><li><a href="#p3-宽索引-解除-256-字段-255-局部量-原-④">P3 宽索引：解除 256 字段 / 255 局部量——原 ④</a></li><li><a href="#p4-实测确认的真缺口-原-②-与-⑤-的排序部分">P4 实测确认的真缺口——原 ② 与 ⑤ 的排序部分</a></li><li><a href="#不建议优先做">不建议优先做</a></li></ul><li><a href="#7-明确值得肯定的设计">7. 明确值得肯定的设计</a></li><ul class="lv3"><li><a href="#7-1-做完一轮之后的再判断-2026-11-09">7.1 做完一轮之后的再判断（2026-11-09）</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/Leno报错提示改进计划.html">← 上一篇</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

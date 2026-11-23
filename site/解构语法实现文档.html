@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 解构声明语法实现文档 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="解构语法实现文档.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">04 语言设计与实现</a><span class="sep">/</span><span class="here">Leno 解构声明语法实现文档</span></span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details open><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html" class="active" aria-current="page">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-解构声明语法实现文档">Leno 解构声明语法实现文档</h1>
+<blockquote>
+<p>⚠ <strong>局部过时（2026-10-02 注）</strong>：文中"涉及文件"表里的 <code>codegen_inline.c</code> 与 <code>op_call.inc</code>
+均已随寄存器式改造删除（<code>0f0cf52</code>）；由此，"多返回值函数不会被内联"这条<strong>当前恒成立</strong>
+（内联器已不在）。<strong>解构本身的语法与语义（Phase 1/2/3）仍是现行</strong>，其余照读。</p>
+</blockquote>
+<h2 id="一-已实现-数组-字典解构-phase-1">一、已实现：数组/字典解构（Phase 1）</h2>
+<h3 id="1-1-数组解构-按位置">1.1 数组解构（按位置）</h3>
+<pre><code>var[T1, T2, ..., Tn](a, b, ..., n) = expr
+</code></pre>
+<ul>
+<li><code>[T1, ..., Tn]</code>：解构形状，方括号内是每个槽位的期望类型</li>
+<li><code>(a, b, ..., n)</code>：绑定目标，按索引顺序对应</li>
+<li><code>expr</code>：数据源，运行时必须是 Array</li>
+</ul>
+<h3 id="1-2-字典解构-按键名">1.2 字典解构（按键名）</h3>
+<pre><code>var{&quot;k1&quot;: T1, &quot;k2&quot;: T2, ...}(a, b, ...) = expr
+</code></pre>
+<ul>
+<li><code>{"k1": T1, ...}</code>：解构形状，花括号内是键名:类型对</li>
+<li><code>(a, b, ...)</code>：绑定目标，按花括号内顺序对应</li>
+<li><code>expr</code>：数据源，运行时必须是 Dict</li>
+</ul>
+<h3 id="1-3-已实现规则">1.3 已实现规则</h3>
+<ol>
+<li><code>[...]</code> 内的类型数量必须与 <code>(...)</code> 内的变量名数量一致</li>
+<li><code>var</code> / <code>const</code> 关键字是必须的（声明新变量）</li>
+<li>不支持嵌套解构（<code>var[int, [int, int]](a, b, c) = expr</code> 不合法）</li>
+<li>不支持剩余元素 <code>...rest</code>（预留扩展）</li>
+<li>槽位类型支持：<code>int</code>、<code>float</code>、<code>string</code>、<code>bool</code>、<code>any</code>、<code>var</code>、alias 类型</li>
+</ol>
+<h3 id="1-4-已实现类型检查规则-any-槽位优先">1.4 已实现类型检查规则（any 槽位优先）</h3>
+<table>
+<thead>
+<tr>
+<th>源类型 (init)</th>
+<th>槽位类型</th>
+<th>行为</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Array[int]</code></td>
+<td><code>int</code></td>
+<td>✓ 兼容</td>
+<td><code>var[int](a) = [1, 2]</code></td>
+</tr>
+<tr>
+<td><code>Array[int]</code></td>
+<td><code>float</code></td>
+<td>✓ int→float 提升</td>
+<td><code>var[float](a) = [1, 2]</code></td>
+</tr>
+<tr>
+<td><code>Array[int]</code></td>
+<td><code>string</code></td>
+<td>✗ 不兼容</td>
+<td><code>var[string](a) = [1, 2]</code></td>
+</tr>
+<tr>
+<td><code>Array[int]</code></td>
+<td><code>any</code></td>
+<td>✓ 跳过检查，不转换</td>
+<td><code>var[any](a) = [1, 2]</code></td>
+</tr>
+<tr>
+<td><code>Array[any]</code></td>
+<td><code>any</code></td>
+<td>✓ 跳过检查，不转换</td>
+<td><code>var[any, any](a, b) = [1, "x"]</code></td>
+</tr>
+<tr>
+<td><code>Array[any]</code></td>
+<td><code>int</code></td>
+<td>✗ 源 any 不能转具体类型</td>
+<td><code>var[int](a) = [1, "x"]</code></td>
+</tr>
+<tr>
+<td><code>int</code> (非Array)</td>
+<td>任何</td>
+<td>✗ 不是数组</td>
+<td><code>var[int](a) = 42</code></td>
+</tr>
+<tr>
+<td><code>TYPE_INFER</code></td>
+<td><code>any</code></td>
+<td>✗ 无法确认是 Array</td>
+<td><code>var[any](a) = no_return_func()</code></td>
+</tr>
+</tbody>
+</table>
+<p>同样适用于字典解构（<code>Dict[string, T]</code> + <code>{"key": any}</code> 等）。</p>
+<h3 id="1-5-已实现-codegen">1.5 已实现 Codegen</h3>
+<pre><code>var[int, float, string](a, b, c) = arr
+</code></pre>
+<p>生成序列（实际实现，省略长度检查，靠 OP_INDEX 越界报错）：</p>
+<pre><code>gen_expr(arr)                     // 压入数组
+OP_DUP                            // 复制引用
+OP_CONST 0                        // 索引 0
+OP_INDEX                          // arr[0]
+OP_CAST_INT                       // 转为 int
+OP_SET_LOCAL_POP a                // 存入 a
+
+OP_DUP                            // 复制引用
+OP_CONST 1
+OP_INDEX                          // arr[1]
+OP_CAST_FLOAT                     // 转为 float
+OP_SET_LOCAL_POP b
+
+OP_DUP
+OP_CONST 2
+OP_INDEX                          // arr[2]
+OP_CAST_STRING
+OP_SET_LOCAL_POP c
+
+OP_POP                            // 弹出原始数组
+</code></pre>
+<p>any 槽位不生成 CAST 指令（直接取值）。</p>
+<hr>
+<h2 id="二-已实现-函数多返回值-phase-2">二、已实现：函数多返回值（Phase 2）</h2>
+<h3 id="2-0-设计动机">2.0 设计动机</h3>
+<p>当前函数返回多值的唯一方式是包装成 <code>Array[T]</code> 或 <code>Dict[string, T]</code>：</p>
+<pre><code>// 现有方式：返回 Array，所有元素必须同类型
+func compute(): Array[int] {
+    return [100, 200]    // 只能返回同类型
+}
+
+// 问题：返回不同类型时变成 Array[any]，丢失类型安全
+func get_info(): Array[any] {
+    return [42, &quot;hello&quot;, 3.14]   // 类型信息丢失
+}
+</code></pre>
+<p><strong>目标</strong>：函数直接返回多个不同类型的值，编译时保证类型安全：</p>
+<pre><code>// 新方式：多返回值，每个值有独立的类型
+func get_info(): [int, string, float] {
+    return 42, &quot;hello&quot;, 3.14
+}
+
+var[int, string, float](id, name, score) = get_info()
+// id=42(int)  name=&quot;hello&quot;(string)  score=3.14(float)
+</code></pre>
+<h3 id="2-1-语法规格">2.1 语法规格</h3>
+<h4 id="2-1-1-多返回值类型声明-按位置">2.1.1 多返回值类型声明（按位置）</h4>
+<pre><code>func name(params): [T1, T2, ..., Tn] {
+    return expr1, expr2, ..., exprn
+}
+</code></pre>
+<ul>
+<li><code>[T1, ..., Tn]</code>：多返回值类型列表，方括号内是每个返回值的类型</li>
+<li><code>return expr1, ..., exprn</code>：返回多个值，逗号分隔，按位置对应</li>
+</ul>
+<h4 id="2-1-2-多返回值类型声明-按键名-可选">2.1.2 多返回值类型声明（按键名，可选）</h4>
+<pre><code>func name(params): {&quot;k1&quot;: T1, &quot;k2&quot;: T2, ...} {
+    return expr1, expr2, ...
+}
+</code></pre>
+<ul>
+<li><code>{"k1": T1, ...}</code>：带键名的多返回值类型，键名仅用于文档和错误提示</li>
+<li><code>return expr1, ...</code>：仍按位置对应（键名不改变返回顺序）</li>
+</ul>
+<h4 id="2-1-3-接收多返回值">2.1.3 接收多返回值</h4>
+<p>复用解构声明语法：</p>
+<pre><code>// 按位置接收
+var[int, string, float](a, b, c) = get_info()
+
+// 按键名接收（键名需与函数声明匹配）
+var{&quot;id&quot;: int, &quot;name&quot;: string, &quot;score&quot;: float}(a, b, c) = get_info()
+
+// 部分接收（只取前 N 个）
+var[int, string](a, b) = get_info()
+
+// any 槽位接收（不转换）
+var[any, any, any](a, b, c) = get_info()
+</code></pre>
+<h4 id="2-1-4-与单返回值的兼容">2.1.4 与单返回值的兼容</h4>
+<ul>
+<li><code>func f(): int { return 42 }</code> — 单返回值，现有语法不变</li>
+<li><code>func f(): [int] { return 42 }</code> — 单返回值的多返回值语法（等价，但风格不推荐）</li>
+<li>普通函数调用 <code>var x = f()</code> 仍只取第一个返回值（如果有多个，其余被丢弃）</li>
+</ul>
+<h3 id="2-2-语法层-parser">2.2 语法层（Parser）</h3>
+<h4 id="2-2-1-多返回值类型解析">2.2.1 多返回值类型解析</h4>
+<p>在 <code>parse_func_stmt</code>（<code>parser_func.c</code>）中，解析返回类型时：</p>
+<pre><code>parse_func_stmt:
+    ...
+    consume RPAREN  // 参数列表结束
+
+    if (current == TOK_COLON):
+        consume COLON
+        if (current == TOK_LBRACKET):
+            → parse_multi_return_type(p)    // ★ 新增
+        elif (current == TOK_LBRACE):
+            → parse_multi_return_type(p)    // ★ 新增（带键名）
+        else:
+            return_type = parse_type(p)     // 原有：单返回类型
+</code></pre>
+<p><code>parse_multi_return_type</code> 流程：</p>
+<pre><code>parse_multi_return_type(p):
+    is_named = (token == TOK_LBRACE)
+    consume LBRACKET or LBRACE
+
+    count = 0
+    loop:
+        if is_named:
+            parse STRING → key
+            expect COLON
+        parse_type → ret_type[count]
+        count++
+        if COMMA: continue
+        else: break
+    consume RBRACKET or RBRACE
+
+    // 创建 TYPE_MULTI_RET 类型
+    type = type_new(TYPE_MULTI_RET)
+    type-&gt;param_types = ret_type[]   // 复用 param_types 字段存储返回类型列表
+    type-&gt;param_count = count        // 复用 param_count 存储返回值数量
+    type-&gt;struct_name = keys[]       // 如果有键名，存储为 JSON 字符串（可选）
+    return type
+</code></pre>
+<h4 id="2-2-2-return-多值解析">2.2.2 return 多值解析</h4>
+<p>在 <code>parse_return_stmt</code>（<code>parser_stmt_other.c</code>）中：</p>
+<pre><code>parse_return_stmt(p):
+    consume RETURN
+
+    if (current is not SEMI/RBRACE):
+        expr = parse_expression(p)
+
+        // ★ 新增：检测多值返回
+        if (current == TOK_COMMA):
+            exprs[0] = expr
+            count = 1
+            while (match COMMA):
+                exprs[count] = parse_expression(p)
+                count++
+            // 创建 AST_RETURN_MULTI 节点
+            ast = ast_new(AST_RETURN_MULTI, line)
+            ast-&gt;u.ret_multi.exprs = exprs
+            ast-&gt;u.ret_multi.count = count
+        else:
+            // 原有：单值返回
+            ast = ast_new(AST_RETURN, line)
+            ast-&gt;u.ret = expr
+    else:
+        // 原有：无返回值
+        ast = ast_new(AST_RETURN, line)
+        ast-&gt;u.ret = NULL
+</code></pre>
+<h4 id="2-2-3-ast-扩展">2.2.3 AST 扩展</h4>
+<p>新增枚举值：</p>
+<pre><code class="language-c">AST_RETURN_MULTI,   // 多值返回: return a, b, c
+</code></pre>
+<p>新增 union 字段：</p>
+<pre><code class="language-c">struct {
+    Ast** exprs;     // 返回值表达式数组
+    int count;       // 返回值数量
+} ret_multi;
+</code></pre>
+<h3 id="2-3-类型系统-typeinfo">2.3 类型系统（TypeInfo）</h3>
+<h4 id="2-3-1-新增-typekind">2.3.1 新增 TypeKind</h4>
+<pre><code class="language-c">TYPE_MULTI_RET,     // 多返回值类型 [T1, T2, ...] 或 {&quot;k&quot;: T1, ...}
+</code></pre>
+<h4 id="2-3-2-typeinfo-复用现有字段">2.3.2 TypeInfo 复用现有字段</h4>
+<p><code>TYPE_MULTI_RET</code> 类型的 TypeInfo 复用现有字段：
+- <code>param_types[]</code>：存储返回值类型数组（<code>param_types[0]</code> 是第一个返回值类型）
+- <code>param_count</code>：返回值数量
+- 不使用 <code>return_type</code>、<code>element_type</code>、<code>key_type</code>、<code>value_type</code></p>
+<h4 id="2-3-3-新增辅助函数">2.3.3 新增辅助函数</h4>
+<pre><code class="language-c">// 创建多返回值类型
+TypeInfo* type_multi_ret(TypeInfo** ret_types, int count);
+
+// 判断是否是多返回值类型
+int is_multi_ret_type(TypeInfo* type);
+</code></pre>
+<h4 id="2-3-4-type_free-type_copy-type_equals-type_to_string-扩展">2.3.4 type_free / type_copy / type_equals / type_to_string 扩展</h4>
+<p>在 <code>type.c</code> 中为 <code>TYPE_MULTI_RET</code> 添加分支：
+- <code>type_free</code>：释放 <code>param_types[]</code>
+- <code>type_copy</code>：深拷贝 <code>param_types[]</code>
+- <code>type_equals</code>：比较 <code>param_count</code> 和每个 <code>param_types[i]</code>
+- <code>type_to_string</code>：输出 <code>[T1, T2, ...]</code></p>
+<h3 id="2-4-语义层-semantic">2.4 语义层（Semantic）</h3>
+<h4 id="2-4-1-return-多值类型检查">2.4.1 return 多值类型检查</h4>
+<p>在 <code>visit_stmt.inc</code> 的 <code>case AST_RETURN:</code> 后新增 <code>case AST_RETURN_MULTI:</code>：</p>
+<pre><code>case AST_RETURN_MULTI:
+    // 1. 访问每个返回值表达式
+    for i in 0..count:
+        visit(s, exprs[i])
+
+    // 2. 获取函数声明的返回类型
+    expected = s-&gt;current_func-&gt;return_type
+
+    // 3. 如果函数声明是多返回值类型
+    if expected-&gt;kind == TYPE_MULTI_RET:
+        // 检查返回值数量匹配
+        if count != expected-&gt;param_count:
+            error(&quot;多返回值数量不匹配：期望 %d 个，实际 %d 个&quot;)
+
+        // 逐个检查类型兼容性
+        for i in 0..count:
+            actual = infer_expr_type(exprs[i])
+            if !type_is_compatible(expected-&gt;param_types[i], actual):
+                error(&quot;返回值 %d 类型不匹配：期望 %s，实际 %s&quot;)
+
+    // 4. 如果函数声明是单返回值类型但 return 了多个值
+    elif expected &amp;&amp; expected-&gt;kind != TYPE_MULTI_RET:
+        error(&quot;函数声明返回单个值，但 return 语句返回了 %d 个值&quot;)
+
+    // 5. 如果函数无返回类型注解（TYPE_INFER）
+    else:
+        // 不报错，允许无注解的函数使用多返回值
+        // 但调用方解构时会被拦截（TYPE_INFER 不允许解构）
+</code></pre>
+<h4 id="2-4-2-多返回值函数调用的类型推断">2.4.2 多返回值函数调用的类型推断</h4>
+<p>在 <code>semantic_type.c</code> 的 <code>case AST_CALL:</code> 中，当从函数定义获取返回类型时：</p>
+<pre><code>// 现有逻辑（semantic_type.c 第 1099-1108 行）:
+if (func_def-&gt;u.func.return_type) {
+    ret = type_copy(func_def-&gt;u.func.return_type);
+} else {
+    ret = type_new(TYPE_ANY);
+}
+
+// ★ 新增：如果是多返回值类型，直接返回 TYPE_MULTI_RET
+// （调用方通过 is_multi_ret_type 判断是否走多值解构路径）
+</code></pre>
+<p>无需修改——<code>type_copy</code> 会正确复制 <code>TYPE_MULTI_RET</code> 类型。</p>
+<h4 id="2-4-3-解构声明接收多返回值的类型检查">2.4.3 解构声明接收多返回值的类型检查</h4>
+<p>在 <code>visit_var.inc</code> 的 <code>case AST_DESTRUCT_DECL:</code> 中，现有逻辑已处理 <code>init_type-&gt;kind</code> 的各种情况。
+新增对 <code>TYPE_MULTI_RET</code> 的处理：</p>
+<pre><code>// 在数组解构和字典解构的判断之前，新增多返回值解构分支
+if (init_type-&gt;kind == TYPE_MULTI_RET) {
+    // 多返回值解构：按位置匹配
+    int ret_count = init_type-&gt;param_count;
+
+    for (int i = 0; i &lt; slot_count; i++) {
+        TypeInfo* slot_type = slot_types[i];
+        if (!slot_type) continue;
+
+        // any 槽位：总是兼容，跳过检查
+        if (slot_kind == TYPE_ANY || slot_kind == TYPE_INFER) continue;
+
+        // 具体类型槽位：检查与对应返回值类型的兼容性
+        if (i &gt;= ret_count) {
+            error(&quot;解构槽位 %d 超出返回值数量 %d&quot;, i, ret_count);
+        } else if (!type_is_compatible(slot_type, init_type-&gt;param_types[i])) {
+            error(&quot;解构槽位 %d 类型 %s 与返回值类型 %s 不兼容&quot;,
+                  i, slot_type, init_type-&gt;param_types[i]);
+        }
+    }
+}
+</code></pre>
+<h3 id="2-5-代码生成层-codegen">2.5 代码生成层（Codegen）</h3>
+<h4 id="2-5-1-多值-return-字节码生成">2.5.1 多值 return 字节码生成</h4>
+<p>在 <code>codegen_stmt.c</code> 新增 <code>gen_return_multi(CodeGen* gen, Ast* ast)</code>：</p>
+<pre><code>gen_return_multi(gen, ast):
+    // 1. 求值所有返回值表达式，依次压栈
+    for i in 0..count:
+        gen_expr(exprs[i])
+
+    // 2. 发射 OP_RETURN_MULTI 指令
+    OP_RETURN_MULTI count
+</code></pre>
+<p>字节码序列：</p>
+<pre><code>// return 42, &quot;hello&quot;, 3.14
+gen_expr(42)          // 压入 42
+gen_expr(&quot;hello&quot;)     // 压入 &quot;hello&quot;
+gen_expr(3.14)        // 压入 3.14
+OP_RETURN_MULTI 3     // 返回 3 个值
+</code></pre>
+<h4 id="2-5-2-多返回值函数调用的字节码生成">2.5.2 多返回值函数调用的字节码生成</h4>
+<p>在 <code>gen_destruct_decl</code> 中，现有逻辑是：
+1. <code>gen_expr(init)</code> — 求值 init（压入数组/字典）
+2. 循环 <code>OP_DUP + OP_CONST + OP_INDEX + OP_CAST + OP_SET_LOCAL_POP</code></p>
+<p>对于多返回值，需要新增路径：</p>
+<pre><code>gen_destruct_decl(gen, ast):
+    ...
+    gen_expr(init)    // 求值 init → 如果是函数调用，栈上是多个返回值
+
+    // ★ 检测 init 是否是多返回值函数调用
+    if (is_multi_ret_call(init)):
+        // 多返回值已在栈上，直接逐个取值
+        for i in 0..slot_count:
+            // 栈布局: [ret0][ret1][ret2]...
+            // 需要从底部取第 i 个值
+            OP_GET_RET_VALUE i    // ★ 新指令：取第 i 个返回值
+            // 或用 OP_GET_LOCAL 临时槽位方式
+
+            // 类型转换
+            if slot_type == TYPE_FLOAT: OP_CAST_FLOAT
+            elif slot_type == TYPE_INT: OP_CAST_INT
+            elif slot_type == TYPE_STRING: OP_CAST_STRING
+
+            OP_SET_LOCAL_POP name[i]
+
+        // 清理栈上剩余返回值
+        OP_POP_N remaining_count
+    else:
+        // 原有逻辑：数组/字典解构
+        ...
+</code></pre>
+<p><strong>替代方案（更简洁，推荐）</strong>：将多返回值先存入临时局部变量槽位，再走索引取值：</p>
+<pre><code>// 方案 B：临时槽位 + 索引取值（复用现有 OP_GET_LOCAL）
+gen_expr(init)    // 函数调用后栈上是 N 个返回值
+
+// 将 N 个返回值存入临时槽位（逆序弹出）
+for i = N-1 downto 0:
+    OP_SET_LOCAL_POP temp_slot[i]
+
+// 逐槽位从临时槽位加载 + 转换 + 存储
+for i in 0..slot_count:
+    OP_GET_LOCAL temp_slot[i]
+    // 类型转换...
+    OP_SET_LOCAL_POP name[i]
+
+// 无需清理（临时槽位在函数结束时自动回收）
+</code></pre>
+<p>方案 B 的优势：<strong>不新增 VM 指令</strong>，完全复用 <code>OP_GET_LOCAL</code> / <code>OP_SET_LOCAL_POP</code>。</p>
+<h4 id="2-5-3-尾调用优化">2.5.3 尾调用优化</h4>
+<p>多返回值的 <code>return f()</code> 不能使用 <code>OP_TAIL_CALL</code>（因为尾调用假设单返回值）。
+在 <code>is_tail_call</code> 检查中排除多返回值场景。</p>
+<h3 id="2-6-vm-层">2.6 VM 层</h3>
+<h4 id="2-6-1-新增-op_return_multi-指令">2.6.1 新增 OP_RETURN_MULTI 指令</h4>
+<pre><code class="language-c">OP_RETURN_MULTI,    // 多值返回: OP_RETURN_MULTI count(1)
+</code></pre>
+<p><strong>字节格式</strong>：<code>OP_RETURN_MULTI</code> (1 byte) + <code>count</code> (1 byte)</p>
+<p><strong>VM 实现</strong>：</p>
+<pre><code class="language-c">OPCODE(OP_RETURN_MULTI) {
+    frame = &amp;vm.frames[vm.frame_cnt - 1];
+    int ret_count = READ_BYTE();  // 读取返回值数量
+
+    // GC 安全点检查（同 OP_RETURN）
+    ...
+
+    // 从栈上弹出 count 个返回值（保存到临时数组）
+    Value results[MAX_MULTI_RET];
+    for (int i = ret_count - 1; i &gt;= 0; i--) {
+        results[i] = vm_stack_pop_fast(&amp;vm);
+    }
+
+    // 关闭 upvalues（同 OP_RETURN）
+    ...
+
+    // 恢复栈到调用前状态
+    vm.frame_cnt--;
+    vm.sp = frame-&gt;stack_base;
+
+    // 将多个返回值压回栈
+    for (int i = 0; i &lt; ret_count; i++) {
+        vm_stack_push(&amp;vm, results[i]);
+    }
+
+    // 释放 locals
+    ...
+
+    frame = &amp;vm.frames[vm.frame_cnt - 1];
+    DISPATCH;
+}
+</code></pre>
+<p><strong>关键点</strong>：与 <code>OP_RETURN</code> 的区别在于——<code>OP_RETURN</code> 弹出一个值后 <code>vm.sp = stack_base</code> 再压入一个值；
+<code>OP_RETURN_MULTI</code> 弹出 N 个值后 <code>vm.sp = stack_base</code> 再压入 N 个值。
+调用方栈上留下 N 个值。</p>
+<h4 id="2-6-2-栈布局变化">2.6.2 栈布局变化</h4>
+<p><strong>单返回值（现有）</strong>：</p>
+<pre><code>调用前:  [...][arg1][arg2][callee]
+                    ^stack_base
+返回后:  [...][result]
+                    ^stack_base
+</code></pre>
+<p><strong>多返回值（新增）</strong>：</p>
+<pre><code>调用前:  [...][arg1][arg2][callee]
+                    ^stack_base
+返回后:  [...][result0][result1][result2]
+                    ^stack_base
+</code></pre>
+<p>调用方通过临时槽位方案将多个返回值逐个存入局部变量。</p>
+<h4 id="2-6-3-op_call-无需修改">2.6.3 OP_CALL 无需修改</h4>
+<p><code>OP_CALL</code> 调用函数后，VM 的 <code>frame</code> 切换到被调用函数。
+被调用函数执行 <code>OP_RETURN_MULTI</code> 后，栈上留下多个值。
+<code>OP_CALL</code> 本身不需要知道返回值数量——调用方 codegen 知道。</p>
+<h4 id="2-6-4-普通调用场景的兼容">2.6.4 普通调用场景的兼容</h4>
+<p>如果一个多返回值函数被普通调用（非解构接收）：</p>
+<pre><code>var x = get_info()   // 只取第一个返回值
+</code></pre>
+<p>Codegen 在 <code>gen_expr(AST_CALL)</code> 后压入所有返回值，但 <code>gen_var_decl</code> 只取栈顶一个值。
+<strong>需要在 codegen 中处理</strong>：如果是多返回值函数调用且非解构接收，在 <code>OP_CALL</code> 后发射 <code>OP_POP_N (count-1)</code> 弹出多余的返回值。</p>
+<p>或者更简单：<strong><code>OP_RETURN_MULTI</code> 时检查调用方是否期望多值</strong>。
+但这需要 <code>OP_CALL</code> 携带"期望返回值数量"参数，增加复杂度。</p>
+<p><strong>推荐方案</strong>：在 codegen 层处理。<code>gen_call</code> 之后，如果调用方不是解构声明，插入 <code>OP_POP_N</code> 弹出多余值。</p>
+<h3 id="2-7-错误处理">2.7 错误处理</h3>
+<h4 id="2-7-1-编译期错误">2.7.1 编译期错误</h4>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>错误信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>return a, b</code> 但函数声明 <code>: int</code>（单返回值）</td>
+<td>"函数声明返回单个值，但 return 语句返回了 2 个值"</td>
+</tr>
+<tr>
+<td><code>return a</code> 但函数声明 <code>: [int, string]</code>（多返回值）</td>
+<td>"函数声明返回 2 个值，但 return 语句只返回了 1 个值"</td>
+</tr>
+<tr>
+<td><code>return a, b</code> 数量 ≠ <code>: [int, string, float]</code> 数量</td>
+<td>"多返回值数量不匹配：期望 3 个，实际 2 个"</td>
+</tr>
+<tr>
+<td>返回值类型不匹配</td>
+<td>"返回值 1 类型不匹配：期望 string，实际 int"</td>
+</tr>
+<tr>
+<td>解构槽位超出返回值数量</td>
+<td>"解构槽位 3 超出返回值数量 2"</td>
+</tr>
+<tr>
+<td>多返回值函数用于表达式（非解构）</td>
+<td>警告："多返回值函数在表达式中调用，只取第一个返回值"</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-7-2-运行期错误">2.7.2 运行期错误</h4>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>错误来源</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>返回值数量不足解构槽位</td>
+<td>codegen 检查</td>
+<td>编译期拦截</td>
+</tr>
+<tr>
+<td>类型转换失败</td>
+<td><code>OP_CAST_INT</code> 等</td>
+<td>报错 "类型转换 int: 操作数必须是数字"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-8-实现步骤">2.8 实现步骤</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>leno_types.h</code></td>
+<td>新增 <code>TYPE_MULTI_RET</code> 枚举值</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>leno_ast.h</code></td>
+<td>新增 <code>AST_RETURN_MULTI</code> 枚举值和 <code>ret_multi</code> union 字段</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>type.c</code></td>
+<td>新增 <code>type_multi_ret()</code>；<code>type_free/copy/equals/to_string</code> 添加 <code>TYPE_MULTI_RET</code> 分支</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>parser_func.c</code></td>
+<td>新增 <code>parse_multi_return_type()</code>；在 <code>parse_func_stmt</code> 中检测 <code>:</code> 后的 <code>[</code> / <code>{</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>parser_stmt_other.c</code></td>
+<td><code>parse_return_stmt</code> 中检测逗号分隔的多值返回</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>visit_stmt.inc</code></td>
+<td>新增 <code>case AST_RETURN_MULTI:</code> 类型检查</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>visit_var.inc</code></td>
+<td><code>case AST_DESTRUCT_DECL:</code> 中新增 <code>TYPE_MULTI_RET</code> 分支</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>semantic_type.c</code></td>
+<td><code>AST_CALL</code> 类型推断返回 <code>TYPE_MULTI_RET</code>（已由 <code>type_copy</code> 自然支持）</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>codegen_stmt.c</code></td>
+<td>新增 <code>gen_return_multi()</code>；<code>gen_destruct_decl</code> 中新增多返回值路径</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>codegen_expr.c</code></td>
+<td><code>gen_call</code> 后处理多余返回值（非解构场景）</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>leno_vm.h</code></td>
+<td>新增 <code>OP_RETURN_MULTI</code> 操作码</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>op_call.inc</code></td>
+<td>实现 <code>OPCODE(OP_RETURN_MULTI)</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>codegen_inline.c</code></td>
+<td><code>patch_ast_indices</code> 和 <code>body_has_unsupported</code> 添加 <code>AST_RETURN_MULTI</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>ast.c</code></td>
+<td><code>ast_free</code> 添加 <code>AST_RETURN_MULTI</code> 释放</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>leno_value.h</code></td>
+<td><code>ObjFunction</code> 新增 <code>ret_count</code> 字段（可选，用于运行时检查）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-9-复杂度评估">2.9 复杂度评估</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>评估</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>类型系统</td>
+<td>新增 1 个 <code>TYPE_MULTI_RET</code>，复用 <code>param_types/param_count</code> 字段</td>
+</tr>
+<tr>
+<td>AST</td>
+<td>新增 1 个 <code>AST_RETURN_MULTI</code>，1 个 union 字段</td>
+</tr>
+<tr>
+<td>Parser</td>
+<td>~60 行（<code>parse_multi_return_type</code> + return 多值检测）</td>
+</tr>
+<tr>
+<td>Semantic</td>
+<td>~50 行（return 类型检查 + 解构 <code>TYPE_MULTI_RET</code> 分支）</td>
+</tr>
+<tr>
+<td>Codegen</td>
+<td>~60 行（<code>gen_return_multi</code> + <code>gen_destruct_decl</code> 多返回值路径 + <code>gen_call</code> 弹出多余值）</td>
+</tr>
+<tr>
+<td>VM</td>
+<td>~30 行（<code>OP_RETURN_MULTI</code> 实现）</td>
+</tr>
+<tr>
+<td>总计</td>
+<td>~200 行新代码</td>
+</tr>
+</tbody>
+</table>
+<p><strong>引入 1 个新类型、1 个新 AST 节点、1 个新 VM 操作码。不修改现有类型系统逻辑。</strong></p>
+<hr>
+<h2 id="三-完整测试用例规划">三、完整测试用例规划</h2>
+<h3 id="3-1-已实现测试-phase-1">3.1 已实现测试（Phase 1）</h3>
+<ul>
+<li><code>test_destruct.leno</code> — 数组/字典解构、类型转换、const、alias、any 槽位、部分解构</li>
+<li><code>test_destruct_sdl3_sim.leno</code> — SDL3 场景模拟（多元素数组、函数返回值、循环内解构）</li>
+<li><code>destruct_type_check_test.leno</code> — 编译时类型检查（期望编译失败的 9 个测试）</li>
+<li><code>test_destruct_export.leno</code> — 跨模块导出解构</li>
+<li><code>test_destruct_mod_var.leno</code> — 模块变量解构</li>
+</ul>
+<h3 id="3-2-已实现测试-phase-2">3.2 已实现测试（Phase 2）</h3>
+<pre><code>// 基本多返回值
+func get_user(): [int, string, float] {
+    return 42, &quot;Alice&quot;, 95.5
+}
+var[int, string, float](id, name, score) = get_user()
+
+// 带键名的多返回值
+func parse_url(): {&quot;host&quot;: string, &quot;port&quot;: int, &quot;path&quot;: string} {
+    return &quot;localhost&quot;, 8080, &quot;/api&quot;
+}
+var{&quot;host&quot;: string, &quot;port&quot;: int, &quot;path&quot;: string}(host, port, path) = parse_url()
+
+// 部分接收
+var[int, string](id, name) = get_user()   // 只取前 2 个
+
+// any 槽位接收
+var[any, any, any](a, b, c) = get_user()
+
+// int → float 类型提升
+func get_dims(): [int, int] {
+    return 100, 200
+}
+var[float, float](w, h) = get_dims()   // int 自动提升为 float
+
+// 循环内多返回值解构
+func get_frame_data(int frame): [float, float, float] {
+    return frame * 1.0, frame * 2.0, frame * 3.0
+}
+for 5 to i {
+    var[float, float, float](d1, d2, d3) = get_frame_data(i)
+}
+
+// 普通调用（只取第一个返回值）
+var x = get_user()   // x = 42，其余返回值被丢弃
+</code></pre>
+<h3 id="3-3-编译时类型检查测试-phase-2">3.3 编译时类型检查测试（Phase 2）</h3>
+<pre><code>// 返回值数量不匹配
+func f(): [int, string] { return 42 }              // ✗ 期望 2 个，实际 1 个
+func g(): [int, string] { return 42, &quot;x&quot;, 3.14 }   // ✗ 期望 2 个，实际 3 个
+
+// 返回值类型不匹配
+func f(): [int, string] { return 42, 100 }          // ✗ 返回值 1 类型不匹配：期望 string，实际 int
+
+// 解构槽位超出返回值数量
+func f(): [int, string] { return 42, &quot;x&quot; }
+var[int, string, float](a, b, c) = f()              // ✗ 解构槽位 2 超出返回值数量 2
+
+// 解构槽位类型不匹配
+func f(): [int, string] { return 42, &quot;x&quot; }
+var[string, int](a, b) = f()                        // ✗ 槽位 0 类型 string 与返回值类型 int 不兼容
+</code></pre>
+<hr>
+<h2 id="四-设计决策记录">四、设计决策记录</h2>
+<h3 id="4-1-为什么不引入-tuple-类型">4.1 为什么不引入 tuple 类型？</h3>
+<p>多返回值不需要一等公民的 tuple 类型：
+- tuple 作为值在栈上传递，需要内存分配
+- 多返回值只在"函数返回 → 解构接收"这一瞬间存在，不需要持久化
+- 直接在栈上留多个值，零分配，最高效</p>
+<p>如果用户需要持久化多返回值，可以显式包装：</p>
+<pre><code>var result = [get_user()]   // 包装成数组
+</code></pre>
+<h3 id="4-2-为什么用-t1-t2-而不是-t1-t2">4.2 为什么用 <code>[T1, T2]</code> 而不是 <code>(T1, T2)</code>？</h3>
+<ul>
+<li><code>(T1, T2)</code> 与函数参数列表语法冲突</li>
+<li><code>[T1, T2]</code> 与现有解构形状语法一致（<code>var[T1, T2](a, b) = ...</code>）</li>
+<li><code>{"k": T}</code> 是字典格式的自然扩展，与字典解构形状一致</li>
+</ul>
+<h3 id="4-3-为什么-return-用逗号而不是数组">4.3 为什么 return 用逗号而不是数组？</h3>
+<pre><code>// 选择：return 42, &quot;hello&quot;, 3.14
+// 而非：return [42, &quot;hello&quot;, 3.14]
+</code></pre>
+<ul>
+<li><code>return [42, "hello", 3.14]</code> 会创建 Array 对象（堆分配），且类型为 <code>Array[any]</code></li>
+<li><code>return 42, "hello", 3.14</code> 直接在栈上留 3 个值，零分配，类型安全</li>
+</ul>
+<h3 id="4-4-为什么不用-op_return-携带数量">4.4 为什么不用 OP_RETURN 携带数量？</h3>
+<p>考虑过让 <code>OP_RETURN</code> 携带返回值数量参数，但这会改变 <code>OP_RETURN</code> 的字节格式（现有 1 byte → 2 bytes），
+影响所有现有函数的性能（指令解码开销）。</p>
+<p>新增独立的 <code>OP_RETURN_MULTI</code> 更干净：
+- 现有单返回值函数不受影响
+- 多返回值是显式选择，零性能退化</p>
+<h3 id="4-5-方括号-vs-花括号的语义区别">4.5 方括号 vs 花括号的语义区别</h3>
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>含义</th>
+<th>接收方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>func f(): [int, string]</code></td>
+<td>按位置的多返回值</td>
+<td><code>var[int, string](a, b) = f()</code></td>
+</tr>
+<tr>
+<td><code>func f(): {"code": int, "msg": string}</code></td>
+<td>带键名的多返回值</td>
+<td><code>var{"code": int, "msg": string}(a, b) = f()</code></td>
+</tr>
+</tbody>
+</table>
+<p>两者运行时机制完全相同（栈上留多个值）。区别仅在于：
+- 花括号格式提供键名，用于文档和错误提示
+- 接收端键名需与声明匹配（编译时检查）</p>
+<h3 id="4-6-与现有-array-dict-返回值解构的共存">4.6 与现有 Array/Dict 返回值解构的共存</h3>
+<p>现有方式（返回 Array/Dict 后解构）和新方式（多返回值解构）完全独立、共存：</p>
+<pre><code>// 方式 A：返回 Array（现有，所有元素同类型）
+func f(): Array[int] { return [1, 2, 3] }
+var[int, int, int](a, b, c) = f()    // init_type = TYPE_ARRAY
+
+// 方式 B：多返回值（新，每个值不同类型）
+func f(): [int, string, float] { return 1, &quot;x&quot;, 3.14 }
+var[int, string, float](a, b, c) = f()   // init_type = TYPE_MULTI_RET
+</code></pre>
+<p>解构声明通过 <code>init_type-&gt;kind</code> 区分走哪条路径：
+- <code>TYPE_ARRAY</code> → 现有数组解构路径
+- <code>TYPE_DICT</code> → 现有字典解构路径
+- <code>TYPE_MULTI_RET</code> → 新增多返回值解构路径</p>
+<h3 id="4-7-非解构上下文中的自动退化">4.7 非解构上下文中的自动退化</h3>
+<p>当多返回值函数在<strong>非解构上下文</strong>中被调用时（算术运算、条件判断、函数参数、普通变量声明等），
+自动取<strong>第一个返回值</strong>，丢弃其余返回值。</p>
+<pre><code>func get_info(): [int, string, float] {
+    return 42, &quot;hello&quot;, 3.14
+}
+
+var y = get_info() + 1        // y = 43（取第一个值 42，丢弃 &quot;hello&quot; 和 3.14）
+var first = get_info()         // first = 42
+if get_info() &gt; 0 { ... }     // 42 &gt; 0 = true
+
+func add(int a, int b): int { return a + b }
+var result = add(get_info(), 10)  // add(42, 10) = 52
+</code></pre>
+<p><strong>实现机制</strong>：</p>
+<ol>
+<li>
+<p><strong>Codegen 层</strong>：<code>gen_expr</code> 的 <code>AST_CALL</code> case 在 <code>gen_call</code> 返回后检查 <code>cached_type</code>。
+   如果是 <code>TYPE_MULTI_RET</code> 且 <code>suppress_multi_pop</code> 未设置，则 emit <code>OP_POP</code> 弹出多余的返回值，
+   只保留第一个返回值在栈顶。</p>
+</li>
+<li>
+<p><strong>调用者控制</strong>：三个调用者通过 <code>suppress_multi_pop</code> 标志控制弹出行为：
+   - <code>gen_var_decl</code>：设置 <code>suppress_multi_pop=1</code>，由自己统一弹出多余值（保留第一个）
+   - <code>gen_destruct_decl</code>：设置 <code>suppress_multi_pop=1</code>，保留所有返回值用于解构
+   - <code>gen_expr_stmt</code>：设置 <code>suppress_multi_pop=1</code>，由自己弹出所有返回值</p>
+</li>
+<li>
+<p><strong>类型系统层</strong>：<code>type_is_compatible</code> 在 source 是 <code>TYPE_MULTI_RET</code> 时，
+   自动退化为第一个元素类型进行比较，使多返回值函数可以直接作为单参数传递。</p>
+</li>
+</ol>
+<h3 id="4-8-已知限制">4.8 已知限制</h3>
+<table>
+<thead>
+<tr>
+<th>限制</th>
+<th>性质</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>多返回值最多 16 个</td>
+<td>设计限制</td>
+<td><code>OP_RETURN_MULTI</code> 操作数为 1 byte，最大 255；实际限制为 16 以保持栈安全</td>
+</tr>
+<tr>
+<td>多返回值函数不被内联</td>
+<td>设计限制</td>
+<td><code>OP_RETURN_MULTI</code> 需要真实调用帧操作栈，内联会绕过此机制</td>
+</tr>
+<tr>
+<td>多返回值不能直接解构嵌套</td>
+<td>设计限制</td>
+<td>不支持 <code>var[int, [int, int]](a, b, c) = f()</code>，无嵌套解构</td>
+</tr>
+<tr>
+<td>闭包返回多返回值时类型可能退化为 any</td>
+<td>实现限制</td>
+<td>闭包类型推断不完整时，<code>cached_type</code> 可能为 <code>TYPE_ANY</code> 而非 <code>TYPE_MULTI_RET</code>，导致 codegen 无法弹出多余值。解构声明仍可工作（走 <code>TYPE_ARRAY</code> 路径），但非解构上下文中会产生栈上多余值</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="五-已实现-var-空形状自动推断-phase-3">五、已实现：var[] 空形状自动推断（Phase 3）</h2>
+<h3 id="5-0-设计动机">5.0 设计动机</h3>
+<p>Phase 1/2 的解构声明要求用户在 <code>[...]</code> 内显式写出每个槽位的类型：</p>
+<pre><code class="language-leno">var[float, float, float, float](x, y, w, h) = getRect()
+var[int, string, float](id, name, score) = getUser()
+</code></pre>
+<p>但函数的返回类型已经在声明中写过了，调用方再写一遍是冗余的。<code>var[]</code> 空形状语法允许省略类型标注，由编译器自动推断。</p>
+<h3 id="5-1-语法">5.1 语法</h3>
+<pre><code class="language-leno">// 空数组形状：var[](name1, name2, ...) = expr
+// 等价于省略所有槽位类型，编译器从 init_type 自动推断
+
+// 多返回值自动推断
+var[](x, y, w, h) = getRect()     // 等价于 var[float, float, float, float](...)
+
+// 数组解构自动推断
+var[](a, b, c) = [1, 2, 3]        // 等价于 var[int, int, int](...)
+
+// const 也支持
+const[](cx, cy) = getRect()
+
+// 部分解构（只取前 N 个）
+var[](first, second) = getUser()  // 只取前 2 个返回值
+</code></pre>
+<h3 id="5-2-不支持的场景">5.2 不支持的场景</h3>
+<ul>
+<li><strong>字典解构不支持空形状</strong>：<code>var{}(a, b) = expr</code> 不合法。字典解构必须写键名，因为它语义上是按键名取值，不是按位置。</li>
+<li><strong>无法推断的源类型</strong>：如果 init 的类型是 <code>TYPE_ANY</code> 或 <code>TYPE_INFER</code>（如无返回类型注解的函数），编译器报错："解构声明要求初始化值为具体类型的 Array 或多返回值函数"。</li>
+</ul>
+<h3 id="5-3-实现机制">5.3 实现机制</h3>
+<h4 id="5-3-1-parser-层">5.3.1 Parser 层</h4>
+<p>在 <code>parse_destruct_decl</code>（<code>parser_func.c</code>）中，当 <code>[</code> 后直接遇到 <code>]</code>（空形状）时：</p>
+<ol>
+<li>消费 <code>]</code></li>
+<li>解析 <code>(name1, name2, ...)</code> 变量名列表</li>
+<li>根据变量名数量，为每个生成 <code>TYPE_INFER</code> 槽位</li>
+<li>解析 <code>= expr</code> 初始值</li>
+</ol>
+<p>生成的 <code>AST_DESTRUCT_DECL</code> 节点与普通解构声明完全一致，只是所有 <code>slot_types[i]</code> 为 <code>TYPE_INFER</code>。</p>
+<h4 id="5-3-2-semantic-层">5.3.2 Semantic 层</h4>
+<p>在 <code>visit_var.inc</code> 的 <code>AST_DESTRUCT_DECL</code> 类型检查中，当 <code>init_type</code> 为 <code>TYPE_MULTI_RET</code> 或 <code>TYPE_ARRAY</code> 且槽位为 <code>TYPE_INFER</code> 时：</p>
+<ol>
+<li>从 <code>init_type-&gt;param_types[i]</code>（多返回值）或 <code>init_type-&gt;element_type</code>（数组）获取类型</li>
+<li>回填 <code>ast-&gt;u.destruct_decl.slot_types[i]</code>（影响 codegen 的 CAST 生成）</li>
+<li>通过 <code>scope_resolve</code> 获取符号，回填 <code>sym-&gt;type</code>（影响后续类型检查）</li>
+</ol>
+<p>回填后，槽位类型从 <code>TYPE_INFER</code> 变为具体类型（如 <code>TYPE_FLOAT</code>、<code>TYPE_INT</code>），后续 codegen 会根据回填后的类型生成对应的 CAST 指令。</p>
+<h4 id="5-3-3-codegen-层">5.3.3 Codegen 层</h4>
+<p><strong>无需修改</strong>。Codegen 在 <code>gen_destruct_decl</code> 中根据 <code>slot_type-&gt;kind</code> 生成 CAST 指令。semantic 层回填类型后，codegen 自动走正确路径。</p>
+<h3 id="5-4-类型推断链路">5.4 类型推断链路</h3>
+<pre><code>函数声明: func getRect(): [float, float, float, float]
+    ↓ type_copy
+模块符号表: ModuleFuncSymbol.return_type_info = TYPE_MULTI_RET{param_types[0..3] = float}
+    ↓ module_symbol_table_find_func
+调用方 infer_expr_type(): 返回 TYPE_MULTI_RET{param_types[0..3] = float}
+    ↓ 回填
+var[](x, y, w, h) → slot_types[0..3] = float, sym-&gt;type = float
+    ↓ codegen
+OP_GET_LOCAL + OP_CAST_FLOAT + OP_SET_LOCAL_POP（逐槽位）
+</code></pre>
+<h3 id="5-5-测试">5.5 测试</h3>
+<table>
+<thead>
+<tr>
+<th>测试文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>assert/test_destruct_auto_infer.leno</code></td>
+<td>基本语法：多返回值、混合类型、数组、float 数组、部分解构、const、旧语法兼容、bool 数组、循环内解构</td>
+</tr>
+<tr>
+<td><code>assert/test_destruct_auto_infer_cross.leno</code></td>
+<td>跨模块：多返回值、混合类型、float 多返回值、旧语法兼容</td>
+</tr>
+<tr>
+<td><code>assert/destruct_auto_infer_mod.leno</code></td>
+<td>跨模块测试模块</td>
+</tr>
+</tbody>
+</table>
+<h3 id="5-6-与现有语法的关系">5.6 与现有语法的关系</h3>
+<p><code>var[]</code> 是现有 <code>var[T1, T2, ...]</code> 的语法糖，完全向后兼容：</p>
+<pre><code class="language-leno">// 以下两种写法等价
+var[](x, y, w, h) = getRect()
+var[float, float, float, float](x, y, w, h) = getRect()
+
+// 旧写法完全不受影响
+var[int, string](a, b) = [1, &quot;hello&quot;]
+var{&quot;id&quot;: int, &quot;name&quot;: string}(a, b) = getUser()
+</code></pre>
+<p>底层走同一套解析、类型检查、codegen 路径，只是空形状时槽位类型从 <code>TYPE_INFER</code> → semantic 阶段自动回填为实际类型。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-已实现-数组-字典解构-phase-1">一、已实现：数组/字典解构（Phase 1）</a></li><ul class="lv3"><li><a href="#1-1-数组解构-按位置">1.1 数组解构（按位置）</a></li><li><a href="#1-2-字典解构-按键名">1.2 字典解构（按键名）</a></li><li><a href="#1-3-已实现规则">1.3 已实现规则</a></li><li><a href="#1-4-已实现类型检查规则-any-槽位优先">1.4 已实现类型检查规则（any 槽位优先）</a></li><li><a href="#1-5-已实现-codegen">1.5 已实现 Codegen</a></li></ul><li><a href="#二-已实现-函数多返回值-phase-2">二、已实现：函数多返回值（Phase 2）</a></li><ul class="lv3"><li><a href="#2-0-设计动机">2.0 设计动机</a></li><li><a href="#2-1-语法规格">2.1 语法规格</a></li><li><a href="#2-2-语法层-parser">2.2 语法层（Parser）</a></li><li><a href="#2-3-类型系统-typeinfo">2.3 类型系统（TypeInfo）</a></li><li><a href="#2-4-语义层-semantic">2.4 语义层（Semantic）</a></li><li><a href="#2-5-代码生成层-codegen">2.5 代码生成层（Codegen）</a></li><li><a href="#2-6-vm-层">2.6 VM 层</a></li><li><a href="#2-7-错误处理">2.7 错误处理</a></li><li><a href="#2-8-实现步骤">2.8 实现步骤</a></li><li><a href="#2-9-复杂度评估">2.9 复杂度评估</a></li></ul><li><a href="#三-完整测试用例规划">三、完整测试用例规划</a></li><ul class="lv3"><li><a href="#3-1-已实现测试-phase-1">3.1 已实现测试（Phase 1）</a></li><li><a href="#3-2-已实现测试-phase-2">3.2 已实现测试（Phase 2）</a></li><li><a href="#3-3-编译时类型检查测试-phase-2">3.3 编译时类型检查测试（Phase 2）</a></li></ul><li><a href="#四-设计决策记录">四、设计决策记录</a></li><ul class="lv3"><li><a href="#4-1-为什么不引入-tuple-类型">4.1 为什么不引入 tuple 类型？</a></li><li><a href="#4-2-为什么用-t1-t2-而不是-t1-t2">4.2 为什么用 [T1, T2] 而不是 (T1, T2)？</a></li><li><a href="#4-3-为什么-return-用逗号而不是数组">4.3 为什么 return 用逗号而不是数组？</a></li><li><a href="#4-4-为什么不用-op_return-携带数量">4.4 为什么不用 OP_RETURN 携带数量？</a></li><li><a href="#4-5-方括号-vs-花括号的语义区别">4.5 方括号 vs 花括号的语义区别</a></li><li><a href="#4-6-与现有-array-dict-返回值解构的共存">4.6 与现有 Array/Dict 返回值解构的共存</a></li><li><a href="#4-7-非解构上下文中的自动退化">4.7 非解构上下文中的自动退化</a></li><li><a href="#4-8-已知限制">4.8 已知限制</a></li></ul><li><a href="#五-已实现-var-空形状自动推断-phase-3">五、已实现：var[] 空形状自动推断（Phase 3）</a></li><ul class="lv3"><li><a href="#5-0-设计动机">5.0 设计动机</a></li><li><a href="#5-1-语法">5.1 语法</a></li><li><a href="#5-2-不支持的场景">5.2 不支持的场景</a></li><li><a href="#5-3-实现机制">5.3 实现机制</a></li><li><a href="#5-4-类型推断链路">5.4 类型推断链路</a></li><li><a href="#5-5-测试">5.5 测试</a></li><li><a href="#5-6-与现有语法的关系">5.6 与现有语法的关系</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="类型收窄与绑定语法改进.html">← 上一篇</a><a href="enum载荷_设计草案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

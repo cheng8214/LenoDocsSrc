@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 目录操作模块 (dirs) · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_dirs.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">02 模块 API 参考</a><span class="sep">/</span><span class="here">Leno 目录操作模块 (dirs)</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details open><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html" class="active" aria-current="page">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-目录操作模块-dirs">Leno 目录操作模块 (dirs)</h1>
+<p>本文档详细说明 <code>dirs</code> 模块提供的所有目录和文件操作方法。</p>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#路径操作">路径操作</a></li>
+<li><a href="#路径检查">路径检查</a></li>
+<li><a href="#目录操作">目录操作</a></li>
+<li><a href="#文件操作">文件操作</a></li>
+<li><a href="#目录遍历">目录遍历</a></li>
+<li><a href="#文件信息">文件信息</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+</ul>
+<hr>
+<h2 id="使用方式">使用方式</h2>
+<pre><code class="language-leno">import dirs
+import io
+
+main() {
+    // 获取当前目录
+    var cwd = dirs.cwd()
+    io.print(cwd)
+
+    // 创建目录
+    dirs.mkdir(&quot;new_folder&quot;)
+}
+</code></pre>
+<h3 id="类型-direntry-dirinfo">类型：<code>DirEntry</code> / <code>DirInfo</code></h3>
+<p><code>dirs</code> 导出两个<strong>类型</strong>（native 类型规格声明，见 <code>docs/单一事实来源与重复实现收敛.md</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>出现在</th>
+<th>字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DirEntry</code></td>
+<td><code>walk()</code> 的元素</td>
+<td><code>root</code>(string) / <code>dirs</code>(Array[string]) / <code>files</code>(Array[string])</td>
+</tr>
+<tr>
+<td><code>DirInfo</code></td>
+<td><code>stat()</code> 的返回</td>
+<td><code>exists</code>(bool) / <code>size</code>(int) / <code>is_file</code>(bool) / <code>is_dir</code>(bool) / <code>mtime</code>(int)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐写法：显式 <code>use</code></strong>（与其它跨模块类型同一规矩；<code>use</code> 之前先 <code>import</code>）：</p>
+<pre><code class="language-leno">import dirs
+import io
+use dirs.DirEntry
+use dirs.DirInfo
+
+main() {
+    DirInfo info = dirs.stat(&quot;build.bat&quot;)     // 字段类型编译期已知
+    Array[DirEntry] es = dirs.walk(&quot;src&quot;)     // 元素类型编译期已知
+    io.print(info.size)
+}
+</code></pre>
+<p>两个名字<strong>也可以不写 <code>use</code> 直接用</strong>（编译器按 native 类型规格兜底解析）；两种写法等价，
+写 <code>use</code> 的好处是：出处明确、名字冲突时有正式出口、工具能列出该模块导出的类型。</p>
+<blockquote>
+<p>⚠ <strong>别用同名的脚本 <code>struct</code></strong>：类型名两边共用<strong>全局名字空间</strong>，脚本定义会遮蔽 native 规格
+（字段按脚本定义解析、而 native 值按 native 规格解释）⇒ 形状不一致时只有<strong>运行期</strong>才报错。
+编译器会对这种情况给 <code>[与native类型同名]</code> 警告，改名即可。
+⚠ <code>use</code> 把类型名写错时，报错会<strong>列出可用类型</strong>（如 <code>可用类型: DirEntry / DirInfo</code>）。</p>
+</blockquote>
+<hr>
+<h2 id="路径操作">路径操作</h2>
+<h3 id="cwd"><code>cwd()</code></h3>
+<p>获取当前工作目录。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>string</code> - 当前工作目录的绝对路径</p>
+<pre><code class="language-leno">dirs.cwd()  // &quot;D:\\CLeno\\Leno&quot; (Windows)
+            // &quot;/home/user/Leno&quot; (Linux/macOS)
+</code></pre>
+<hr>
+<h3 id="abspath-path"><code>abspath(path)</code></h3>
+<p>将相对路径转换为绝对路径。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 相对路径或绝对路径</p>
+<p><strong>返回</strong>: <code>string</code> - 绝对路径</p>
+<pre><code class="language-leno">dirs.abspath(&quot;src/module/io&quot;)     // &quot;D:\\CLeno\\Leno\\src\\module\\io&quot;
+dirs.abspath(&quot;./test.txt&quot;)        // &quot;D:\\CLeno\\Leno\\test.txt&quot;
+</code></pre>
+<hr>
+<h3 id="basename-path"><code>basename(path)</code></h3>
+<p>获取路径中的文件名部分。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>string</code> - 文件名</p>
+<pre><code class="language-leno">dirs.basename(&quot;/home/user/file.txt&quot;)    // &quot;file.txt&quot;
+dirs.basename(&quot;src/module/io/io.c&quot;)     // &quot;io.c&quot;
+dirs.basename(&quot;file.txt&quot;)               // &quot;file.txt&quot;
+</code></pre>
+<hr>
+<h3 id="dirname-path"><code>dirname(path)</code></h3>
+<p>获取路径中的目录部分。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>string</code> - 目录路径</p>
+<pre><code class="language-leno">dirs.dirname(&quot;/home/user/file.txt&quot;)     // &quot;/home/user&quot;
+dirs.dirname(&quot;src/module/io/io.c&quot;)      // &quot;src/module/io&quot;
+dirs.dirname(&quot;file.txt&quot;)                // &quot;.&quot;
+</code></pre>
+<hr>
+<h3 id="extname-path"><code>extname(path)</code></h3>
+<p>获取文件的扩展名。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>string</code> - 扩展名（包含点），如果没有扩展名返回空字符串</p>
+<pre><code class="language-leno">dirs.extname(&quot;file.txt&quot;)        // &quot;.txt&quot;
+dirs.extname(&quot;io.c&quot;)            // &quot;.c&quot;
+dirs.extname(&quot;Makefile&quot;)        // &quot;&quot; (无扩展名)
+dirs.extname(&quot;.bashrc&quot;)         // &quot;&quot; (隐藏文件)
+</code></pre>
+<h3 id="stem-path-2026-11-10-新增"><code>stem(path)</code> ★ 2026-11-10 新增</h3>
+<p>文件名去掉<strong>最后一个</strong>扩展名。与 <code>extname</code> <strong>严格互补</strong>：<code>stem(p) + extname(p) == basename(p)</code>。</p>
+<pre><code class="language-leno">dirs.stem(&quot;a/b/c.txt&quot;)     // &quot;c&quot;
+dirs.stem(&quot;c.tar.gz&quot;)      // &quot;c.tar&quot;      （只去最后一段）
+dirs.stem(&quot;.bashrc&quot;)       // &quot;.bashrc&quot;    （隐藏文件没有扩展名）
+dirs.stem(&quot;noext&quot;)         // &quot;noext&quot;
+dirs.stem(&quot;dir/sub/x.len&quot;) // &quot;x&quot;
+</code></pre>
+<blockquote>
+<p>为什么补：<code>basename</code> + <code>extname</code> + 切片 三件套在每个项目里各抄一遍 ——
+Aria 的 <code>downloads.leno</code> 用 <code>path.split(".")</code> 再拼回去（还得特判无点/多点），
+<code>ffapi_core.leno</code> 的注释直接写"没有 rfind ⇒ 按点切开取最后一段"。</p>
+</blockquote>
+<hr>
+<h3 id="join-part1-part2"><code>join(part1, part2, ...)</code></h3>
+<p>将多个路径部分拼接成一个完整路径。</p>
+<p><strong>参数</strong>:
+- <code>part1, part2, ...</code> (string): 路径部分</p>
+<p><strong>返回</strong>: <code>string</code> - 拼接后的路径</p>
+<pre><code class="language-leno">dirs.join(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)              // &quot;a\\b\\c&quot; (Windows)
+                                       // &quot;a/b/c&quot; (Linux/macOS)
+dirs.join(&quot;/home&quot;, &quot;user&quot;, &quot;file&quot;)    // &quot;/home\\user\\file&quot;
+dirs.join(&quot;src&quot;, &quot;module&quot;, &quot;io.c&quot;)    // &quot;src\\module\\io.c&quot;
+dirs.join(&quot;a/&quot;, &quot;/b&quot;)                 // &quot;a\\b&quot; ✓（**2026-10-10 起**：重复分隔符会**收拢** ✓）
+</code></pre>
+<blockquote>
+<p>★ <strong>2026-10-10 起</strong>：拼接处<strong>重复的分隔符会被收拢</strong> ✓（实测）——
+<code>join("a/", "/b")</code> ⇒ <code>a\b</code> ✓、<code>join("a", "/b")</code> ⇒ <code>a\b</code> ✓、<code>join("a//", "//b")</code> ⇒ <code>a\b</code> ✓
+（原来会拼出 <code>a\/b</code> ✗ 这种能跑但埋雷的路径 ✓——<strong>交给别的工具时 Windows 上可能被当成别的路径</strong> ✓）。
+★ <strong>2026-11-15 起</strong>：<strong>空段不产生分隔符</strong> —— <code>join("", "")</code> ⇒ <code>""</code>（此前会得到 <code>"\"</code>，
+那是"当前盘根目录"，属静默错值 ✗）、<code>join("", "b")</code> ⇒ <code>b</code>、<code>join("a", "", "b")</code> ⇒ <code>a\b</code>。
+⚠ <strong>两条边界</strong>照旧、别记错 ✗：
+- <strong>第一段的根不会被吞</strong> ✓：<code>join("/home", "user", "file")</code> ⇒ <code>/home\user\file</code> ✓（不是 <code>home\…</code> ✓）；
+- <strong>分隔符风格仍不统一</strong> ✗：拼接用的始终是<strong>平台分隔符</strong>（Windows 上是 <code>\</code> ✓）⇒
+  <code>/home\user\file</code> 这种「<code>/</code> 里混 <code>\</code>」是<strong>预期</strong>的 ✓；想要统一样式请自己再归一 ✓。
+⚠ 也<strong>不做</strong> Python 那种"后段是绝对路径 ⇒ 丢掉前面" ✗：<code>join("a", "/b")</code> ⇒ <code>a\b</code> ✓
+而<strong>不是</strong> <code>/b</code> ✓ ⇒ 别按 Python 的直觉用 ✗。</p>
+</blockquote>
+<hr>
+<h3 id="sep"><code>sep()</code></h3>
+<p>获取当前平台的路径分隔符。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>string</code> - 路径分隔符</p>
+<pre><code class="language-leno">dirs.sep()  // &quot;\\&quot; (Windows)
+            // &quot;/&quot; (Linux/macOS)
+</code></pre>
+<hr>
+<h3 id="relpath-path-base"><code>relpath(path, base)</code></h3>
+<p>求 <code>path</code> 相对 <code>base</code> 的路径（<strong>纯词法计算</strong>）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目标路径
+- <code>base</code> (string): 基准路径（<strong>必填</strong> —— 没有"默认相对 cwd"的单参形态）</p>
+<p><strong>返回</strong>: <code>string</code> - 相对路径（<strong>不含</strong> <code>.\</code> 前缀）；两者同一路径 ⇒ <code>"."</code></p>
+<p><strong>口径</strong>（对齐 Python <code>os.path.relpath</code>，三处故意不同）:</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查盘</td>
+<td>❌ 不查 —— 路径<strong>不存在也能算</strong>（纯字符串运算）</td>
+</tr>
+<tr>
+<td>符号链接</td>
+<td>❌ 不解析（词法即可）</td>
+</tr>
+<tr>
+<td>相对输入</td>
+<td>先按 <code>cwd()</code> 规范化成绝对路径</td>
+</tr>
+<tr>
+<td><code>.</code> / <code>..</code></td>
+<td>输入里的先消解；输出用平台分隔符连接</td>
+</tr>
+<tr>
+<td>段比较</td>
+<td>Windows <strong>折叠 ASCII 大小写</strong>（<code>D:\L\A</code> == <code>d:\l\a</code>）；POSIX 精确比较</td>
+</tr>
+<tr>
+<td>跨根（不同盘符）</td>
+<td><strong>原样返回 <code>path</code></strong> —— Python 那边抛 <code>ValueError</code>，但脚本工具里跨盘是常见输入，抛异常只会逼每个调用点写 <code>try</code></td>
+</tr>
+<tr>
+<td>UNC（<code>\\srv\share\…</code>）</td>
+<td><strong>暂不支持（v1）</strong> ⇒ 原样返回（宁可没变，也不给错答案）</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">import dirs
+
+dirs.relpath(&quot;D:\\L\\src\\gc.c&quot;, &quot;D:\\L&quot;)        // &quot;src\\gc.c&quot;
+dirs.relpath(&quot;D:\\L\\a\\b&quot;, &quot;D:\\L\\a\\c\\d&quot;)    // &quot;..\\..\\b&quot;
+dirs.relpath(&quot;D:\\L&quot;, &quot;D:\\L\\&quot;)                 // &quot;.&quot;
+dirs.relpath(&quot;src&quot;, dirs.cwd())                  // &quot;src&quot;（相对输入先按 cwd 绝对化）
+dirs.relpath(&quot;C:\\x&quot;, &quot;D:\\y&quot;)                   // &quot;C:\\x&quot;（跨盘 ⇒ 原样）
+</code></pre>
+<p><strong>为什么需要它</strong>：<code>dirs.walk(root)</code> 返回的 <code>DirEntry.root</code> 是<strong>沿传入 root 展开的路径</strong>
+（传 <code>.</code> 就得到 <code>.\src</code> 这类<strong>带前缀</strong>的写法）⇒ 想打印"相对报告根"的短路径，过去只能靠
+字符串切前缀，或让下游脚本顺手 <code>strip(".\\")</code>。有了它就能直接算 ✓</p>
+<blockquote>
+<p>⚠ <strong>不查盘</strong>是刻意的：不借 Windows 的 <code>_wfullpath</code> / POSIX 的 <code>realpath</code> —— 后者会解析符号
+链接<strong>且要求路径存在</strong> ⇒ 同一段 Leno 代码在两个平台会给出不同答案 ✗（2026-10-01 实现并测过）。</p>
+</blockquote>
+<hr>
+<h2 id="路径检查">路径检查</h2>
+<h3 id="exists-path"><code>exists(path)</code></h3>
+<p>检查路径是否存在。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否存在</p>
+<pre><code class="language-leno">dirs.exists(&quot;src&quot;)              // true
+dirs.exists(&quot;build.bat&quot;)        // true
+dirs.exists(&quot;not_exist&quot;)        // false
+</code></pre>
+<hr>
+<h3 id="is_file-path"><code>is_file(path)</code></h3>
+<p>检查路径是否是文件。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否是文件</p>
+<pre><code class="language-leno">dirs.is_file(&quot;build.bat&quot;)       // true
+dirs.is_file(&quot;src&quot;)             // false
+dirs.is_file(&quot;not_exist&quot;)       // false
+</code></pre>
+<hr>
+<h3 id="is_dir-path"><code>is_dir(path)</code></h3>
+<p>检查路径是否是目录。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否是目录</p>
+<pre><code class="language-leno">dirs.is_dir(&quot;src&quot;)              // true
+dirs.is_dir(&quot;build.bat&quot;)        // false
+dirs.is_dir(&quot;not_exist&quot;)        // false
+</code></pre>
+<hr>
+<h3 id="is_symlink-path"><code>is_symlink(path)</code></h3>
+<p>检查路径是否是<strong>符号链接 / junction / 挂载点</strong>（Windows 侧是 reparse point，POSIX 侧是 symlink）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 路径</p>
+<p><strong>返回</strong>: <code>bool</code></p>
+<pre><code class="language-leno">dirs.is_symlink(&quot;D:\\some\\junction&quot;)   // true
+dirs.is_symlink(&quot;src&quot;)                  // false（普通目录）
+</code></pre>
+<p><strong>口径说明（重要）</strong>：<code>dirs</code> 的<strong>递归类操作一律不跟随链接</strong>（与 <code>find</code> 的默认行为一致）：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>对链接的行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>walk()</code></td>
+<td>链接<strong>出现在 <code>e.dirs</code> 里</strong>（看得见），但<strong>不会递归进去</strong></td>
+</tr>
+<tr>
+<td><code>delete()</code></td>
+<td><strong>只摘链接本身</strong>，绝不动 target 里的内容</td>
+</tr>
+<tr>
+<td><code>rmdir()</code></td>
+<td>只摘链接（要求它是空的，而链接天然是空的）</td>
+</tr>
+</tbody>
+</table>
+<p>要跟随链接时，自己判一下再走：</p>
+<pre><code class="language-leno">for dirs.walk(root) to e {
+    for e.dirs to d {
+        var p = dirs.join(e.root, d)
+        if dirs.is_symlink(p) { continue }    // 或自行决定要不要 walk 那个目标
+    }
+}
+</code></pre>
+<blockquote>
+<p>⚠ 为什么<strong>必须</strong>不跟随：指回祖先的链接会让递归走出原目录树 —— 实测一条自指 junction 让
+<code>walk</code> 产出 <strong>66 条</strong>垃圾条目（<code>a\b\loop\b\loop\…</code> 一路拼到路径超长才停）；而 <code>delete(链接)</code>
+在过去会<strong>透过链接删光 target 里的内容</strong>（数据丢失，2026-09-27 修复）。</p>
+</blockquote>
+<hr>
+<h2 id="目录操作">目录操作</h2>
+<h3 id="mkdir-path"><code>mkdir(path)</code></h3>
+<p>创建单个目录。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目录路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否创建成功</p>
+<pre><code class="language-leno">dirs.mkdir(&quot;new_folder&quot;)        // true
+dirs.mkdir(&quot;a/b/c&quot;)             // false (父目录不存在)
+</code></pre>
+<hr>
+<h3 id="mkdir_p-path"><code>mkdir_p(path)</code></h3>
+<p>递归创建目录（包括所有父目录）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目录路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否创建成功（<strong>已存在 ⇒ <code>true</code></strong>，幂等；路径上已有同名<strong>文件</strong> ⇒ <code>false</code>）</p>
+<pre><code class="language-leno">dirs.mkdir_p(&quot;a/b/c&quot;)           // true (创建 a, a/b, a/b/c)
+dirs.mkdir_p(&quot;deep/nested/dir&quot;) // true
+dirs.mkdir_p(&quot;a/b/c&quot;)           // true（已存在，不报错、不重建）
+dirs.mkdir_p(&quot;file.txt/sub&quot;)    // false（file.txt 是文件，建不了子目录）
+</code></pre>
+<hr>
+<h3 id="rmdir-path"><code>rmdir(path)</code></h3>
+<p>删除空目录。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目录路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否删除成功</p>
+<pre><code class="language-leno">dirs.rmdir(&quot;empty_folder&quot;)      // true
+dirs.rmdir(&quot;non_empty&quot;)         // false (目录非空)
+</code></pre>
+<hr>
+<h2 id="文件操作">文件操作</h2>
+<h3 id="delete-path"><code>delete(path)</code></h3>
+<p>删除文件或目录。</p>
+<ul>
+<li><strong>文件</strong>：直接删除。</li>
+<li><strong>目录</strong>：递归删除整个目录树（先删除其所有子文件和子目录，再删除自身），因此<strong>非空目录也能删除</strong>。</li>
+<li><strong>链接</strong>（junction / symlink）：<strong>只摘链接本身</strong>，绝不动 target 里的内容 —— 见 <code>is_symlink</code> 的口径表
+  （2026-09-27 前会透过链接删光 target，属数据丢失）。</li>
+<li>全程使用 UTF-16 处理路径，支持中文等非 ASCII 路径。</li>
+<li>路径不存在时返回 <code>false</code>。</li>
+</ul>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件或目录路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否删除成功</p>
+<pre><code class="language-leno">dirs.delete(&quot;old_file.txt&quot;)            // true（删文件）
+dirs.delete(&quot;empty_folder&quot;)            // true（删空目录）
+dirs.delete(&quot;project&quot;)                 // true（递归删非空目录及其全部内容）
+dirs.delete(&quot;not_exist.txt&quot;)           // false（路径不存在）
+</code></pre>
+<blockquote>
+<p>注意：删除非空目录会<strong>永久移除其下所有内容</strong>，请谨慎使用。若只想删除空目录，可用 <code>dirs.rmdir()</code>。</p>
+</blockquote>
+<hr>
+<h3 id="rename-old_path-new_path"><code>rename(old_path, new_path)</code></h3>
+<p>重命名文件或目录。</p>
+<p><strong>参数</strong>:
+- <code>old_path</code> (string): 原路径
+- <code>new_path</code> (string): 新路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否重命名成功</p>
+<pre><code class="language-leno">dirs.rename(&quot;old.txt&quot;, &quot;new.txt&quot;)           // true
+dirs.rename(&quot;folder1&quot;, &quot;folder2&quot;)           // true
+dirs.rename(&quot;not_exist.txt&quot;, &quot;new.txt&quot;)     // false
+</code></pre>
+<blockquote>
+<p>⚠ <strong>目标已存在时是平台相关的</strong>（2026-11-15 实测补记）：</p>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th><code>rename(src, dst)</code> 且 dst 已存在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td><strong><code>false</code></strong>，src 与 dst 都不动（<code>_wrename</code> 不覆盖）</td>
+</tr>
+<tr>
+<td>Linux / macOS</td>
+<td><strong><code>true</code></strong> 且 dst 被<strong>静默覆盖</strong>（POSIX <code>rename()</code> 的语义）</td>
+</tr>
+</tbody>
+</table>
+<p>同一份代码在两边行为不同 ⇒ 要覆盖请<strong>显式</strong>先删：</p>
+</blockquote>
+<pre><code class="language-leno">if dirs.exists(dst) { dirs.delete(dst) }
+dirs.rename(src, dst)
+</code></pre>
+<blockquote>
+<p>反过来，"先写临时文件再 rename 覆盖"这种 POSIX 原子替换惯用法在 Windows 上<strong>不成立</strong>
+（会拿到 false）⇒ 跨平台代码别用它。<code>assert/test_dirs.leno</code> 的测试 19 按 <code>_os()</code>
+分别钉住了两边行为。</p>
+</blockquote>
+<hr>
+<h2 id="目录遍历">目录遍历</h2>
+<h3 id="listdir-path"><code>listdir(path)</code></h3>
+<p>列出目录中的所有文件和子目录。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目录路径</p>
+<p><strong>返回</strong>: <code>array</code> - 文件和目录名称数组（不包含 <code>.</code> 和 <code>..</code>）</p>
+<blockquote>
+<p>⚠ <strong>目录不存在 / 打不开时返回 <code>null</code>，不是空数组</strong>（<code>dirs.c</code> 的
+<code>FindFirstFileW == INVALID_HANDLE_VALUE</code> 分支）。而 2026-11-08 起
+<code>for null to x</code> 是<strong>运行时错误</strong>（不再静默 0 次）⇒ 列一个"可能还没有"的目录时要先判：
+</p>
+</blockquote>
+<pre><code class="language-leno">if not dirs.exists(d) { return [] }
+var files = dirs.listdir(d)
+for files to f { ... }
+</code></pre>
+<blockquote>
+<p>或者直接判返回值：<code>var files = dirs.listdir(d)</code> 之后 <code>if files != null { ... }</code>。</p>
+</blockquote>
+<pre><code class="language-leno">var files = dirs.listdir(&quot;src&quot;)
+// files = [&quot;error.c&quot;, &quot;gc.c&quot;, &quot;lexer.c&quot;, &quot;main.c&quot;, ...]
+
+for files to f {
+    io.print(f)
+}
+</code></pre>
+<h3 id="list_drives"><code>list_drives()</code></h3>
+<p>返回系统盘符列表（用于文件管理器等需要全盘导航的场景）。</p>
+<ul>
+<li><strong>Windows</strong>: 返回 <code>["C:\\", "D:\\", ...]</code>（按位枚举 <code>GetLogicalDrives</code>，每条带末尾分隔符）。</li>
+<li><strong>Unix / 其他</strong>: 返回 <code>["/"]</code>。</li>
+</ul>
+<p><strong>返回</strong>: <code>array</code> - 盘符路径数组</p>
+<pre><code class="language-leno">var drives = dirs.list_drives()   // Windows: [&quot;C:\\&quot;, &quot;D:\\&quot;]
+</code></pre>
+<hr>
+<h3 id="walk-path"><code>walk(path)</code></h3>
+<p>递归遍历目录树，返回 <code>Array[DirEntry]</code> —— 每项是结构体 <code>DirEntry{ string root, Array[string] dirs, Array[string] files }</code>。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 目录路径</p>
+<p><strong>返回</strong>: <code>Array[DirEntry]</code>（类型串按既有的 <code>type_to_string</code> 风格渲染为 <code>Array[struct DirEntry]</code>）</p>
+<pre><code class="language-leno">Array[DirEntry] es = dirs.walk(&quot;src/module&quot;)   // 元素类型可以直接标出来（v3.2.5 起；或先 `use dirs.DirEntry`）
+for es to e {
+    string root = e.root            // 编译期就知道是 string（无需 as / 收窄）
+    Array[string] ds = e.dirs       // 子目录名
+    Array[string] fs = e.files      // 文件名；元素类型是 string ⇒ 能直接进 Array[string] 的方法
+    io.print(root + &quot; → &quot; + _str(fs.len()) + &quot; 个文件&quot;)
+    for fs to f { io.print(&quot;  &quot; + f) }
+}
+</code></pre>
+<p><strong>字段含义</strong>（<code>dirs</code> / <code>files</code> 都只给<strong>名字</strong>、不含路径 ⇒ 完整路径用 <code>dirs.join(e.root, name)</code>）:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>root</code></td>
+<td><code>string</code></td>
+<td>本次扫到的目录路径</td>
+</tr>
+<tr>
+<td><code>dirs</code></td>
+<td><code>Array[string]</code></td>
+<td>它的直接子目录名</td>
+</tr>
+<tr>
+<td><code>files</code></td>
+<td><code>Array[string]</code></td>
+<td>它的直接文件名</td>
+</tr>
+</tbody>
+</table>
+<p>递归深度 = 目录树深度，每层一条（先父后子）。</p>
+<blockquote>
+<p>⚠ <strong>根路径不存在 / 不是目录 ⇒ 抛错（2026-11-14 起）</strong>：此前照样返回一条
+<code>root=path</code>、<code>dirs/files</code> 全空的 <code>DirEntry</code> ⇒ 拼错的路径看起来像"空目录"，是典型的
+静默错值 ✗。现在直接报 <code>dirs.walk: 目录不存在或不是目录：'…'</code>。
+递归中某个<strong>子目录</strong>打不开（权限）仍按空条目处理 —— 那是真实存在的目录，只是读不了。</p>
+<p>⚠ <strong>不跟随链接</strong>：junction / symlink <strong>会出现在 <code>e.dirs</code> 里</strong>（看得见），但<strong>不会递归进去</strong> ——
+口径同 <code>find</code>（默认不跟随）。指回祖先的链接会让跟随式遍历走出原目录树（实测 66 条垃圾条目）；
+要跟随请先 <code>dirs.is_symlink()</code> 判一下，见 <code>is_symlink</code> 的口径表。</p>
+</blockquote>
+<p><strong>为什么返回结构体、而不是 <code>[root, dirs, files]</code> 三元组</strong>：三元组的静态类型是 <code>Array[Array]</code> ⇒ 元素是 <code>any</code>，只能靠 <code>e[0] / e[1] / e[2]</code> 位置索引取值，既不可读、顺序一改还会静默错位。现在用 native 的<strong>类型规格</strong>（<code>NativeTypeSpec</code>，见 <code>docs/单一事实来源与重复实现收敛.md</code>）声明返回 <code>Array[DirEntry]</code>：编译期字段表与运行期 <code>ObjStructDef</code> 是<strong>同一份声明</strong> ⇒ 字段名 / 类型 / 顺序同源，编译期即知字段类型 ⇒ 调用点零收窄 ✓</p>
+<blockquote>
+<p>⚠ <strong>v3.2.3 起返回形态变了</strong>：<code>walk</code> 由 <code>Array[Array]</code> 三元组改为 <code>Array[DirEntry]</code>（同一版本里过渡性的 <code>walk_entries</code> 已删除、能力并入 <code>walk</code>）⇒ 旧代码的 <code>entry[0]/entry[1]/entry[2]</code> 要改成 <code>entry.root/entry.dirs/entry.files</code>；返回类型变了 ⇒ 旧 <code>.lenb</code> 需重编译。
+⚠ 别把局部变量命名成 <code>files</code>：那是 native 模块名，会被优先当模块解析（用 <code>fs</code> 之类）。
+⚠ <code>DirEntry</code> 与脚本自定义的 struct <strong>共享同一个全局名字空间</strong>；若你自己也定义了同名 struct 且形状不同，运行期会<strong>报错</strong>（而不是静默按错序号读字段）。</p>
+</blockquote>
+<hr>
+<h2 id="文件信息">文件信息</h2>
+<h3 id="stat-path"><code>stat(path)</code></h3>
+<p>获取文件信息，返回结构体 <code>DirInfo</code> —— <strong>字段类型编译期已知</strong>（v3.2.4 起）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件或目录路径</p>
+<p><strong>返回</strong>: <code>DirInfo{ bool exists, int size, bool is_file, bool is_dir, int mtime }</code></p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>exists</code></td>
+<td><code>bool</code></td>
+<td>是否存在</td>
+</tr>
+<tr>
+<td><code>size</code></td>
+<td><code>int</code></td>
+<td>文件大小（字节）—— <strong>该条目自身</strong>的大小，不是递归总大小</td>
+</tr>
+<tr>
+<td><code>is_file</code></td>
+<td><code>bool</code></td>
+<td>是否是文件</td>
+</tr>
+<tr>
+<td><code>is_dir</code></td>
+<td><code>bool</code></td>
+<td>是否是目录</td>
+</tr>
+<tr>
+<td><code>mtime</code></td>
+<td><code>int</code></td>
+<td>最后修改时间（Unix 时间戳）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>✅ <code>mtime</code> 是 <strong>Unix 秒（UTC）</strong>：Windows 由 <code>FILETIME</code> 换算、POSIX 取 <code>st_mtime</code>（均 64 位，
+不走 32 位截断）；拿不到时间 ⇒ <code>0</code>。（2026-09-27 前 Windows 上恒为 <code>0</code>，是已知限制，现已实现。）
+⚠ <code>size</code> 在 2026-09-26 前是 <code>(int)</code> 强转 ⇒ <strong>≥2GB 的文件会读出负数</strong>（实测 2GB+1KB ⇒ <code>-2147482624</code>）；
+现已改为 48 位 <code>int</code>，大文件读数正确。</p>
+</blockquote>
+<pre><code class="language-leno">DirInfo info = dirs.stat(&quot;build.bat&quot;)     // 类型可以直接标出来（v3.2.5 起；或先 `use dirs.DirInfo`）
+// info = DirInfo{ exists: true, size: 2917, is_file: true, is_dir: false, mtime: 0 }
+
+io.print(&quot;大小: &quot; + info.size + &quot; 字节&quot;)     // info.size 直接是 int ⇒ 能直接参与运算
+io.print(&quot;是文件: &quot; + info.is_file)          // 直接是 bool ⇒ 能直接进 if
+io.print(&quot;是目录: &quot; + info.is_dir)
+</code></pre>
+<blockquote>
+<p>⚠ <strong>v3.2.4 起返回结构体、不再是 <code>dict</code></strong>：旧形态的键名与现在的字段名<strong>逐字相同</strong> ⇒ <code>info.size</code> /
+<code>info.is_file</code> 这类调用点<strong>不用改</strong>；要改的是 <code>info["size"]</code> 下标式与 <code>if info is Dict { ... }</code> 收窄
+—— 编译期就会挡住。
+为什么不用 <code>Dict[string, ...]</code>：这五个键<strong>类型不齐</strong>（<code>exists</code> / <code>is_file</code> / <code>is_dir</code> 是 <code>bool</code>，
+<code>size</code> / <code>mtime</code> 是 <code>int</code>），同质的 <code>Dict</code> 表达不了"这个键是 bool、那个键是 int"。
+✅ native struct 名（<code>DirInfo</code> / <code>DirEntry</code>）<strong>可以当类型标注</strong>（v3.2.5 起）：<code>DirInfo d = dirs.stat(p)</code>、
+<code>Array[DirEntry] w = dirs.walk(p)</code>、<code>func f(DirInfo d)</code>、脚本 struct 的字段类型都能写；<code>x is DirInfo</code>
+也照旧可用。之前只能 <code>var d = ...</code> 让编译器推断 —— 因为它俩<strong>不在符号表里</strong>（native 模块没有
+<code>sym_table</code>），类型名校验会判"未定义的类型"。现在校验处补了 native 兜底判据
+（来源就是 <code>native_find_struct_spec</code>，与字段解析、运行期 <code>ObjStructDef</code> 同源）。
+📌 <strong>取单个字段</strong>就写 <code>dirs.stat(p).size</code> —— 并行的 <strong><code>dirs.size()</code> 已于 2026-09-27 删除</strong>
+（它当初只是"<code>stat</code> 返回无类型 <code>dict</code> 时补的类型化入口"；<code>stat</code> 定型后它就是第二个入口）。
+口径不变：不存在的路径 ⇒ <code>0</code>；目录给的是<strong>目录条目自身</strong>的大小（Windows 报 <code>0</code>，POSIX 报 <code>st_size</code>），
+<strong>不是</strong>递归总大小 ⇒ 要递归总大小自己用 <code>dirs.walk()</code> 累加。</p>
+</blockquote>
+<hr>
+<h2 id="示例代码">示例代码</h2>
+<h3 id="1-批量重命名文件">1. 批量重命名文件</h3>
+<pre><code class="language-leno">import dirs
+import io
+
+main() {
+    var files = dirs.listdir(&quot;.&quot;)
+    var count = 0
+
+    for files to f {
+        // 将所有 .txt 文件重命名为 .bak
+        if dirs.extname(f) == &quot;.txt&quot; {
+            var new_name = dirs.basename(f) + &quot;.bak&quot;
+            if dirs.rename(f, new_name) {
+                count = count + 1
+                io.print(&quot;重命名: &quot; + f + &quot; -&gt; &quot; + new_name)
+            }
+        }
+    }
+
+    io.print(&quot;共重命名 &quot; + count + &quot; 个文件&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="2-递归查找文件">2. 递归查找文件</h3>
+<pre><code class="language-leno">import dirs
+import io
+
+// 递归查找所有 .leno 文件
+func find_leno_files(var path) -&gt; array {
+    var result = []
+    var entries = dirs.walk(path)
+
+    for entries to entry {
+        var root = entry.root
+        var files = entry.files
+
+        for files to f {
+            if dirs.extname(f) == &quot;.leno&quot; {
+                result.add(dirs.join(root, f))
+            }
+        }
+    }
+
+    return result
+}
+
+main() {
+    var leno_files = find_leno_files(&quot;src&quot;)
+    io.print(&quot;找到 &quot; + leno_files.count() + &quot; 个 .leno 文件:&quot;)
+
+    for leno_files to f {
+        io.print(&quot;  &quot; + f)
+    }
+}
+</code></pre>
+<hr>
+<h3 id="3-文件备份工具">3. 文件备份工具</h3>
+<pre><code class="language-leno">import dirs
+import io
+import times
+
+main() {
+    var source_dir = &quot;src&quot;
+    var backup_dir = &quot;backup_&quot; + times.now()
+
+    // 创建备份目录
+    if !dirs.mkdir_p(backup_dir) {
+        io.print(&quot;创建备份目录失败&quot;)
+        return
+    }
+
+    // 复制所有 .c 文件
+    var files = dirs.listdir(source_dir)
+    var count = 0
+
+    for files to f {
+        if dirs.extname(f) == &quot;.c&quot; {
+            var src = dirs.join(source_dir, f)
+            var dst = dirs.join(backup_dir, f)
+
+            // 读取并写入（简化版复制）
+            // 实际应用中应该使用 files 模块
+            count = count + 1
+        }
+    }
+
+    io.print(&quot;备份完成: &quot; + count + &quot; 个文件&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="4-目录大小统计">4. 目录大小统计</h3>
+<pre><code class="language-leno">import dirs
+import io
+
+// 计算目录总大小（简化版，只统计当前层）
+func calc_dir_size(var path) -&gt; int {
+    var total = 0
+    var entries = dirs.walk(path)
+
+    for entries to entry {
+        var root = entry.root
+        var files = entry.files
+
+        for files to f {
+            var full_path = dirs.join(root, f)
+            var info = dirs.stat(full_path)
+            total = total + info.size
+        }
+    }
+
+    return total
+}
+
+main() {
+    var size = calc_dir_size(&quot;src&quot;)
+    io.print(&quot;src 目录总大小: &quot; + size + &quot; 字节&quot;)
+    io.print(&quot;约 &quot; + (size / 1024) + &quot; KB&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="5-清理临时文件">5. 清理临时文件</h3>
+<pre><code class="language-leno">import dirs
+import io
+
+main() {
+    var temp_patterns = [&quot;.tmp&quot;, &quot;.log&quot;, &quot;.cache&quot;]
+    var removed = 0
+
+    var files = dirs.listdir(&quot;.&quot;)
+
+    for files to f {
+        var ext = dirs.extname(f)
+
+        for temp_patterns to pattern {
+            if ext == pattern {
+                if dirs.delete(f) {
+                    removed = removed + 1
+                    io.print(&quot;删除: &quot; + f)
+                }
+            }
+        }
+    }
+
+    io.print(&quot;共清理 &quot; + removed + &quot; 个临时文件&quot;)
+}
+</code></pre>
+<hr>
+<h2 id="注意事项">注意事项</h2>
+<ol>
+<li>
+<p><strong>路径分隔符</strong>
+   - Windows 使用 <code>\</code>，Linux/macOS 使用 <code>/</code>
+   - 使用 <code>dirs.sep()</code> 获取当前平台的分隔符
+   - <code>dirs.join()</code> 会自动处理分隔符</p>
+</li>
+<li>
+<p><strong>权限问题</strong>
+   - 某些操作（如创建目录、删除文件）可能需要相应权限
+   - 操作失败时返回 <code>false</code>，不会抛出异常</p>
+</li>
+<li>
+<p><strong>符号链接</strong>
+   - 当前版本对符号链接的处理取决于操作系统
+   - <code>is_dir()</code> 和 <code>is_file()</code> 会跟随符号链接</p>
+</li>
+<li>
+<p><strong>路径长度限制</strong>
+   - Windows 传统路径限制为 260 字符
+   - 使用绝对路径时注意长度限制</p>
+</li>
+<li>
+<p><strong>线程安全</strong>
+   - 目录遍历操作不是原子性的
+   - 遍历过程中目录内容变化可能导致不一致</p>
+</li>
+</ol>
+<hr>
+<h2 id="跨平台注意事项">跨平台注意事项</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Windows</th>
+<th>Linux/macOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>路径分隔符</td>
+<td><code>\</code></td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td>根目录</td>
+<td><code>C:\</code>, <code>D:\</code> 等</td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td>大小写敏感</td>
+<td>不敏感</td>
+<td>敏感</td>
+</tr>
+<tr>
+<td>隐藏文件</td>
+<td>属性标记</td>
+<td>以 <code>.</code> 开头</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>文档版本: 1.2</em><br>
+<em>最后更新: 2026-07-22</em></p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><ul class="lv3"><li><a href="#类型-direntry-dirinfo">类型：DirEntry / DirInfo</a></li></ul><li><a href="#路径操作">路径操作</a></li><ul class="lv3"><li><a href="#cwd">cwd()</a></li><li><a href="#abspath-path">abspath(path)</a></li><li><a href="#basename-path">basename(path)</a></li><li><a href="#dirname-path">dirname(path)</a></li><li><a href="#extname-path">extname(path)</a></li><li><a href="#stem-path-2026-11-10-新增">stem(path) ★ 2026-11-10 新增</a></li><li><a href="#join-part1-part2">join(part1, part2, ...)</a></li><li><a href="#sep">sep()</a></li><li><a href="#relpath-path-base">relpath(path, base)</a></li></ul><li><a href="#路径检查">路径检查</a></li><ul class="lv3"><li><a href="#exists-path">exists(path)</a></li><li><a href="#is_file-path">is_file(path)</a></li><li><a href="#is_dir-path">is_dir(path)</a></li><li><a href="#is_symlink-path">is_symlink(path)</a></li></ul><li><a href="#目录操作">目录操作</a></li><ul class="lv3"><li><a href="#mkdir-path">mkdir(path)</a></li><li><a href="#mkdir_p-path">mkdir_p(path)</a></li><li><a href="#rmdir-path">rmdir(path)</a></li></ul><li><a href="#文件操作">文件操作</a></li><ul class="lv3"><li><a href="#delete-path">delete(path)</a></li><li><a href="#rename-old_path-new_path">rename(old_path, new_path)</a></li></ul><li><a href="#目录遍历">目录遍历</a></li><ul class="lv3"><li><a href="#listdir-path">listdir(path)</a></li><li><a href="#list_drives">list_drives()</a></li><li><a href="#walk-path">walk(path)</a></li></ul><li><a href="#文件信息">文件信息</a></li><ul class="lv3"><li><a href="#stat-path">stat(path)</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-批量重命名文件">1. 批量重命名文件</a></li><li><a href="#2-递归查找文件">2. 递归查找文件</a></li><li><a href="#3-文件备份工具">3. 文件备份工具</a></li><li><a href="#4-目录大小统计">4. 目录大小统计</a></li><li><a href="#5-清理临时文件">5. 清理临时文件</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#跨平台注意事项">跨平台注意事项</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="module_dicts.html">← 上一篇</a><a href="module_ffi_api.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

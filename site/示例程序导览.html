@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>示例程序导览（examples 目录怎么逛） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="示例程序导览.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">01 入门 · 先读这些</a><span class="sep">/</span><span class="here">示例程序导览（examples 目录怎么逛）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details open><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html" class="active" aria-current="page">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="示例程序导览-examples-目录怎么逛">示例程序导览（examples 目录怎么逛）</h1>
+<blockquote>
+<p>仓库的 <code>examples/</code> 里有 <strong>800 多个 <code>.leno</code> 文件</strong>，但<strong>不需要全看</strong>——大半是回归测试（<code>test_*</code>）
+和性能基准（<code>bench_*</code> / <code>*性能测试*</code>），对学习者没价值，混在一起反而劝退。</p>
+<p>这篇挑出 <strong>26 个</strong>"看得懂、跑得通、有收获"的示例，按主题排好，<strong>每个都实测过</strong>
+（能编译 + 能跑完，退出码 0）。</p>
+</blockquote>
+<hr>
+<h2 id="怎么跑">怎么跑</h2>
+<p>在<strong>仓库根目录</strong>（<code>examples/</code> 的上一级）执行：</p>
+<pre><code class="language-bat">leno examples\for\for.leno
+</code></pre>
+<p>只想确认它能编译（不运行）：</p>
+<pre><code class="language-bat">leno --check examples\for\for.leno
+</code></pre>
+<blockquote>
+<p>文件名里有空格或中文时加引号：<code>leno "examples\for\for.leno"</code> 一般不用，
+但 <code>leno "examples\try catch\try catch finally.leno"</code> 这种<strong>必须加</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="一-先把语法看熟-6-个">一、先把语法看熟（6 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/for/for.leno"><code>examples/for/for.leno</code></a></td>
+<td><code>for a:b to i</code> 数数循环（闭区间，两头都算）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/if/if.leno"><code>examples/if/if.leno</code></a></td>
+<td><code>if / else</code> 最朴素的分支</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/if/if%20eif.leno"><code>examples/if/if eif.leno</code></a></td>
+<td><code>else if</code> 与 <code>eif</code>（等价写法）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E4%B8%89%E5%85%83%E8%BF%90%E7%AE%97%E7%AC%A6/%E4%B8%89%E5%85%83%E8%BF%90%E7%AE%97%E7%AC%A6.leno"><code>examples/三元运算符/三元运算符.leno</code></a></td>
+<td><code>if 条件 then a else b</code> —— 一行内做选择</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E6%8F%92%E5%80%BC/%E6%8F%92%E5%80%BC.leno"><code>examples/插值/插值.leno</code></a></td>
+<td><code>$"{变量}"</code> 字符串插值（最短的一个例子，6 行）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E5%A4%9A%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E/%E5%A4%9A%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E.leno"><code>examples/多变量声明/多变量声明.leno</code></a></td>
+<td><code>var a=1, b, c=2</code> / <code>int x, y, z</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="二-函数与闭包-4-个">二、函数与闭包（4 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/func/func.leno"><code>examples/func/func.leno</code></a></td>
+<td>定义函数、传参、<code>return</code>（注意函数可以写在 <code>main</code> 后面）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/func/func%20%E9%97%AD%E5%8C%85.leno"><code>examples/func/func 闭包.leno</code></a></td>
+<td>闭包最朴素的形态</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E9%97%AD%E5%8C%85/%E5%A4%9A%E5%B1%82%E9%97%AD%E5%8C%85.leno"><code>examples/闭包/多层闭包.leno</code></a></td>
+<td>函数返回函数，逐层捕获外层变量</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E5%A4%9A%E8%BF%94%E5%9B%9E%E5%80%BC/min_multi.leno"><code>examples/多返回值/min_multi.leno</code></a></td>
+<td><code>func f(): [int, int]</code> + <code>var[int,int](a,b) = f()</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="三-数组与排序-2-个">三、数组与排序（2 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E6%95%B0%E7%BB%84%E5%88%87%E7%89%87/%E7%AE%80%E5%8D%95%E7%9A%84%E5%88%87%E7%89%87.leno"><code>examples/数组切片/简单的切片.leno</code></a></td>
+<td>切片是<strong>闭区间</strong>：<code>a[2:5]</code> 含 2 和 5</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E6%8E%92%E5%BA%8F%E6%B5%8B%E8%AF%95/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F.leno"><code>examples/排序测试/冒泡排序.leno</code></a></td>
+<td>手写排序（想理解 <code>sort()</code> 在做什么就看这个）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="四-枚举-2-个">四、枚举（2 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/enum/test_simple.leno"><code>examples/enum/test_simple.leno</code></a></td>
+<td>最基础的 int 枚举 + 取值</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/enum/cs.leno"><code>examples/enum/cs.leno</code></a></td>
+<td>用枚举表达状态（比魔法数字清楚）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="五-错误处理-2-个">五、错误处理（2 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/try%20catch/try%20catch%20finally.leno"><code>examples/try catch/try catch finally.leno</code></a></td>
+<td><code>try / catch / finally</code> 三者顺序</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/try%20catch/%E5%BC%82%E5%B8%B8%E4%BC%A0%E6%92%AD.leno"><code>examples/try catch/异常传播.leno</code></a></td>
+<td>异常怎么从内层函数传到外层 <code>catch</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="六-并发-2-个">六、并发（2 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/threads/pool.leno"><code>examples/threads/pool.leno</code></a></td>
+<td>20 个任务分给若干 worker，<strong>带期望值断言</strong>（跑完打印"失败 0"）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/async%20await/test_async_simple.leno"><code>examples/async await/test_async_simple.leno</code></a></td>
+<td>最小 <code>async</code> / <code>await</code> 例子</td>
+</tr>
+</tbody>
+</table>
+<h2 id="七-原生内存与-c-互操作-3-个">七、原生内存与 C 互操作（3 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/cstruct/test_simple.leno"><code>examples/cstruct/test_simple.leno</code></a></td>
+<td><code>cstruct</code> 按 C 布局分配/读写</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/ffi/test_ffi_cb_simple.leno"><code>examples/ffi/test_ffi_cb_simple.leno</code></a></td>
+<td>把 Leno 函数当回调传给 C</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/clib/test_min.leno"><code>examples/clib/test_min.leno</code></a></td>
+<td><code>clib</code> 声明式调用（不用手写 FFI 绑定）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="八-能直接用的工具-2-个">八、能直接用的工具（2 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E5%B7%A5%E5%85%B7/leno-grep.leno"><code>examples/工具/leno-grep.leno</code></a></td>
+<td>用 Leno 写 grep（读目录 + 正则 + 打印命中行）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E5%B7%A5%E5%85%B7/leno-lines.leno"><code>examples/工具/leno-lines.leno</code></a></td>
+<td>行数统计（默认统计当前目录，可传路径）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="九-json-与大数-3-个">九、JSON 与大数（3 个）</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/jsons/%E5%A4%8D%E6%9D%82json%E8%A7%A3%E6%9E%90.leno"><code>examples/jsons/复杂json解析.leno</code></a></td>
+<td>嵌套 JSON 的解析与取值（唐诗数据集）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/%E5%A4%A7%E6%95%B0/2%E7%9A%84%E5%8D%81%E4%BA%BF%E6%AC%A1%E6%96%B9.leno"><code>examples/大数/2的十亿次方.leno</code></a></td>
+<td>bigint 移位与十进制转换的成本曲线（<strong>跑得较久</strong>）</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/cheng8214/LenoLang/blob/main/examples/bigint/%E6%B5%8B%E8%AF%95%E8%B6%85%E5%A4%A7%E6%95%B4%E6%95%B0.leno"><code>examples/bigint/测试超大整数.leno</code></a></td>
+<td>超过 int64 之后照样精确运算</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="哪些不用看">哪些<strong>不用</strong>看</h2>
+<table>
+<thead>
+<tr>
+<th>前缀 / 关键词</th>
+<th>为什么跳过</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_*.leno</code></td>
+<td>回归测试，很多是"故意写错看报错"</td>
+</tr>
+<tr>
+<td><code>bench_*</code> / <code>*性能测试*</code> / <code>性能测试/</code> 目录</td>
+<td>压测脚本，跑得久、代码不好看</td>
+</tr>
+<tr>
+<td><code>dict_bug_repro/</code>、<code>改进测试/</code></td>
+<td>历史 bug 复现，看懂需要背景知识</td>
+</tr>
+<tr>
+<td><code>minilang/</code></td>
+<td>一个玩具解释器，属于"炫技"，不是入门材料</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="看完示例之后">看完示例之后</h2>
+<p>示例是"读"的，接下来该"写"了：</p>
+<ol>
+<li>抄 <a href="常见任务cookbook.html"><code>常见任务cookbook.md</code></a> 里最像你需求的那一段，改成自己的；</li>
+<li>用 <a href="安装与第一个项目.html"><code>安装与第一个项目.md</code></a> 里的 <code>leno --init</code> 建个项目，把代码搬进去；</li>
+<li>写错了查 <a href="语言陷阱速查.html"><code>语言陷阱速查.md</code></a>，不确定某个函数签名查 <code>module_*.md</code>。</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>本文的链接都是仓库路径</strong>（指向 gitee 的 <code>examples/</code>），不在本站点内。
+列出的 26 个文件全部实测：<code>--check</code> 通过 + 实际运行退出码 0。</p>
+</blockquote></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#怎么跑">怎么跑</a></li><li><a href="#一-先把语法看熟-6-个">一、先把语法看熟（6 个）</a></li><li><a href="#二-函数与闭包-4-个">二、函数与闭包（4 个）</a></li><li><a href="#三-数组与排序-2-个">三、数组与排序（2 个）</a></li><li><a href="#四-枚举-2-个">四、枚举（2 个）</a></li><li><a href="#五-错误处理-2-个">五、错误处理（2 个）</a></li><li><a href="#六-并发-2-个">六、并发（2 个）</a></li><li><a href="#七-原生内存与-c-互操作-3-个">七、原生内存与 C 互操作（3 个）</a></li><li><a href="#八-能直接用的工具-2-个">八、能直接用的工具（2 个）</a></li><li><a href="#九-json-与大数-3-个">九、JSON 与大数（3 个）</a></li><li><a href="#哪些不用看">哪些不用看</a></li><li><a href="#看完示例之后">看完示例之后</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="常见任务cookbook.html">← 上一篇</a><a href="Leno入门教程.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

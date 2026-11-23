@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoCrypto · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/LenoCrypto.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">08 扩展模块（独立包）</a><span class="sep">/</span><span class="here">LenoCrypto</span></span>
+</header>
+<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href="../扩展模块/_总览.html">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details open><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html" class="active" aria-current="page">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><blockquote>
+<p>📦 <strong>扩展模块</strong>（非语言内置标准库）· 包名 <code>LenoCrypto</code> · import 名 "Crypto"
+源 README：<code>Leno/build/leno_module/LenoCrypto/README.md</code>（本页是同步副本，改请改源）</p>
+</blockquote>
+<h1 id="lenocrypto">LenoCrypto</h1>
+<p>Leno 通用加密库：<strong>MD5 / SHA-256 / SHA-512 / HMAC-SHA256 / AES-128 与 AES-256（ECB 单块 + CBC + PKCS7 + GCM/AEAD）</strong>，
+纯 Leno 实现，无外部依赖。</p>
+<blockquote>
+<p><strong>base64 与"文本 ⇄ 字节"不在这里</strong>：它们是标量编解码、不是密码学原语（无密钥、无安全性质），
+已归<strong>核心标准库</strong> <code>strings.to_base64</code> / <code>strings.from_base64</code> / <code>strings.to_bytes</code> /
+<code>strings.from_bytes</code>（2026-10-07，与 <code>to_hex</code> / <code>from_hex</code> 同族）✓</p>
+<p>缘起：用 Leno 移植 TraeSign 时，为了"派生密钥 + AES-128-CBC 解密登录态"，
+不得不在应用里<strong>搬 800 行纯 Leno 的 AES/SHA-512</strong> ✗（对照 C# 只写 33 行，因为它自带
+<code>SHA512.Create()</code> / <code>Aes.Create()</code>）。与其每个项目都搬一遍，不如做成标准库 ✓。</p>
+<p>追加缘起（2026-10-14）：给 WorkBuddy 自动签到做"纯 Leno 解凭据"时，撞上的是
+<strong>AES-256-GCM + 自定义 AAD</strong> 的信封（<code>sym-v1</code>：key=sha256(密钥串)、nonce 12 字节、
+AAD 里带 keyId 的分帧头）—— 本库当时只有 AES-128 的 ECB/CBC，于是又得回去借 Node ✗。
+触发点和上次一模一样：<strong>与其每个项目各搬一份，不如进标准库</strong> ✓。</p>
+</blockquote>
+<h2 id="用法">用法</h2>
+<pre><code class="language-leno">import strings                                      // base64 / 文本⇄字节 ⇒ 核心标准库
+import &quot;Crypto&quot; as crypto
+
+// Base64（二进制安全：走字节版）
+var bs = strings.to_bytes(strings.from_base64(&quot;AAEC/f7/&quot;))           // ⇒ [0,1,2,253,254,255]
+var s  = strings.to_base64(strings.from_bytes([0,1,2,253,254,255]))  // ⇒ &quot;AAEC/f7/&quot;
+
+// 哈希（返回十六进制小写；*_bytes 返回原始字节）
+var h   = crypto.sha256(&quot;abc&quot;)
+var h2  = crypto.sha512(&quot;abc&quot;)
+var raw = crypto.sha512_bytes(strings.to_bytes(&quot;abc&quot;))
+
+// MD5（**只为服务端协议签名**收录，如酷狗 API；别拿它做口令存储/数字签名 ✗）
+var m   = crypto.md5(&quot;abc&quot;)                            // ⇒ &quot;900150983cd24fb0d6963f7d28e17f72&quot;
+var m16 = crypto.md5_bytes(strings.to_bytes(&quot;abc&quot;))    // ⇒ 16 原始字节
+
+// HMAC-SHA256
+var mac = crypto.hmac_sha256(&quot;key&quot;, &quot;msg&quot;)
+
+// AES-128-CBC（**内置 PKCS7**：加密自动补、解密自动去）
+var key = strings.to_bytes(&quot;0123456789abcdef&quot;)   // 16 字节
+var iv  = strings.to_bytes(&quot;abcdef0123456789&quot;)   // 16 字节
+var ct  = crypto.aes128_cbc_encrypt_bytes(key, iv, strings.to_bytes(&quot;hello leno crypto&quot;))
+var pt  = crypto.aes128_cbc_decrypt_str(key, iv, ct)   // ⇒ &quot;hello leno crypto&quot;
+
+// AES-256 单块（32 字节密钥）；这条就是 FIPS-197 附录 C.3 的例子
+var k32 = crypto.hex_to_bytes(&quot;000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f&quot;)
+var blk = crypto.aes256_encrypt_block(crypto.hex_to_bytes(&quot;00112233445566778899aabbccddeeff&quot;), k32)
+
+// GCM / AEAD：密钥 16 字节 ⇒ AES-128-GCM，32 字节 ⇒ AES-256-GCM（**按长度自动选**）
+//   seal 返回 **密文 || 标签(16)**；open 先校验标签，不符**抛错**（AEAD 不交付未认证的明文）
+var nonce = strings.to_bytes(&quot;0123456789ab&quot;)     // 12 字节（推荐；其它长度走规范的 GHASH 构造，见下）
+var aad   = strings.to_bytes(&quot;WB-AAD&quot; + strings.char(0) + strings.char(1))
+var sealed = crypto.aes_gcm_seal(k32, nonce, aad, strings.to_bytes(&quot;payload&quot;))
+var back   = crypto.aes_gcm_open(k32, nonce, aad, sealed)              // ⇒ 原字节
+// 信封把密文与标签拆成两个字段时（如 WorkBuddy 的 sym-v1）：
+var plain  = crypto.gcm_open_parts(k32, nonce, aad, ct_bytes, tag_bytes)
+var tag    = crypto.gcm_tag_bytes(k32, nonce, aad, ct_bytes)           // 只算标签、不取明文
+</code></pre>
+<blockquote>
+<p><strong>GCM 的 nonce 长度</strong>：12 字节走 <code>nonce || 0x00000001</code> 这条推荐路径；
+其它长度按 NIST SP 800-38D 用 GHASH 构造 J0（兼容老实现，但性能与安全性都不如 12 字节）。
+两条路径都已用权威向量锁住 —— 它们的差别不只是"少几个字节"，<strong>分块边界完全不同</strong>。</p>
+<p><code>strings.from_base64</code> 比手工实现<strong>更宽容</strong>：两种字母表都认（<code>+/</code> 与 <code>-_</code>）、缺 <code>=</code>
+padding 也收、空白字符忽略；非法字符则<strong>报错并指出第几位</strong>（不静默截断 ✓）。</p>
+</blockquote>
+<h2 id="设计约定">设计约定</h2>
+<ul>
+<li><strong>加解密一律走 <code>Array[int]</code>（字节）</strong> ✓；字符串只是糖（Leno 的 string 是字节串，二进制经它往返易失真 ✗）。
+  ⇒ 文本 ⇄ 字节用 <code>strings.to_bytes</code> / <code>strings.from_bytes</code> ✓。</li>
+<li><strong>子模块互不依赖</strong>（<code>crypto_md5</code> / <code>crypto_sha256</code> / <code>crypto_sha512</code> / <code>crypto_hmac_sha256</code> / <code>crypto_aes</code>），
+  组合只发生在门面 <code>Crypto.leno</code> ⇒ 换实现不影响别人 ✓。</li>
+<li>五个子模块都是 <code>examples/crypto/*.leno</code> 的<strong>机械搬运</strong>（截断各自 <code>main()</code>、一律 <code>export</code>，
+  算法代码逐字保留 ✓）⇒ 库里不含"新写但没验证"的实现 ✓；<code>crypto_aes</code> 末尾追加了 bytes 版
+  接口与 CBC/PKCS7 ✓。</li>
+<li><strong>例外（2026-10-14）</strong>：AES-256 与 GCM <strong>不是</strong>搬运来的（<code>examples/crypto/</code> 里没有对应实现），
+  是本模块内新写的 —— 因此它们<strong>必须有权威向量兜底</strong>（FIPS-197 单块 + NIST SP 800-38D 用例，
+  用 node:crypto 复算一致），不接受"自洽往返"当验收 ✓。
+  AES-128 那三个老函数（<code>key_expansion</code> / <code>aes_encrypt_block</code> / <code>aes_decrypt_block</code>）<strong>逐字未动</strong>：
+  它们已被现有调用方依赖、也过了向量校验，不做"顺手重构"。
+  GCM 用规范里的<strong>右移型参考算法</strong>（大端位串口径）而不是软件常见的"小端整数"版 ——
+  位序写错的典型症状是"空输入/单块对得上、一多块全错"，正好躲过小样例。</li>
+<li><code>crypto_base64</code>（原第 5 个子模块）已于 2026-10-07 <strong>删除</strong>：base64 归核心标准库，
+  <code>examples/crypto/base64.leno</code> 同步删除，调用方（音乐下载器 / Trae签到 / 本库测试）全部改走 <code>strings.*</code> ✓</li>
+</ul>
+<h2 id="验证">验证</h2>
+<p><code>test/test_crypto_vectors.leno</code>：断言值全部由 <strong>node:crypto 生成</strong>（权威），作为绝对期望值 ✓</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>向量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>md5("abc")</code></td>
+<td><code>900150983cd24fb0d6963f7d28e17f72</code>（另有 RFC 1321 全套 + 跨块 + 中文 UTF-8 + <code>md5_bytes</code> 长度用例）</td>
+</tr>
+<tr>
+<td><code>sha256("abc")</code></td>
+<td><code>ba7816bf…20015ad</code></td>
+</tr>
+<tr>
+<td><code>sha512("abc")</code></td>
+<td><code>ddaf35a1…fa54ca49f</code></td>
+</tr>
+<tr>
+<td><code>hmac_sha256("key","msg")</code></td>
+<td><code>2d93cbc1…bb1b8c628</code></td>
+</tr>
+<tr>
+<td><code>strings.to_base64(strings.from_bytes([0,1,2,253,254,255]))</code></td>
+<td><code>AAEC/f7/</code></td>
+</tr>
+<tr>
+<td>AES-128-CBC 往返</td>
+<td>key=<code>0123456789abcdef</code>、iv=<code>abcdef0123456789</code>、明文=<code>hello leno crypto</code>、密文=<code>fd0ebb65…f6fb4a09</code></td>
+</tr>
+<tr>
+<td>AES-128 / AES-256 单块</td>
+<td>FIPS-197 附录 C.1 / C.3：<code>69c4e0d8…b4c55a</code> / <code>8ea2b7ca…4b496089</code>（<strong>单向</strong>期望值，自洽往返测不出密钥扩展写错）</td>
+</tr>
+<tr>
+<td>GCM（AES-256）</td>
+<td>SP 800-38D 用例 13/14（全零 key/iv：空明文与 16 字节明文）、用例 15（60 字节明文 + 20 字节 AAD，密文与标签都锁）</td>
+</tr>
+<tr>
+<td>GCM（AES-128）</td>
+<td>同一组参数的用例 3（<code>42831ec2…</code> / 标签 <code>5bc94fbc…</code>）—— 证明"按密钥长度自动选"两条都对</td>
+</tr>
+<tr>
+<td>GCM 非 12 字节 IV</td>
+<td>16 字节 IV 的通用 J0 路径（key/iv 全零、16 字节明文）⇒ 密文 + 标签</td>
+</tr>
+<tr>
+<td>GCM 应用形态</td>
+<td>key=sha256(密钥串)、12 字节 nonce、AAD=<code>WB-AAD\0\|0x01\|lp('WBEV1')\|lp('sym-v1')\|0,0,0,1\|lp(keyId)\|2,0,0</code>、275 字节明文 ⇒ 密文/标签/往返</td>
+</tr>
+<tr>
+<td>GCM 拒绝篡改</td>
+<td>标签 / 密文 / AAD / 密钥 任一被改、密钥长度非法 ⇒ <strong>必须抛错</strong>（不许交付明文）</td>
+</tr>
+</tbody>
+</table>
+<pre><code>build\leno.exe leno_module\LenoCrypto\test\test_crypto_vectors.leno
+</code></pre>
+<h2 id="现状-待做">现状 / 待做</h2>
+<ul>
+<li>✅ 已收录：MD5、SHA-256、SHA-512、HMAC-SHA256、AES-128（ECB/CBC/PKCS7）、
+  <strong>AES-256（ECB 单块 + GCM）</strong>；base64 与文本⇄字节归核心标准库 <code>strings</code></li>
+<li>⏳ 待收录（<code>examples/crypto/</code> 里已有实现，可直接搬）：SHA-1、PBKDF2、ChaCha20、RC4、
+  RC5、TEA/XTEA/XXTEA、Speck、Vigenere、RSA
+  （MD5 于 2026-10-08 收录，触发点是<strong>酷狗 API 的签名就是 md5</strong> —— 见音乐下载器的酷狗源）</li>
+<li>⏳ 性能：<code>sha512_bytes</code> 里两个循环目前较慢（每轮都有 <code>OP_CAST_INT</code> 的开销，结果正确）⇒
+  见 <code>docs/待办_易用性痛点（TraeSign 移植实录）.md</code> 的 J1 ✓</li>
+<li>⏳ 性能（GCM）：实测 <strong>1365 字节 seal ≈ 27 ms</strong>（50 次合计 1373 ms；其中 GHASH 约 10 ms，
+  其余是 AES-256 的 14 轮 × 86 个块，逐轮都在新建 <code>Array[int]</code>）。对"每次运行解一次凭据"
+  这种用量完全够用；真要提速，方向是<strong>表驱动 + 就地改 state</strong>（现在每轮 <code>sub_bytes</code>/<code>shift_rows</code>
+  都分配新数组），但那属于重写核，得先有基准再动 —— 与 J1 同一条思路：别为"看起来快"改算法 ✓</li>
+<li>⏳ 可用性：GCM 目前只输出 16 字节标签（规范允许 4~16 字节截断），需要短标签时再补参数 ✓</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#设计约定">设计约定</a></li><li><a href="#验证">验证</a></li><li><a href="#现状-待做">现状 / 待做</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoCompress.html">← 上一篇</a><a href="../扩展模块/LenoFS.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

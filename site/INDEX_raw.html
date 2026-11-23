@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INDEX 原文 · 文档索引 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="INDEX_raw.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><span class="here">索引原文</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="docs-文档索引">docs/ 文档索引</h1>
+<blockquote>
+<h2 id="先看这里-2026-11-20-更新">📌 先看这里（2026-11-20 更新）</h2>
+<p><strong>快速找文档请用站点首页</strong> <code>site/index.html</code> —— 它按读者任务重新分了 7 类，</p>
+<p>首页顶部还有「两条主路径」直达卡（学 Leno / 查 API），全文搜索按章节定位。</p>
+<p>新的 7 类（<strong>分类逻辑在 <code>build_html.py</code> 的 <code>CATEGORIES</code>，不靠本文件</strong>）：</p>
+<p>① 入门 · 先读这些（6） ② 模块 API 参考（19） ③ 使用指南（9）</p>
+<p>④ 语言设计与实现（14） ⑤ GUI · 平台（11）</p>
+<p>⑥ 开发台账（12，首页折叠） ⑦ 性能 · 排查 · 历史（24，首页折叠）</p>
+<p>本文件余下的 10 节是<strong>历史索引</strong>：保留每篇的「一句话描述 + 状态」供生成器读取，</p>
+<p>其中的分组（一~八）是 2026-10-02 的旧口径，<strong>不再是首页分类</strong>。</p>
+<p>97 篇 md 的路径被 Leno 代码仓 67 个文件按名引用，故<strong>不物理移动</strong>，分类只在生成器里做。</p>
+<p><strong>本文件是 <code>docs/</code> 的唯一索引</strong>：分类、一句话主题、状态与过时标注。</p>
+<p>两份 <code>README</code>（<code>README.md</code> / <code>README_EN.md</code>）只保留几条最常用链接，<strong>找文档一律从这里进</strong>。</p>
+<ul>
+<li><strong>最后核对：2026-10-02</strong>（本轮：JIT 系 5 篇归档到 <code>docs/archive/</code>、5 篇杂名改名、</li>
+</ul>
+<p>17 篇加"历史 / 局部过时"头、新增本索引；明细见 <code>待办与路线图.md</code> 第六节）。</p>
+<p><strong>2026-10-10 追加</strong>：新增 1 篇『LenoSDL3_打包后窗口句柄下发静默失效排查记录.md』（仅登记新文档，其余状态未重核）。</p>
+<p><strong>2026-10-12 追加</strong>：新增 1 篇『线程并发能力修复追踪.md』（线程/并发待做台账 TH1…TH7，进第四节；仅登记，其余状态未重核）。</p>
+<p><strong>2026-10-12 追加（二）</strong>：新增 1 篇『类型可见性与use逃生阀修复追踪.md』（类型可见性待做台账 US1…US5，进第四节）；同日还新增/同步 3 篇：『语言摩擦与隐式契约清单.md』M9（类型位置限定名报错口径）、『语言陷阱速查.md』㉝（哪些类型不用 <code>use</code>）、<code>import使用指南</code> 未改（仅登记，其余状态未重核）。</p>
+<p><strong>2026-10-13 追加</strong>：修 <strong>M10</strong>（跨模块读<strong>没 export 的变量</strong>以前编译不报错、运行期静默 <code>null</code>；现编译期报错并给处方）—— 同步『语言摩擦与隐式契约清单.md』M10、『语言陷阱速查.md』<strong>新增 ㉞</strong>，并<strong>订正 ㉝</strong>（US1 之后"类型位置不能写限定名"已不成立 ✗→✓，此前只加了 ★ 注没改正文 ✗）。</p>
+<p><strong>2026-10-13 追加（二）</strong>：新增 1 篇『LenoSDL3_Card卡片控件设计文档.md』（GUI 卡片控件：尺寸模型 / 容器化 / 状态优先级 / 裁剪预算 + 实施台账，<strong>v2 已落地</strong>；进第三节）。同日<strong>框架侧</strong>落实：<code>sdl_card.leno</code> v2 + v2.1（容器化 <code>set_content</code> · <code>selected/pressed</code> · 源矩形裁切去 <code>pushClipRect</code> · <strong>圆角图 <code>image_radius</code></strong> · <strong>多角标 <code>badges</code>/<code>add_badge</code></strong> · 运行时 setter 全家桶）、<code>sdl_renderer.leno</code> 新增 <strong><code>drawTextureRounded</code></strong>（离屏 + 圆角蒙版「只乘 alpha」的<strong>自定义混合</strong>合成 —— ⚠ 不能用 MUL/MOD：它们只动 rgb、不动 alpha ⇒ 切口里原图被放大 2 倍照画 ✗，见速查附录 C）与 <code>currentTarget()</code>、<code>sdl_gridlayout.leno</code> 新增运行时 <code>set_cols()</code>、<code>sdl_window.leno</code> 句柄下发认识 <code>Card</code>、<code>SDL3.leno</code> 导出 <code>createCard</code>；演示件 <code>leno_gui/控件/复合控件/卡片/test_card.leno</code>；<strong>三条新踩坑</strong>进『SDL3常用API与易踩坑速查.md』<strong>附录 C</strong>。</p>
+<p><strong>2026-10-14 追加</strong>：<strong>修 <code>Card</code> 圆角图片的"每帧每卡离屏合成"⇒ 消掉真机实测的卡片闪烁 ✓</strong></p>
+<p>（症状：鼠标移过卡片触发整帧重绘时卡片区域在闪；机制：<code>drawTextureRounded</code> 每调用一次要</p>
+<p>「关裁剪 → <code>setRenderTarget</code> → <strong><code>SDL_RenderClear</code></strong> → 贴回」，22 张海报卡 = <strong>每帧 22 次</strong>，</p>
+<p>而同仓 <code>sdl_window.leno</code> 自己注释着"D3D 后端上 <code>SDL_RenderClear</code> 有短暂黑闪" ⇒ 放大后肉眼可见 ✗）；</p>
+<p>修法：渲染器抽出 <code>composeRoundedTexture(out,…)</code>（<code>out</code> 尺寸不符返回 null 不销毁 ✓），</p>
+<p><code>Card</code> 按卡缓存合成结果 <code>rrTex</code>（键 = 源纹理/裁切源矩形/尺寸/半径/着色 ✓）⇒ 稳态 <strong>0 次</strong> ✓。</p>
+<p><strong>验收</strong>：改前/改后同尺寸截图 <strong>MD5 完全相同</strong>（零视觉回归 ✓，同时反证缓存真的生效 ✓）、</p>
+<p>换尺寸/详情页大图/列表视图 ✓、5 个相关自测 exit=0 ✓；<strong>2026-10-14 用户实机确认"不闪了" ✓</strong>（<code>33eb18e</code>）。</p>
+<p>同步『LenoSDL3_裁剪过多导致闪烁排查记录.md』<strong>新增 §7.1</strong>（机制/修法/验收表 + 一个排查坑：</p>
+<p>用户正在动鼠标会让 hover 变化 ⇒ 截帧必然不同 ⇒ <strong>别把"鼠标移动"误判成"闪烁"</strong> ✗）、</p>
+<p>『LenoSDL3_Card卡片控件设计文档.md』§5.4b/台账、<code>sdl_card.leno</code> 文件头（不变式 ③→<strong>四条</strong> ✓）。</p>
+<p><strong>2026-10-14 追加（二）</strong>：<strong>修 VM 侧两处「传数据」基础设施 + 补 LenoWeb 首份文档</strong>：</p>
+<p>① <strong><code>_env</code> 非 ASCII</strong>：此前 <code>_env("X", "中文")</code> 在 Windows 上<strong>写失败</strong>（返回 <code>false</code>）且<strong>子进程看不到</strong></p>
+<p>（根因：窄口 <code>_putenv_s</code> 按 ANSI 代码页转 UTF-8 字节，CP936 下转换失败 ⇒ 值从没进 Win32 环境块，</p>
+<p>而 CRT 窄副本<strong>已被写入</strong> ⇒ 表现为"本进程读得回、子进程读不到"，极易被误判成"多行截断"✗）⇒</p>
+<p>修：非 ASCII 走 <code>SetEnvironmentVariableW</code>、读走 <code>GetEnvironmentVariableW</code>；<strong>纯 ASCII 仍走原路</strong></p>
+<p>（那条路会同步 CRT 窄副本 —— 进程内直接 <code>getenv</code> 的 C 库（如 libcurl）只认它 ✓）；</p>
+<p>② <strong><code>_exec</code> 补 stdin 喂入 + stdout/stderr 分流</strong>：<code>ExecResult</code> 增 <code>out</code>/<code>err</code>，<strong>保留 <code>output</code> = out 后接 err</strong></p>
+<p>（800+ 处老调用点零改动 ✓）；命令行整组包 <code>( )</code> ⇒ <code>A &amp; B</code> 里 A 的输出不再漏到父控制台 ✓；</p>
+<p>第 2 实参按类型分流（<code>Int</code>=超时 / <code>String</code>=stdin）⇒ <code>_exec(cmd[, timeout][, stdin])</code> 四种写法都合法；</p>
+<p>③ 新增 <strong><code>module_web.md</code>（LenoWeb 首份参考文档）</strong> —— 此前它的能力只在源码头注释与开发记录里，</p>
+<p>从 <code>docs/</code> 入口发现不了（实际后果：<code>web_gzip.leno</code> 635 行纯 Leno gzip 被误判成"Leno 没有 gzip"✗）；</p>
+<p>④ 订正 <code>module_strings.md</code> 的 <code>byte_len</code> 示例算术错（<code>6字节(中文)+5字节(ASCII)</code> 写成 <strong>9</strong> ✗→<strong>11</strong> ✓）；</p>
+<p>⑤ 新增用例 <code>assert/test_exec_streams_stdin.leno</code>（流分离 / stdin / 退出码 / 超时 124 / <code>&amp;</code> 整组重定向）</p>
+<p>与 <code>assert/test_env_utf8.leno</code>（ASCII 老行为 + 非 ASCII 写读 + <strong>跨进程</strong>取值 + 长值/多行）⇒</p>
+<p>套件 <strong>452 → 454 passed / 0 failed</strong> ✓；</p>
+<p>⑥ 『语言陷阱速查.md』<strong>新增 ㊲</strong>（二进制串上 <code>len()</code> 是字符数、不是字节数 —— 实测同一份 146 字节</p>
+<p>gzip 流 <code>len()</code> 报 127 ✗ / <code>byte_len()</code> 报 146 ✓，与 <code>GzipResult.inBytes</code> 对齐；顺带记 <code>slice</code> 闭区间）。</p>
+<p>⚠ <strong>验收边界</strong>：POSIX 侧改动与 Windows 同构（<code>( cmd ) &gt; out 2&gt; err &lt; in</code> + 临时文件），但这台机器</p>
+<p><strong>没有 WSL 发行版</strong>、无法实测 ⇒ <strong>POSIX 分支本次未经运行验证</strong>，需在 Linux/macOS 上跑一遍</p>
+<p><code>assert/test_exec_streams_stdin.leno</code> 与 <code>assert/test_env_utf8.leno</code> 才算收口。</p>
+<p><strong>2026-10-14 追加（三）</strong>：<strong>按「写 LenoWordBuddy 时提出的问题清单」修 3 处 + 订正 1 处文档不实</strong></p>
+<p>（清单由另一个 AI 提出、用户转述；本轮先把能定案的三条做掉 ✓）：</p>
+<p>① <strong>参数名撞保留字</strong>（清单第 6 条）：<code>func slice2(Array[int] arr, int from, int to)</code> 实测报 <strong>8 条</strong></p>
+<p>错误、首条是「期望参数名」，全部指向标点 ⇒ 看不出问题出在 <code>to</code> 是<strong>保留字</strong>上 ✗（白烧编译轮次）。</p>
+<p>修：<code>parser_func.c</code> 的「期望参数名」分支改用既有 <code>lexer_keyword_text</code> 反查（<strong>M5b 同族</strong>），</p>
+<p>报「'to' 是<strong>保留字</strong> ✗ 不能用作参数名」。顺带钉一个容易误判的事实：<strong><code>from</code> 不是保留字</strong></p>
+<p>（Leno 只有 <code>to</code>，来自 <code>for x to y</code> ✓）—— 用例里有正向对照 ✓；</p>
+<p>⚠ 同处按仓库既有口径<strong>两分</strong>（<code>error_use_list_name_hint</code> / 「不能使用关键字作变量名」同款：</p>
+<p><strong>内建类型 ≠ 保留字</strong> ✓）：<code>func g(int int)</code> 报「'int' 是<strong>内建类型</strong>（Leno 自带）✗ 不能用作</p>
+<p>参数名」，而 <code>func f(int to)</code> 才报保留字 —— 两句话分别指向两种改法 ✓；</p>
+<p>② <strong>裸 Dict 被第一次写入锁死元素类型</strong>（清单第 7 条）：<code>var out = mk()</code>（<code>mk(): Dict</code>，<strong>裸 Dict</strong>）
+  - 第一次 <code>out.set(k,v)</code> 把元素类型<strong>静默定死</strong> ⇒ 第二次写入报「参数 2 期望 'string'，但传入</p>
+<pre><code>'bool'」，而报错落在**第二处**、字面不提前因 ✗。修：`type_utils_try_update_dict_value_type` 记下
+
+锁定点（行/列，**存在 `Symbol` 上而不是 `TypeInfo` 上** —— 后者有驻留/共享实例，挂位置必然串台 ✗）
+
+⇒ 两条**独立实现**的写入路径（实例方法 `d.set(k,v)` 与索引赋值 `d[k]=v`）的报错统一回溯成
+
+「'out' 的元素类型是 **第 6 行第 9 列** 那次写入定死的」✓；
+
+⚠ 文案刻意压到 ~140 字节内：`msg` 是 `BUFFER_MEDIUM`(256) **栈**缓冲，第一版 ~220 字节被 snprintf
+
+从中间截断、切在 UTF-8 字符中间打出乱码 ✗（实测）；
+
+③ **补 `Dict.copy()`**（清单第 8 条）：Array / struct 都有、只有字典没有 ✗。语义按"与 `Array.copy()`
+
+对齐"定为**深拷贝**；返回类型用就地组合的关系型规格 `Dict[ARG0_KEY, ARG0_VALUE]` ⇒
+
+`Dict[string,int].copy()` 仍是 `Dict[string,int]` ✓（标成预制 `NATIVE_T_DICT` 会丢泛型 ——
+
+正是"裸容器 → any 传染"那类问题 ✗）。**过程中发现 `value_copy` 的字典分支有两个既有缺陷**：
+
+丢**插入序**（按哈希槽位重放 ⇒ `keys()`/`items()` 的"按插入序"保证被打乱 ✗）、丢 `type_info`
+
+（⇒ 拷出来退化成裸 Dict ✗；Array 那一支一直是拷的）⇒ 一并改为照 `order` 逐键重放 ✓；
+
+⚠ **清单第 8 条里的"窗口库没有请求关闭 API"是误判**：`Window.requestClose()`（`sdl_window.leno`）
+
+与**模块级** `SDL3.requestExit()` 都存在，且『SDL3常用API与易踩坑速查.md』第 44-52 行早就写着
+
+"托盘回调里没法 `return false` ⇒ 用 `requestExit`"（连同"`_exit(0)` 强杀会绕过收尾"的告诫）
+
+⇒ **不改代码**，只在此登记澄清 ✓；
+
+④ **订正 `module_dicts.md` 一处不实**：该文一直宣称"所有字典方法都支持两种调用方式"并给出
+
+`dicts.len(dict)` 对照表 —— 实测 `import dicts` 直接报「未知的原生模块 'dicts'」✗，
+
+字典**只有实例方法**（有模块形式的是**数组**：`arrays.copy(arr)` ✓），表已按实情重写；
+
+⑤ 新增用例 `assert/test_dict_copy.leno`（长度 / **插入序** / 深拷贝 / 整数键（字典的数组部分）/
+
+空字典，五组）与 `assert/test_diag_dict_lock_and_kw.leno`（保留字文案 + `from` 的正向对照 +
+
+两条锁定路径各钉「回溯文案 / **锁定行** / 报错行」+ `Dict[..., any]` **不该**被锁的反向 +
+
+`copy()` 的泛型保留正反）⇒ 套件 **454 → 456 passed / 0 failed** ✓；
+
+⑥ **本轮未做**（清单第 4、5 条，已与用户对过口径）：第 4 条"字节/文本载体不对称"的方向建议
+
+**反过来** —— 把字节的主口径定成 `string`、让 `LenoCrypto` 的对外 I/O 也收 `string`，
+
+而不是把 `strings` 改成 `Array[int]`（`Value` 是 `uint64_t` ⇒ `Array[int]` 存字节 = **8 倍**
+
+内存 + GC 压力，正是用户实测"1KB 信封 27ms"的来源 ✓）；第 5 条（`create*` 工厂返回类型该不该带
+
+`?`）宜先给"真会失败的工厂"收窄，再上「返回类型不可空却 `return null`」的编译期检查
+
+（顺序反了会一次刷出几百条告警 ✗）。
+
+**2026-10-14 追加（四）**：**LSP 缓存策略修正 —— 与编译器分开目录 + 一键禁用开关**：
+
+① **根因（机制，已实测坐实）**：符号表/模块缓存的 header 里烙着「运行中 exe 的指纹」
+
+（`bin_fp`，§8.112；取自 `GetModuleFileNameW(NULL)` ⇒ **当前进程自己的 exe**，口径 = size +
+
+mtime + 内容 FNV-1a），而 `leno_lsp.exe` 与 `leno.exe` 是**两个文件** ⇒ 两边写出的缓存
+
+**必然互判失效**（`sym_cache_deserialize` / `module_cache_deserialize` 都按 fail-closed 校验它）。
+
+两者共享 `.lenocache/` 的后果**不是**"互相污染"，而是**互相判死 + 互相覆盖**：任一方写下的
+
+缓存对方一读就丢，还要**白重扫一遍再写回去** ⇒ 在"边写代码边跑 CLI 验证"的典型工作流里
+
+两边反复交替失效（CLI 编译一次 ⇒ IDE 侧下一轮全扫；IDE 分析一次 ⇒ CLI 下一轮全扫）✗；
+
+② 修：LSP 改用**自己的** `&lt;项目根&gt;/.lenocache_lsp/`（`.gitignore` 同步加一行）⇒ 各自命中
+
+自己的缓存 ✓（代价：各自首次全扫一遍建缓存，一次性）。
+
+⚠ 实测抓到一个拼接 bug：`root_path` 由 `rootUri` 转来**不带尾随分隔符**（实测是
+
+`d:/CLeno/Leno`），第一版格式串拼出 `d:/CLeno/Leno.lenocache_lsp\` —— 项目目录名与缓存目录名
+
+**粘连**、目录被建到**上一级**去了 ✗ ⇒ 复用本文件既有的 `lsp_to_dir_with_sep` 归一化 ✓；
+
+③ 新增 `LENO_LSP_NO_CACHE=1` ⇒ **完全禁用磁盘缓存**（每次分析都实时全量扫描）。
+
+它同时是**一键判定**"某个提示到底是不是缓存引起的"的开关 ✓
+
+（另记：**不加**"启动时清空缓存目录" —— 任何 exe 变化都会让 `bin_fp` 变 ⇒ 旧缓存自动全失效，
+
+再加一层清目录只会白付一次全扫，YAGNI ✓）；
+
+④ 验证（命令行直接喂 LSP 协议，绕开 IDE）：默认模式 stderr 打出
+
+`[LSP-CACHE] cache_dir=d:/CLeno/Leno\.lenocache_lsp\` ✓、`LENO_LSP_NO_CACHE=1` 打出
+
+`disk cache DISABLED` ✓；再发一次真实 `initialize` + `didOpen` + `hover` ⇒
+
+**`.lenocache_lsp/faf03662c4378767.lenosymc` 真被写出** ✓（证明 LSP 的分析缓存现在落在
+
+自己的目录里，而不是与 CLI 混在 `.lenocache/`）；
+
+⑤ ⚠ **本次没动的两条**（用户观察到的"提示陈旧"若仍在，主因大概率在这两条，**不在**缓存）：
+
+(a) **LSP exe 陈旧** —— 本次就亲身撞到：`Dict.copy()` 明明已实现，IDE 却报
+
+「`Dict[string, any]` 没有方法 `copy`」，根因是 `leno_lsp/build/leno_lsp.exe` 还是旧版
+
+（**native 方法表是烙在 exe 里的**）⇒ 改完 native 侧必须**重建 LSP**；
+
+(b) **未保存的编辑** —— LSP 的**诊断**用的是内存文本（`lsp_compile_and_get_errors(content,
+filename)` ✓ 实时），但 **hover / 补全 / 定义跳转**里的"符号信息"走
+
+`module_symbol_table_create(path) + module_symbol_table_scan()` ⇒ **从磁盘读**
+
+（符号表没有"内存源码覆盖"入口）⇒ 磁盘上还没有的编辑，符号类能力看不到 ✗。
+
+要治 (b)：给 `module_symbol_table` 加一个"源码 provider"入口（LSP 注册回调，scan 时优先用
+
+编辑器里的文本、并跳过磁盘缓存），属**独立一项**，待与用户确认现象后再做。
+
+**2026-10-14 追加（五）**：**LSP「波浪线陈旧」真因查明并修复 —— 是**进程内**缓存，不是磁盘缓存**
+
+（用户报的现象是**波浪线**，据此重新定位；⚠ **订正本文件（四）⑤(b)**：那里写"诊断用内存文本
+
+⇒ 实时"**不完整** ✗ —— 诊断**自身**的语法/类型判断确实走内存文本，但它**解析 import 的依赖**
+
+时用的是**进程内缓存**（导出名 / 符号表）⇒ 依赖改了，诊断照样陈旧 ✗）：
+
+① **两处进程内缓存都没被 LSP 管住**：
+
+· `module_ast_exports.c` 的 `g_ast_export_cache`（路径 → 导出名清单）——**连失效判据都没有** ✗
+
+（路径命中就返回，永不过期），也没有清理入口；语义分析判「模块 'm' 中没有方法 'x'」
+
+走的就是它（`visit_module.inc` → `module_has_method` → provider）⇒ **正是波浪线的来源** ✓
+
+· `module_symbol_table` 的 `g_sym_memo`（符号表记忆化）—— 有 mtime/size 判据、**也有**
+
+`module_symbol_table_reset_memo()`，头文件注释白纸黑字写着「**LSP 这类常驻宿主应在每次
+
+请求前调用**」，而 **LSP 一次都没调** ✗（只有 `main.c` 两个编译入口调了）；
+
+② 修：`g_ast_export_cache` 补**内容哈希**判据（`serialize_source_hash`，文本读入 + FNV-1a）
+- 新增 `module_ast_exports_cache_clear()`；LSP 在 `compiler_analyze_with_filename` 开头
+
+  **每轮分析前**调用 `module_symbol_table_reset_memo()` + `module_ast_exports_cache_clear()`
+
+  （与 `main.c` 两处口径一致 ✓，`main.c` 也补上了后者）；provider 改为**先读源码算哈希再查缓存**
+
+  （未命中时直接用这份 src 去 parse ⇒ 不重复读文件 ✓，命中多付"读一次文件 + 一次 FNV"）；
+
+  ⚠ 判据用**内容哈希**而不是 mtime/size：Windows 的 `st_mtime` 只到**秒** ⇒ 同一秒内改文件会漏 ✗；
+
+  ③ **对照实验**（同一场景，旧 exe vs 新 exe；`b.leno` 内容一字未改，只给 `a.leno` 补上 `world()`）：
+
+  · 修复前：`改依赖前 count=1` → **`补上 world() 之后 count=1`**（仍报"模块 'a' 中没有方法 'world'"✗）
+
+  · 修复后：`改依赖前 count=1` → **`补上 world() 之后 count=0`**（错误消失 ✓）
+
+  ⇒ 症状复现 + 修复生效，双向坐实 ✓；
+
+  ④ 该修复**进不了 assert 套件**（套件跑 CLI = 一次性进程，复现不出"同一进程内跨请求、中间改文件"
+
+  ⇒ 新增独立自检 `leno_lsp/test_cache_refresh.ps1`（判据 1 → 0，退出码 0/1）✓；
+
+  ⚠ **仍未做**（与本次无关、但仍是 (b) 的剩余部分）：**未保存的编辑** —— hover/补全/跳转里
+
+  那些"符号信息"走 `module_symbol_table_create(path) + scan()` ⇒ 从磁盘读，
+
+  磁盘上还没有的编辑看不到；要治它才需要给符号表加"源码 provider"入口 ✓
+
+  验收：重建 `build\leno.exe` 后套件 **456 passed / 0 failed** ✓（CLI 侧无回归）。
+
+  **2026-10-14 追加（六）**：**跨模块 struct 撞名：从「静默读错字段」改成编译期拦截**（用户踩坑实录）：
+
+  现象（用户报告）：自己的文件里定义 `struct Session`，同时又 import 了 LenoWeb
+
+  （`web_net.leno` 也 `export struct Session`）⇒ **静默读错字段** ✗。
+
+  最小复现（两个 Session，字段同名、顺序相反）：`name = 7` / `count = from_a` —— **一个字都不报** ✗。
+
+  机制：字段索引是**编译期**按"本文件看得见的那份定义"算出来的**常量**，而对象按**定义它的那个模块**
+
+  的布局创建 ⇒ 不是"哪边定义赢了"，而是"索引按 A 算、布局按 B 存"⇒ 必然错位 ✓。
+
+  修（`visit_type_def.inc` 的 struct 定义处）：比对**已导入模块导出的同名 struct**，
+
+  判据 = 字段**数量 + 逐字段名（顺序敏感）**：
+
+  · **异形** ⇒ **编译错误**（`[语义错误]`；必然静默错值，不能放过 ✗）
+
+  · **同形** ⇒ **警告**（新增 `WARN_STRUCT_NAME_CLASH`；当前能跑，但任一方改字段就静默错值 ✗
+
+  —— 与 native 那条 `WARN_NATIVE_TYPE_NAME_CLASH` 同口径 ✓）
+
+  · 符号表没记字段（老缓存 / 只有数量）⇒ 判不了 ⇒ 退回警告（宁轻勿误报错 ✓）
+
+  ⚠ 同族此前只覆盖"脚本 struct 撞 **native 类型**"⇒"脚本 struct 撞脚本 struct"这一格是空的 ✗；
+
+  ⚠ 这是**有意的破坏性修复**：既有代码里若真有这种异形撞名，会**编不过** —— 但那代码本来就必然错值 ✓
+
+  （全量套件 456 → **457 passed / 0 failed** ⇒ 仓库既有代码**无一中招** ✓）。
+
+  用例 `assert/test_diag_struct_name_clash.leno`（异形 ×2 / 同形 / 不撞名，四条 ✓）；
+
+  『语言陷阱速查.md』**新增 ㊳**，并**订正上一轮的编号撞车**：把上轮新增的"二进制 len()"由 ㊱ 改为
+
+  **㊲** —— ㊱ 早已被 2026-10-13 的"闭包值捕获"占用 ✗（本条对本文件里的那处引用也一并订正 ✓）。
+
+  **2026-10-14 追加（七）**：**C / Java / JS 风格三元 `条件 ? a : b` ⇒ 定向报错**（用户提出）：
+
+  此前 `?` 在表达式位置**没有中缀规则** ⇒ 只报「期望 ';'」「期望 ')'」这类**指不出真因**的话 ✗。
+
+  修（`parser_expr.c` 的 Pratt 循环之后）：遇到表达式位置的 `TOK_QUESTION` ⇒ 一条
+
+  「Leno **没有** `条件 ? a : b` …… 请写成 `if 条件 then a else b`（多分支可链 `eif`）」，
+
+  并把 `? expr : expr` **整段吃掉** ⇒ 只报 1 条、**不刷级联**（级联会盖住这条真因 ✗）。
+
+  ⚠ 不误报的前提：`?` 在 Leno 里另外三个**合法**用途各有独立 token / 路径 ——
+
+  类型位置的 `Type?`（`parse_type` 内部消费）、`?.`（安全访问）、`??`（空合并）
+
+  ⇒ 走到这里的 `TOK_QUESTION` 只可能是"想写三元" ✓。
+
+  实测：错误场景 **1 条**错误；合法场景（`if-then-else` / `eif` 链 / `int?` / `??`）
+
+  输出 `20 B 0` ✓；套件 457 → **458 passed / 0 failed**（**零误报** ✓）。
+
+  用例 `assert/test_diag_c_style_ternary.leno`（顺带断言"只有 1 条 error"，钉住不刷级联 ✓）；
+
+  『语言陷阱速查.md』**新增 ㊴**（含"别和 `Type?` / `?.` / `??` 搞混"的对照 ✓）。
+
+  **2026-10-14 追加（八）**：**跨语言习惯的定向报错补齐**（接上一条 —— 用户点出这类报错
+
+  主要是给 **AI** 用的：AI 的训练数据里 C / JS / Python 写法太密，得靠报错把它拉回来 ✓）：
+
+  先**侦察**了 10 个高频习惯的现状，避免做重复的事 ✓：
+
+  · **已有**：`&amp;&amp;` / `||` / `!`（词法层就给"请用 'and'"）、`.length` 当属性读（已有很准的
+
+  "取长度请写 `x.len()`"）、`var x: int`（D6）、`for x in arr`（D3）、`True` / `False`（G2）、
+
+  `? :` 三元（本文件 2026-10-14 追加（七）✓）；
+
+  · **`else if` 本来就合法** —— 这条是侦察才发现的 ✓（否则会白做一条提示 ✗）；
+
+  · **缺的 3+1 条已补**：
+
+  ① C 风格 `for (初始化; 条件; 步进)` —— 判据 = "括号里有 `;`"，**不是**"见到 `(`"
+
+  ⇒ 不误伤 `for (-3):(-1) to k` 这种**括号边界**（它是合法写法 ✓）；
+
+  ② 语句入口的跨语言关键字 `let` / `function` / `def` / `elif` / `elseif` —— 判据只在
+
+  **语句开头**命中 ⇒ `var let = 5` 这种"真·同名变量"完全不受影响 ✓；
+
+  ③ `.push` / `.append` / `.size()` / `.contains()` / `.indexOf` / `.removeAt` / `.delete`
+
+  等**同义不同名**的别名表（加在 `native_instance_method_hint`，即 C1 相似名提示那一处）
+
+  —— 编辑距离兜不住它们（`push`→`add` 差 3，超过阈值 2 ⇒ 原先**零建议** ✗），
+
+  故改用白名单映射，且比较**不区分大小写**（覆盖 `indexOf` / `removeAt` ✓）。
+
+  三条都做到**只报 1 条、不刷级联**（把整段旧语法吃掉）：C 风格 for 跳掉 `( … )` + 紧跟的 `{ }`；
+
+  报关键字后跳到行尾但**留着 `{` 再整块跳** —— 否则 `function f() {` 的函数体会退化成顶层语句、
+
+  末尾那个 `}` 再报一条「期望表达式」✗（实测：不保留时 `let`+`function` 一个文件报 5 条而非 3 条）。
+
+  验证：错误场景各 1 条（`let`+`function`+`elif` 合起来 **3 条**，原为 **9 条**；C 风格 for
+
+  从 7 条降到 **1 条**）；反向场景（四种合法 for 含括号边界 / `var let` / `else if` /
+
+  `add`·`len`·`has`）全部照常 ✓；套件 458 → **459 passed / 0 failed**（仓库既有代码**零误伤** ✓）。
+
+  用例 `assert/test_diag_xlang_habits.leno`；『语言陷阱速查.md』**新增 ㊵**（含"不会误伤"的三条 ✓）。
+
+  **2026-10-13 追加（三）**：登记 **M11**（⏳ **待修**）—— struct **方法**里 `new B(键 = 隐式自字段)` 会报「未定义的变量」（写 `self.` 或先 `new B()` 再赋值都正常；**只在方法里犯、不静默错值**）：『语言摩擦与隐式契约清单.md』新增 **M11** 节（6 个探针的边界表 + 疑似定位点，**实现侧 `src/semantic` 未动**）、『语言陷阱速查.md』新增 **㉟**；同日**订正三处**旧说法（曾写成"编译器把 self 切成 B"，不准确 ✗）：`sdl_card.leno` 注释、『LenoSDL3_Card卡片控件设计文档.md』第 4 条坑、『SDL3常用API与易踩坑速查.md』**附录 C** 那条标题。
+
+  **2026-10-13 追加（三-修）**：**M11 ✅ 已修** —— 真因**不是**"隐式 `self` 失效"✗，而是**方法体改写器**（`transform_method_body`，`src/semantic/semantic_visit_method.c`）的 **switch 白名单漏了 `AST_STRUCT_INIT`** ⇒ `new B(键 = 值)` 的**值**整段落进 `default:` 被**静默跳过** ⇒ 值里的裸字段名没被改写成 `self.字段` ⇒ 报「未定义的变量」。修法：补一个 case、**只递归 `field_values[]`**（⚠ 不碰构造目标的字段名 —— 当裸名改写会造出 `self.k` 假字段 ✗）。**同族排查**：把该白名单与 `leno_ast.h` 的 AST 枚举**逐项对了一遍**（只剩 `AST_RANGE` 未递归，但**构造不出可复现失败用例** ⇒ 不当作 bug 修、仅登记）。验收：`assert/test_method_new_implicit_self.leno`（6 条边界逐条对应，含 ⑥「B 有同名字段 ⇒ 取**外层** 7、**不是** 99」这条防**静默错值**的钉子）；套件 **452 passed / 0 failed**。『语言摩擦与隐式契约清单.md』M11 收口、『语言陷阱速查.md』**㉟ 翻案**（"⏳ 待修"→"✅ 已修"，并写明真因与当初猜测不同 ✗）。
+
+  **2026-10-13 追加（四）**：**框架侧修 2 处 + 应用侧新增 1 页**（都真机实测过，坑都进速查 ✓）：
+
+  ① `win.setRootAt` 在 **run() 之后换根是静默 no-op**（主循环的绘制/派发只认 `registerOnly` 抓的快照 `_runRoots[i]`，而它只改了 `self.root` 这个布局字段 ⇒ 界面纹丝不动、日志却说换成功 ✗）⇒ 加 `_syncRunRoot()` 同步 ⇒ 运行时**整页切换**（列表 ⇄ 详情）可用 ✓；
+
+  ② 列表/下拉/菜单的**行高亮圆角锚错了边**（`atBottom` 拿行自己的矩形补圆角，而末行常只露一半 ⇒ 圆角落到面板底边下方 ⇒ 面板两个底角被方角铺满）+ 内容裁剪 `_int(ph)+1` 让末行文字出框 1px ⇒ 收敛成渲染器共用件 **`fillRowInPanel`**（只填「行矩形 ∩ 面板圆角矩形」，圆角**锚在面板的边**）+ 裁剪改 `ceil` 精确覆盖；`sdl_combobox` / `sdl_listbox` / `sdl_menu` 三处调用点改调它 ✓；
+
+  ③ `leno_gui/应用/影视海报墙/` 新增**影片详情页**（点卡片进入：大海报 + 评分环 + 年份/分类/简介 + 收藏/播放；Esc/返回切回，网格状态原样保留 ✓；自检钩子 `WALL_DETAIL` / `WALL_BACK`）；
+
+  速查附录 C 相应新增 3 条（圆角纹理用自定义混合 · 行高亮锚点与裁剪 · `setRootAt` 运行时换根）。
+
+  **2026-10-13 追加（二十九）**：**A1 第七批：`TreeView` 进链条 —— A1「键盘可用」全线打通 ✓**：
+
+  ① 语义：`↑/↓` 在**可见行**里移动（`flatten()` 的 `flatIds` ✓）、`Home/End` 首末、`→` 展开、`←` 收起、
+
+  **Enter = 激活**（新增 `on_activate(func(id))` ✓ 与 `ListBox` 同款 ✓）；一律复用公开入口
+
+  （`select(flatIds[i])` / `expand(id, bool)` ✓ ⇒ 与鼠标同口径 ✓）；
+
+  ② 本轮**先按"先 grep"的口径查了** —— `TreeView` **本来确实没有**键盘导航 ✓（与 `Table` 那次相反 ⇒
+
+  这次是真要新写 ✓，没有重复实现 ✓）；
+
+  ③ ⭐ 抓到一个"静默不生效"：建树的键名是 **`items`**（不是 `nodes` ✗）—— 写成 `nodes` 只会得到**空树**
+
+  （`get_visible_count()==0`、**没有任何报错** ✗）；好在 `dochk.check` 会提示"不认识的选项 'nodes'" ✓；
+
+  ④ v1 边界（记档 ✓）：`←` 对**叶子**不做"回父级" ✗（标准行为会回父级 ✓）；
+
+  ⑤ 验收（`test_focus_nav.leno` 第八行树 ✓）：Tab→ 树（focus=true、可见行=1）→ ↓ 选中根 →
+
+  **→ 展开 ⇒ 可见行=3** → ↓ 到子节点 → ↑ 回根 → **← 收起 ⇒ 可见行=1** → Enter 激活次数=1 →
+
+  Tab 回卷到 A ✓；
+
+  ⑥ 回归：海报墙 ✓、清理大师 exit=0 ✓、主题件 ✓、opacity 件 ✓、`test_treeview.leno` 编译无错 ✓；
+
+  ⑦ **A1 收尾状态**：进链条 = `Button / CheckBox / RadioButton / Toggle / Slider / ListBox / ComboBox /
+   TabControl / Table / TreeView` ✓。仍未做：① 链只扫**顶层控件** ⇒ 容器里的子控件 Tab 到不了 ✗
+
+  （修法同主题递归：走"回调出口" ✓）；② 方向键在兄弟控件间移动 ✗；③ `tabIndex` ✗。
+
+  速查附录 C 已补第七批与 A1 现状 ✓。
+</code></pre>
+<p><strong>2026-10-13 追加（二十八）</strong>：<strong>A1 第六批：<code>TabControl</code> 与 <code>Table</code> 进焦点链</strong>（+ 修一个既有 bug ✓）：</p>
+<p>① <code>TabControl</code>：←/→ 切页签（走 <code>set_active</code> ⇒ 与鼠标点页签<strong>同一入口</strong> ✓）；本版让它<strong>可停靠</strong></p>
+<p>（不然 ←/→ 没有触发时机 ✗；<code>show_header:false</code> 的场合可 <code>set_focusable(false)</code> 退出 ✓）；</p>
+<p>② <code>Table</code>：↑/↓/Home/End/翻页/Ctrl+A 用它<strong>既有</strong>的导航 ✓ + 焦点环 ✓；</p>
+<p>③ ⛔⛔⛔ <strong>本轮最值钱的教训：写新能力前先搜"这个控件是不是已经有这套能力"</strong> —— 我给 <code>Table</code></p>
+<p>又写了一份键盘导航 ⇒ 同一颗键被处理<strong>两次</strong> ⇒ 选中/回调双触发 ✗；真相是 <code>Table</code> <strong>早就有</strong></p>
+<p>那一套（<code>process</code> 里"键盘导航：表格聚焦时…" ✓），只是<strong>缺一个焦点守卫</strong> ✗。</p>
+<p>口径：先 grep（<code>isKeyDown</code>/<code>Scancode.</code>/现成的 <code>select_key</code> ✓），再决定"补守卫"还是"新写" ✓；</p>
+<p>④ ⛔ <strong>顺带修掉一个既有 bug（实测抓到 ✓）</strong>：那段导航的注释写着"<strong>表格聚焦时</strong>"、代码却是</p>
+<p><code>if ev.isKeyDown() {</code> —— <strong>没查焦点</strong> ✗ ⇒ 表格<strong>没聚焦也在吃键</strong> ✓（症状：别的控件按</p>
+<p>↓/Home/End，<strong>表格偷偷换选中行</strong> ✓）。修法 <code>if focused and ev.isKeyDown() {</code> ✓</p>
+<p>—— <strong>注释说"聚焦时"，代码就得真的判聚焦</strong> ⭐；</p>
+<p>⑤ <code>Table</code> <strong>刻意不进窗口的激活表</strong> ✓（Enter 由它自己那套导航处理 ✓，否则又是双触发 ✓）；</p>
+<p>⑥ 验收（<code>test_focus_nav.leno</code> 加页签 + 表格两行 ✓）：Tab→ 页签（页=0）→ → 1 → → 2 → ← 1 ✓；</p>
+<p>Tab→ 表格（focus=true、<strong>行=-1</strong> ✓ —— 修前这里会被别处的键偷偷改成 2 ✗）→ ↓ 0 → ↓ 1 →</p>
+<p>End 3 → Home 0 → Enter <strong>双击回调=1</strong> ✓ → Tab 回卷到 A ✓；</p>
+<p>⑦ 回归：海报墙 ✓、<strong>表格三个既有探针</strong>（<code>test_table_cell_colors</code> / <code>test_table_image_cache</code> /</p>
+<p><code>test_nested_context_menu</code> ✓）、清理大师 exit=0 ✓、主题件 ✓。速查附录 C 已补第六批与两条方法论 ✓；</p>
+<p>⑧ 仍未进链条：<code>TreeView</code>（下一轮 ✓）。</p>
+<p><strong>2026-10-15 追加（三十三）</strong>：<strong>把选项对账扫出的三条"传了没生效"逐条修掉</strong> ✓（都是真命中 ✓）：</p>
+<p>① <code>应用/IDE布局/ide_4way.leno</code> 的 <code>createTreeView({placeholder: …})</code> ✗ —— TreeView 白名单没这个键</p>
+<p>⇒ 静默无效 ✓ ⇒ <strong>补功能</strong>：TreeView 新增<strong>空态提示</strong>（没有节点时居中画一行暗色文字 ✓、</p>
+<p>白名单同步 ✓；只在空态调一次 <code>measureString</code> ✓ 不违反"别在每帧渲染里量字" ✓）；</p>
+<p>② <code>控件/…/test_tab_table.leno</code> 的 ListBox 传 <code>multi_select</code> ✗（那是 <strong>Table</strong> 的键 ✓）⇒ 改 <code>mode: 1</code></p>
+<p>（= <code>MODE_MULTI</code> ✓）；</p>
+<p>③ 5 个样例给<strong>自量尺寸</strong>的 <code>CheckBox</code>/<code>RadioButton</code> 传 <code>w/h</code> ✗（传了不生效 ✓）⇒ 去掉 ✓；</p>
+<p>⚠ <code>Toggle</code> 白名单<strong>含</strong> <code>w/h</code> ⇒ 同样写法它不报 ✗ —— 不一致先记档 ✓；</p>
+<p>④ 新增验收件 <code>leno_gui/自测/test_treeview_placeholder.leno</code> ✓ —— <strong>A/B 对照 + 离线比像素</strong>：</p>
+<p>左树传 placeholder、右树不传（都无节点 ✓）⇒ 左 <strong>904</strong> 个文字像素（max 178）、右 <strong>0</strong> 个（max 42）✓；</p>
+<p>⑤ 编译检查：7 个改过的入口 <code>--check</code> 全通过 ✓、<code>[ui]</code> 警告全清零 ✓。</p>
+<p><strong>2026-10-13 追加（三十二）</strong>：<strong>A3：选项对账（<code>dochk</code>）覆盖铺满 + 修两类误报</strong>：</p>
+<p>① 覆盖缺口（原来<strong>一个都没接</strong> ✗）：<code>Window.init</code>（<code>createWindow</code>）/ <code>layout.set()</code>（建</p>
+<p>HBox/VBox/AnchorBox）/ <code>filedialog</code> 三入口 / <code>popmenu</code> / <code>tray</code> ✓ 全接上；</p>
+<p>⚠ <code>layout</code> 是"半接入"陷阱：<code>add(child, opts)</code> 那条<strong>早就有对账</strong> ✓、<code>set()</code> 这条路<strong>完全没有</strong> ✗；</p>
+<p>② 误报（对账一旦误报就退化成噪音 ✗）：窗口侧通用键 <code>z</code>（<code>addXxx</code> 读它做层级 ✓）**33 份白名单里</p>
+<p>一个都没有** ✗ ⇒ 在 <code>sdl_opts</code> <strong>一处豁免</strong> ✓（<code>zz</code> 这类错拼照报 ✓）；<code>createWindow</code> 的<strong>门面键</strong></p>
+<p><code>icon</code>（<code>SDL3.createWindow</code> 收下、再<strong>原样透传</strong>给 <code>init</code> ✗）漏在白名单外 ⇒ 把海报墙的合法用法</p>
+<p><strong>报了出来</strong> ✓（实测踩到 —— 这正是"跑真应用查误报"的价值 ✓）；</p>
+<p>③ "STRICT 前缀"原来只是<strong>注释里的口号</strong> ✗（<code>take_log()</code> 存<strong>原文</strong>、前缀只打 stdout ⇒ 断言不到 ✗）</p>
+<p>⇒ 抽成纯函数 <code>dochk.format_line()</code> ✓ ⇒ 自测<strong>直接断言</strong> ✓；</p>
+<p>④ 新增验收件 <code>leno_gui/自测/test_opts_live.leno</code> ✓（纯逻辑那个件测不到"<strong>哪些入口真的接了</strong>" ✗）：</p>
+<p>VBox 错键必报 ✓ / 对键零报 ✓ / <code>createWindow</code> 同 ✓ / <code>addButton</code> 传 <code>z</code> <strong>零报</strong>、传 <code>zz</code> <strong>照报</strong> ✓ 全通过；</p>
+<p>⑤ <code>assert/test_ui_opts_guard.leno</code> 补三组断言（STRICT 前缀 ✓ / <code>z</code> 豁免 ✓ / 内边距键四套写法的近名提示 ✓）；</p>
+<p>⑥ <strong>规模验证</strong>：<code>leno_gui/应用/</code> <strong>十个应用</strong>各跑一遍筛 <code>[ui]</code> ⇒ <strong>零误报</strong> ✓（按新定规配</p>
+<p><code>LENO_SDL_FRAMES=30</code> ✓ 全程无人值守 ✓）；顺手修掉我自己探针里的两处无效键</p>
+<p>（主题探针给自量尺寸控件传 <code>w/h</code> ✗ ⇒ CheckBox/Radio 删掉、Spinner/Ring 改 <code>size</code> ✓）；</p>
+<p>⑦ <strong>内边距键仍是四套</strong>（<code>pad</code> / <code>pad_x·pad_y</code> / <code>padX·padY</code> / <code>padding</code>）⇒ <strong>不强行改名</strong>：</p>
+<p>Button 的 <code>padding</code> 是<strong>文字内边距</strong>、Card 有 <code>pad</code>+<code>content_pad</code> 两种语义、layout 是<strong>四边非对称</strong></p>
+<p>⇒ 收敛会丢表达力 ✗（且牵动 10 个文件）⇒ 改为自测钉住"<strong>跨套用错必有近名提示</strong>" ✓；</p>
+<p>⑧ 编译检查：三个 UI 断言件 + 十个应用 <code>--check</code> 全绿 ✓。</p>
+<p><strong>2026-10-13 追加（三十一）</strong>：<strong>A1 第八批：焦点链递归进容器（A1 真正收尾 ✓）</strong>：</p>
+<p>① 病根：<code>Window._focusables()</code> <strong>只扫 <code>widgets</code></strong> ✗ ⇒ 装进容器（HBox/VBox/AnchorBox/GridLayout/</p>
+<p>Panel/GroupBox/Splitter/ScrollView/Card/页签页）的控件 <strong>Tab 永远到不了</strong> ✗（连根布局 <code>root</code></p>
+<p>都不扫 ✓ ⇒ 走 <code>setRoot</code> 布局的应用里所有控件都不在链条里 ✗）；</p>
+<p>② 复现（先抓实证 ✓）：面板里放按钮 ⇒ 链尾本该是它，实际 Tab <strong>直接回卷到 A</strong> ✓（<code>D.focus=false</code> /</p>
+<p><code>A=true</code>，<strong>零报错</strong> ⇒ 又是"少停一站"这类静默失效 ✗）；</p>
+<p>③ 修法：<code>_focusables()</code> 递归收集 + <strong>去重</strong> ✓（同一控件既在 <code>widgets</code> 又在子树里 ⇒ 不去重会两次停靠 ✗）；</p>
+<p>容器取子控件<strong>全走公开 API</strong> ✓（<code>Panel/GroupBox.children</code>、<code>Splitter._first·_second</code>、</p>
+<p><code>ScrollView._content</code>、<code>TabControl._pageLayouts</code> ✓；<code>Card._content</code> 是 <code>pri</code> ✗ ⇒ 用公开的</p>
+<p><code>content_widget()</code> ✓ —— <strong>不用</strong>再加"回调出口"，比主题那次省事 ✓）；</p>
+<p>④ 修后：<code>D.focus=true</code> → Space ⇒ <code>hitsD=1</code>（与鼠标同路 ✓）→ 再 Tab 才回卷 A ✓；第一~第七批断言</p>
+<p><strong>一条没回归</strong> ✓；</p>
+<p>⑤ 回归（全部无人值守 ✓）：海报墙（走 <code>setRoot</code> ⇒ 现在 root 也进链条 ✓）/ 清理大师 <code>--autotest</code> /</p>
+<p>主题验收件 / 不透明度探针 / Splitter 探针 ✓ 全绿。</p>
+<p><strong>2026-10-13 追加（三十 ①）</strong>：<strong>定规：自测跑应用一律带"无人值守"参数</strong>（用户点名 ✓）：</p>
+<p>我此前回归里<strong>裸跑清理大师</strong> ⇒ 窗口一直挂着<strong>等手动关闭</strong> ✗（每次都让作者手动点掉 ✓）。</p>
+<p>其实库和示例<strong>早就备好了钩子</strong> ✓：任意应用 <code>LENO_SDL_FRAMES=&lt;n&gt;</code>（<code>sdl_window.leno:1448</code>，</p>
+<p>跑满 n 帧自动退出 + 确定性摘要 ✓，配 <code>SDL_VIDEODRIVER=dummy</code> 可完全无窗口 ✓）；海报墙</p>
+<p><code>WALL_SHOT/WALL_AT</code> ✓；清理大师 <strong><code>--autotest</code></strong>（扫到 done ⇒ 存图 ⇒ <code>_exit(0)</code> ✓）；</p>
+<p><code>leno_gui/自测/test_*.leno</code> 自带 <code>_exit(0)</code> ✓。<strong>实测</strong>：四条回归全部自行退出 ✓</p>
+<p>（<code>AUTOTEST EXIT</code> ✓ / 海报墙截图后收工 ✓ / 两个探针自带退出 ✓）⇒ 不再需要人工关窗 ✓。</p>
+<p>⚠ 注意：<code>LENO_SDL_FRAMES</code> 数的是<strong>帧</strong>（且去掉节流 ✓）⇒ 依赖 <code>addTimer</code> 逐步推进的探针</p>
+<p><strong>不能</strong>用它 ✗（会被几帧截断；那类件自带退出即可 ✓）。已记进速查（⭐ 自测跑法 ✓）。</p>
+<p><strong>2026-10-13 追加（三十）</strong>：<strong>A1 第七批：<code>TreeView</code> 进链条 —— A1「键盘可用」全线打通 ✓</strong>：</p>
+<p><strong>2026-10-13 追加（二十七）</strong>：<strong>A1 第五批：<code>ComboBox</code> 进焦点链</strong>（↓/↑ · Home/End · Enter 开关下拉 · Esc ✓）：</p>
+<p>① 语义：<code>↓/↑</code> 移动选中（走 <code>set_selected</code> ⇒ 回调 + 滚入视野 + <strong>内嵌 Edit 文本同步</strong>一起 ✓）、</p>
+<p><code>Home/End</code> 首末、<strong>Enter/Space 开关下拉</strong>（开着时按 = 选定并收起 ✓）、<code>Esc</code> 收起 ✓；</p>
+<p>顺手把"打开下拉"抽成<strong>单一入口 <code>open_list()</code></strong> ✓（原来内联在点击路径里 ✗，键盘要用就得抄第二遍 ✓）；</p>
+<p>键盘分支刻意放在<strong>所有"弹层捕获"守卫之前</strong> ✓（下拉开着时鼠标被捕获区拦掉，但键盘必须照常工作 ✓）；</p>
+<p>② ⛔⛔ <strong>本轮抓到的最值钱的坑：键盘 Enter/Space 只能由"一处"处理</strong> —— 键事件是<strong>广播</strong>的 ⇒</p>
+<p>窗口焦点链调了 <code>activate()</code> ✓，控件 <code>process</code> 又收到同一个键再 toggle 一次 ⇒ 两边<strong>互相抵消</strong> ✗：</p>
+<p><code>ComboBox</code> 的 Enter 变成"<strong>开了又关</strong>"（<code>isOpen()</code> 仍是 false ✓）、<code>ListBox</code> 是<strong>回调发两次</strong> ✓。</p>
+<p>口径：<strong>Enter/Space 归窗口</strong>（统一调 <code>activate()</code>）、<strong>方向键/Esc/Home/End 归控件自己</strong> ✓；</p>
+<p>③ ⭐ 方法论：<strong>自测件要"数次数"</strong>，只记"最后值"看不出双触发 ✗ —— 实测就是这么抓到的 ✓</p>
+<p>（<code>actLb</code> 一直是 0 看着正常，加 <code>actN</code> 才发现是 2 ✓）；</p>
+<p>④ 验收（<code>test_focus_nav.leno</code> 第五行下拉框 ✓）：Tab→ 下拉框（focus=true、选中=0、未展开）→ ↓ 选中=1</p>
+<p>且 <code>on_change</code>=1 → <strong>Enter 展开=true</strong> → 展开后 ↓ 选中=2 → Enter 收起 ✓ → Esc 收起 ✓ →</p>
+<p>Tab 回卷到 A ✓；列表那条 Enter 现在 <strong>次数=1</strong> ✓；</p>
+<p>⑤ 回归：海报墙 ✓、清理大师 exit=0 ✓、主题件 ✓、opacity 件 ✓、<code>test_combobox_focus.leno</code>（它自己的</p>
+<p>失焦探针）✓。速查附录 C 已补第五批与两条坑（双触发 / 事件分支位置）✓；</p>
+<p>⑥ 仍未进链条：<code>Table</code>（Enter 优先进单元格编辑）、<code>TreeView</code>、<code>TabControl</code>。</p>
+<p><strong>2026-10-13 追加（二十六）</strong>：<strong>A1 第四批：<code>ListBox</code> 进焦点链</strong>（↑/↓ · Home/End · Enter 激活 ✓）：</p>
+<p>① 键盘选：<code>↑/↓</code> 移动选中（自动滚到可见 ✓ 因为复用公开入口 <code>set_selected</code> ✓）、<code>Home/End</code> 首末 ✓；</p>
+<p><strong>Enter = 激活选中项</strong> ✓ —— 列表原来只有 <code>on_change</code>（"选中变了"）、<strong>没有"确认/打开"语义</strong> ✗</p>
+<p>⇒ 本轮补了 <strong><code>on_activate(func(int))</code></strong> ✓（与菜单选中、<code>Table</code> 双击同属"确认"动作 ✓）；</p>
+<p><code>activate()</code> 里没选中就不激活 ✓；窗口类型表 4 处同步加 <code>ListBox</code> ✓；</p>
+<p>② ⛔ <strong>踩到并记档的坑</strong>：<code>if ev.isMouseButtonDown() and ev.mouseButton() == 3 {</code> 这类句子在同一文件里</p>
+<p><strong>出现两次</strong>（"菜单已展开"分支里一次、主流程一次 ✓）⇒ 文本替换插代码<strong>命中了第一处</strong> ✗ ⇒</p>
+<p>症状是"<strong>只有菜单开着时键盘才生效</strong>"（实测：<code>↓</code> 后选中不动、<code>on_change</code> 也不触发 ✓）；</p>
+<p>口径：插事件分支一律<strong>带独特上下文</strong>（如 <code>if core.inPopupCapture(mx, my) { return }</code> 那段 ✓），</p>
+<p>插完<strong>再读一遍确认落在主流程</strong> ✓；</p>
+<p>③ 验收（<code>test_focus_nav.leno</code> 加第四行列表 ✓，断言走公开 <code>get_selected_index()</code> + 回调 ✓）：</p>
+<p>Tab→ 列表（focus=true、选中=0）→ <code>↓</code> 选中=1 且 <code>on_change</code>=1 → <code>↑</code> 0 → End 5 → Home 0 →</p>
+<p>Enter <code>on_activate</code> 收到 0 ✓ → Tab×9 <strong>回卷到 A</strong> ✓；</p>
+<p>④ 回归：海报墙 ✓、清理大师 exit=0 ✓、主题件 ✓、opacity 件 ✓。速查附录 C 已补第四批与该坑 ✓；</p>
+<p>⑤ 仍未进链条：<code>ComboBox</code>（Enter 开下拉 / 展开后 ↑↓ 选项 + Enter 选定 + Esc 收起 ✓）、<code>Table</code></p>
+<p>（Enter 优先进单元格编辑 ✓）、<code>TreeView</code>、<code>TabControl</code>。</p>
+<p><strong>2026-10-13 追加（二十五）</strong>：<strong>A1 第三批：<code>Slider</code> 进焦点链 + 键盘微调</strong> ✓：</p>
+<p>① <code>←/↓</code> 减、<code>→/↑</code> 加（垂直滑块同样可用 ✓）、<code>Home/End</code> 到两端 ✓；★ 微调<strong>只走 <code>set_value</code></strong> ✓</p>
+<p>（量化 / 夹取 / 回调全在它里面 ⇒ 与鼠标那条路同口径 ✓）；<code>activate()</code> 对滑块无标准语义 ⇒ 空实现 ✓</p>
+<p>（但方法要在 ⇒ 才能进窗口那张类型表 ✓）；</p>
+<p>② 控件自己收键的<strong>通用注意点</strong>（写进速查 ✓）：键事件是<strong>广播</strong>的 ✗ ⇒ 必须 <code>if focused and ev.isKeyDown()</code></p>
+<p>自己按焦点过滤 ✓（不聚焦时不消费、不影响别的控件 ✓，与 <code>Edit</code> 一致 ✓；窗口只拦 Tab/Enter/Space ✓）；</p>
+<p>③ 验收（<code>test_focus_nav.leno</code> 加第三行滑块 ✓，值走公开 <code>get_value()</code> 断言 ✓）：</p>
+<p>Tab→ 滑块（focus=true、值=50）→ <code>→</code> 55 → <code>←</code> 50 → End 100 → Home 0 → Tab×7 <strong>回卷到 A</strong> ✓；</p>
+<p>④ 回归：海报墙 ✓、主题件 ✓、opacity 件 ✓、清理大师 exit=0 ✓。速查附录 C 已补第三批 ✓。</p>
+<p>⑤ 仍未进链条（按需推进）：<code>ListBox/ComboBox/Table/TreeView/TabControl</code> —— 要先定"Enter 是激活选中项</p>
+<p>还是进编辑"（建议：列表/树/表格 ⇒ 激活选中项；<code>Table</code> 的 Enter 留给进单元格编辑 ✓）；</p>
+<p>方向键在兄弟控件间移动 ✗、<code>tabIndex</code> ✗。</p>
+<p><strong>2026-10-13 追加（二十四）</strong>：<strong>A1 第二批：开关类（<code>CheckBox</code>/<code>Toggle</code>/<code>RadioButton</code>）进焦点链</strong> ✓：</p>
+<p>① 三个控件各补同一套焦点方法（<code>set_focusable/is_focusable/focus/blur/is_focused/draw_focus_ring/activate</code> ✓），</p>
+<p>窗口那张类型表同步扩到 4 处（可聚焦 / 应用焦点 / 激活 / 画 ring ✓）；</p>
+<p>② <strong>激活语义 = "切一下"，且刻意与鼠标点击那条路逐字段对齐</strong> ✓：<code>CheckBox</code> 切值+回调；</p>
+<p><code>Toggle</code> <strong>连动画状态机一起照抄</strong>（否则键盘切换是"瞬跳"、鼠标是平滑 ✗）；<code>RadioButton</code> 直接调</p>
+<p><code>select()</code>（与鼠标<strong>同一个入口</strong> ⇒ 互斥/回调都不会漂 ✗）；</p>
+<p>③ 坑：焦点环要用 <code>get_w()/get_h()</code> —— 开关类是<strong>自量尺寸</strong>控件、<strong>没有 <code>w/h</code> 字段</strong> ✗（写 <code>ck.w</code> 直接编译不过 ✓）；</p>
+<p>另：<code>CheckBox.checked</code>/<code>Toggle.on</code> 是 <strong><code>pri</code> 私有</strong> ✗ ⇒ 探针断言一律走<strong>公开回调</strong> <code>on_change</code> ✓</p>
+<p>（它本来就是"值变了"的官方出口 ✓）；</p>
+<p>④ 验收（<code>leno_gui/自测/test_focus_nav.leno</code> 扩到两行、注入真按键 ✓）：Tab×1→A、Tab×2 **跳过</p>
+<p><code>set_focusable(false)</code> 的 B** 到 C、Tab×3→复选框（按钮行全 false ✓）、Shift+Tab 反向到 C、</p>
+<p>Enter/Space 让 <code>hitsC</code> 1→2、Tab→开关→Space 让开关值=1（回调=1 ✓）、Tab→单选→Enter 选中（回调=1 ✓）、</p>
+<p>Tab×6 末尾<strong>回卷到 A</strong> ✓；焦点环客观取色仍为 <code>accentFocus</code> ✓；</p>
+<p>⑤ 回归：海报墙 ✓、opacity 验收件 ✓、清理大师 exit=0 ✓。速查附录 C 已补第二批与"pri 字段只能靠回调"这条 ✓。</p>
+<p><strong>2026-10-13 追加（二十三）</strong>：<strong>按优先级修 A1 的第一批：焦点链 / 键盘导航</strong>（Tab · Shift+Tab · Enter · Space ✓）：</p>
+<p>① 缺口：全库原来只有 <code>Edit</code> / <code>Canvas</code> 自己管焦点 ⇒ <strong>Tab 键根本不换焦点</strong> ✗（<code>Widget</code> face 只有 7 个</p>
+<p>方法、没有焦点槽 ✓；事件是"广播给所有控件" ✗）；本版定的默认口径（可改 ✓）：焦点链 = <strong>注册顺序</strong>、</p>
+<p>窗口只管 Tab/Shift+Tab 换焦点 + Enter/Space 激活（方向键留给控件内部 ✓）、"谁能聚焦"用<strong>一张类型表</strong></p>
+<p>（本版只有 <code>Button</code> ✓）、<strong>焦点环由控件自绘</strong>（窗口渲染后统一叫一下 ✓ ⇒ 窗口不需要知道控件几何 ✓）、</p>
+<p><code>activate()</code> 只触发 <code>on_click</code>（与鼠标点击<strong>同一条回调</strong> ✓）；</p>
+<p>② 实现（<code>sdl_window.leno</code>）：焦点链<strong>懒收集</strong>（每次按键现扫 <code>widgets</code> ⇒ 不维护注册表 ⇒ 不会失同步 ✓）、</p>
+<p><code>focusIdx</code> + <code>_applyFocus</code> 一次性刷全部（不会"两个都以为有焦点" ✗）、键盘挂在 <code>_tryShortcut</code></p>
+<p><strong>之后、广播之前</strong>（快捷键优先 ✓ 且不漏给每个控件各处理一遍 ✓）；</p>
+<p>③ 顺带补了<strong>自测钩子</strong> <code>SDL3.testKeyDown(wid, scancode, mod)</code>（照 <code>testFocusLost</code> 的 malloc+from_ptr ✓，</p>
+<p>门面 <code>SDL3.leno</code> 同步转出 ✓ —— 上一版就是漏了门面那一步 ⇒ 探针报"模块 SDL3 中没有方法" ✗）；</p>
+<p>④ 验收（新增 <code>leno_gui/自测/test_focus_nav.leno</code>，注入<strong>真按键</strong> ✓）：初始全 false → Tab×1 到 A →</p>
+<p>Tab×2 <strong>跳过 <code>set_focusable(false)</code> 的 B</strong> 到 C → Tab×3 回卷到 A → Shift+Tab 反向到 C →</p>
+<p>Enter/Space 让 <code>hitsC</code> 1→2 ✓；焦点环<strong>客观取色</strong>：C 左沿外 2px = <code>(100,180,255)</code> = 主题 <code>accentFocus</code> ✓，</p>
+<p>未聚焦的 A 同位置只有底色 ✓ ⇒ 环只在聚焦控件外沿出现 ✓；</p>
+<p>⑤ 未做（按需推进 ✓）：<code>CheckBox/RadioButton/Toggle/Slider/ListBox/ComboBox/Table/TreeView/TabControl</code></p>
+<p>进类型表（要先给它们补 <code>focus()/blur()/is_focused()/draw_focus_ring()</code> ✓）、方向键在兄弟控件间移动 ✗、</p>
+<p><code>tabIndex</code> ✗。回归：海报墙 ✓、主题验收件 ✓、opacity 验收件 ✓、清理大师 exit=0 ✓。速查附录 C 新增该条 ✓。</p>
+<p><strong>2026-10-13 追加（二十二）</strong>：<strong>新增框架能力：控件级不透明度 <code>win.set_widget_opacity(w, a)</code></strong>（真机实测 ✓）：</p>
+<p>① 动机：框架原来<strong>没有</strong>通用控件透明度 ✗（只有 <code>imageview/scrim/separator</code> 各自的语义化 <code>alpha</code> key ✓），</p>
+<p>"把某个控件整体淡出"（禁用态 / 加载中 / 逐层揭示）做不到 ✓；</p>
+<p>② 实现（<strong>控件侧零改动</strong>，只在两个收口处动手 ✓）：<code>sdl_renderer</code> 加<strong>全局 alpha 缩放</strong> <code>setAlphaScale</code></p>
+<p>—— 在 <code>setColor</code> / <code>setColorFloat</code> / <code>pushTexBatch</code> 三处统一乘（纹理批覆盖文字 ✓ 所以 <code>drawText</code></p>
+<p><strong>不能</strong>再乘一次，否则平方淡化 ✗；缩放必须放在各自"缓存比较"之前 ✓，否则同色跳过优化会绕过它 ✗）；</p>
+<p><code>sdl_window</code> 在渲染循环里<strong>只包一层</strong>（push → render → 还原，<strong>必须还原</strong> ✓）；</p>
+<p>值存在<strong>稀疏</strong>数组（下标对齐 <code>widgets</code>、越界=1.0 ✓）⇒ 不必改 40+ 处 <code>widgets.add</code> 调用点 ✓；</p>
+<p>③ 特性：<strong>容器设透明度 ⇒ 整个子树一起淡出</strong> ✓（子控件都在它的 render 里画 ✓）；</p>
+<p>✅ <strong>直绘纹理已补齐（同日 ✓）</strong>：<code>drawTextureAt/Rect/FromTo</code> 走 <code>_texScalePush/_texScalePop</code></p>
+<p>（临时设纹理 alpha 调制、画完<strong>还原旧值</strong> ✓ —— 不能一律还原 255 ✗）；<code>drawTextureRounded</code> 因其</p>
+<p><strong>最后一步就是 <code>drawTextureAt</code></strong> ⇒ 自动覆盖 ✓（<strong>圆角海报也能淡出</strong> ✓）。两个前置条件都踩过 ✗：</p>
+<p>① FFI 只认 clib <strong>声明过</strong>的函数 ⇒ 补声明 <code>SDL_GetTextureAlphaMod</code>（sdl_core.leno ✓）；</p>
+<p>② <code>&amp;</code> 取址只能取 <strong>cstruct 字段</strong>（<code>&amp;局部量</code> 报语义错误 ✗）⇒ 出参照 <code>getColor</code> 用 <code>SDL_Color.malloc()</code> ✓；</p>
+<p>⚠ 又抓一坑并修掉：合成期间若缩放仍开着 ⇒ 蒙版顶点色 alpha 被二次相乘 ⇒ <strong>平方淡化</strong></p>
+<p>（实测 opacity=0.4 的圆角海报看着像 0.16，且逐通道与 0.16 理论值吻合 ✓）⇒ 口径定为</p>
+<p>"<strong>缩放只施加在最终出口</strong>" ✓；</p>
+<p>④ 验收（新增回归件 <code>leno_gui/自测/test_opacity.leno</code>，三档 + 容器 + 对照组，量平均色）：</p>
+<p>实测与该透明度下的<strong>理论混合值逐通道吻合</strong> ✓ —— 100% (63,142,221)；50% (49,90,134) vs 理论 (50,91,134)；</p>
+<p>25% (44,64,90) vs (44,65,91)；容器 0.35 量内部按钮 (46,77,109) vs (47,76,108)（<strong>子树确实跟着淡</strong> ✓）、</p>
+<p>对照组 (64,143,221) ✓；</p>
+<p>⑤ 回归：海报墙 ✓、主题验收件（公开色逐字一致 ⇒ 未扰动 ✓）、清理大师 exit=0 ✓。速查附录 C 新增该条 ✓。</p>
+<p><strong>2026-10-13 追加（二十一）</strong>：<strong>按优先级修 A2：运行时主题切换（<code>applyThemeAll</code>）两个真洞</strong>（真机实测对照 ✓）：</p>
+<p>① <strong>发现方式</strong>：读码时注意到仓里唯一的主题测试 <code>leno_gui/控件/总览/test_theme.leno</code> 是</p>
+<p>"<strong>关窗口重建</strong>"式的（注释自述 ✓）⇒ <code>applyThemeAll</code> 这条<strong>运行时</strong>路径从来没被测过 ✗；</p>
+<p>② <strong>洞 1（点名表漏人）</strong>：<code>sdl_window.applyThemeWidget</code> 的合并 <code>case</code> 只列了 8 个类型，而全库有</p>
+<p><strong>44 处 <code>impl Widget</code></strong> ✗ ⇒ <code>Canvas/ListBox/Slider/SpinBox/三种图表/Card/ScrollView/TabControl</code></p>
+<p>的 <code>applyTheme</code> <strong>写好了却从没被调用</strong> ✓；</p>
+<p>③ <strong>洞 2（递归不下钻）</strong>：只递归 <code>Splitter/Panel/GroupBox/HBox/VBox/GridLayout</code> ⇒</p>
+<p><code>ScrollView</code>/<code>Card</code>/<code>TabControl</code> 里的控件<strong>永远收不到主题</strong> ✗；</p>
+<p>④ <strong>修法</strong>：点名表补全 + 补 <code>AnchorBox</code> 递归；<code>sdl_scrollview</code> 补 <code>impl Widget, Themeable</code> + <code>applyTheme</code>；</p>
+<p>新增<strong>主题递归出口</strong> <code>lay.setExtraApplyThemeChild</code>（照 <code>_extraPassResize</code> 样板 ✓，容器把内容控件</p>
+<p>交回窗口继续下钻 ⇒ 类型表仍只在 <code>sdl_window</code> 一处 ✓，也绕开了 <code>Card._content</code> 是 <code>pri</code> 的问题 ✓）；</p>
+<p>⑤ <strong>验收（新增回归件 <code>leno_gui/自测/test_theme_switch.leno</code>）</strong>：同一次运行内截 A(dark) →</p>
+<p><code>applyThemeAll(light)</code> → 截 B，离线按矩形比区域平均色 ✓。**修前（真机 stash 对照）四个深容器 Δ 全是 0 ✗；</p>
+<p>修后 202 / 176 / 125 / 186 ✓**（窗口直属 Button 对照组 18 ✓ 两侧一致）✓；</p>
+<p>⑥ <strong>第二批（同日补完 ✓）</strong>：<code>CheckBox / RadioButton / Toggle / ProgressBar / Spinner / Separator /
+     RingProgress / ImageView / LinkButton</code> 这 9 个补上 <code>applyTheme</code> 并进点名表（<code>SDLK_window</code> 还补了</p>
+<p><code>sdl_ring</code> 的 import —— 静态 <code>case</code> 必须显式 import ✓）；映射与各自 <code>set()</code> 的建时取色逐字段对齐 ✓，</p>
+<p><code>ProgressBar</code> 直接复用建时那三个映射函数（防口径漂移 ✓）。</p>
+<p>另外 6 个<strong>不是漏是不需要</strong>：<code>PopMenu/Tooltip/Dialog</code> 每帧现读 <code>getTheme()</code> ✓；<code>Scrim</code> 纯 alpha 遮罩 ✓；</p>
+<p><code>Calendar/Steps</code> 设计上不依赖主题（配色全靠 opts ✓）⇒ 产品语义，本次未动 ✓。</p>
+<p>⑦ <strong>第二批验收</strong>（同一探针，判据强弱如实记 ✓）：<code>Spinner/LinkButton</code> 公开字段 <code>_color</code> <strong>修前切前=切后（一字节没变）</strong></p>
+<p>✗ → 修后变 ✓；<code>Separator</code> <code>#464A54</code> → <code>#D2D2DC</code> ✓；<code>ProgressBar/RingProgress/ImageView</code> 暗像素占比</p>
+<p>修前 42→<strong>40</strong> / 100→<strong>34</strong> / 100→<strong>88</strong> ✗ → 修后 42→3 / 100→0 / 100→0 ✓；<code>CheckBox/RadioButton</code> 框内</p>
+<p>22×22 平均色 修前 (66,78,95)/(95,107,124) 仍深 ✗ → 修后 (214,221,237)/(211,219,235) ✓；<code>Toggle</code> 最弱</p>
+<p>（轨道本就是 accent）(70,155,236)→(70,136,221) ✓。</p>
+<p>⑧ 速查附录 C 新增该条（症状 / 两个洞 / 修法 / 两批验收命令与对照表 / "pri 字段只能靠像素"的记号 ✓）。</p>
+<p><strong>2026-10-13 追加（二十）</strong>：<strong>把这一轮攒下的 13 个探针收进仓库当正式回归件</strong>（用户要求：留着 ✓ 改名 ✓ 归文件夹 ✓）：</p>
+<p>① <strong>为什么必须搬出 <code>build/</code></strong>：<code>.gitignore</code> 明确按"<code>build/_*</code> 下划线前缀"排除临时探针 ✗（<code>build/</code> 本身是</p>
+<p><strong>要入库</strong>的目录 ⇒ 不能整体忽略 ✓）⇒ 搬到新目录 <strong><code>leno_gui/自测/</code></strong>（沿用 <code>控件/特效/系统/应用</code> 的短双字风格 ✓），</p>
+<p>文件名统一为 <strong><code>test_*.leno</code></strong>（与 <code>leno_gui/控件/**/test_*.leno</code> 一致 ✓）；每个文件头都写明"验什么 + 怎么判" ✓；</p>
+<p>② 13 个回归件：
+  | 文件                                                                               | 验什么                                                             |
+  | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+  | <code>test_form_controls.leno</code>                                                        | Toggle/CheckBox/Radio 的 <code>set_size</code> 空实现 · Radio 互斥回调 · Slider 量化 |
+  | <code>test_chart_labels.leno</code>                                                         | 图表数值标签丢小数（柱上 / Y 轴 / 饼图图例）                                      |
+  | <code>test_scrim_resize.leno</code>                                                         | Scrim 不跟随窗口缩放（像素判据）                                             |
+  | <code>test_table_cell_colors.leno</code>                                                    | Table 格色：删行错位 / 换数据残留（三段截图）                                     |
+  | <code>test_tabcontrol_reset.leno</code>                                                     | TabControl 二次 <code>set()</code> 丢页                                        |
+  | <code>test_spinner_enabled_tip.leno</code>                                                  | Spinner <code>set_enabled</code> / <code>tip</code> / 帧率对照                            |
+  | <code>test_spinner_shape.leno</code>                                                        | Spinner 圆度与厚度（逐 2° 采样 180 个角度）                                  |
+  | <code>test_splitter_events.leno</code>                                                      | Splitter 事件转发 / 拖拽 / resize                                     |
+  | <code>test_combobox_focus.leno</code>                                                       | 失焦收起下拉（像素 7205→0）                                               |
+  | <code>test_window_handle_size.leno</code>                                                   | 句柄/尺寸下发（ListBox 点击 + resize 后右键菜单）                              |
+  | <code>test_table_image_cache.leno</code>                                                    | 图标纹理缓存上限（<code>PROBE_MAX</code> A/B）                                       |
+  | <code>test_nested_context_menu.leno</code>                                                  | 嵌套控件右键菜单夹紧 + 缩窗后重开                                              |
+  | <code>test_lang_closure_capture.leno</code>                                                 | <strong>语言</strong>：闭包捕获语义六种形态                                               |
+  | ③ 全仓引用一并改路径（扫出 57 处 ⇒ <strong>只换我这 13 个名字</strong> ✓；<code>_probe_combo_corner</code> / <code>_probe_round</code> / |                                                                 |
+  | <code>_probe_call</code> / <code>_probe_facebound</code> / <code>_probe_new_*</code> 是<strong>别人/旧轮</strong>的名字 ⇒ 一个没动 ✓）；     |                                                                 |
+  | ⚠ 替换时踩到两个坑：映射键<strong>自带下划线</strong>、我又前缀 <code>build/_</code> ⇒ 实际匹配 <code>build/__probe_*</code> <strong>全不匹配</strong> ✗       |                                                                 |
+  | （第一遍只改掉了裸名）；短语里的 <code>build/_*</code> 中 <code>*</code> 被当成<strong>正则量词</strong> ⇒ 那条也没匹配 ✗（第二遍才修净 ✓）；              |                                                                 |
+  | ④ 验证：搬家后<strong>照跑</strong> ✓（闭包六形态 ✓、图标缓存 <code>img_cache_count()=3</code> ✓ ⇒ 说明探针内部的<strong>相对路径仍然对</strong> ✓）；   |                                                                 |
+  | <code>git check-ignore</code> 退出码 1 ⇒ <strong>没被忽略</strong> ✓（可入库 ✓）；速查/INDEX/库注释里的验收命令已全部指向新路径 ✓；       |                                                                 |
+  | 海报墙回归 ✓。                                                                         |                                                                 |
+  <strong>2026-10-13 追加（十九）</strong>：<strong>查"嵌套控件拿不到窗口尺寸"（用户点名的第 ⑤ 项）⇒ 结论与预想相反</strong>：</p>
+<p>① <strong>先纠正误判</strong>：嵌套控件收到的尺寸确实是 <code>-1</code>（未知 ✓），但 <code>sdl_menu.clampRect</code> 里<strong>早有兜底</strong> ——</p>
+<p>尺寸 ≤ 0 且有句柄时直接 <code>SDL_GetWindowSize(winHnd)</code> ✓。实测（探针 <code>leno_gui/自测/test_nested_context_menu.leno</code>：</p>
+<p>Table 嵌在 根→HBox→VBox 三层、尺寸字段恒为 0）：窗口右下角右键 ⇒ 菜单<strong>被正确翻转</strong>、完整留在窗口内 ✓</p>
+<p>⇒ <strong>容器层层传尺寸那条路不需要走</strong> ✓（原本以为"最难"的一项，实测是虚警 ✓）；</p>
+<p>② <strong>但同一支代码里有个真缺口（实测抓到）</strong>：兜底<strong>只查一次就缓存</strong> ✗ ⇒ 窗口 resize 后再弹（菜单关着 ⇒</p>
+<p>没人刷新它）会先用<strong>旧值</strong>算一遍；日志实证 <code>_winW=700</code> 先算、同帧稍后才刷成 420 重算（画的位置会被纠正 ✓，</p>
+<p>但 <code>openContext</code> 已拿第一遍的结果 <code>setPopupCapture(...)</code> 登记<strong>弹层捕获区</strong> ✗ ⇒ 那一帧捕获区是歪的 ✓）；</p>
+<p>③ <strong>修法</strong>：<code>openContext</code> 弹出前按句柄刷一次真实窗口尺寸（6 行 ✓）；验收：修复前日志</p>
+<p><code>夹紧用尺寸 700x460 ⇒ 捕获区=365,366</code> ✗ → 修复后 <code>420x340 ⇒ 捕获区=85,256</code> ✓（= 翻转后的正确位置 ✓）；</p>
+<p>④ 回归：<code>test_menu</code>/<code>test_table</code>/海报墙 编译 ✓、海报墙真跑含 Card 右键链 ✓；</p>
+<p>速查附录 C 新增该条（<strong>含"别再重复怀疑这条"的结论</strong> ✓）。</p>
+<p>至此，用户列的五项（Spinner 多边形 / Splitter 双 relayout / ComboBox 失焦 / Table 缓存上限 / 嵌套尺寸）全部收敛 ✓。</p>
+<p><strong>2026-10-13 追加（十八）</strong>：<strong>修 <code>Table</code> 图标纹理缓存"只增不减"</strong>（用户点名的第 ④ 项）：</p>
+<p>① 病因：<code>get_tex</code> 只有"未命中 ⇒ 加载 + <code>add</code>"一条路 ✗ ⇒ 表格里"每行一个不同图标/缩略图"时显存一路涨 ✓；</p>
+<p>② 修法：照 <code>sdl_font.texCap</code> 的<strong>环形覆盖 + 当场回收</strong>样板（<code>SDL_DestroyTexture(old)</code> ✓，不是"丢引用" ✗）+</p>
+<p>新选项 <strong><code>image_cache_max</code></strong>（默认 64，<code>0</code> = 不限制 = 老行为 ✓）+ <code>set_image_cache_max(n)</code> +</p>
+<p><code>img_cache_count()</code>（调试/自测 ✓）；覆盖 MRU 那一格时把 MRU 指向<strong>新</strong>纹理（否则会返回已销毁的 ✗）；</p>
+<p>③ 安全性说明（写进速查）：<code>IMG_LoadTexture</code> 每次都新建、<strong>不共享</strong> ⇒ 淘汰时销毁安全 ✓；</p>
+<p>淘汰后已从数组移除 ⇒ <code>dispose</code> 不会再碰 ✓；⚠ 明确写下"别把这句销毁抄进 <code>dispose</code>"（那里有 double-free 教训 ✓）；</p>
+<p>④ 验收：探针 <code>leno_gui/自测/test_table_image_cache.leno</code>（6 行各一张不同海报，A/B 用 <code>PROBE_MAX</code> 切）⇒</p>
+<p><code>max=3</code> 时 <code>img_cache_count()=3</code> ✓、<code>max=0</code> 时 <code>=6</code> ✓；且截图里 <strong>6 行缩略图全正常</strong> ✓</p>
+<p>（上限 3 &lt; 6 行 ⇒ 渲染中途就在回收也没画坏 ✓）；<code>test_table_features</code>/<code>test_table_advanced</code>/</p>
+<p><code>cleaner_master</code>/<code>file_manager</code> 编译 ✓、海报墙列表页真跑 ✓。</p>
+<p>⑤ 顺带记两个<strong>踩坑</strong>（本轮实际被编译器拦下）：库内要用 <code>SDL_DestroyTexture</code> 得先 <code>use core.sdl3</code> ✓；</p>
+<p>改 import 行时<strong>别只匹配到行首那一段</strong>（尾段 <code>; use core.SDL_Rect</code> 会被后加的 <code>//</code> 注释吃掉 ✗，</p>
+<p>表现为别处一片"SDL_Rect 未定义"✗）。</p>
+<p><strong>2026-10-13 追加（十七）</strong>：<strong>修"失焦不收弹层"</strong>（用户点名的第 ③ 项）+ 为此补自测钩子：</p>
+<p>① ⛔ 症状：打开 ComboBox 下拉（或右键菜单）后 Alt+Tab / 切走 ⇒ 弹层<strong>留在屏幕上、点不动也关不掉</strong> ✗</p>
+<p>（实测：注入 <code>WINDOW_FOCUS_LOST</code> 后 <code>isOpen()</code> 仍是 true ✗；下拉区域可见像素 7205，修后 0 ✓）；</p>
+<p>② 病因：这一支没人接 —— <code>ComboBox.process</code> 缺分支（<code>PopMenu</code> 早有 ✓）；右键菜单/顶部菜单下拉更收不到</p>
+<p>（它们不是宿主画的，按 <code>isOpen()</code> 第二遍统一画 ✗，与 <code>TabControl</code> 切页那个同源 bug 一样 ✓）；</p>
+<p>③ 修法：<code>ComboBox.process</code> 加失焦分支 ✓ + 窗口<strong>唯一派发点</strong>集中收拾（<code>menu.closeContextMenus(hnd)</code> +</p>
+<p>逐个 <code>MenuBar.close()</code> ✓；全工程只有一处派发 ⇒ 模态窗/普通窗全覆盖 ✓）；</p>
+<p>⚠ 踩到一个语法坑记在速查里：<code>for arr to x</code> 里 <strong>x 是元素不是索引</strong>（写成 <code>bars[b]</code> 编译不过 ✓）；</p>
+<p>④ 新增自测钩子 <code>SDL3.testFocusLost(wid)</code> / <code>testFocusGained(wid)</code>（照 <code>testClickAt</code> 的思路补 ✓，</p>
+<p>以后这类"只有真机 Alt+Tab 才触发"的行为也能自动回归 ✓）；</p>
+<p>⑤ 验收与回归：<code>test_combobox_focus</code>（true→false + 像素 7205→0 ✓）、<code>test_window_handle_size</code>（右键菜单 true→false ✓）、</p>
+<p><code>test_menu</code> / <code>test_combobox</code> / <code>ide_layout</code> / 海报墙编译 ✓、海报墙真跑含 Card 右键链 ✓。</p>
+<p><strong>2026-10-13 追加（十六）</strong>：<strong>用户实测报"Spinner 是多边形不是圆形" ⇒ 修掉一个渲染真 bug（含 3 个连带问题）</strong>：</p>
+<p>① ⛔ <code>sdl_spinner.draw_arc</code> 的段数公式 <code>radius*span/360*0.4</code> 在 r=26/120° 时算出 3.46 ⇒ 夹到 <strong>4 段</strong>、</p>
+<p>整圈轨道只有 <strong>10 段</strong>（十边形 ✗）；且 <code>thick</code> 形参<strong>压根没用</strong>（只画 1px <code>drawLine</code> ✗）</p>
+<p>⇒ 修法：<strong>不走"加密段数"</strong>（<code>drawLine</code> 无抗锯齿、不能设线宽 ⇒ 只是"更细腻的多边形" ✗），</p>
+<p>改用 <code>fillCircle</code>（<strong>抗锯齿</strong> ✓，圆角蒙版缓存 ⇒ 同半径复用 ✓）沿弧线<strong>密排</strong> ⇒ 边缘无棱角、</p>
+<p>圆角端点、粗细即 <code>thickness</code>、<strong>不依赖背景色</strong> ✓（没学 RingProgress 的"fillPie+抠底"，那要求知道内圆底色 ✗）；</p>
+<p>② 同批修：<code>set_enabled</code> 原来是<strong>空实现</strong> ✗（现在真停转 + 不再每帧请求重绘 + 变暗；实测帧率</p>
+<p>启用 2s/103 帧 vs 全禁用 2s/20 帧 ✓）· <code>tip</code> 原来是<strong>死代码</strong> ✗（<code>process</code> 空 ⇒ 从不上报，现已接上、悬停实测弹出 ✓）·</p>
+<p><code>step()</code> 角度归一化只会减一次 360 ✗（卡顿后弧段跳变）⇒ 改 <code>while</code>，并<strong>一并修掉 <code>RingProgress.step_sweep</code> 的同款</strong> ✓；</p>
+<p>③ 还掉（用户点名的第二条）：<code>Splitter</code> 每帧<strong>双 relayout</strong>（<code>process</code> 与 <code>render</code> 各调一次、值还一样 ✗）</p>
+<p>⇒ 加"上次几何"去重（(x,y,w,h,ratio) 一致就跳过 ✓；<code>set_first/second</code> 会作废缓存 ✓）；</p>
+<p>④ 验收：探针 <code>leno_gui/自测/test_spinner_shape.leno</code>（size220/厚14/静态整圈）逐 2° 采样 180 个角度 ⇒</p>
+<p><strong>0 未命中</strong>、弧带中心偏差 <strong>-1.0…+1.25px</strong>、厚度 <strong>13.5…16.5</strong>（老实现内凹 ~4.7px、线宽 ~1px ✗）；</p>
+<p><code>test_splitter_events</code> 与海报墙回归照旧通过 ✓（速查附录 C 新增 Spinner 那条，含公式、修法与验收命令 ✓）。</p>
+<p><strong>2026-10-13 追加（十五）</strong>：<strong>把（十四）提到的"句柄路径同类债"也还掉，顺带治好一处漂移</strong>：</p>
+<p>① <code>sdl_layout._extraPassWindow</code> 钩子签名补 <strong>窗口逻辑宽高</strong>（<code>ww &lt; 0</code> = 尺寸未知 ⇒ 容器路径传 <code>-1</code> ✓）；</p>
+<p><code>Table</code>/<code>TreeView</code>/<code>ListBox</code> 从布局那层 switch <strong>挪进钩子</strong>（它们要"句柄 <strong>+ 尺寸</strong>"，得由认识窗口尺寸的一方下发 ✓）；</p>
+<p><code>sdl_window</code> 里原先<strong>两份</strong>类型表（<code>_refreshWindowHandle</code> / <code>Window._passWindowHandle</code>）<strong>全删</strong>，</p>
+<p>只调新导出的 <code>passWindowHandleSized</code> ✓ ⇒ 句柄相关类型判断也<strong>只剩一处</strong> ✓；</p>
+<p>② <strong>顺带治好漂移</strong> ✗→✓：那两份表原本不一致（一份有 <code>ListBox</code>/<code>GridLayout</code>，另一份有 <code>Card</code> 却<strong>漏 <code>ListBox</code></strong>，</p>
+<p>靠"每帧安全网"掩盖 ✓）⇒ 现在合并成一份，两边行为一致 ✓；</p>
+<p>③ 回归（均实测 ✓）：<code>test_window_handle_size.leno</code> —— <code>win.addListBox</code> 点击 <code>on_change</code> 触发 ✓（合并 case 没被剪空 ✓）、</p>
+<p>窗口 resize 后<strong>右键 Table 菜单仍能打开</strong> ✓；<code>test_scrim_resize/splitter</code> 探针 ④ resize 断言仍过</p>
+<p>（<code>splitter=840×420</code> ✓）；海报墙网格 + Card 右键链 ✓、列表页 ✓；<code>ide_layout</code>/<code>test_listbox</code>/<code>test_listbox_multi</code>/</p>
+<p><code>test_treeview</code>/<code>test_treeview_image</code>/<code>test_table</code>/<code>file_manager</code> 编译通过 ✓；</p>
+<p>④ ⚠ <strong>仍未覆盖</strong>（如实记）：<strong>嵌套</strong>在容器里的 <code>Table</code>/<code>Splitter</code> 拿不到窗口尺寸（容器只有句柄 ⇒ <code>ww=-1</code> ✓）——</p>
+<p>实际影响≈0（右键菜单每帧用当前窗口尺寸刷新 ✓）；要彻底修需让容器层层携带尺寸 ✗（未做 ✓）。</p>
+<p><strong>2026-10-13 追加（十四）</strong>：<strong>还掉（十一）记的那条设计债 —— 窗口 resize 通知的硬编码类型表收敛到一处</strong>：</p>
+<p>① 原来 <code>sdl_window</code> 里<strong>同一张类型表写了 3 遍</strong>（主循环 / 模态窗 / 悬停弹层窗，只认 <code>Table</code>/<code>TreeView</code>/<code>Splitter</code>）</p>
+<p>✗ ⇒ 新控件想收 resize 得改 3 处。现照 <code>_passWindowHandle</code> 的样板做：</p>
+<p><code>sdl_layout</code> 新增 <code>_passWindowResize</code> + 导出 <code>passWindowResize</code> + <code>setExtraPassResize</code> 扩展钩子</p>
+<p>（与 <code>setExtraPassWindow</code> 同款 ✓，避开循环依赖：布局模块仍不 import 扩展类型 ✓）；</p>
+<p><code>sdl_window</code> 只留<strong>一处注册</strong>（<code>Splitter → _bind_window_size</code>、<code>Scrim → on_window_resize</code> ✓），</p>
+<p>三个循环与三处"根为 Splitter"的特殊分支全部改成 <code>lay.passWindowResize(...)</code> ✓</p>
+<p>⇒ <strong><code>sdl_window</code> 的 resize 逻辑现在一个具体控件类型都不认识</strong> ✓（新控件只加一处 ✓）；</p>
+<p>② 回归（三条，均实测 ✓）：Scrim 探针 —— 缩放到 880×580 后采样点全 <code>878787</code>（无白条 ✓，说明 resize 经新路径</p>
+<p>仍到达 Scrim ✓）；Splitter 探针 —— 点左栏子控件 <code>clicks=1</code> ✓、拖分隔条 <code>ratio 0.35→0.5</code> ✓、</p>
+<p><strong>窗口拉到 840×420 后 <code>splitter=840.0x420.0</code></strong> ✓（Splitter 经钩子收到 resize ✓）；海报墙 +</p>
+<p><code>ide_layout</code> / <code>test_table</code> / <code>file_manager</code> 编译通过 ✓。</p>
+<p><strong>2026-10-13 追加（十三）</strong>：<strong>继续压 Splitter / ProgressBar / TabControl</strong>（探针 <code>leno_gui/自测/test_splitter_events.leno</code>、</p>
+<p><code>leno_gui/自测/test_tabcontrol_reset.leno</code>）：</p>
+<p>① ⛔ <strong>修掉真 bug</strong>：<code>TabControl</code> <strong>二次 <code>set()</code></strong> 会重建 <code>pages/rel/_pageLayouts</code> ⇒ <strong>整页内容被丢弃</strong> ✗</p>
+<p>（实测：<code>set(同 opts + 改一个颜色)</code> 后页里的按钮当场消失、<code>on_click</code> 停在 1 ✗）。修法：<strong>页数没变就不重建</strong></p>
+<p>页容器 ✓ + <code>active</code> 缺省值改取<strong>当前页</strong>（否则改配色会把页签跳回第 0 页 ✗）+ 页数真变时<strong>故意不 dispose</strong></p>
+<p>旧子控件（应用持有，替它释会"释放后再用"✗）。修后探针计数 1→2 ✓、按钮还在 ✓（速查附录 C 新增该条 ✓）；</p>
+<p>② <strong>未复现（如实记，不当作问题 ✓）</strong>：<code>Splitter</code> 的事件转发与拖拽都正确 —— 点左栏子控件 <code>on_click</code> 照常触发 ✓、</p>
+<p>拖分隔条 <code>ratio 0.35→0.5</code> 精确 ✓、<strong>拖完再点子控件照样灵</strong> ✓（读码怀疑的"拖拽吞事件 ⇒ 子控件卡在按下态"✗不成立）；</p>
+<p><code>ProgressBar</code> 那句"无条件 <code>markFrameMotion</code> ⇒ 空转重绘"✗也不成立 —— <code>markFrameMotion</code> <strong>只标记本帧有鼠标移动</strong></p>
+<p>（供帧末统一应用光标 ✓、见 <code>sdl_core.applyFrameCursor</code>），<strong>不请求重绘</strong> ✓（读码时看着吓人而已 ✓）。</p>
+<p>③ 仍<strong>未验</strong>的读码怀疑：<code>ComboBox</code> 失焦不收下拉（无头难验）· <code>Splitter</code> 每帧双 relayout（幂等 ⇒ 只是白做）·</p>
+<p><code>Splitter.dispose</code> 递归 dispose 子控件（与"子控件归应用所有"的口径不一致，<strong>双 dispose 风险</strong>）·</p>
+<p><code>Table</code> 图标纹理缓存无上限 · <code>Spinner.set_enabled</code> 空实现 + <code>tip</code> 死代码。</p>
+<p><strong>2026-10-13 追加（十二）</strong>：<strong>压 Table 的自定义格色（探针 <code>leno_gui/自测/test_table_cell_colors.leno</code>）⇒ 又两个"张冠李戴"</strong>：</p>
+<p>⛔ 单元格级颜色存在 <code>_cellFgColors/_cellBgColors</code>（<code>Dict</code>，键 <code>"row,col"</code> ✓），而 <code>remove_row</code> 不重排键、</p>
+<p><code>set_rows</code>/<code>clear</code> 也不清 ⇒ ① 删一行后下面的格色<strong>整体错位一行</strong>（实测：R2 绿/R3 红，<code>remove_row(0)</code> 后</p>
+<p>绿红停在同一屏幕行 ⇒ 实际染上 R3/R4 ✗）；② 换成全新数据后旧格色<strong>原样残留</strong> ✗。</p>
+<p>修法（口径与"排序不许说谎"一致：<strong>要么别张冠李戴</strong>）：<code>remove_row</code> 把 <code>o&gt;idx</code> 的键搬成 <code>o-1</code>（照 <code>swap_rows</code> 思路 ✓）、</p>
+<p><code>set_rows</code>/<code>clear</code> 清掉两个色表与 <code>rowColors</code> ✓（应用想换数据后染色就在 <code>set_rows</code> 之后 set —— <code>cleaner_master</code> 本就如此 ✓）。</p>
+<p>验收：三段截图读同一列像素 ⇒ B 应"绿红整体上移一行" ✓、C 应"全无染色" ✓（速查附录 C 新增该条，含流程与判据 ✓）。</p>
+<p><strong>2026-10-13 追加（十一）</strong>：<strong>压 Scrim（探针 <code>leno_gui/自测/test_scrim_resize.leno</code>）⇒ 又一个真 bug + 一条设计债</strong>：</p>
+<p>① ⛔ <code>Scrim</code>（模态遮罩）<strong>不跟随窗口缩放</strong>：尺寸只在 <code>win.addScrim</code> 创建时下发一次 ✗ ⇒ 拉大窗口后</p>
+<p>右下<strong>露一条没遮住的原色</strong>，而且那条<strong>点得动</strong>（<code>process</code> 按自己的矩形吞事件 ✓）—— 模态漏半边 ✓。</p>
+<p>实测（白底 + alpha120）：600×400 全灰 ✓；拉到 880×580 后 (640,200)/(300,460)/(820,540) 仍是纯白 <code>ffffff</code> ✗。</p>
+<p>修法：<code>Scrim</code> 补 <code>on_window_resize(ww,hh)</code> + 接进窗口那 3 处类型表 ⇒ 修后 6 个采样点全 <code>878787</code> ✓</p>
+<p>（速查附录 C 新增该条，含探针命令与像素判据 ✓）；</p>
+<p>② 记<strong>设计债</strong>：窗口的 resize 通知是<strong>硬编码类型表</strong>（<code>Table</code>/<code>TreeView</code>/<code>Splitter</code>，<strong>同一份写了 3 遍</strong> ✗）</p>
+<p>⇒ 新控件想收 resize 得改 3 处；建议照 <code>_passWindowHandle</code> 集中到布局模块一处 + 留扩展钩子 ✓（<strong>本次未动</strong> ✓）。</p>
+<p><strong>2026-10-13 追加（十）</strong>：<strong>压图表（探针 <code>leno_gui/自测/test_chart_labels.leno</code>）⇒ 又修一个"界面说谎"</strong>：</p>
+<p>⛔ <code>_fmtNum(float) = _int(v) as string</code> ⇒ 图上数字<strong>全被取整</strong>：实测把评分 <code>7.7/8.2/9.3/8.4</code></p>
+<p>画成柱状图，柱上标签显示 <code>7/8/9/8</code> ✗、Y 轴把 2.5/7.5 的位置写成 <code>2/7</code> ✗ —— 而它同时供</p>
+<p><strong>Y 轴刻度 / 柱上数值 / 悬停提示 / 折线·饼图图例</strong>用（一处错、全图错 ✓）。</p>
+<p>修法：整数显示整数、有小数如实显示（<code>d &lt; 0.0001 ⇒ 取整</code>，否则 <code>_str(v)</code> ✓；<code>_int</code> 是截断不是四舍五入 ✓）；</p>
+<p>修后柱上 <code>7.7/8.2/9.3/8.4</code> ✓、Y 轴出现 2.5/7.5 ✓、饼图图例带小数 ✓。速查附录 C 新增该条（含验收命令 ✓）。</p>
+<p>⚠ 本轮<strong>没有</strong>给海报墙加"统计页"：图表能力已单独验过，而这个应用的形态刚按你的意见定稿 ⇒</p>
+<p>不主动再塞新视图（要加随时说 ✓）。</p>
+<p><strong>2026-10-13 追加（九）</strong>：<strong>继续压表单控件</strong>（探针 <code>leno_gui/自测/test_form_controls.leno</code> ✓（回归件，随仓入库 ✓））：</p>
+<p>① ⛔ <strong>修掉真 bug</strong>：<code>RadioButton</code> 同组互斥时<strong>不给被取消那一项回调</strong> —— <code>select()</code> 直接改 <code>rb.checked = false</code></p>
+<p>不走 <code>on_change</code> ⇒ 靠回调维护状态的应用"界面没选、自己以为选着"✗（实测：先点 r1 再点 r2，r1 收到 <strong>0 次</strong> on=false）。</p>
+<p>修法：按「<strong>用户操作</strong>（点击/被挤掉）回调 / <strong>程序化</strong> <code>set_checked</code> 不回调」的口径补 <code>notify_change(false)</code> ✓</p>
+<p>（终态 r1 回调 2 次 ✓）；同口径也写进了 <code>RadioButton</code> 的注释 ✓</p>
+<p>② 记下<strong>契约</strong>（非 bug）：<code>Toggle</code> / <code>CheckBox</code> / <code>RadioButton</code> 的 <code>set_size</code> 是<strong>空实现</strong>（尺寸自量 ✓）⇒</p>
+<p>布局 <code>grow</code>/<code>basis</code> 改不了它画多大（实测 <code>set_size(200,44)</code> 后仍是 122×28 ✓）；要尺寸请在 <code>createXxx</code> 的 opts 里给 ✓</p>
+<p>（三处空实现已补注释说明 ✓）</p>
+<p>③ 记下<strong>自测坑</strong>：合成点击前必须先 <code>SDL3.testMoveAt</code> —— <code>Radio</code>/<code>CheckBox</code>/<code>Toggle</code> 的点击判据含 <code>hover</code></p>
+<p>（只在 motion 里置位）⇒ 只投 <code>testClickAt</code> 会"返回 true 但毫无反应"✗（本次就这么被坑了一轮 ✓）</p>
+<p>④ <strong>未复现</strong>（不当作问题 ✓）：<code>Slider</code> 的量化与回调正常 —— <code>set_value(3.7)</code> + <code>step:1</code> ⇒ 4.0 且回调 1 次 ✓；</p>
+<p><code>set_range(0,5)</code> 值未变 ⇒ 不回调 ✓（合理 ✓）</p>
+<p><strong>2026-10-13 追加（八）</strong>：<strong>照用户反馈把「列表」页调成"媒体库"的样子</strong> + 补一个 <code>TabControl</code> 缺口：</p>
+<p>① 用户指出「在海报墙里加 table 感觉好突兀」⇒ 对截图逐条定位到 5 处：列宽等分（「收藏」列一大片死黑）、</p>
+<p>纯黑底 + Excel 式<strong>竖线网格</strong>、表头灰条与顶栏不是同一色系、选中行是亮灰（应用别处都是橙色语言）、<strong>没有封面</strong> ✓；</p>
+<p>② 应用侧改成媒体库列表：第 0 列带<strong>海报缩略图</strong>（<code>image_col</code> + 逐行 <code>set_row_image</code> + <code>image_mode:2</code> 方图裁边、</p>
+<p>行高 46 / 字号 14）、去掉空荡荡的「收藏」列（收藏改用片名前的 <strong>★</strong>）、</p>
+<p>底色/表头/选中/分隔线<strong>全部对齐应用色板</strong>（<code>bg_color/header_color/sel_color/sep_color</code> + <code>zebra:false</code> 去网格感 ✓）；</p>
+<p>③ ⛔ <strong>框架缺口（已补）</strong>：<code>TabControl</code> 的<strong>标签栏底 / 非激活标签底 / 两种文字色</strong>以前<strong>只跟主题</strong>、opts 改不了</p>
+<p>⇒ 应用想把页签融进自己的配色时做不到，只能顶着主题那条灰底（"像外挂进来的一块" ✗）</p>
+<p>⇒ 暴露 <code>bar_color</code> / <code>tab_color</code> / <code>text_color</code> / <code>active_text_color</code> 四个 opts（<code>_opts_keys</code> 同步 ✓）；</p>
+<p>⚠ 仍<strong>只跟主题</strong>的：<code>Table</code> 的文字色与斑马色（<code>txtColor/hdrTxtColor/zebColor</code>）—— 暗色应用够用，本次未动 ✓。</p>
+<p><strong>2026-10-13 追加（九）</strong>：<strong>修「鼠标按下去光标变回箭头」+ 做成无人值守回归</strong>（<strong>框架侧</strong> ⇒ 进『SDL3常用API与易踩坑速查.md』<strong>附录 C</strong>，不占语言摩擦清单的 Mxx ✓）：</p>
+<p>① 症状：鼠标移到按钮上是<strong>手型</strong>、<strong>一按下去</strong>变成<strong>普通箭头</strong>（松开 / 键盘 Enter 激活 / 任何 <code>set_xxx</code> 触发的重绘同样中 ✗）；</p>
+<p>② 病根：<code>sdl_core</code> 的帧级光标决策里 <code>markFrameRedraw()</code> 把"<strong>要重绘</strong>"与"<strong>鼠标动过</strong>"混为一谈 ✗</p>
+<p>⇒ 非 motion 的鼠标/键盘帧被当成"要重算光标"，而控件<strong>只在 motion 里请求光标</strong> ⇒ 那一刻无请求 ⇒ 落到 <code>DEFAULT</code> 兜底 ✗；</p>
+<p>③ 修法（<strong>核心两处，控件一行未改</strong>）：<code>markFrameRedraw</code> 不再置 "seen"；改由<strong>窗口</strong>在派发 motion 事件时登记；<code>requestCursor</code> 自己置 seen（"只在拖拽里请求"的 <code>Table</code> 列宽 / <code>Splitter</code> 不受影响 ✓）；</p>
+<p>④ 范围：<strong>不是 Button 一家</strong> —— 15+ 个"只在 motion 里请求"的控件全中（Card / CheckBox / Toggle / Radio / Edit / ImageView / LinkButton / Progress / Spinbox / Tab / TreeView …）✓；</p>
+<p>⑤ 判据：新增 <code>leno_gui/自测/test_cursor_press.leno</code>（注入真事件 + 读 <code>SDL3.testLastAppliedCursor()</code>）；</p>
+<p>实测<strong>修好前 ②③ 当场红（<code>got=0</code>）</strong>、修好后 4/4 ✓ ⇒ 用例确实能抓住该 bug ✓；套件 <strong>452 passed / 0 failed</strong> ✓；</p>
+<p>⑥ <strong>同族审计（逐个控件查完 ✓）</strong>：谁直接 <code>setSystemCursor</code> / 谁有 <code>cursor</code> 字段却不请求 / 谁在<strong>非 motion</strong> 场景调 <code>markFrameMotion</code>（会把 bug 带回来）/ 谁<strong>无条件</strong>请求光标（会劫持别人）——<strong>四项全过</strong>，无第二处同类漏洞 ✓；</p>
+<p><strong>顺带查出并修掉 3 处真不一致</strong>：<code>CheckBox</code> / <code>Toggle</code> / <code>RadioButton</code> 的默认光标是 <code>DEFAULT</code>（箭头）⇒ 与同为可点击的 <code>Button</code> 不一致 ⇒ 统一改 <code>Pointer</code> ✓（其余控件默认本就 <code>Pointer</code>；<code>progress</code> 只读模式下不请求，<strong>不是</strong> bug ✓）；</p>
+<p>⑦ 新增<strong>多控件横扫</strong>用例 <code>leno_gui/自测/test_cursor_press_multi.leno</code>（10 类控件 × 悬停/按下/松开/移开，<strong>41 条断言全过</strong> ✓；<code>Edit</code> 另钉"悬停 = <code>TEXT(1)</code>" ✓），并把写这类用例的两个<strong>假失败坑</strong>记进附录 C（自量控件忽略 <code>w</code>/<code>h</code>；会弹层的 <code>ComboBox</code> 要放最后测 ✓）。</p>
+<p><strong>2026-10-13 追加（十）</strong>：<strong>选项命名统一（第一轮）</strong> —— 审计全库 <strong>36 控件 / 724 键位 / 297 个不重名</strong>（核心词汇本来就一致：<code>x</code>/<code>y</code>/<code>w</code>/<code>h</code>/<code>bg_color</code>/<code>text_color</code>/<code>font_size</code>… 前 14 名全是共用名 ✓）：</p>
+<p>① <strong>改掉 5 个 camelCase 笔误</strong>：<code>fontSize</code>→<code>font_size</code>（popmenu）、<code>padX</code>/<code>padY</code>→<code>pad_x</code>/<code>pad_y</code>（gridlayout + <strong>layout 的 VBox/HBox/AnchorBox 也读它</strong> ✗）、<code>imageMode</code>/<code>imageExpanded</code>→<code>image_mode</code>/<code>image_expanded</code>（treeview）；</p>
+<p>② <strong>先加"改名表"过渡、随后按决定撤掉</strong>（过程比结论值得记 ✓）：改名表 = 旧名<strong>仍可用</strong> + <strong>每次用到都警告</strong> ⇒ <strong>警告清零 = 迁移完成，可验证</strong> ✓（纪律两条：必须在白名单判断<strong>之前</strong>查；表里有的名<strong>所有</strong>读它的控件都要同时认新名 ✗ —— 靠这条抓出 <code>sdl_layout.leno</code> 的 VBox/HBox/AnchorBox <strong>也读</strong> <code>padX</code>/<code>padY</code> ✓）。<strong>★ 随后定「旧名全部放弃」⇒ 表格、别名读取、白名单项当天一并撤</strong> ✓（迁完就没有旧名使用者了，"旧名仍可用"反而成假话 ✗；发现能力由"不认识的选项 + 你是不是想要 <code>pad_x</code>？"接住 ✓）；<code>assert/test_ui_opts_guard.leno</code> <strong>⑩ 翻案</strong>为"旧名<strong>不再被接受</strong>"（这才是"放弃"的可执行证据 ✓）；</p>
+<p>③ <strong>四个仓库一起迁移</strong>（只动<strong>字典键位置</strong>与<strong>字符串形式</strong>，字段名/局部变量一律不动 ✓）：<code>Leno</code> <strong>52 文件</strong> / <code>LenoMusic</code> / <code>LenoGame</code> / <code>LenoTrae</code>；</p>
+<p>④ <strong>验收</strong>：Leno 含新名的 <strong>99 个文件逐个真编译 0 失败</strong> + 套件 <strong>452/0</strong> ✓；三个应用 <strong>32 个入口逐个真编译 0 失败、0 条旧名警告</strong> ✓；</p>
+<p>⑤ 文档：『SDL3常用API与易踩坑速查.md』新增 <strong>附录 D</strong>（审计数据 + 改名表机制 + 迁移铁律 + <strong>命名规约</strong>：颜色一律 <code>*_color</code>、尺寸用短名 <code>w</code>/<code>h</code>、内边距 <code>pad_*</code>、开关 <code>show_*</code>、回调走方法不进 opts ✓）；<strong>未动</strong>语义色名（<code>fill_color</code>/<code>track_color</code>… 各指各的东西 ✗）与 <code>h</code> vs <code>height</code> 等"同概念不同名"（<strong>下一轮</strong>评估，有的差异是刻意的 ✓）。</p>
+<p><strong>2026-10-13 追加（十一）</strong>：<strong>选项命名统一（第二轮）</strong> —— 第②类"同概念不同名"逐组判"是不是刻意的"：</p>
+<p>① <strong>统一 9 组</strong>：<code>height</code>→<code>h</code>（titlebar）、<code>separator_color</code>/<code>divider_color</code>→<strong><code>sep_color</code></strong> + <code>divider_width</code>→<strong><code>sep_width</code></strong>、<code>border_width</code>→<code>border_w</code>（canvas）、calendar <code>head_h</code>/<code>head_text_color</code>/<code>show_head</code>→<strong><code>header_*</code></strong>、<strong>状态色</strong> <code>{状态}_bg/_fg</code>→<strong><code>{状态}_color</code>/<code>{状态}_text_color</code></strong>（calendar 的 plain/filled/alert/today + <code>today_border</code>→<code>today_border_color</code>；steps 的 <code>pending_bg</code>/<code>pending_border</code>/<code>pending_text</code>→<code>pending_color</code>/<code>pending_border_color</code>/<code>pending_text_color</code>）、card <code>selected_color</code>→<strong><code>sel_color</code></strong>、table·treeview <code>row_h</code>→<strong><code>item_h</code></strong>、<strong>删掉</strong> table 的 <code>multi</code>（<code>multi_select</code> 的旧别名 ✓）；</p>
+<p>② <strong>刻意保留 5 项</strong>（不同对象/不同概念）：tab <code>active_color</code>（"<strong>激活页</strong>"≠"选中行"，配套 <code>active</code>/<code>set_active()</code> ✓）、menu <code>separator</code>（<strong>菜单项种类</strong>标记、不是开关 ⇒ 改 <code>show_*</code> 反而错 ✗）、ring/spinner <code>size</code>（形状尺寸）、<code>thickness</code> 族（环粗/线粗，对象不同）、steps <code>line_w</code>（本就合规 ✓）；</p>
+<p>③ ⚠ <strong>踩到并纠正了我自己的错</strong>：calendar 颜色是 <code>{状态}_{bg,fg}</code> <strong>矩阵</strong>，第一遍<strong>只改了一半</strong>（plain/alert ✗，filled/today 没动 ✗）⇒ <strong>比不改更糟</strong>（同族两种写法 ✗）⇒ 整族改完 ✓；<strong>规矩：一族要么整族不动、要么整族改完</strong> ✓；</p>
+<p>④ <strong>验收</strong>：全仓旧名（键位置）<strong>归零</strong> ✓；<strong>GUI 全部 107 个文件逐个真编译 0 失败 / 0 选项警告</strong> ✓；框架 examples 56 + 三应用 <strong>32 个入口</strong> 0 失败/0 警告 ✓；套件 <strong>452/0</strong> ✓；<code>leno_gui/自测</code> <strong>19 个用例逐个真跑全 0</strong> ✓（⚠ <code>test_chart_labels</code> 读的是 <code>PROBE_SHOT</code> 而非 <code>SHOT</code> ⇒ 不给那变量就<strong>不自动退出</strong>、看着像超时 —— <strong>不是回归</strong> ✓）；</p>
+<p>⑤ 文档：SDL3速查新增 <strong>附录 E</strong>（9 组统一表 + 刻意保留表 + 教训 + 验收）；<code>height</code> 这类<strong>常用词</strong>必须<strong>限定作用域</strong>（只改 <code>createTitleBar(...)</code> 内部 ✓，否则误伤 HTML 字符串与普通 dict ✗）。</p>
+<p><strong>2026-10-13 追加（七）</strong>：<strong>自检时基改为定时器 + 页签/列表视图 + 抓到并修掉 Table 排序说谎</strong>：</p>
+<p>① ⚠ <strong>自检一律走 <code>Timer</code></strong>（<code>WALL_*</code> 里的数字 = 步号，100ms 一拍）：本框架是<strong>事件驱动重绘</strong>，</p>
+<p>没有重绘请求时帧号不走 ⇒ 旧的"第 N 帧注入/截图"既不定时、还可能截到<strong>旧画面</strong> ✗（用户点出 ✓；</p>
+<p>仓里惯例见 <code>cleaner_master</code> 的 <code>autoStep</code> 与 <code>dashboard_sidebar</code> 那条"无头下没有事件就永不重绘"✓）；</p>
+<p>海报墙已改用 <code>win.addTimer(STEP_MS, selftest_step)</code>，截图仍留在 <code>setOverlay</code> ✓；</p>
+<p>② 海报墙新增<strong>视图页签（TabControl：海报墙 / 列表）</strong>&#x4E0E;<strong>列表视图（Table）</strong>：同一份命中名单（<code>collect()</code> ✓）、</p>
+<p>表头可点排序、双击进详情、右键菜单与卡片<strong>同名同义</strong>（<code>leno_gui/应用/影视海报墙/movie_wall.leno</code>）；</p>
+<p>③ ⛔ <strong>抓到真 bug 并修掉</strong>：<code>Table</code> 表头排序箭头<strong>说谎</strong> —— <code>set_rows</code>/<code>clear</code>/<code>add_row</code> 都不管</p>
+<p><code>sortCol/sortDesc</code> ⇒ 点「评分▼」后再换数据，行回到插入序而箭头照旧 ✗（实测 9.3 掉到第 3 行）。</p>
+<p>修法：<code>set_rows</code> <strong>重放</strong>排序、<code>clear</code>/<code>add_row</code> <strong>撤销</strong>排序（口径：要么别谎报、要么别乱序 ✓），</p>
+<p>应用侧改用 <code>set_rows</code> 批量换数据 ✓；速查附录 C 新增该条（含复现命令与验收判据 ✓）。</p>
+<p>⚠ 本轮只修了这一条 —— 侦察出来<strong>尚未复现</strong>的疑似问题另列（见下条）。</p>
+<p><strong>2026-10-13 追加（六）</strong>：<strong>框架补 2 项能力 + 应用侧把海报墙做厚</strong>（均真机实测）：</p>
+<p>① <code>sdl_card.leno</code> 新增<strong>右键上下文菜单</strong>（框架缺口 ⇒ 媒体库/商品墙必用的「右键 → 播放/收藏/详情」以前挂不上，只有 Table/TreeView/ListBox 有）：API 与那三者<strong>同名同义</strong>（<code>addContextItem</code> / <code>on_context_select(func(id))</code> / <code>on_context_will_open</code> / <code>clearContextItems</code> / <code>is_context_menu_open</code> …），菜单本体共用 <code>sdl_menu</code>、由窗口第二遍统一画；懒建（<code>ensure_ctx_menu</code>，22 张卡不会各留一个空菜单）+ <code>dispose</code> 摘注册表 ✓；顺带修掉"右键也会触发整卡 <code>on_click</code>"✗；</p>
+<p>② <code>sdl_scrollview.leno</code>：<strong>只有横向能滚时，纵向滚轮也用来横滚</strong>（横向列表/推荐位在普通鼠标下以前"滚轮毫无反应"✗；纵向能滚时行为不变 ✓）；</p>
+<p>③ <code>leno_gui/应用/影视海报墙/</code>：详情页加<strong>相似推荐横排</strong>（横向 <code>ScrollView</code> + <code>content_w</code>，推荐位复用卡片右键菜单）、网格页加<strong>底部状态栏</strong>（共 N 部 / 当前 / 收藏 / 排序 · 分类，<code>update_status</code> 单一出口）与<strong>空态提示</strong>（命中 0 部时网格区写字 —— ⚠ 必须走 <code>setOverlay</code>，放 <code>onRender</code> 会被 <code>ScrollView</code> 自己的底色整块盖掉 ✗ 同"截图钩子"那条规律）；</p>
+<p>④ 速查附录 C 新增 <strong>1 条坑</strong>：文本会变的 <code>Label</code> 在布局里必须给 <code>basis</code>（或 <code>grow</code>）——空文本建出来盒子宽 ≈ 0，之后 <code>set_text</code> 的文字会<strong>溢出被窗口裁掉</strong>（实测症状：右项只剩「默…」）。</p>
+<p><strong>2026-10-13 追加（五）</strong>：<strong>澄清一条被误传的语义</strong>（<strong>不是 bug</strong> —— 实现 <code>semantic_upvalue.c</code> + 回归 <code>assert/test_closure_value_capture.leno</code> 都在 ✓）：闭包的「值捕获」<strong>只发生在循环体内</strong>（每轮各一份 ✓）；循环外的局部量 / 模块级 / <code>self</code> 字段都是 <strong>by-upvalue（实时）</strong> ⇒ 捕获后改它，闭包读得到新值 ✓。『语言陷阱速查.md』新增 <strong>㊱</strong>（6 形态实测表 + 唯一的真坑：循环里改<strong>外层共享</strong>变量 ⇒ 几个闭包全读末值 ✗）；同日<strong>全仓订正 4 个文件里的 8 处旧说法</strong>（原文把"循环体内声明的变量才是值捕获"说成"闭包按值捕获" ✗，范围说宽了）：<code>leno_gui/应用/数据看板/dashboard.leno</code>（2 处）、<code>leno_gui/控件/数据看板/dashboard_sidebar.leno</code>（2 处）、<code>leno_gui/应用/影视海报墙/movie_wall.leno</code>（3 处，含我 2026-10-13 写详情页时顺手抄错的）、<code>build/leno_module/LenoSDL3/examples/基础示例/窗口管理/test_filedialog.leno</code>（1 处）；<strong>剩下的"值捕获"提法都核对过</strong>（<code>assert/test_closure_value_capture.leno</code>、<code>examples/性能测试/R5R6形态基准.leno</code>、<code>docs/archive/JIT闭包与upvalue设计_R5.md</code> 讲的都是<strong>循环体内</strong>那个形态 ⇒ 正确 ✓ 未动）。</p>
+<p><strong>2026-11-17 追加</strong>：新增 1 篇『待修_2026-11-17_实测发现.md』—— <strong>待修台账 F1…F7</strong>（<code>any as func(...)</code> 恒 null、struct 与 null 的顺序、<code>Color = int</code> 别名、<code>requestRedraw</code> 全局单标志、<code>leno_version</code> 从不校验、无 <code>@must_use</code> / <code>defer</code> 零使用、多返回值报错缺出处），每条带最小复现与 v0.2.4 实测输出；<strong>进第四节</strong>。
+- 状态图例：<strong>✅ 现行</strong>（可照着写代码）· <strong>🟡 现行但含过时段落</strong>（文件头部已加"历史 / 局部过时"块，</p>
+<p>引用前先看那一段）· <strong>📜 历史留档</strong>（功能已不存在或已完结，只作考古）· <strong>🧭 台账</strong>（待办与路线图）。
+- <strong>维护约定</strong>：新增 / 改名 / 状态变化（实现完成、功能移除）<strong>都要回来改这一行</strong>；</p>
+<p>文档里<strong>不要写死断言总数</strong> —— 一律以 <code>.\build\leno.exe assert\run_tests.leno build\leno.exe assert</code> 实跑为准</p>
+<p>（历史上同一事实被写成 245/256/263/298/305/352/366/380/410/412 十个版本）。</p>
+</blockquote>
+<hr>
+<h2 id="一-指南-面向-leno-使用者">一、指南（面向 <code>leno</code> 使用者）</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>一句话</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="Leno零基础入门.html">Leno零基础入门.md</a></td>
+<td><strong>从没写过代码</strong>也能读的教程：18 章、每章可运行小程序 + 真实输出 + 常见错误；练习带答案</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="安装与第一个项目.html">安装与第一个项目.md</a></td>
+<td>拿 exe → 配 PATH → 三种交付（直跑/.lenb/独立 exe）→ <code>--init</code> 项目骨架 → <code>--check</code> 自检 → LSP</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="常见任务cookbook.html">常见任务cookbook.md</a></td>
+<td>15 个"我要做 X"的完整程序：文件 / JSON / 参数 / 外部命令 / 数组 / 词频 / 时间 / 随机 / 线程 / 结构体枚举，全部实测跑过</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="示例程序导览.html">示例程序导览.md</a></td>
+<td><code>examples/</code> 里有 800+ 文件，这篇挑出 26 个值得读的按主题排好（每个都实测能编译+能跑），并标明哪些不用看</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="Leno入门教程.html">Leno入门教程.md</a></td>
+<td>语言全貌教程：语法 + 类型系统 + 模块，最全的一份</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="FAQ.html">FAQ.md</a></td>
+<td>常见问题（<code>.leno</code> 直跑 vs <code>.lenb</code>、缓存、退出码…）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="语言陷阱速查.html">语言陷阱速查.md</a></td>
+<td><strong>症状 → 病因 → 怎么办</strong>：语言 / 编译器 / 模块 / 构建层的坑（框架层见 LenoSDL3 那份速查）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="Leno_规范草稿.html">Leno_规范草稿.md</a></td>
+<td>语言规范草案（设计口径，不是教程）</td>
+<td>✅（草稿）</td>
+</tr>
+<tr>
+<td><a href="import使用指南.html">import使用指南.md</a></td>
+<td><code>import</code> / 模块加载与缓存</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="包管理与安装使用指南.html">包管理与安装使用指南.md</a></td>
+<td><code>leno --init/install/publish</code> 与 <code>leno.toml</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="单文件打包使用指南.html">单文件打包使用指南.md</a></td>
+<td><code>-p --onefile</code> 打包与资源内嵌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="async_await入门指南.html">async_await入门指南.md</a></td>
+<td>协程 / <code>async</code> / <code>await</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="threads使用指南.html">threads使用指南.md</a></td>
+<td>线程 / <code>Channel</code>（与 <code>module_threads_api.md</code> 有重叠）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="并发选择指引.html">并发选择指引.md</a></td>
+<td>async / threads / Channel 怎么选</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进.md</a></td>
+<td><code>is</code> 收窄与 <code>=&gt;</code> 绑定的语义与用法</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="区间口径约定.html">区间口径约定.md</a></td>
+<td><strong>下标/整数区间一律闭区间</strong>的唯一口径来源：切片 / <code>for a:b</code> / <code>switch case</code> / <code>RegexMatch.last</code> / <code>rfind(last)</code>；含 2026-11-20 的 <code>end</code> ⇒ <code>last</code> 迁移表</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="FFI使用指南.html">FFI使用指南.md</a></td>
+<td>FFI / clib 调用全流程</td>
+<td>🟡 版本历史里有一条 JIT 记录已过时</td>
+</tr>
+<tr>
+<td><a href="加密算法示例指南.html">加密算法示例指南.md</a></td>
+<td><code>examples/</code> 里纯 Leno 密码学算法导览</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验.md</a></td>
+<td>跨模块 clib 的踩坑与写法</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h2 id="二-模块-api-参考-18-篇">二、模块 API 参考（18 篇）</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="module_io.html">module_io.md</a></td>
+<td>文件读写与标准流</td>
+</tr>
+<tr>
+<td><a href="module_files.html">module_files.md</a></td>
+<td>files 模块（注意"字节保真 / 不翻译行尾"口径）</td>
+</tr>
+<tr>
+<td><a href="module_dirs.html">module_dirs.md</a></td>
+<td>目录操作</td>
+</tr>
+<tr>
+<td><a href="module_strings.html">module_strings.md</a></td>
+<td>字符串方法</td>
+</tr>
+<tr>
+<td><a href="module_arrays.html">module_arrays.md</a></td>
+<td>数组（<code>arr[:]</code> 双侧省略可用，等价整段浅拷贝）</td>
+</tr>
+<tr>
+<td><a href="module_dicts.html">module_dicts.md</a></td>
+<td>字典</td>
+</tr>
+<tr>
+<td><a href="module_types.html">module_types.md</a></td>
+<td>类型判定与转换</td>
+</tr>
+<tr>
+<td><a href="module_maths.html">module_maths.md</a></td>
+<td>数学</td>
+</tr>
+<tr>
+<td><a href="module_times.html">module_times.md</a></td>
+<td>时间</td>
+</tr>
+<tr>
+<td><a href="module_rands.html">module_rands.md</a></td>
+<td>随机数</td>
+</tr>
+<tr>
+<td><a href="module_regexs.html">module_regexs.md</a></td>
+<td>正则</td>
+</tr>
+<tr>
+<td><a href="module_jsons.html">module_jsons.md</a></td>
+<td>JSON</td>
+</tr>
+<tr>
+<td><a href="module_sockets.html">module_sockets.md</a></td>
+<td>网络</td>
+</tr>
+<tr>
+<td><a href="module_sys.html">module_sys.md</a></td>
+<td>系统（环境变量 / 进程 / 线程）</td>
+</tr>
+<tr>
+<td><a href="module_asyncs.html">module_asyncs.md</a></td>
+<td>异步协程</td>
+</tr>
+<tr>
+<td><a href="module_ffi_api.html">module_ffi_api.md</a></td>
+<td>FFI（命名带 <code>_api</code>，历史遗留）</td>
+</tr>
+<tr>
+<td><a href="module_cstructs.html">module_cstructs.md</a></td>
+<td>cstruct 内存布局</td>
+</tr>
+<tr>
+<td><a href="module_threads_api.html">module_threads_api.md</a></td>
+<td>线程 / Channel（命名带 <code>_api</code>，历史遗留）</td>
+</tr>
+<tr>
+<td><a href="module_web.html">module_web.md</a></td>
+<td><strong>LenoWeb</strong>（HTTP / HTML / 字符集 / <strong>gzip 解压</strong> / 爬虫 / 无头浏览器）；2026-10-14 首份文档</td>
+</tr>
+</tbody>
+</table>
+<h2 id="三-gui-lenosdl3">三、GUI / LenoSDL3</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>一句话</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化.md</a></td>
+<td>像素直写渲染的优化记录</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档.md</a></td>
+<td><strong>卡片控件</strong>（图 + 标题 + 角标 + <strong>可挂子控件的内容区</strong>）：尺寸模型 / 容器化 / 状态优先级 / 零裁剪预算 / <strong>圆角图（走渲染器离屏 + 「只乘 alpha」自定义混合合成）</strong> / <strong>多角标</strong> + 实施台账（v2.1 已落地；待办：列表行 <code>image_pos</code>、虚拟化）</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘.md</a></td>
+<td><strong>合并复盘（2026-11-22）</strong>：① 裁剪过多为何闪（push/pop 每次都 flush + 交集 rect + <code>_int</code> 截断丢亚像素）② 打包后句柄下发整条静默失效（合并 <code>case is A, B</code> 的动态派发被 DCE 剪成空桩；同名符号是误诊）③ Table 方法表断裂（符号表 128 上限静默丢弃）。含"只有打包才犯"的五步自查法</td>
+<td>✅ 三条全部已修/已查清（原文归档到 <code>archive/</code>）</td>
+</tr>
+<tr>
+<td>SDL3 常用 API / 控件优化清单</td>
+<td>在模块目录下：<code>build/leno_module/LenoSDL3/docs/</code> 的两篇</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h2 id="四-设计-台账-仍在推进">四、设计 · 台账（仍在推进）</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>一句话</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="待办与路线图.html">待办与路线图.md</a></td>
+<td><strong>待办总表</strong>（T1…T28 + ⑤-* 批次记录 + 数值结论），一件事一条带判据</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="线程并发能力修复追踪.html">线程并发能力修复追踪.md</a></td>
+<td><strong>线程/并发待做台账</strong>（TH1…TH7：struct 跨 Channel、入口模块化、并行原语、<code>Channel[T]</code>、threads.local），含"明确不做"五项</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪.md</a></td>
+<td><strong>类型可见性待做台账</strong>（US1…US5：类型位置限定名 <code>m.Pt</code>、漏列报错定位、<code>use m.*</code> 通配、传导型 use、native 规格归并），含"明确不做"五项</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现.md</a></td>
+<td><strong>待修台账 F1…F7</strong>（2026-11-17 Aria 实战 + v0.2.4 逐条复验）：<code>any as func(...)</code> 恒 null（编译器 bug）· struct 与 null 的正确顺序 · <code>Color</code> 只是 int 别名 · <code>requestRedraw</code> 全局单标志 · <code>leno_version</code> 从不校验 · 无 <code>@must_use</code> / <code>defer</code> 零使用 · 多返回值报错缺出处；每条带复现 / 位置 / 判据</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="F2_非可空与可空类型设计.html">F2_非可空与可空类型设计.md</a></td>
+<td><strong>F2 设计稿</strong>：<code>P</code> 与 <code>P?</code> 运行期同构 ⇒ <code>?</code> 目前只是声明意图；四条通路现状实测（声明 / 赋值 / 实参 / return / 字段写入全是静默）+ 分层方案 L0 天然可空豁免 → L1 警告 → 收窄 + L2 流失警告 → L3/L4 升错误，含 6 个真实迁移样例（Aria 桌面歌词 / 托盘、LenoSDL3 FFI 懒加载）× 判据 × 未决问题</td>
+<td>🧭</td>
+</tr>
+<tr>
+<td><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛.md</a></td>
+<td>重复实现收敛（多条目对象是已移除的 JIT）</td>
+<td>🟡</td>
+</tr>
+<tr>
+<td><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）.md</a></td>
+<td>易用性痛点清单（部分判据是 JIT 口径）</td>
+<td>📦 已归档（2026-11-22；无未完成事项）</td>
+</tr>
+<tr>
+<td><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案.md</a></td>
+<td>异常对象与报错文案（现行契约在"引擎错误自带位置"）</td>
+<td>🟡 内联器那段已过时</td>
+</tr>
+<tr>
+<td><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进.md</a></td>
+<td><code>is</code> 收窄 / <code>=&gt;</code> 绑定的设计</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="Leno语言改进建议.html">Leno语言改进建议.md</a></td>
+<td>语言特性去留评估（结论：不再追加特性）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单.md</a></td>
+<td>语言层隐式契约 / 类型洞 / 词法摩擦（M1…M11；含探针与修法建议）</td>
+<td>✅ 全部有结论（M1~M7、M9、M10、M11 已修、M8 定口径、M5c 已决不修）</td>
+</tr>
+<tr>
+<td><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31.md</a></td>
+<td>Aria 实战踩到的语言 / LenoSDL3 问题（L1 类型断言静默丢数据、L2 单槽回调覆盖、L3 线程入口参数、L4 字节/字符下标…）</td>
+<td>🆕 L1~L5 待修，F1~F3 本轮已修</td>
+</tr>
+<tr>
+<td><a href="注解系统与optkeys设计草案.html">注解系统与optkeys设计草案.md</a></td>
+<td><code>@</code> 注解语法 + <code>@optkeys</code>：把控件选项键的检查从运行时 <code>dochk.check</code> 提前到编译期（含 parser/semantic 落点、迁移路径、对账用例）</td>
+<td>✅ 已实现（2026-10-31，<code>semantic_annotations.c</code>）</td>
+</tr>
+<tr>
+<td><a href="enum载荷_设计草案.html">enum载荷_设计草案.md</a></td>
+<td>enum 成员带载荷（<code>case Progress(done, total)</code>）+ 模式匹配收窄；不破坏 int 枚举</td>
+<td>✅ 已实现并收官（2026-11-10）</td>
+</tr>
+<tr>
+<td><a href="cstruct_packed_align_设计文档.html">cstruct_packed_align_设计文档.md</a></td>
+<td>cstruct <code>packed</code> / <code>align(N)</code>（已实现）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><a href="struct 里const可行性.html">struct 里const可行性.md</a></td>
+<td>struct 关联常量可行性分析</td>
+<td>📜 分析稿</td>
+</tr>
+<tr>
+<td><a href="解构语法实现文档.html">解构语法实现文档.md</a></td>
+<td>解构声明语法与语义（Phase 1/2/3）</td>
+<td>🟡 引用表含已删文件</td>
+</tr>
+</tbody>
+</table>
+<h2 id="五-性能记录">五、性能记录</h2>
+<blockquote>
+<p>已<strong>全部归档</strong>到第七节（性能优化记录 / 字节码优化分析 / 字节码融合指令优化 / 函数调用性能优化 /
+代码生成性能排查记录 / leno对比 —— 整篇都是栈式 VM 或 JIT 时代的口径，<code>src/</code> 里已无对应实现）。</p>
+</blockquote>
+<h2 id="六-排查记录-已完结-留档">六、排查记录（已完结，留档）</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="窥孔优化复盘.html">窥孔优化复盘.md</a></td>
+<td>窥孔优化 bug 复盘（旧缓存名 <code>.lenocache</code>）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>其余排查记录（枚举求值 / 多线程 struct / 内联器 / 多线程全局变量 …）已归档到第七节。</p>
+</blockquote>
+<h2 id="七-已归档-docs-archive">七、已归档（<code>docs/archive/</code>）</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>一句话</th>
+<th>为什么归档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录.md</a></td>
+<td>JIT 架构 / 寄存器约定 / bailout / 踩坑（7104 行）</td>
+<td>JIT 已不在代码中</td>
+</tr>
+<tr>
+<td><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录.md</a></td>
+<td>JIT callout 三项优化与 bailout 排查</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5.md</a></td>
+<td>JIT 闭包 / upvalue 设计稿</td>
+<td>同上（当时即未动手）</td>
+</tr>
+<tr>
+<td><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研.md</a></td>
+<td>JIT 安全点 / GC 的行业调研</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python.md</a></td>
+<td>JIT vs VM vs Python 的基准与结论</td>
+<td>JIT 列全部失效</td>
+</tr>
+<tr>
+<td><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划.md</a></td>
+<td>报错文案逐条改进（B 类）与销账记录</td>
+<td>落点文件已删，仅留"当时为什么这么改"</td>
+</tr>
+<tr>
+<td><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录.md</a></td>
+<td>HttpClient 堆损坏崩溃（已修）</td>
+<td>LenoNet 已并入 LenoWeb；留作堆损坏排查的教训</td>
+</tr>
+<tr>
+<td><a href="archive/GC与分配优化.html">GC与分配优化.md</a></td>
+<td>GC / 分配优化交接（多处依据 JIT 实测）</td>
+<td>多处依据已移除的 JIT 实测</td>
+</tr>
+<tr>
+<td><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案.md</a></td>
+<td>字节码校验分层防护（复盘的内联器 bug 已随文件删除）</td>
+<td>方案已落地（bytecode_verify.c）</td>
+</tr>
+<tr>
+<td><a href="archive/字节码优化分析.html">字节码优化分析.md</a></td>
+<td>融合指令建议清单（栈式时代，未回填状态）</td>
+<td>栈式时代的融合指令清单</td>
+</tr>
+<tr>
+<td><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版.md</a></td>
+<td>融合指令落地记录（模型描述是栈式）</td>
+<td>同上（模型描述是栈式）</td>
+</tr>
+<tr>
+<td><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行.md</a></td>
+<td>内存态序列化 / <code>.lenb</code> 运行方案</td>
+<td>方案已落地（.lenb 上线）</td>
+</tr>
+<tr>
+<td><a href="archive/FFI优化方案.html">FFI优化方案.md</a></td>
+<td>FFI 模块优化清单（两条依赖 JIT）</td>
+<td>两条优化依赖 JIT</td>
+</tr>
+<tr>
+<td><a href="archive/性能优化记录.html">性能优化记录.md</a></td>
+<td>fib(30) 与操作栈优化的取舍记录（<strong>整篇是栈式 VM</strong>）</td>
+<td>整篇是栈式 VM 的取舍记录</td>
+</tr>
+<tr>
+<td><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构.md</a></td>
+<td>调用帧 / 多返回值优化（含"否决寄存器机"的旧结论）</td>
+<td>含"否决寄存器机"的旧结论</td>
+</tr>
+<tr>
+<td><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录.md</a></td>
+<td>codegen 首次编译 4.3s 的瓶颈排查</td>
+<td>一次性排查（已完结）</td>
+</tr>
+<tr>
+<td><a href="archive/leno对比.html">leno对比.md</a></td>
+<td>Leno vs Python 早期实测对比</td>
+<td>早期对比，已被归档的性能总结取代</td>
+</tr>
+<tr>
+<td><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题.md</a></td>
+<td>枚举三路径求值不一致 + 符号表扫描（全部已修；含已删文件的行号）</td>
+<td>问题已全修</td>
+</tr>
+<tr>
+<td><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录.md</a></td>
+<td>线程 struct 定义已修，模块级全局变量串台待重构</td>
+<td>问题已修（线程 struct / thread_local）</td>
+</tr>
+<tr>
+<td><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录.md</a></td>
+<td>内联器 <code>patch_ast_indices</code> 越界导致的间歇 segfault（<strong>方法论与教训仍有效</strong>）</td>
+<td>内联器已不在代码中</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ <strong>JIT 不在本仓库的历史里</strong>：<code>git ls-files "*jit*"</code> 与
+<code>git log --all --diff-filter=AD -- "*jit*"</code> 均为空（最早提交 <code>e8ccc46 2026-09-20 Initial commit</code>）
+⇒ 归档文档里的 <code>src/jit/*</code>、<code>LENO_NO_JIT=1</code>、<code>JIT_HOT_THRESHOLD</code> 等<strong>别去当前源码里找</strong>，
+其中的 <code>file:line</code> 一律不可用。</p>
+</blockquote>
+<p><strong>另外两篇"事实上已归档但没搬家"</strong>（被多处按名引用，路径保持原样）：</p>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>状态</th>
+<th>不搬的理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单.md</a></td>
+<td>📜 正文首部已自标归档（2026-09-23），46 处讲"与栈式对照"</td>
+<td>被 11 处按名引用，且是 <code>待办与路线图.md</code> 的历史锚点</td>
+</tr>
+<tr>
+<td><a href="窥孔优化复盘.html">窥孔优化复盘.md</a></td>
+<td>📜 讲的是已重写的栈式 codegen</td>
+<td>方法论仍被引用</td>
+</tr>
+</tbody>
+</table>
+<h2 id="八-图片与其他">八、图片与其他</h2>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/images/dashboard-main.png</code> / <code>-usage.png</code> / <code>-checkin.png</code> / <code>-settings.png</code></td>
+<td>两份 <code>README</code> 里的数据看板真实截图（<code>leno_gui/应用/数据看板/</code>）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="九-本轮-2026-10-02-变更摘要">九、本轮（2026-10-02）变更摘要</h2>
+<ol>
+<li><strong>新增本索引</strong>；两份 README 的文档段落改为"以本索引为准 + 保留常用链接"。</li>
+<li><strong>JIT 系 5 篇 <code>git mv</code> → <code>docs/archive/</code></strong>（共 8218 行 / 767KB ≈ docs 字节数的 40%），
+   每篇头部加统一归档块，全仓引用（含 <code>src/*.c</code> 注释、<code>assert/*.leno</code>、两份 README）同步改路径。</li>
+<li><strong>5 篇杂名英文改名</strong>：<code>error_column_progress</code> → <code>错误列号准确性_工作进度</code>、
+   <code>codegen-perf-investigation</code> → <code>代码生成性能排查记录</code>、<code>peephole-optimization-postmortem</code> → <code>窥孔优化复盘</code>、
+   <code>debug-inline-segfault</code> → <code>内联器崩溃排查记录</code>、<code>destructuring_design</code> → <code>解构语法实现文档</code>。</li>
+<li><strong>给 17 篇加"历史 / 局部过时"头</strong>（正文一字不动）：凡"把栈式 / JIT 当现状""引用已删文件
+   （<code>codegen_inline.c</code>、<code>op_*.inc</code>、<code>src/jit/*</code>）""写着旧版本号 / 旧断言总数"的，一眼能看到。</li>
+<li><code>Leno入门教程.md</code> 另修一处<strong>事实错误</strong>：原文"多返回值函数不会被内联" ⇒ 现状是
+   <strong>所有脚本函数调用都是真调用</strong>（寄存器式 codegen 缺函数内联器，见 <code>待办与路线图.md</code> 第六节）。</li>
+</ol>
+<h2 id="十-为什么保持扁平-没建子目录">十、为什么保持扁平（没建子目录）</h2>
+<p><code>docs/*.md</code> 的路径被 <strong>67 个文件</strong>按名引用（含 <code>src/*.c</code> 注释、<code>assert/*.leno</code>、<code>leno_gui</code>、
+<code>build/leno_module</code>、两份 README）。热点：<code>单一事实来源</code> 28 处、<code>JIT实现与调试记录</code> 32 处、
+<code>待办与路线图</code> 21 处。换成子目录/前缀要同步上百处引用，收益不抵风险 ⇒
+<strong>布局保持扁平、分类交给本索引</strong>；<code>docs/archive/</code> 只放"整篇都是历史"的文档。
+<code>module_*.md</code> 的命名约定（18 篇）也被两份 README 当规格引用，一并保持不动。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><div class="side-title">（无小节标题）</div></aside>
+</div>
+<nav class="pager"><a href="index.html">← 返回门户</a><span></span></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

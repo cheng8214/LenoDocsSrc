@@ -43,9 +43,19 @@ def _slug(value: str, separator: str) -> str:
 def _make_md() -> "markdown.Markdown":
     #   ⚠ `extension_configs` 的键必须与 `extensions` 里写的**字符串完全一致**：
     #     原来写 "markdown.extensions.toc" 却用键 "toc" ⇒ 配置被静默忽略（实测 id 仍是默认值）。
+    #
+    #   ⚠⚠ 2026-11-23（**站点全丢**的事故）：这里必须写**完整模块路径**。
+    #     写短名（"tables"）时 markdown 3.11 走的是 `importlib.metadata` 的
+    #     **entry points** 解析；而 `_build_vendor/` 里那份拷贝**没有 entry_points.txt**
+    #     ⇒ `ModuleNotFoundError: No module named 'tables'`，构造直接抛异常。
+    #     又因为生成脚本当时是"先 rmtree(site) 再生成"，异常一来 **site/ 整个消失**，
+    #     而构建命令的输出被 `>nul` 吞掉 ⇒ 现场表现就是"文档 HTML 全没了"。
+    #     完整路径走的是 `importlib.import_module('markdown.extensions.tables')`，
+    #     不依赖 entry points ⇒ 无论 vendor 是否完整都能用 ✓
+    ext = "markdown.extensions."
     return markdown.Markdown(
-        extensions=["tables", "fenced_code", "toc", "sane_lists"],
-        extension_configs={"toc": {"slugify": _slug, "separator": "-"}},
+        extensions=[ext + "tables", ext + "fenced_code", ext + "toc", ext + "sane_lists"],
+        extension_configs={ext + "toc": {"slugify": _slug, "separator": "-"}},
         output_format="html5")
 
 SRC = Path(__file__).resolve().parent
@@ -1058,8 +1068,15 @@ def main():
             ordered.append(rel)
             cat_of[rel] = c["name"]
 
+    #   ⚠ 2026-11-23：原来这里是 `shutil.rmtree(OUT)` —— 只要**后面任何一步失败**
+    #     （扩展导入失败、某个 md 解析异常…），site/ 就永久消失，而命令常被 `>nul` 吞输出。
+    #     改成"先改名备份"：成功时末尾删备份；失败时至少文件还在（`site.bak/`），
+    #     可以直接 `move site.bak site` 回滚 ✓
+    bak = OUT.with_name(OUT.name + ".bak")
     if OUT.exists():
-        shutil.rmtree(OUT)
+        if bak.exists():
+            shutil.rmtree(bak)
+        OUT.rename(bak)
     ASSETS.mkdir(parents=True)
 
     index_docs = []
@@ -1177,6 +1194,10 @@ def main():
 
     if IMAGES_SRC.is_dir():
         shutil.copytree(IMAGES_SRC, OUT / "images", dirs_exist_ok=True)
+
+    # 生成成功 ⇒ 删掉改名备份（失败时不会走到这里，`site.bak/` 留着可回滚 ✓）
+    if bak.exists():
+        shutil.rmtree(bak, ignore_errors=True)
 
     print("生成完成: {}".format(OUT))
     print("文档 {} 篇 | 分类 {} 组 | 搜索索引 {:.0f} KB".format(

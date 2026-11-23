@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>寄存式与栈式的差异清单 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="寄存式与栈式的差异清单.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">04 语言设计与实现</a><span class="sep">/</span><span class="here">寄存式与栈式的差异清单</span></span>
+</header>
+<div class="banner">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details open><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html" class="active" aria-current="page">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="寄存式与栈式的差异清单">寄存式与栈式的差异清单</h1>
+<blockquote>
+<p>⛔ <strong>本文档已归档（2026-09-23）</strong>：寄存器式已经在语义与性能上跑到栈式前面，<strong>不再与栈式对比</strong>，
+对照脚本（<code>tools/diff_vs_stack.ps1</code>）已删除 ⇒ 下面的"与栈式对照"结论一律只当<strong>历史核对记录</strong>看。
+待做事项与新的结论一律记在 <code>docs/待办与路线图.md</code>。</p>
+<p>适用对象（历史）：本仓库 <strong>Leno（寄存器式 VM）</strong> 与参考实现 <strong>栈式 VM</strong>（<code>D:\CLeno\Leno</code>）。
+目的（历史）：把"<strong>寄存器式已经修对、栈式还不对</strong>"的地方登记下来。</p>
+<p>⚠ <strong>回归方式（已定）</strong>：日常回归<strong>只跑断言套件</strong>
+（<code>.\build\leno.exe assert\run_tests.leno build\leno.exe assert</code>）——
+<strong>没有差分/对照这一步了</strong>，也不会再有"跑一批和栈式比"的操作。</p>
+</blockquote>
+<ul>
+<li>本轮的核对范围（逐条实测）：<code>examples/async await</code>（23 个样例）、<code>examples/minilang</code>、
+  <code>examples/func</code>（前向引用 / 闭包）、<code>examples/验证/repro_if_expr.leno</code>、
+  <code>examples/import/default_param_bug/</code>，外加「模块变量 / 全局变量 / 插值 / for 迭代 / clear 后类型名」
+  系列探针 → <strong>行为差异只剩 A1–A6 六类（都在栈式侧）</strong>。</li>
+<li><code>examples/async await</code> 全 23 个样例：修完 A2 / A3 / E15 后<strong>差异清零</strong>（只剩 <code>gc .leno</code> 的
+  性能超时，非结果差异）；<code>examples/func</code> 0 差异；<code>examples/import</code>（211 个）剩 3 条、
+  <code>examples/测试</code>（140 个）剩 5 条、<code>examples/threads</code>（14 个）剩 3 条<strong>既存</strong>差异
+  （都会噪、报错措辞或线程打印竞态，见第七节）。</li>
+<li>（归档说明）修完后未再跑 <code>examples/</code> 全量对照；这一项随"不再与栈式对比"取消，
+  需要跑一批样例看回归时改用 <code>docs/待办与路线图.md</code> 的 T2（对自身基线的输出快照）。</li>
+<li>断言基线：<code>build\leno.exe assert\run_tests.leno build\leno.exe assert</code> → <strong>352 passed / 0 failed</strong>。</li>
+</ul>
+<hr>
+<h2 id="一-结论一览">一、结论一览</h2>
+<table>
+<thead>
+<tr>
+<th>分区</th>
+<th>含义</th>
+<th>条数</th>
+<th>现在跑差分对照会看到差异吗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong> 寄存器式对 / 栈式错</td>
+<td>有意的行为差异，栈式暂不同步</td>
+<td>6</td>
+<td><strong>会</strong>（本文档的核心）</td>
+</tr>
+<tr>
+<td><strong>B</strong> 两边都错、现象还不一样</td>
+<td>同一个坑，两侧表现不同</td>
+<td>1</td>
+<td>会（但都不对，别照着任一侧对齐）</td>
+</tr>
+<tr>
+<td><strong>C</strong> 两边都错、都还没修</td>
+<td>共有缺口，登记备查</td>
+<td>6</td>
+<td>不会（两侧一致地错）</td>
+</tr>
+<tr>
+<td><strong>D</strong> 栈式侧潜伏缺陷</td>
+<td>栈式暂时不崩，但别照抄</td>
+<td>1</td>
+<td>不会</td>
+</tr>
+<tr>
+<td><strong>E</strong> 已追平</td>
+<td>移植时漏掉/写错、已补齐，两侧现在一致</td>
+<td>15</td>
+<td>不会</td>
+</tr>
+</tbody>
+</table>
+<p>判定原则（本仓库一直按这个走）：</p>
+<ol>
+<li><strong>静默错值</strong>（算出来是错的但没报错）<strong>优先于</strong>报错 —— 报错至少能被发现；</li>
+<li>能修一侧就先修，但<strong>必须在本文档登记另一侧</strong>，避免以后把有意差异当回归；</li>
+<li>不为了让两边"看起来一致"而回退已经修对的行为。</li>
+</ol>
+<hr>
+<h2 id="二-a-类-寄存器式对-栈式错-真实行为差异">二、A 类：寄存器式对、栈式错（真实行为差异）</h2>
+<h3 id="a1-导出-模块-变量的声明类型规范化-就是你问的-float-那条">A1. 导出（模块）变量的<strong>声明类型规范化</strong>（就是你问的 float 那条）</h3>
+<p><strong>最小复现</strong>（两个文件放同一目录）：</p>
+<pre><code class="language-leno">// _mod.leno
+export float mfLit = 1          // 整数字面量初始化一个声明为 float 的导出变量
+export float mfExpr = 1 + 1
+</code></pre>
+<pre><code class="language-leno">// main.leno
+import &quot;_mod.leno&quot; as m
+main() {
+    print(&quot;type=&quot;, type(m.mfLit), &quot;  /2=&quot;, m.mfLit / 2)
+}
+</code></pre>
+<p><strong>实测对比</strong>（<code>--no-cache</code>，两边的完整形态）：</p>
+<table>
+<thead>
+<tr>
+<th>模块里的写法</th>
+<th>寄存器式</th>
+<th>栈式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>export float mfLit = 1</code></td>
+<td><code>float</code> / <code>0.5</code> ✅</td>
+<td><code>int</code> / <code>0</code> ❌</td>
+</tr>
+<tr>
+<td><code>export float mfExpr = 1 + 1</code></td>
+<td><code>float</code> / <code>1.0</code> ✅</td>
+<td><code>int</code> / <code>1</code> ❌</td>
+</tr>
+<tr>
+<td><code>export float mfDecimal = 1.5</code></td>
+<td><code>float</code> / <code>0.75</code> ✅</td>
+<td><code>float</code> / <code>0.75</code> ✅</td>
+</tr>
+<tr>
+<td><code>export int miLit = 7</code></td>
+<td><code>int</code> / <code>3</code> ✅</td>
+<td><code>int</code> / <code>3</code> ✅</td>
+</tr>
+<tr>
+<td><code>export string msLit = "s"</code> / <code>export bool mbLit = true</code></td>
+<td>正确 ✅</td>
+<td>正确 ✅</td>
+</tr>
+<tr>
+<td><code>export Array[int] maLit = [1, 2]</code></td>
+<td><code>Array[int]</code> ✅</td>
+<td><code>Array[int]</code> ✅</td>
+</tr>
+<tr>
+<td><strong>脚本内</strong>（非导出）的全局 <code>float g = 1</code></td>
+<td><code>float</code> / <code>0.5</code> ✅</td>
+<td><code>float</code> / <code>0.5</code> ✅</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ 差异只在<strong>"导出变量 + 用整数字面量初始化 + 声明为 float"</strong>这一格；
+<code>/2</code> 走 int 除法是<strong>静态类型</strong>错了，<code>type()</code> 也是错的（<strong>运行时值</strong>也是 int，两个面一起错）。</p>
+<p><strong>根因</strong>（<code>src/module_compiler.c</code> 的"编译期预登记导出变量"）：</p>
+<pre><code class="language-c">// 修之前：直接按初始化字面量建值，**完全无视声明类型**
+case AST_NUM:
+    if (init-&gt;u.num.is_bigint) { ... }
+    else if (init-&gt;u.num.is_float) { var_val = val_float(...); }
+    else { var_val = val_int((int)init-&gt;u.num.value); }   // ← export float x = 1 登记成 int 1 ✗
+</code></pre>
+<p>登记进去以后，模块初始化收尾那段"从 <code>globals</code> 补填 <code>exports</code>"看到
+<code>val_is_null(current_val)</code> 为假就<strong>跳过</strong>了 ⇒ 错的 int 值一直留在 <code>exports</code> 里。
+而模块<strong>内部</strong>读自己的槽位（已按声明类型 CAST 过）是 float ⇒
+出现"同一个变量，模块内 0.5、模块外 0"的诡异现象。</p>
+<p><strong>寄存器式修法</strong>（commit <code>6667a60</code>）：预登记时尊重声明类型 —— 声明是 <code>float</code> 而字面量是整数时也按浮点存。</p>
+<p><strong>栈式现状</strong>：同一段逻辑、同样的问题（未同步）。按约定：栈式逐步放弃，<strong>不追平</strong>；
+如果哪天要同步，改法与寄存器式一样（<code>decl_kind == TYPE_FLOAT</code> 时走 <code>val_float</code>）。</p>
+<p><strong>回归锁定</strong>：<code>assert/test_cross_module_types.leno</code>（含 int / string / bool 反向用例，
+防止"顺手把所有导出变量都转成 float"）。</p>
+<h3 id="a2-async-函数经一等值调用必须返回-future-原-c-类-c4-已修">A2. async 函数<strong>经一等值调用</strong>必须返回 Future（原 C 类 C4，已修）</h3>
+<p><strong>最小复现</strong>：</p>
+<pre><code class="language-leno">import io
+import asyncs
+async func work(int n): int {
+    await asyncs.sleep(1)
+    return n * 2
+}
+async func driver() {
+    var f = work
+    io.print(&quot;via var=&quot;, await f(3))    // 曾经：整段**静默无输出**（exit=0，一行都不打）
+}
+main() { driver(); asyncs.run() }
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>寄存器式</th>
+<th>栈式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>var f = work; await f(3)</code></td>
+<td><code>6</code> ✅</td>
+<td><strong>静默无输出</strong>（exit=0）❌</td>
+</tr>
+<tr>
+<td><code>var r = work(3); type(r)</code></td>
+<td><code>object</code>（Future）✅</td>
+<td>拿到裸值 ❌</td>
+</tr>
+<tr>
+<td>把 async 函数当参数传、函数里 <code>await cb(7)</code></td>
+<td><code>14</code> ✅</td>
+<td>❌（静默 / 或类型检查挡下）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：编译器只在<strong>静态</strong>能确定 callee 是 async 时才发 <code>OP_ASYNC_CALL</code>；
+经变量 / 当参数传 / 经绑定对象调用时静态判不出来 ⇒ 发普通 <code>CALL</code> ⇒ 函数体被<strong>同步执行</strong>
+（返回值不是 Future；体里若有 <code>await</code>，它还会把当前协程的帧搞乱 ⇒ 静默死亡）。</p>
+<p><strong>寄存器式修法</strong>：把 async 标记落到<strong>函数对象</strong>上（<code>ObjFunction.is_async</code>：编译期写入 +
+模块缓存往返，缓存版本 v12 → <strong>v13</strong>，旧缓存必须作废），再由 VM 在 <code>OP_CALL</code> / <code>OP_TAIL_CALL</code>
+的<strong>运行期</strong>兜底 —— 命中 async 闭包就"建协程 + 返回 Future"，与 <code>OP_ASYNC_CALL</code>
+共用同一份实现（<code>vm_start_async_call</code>）。语义上这就是对的：<strong>async 函数一旦被调用就返回 Future，与写法无关</strong>。</p>
+<p><strong>回归锁定</strong>：<code>assert/test_async.leno</code> 测试9（经变量 / 当参数传）。</p>
+<h3 id="a3-跨模块-async-export-async-func-export-struct-的-async-方法-原-c-类-c2-已修">A3. <strong>跨模块 async</strong>（<code>export async func</code> / <code>export struct</code> 的 async 方法）（原 C 类 C2，已修）</h3>
+<p><strong>最小复现</strong>（两个文件同目录）：</p>
+<pre><code class="language-leno">// mod.leno
+import asyncs
+export async func work(): int {          // ① 导出的 async 函数
+    await asyncs.sleep(1)
+    return 7
+}
+export struct Worker {                   // ② 导出 struct 的 async 方法
+    int n = 0
+    async func run(): int {
+        await asyncs.sleep(1)
+        return self.n + 1
+    }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>寄存器式</th>
+<th>栈式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>await m.work()</code></td>
+<td><code>7</code> ✅</td>
+<td>❌「模块 'm' 中没有方法 'work'」</td>
+</tr>
+<tr>
+<td><code>var w = new Worker(); await w.run()</code></td>
+<td><code>42</code> ✅</td>
+<td>❌ 3 条「struct 的字段 'func'/'asyncs'/'self' 声明类型无法解析」警告 + ❌「内部错误: struct 'Worker' 方法收集不完整…请报告编译器 bug」</td>
+</tr>
+<tr>
+<td>普通导出函数 <code>m.plain()</code></td>
+<td><code>5</code> ✅</td>
+<td><code>5</code> ✅（都对，注意<strong>别</strong>被 async 化）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：整条链路上<strong>四处都不认 <code>async</code></strong>（<code>grep async src/module_symbol_table</code> 原来是 0 命中）：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>原来会怎样</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parser_module.c</code> 的 export 分支</td>
+<td>只认 <code>TOK_FUNC</code> ⇒ <code>export async func</code> 直接报「export 后面期望 var、const、func…」</td>
+</tr>
+<tr>
+<td><code>scan_func.inc</code>（模块函数扫描）</td>
+<td>只认 <code>func</code> ⇒ <code>async func</code> 落到 <code>scan_var.inc</code> 被当成<strong>"类型在前"的变量声明</strong>（"async" 当类型、"func" 当变量名）</td>
+</tr>
+<tr>
+<td><code>scan_struct.inc</code>（struct 方法扫描）</td>
+<td>只认 <code>func</code> ⇒ <code>async func</code> 落到<strong>字段</strong>解析，伪造出 <code>func</code>/<code>asyncs</code>/<code>self</code> 三个字段</td>
+</tr>
+<tr>
+<td><code>module_loader.c</code> 的 <code>extract_exports</code>（导出名单）</td>
+<td>只跳过 <code>func/var/const/…</code> ⇒ 导出名被登记成 <code>async</code>/<code>func</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>寄存器式修法</strong>：解析器认 <code>TOK_ASYNC</code>；扫描器加 <code>scan_skip_async</code> 前缀剥离（函数 + struct 方法两处）；loader 的导出名单同样跳过；符号表加 <code>ModuleFuncSymbol.is_async</code> / <code>ModuleStructMethod.is_async</code>（随 <code>.lenosymc</code> 往返，缓存版本 <strong>v14</strong>）；codegen 对跨模块 async 调用发 <code>OP_ASYNC_CALL</code>（与本地路径同口径），<code>OP_ASYNC_CALL</code> 也接受模块导出常见的<strong>裸函数对象</strong>；跨模块方法的占位 AST 带上该标记。</p>
+<blockquote>
+<p>⚠ <strong>加字段的血泪教训</strong>：给 <code>ModuleStructMethod</code> 加 <code>is_async</code> 后，
+<code>sym_table_add.inc</code> 的 <code>module_symbol_table_add_struct</code> 是<strong>逐字段手工深拷贝</strong>（<code>malloc</code> + 逐项赋值），
+漏拷这个字段 ⇒ 目标里的 <code>is_async</code> 是<strong>未初始化垃圾</strong>，偶尔为 1 ⇒ 普通方法被当成 async
+（返回 Future、打印成 <code>[object]</code>），失败点还随内存布局漂移（<code>test_use_return_edge</code> 等 6 个测试）。
+已补上拷贝并把 <code>malloc</code> 换成 <strong><code>calloc</code></strong> —— 以后漏拷至少退化成 0（安全默认），不再是随机行为。
+<strong>给这类结构体加字段时，务必检查"手工深拷贝"点</strong>（<code>add_struct</code> 的方法数组、<code>add_func</code> 的扩容槽位、
+缓存往返的三处读写）。</p>
+</blockquote>
+<p><strong>回归锁定</strong>：<code>assert/test_async_cross_module.leno</code>（含"普通导出函数不受影响"的反向断言）。</p>
+<h3 id="a4-函数返回值按声明类型规范化-原-c-类-c1-已修">A4. <strong>函数返回值</strong>按声明类型规范化（原 C 类 C1，已修）</h3>
+<p><strong>最小复现</strong>：</p>
+<pre><code class="language-leno">func f(): float { return 1 }          // 整数字面量
+func g(): float { int n = 5; return n }   // int 变量
+func h(): float { return 1 + 1 }          // 表达式
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>检查（<code>main</code> 里 <code>f() / 2</code>…）</th>
+<th>寄存器式</th>
+<th>栈式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type(f())</code> / <code>f()/2</code></td>
+<td><code>float</code> / <code>0.5</code> ✅</td>
+<td><code>int</code> / <code>0</code> ❌</td>
+</tr>
+<tr>
+<td><code>g()/2</code></td>
+<td><code>2.5</code> ✅</td>
+<td><code>2</code> ❌</td>
+</tr>
+<tr>
+<td><code>h()/2</code></td>
+<td><code>1.0</code> ✅</td>
+<td><code>1</code> ❌</td>
+</tr>
+<tr>
+<td>跨模块 <code>m.ret_float()/2</code></td>
+<td><code>0.5</code> ✅</td>
+<td><code>0</code> ❌</td>
+</tr>
+<tr>
+<td>struct 方法 <code>b.scale()/2</code></td>
+<td><code>1.5</code> ✅</td>
+<td><code>1</code> ❌</td>
+</tr>
+<tr>
+<td><code>async func</code> + <code>await af()/2</code></td>
+<td><code>0.5</code> ✅</td>
+<td><code>0</code> ❌</td>
+</tr>
+<tr>
+<td>反向：<code>func i(): int { return 7 }</code> → <code>i()/2</code></td>
+<td><code>3</code> ✅（int 除法）</td>
+<td><code>3</code> ✅</td>
+</tr>
+<tr>
+<td>反向：构造函数 / <code>: string</code> / <code>: bool</code></td>
+<td>不受影响 ✅</td>
+<td>不受影响 ✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：<code>gen_return</code> <strong>从来没看过声明的返回类型</strong> —— 求值完直接 <code>emit_return</code>。
+变量的声明/赋值早就有 <code>emit_cast_for_target</code>（A1 补齐了全局/模块分支），
+返回值这一处却漏了，于是"函数说好返回 float、实际返回 int"；
+跨模块调用点只信声明类型，所以在模块边界暴露得最明显。<strong>栈式侧同样如此</strong>，是共有缺口。</p>
+<p><strong>修法</strong>：CodeGen 记住当前函数的 <strong>AST</strong>（<code>current_func_ast</code>，随嵌套函数保存/恢复；
+<code>ObjFunction.return_types</code> 在寄存器式里从未被填过，不能依赖它），
+<code>gen_return</code> 按 <code>u.func.return_type</code> 插 CAST —— 与变量声明/赋值共用 <code>emit_cast_for_target</code>；
+构造函数（返回 self）与多返回值不走这条。</p>
+<blockquote>
+<p>💡 一般规律：<strong>凡是有"声明类型"的地方，都要在赋值处做一次规范化</strong>。
+到目前为止的三处：变量声明（A1 修的模块/全局分支）、赋值（早就有）、
+函数返回值（A4）。以后再加新的"带声明类型"的语法，先想想这一处补齐没有。</p>
+</blockquote>
+<p><strong>回归锁定</strong>：<code>assert/test_return_type_cast.leno</code>（本地 / 跨模块 / struct 方法 / async / 构造函数
++ int·string 反向用例）、<code>assert/xmod_types.leno</code> 补 <code>ret_float_lit</code> / <code>ret_float_var</code> / <code>ret_int</code> / <code>ret_str</code>。</p>
+<h3 id="a5-多个协程同时失败时-run-汇总抛出-原-c-类-c7-已修">A5. 多个协程同时失败时 <code>run()</code> <strong>汇总</strong>抛出（原 C 类 C7，已修）</h3>
+<p><strong>最小复现</strong>：</p>
+<pre><code class="language-leno">import io
+import asyncs
+
+async func riska(): int { await asyncs.sleep(1); throw &quot;A&quot; }
+async func riskb(): int { await asyncs.sleep(1); throw &quot;B&quot; }
+
+main() {
+    riska()
+    riskb()
+    try { asyncs.run() } catch e { io.print(&quot;run caught: &quot;, e.msg) }
+    io.print(&quot;done&quot;)
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>侧</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>寄存器式</td>
+<td><code>run caught:  2 个协程失败: A; B</code> / <code>done</code>、<code>exit=0</code> ✅（正是文档承诺的汇总格式）</td>
+</tr>
+<tr>
+<td>栈式</td>
+<td><code>run caught:  A</code>，另外一条 <strong>B 的未捕获错误</strong>从 <code>main</code> 之外冒出来 ❌</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因 / 修法</strong>：这条<strong>不是单独修的</strong> —— E15（协程异常屏障）修完后自动正确了。
+以前协程里抛的异常会被<strong>调用方</strong>的 try-catch 半路截走，第二个失败根本没走到 <code>run()</code> 的收集点，
+反而在调用方之外冒出来；加上协程边界之后，两个失败都归 <code>asyncs.run()</code> 收集，
+于是按文档汇总成 <code>N 个协程失败: …; …</code>。</p>
+<p><strong>回归锁定</strong>：<code>assert/test_async_exception_barrier.leno</code> 第 ④ 条断言（连跑稳定）。</p>
+<h3 id="a6-asyncs-的查询类-api-缺失-current-is_done-get_result-原-c-类-c9-已补">A6. <code>asyncs</code> 的查询类 API 缺失：<code>current()</code> / <code>is_done()</code> / <code>get_result()</code>（原 C 类 C9，已补）</h3>
+<p><strong>现象</strong>：<code>docs/module_asyncs.md</code> 把这三个 API 当<strong>已可用</strong>写 —— 有签名、有示例，
+甚至有「必须先使用 <code>await</code> 确保 Future 完成，再调用 <code>get_result()</code>」这种注意事项，
+但两个引擎的注册表里都只有 <code>sleep / run / yield / all / timeout</code> ⇒ 照文档写必然失败：</p>
+<pre><code>[语义错误] 未找到模块方法: asyncs.current（可用: timeout, run, all, yield, sleep）
+</code></pre>
+<p><strong>修法</strong>（文档是规范，实现向文档对齐；运行时数据其实基本齐了）：
+- <code>ObjFuture</code> 早有 <code>completed</code> / <code>result</code> ⇒ <code>is_done</code> / <code>get_result</code> 直接读；
+- 只缺<strong>协程 ID</strong>：给 <code>ObjCoroutine</code> 加 <code>int id</code>，在 <code>coroutine_new</code> 里从 <strong>VM 的计数器</strong>
+  （<code>next_coroutine_id</code>）递增分配。放 VM 上而不是文件级 <code>static</code>，是因为各线程的 VM 都是
+  <code>memset(&amp;vm, 0, sizeof(VM))</code> 出来的 ⇒ 天然线程安全、每个 VM 独立编号；
+- 三个 native + 注册，参数类型写 <code>TYPE_FUTURE</code> ⇒ 语义层会在<strong>编译期</strong>就拦住 <code>is_done(123)</code>。</p>
+<p><strong>行为</strong>（实测）：</p>
+<table>
+<thead>
+<tr>
+<th>调用</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main</code> 里 <code>asyncs.current()</code></td>
+<td><code>-1</code>（不在协程里；文档未规定，取这个以免与真实 ID 混淆）</td>
+</tr>
+<tr>
+<td>协程里 <code>asyncs.current()</code></td>
+<td><code>1</code>、<code>2</code>…（每个协程一个，互不相同）</td>
+</tr>
+<tr>
+<td>未完成 future：<code>is_done(f)</code> / <code>get_result(f)</code></td>
+<td><code>false</code> / <code>null</code> ✅（文档同此约定）</td>
+</tr>
+<tr>
+<td><code>await f</code> 之后</td>
+<td><code>true</code> / 返回值（实测 <code>42</code>、<code>200</code>） ✅</td>
+</tr>
+<tr>
+<td><code>asyncs.is_done(123)</code></td>
+<td><strong>编译期</strong>报「参数 1 类型错误: 期望 'Future'，但传入 'int'」 ✅</td>
+</tr>
+</tbody>
+</table>
+<p>栈式仍报「未找到模块方法: asyncs.current」（连提示里列出的可用 API 也只有 5 个）⇒ 有意差异。</p>
+<p><strong>回归锁定</strong>：<code>assert/test_asyncs_query_api.leno</code>。</p>
+<hr>
+<h2 id="三-b-类-两边都错-现象还不一样">三、B 类：两边都错、现象还不一样</h2>
+<h3 id="b1-局部函数遮蔽同名全局-async-函数-且调用点在该局部函数之后才被语义分析">B1. 局部函数遮蔽同名全局 async 函数，且调用点在该局部函数<strong>之后</strong>才被语义分析</h3>
+<pre><code class="language-leno">async func dup(): int { await asyncs.sleep(5); return 5 }
+
+async func other(): int {
+    func dup(): int { return 99 }     // 局部同名（非 async）
+    return dup()                       // ← 这行是对的（局部遮蔽）
+}
+
+async func later(): int {
+    return await dup()                 // ← 这行被&quot;污染&quot;：func_table 里 dup 已是那个局部函数
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>侧</th>
+<th>现象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>寄存器式</td>
+<td><code>other()</code> 正确返回 99；<code>later()</code> <strong>静默少输出</strong>（协程提前结束，无任何报错）</td>
+</tr>
+<tr>
+<td>栈式</td>
+<td><code>other()</code> 正确返回 99；<code>later()</code> 报「await 只能等待 Future 对象」</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：<code>func_table</code> 是<strong>按名字</strong>的全局表、<strong>没有作用域维度</strong>；局部函数会覆盖同名全局条目。
+两边都用"语义遍历到调用点的<strong>时点</strong>"来判定 async（寄存器式的 <code>ast-&gt;u.call.callee_is_async</code>），
+时点早于污染 → 大部分场景正确；但调用点若在污染<strong>之后</strong>，时点也救不了。</p>
+<p><strong>处置</strong>：本轮<strong>不修</strong>（两边都错、且属边角写法）。要彻底解决需要给 <code>func_table</code> 加作用域维度
+（记录函数定义所在作用域，查找时按调用点作用域链过滤）——那是结构性改动，单独排期。</p>
+<blockquote>
+<p>注意：这是"两边都错"，<strong>不要</strong>照任一侧对齐；也不要把寄存器式的"静默少输出"当成回归 ——
+它在修 A1/async 之前就是这样。</p>
+</blockquote>
+<hr>
+<h2 id="四-c-类-两边都错-都还没修-登记备查">四、C 类：两边都错、都还没修（登记备查）</h2>
+<blockquote>
+<p><strong>🔁 2026-09-25 复核 —— 状态回填（本文档已归档，活账见 <code>docs/待办与路线图.md</code>）</strong></p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>复核结论（均为本机实测/代码审计）</th>
+<th>去向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C3</td>
+<td><strong>现象属实</strong>：<code>w?.go()</code> 运行时正确（协程确实建了），但<strong>静态类型</strong>是 <code>int?</code> ⇒ <code>asyncs.is_done(b)</code> 编译错「期望 'Future'，但传入 'int?'」；代码侧也确认 <code>u.safe_access.callee_is_async</code> 只有 parser 初始化为 0、语义遍从不填（<code>visitinc/visit_expr.inc</code> 只覆盖 <code>AST_VAR</code> 那一支）</td>
+<td>仍开 ⇒ <strong>T3</strong></td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong>仍复现</strong> ✓：<strong>标</strong>返回类型注解 ⇒ 编译错「返回类型不匹配：期望 int，实际 func()」✗；<strong>不标</strong>注解 ⇒ 能跑且结果正确（实测 18 ✓）—— 与登记一致</td>
+<td>仍开 ⇒ <strong>T3</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>⚠ 复核时差点误判"已修"：探针把<strong>形参名</strong>起成了与某个全局函数<strong>同名</strong>（形参 <code>cb</code> + 全局 <code>async func cb(int x): int</code>）⇒ 类型推断按那个全局函数推、看起来能编译 ✗（名字解析在推断里不带作用域）。写用例/探针时形参名要与全局函数名错开 ✓</td>
+<td></td>
+</tr>
+<tr>
+<td>C6</td>
+<td><strong>仍复现</strong>：<code>async func f(Future x): int { return await x }</code> ⇒ 编译错「返回类型不匹配：期望 int，实际 any」</td>
+<td>仍开 ⇒ <strong>T3</strong></td>
+</tr>
+<tr>
+<td>C8</td>
+<td><strong>仍属实</strong>：失败 future 在 <code>all()</code> 里是 <code>[null]</code>、<strong>不抛</strong>；错延后到 <code>run()</code> 才抛（实测异常值类型 <code>Dict[string, any]</code>）</td>
+<td>仍开 ⇒ <strong>T4</strong>（待拍板）</td>
+</tr>
+<tr>
+<td>C10</td>
+<td><strong>仍属实</strong>：未完成成员给 <code>null</code>，<code>run()</code> 之后再取才是真值（实测 <code>null</code> → <code>5</code>）</td>
+<td>仍开 ⇒ <strong>T4</strong>（待拍板）</td>
+</tr>
+<tr>
+<td>~~C11~~</td>
+<td><strong>✅ 已修</strong>（T11 ✅）：<code>int? a = null</code> 参与算术 ⇒ <strong>编译错</strong>（另有可空运算警告）；<strong>未赋默认值的值类型字段</strong>参与算术 ⇒ <strong>运行期报错</strong>（不再静默算 0 ✗）。既有用例：<code>test_null_arith_compile_error</code> / <code>test_null_arith_error</code></td>
+<td>已实现</td>
+</tr>
+</tbody>
+</table>
+<p>复核方法：每条各写最小复现脚本直接跑（不依赖差分对照——栈式已弃用且不在本机）。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>缺口</th>
+<th>现象（两侧一致）</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>~~函数返回值不按声明类型规范化~~</td>
+<td><strong>已修 —— 移入 A 类 A4</strong>（寄存器式已修、栈式仍错）</td>
+<td>与 A1 同源（缺 CAST），A1 修的是<strong>变量</strong>、A4 修的是<strong>返回值</strong></td>
+</tr>
+<tr>
+<td>C2</td>
+<td>~~跨模块 async 完全不支持~~</td>
+<td><strong>已修 —— 移入 A 类 A3</strong>（寄存器式已支持、栈式仍不支持）</td>
+<td>扫描器/解析器/loader 四处都不认 <code>async</code></td>
+</tr>
+<tr>
+<td>C3</td>
+<td><code>a?.b()</code>（safe access）的 <code>callee_is_async</code> 没人填</td>
+<td>只有 parser 初始化成 0、语义从未设置 ⇒ 安全调用里的 async 函数识别不了</td>
+<td><strong>代码审计结论，未实测</strong></td>
+</tr>
+<tr>
+<td>C5</td>
+<td>async 函数作 <code>func</code> 形参、在函数里 <code>await cb(x)</code> —— 只剩<strong>类型推断</strong></td>
+<td><code>async func call_it(func cb): int { return await cb(7) }</code> ⇒ 两侧编译错「返回类型不匹配：期望 int，实际 <strong>func()</strong>」</td>
+<td>语义把 <code>await cb(7)</code> 推成 <code>func()</code>。<strong>运行期已随 A2 修好</strong>（不写返回类型注解就能跑、结果正确），只是标了注解会被类型检查挡下</td>
+</tr>
+<tr>
+<td>C6</td>
+<td><code>await</code> 作用于<strong>类型为 <code>Future</code> 的位置</strong>（形参/字段）</td>
+<td><code>async func f(Future x): int { return await x }</code> ⇒ 两侧编译错「期望 int，实际 <strong>any</strong>」</td>
+<td>只有"能追溯初始化器"的写法（<code>Future f = compute(7)</code>）才推得出结果类型</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>~~多个协程同时失败时 <code>run()</code> 只抛第一个~~</td>
+<td><strong>已修 —— 移入 A 类 A5</strong>（随 E15 的异常屏障自动正确；栈式仍只抛第一个）</td>
+<td>见 <code>docs/module_asyncs.md</code> 的「路径3」</td>
+</tr>
+<tr>
+<td>C8</td>
+<td><code>asyncs.all([失败的 future])</code></td>
+<td>两侧返回 <code>[null]</code>（长度 1），错误<strong>延后到 <code>run()</code></strong> 才抛，<code>try-catch</code> 包 <code>all()</code> 抓不到</td>
+<td>异常归属反直觉</td>
+</tr>
+<tr>
+<td>C9</td>
+<td>~~文档承诺的 <code>asyncs.current()</code> / <code>is_done()</code> / <code>get_result()</code> 未实现~~</td>
+<td><strong>已补 —— 移入 A 类 A6</strong>（寄存器式按文档实现；栈式仍报「未找到模块方法」）</td>
+<td><code>docs/module_asyncs.md</code> 第 154/170/196 行列了这三个 API</td>
+</tr>
+<tr>
+<td>C10</td>
+<td><code>asyncs.all()</code> <strong>不等待</strong>未完成的 Future</td>
+<td>传未 await 的 future ⇒ 元素是 <code>null</code>（不是等它完成）。文档正文说"收集<strong>已完成</strong> Future 的结果"且给了"先 await 再 all"的步骤，但 <code>asyncs.c</code> 里注释写的是"等待所有 Future 完成"</td>
+<td>文档/接口口径不一致，易踩坑；改文档或改实现都行</td>
+</tr>
+<tr>
+<td>C11</td>
+<td><code>int</code> 特化算术把 <strong>null 静默当作 0</strong></td>
+<td>两侧静态类型都是 <code>int</code> 时走 <code>OP_ADD_INT</code>/<code>SUB_INT</code>/<code>ADD_INT_IMM</code>… 特化指令，左值经 <code>val_as_int()</code> 取到 <code>NULL_VAL</code> 的载荷 = 0（<code>TAG_NULL = 0</code>）⇒ <code>null + 3</code> 得 <strong>3 且不报错</strong>；同一条式子只要一侧是 bigint / float / any，就落到通用 <code>OP_ADD</code> ⇒ 抛「加法运算: null 不能参与运算」</td>
+<td><strong>两侧一致</strong>（寄存器式当初正是为对齐栈式才改成走特化的，见 <code>src/codegen/codegen_expr.c:1001-1005</code> 与 <code>test_cross_module_method_args</code> ⑥）。但<strong>与文档冲突</strong>：<code>docs/Leno入门教程.md</code> 明写「null 不能参与算术运算」。按判定原则 1 属<strong>静默错值</strong>，优先级应高于报错型缺口。触发形态：<code>int? a = null</code> 参与运算、结构体未赋值的值类型字段参与运算。⚠ <code>+=</code>/<code>-=</code>/<code>*=</code> 与 <code>+</code>/<code>-</code>/<code>*</code> <strong>同一口径</strong>（立即数/特化路径都会这样），修的时候要一起改。<strong>来源：代码审计（改 <code>gen_compound_assign</code> 时读到 <code>codegen_expr.c:1001-1005</code> 的既有实测记录），本条未独立复现</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<blockquote>
+<p>⚠ C5–C10 是<strong>本轮 async 能力面审计</strong>（17 个探针 × 两引擎）挖出来的，两侧行为<strong>完全一致</strong>，
+所以<strong>差分对照查不出来</strong> —— 每条都是照文档承诺 / 正常语义做出的最小复现，两侧一起错。
+这类问题只能靠"按文档写用例 + 看输出对不对"来发现，见第七节的方法说明。</p>
+</blockquote>
+<hr>
+<h2 id="五-d-类-栈式侧潜伏缺陷-当前不崩-但别照抄">五、D 类：栈式侧潜伏缺陷（当前不崩，但别照抄）</h2>
+<h3 id="d1-插值串-parts-exprs-两个数组容量可能不平行">D1. 插值串 <code>parts</code> / <code>exprs</code> 两个数组<strong>容量可能不平行</strong></h3>
+<p><code>parser_expr.c</code> 的插值串收尾分支只给 <code>parts</code> 扩容、<strong>没给 <code>exprs</code> 扩容</strong>（前面两处扩容都是成对的），
+而 <code>count = idx + 1</code> 是按 <code>idx</code> 算的 ⇒ <code>exprs</code> 的容量可能小于 <code>count</code>。</p>
+<ul>
+<li><strong>寄存器式</strong>：曾经因此<strong>编译期段错误</strong>（<code>$"{a}{b}{c}{d}"</code> 这类 <strong>4 段及以上</strong>插值必崩，
+  <code>exit=0xC0000005</code>，<code>--debug</code> 一行都打不出来）。已修（commit <code>3531869</code>）：
+  解析器两数组一起扩容 + 消费端上界改成 <code>count-1</code>。</li>
+<li><strong>栈式</strong>：解析器同样只扩 <code>parts</code>，但它的消费端按约定只读 <code>exprs[0..count-2]</code>
+  （<code>codegen_inline.c</code> 注释写明 <code>count = exprs_count + 1</code>）⇒ 侥幸不崩。</li>
+</ul>
+<p>⚠ 所以：<strong>栈式现在是对的、代码是带雷的</strong>。日后若把寄存器式的修法同步过去，
+两处要一起改（要么都扩、要么都不读最后一格），否则迟早踩同一个越界。</p>
+<hr>
+<h2 id="六-e-类-已追平-移植缺口账本">六、E 类：已追平（移植缺口账本）</h2>
+<p>这些是<strong>移植到寄存器式时漏掉/写错、已补齐</strong>的点。补齐后与栈式逐条复测 <strong>0 差异</strong>，
+列在这里是为了：① 回归时知道哪些样例最敏感；② 栈式侧若有同类写法可对照。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>条目</th>
+<th>代表样例 / 断言</th>
+<th>复测</th>
+<th>commit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td><code>for 容器字段 to x</code> 被误判成数值区间（循环体一次都不进）</td>
+<td><code>examples/minilang/minilang.leno</code></td>
+<td>0 差异</td>
+<td><code>07ab468</code></td>
+</tr>
+<tr>
+<td>E2</td>
+<td>局部函数前向引用（先调用后声明）</td>
+<td><code>examples/func/前向引用.leno</code>、<code>func 闭包.leno</code></td>
+<td>0 差异</td>
+<td><code>d66d7f4</code></td>
+</tr>
+<tr>
+<td>E3</td>
+<td>跨模块调用缺默认参数补齐</td>
+<td><code>examples/import/default_param_bug/main_default.leno</code></td>
+<td>0 差异</td>
+<td><code>d66d7f4</code></td>
+</tr>
+<tr>
+<td>E4</td>
+<td>语句位置出现裸表达式节点时被静默丢弃（优化器把 <code>if true then X else Y</code> 就地换成 <code>X</code>）</td>
+<td><code>examples/验证/repro_if_expr.leno</code></td>
+<td>0 差异</td>
+<td><code>d66d7f4</code></td>
+</tr>
+<tr>
+<td>E5</td>
+<td>全局/模块变量缺声明类型 CAST（float/int/string 规范化）</td>
+<td>脚本内全局两侧本来就一致；导出变量见 <strong>A1</strong></td>
+<td>见 A1</td>
+<td><code>877d21e</code></td>
+</tr>
+<tr>
+<td>E6</td>
+<td>声明但未初始化时的类型默认值（<code>Array[T]</code>→空数组、<code>Dict</code>→空字典，不能一律 null）</td>
+<td><code>examples/type类型/处理 非数值的健壮函数.leno</code></td>
+<td>0 差异</td>
+<td><code>7ffa584</code></td>
+</tr>
+<tr>
+<td>E7</td>
+<td>数组字面量没设运行时 <code>type_info</code>（<code>clear()</code> 后元素类型名 <code>Array[int]</code>→<code>Array</code>）</td>
+<td><code>examples/array/基本 clear.leno</code>（⚠ 已随目录删除；2026-09-27 <strong>复测：退化不再复现</strong> —— <code>clear()</code>/<code>copy()</code> 后类型名仍是 <code>Array[int]</code>，现由 <code>assert/test_arrays_module.leno</code> 的 ⑤ 守着）</td>
+<td>实测一致</td>
+<td><code>e520419</code></td>
+</tr>
+<tr>
+<td>E8</td>
+<td>函数 chunk 不继承文件名（异常/调用栈里没有文件路径）</td>
+<td>任意抛异常样例</td>
+<td>栈式本来就有</td>
+<td><code>4cc9464</code></td>
+</tr>
+<tr>
+<td>E9</td>
+<td><code>Ptr[T]</code> / face 的运行时类型标注从未发射（<code>read_at</code>/<code>write_at</code> 用不了）</td>
+<td><code>assert/</code> 指针相关</td>
+<td>寄存器式独有</td>
+<td><code>baf9736</code></td>
+</tr>
+<tr>
+<td>E10</td>
+<td><code>gen_binop</code> 别名错值（<code>x = ... x</code> 覆盖 rhs 要读的原值，静默错值）</td>
+<td><code>assert/</code> 复合赋值</td>
+<td>寄存器式独有（栈式无此代码形状）</td>
+<td><code>6ca7e37</code></td>
+</tr>
+<tr>
+<td>E11</td>
+<td>泛型实参名丢嵌套（<code>type(outer)</code> 打成 <code>Box[Box]</code>）</td>
+<td><code>assert/</code> 泛型</td>
+<td>—</td>
+<td><code>79a1ffd</code></td>
+</tr>
+<tr>
+<td>E12</td>
+<td>解构多返回值路径的模块对象解析漏模块作用域（GUI 崩溃）</td>
+<td><code>assert/</code> 多返回值</td>
+<td>寄存器式独有</td>
+<td><code>da30686</code></td>
+</tr>
+<tr>
+<td>E13</td>
+<td><strong>async 方法调用走协程</strong> + <strong>async 判定用语义捕获的 <code>callee_is_async</code></strong></td>
+<td><code>examples/async await/struct 方法 + async.leno</code>、<code>test_edge_async.leno</code>、<code>assert/test_async.leno</code> 测试7/8</td>
+<td>0 差异（3 个样例逐行一致）</td>
+<td><code>2e656bc</code></td>
+</tr>
+<tr>
+<td>E14</td>
+<td>4 段及以上插值编译期段错误（见 <strong>D1</strong>）</td>
+<td><code>assert/test_interpolation.leno</code>（4 段、5 段）</td>
+<td>0 差异</td>
+<td><code>3531869</code></td>
+</tr>
+<tr>
+<td>E15</td>
+<td><strong>协程异常跨边界</strong>：协程里未捕获的异常被<strong>调用方</strong>的 try-catch 接走，随后帧计数/执行流错乱 ⇒ 程序跑过 <code>main</code> 末尾进垃圾内存（非确定性报错 / <code>exit=0xC0000005</code>）</td>
+<td><code>examples/async await/test_async_exception_simple.leno</code>、<code>assert/test_async_exception_barrier.leno</code></td>
+<td>连跑 5 次稳定、与栈式逐字节一致</td>
+<td>见下</td>
+</tr>
+</tbody>
+</table>
+<p><strong>E15 的根因与修法</strong>（这条是<strong>崩溃 + UB</strong>，值得单独记）：</p>
+<ul>
+<li><strong>根因</strong>：协程帧与调用方帧共用同一个 <code>vm.frames</code>，而异常展开（<code>vm_exception.inc</code> 的运行时错误展开、
+  <code>OP_THROW</code> 的 <code>throw</code> 展开、以及 vm.c 恢复协程时"等待的 Future 失败"那段）都是
+  <code>for (i = frame_cnt - 1; i &gt;= 0; i--)</code> 一路扫到 0 ⇒ <strong>协程里的异常被调用方的 catch 接管</strong>。
+  实测埋点：<code>caught: boom</code> 在<strong>协程还在执行时</strong>就打印了，<code>has_exception</code> 被清掉、协程被误判
+  <code>COMPLETED</code>，<code>frame_cnt</code> 掉到 1 ⇒ 之后执行在垃圾帧上（报错文本随机、多次访问违例）。</li>
+<li><strong>修法</strong>：给三处展开加<strong>协程边界</strong>（边界 = <code>current_coroutine-&gt;saved_frame_cnt</code>，语义统一为
+  "协程首帧索引"）；协程里没接住的异常<strong>不打印"未处理"</strong>，交给 <code>asyncs.run()</code> 收集后再抛回调用方
+  （即文档里"异常传播路径3"）。顺带把 <code>OP_RETURN</code>/<code>REG_FINISH_RETURN</code>/<code>OP_AWAIT</code> 里同一字段的
+  三处用法统一到该语义（此前"新起协程"和"恢复协程"两条路径写进去的值语义不一致）。</li>
+</ul>
+<blockquote>
+<p>⚠ 方法论提醒：这条<strong>之前被差分对照判成 OK</strong> —— 样例是<strong>非确定性</strong>的，恰好那一次两侧输出一样。
+<strong>非确定性样例不能只跑一次就下结论</strong>（见第七节）。</p>
+</blockquote>
+<p>（更早的整批移植断言收敛：<code>40b5a8e</code> 88→3、<code>d3fbdce</code> 3→0，涉及三元/空合并/safe-access/in/bigint/
+位运算/协程/泛型/cstruct/异常对象/字面量槽位/寄存器高水位/模块变量复合赋值等；
+<code>d03a349</code> 给这批缺陷补了断言，测试数 335 → 348。）</p>
+<hr>
+<h2 id="七-怎么复核这份文档-归档-无对照步骤">七、怎么复核这份文档（归档：无对照步骤）</h2>
+<pre><code class="language-powershell"># 现在只有两步：编译 + 断言套件
+.\build.bat
+.\build\leno.exe assert\run_tests.leno build\leno.exe assert   # 当前期望 366 passed / 0 failed
+
+# 单条差异的复现（A1，历史留样）
+build\leno.exe --no-cache assert\test_cross_module_types.leno     # 寄存器式：通过
+</code></pre>
+<blockquote>
+<p>~~差分对照（<code>tools/diff_vs_stack.ps1</code>）~~ <strong>已删除</strong>：不再与栈式对比，本节原内容（归一化清单、
+<code>TIMEOUT</code> 标记、<code>gc .leno</code> 的 1785 vs 2000+ 之类）随之作废 —— 那条性能项本身还留在
+<code>docs/待办与路线图.md</code> 的现状快照里。</p>
+<p>⚠ <strong>差分对照有盲区</strong>：它只能发现"两侧不一样"，发现不了 <strong>C 类（两侧一致地错）</strong>。
+所以还要定期做一遍<strong>能力面审计</strong>：照官方文档（<code>docs/*.md</code>）的承诺、按 API 面逐条写最小用例，
+看输出<strong>对不对</strong>（而不是"两不两样"）。本轮的 C5–C10 就是这么挖出来的：
+17 个探针里 13 个两侧一致 —— 其中既有"正确"，也有"一起错"。</p>
+<p>⚠ <strong>非确定性样例</strong>：涉及协程异常 / GC / 计时的样例可能每次跑出来的结果都不同
+（E15 当时就是：同一份代码有时普通报错、有时访问违例）。这类样例<strong>至少要连跑几次</strong>再下结论，
+否则会把"这次恰好一样"当成 OK —— E15 之前就是这样被漏过的。
+建议：可疑样例连跑 5 次，看输出是否稳定。</p>
+<p>⚠ 归档提醒：当年那些"归一化/超时"注意点都是<strong>对照脚本专属</strong>的，随脚本删除一同作废；
+唯一值得留下的一条是——<strong>非确定性样例（协程异常 / GC / 计时）连跑几次再下结论</strong>。</p>
+<p><strong>归档：当年对照出来的"既存差异"（都是措辞 / 竞态类，非结果错）</strong>：</p>
+<p><code>examples/import</code>（211 个样例）剩 <strong>3 条</strong>，与 async 无关：
+除零错误消息措辞（<code>除零错误：除数为 0</code> / <code>[操作] 除法 (/)</code> vs 栈式的
+<code>整数除零错误</code> / <code>整数除法</code>，出现在 <code>runtime_error_module.leno</code> 与 <code>test_runtime_error.leno</code>）、
+<code>test_partial_success.leno</code> 的「未定义的模块」报错方式不同（寄存器式运行期
+「对象不支持索引」vs 栈式语义期「未定义的模块」）。</p>
+<p><code>examples/threads</code>（14 个）归一化后剩 <strong>3 条既存差异</strong>，且成员会漂移（线程打印顺序竞态）：
+<code>thread_join_result.leno</code>（寄存器式 <code>10/20/30</code> ✅ / 栈式 <code>1/2/3</code>）、
+<code>thread_parallel_print.leno</code>（<code>ABC</code> / <code>2/3/4</code>）、
+<code>test_thread_async_boundary.leno</code>（寄存器式全部 PASS / 栈式 <code>Thread error: unknown error</code>），
+偶尔换成 <code>test_closure_thread.leno</code>（两条线程的输出顺序互换）。
+用 <code>git stash</code> 回退改动实测基线同样是 3 条 ⇒ 与 A6 的改动无关，是栈式侧线程实现的问题。</p>
+<p><code>examples/测试</code>（140 个）归一化后剩 <strong>5 条既存差异</strong>（都不是 A4 引入的）：
+<code>repro_array_gc_crash.leno</code>（打印各自耗时）、<code>for_loop_type_debug.leno</code>（调用栈：
+寄存器式多一层 <code>test_assert_eq_message</code> 帧）、<code>test_args_type.leno</code>（「索引 0, 长度 0」
+vs「索引=0, 数组长度=0」+ 报错行号差 1）、<code>test_exec2.leno</code> / <code>test_exec5.leno</code>
+（「下标访问: 对象不支持索引」vs「索引操作需要对象类型，但实际类型为 'null'」+ 栈式多一行提示）。</p>
+</blockquote>
+<hr>
+<h2 id="八-维护约定">八、维护约定</h2>
+<blockquote>
+<p>⛔ <strong>本文档已归档，不再按下面的约定维护</strong>：新问题与新结论一律记进 <code>docs/待办与路线图.md</code>。
+下面几条只作历史参考。</p>
+</blockquote>
+<ol>
+<li>新挖到的问题：先<strong>留下最小样例</strong> → 修完后<strong>加断言</strong>（<code>assert/</code> 下，保证 <code>run_tests</code> 能覆盖），
+   并把结论写进 <code>docs/待办与路线图.md</code> §三。</li>
+<li>每条至少记全四样：<strong>现象 / 最小复现 / 根因 / 现状</strong>。</li>
+<li>判定"是否正确"以<strong>语义与断言</strong>为准，不以"和别的实现一样"为准。</li>
+<li><strong>凡是有"声明类型"的地方，都要在赋值处做一次规范化</strong>（<code>emit_cast_for_target</code>）：
+   目前三处 —— 变量声明（A1 补齐全局/模块分支）、赋值（早就有）、<strong>函数返回值</strong>（A4 补）。
+   再加新的"带声明类型"的语法时，先查这一处补齐没有；否则就是"说好返回 float、实际 int"
+   这类静默错值（跨模块调用点只信声明类型，暴露得最明显）。</li>
+<li><strong>给模块符号表/结构体加字段时</strong>（例如 A3 的 <code>is_async</code>），务必检查三处<strong>手工深拷贝</strong>：
+   <code>sym_table_add.inc</code> 的 <code>module_symbol_table_add_struct</code>（方法数组，已改 <code>calloc</code>）、
+   <code>module_symbol_table_add_func</code>（扩容槽位）、<code>sym_table_cache.inc</code> 的读写往返。
+   漏一处就是"未初始化垃圾值"——表现为<strong>随机</strong>行为（A3 修复时踩过：6 个测试挂掉、
+   失败点还随内存布局漂移）。</li>
+<li><strong>融合/特化指令上线前，先 dump 字节码看一遍</strong>：<code>leno --debug &lt;脚本&gt;</code> 能打印每个函数的
+   指令序列（<code>main.c</code> 的 <code>debugMode</code>）—— 比读 C 代码猜快得多。
+   另外，融合指令要替代某个原生函数时，必须逐条核对<strong>副作用</strong>（GC 写屏障、错误路径、
+   返回值），别只对返回值。</li>
+</ol>
+<p>## 九、反向差异：栈式<strong>有、我们缺</strong>的优化（性能）</p>
+<p>前面几节都是"寄存器式对、栈式错/慢"。这里记<strong>反方向</strong>的 —— 栈式里已经做了、
+   寄存器式没做（或没做全）的优化。<strong>不要默认"寄存器式一定更优"</strong>。</p>
+<p>### F1. <code>arr.add(x)</code> 缺融合（已补）</p>
+<p><strong>现象</strong>（同一轮对照，30 万次 <code>.add()</code>）：寄存器式 4.91ms vs 栈式 3.99ms ⇒ <strong>慢 23%</strong> ✗；
+   连累"原始快速排序"（每元素一次 <code>.add()</code>）在小规模上偏慢。</p>
+<p><strong>根因</strong>（字节码 dump 对照）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>a.add(i)</code> 的循环体</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>栈式</td>
+<td><code>GET_LOCAL a</code> / <code>GET_LOCAL i</code> / <strong><code>OP_ARRAY_APPEND_NOPUSH</code></strong> = 3 条</td>
+</tr>
+<tr>
+<td>寄存器式（修前）</td>
+<td><code>MOV</code>(接收者) / <code>MOV</code>(实参) / <code>GET_METHOD "add"</code> / <code>CALL</code> = 4 条，且走<strong>完整方法派发</strong></td>
+</tr>
+</tbody>
+</table>
+<p>栈式 codegen 早就把 <code>arr.add(x)</code> <strong>融合成一条专用指令</strong>，寄存器式一直走通用方法调用。</p>
+<p><strong>修法</strong>：在 <code>gen_method_call</code> 入口加融合 —— 方法名 <code>add</code>、恰好 1 个实参、
+   接收者静态类型是 <code>TYPE_ARRAY</code> ⇒ 直接发 <code>OP_ARRAY_APPEND</code>（求值顺序安全：
+   接收者与实参各自取新临时寄存器，长度结果再 <code>MOV</code> 到目标）。</p>
+<p><strong>同轮 A/B（<code>git stash</code> 前后对照，机器漂移互相抵消）</strong>：<code>add</code> 5.32ms → <strong>4.70ms = 0.88x</strong> ✓；
+   排序样例 400k 优化 0.70x、100k 原地 0.80x，正确性 12/12 全 <code>true</code> ✓。</p>
+<p><strong>⚠ 顺带补掉一个真隐患</strong>：<code>OP_ARRAY_APPEND</code> <strong>缺 GC 写屏障</strong>，而原生 <code>arr_add</code> 一直有。
+   本 GC 是<strong>分代 + 记住集</strong>（老年代引用年轻代必须入集，见 <code>leno_value.h</code> 的 REMEMBERED 位
+   与 <code>gc.c</code> 开头）。此前该指令<strong>只被大数组字面量</strong>用到（young→young，恰好不需要屏障）所以没暴露；
+   把 <code>arr.add(x)</code> 融合进来之后，"老数组追加年轻值"变成常规路径 ⇒ 必须补。
+   <strong>教训</strong>：融合指令必须与它替代的原生函数<strong>逐条对齐副作用</strong>（这里是写屏障），别只对返回值。</p>
+<p><strong>回归锁定</strong>：<code>assert/test_array_bounds.leno</code> 第 9 条（<code>add</code> 返回新长度、语句/表达式两种上下文、
+   追加对象元素读回）。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-结论一览">一、结论一览</a></li><li><a href="#二-a-类-寄存器式对-栈式错-真实行为差异">二、A 类：寄存器式对、栈式错（真实行为差异）</a></li><ul class="lv3"><li><a href="#a1-导出-模块-变量的声明类型规范化-就是你问的-float-那条">A1. 导出（模块）变量的声明类型规范化（就是你问的 float 那条）</a></li><li><a href="#a2-async-函数经一等值调用必须返回-future-原-c-类-c4-已修">A2. async 函数经一等值调用必须返回 Future（原 C 类 C4，已修）</a></li><li><a href="#a3-跨模块-async-export-async-func-export-struct-的-async-方法-原-c-类-c2-已修">A3. 跨模块 async（export async func / export struct 的 async 方法）（原 C 类 C2，已修）</a></li><li><a href="#a4-函数返回值按声明类型规范化-原-c-类-c1-已修">A4. 函数返回值按声明类型规范化（原 C 类 C1，已修）</a></li><li><a href="#a5-多个协程同时失败时-run-汇总抛出-原-c-类-c7-已修">A5. 多个协程同时失败时 run() 汇总抛出（原 C 类 C7，已修）</a></li><li><a href="#a6-asyncs-的查询类-api-缺失-current-is_done-get_result-原-c-类-c9-已补">A6. asyncs 的查询类 API 缺失：current() / is_done() / get_result()（原 C 类 C9，已补）</a></li></ul><li><a href="#三-b-类-两边都错-现象还不一样">三、B 类：两边都错、现象还不一样</a></li><ul class="lv3"><li><a href="#b1-局部函数遮蔽同名全局-async-函数-且调用点在该局部函数之后才被语义分析">B1. 局部函数遮蔽同名全局 async 函数，且调用点在该局部函数之后才被语义分析</a></li></ul><li><a href="#四-c-类-两边都错-都还没修-登记备查">四、C 类：两边都错、都还没修（登记备查）</a></li><li><a href="#五-d-类-栈式侧潜伏缺陷-当前不崩-但别照抄">五、D 类：栈式侧潜伏缺陷（当前不崩，但别照抄）</a></li><ul class="lv3"><li><a href="#d1-插值串-parts-exprs-两个数组容量可能不平行">D1. 插值串 parts / exprs 两个数组容量可能不平行</a></li></ul><li><a href="#六-e-类-已追平-移植缺口账本">六、E 类：已追平（移植缺口账本）</a></li><li><a href="#七-怎么复核这份文档-归档-无对照步骤">七、怎么复核这份文档（归档：无对照步骤）</a></li><li><a href="#八-维护约定">八、维护约定</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="单一事实来源与重复实现收敛.html">← 上一篇</a><a href="错误堆栈追踪改进方案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

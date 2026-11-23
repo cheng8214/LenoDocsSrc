@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>扩展模块总览 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/_总览.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">08 扩展模块（独立包）</a><span class="sep">/</span><span class="here">扩展模块总览</span></span>
+</header>
+<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href="../扩展模块/_总览.html">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details open><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html" class="active" aria-current="page">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="扩展模块总览">扩展模块总览</h1>
+<blockquote>
+<p>这一节收录的是<strong>独立的扩展模块包</strong>，位于 <code>Leno/build/leno_module/</code>，与语言内置标准库（<code>strings</code> / <code>files</code> / <code>ffi</code> 那 19 个）不是一回事。
+内置标准库见上一节「模块 API 参考」；这里是按需 <code>import</code> 的扩展包：压缩、加密、HTTP、SQLite、SDL3、Web、Excel、二维码……</p>
+</blockquote>
+<h2 id="包名-import-名">⚠ 包名 ≠ import 名</h2>
+<p><code>import "X"</code> 里的 <code>X</code> 是 <code>lib/</code> 下的<strong>入口文件名</strong>（不含 <code>.leno</code>），<strong>不是</strong> <code>leno.toml</code> 的 <code>[package] name</code>。照包名写会报「找不到模块」。最容易错的：</p>
+<table>
+<thead>
+<tr>
+<th>包名</th>
+<th>正确 import</th>
+<th>错写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LenoFS</code></td>
+<td><code>import "FS"</code></td>
+<td>~~<code>import "LenoFS"</code>~~</td>
+</tr>
+<tr>
+<td><code>LenoSqlite</code></td>
+<td><code>import "sqlite3"</code></td>
+<td>~~<code>import "LenoSqlite"</code>~~</td>
+</tr>
+<tr>
+<td><code>LenoHack</code></td>
+<td><code>import "GameHelper"</code></td>
+<td>~~<code>import "LenoHack"</code>~~</td>
+</tr>
+<tr>
+<td><code>LenoMusic</code></td>
+<td><code>import "Music"</code></td>
+<td>~~<code>import "LenoMusic"</code>~~</td>
+</tr>
+<tr>
+<td><code>LenoWeb</code></td>
+<td><code>import "WebNet"</code> / <code>"WebHtml"</code> / <code>"WebCrawl"</code> / <code>"Web"</code></td>
+<td>~~<code>import "LenoWeb"</code>~~</td>
+</tr>
+</tbody>
+</table>
+<h2 id="21-个模块一览">21 个模块一览</h2>
+<table>
+<thead>
+<tr>
+<th>包名</th>
+<th>import 名</th>
+<th>一句话</th>
+<th>文档</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LenoCLI</td>
+<td><code>"CLI"</code></td>
+<td>命令行解析</td>
+<td><a href="LenoCLI.html">CLI</a></td>
+</tr>
+<tr>
+<td>LenoCompress</td>
+<td><code>"Compress"</code></td>
+<td>DEFLATE / gzip / zlib 压缩解压 + CRC32 / Adler-32</td>
+<td><a href="LenoCompress.html">Compress</a></td>
+</tr>
+<tr>
+<td>LenoCrypto</td>
+<td><code>"Crypto"</code></td>
+<td>MD5 / SHA-256 / SHA-512 / HMAC / AES（ECB/CBC/GCM）</td>
+<td><a href="LenoCrypto.html">Crypto</a></td>
+</tr>
+<tr>
+<td>LenoCSV</td>
+<td><code>"CSV"</code></td>
+<td>CSV 读写（RFC 4180 容错）</td>
+<td><a href="LenoCSV.html">CSV</a></td>
+</tr>
+<tr>
+<td>LenoFS</td>
+<td><code>"FS"</code></td>
+<td>rmtree / copytree / copy</td>
+<td><a href="LenoFS.html">FS</a></td>
+</tr>
+<tr>
+<td>LenoGlob</td>
+<td><code>"Glob"</code></td>
+<td>通配符匹配与查找</td>
+<td><a href="LenoGlob.html">Glob</a></td>
+</tr>
+<tr>
+<td>LenoHack</td>
+<td><code>"GameHelper"</code></td>
+<td>进程操作：内存读写、模拟输入、进程附加、内存扫描</td>
+<td>（无 README，见源码）</td>
+</tr>
+<tr>
+<td>LenoHTTP</td>
+<td><code>"HTTP"</code></td>
+<td>HTTP/1.1 服务端子集（SSE、按路由 maxBody）</td>
+<td><a href="LenoHTTP.html">HTTP</a></td>
+</tr>
+<tr>
+<td>LenoLog</td>
+<td><code>"Log"</code></td>
+<td>日志（等级 / 多目的地 / raw）</td>
+<td><a href="LenoLog.html">Log</a></td>
+</tr>
+<tr>
+<td>LenoMusic</td>
+<td><code>"Music"</code></td>
+<td>音频（miniaudio 流式播放、解码、频谱）</td>
+<td><a href="LenoMusic.html">Music</a></td>
+</tr>
+<tr>
+<td>LenoQR</td>
+<td><code>"QR"</code></td>
+<td>二维码生成（纯 Leno）+ 识别（quirc）</td>
+<td><a href="LenoQR.html">QR</a></td>
+</tr>
+<tr>
+<td>LenoResult</td>
+<td><code>"Result"</code></td>
+<td><code>Result[T]</code> / <code>Option[T]</code> + 严格数值解析</td>
+<td><a href="LenoResult.html">Result</a></td>
+</tr>
+<tr>
+<td>LenoSDL3</td>
+<td><code>"SDL3"</code></td>
+<td>窗口、渲染器、事件、控件（58 个 lib 文件）</td>
+<td><a href="LenoSDL3.html">SDL3</a></td>
+</tr>
+<tr>
+<td>LenoSqlite</td>
+<td><code>"sqlite3"</code></td>
+<td>SQLite3 绑定</td>
+<td><a href="LenoSqlite.html">sqlite3</a></td>
+</tr>
+<tr>
+<td>LenoStats</td>
+<td><code>"Stats"</code></td>
+<td>统计 + 金额整数分</td>
+<td><a href="LenoStats.html">Stats</a></td>
+</tr>
+<tr>
+<td>LenoSys</td>
+<td><code>"Sys"</code></td>
+<td>跨平台系统：进程 / 磁盘 / 回收站 / 开机项 / 已装软件</td>
+<td>（无 README，见源码）</td>
+</tr>
+<tr>
+<td>LenoUUID</td>
+<td><code>"UUID"</code></td>
+<td>UUID v4 / v7 / 短 ID</td>
+<td><a href="LenoUUID.html">UUID</a></td>
+</tr>
+<tr>
+<td>LenoWeb</td>
+<td>四入口，见下</td>
+<td>HTTP / HTML / 爬虫 / CDP 无头浏览器</td>
+<td><a href="LenoWeb.html">Web</a></td>
+</tr>
+<tr>
+<td>LenoWin32</td>
+<td><code>"Win32"</code></td>
+<td>桌面截屏、全局热键、剪贴板图片</td>
+<td>（无 README，见源码）</td>
+</tr>
+<tr>
+<td>LenoXLSX</td>
+<td><code>"XLSX"</code></td>
+<td>Excel 读写（zip + XML）</td>
+<td><a href="LenoXLSX.html">XLSX</a></td>
+</tr>
+<tr>
+<td>LenoZip</td>
+<td><code>"Zip"</code></td>
+<td>ZIP 归档（stored + deflate）</td>
+<td><a href="LenoZip.html">Zip</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="lenoweb-的四个入口">LenoWeb 的四个入口</h2>
+<p><code>LenoWeb</code> 拆成四个按需入口，<strong>选最轻的</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>入口</th>
+<th>依赖规模</th>
+<th>冷缓存编译</th>
+<th>用在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>import "WebNet"</code></td>
+<td>core + net = 2256 行</td>
+<td>31 ms</td>
+<td>只要 HTTP 客户端（最常用）</td>
+</tr>
+<tr>
+<td><code>import "WebHtml"</code></td>
+<td>html + charset + gzip = 2650 行</td>
+<td>32 ms</td>
+<td>解析 HTML / CSS 选择器</td>
+</tr>
+<tr>
+<td><code>import "WebCrawl"</code></td>
+<td>crawler + net + core = 3841 行</td>
+<td>56 ms</td>
+<td>URL 工具 / robots / sitemap / 爬虫骨架</td>
+</tr>
+<tr>
+<td><code>import "Web"</code></td>
+<td>全都有 + cdp + ws = 8510 行</td>
+<td>59 ms</td>
+<td>CDP 无头浏览器 / WebSocket</td>
+</tr>
+</tbody>
+</table>
+<p>三个窄入口各自覆盖 <code>web_net</code> 的全部 54 个导出；<code>WebNet</code> → <code>Web</code> 的迁移是纯增量，不用改调用点。</p>
+<blockquote>
+<p>⚠ <code>web_net.leno</code> / <code>web_html.leno</code> / <code>web_crawler.leno</code> 是内部文件，<strong>不要直接 import</strong>。</p>
+</blockquote>
+<h2 id="模块测试">模块测试</h2>
+<pre><code class="language-bat">:: 全部模块（缺原生库的自动 SKIP）
+build\leno.exe build\leno_module\run_all_tests.leno
+
+:: 只跑指定模块
+build\leno.exe build\leno_module\run_all_tests.leno --only LenoCSV,LenoZip
+</code></pre>
+<p>模块断言放在各自 <code>test/</code> 下，不进语言的 <code>assert/</code> —— 后者要求零原生依赖，是「语言是否健康」的干净信号。</p>
+<h2 id="文档来源">文档来源</h2>
+<p>这些页面由 <code>import_module_docs.py</code> 从 <code>Leno/build/leno_module/&lt;模块&gt;/README.md</code> 同步而来。要改内容请改源 README 再重跑同步脚本；本页是副本，手改会在下次同步时丢失。</p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#包名-import-名">⚠ 包名 ≠ import 名</a></li><li><a href="#21-个模块一览">21 个模块一览</a></li><li><a href="#lenoweb-的四个入口">LenoWeb 的四个入口</a></li><li><a href="#模块测试">模块测试</a></li><li><a href="#文档来源">文档来源</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoSqlite.html">← 上一篇</a><a href="../archive/FFI优化方案.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

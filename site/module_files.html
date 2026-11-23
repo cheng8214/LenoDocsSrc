@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno Files 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_files.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">02 模块 API 参考</a><span class="sep">/</span><span class="here">Leno Files 模块</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details open><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html" class="active" aria-current="page">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-files-模块">Leno Files 模块</h1>
+<p>本文档详细说明 <code>files</code> 模块提供的文件操作功能。</p>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#概述">概述</a></li>
+<li><a href="#使用方式">使用方式</a></li>
+<li><a href="#文件打开模式">文件打开模式</a></li>
+<li><a href="#模块方法静态方法">模块方法（静态方法）</a></li>
+<li><a href="#文件对象方法">文件对象方法</a></li>
+<li><a href="#读取操作">读取操作</a></li>
+<li><a href="#写入操作">写入操作</a></li>
+<li><a href="#文件定位">文件定位</a></li>
+<li><a href="#文件属性">文件属性</a></li>
+<li><a href="#快捷操作">快捷操作</a></li>
+<li><a href="#示例代码">示例代码</a></li>
+<li><a href="#注意事项">注意事项</a></li>
+<li><a href="#最佳实践">最佳实践</a></li>
+</ul>
+<hr>
+<h2 id="概述">概述</h2>
+<p>Files 模块是 Leno 语言中用于文件操作的核心模块，提供了完整的文件读写、定位、属性查询等功能。</p>
+<h3 id="特性">特性</h3>
+<ul>
+<li><strong>双模式操作</strong>：模块快捷方法 + 文件对象精细控制</li>
+<li><strong>文本/二进制支持</strong>：支持各种文件类型的读写</li>
+<li><strong>中文路径支持</strong>：完全支持 Unicode 文件名</li>
+<li><strong>流式操作</strong>：大文件支持分块读写</li>
+<li><strong>自动资源管理</strong>：文件对象自动跟踪状态</li>
+</ul>
+<hr>
+<h2 id="使用方式">使用方式</h2>
+<pre><code class="language-leno">import files
+
+// 方式1：快捷操作（推荐简单场景）
+var content = files.read(&quot;data.txt&quot;)
+files.write(&quot;output.txt&quot;, &quot;Hello World&quot;)
+
+// 方式2：文件对象（推荐复杂操作）
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+var line = f.readline()
+f.close()
+</code></pre>
+<hr>
+<h2 id="文件打开模式">文件打开模式</h2>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+<th>文件存在</th>
+<th>文件不存在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"r"</code></td>
+<td>只读（文本）</td>
+<td>从头读取</td>
+<td>报错</td>
+</tr>
+<tr>
+<td><code>"w"</code></td>
+<td>只写（文本）</td>
+<td>清空内容</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"a"</code></td>
+<td>追加（文本）</td>
+<td>追加到末尾</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"r+"</code></td>
+<td>读写（文本）</td>
+<td>从头读写</td>
+<td>报错</td>
+</tr>
+<tr>
+<td><code>"w+"</code></td>
+<td>读写（文本）</td>
+<td>清空内容</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"a+"</code></td>
+<td>读写追加（文本）</td>
+<td>追加到末尾</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"rb"</code></td>
+<td>只读（二进制）</td>
+<td>从头读取</td>
+<td>报错</td>
+</tr>
+<tr>
+<td><code>"wb"</code></td>
+<td>只写（二进制）</td>
+<td>清空内容</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"ab"</code></td>
+<td>追加（二进制）</td>
+<td>追加到末尾</td>
+<td>创建新文件</td>
+</tr>
+<tr>
+<td><code>"rb+"</code></td>
+<td>读写（<strong>二进制</strong>）</td>
+<td>从头读写</td>
+<td>报错</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ <strong>改二进制文件（图片/音频/压缩包）必须用 <code>"rb+"</code>，不能用 <code>"r+"</code></strong>
+<code>"r+"</code> 是文本模式，写入时会把 <code>0x0A</code> 转成 <code>0x0D 0x0A</code>（CRLF），直接把文件写坏。
+实测（2026-10-28）：用 <code>"r+"</code> 在二进制文件中间写 4 字节，后续字节全部错位；
+换成 <code>"rb+"</code> 后同样操作<strong>字节完全一致</strong> ✓
+</p>
+</blockquote>
+<pre><code class="language-leno">// 原地改文件的一段（不改变长度）
+var f = files.open(&quot;song.flac&quot;, &quot;rb+&quot;)
+f.seek(4, &quot;set&quot;)
+f.write(patch)      // 二进制，原样写入 ✓
+f.close()
+</code></pre>
+<h3 id="模式选择建议">模式选择建议</h3>
+<pre><code class="language-leno">// 读取配置文件
+var f = files.open(&quot;config.ini&quot;, &quot;r&quot;)
+
+// 写入日志（追加模式）
+var log = files.open(&quot;app.log&quot;, &quot;a&quot;)
+
+// 创建新文件或覆盖
+files.open(&quot;output.txt&quot;, &quot;w&quot;)
+
+// 读写已有文件
+files.open(&quot;data.bin&quot;, &quot;r+&quot;)
+</code></pre>
+<hr>
+<h2 id="模块方法-静态方法">模块方法（静态方法）</h2>
+<h3 id="open-path-mode"><code>open(path, mode)</code></h3>
+<p>打开文件并返回文件对象。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径
+- <code>mode</code> (string): 打开模式（见上文）</p>
+<p><strong>返回</strong>: <code>File</code> - 文件对象</p>
+<p><strong>错误</strong>: 文件不存在或权限不足时抛出错误</p>
+<pre><code class="language-leno">import files
+
+// 打开文件读取
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+var content = f.read()
+f.close()
+
+// 打开文件写入
+var f2 = files.open(&quot;output.txt&quot;, &quot;w&quot;)
+f2.write(&quot;Hello&quot;)
+f2.close()
+</code></pre>
+<hr>
+<h3 id="exists-path"><code>exists(path)</code></h3>
+<p>检查<strong>路径</strong>是否存在（文件或目录都算存在）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否存在</p>
+<blockquote>
+<p>⚠ <strong>口径（2026-11-11 修）</strong>：判据是"<strong>路径在不在</strong>"（Windows 取属性 / POSIX <code>stat</code>），
+与 <code>dirs.exists</code> <strong>完全一致</strong>。此前实现是 <code>fopen(path, "r")</code> ⇒ 那是"能不能以读方式打开"：
+<strong>目录</strong>返回 <code>false</code>（实测：<code>mkdir_p</code> 建好的目录 <code>files.exists(dir)</code> 是 false，而
+<code>dirs.exists(dir)</code> 是 true），无读权限的文件也返回 <code>false</code>。要判"是文件还是目录"
+用 <code>dirs.is_file</code> / <code>dirs.is_dir</code>。</p>
+</blockquote>
+<pre><code class="language-leno">import files
+
+if files.exists(&quot;data.txt&quot;) {
+    print(&quot;文件存在&quot;)
+} else {
+    print(&quot;文件不存在&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="delete-path"><code>delete(path)</code></h3>
+<p>删除文件。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>bool</code> - 是否成功删除</p>
+<pre><code class="language-leno">import files
+
+var success = files.delete(&quot;old_file.txt&quot;)
+if success {
+    print(&quot;删除成功&quot;)
+} else {
+    print(&quot;删除失败&quot;)
+}
+</code></pre>
+<hr>
+<h3 id="read-path"><code>read(path)</code></h3>
+<p>快捷读取文件全部内容。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径</p>
+<p><strong>返回</strong>: <code>string</code> - 文件内容</p>
+<p><strong>失败时（2026-09-18 实测；2026-10-01 补消息口径）</strong>：<strong>抛运行时错误</strong>，消息形如
+<code>无法打开文件 '&lt;路径&gt;'</code>（<strong>带路径</strong>，与 <code>open()</code> / <code>write()</code> 同口径），带出错行号 ——
+<strong>既不是返回 <code>""</code> 也不是返回 <code>null</code></strong> ✗。
+⚠ 实现里那句 <code>native_throw_error(...); return val_null();</code> 的 <code>return</code> 是 <strong>C 语法的兜底</strong>：
+<code>native_throw_error</code> <strong>不跳转</strong>，只把异常登记进 VM，真正的抛出发生在 native 调用<strong>返回之后</strong>
+⇒ 调用点永远拿不到那个 <code>null</code>（见 <code>src/include/native.h</code> 的函数头注释，2026-09-30 实测钉死）。
+需要容错时：<code>files.exists(path)</code> 预检，或 <code>try</code> + <code>catch e</code>（消息在 <code>e.msg</code>）。</p>
+<p><strong>编码（2026-10-01）</strong>：本函数是<strong>文本语义</strong>的快捷读取 ⇒ <strong>会剥掉开头的 UTF-8 BOM</strong>（<code>EF BB BF</code>）。
+理由：带 BOM 的文件（记事本、<code>Set-Content -Encoding utf8</code> 产出）若原样带出 BOM，正则 / 字符串比较 /
+数字解析都会<strong>静默失配</strong>。要原始字节请走 <code>files.open(path, "rb").read()</code>（二进制模式<strong>不做任何处理</strong> ✓）。</p>
+<pre><code class="language-leno">import files
+
+// 读取整个文件
+var content = files.read(&quot;document.txt&quot;)
+print(content)
+
+// 处理行
+var lines = content.split(&quot;\n&quot;)
+for lines to line {
+    print(&quot;行: &quot; + line)
+}
+</code></pre>
+<hr>
+<h3 id="write-path-content"><code>write(path, content)</code></h3>
+<p>快捷写入内容到文件（覆盖模式）。</p>
+<p><strong>参数</strong>:
+- <code>path</code> (string): 文件路径
+- <code>content</code> (string): 要写入的内容</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">import files
+
+// 写入字符串
+files.write(&quot;output.txt&quot;, &quot;Hello World&quot;)
+
+// 写入变量
+var data = &quot;Name: Alice\nAge: 25&quot;
+files.write(&quot;user.txt&quot;, data)
+
+// 写入多行（使用 join）
+var lines = [&quot;Line 1&quot;, &quot;Line 2&quot;, &quot;Line 3&quot;]
+files.write(&quot;lines.txt&quot;, lines.join(&quot;\n&quot;))
+</code></pre>
+<hr>
+<h2 id="文件对象方法">文件对象方法</h2>
+<h3 id="read-read-n"><code>read()</code> / <code>read(n)</code></h3>
+<p>读取文件内容。</p>
+<p><strong>参数</strong>:
+- <code>n</code> (int, 可选): 读取字节数，不传则读取全部</p>
+<p><strong>返回</strong>: <code>string</code> - 读取的内容</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+
+// 读取全部
+var all = f.read()
+print(&quot;全部内容: &quot; + all)
+
+// 读取前100字节
+f.seek(0, &quot;set&quot;)  // 回到开头
+var part = f.read(100)
+print(&quot;前100字节: &quot; + part)
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="readline"><code>readline()</code></h3>
+<p>读取一行（不包含换行符）。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>string</code> - 一行内容，EOF 返回空字符串</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+
+// 逐行读取
+var line_num = 1
+while true {
+    var line = f.readline()
+    if line == &quot;&quot; and f.eof() {
+        break
+    }
+    print(line_num + &quot;: &quot; + line)
+    line_num = line_num + 1
+}
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="readlines"><code>readlines()</code></h3>
+<p>读取所有行，返回数组。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>Array[string]</code> - 每行作为一个元素的数组（<strong>元素类型编译期已知</strong>，v3.2.6 起）</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+var lines = f.readlines()
+f.close()
+
+print(&quot;总行数: &quot; + lines.len())
+for lines to line {
+    print(&quot;- &quot; + line)
+}
+</code></pre>
+<hr>
+<h3 id="write-string"><code>write(string)</code></h3>
+<p>写入字符串到文件。</p>
+<p><strong>参数</strong>:
+- <code>string</code> (string): 要写入的内容</p>
+<p><strong>返回</strong>: <code>int</code> - 写入的字节数</p>
+<blockquote>
+<p>★ 2026-11-15：<strong>写不全就抛错</strong>（"只写入 0/1 字节（文件可能是以只读模式打开的，或磁盘已满）"）。
+此前只读模式的文件调 <code>write</code> 会静默返回 <code>0</code> —— 看着像"写了 0 字节"，其实一个字节都没落盘 ✗</p>
+</blockquote>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;output.txt&quot;, &quot;w&quot;)
+
+// 写入字符串
+var written = f.write(&quot;Hello World&quot;)
+print(&quot;写入了 &quot; + written + &quot; 字节&quot;)
+
+// 写入变量
+var name = &quot;Alice&quot;
+f.write(&quot;Name: &quot; + name)
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="writeln-string"><code>writeln(string)</code></h3>
+<p>写入字符串并添加换行符。</p>
+<p><strong>参数</strong>:
+- <code>string</code> (string): 要写入的内容</p>
+<p><strong>返回</strong>: <code>null</code></p>
+<blockquote>
+<p>★ 2026-11-15：与 <code>write</code> 同口径 —— 写失败（只读句柄 / 磁盘满）<strong>抛错</strong>，不再静默当成功。</p>
+</blockquote>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;log.txt&quot;, &quot;w&quot;)
+
+// 写入多行
+f.writeln(&quot;2024-01-15 10:30:00 - 程序启动&quot;)
+f.writeln(&quot;2024-01-15 10:30:01 - 加载配置&quot;)
+f.writeln(&quot;2024-01-15 10:30:02 - 初始化完成&quot;)
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="seek-pos-whence"><code>seek(pos, whence)</code></h3>
+<p>移动文件指针位置。</p>
+<p><strong>参数</strong>:
+- <code>pos</code> (int): 偏移量
+- <code>whence</code> (string, 可选): 起始位置
+  - <code>"set"</code> - 从文件开头（默认）
+  - <code>"cur"</code> - 从当前位置
+  - <code>"end"</code> - 从文件末尾</p>
+<p><strong>返回</strong>: <code>int</code> - 操作结果（0 表示成功）</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.bin&quot;, &quot;r+&quot;)
+
+// 移动到第100字节
+f.seek(100, &quot;set&quot;)
+
+// 从当前位置向前移动50字节
+f.seek(50, &quot;cur&quot;)
+
+// 移动到文件末尾前10字节
+f.seek(-10, &quot;end&quot;)
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="tell"><code>tell()</code></h3>
+<p>获取当前文件指针位置。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - 当前位置（字节偏移）</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+
+// 读取一些内容
+var data = f.read(100)
+
+// 获取当前位置
+var pos = f.tell()
+print(&quot;当前位置: &quot; + pos + &quot; 字节&quot;)
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="len"><code>len()</code></h3>
+<p>获取文件大小。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>int</code> - 文件大小（字节）</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.bin&quot;, &quot;r&quot;)
+var size = f.len()
+print(&quot;文件大小: &quot; + size + &quot; 字节&quot;)
+f.close()
+</code></pre>
+<hr>
+<h3 id="eof"><code>eof()</code></h3>
+<p>检查是否到达文件末尾。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>bool</code> - 是否 EOF</p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+
+while not f.eof() {
+    var line = f.readline()
+    print(line)
+}
+
+f.close()
+</code></pre>
+<hr>
+<h3 id="close"><code>close()</code></h3>
+<p>关闭文件。</p>
+<p><strong>参数</strong>: 无<br>
+<strong>返回</strong>: <code>null</code></p>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+// ... 操作文件
+f.close()
+
+// 重复关闭是安全的
+f.close()  // 不会报错
+</code></pre>
+<hr>
+<h2 id="读取操作">读取操作</h2>
+<h3 id="读取整个文件">读取整个文件</h3>
+<pre><code class="language-leno">import files
+
+// 快捷方式
+var content = files.read(&quot;document.txt&quot;)
+
+// 文件对象方式
+var f = files.open(&quot;document.txt&quot;, &quot;r&quot;)
+var content = f.read()
+f.close()
+</code></pre>
+<h3 id="逐行读取">逐行读取</h3>
+<pre><code class="language-leno">import files
+
+// 方式1：readlines
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+var lines = f.readlines()
+f.close()
+
+for lines to line {
+    print(line)
+}
+
+// 方式2：readline 循环
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+while true {
+    var line = f.readline()
+    if line == &quot;&quot; and f.eof() {
+        break
+    }
+    process_line(line)
+}
+f.close()
+</code></pre>
+<h3 id="分块读取-大文件">分块读取（大文件）</h3>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;large_file.bin&quot;, &quot;rb&quot;)
+var chunk_size = 4096
+var total_read = 0
+
+while not f.eof() {
+    var chunk = f.read(chunk_size)
+    total_read = total_read + chunk.len()
+    process_chunk(chunk)
+}
+
+print(&quot;总共读取: &quot; + total_read + &quot; 字节&quot;)
+f.close()
+</code></pre>
+<hr>
+<h2 id="写入操作">写入操作</h2>
+<h3 id="覆盖写入">覆盖写入</h3>
+<pre><code class="language-leno">import files
+
+// 快捷方式
+files.write(&quot;output.txt&quot;, &quot;新内容&quot;)
+
+// 文件对象方式
+var f = files.open(&quot;output.txt&quot;, &quot;w&quot;)
+f.write(&quot;新内容&quot;)
+f.close()
+</code></pre>
+<h3 id="字节保真-行尾-bom-批量改写务必看这一节">字节保真（行尾 / BOM）—— <strong>批量改写务必看这一节</strong></h3>
+<p><code>files.write</code> 写下去的就是<strong>你给的字节</strong>，<code>files.read</code> 读出来的也是<strong>盘上的字节</strong>（两处都走二进制通道，
+2026-10-02 起；此前是文本模式，会<strong>静默翻译行尾</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>files.write(p, s)</code></td>
+<td>原样落盘：<code>\n</code> 就是 <code>\n</code>（<strong>不会</strong>变成 <code>\r\n</code>）；要 Windows 行尾请自己写 <code>\r\n</code></td>
+</tr>
+<tr>
+<td><code>files.read(p)</code></td>
+<td>原样读入 ⇒ <strong>CRLF 文件读出来行尾仍带 <code>\r</code></strong>（不做 LF 归一化）</td>
+</tr>
+<tr>
+<td><code>files.read(p)</code> 与 BOM</td>
+<td><strong>仍会剥掉 UTF-8 BOM</strong>（这是它的文本语义：不剥的话正则 / 比较 / 数字解析会在首字符静默失配）</td>
+</tr>
+<tr>
+<td><code>files.open(p,"rb")</code> / <code>files.open(p,"wb")</code></td>
+<td>完全原始：<strong>BOM 也在</strong>、行尾不动 ⇒ "读→改→写回"要<strong>连 BOM 一起保真</strong>时必须走这两条</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ <strong>"读 → 改 → 写回"的正确姿势</strong>（批量替换工具 <code>examples/工具/leno-replace.leno</code> 就是这么写的）：</p>
+<pre><code class="language-leno">var fin = files.open(path, &quot;rb&quot;)
+var raw = fin.read()          // 原始字节：BOM、行尾原样
+fin.close()
+
+var fout = files.open(path, &quot;wb&quot;)
+fout.write(raw.replace(&quot;旧&quot;, &quot;新&quot;))
+fout.close()
+</code></pre>
+<p>⚠ <strong>反例</strong>：<code>files.write(p, files.read(p).replace("旧", "新"))</code> —— BOM 会<strong>丢</strong>（<code>read</code> 剥掉它、没人补回来）。
+修复前这条更狠：读/写两侧都是文本模式，会把 <strong>LF 文件整个变成 CRLF</strong>（实测 6 字节 → 9 字节）——
+而且两侧<strong>对称翻译</strong>，纯 CRLF 的文件跑一遍反而"看着没事"，特别难查 ✗
+（护栏用例：<code>assert/test_files_bytes.leno</code>，逐字节断言 + 变异验证）。</p>
+<h3 id="追加写入">追加写入</h3>
+<pre><code class="language-leno">import files
+
+// 追加单行
+var log = files.open(&quot;app.log&quot;, &quot;a&quot;)
+log.writeln(&quot;[&quot; + get_time() + &quot;] 用户登录&quot;)
+log.close()
+
+// 追加多行
+var f = files.open(&quot;data.txt&quot;, &quot;a&quot;)
+f.write(&quot;\n新行1\n新行2&quot;)
+f.close()
+</code></pre>
+<h3 id="写入格式化数据">写入格式化数据</h3>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;report.txt&quot;, &quot;w&quot;)
+
+// 写入表头
+f.writeln(&quot;========== 报告 ==========&quot;)
+f.writeln(&quot;&quot;)
+
+// 写入数据
+var items = [
+    {&quot;name&quot;: &quot;产品A&quot;, &quot;price&quot;: 100, &quot;qty&quot;: 5},
+    {&quot;name&quot;: &quot;产品B&quot;, &quot;price&quot;: 200, &quot;qty&quot;: 3}
+]
+
+for items to item {
+    var line = item[&quot;name&quot;] + &quot; | &quot; + item[&quot;price&quot;] + &quot;元 | x&quot; + item[&quot;qty&quot;]
+    f.writeln(line)
+}
+
+// 写入总计
+f.writeln(&quot;&quot;)
+f.writeln(&quot;=========================&quot;)
+
+f.close()
+</code></pre>
+<hr>
+<h2 id="文件定位">文件定位</h2>
+<h3 id="随机访问">随机访问</h3>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.bin&quot;, &quot;r+&quot;)
+
+// 读取头部信息
+var header = f.read(64)
+
+// 跳转到数据区域
+f.seek(1024, &quot;set&quot;)
+var data = f.read(512)
+
+// 跳转到文件末尾追加
+f.seek(0, &quot;end&quot;)
+f.write(&quot;新数据&quot;)
+
+f.close()
+</code></pre>
+<h3 id="修改文件特定位置">修改文件特定位置</h3>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;records.bin&quot;, &quot;r+&quot;)
+
+// 计算第10条记录的位置
+var record_size = 128
+var record_num = 10
+f.seek(record_size * record_num, &quot;set&quot;)
+
+// 修改记录
+f.write(&quot;更新后的记录数据&quot;)
+
+f.close()
+</code></pre>
+<hr>
+<h2 id="文件属性">文件属性</h2>
+<h3 id="获取文件大小">获取文件大小</h3>
+<pre><code class="language-leno">import files
+
+// 方式1：打开后获取
+var f = files.open(&quot;data.bin&quot;, &quot;r&quot;)
+var size = f.len()
+f.close()
+
+// 方式2：读取后获取内容长度
+var content = files.read(&quot;data.txt&quot;)
+var size = content.len()
+</code></pre>
+<h3 id="检查文件状态">检查文件状态</h3>
+<pre><code class="language-leno">import files
+
+var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+
+// 检查是否到末尾
+if f.eof() {
+    print(&quot;文件已读完&quot;)
+}
+
+// 获取当前位置
+var pos = f.tell()
+print(&quot;当前位置: &quot; + pos)
+
+f.close()
+</code></pre>
+<hr>
+<h2 id="快捷操作">快捷操作</h2>
+<h3 id="复制文件">复制文件</h3>
+<pre><code class="language-leno">import files
+
+func copy_file(src, dst) {
+    var content = files.read(src)
+    files.write(dst, content)
+}
+
+copy_file(&quot;source.txt&quot;, &quot;backup.txt&quot;)
+</code></pre>
+<h3 id="大文件复制-分块">大文件复制（分块）</h3>
+<pre><code class="language-leno">import files
+
+func copy_large_file(src, dst, chunk_size) {
+    var src_f = files.open(src, &quot;rb&quot;)
+    var dst_f = files.open(dst, &quot;wb&quot;)
+
+    var total = 0
+    while not src_f.eof() {
+        var chunk = src_f.read(chunk_size)
+        dst_f.write(chunk)
+        total = total + chunk.len()
+    }
+
+    src_f.close()
+    dst_f.close()
+
+    return total
+}
+
+var copied = copy_large_file(&quot;large.bin&quot;, &quot;large_copy.bin&quot;, 8192)
+print(&quot;复制了 &quot; + copied + &quot; 字节&quot;)
+</code></pre>
+<hr>
+<h2 id="示例代码">示例代码</h2>
+<h3 id="示例1-配置文件读写">示例1：配置文件读写</h3>
+<pre><code class="language-leno">import files
+import jsons
+
+func load_config(string path): Dict[string, any] {
+    if not files.exists(path) {
+        return {}
+    }
+    var content = files.read(path)
+    var obj = jsons.decode(content)
+    if obj is Dict[string, any] =&gt; d {
+        return d
+    }
+    return {}
+}
+
+func save_config(string path, Dict[string, any] config) {
+    files.write(path, jsons.encode_pretty(config))
+}
+
+main() {
+    var config_path = &quot;app.config&quot;
+
+    // 加载配置
+    var config = load_config(config_path)
+
+    // 使用配置（类型化取值：键缺失/类型不符时给默认值，不必自己收窄）
+    var host = jsons.get_str(config, &quot;host&quot;, &quot;localhost&quot;)
+    var port = jsons.get_int(config, &quot;port&quot;, 8080)
+    print(&quot;服务器: &quot; + host + &quot;:&quot; + _str(port))
+
+    // 修改配置
+    config[&quot;port&quot;] = 3000
+    config[&quot;debug&quot;] = true
+
+    // 保存配置
+    save_config(config_path, config)
+    print(&quot;配置已保存&quot;)
+}
+</code></pre>
+<blockquote>
+<p>★ 2026-11-15：本示例此前是<strong>跑不通</strong>的（<code>import dicts</code> 不是模块；<code>jsons.parse</code> /
+<code>jsons.stringify</code> 都不存在，对 <code>any</code> 直接 <code>.get</code> 也会被静态检查拦）—— 现改为
+<code>jsons.decode</code> / <code>jsons.encode_pretty</code> + <code>jsons.get_str</code> / <code>get_int</code>，并实测编译运行通过。</p>
+</blockquote>
+<h3 id="示例2-日志记录器">示例2：日志记录器</h3>
+<pre><code class="language-leno">import files
+import times
+
+var Logger = {
+    &quot;file&quot;: null,
+    &quot;level&quot;: &quot;INFO&quot;
+}
+
+func logger_init(path) {
+    Logger.file = files.open(path, &quot;a&quot;)
+}
+
+func logger_log(level, message) {
+    if Logger.file == null {
+        print(&quot;日志未初始化&quot;)
+        return
+    }
+
+    var time_str = times.now().format(&quot;yyyy-MM-dd HH:mm:ss&quot;)
+    var log_line = &quot;[&quot; + time_str + &quot;] [&quot; + level + &quot;] &quot; + message
+    Logger.file.writeln(log_line)
+}
+
+func logger_info(message) {
+    logger_log(&quot;INFO&quot;, message)
+}
+
+func logger_error(message) {
+    logger_log(&quot;ERROR&quot;, message)
+}
+
+func logger_close() {
+    if Logger.file != null {
+        Logger.file.close()
+        Logger.file = null
+    }
+}
+
+main() {
+    logger_init(&quot;app.log&quot;)
+
+    logger_info(&quot;程序启动&quot;)
+    logger_info(&quot;加载配置完成&quot;)
+    logger_error(&quot;连接数据库失败&quot;)
+
+    logger_close()
+}
+</code></pre>
+<h3 id="示例3-csv-文件处理">示例3：CSV 文件处理</h3>
+<pre><code class="language-leno">import files
+import arrays
+
+func read_csv(path) {
+    var f = files.open(path, &quot;r&quot;)
+    var lines = f.readlines()
+    f.close()
+
+    if lines.len() == 0 {
+        return []
+    }
+
+    // 解析表头
+    var headers = lines[0].split(&quot;,&quot;)
+
+    // 解析数据行
+    var records = []
+    for 1 : lines.len() - 1 to i {
+        var values = lines[i].split(&quot;,&quot;)
+        var record = {}
+        for 0 : headers.len() - 1 to j {
+            record[headers[j]] = values[j]
+        }
+        records.add(record)
+    }
+
+    return records
+}
+
+func write_csv(path, headers, records) {
+    var f = files.open(path, &quot;w&quot;)
+
+    // 写入表头
+    f.writeln(headers.join(&quot;,&quot;))
+
+    // 写入数据
+    for records to record {
+        var values = []
+        for headers to h {
+            values.add(record[h])
+        }
+        f.writeln(values.join(&quot;,&quot;))
+    }
+
+    f.close()
+}
+
+main() {
+    // 读取 CSV
+    var data = read_csv(&quot;data.csv&quot;)
+    for data to row {
+        print(row[&quot;name&quot;] + &quot;: &quot; + row[&quot;age&quot;])
+    }
+
+    // 写入 CSV
+    var headers = [&quot;name&quot;, &quot;age&quot;, &quot;city&quot;]
+    var records = [
+        {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: &quot;25&quot;, &quot;city&quot;: &quot;Beijing&quot;},
+        {&quot;name&quot;: &quot;Bob&quot;, &quot;age&quot;: &quot;30&quot;, &quot;city&quot;: &quot;Shanghai&quot;}
+    ]
+    write_csv(&quot;output.csv&quot;, headers, records)
+}
+</code></pre>
+<h3 id="示例4-二进制文件处理">示例4：二进制文件处理</h3>
+<pre><code class="language-leno">import files
+
+// 写入二进制数据
+func write_binary_data(path) {
+    var f = files.open(path, &quot;wb&quot;)
+
+    // 写入魔数
+    f.write(&quot;BIN\x00&quot;)
+
+    // 写入版本
+    f.write(&quot;\x01\x00&quot;)  // 版本 1.0
+
+    // 写入数据长度（4字节大端）
+    var data_len = 256
+    f.write(char((data_len &gt;&gt; 24) &amp; 0xFF))
+    f.write(char((data_len &gt;&gt; 16) &amp; 0xFF))
+    f.write(char((data_len &gt;&gt; 8) &amp; 0xFF))
+    f.write(char(data_len &amp; 0xFF))
+
+    // 写入数据
+    for 0 : data_len - 1 to i {
+        f.write(char(i &amp; 0xFF))
+    }
+
+    f.close()
+}
+
+// 读取二进制数据
+func read_binary_data(path) {
+    var f = files.open(path, &quot;rb&quot;)
+
+    // 读取魔数
+    var magic = f.read(4)
+    if magic != &quot;BIN\x00&quot; {
+        print(&quot;无效的格式&quot;)
+        f.close()
+        return null
+    }
+
+    // 读取版本
+    var version = f.read(2)
+    print(&quot;版本: &quot; + version[0] + &quot;.&quot; + version[1])
+
+    // 读取数据长度
+    var len_bytes = f.read(4)
+    var data_len = (len_bytes[0] &lt;&lt; 24) | (len_bytes[1] &lt;&lt; 16) | 
+                   (len_bytes[2] &lt;&lt; 8) | len_bytes[3]
+    print(&quot;数据长度: &quot; + data_len)
+
+    // 读取数据
+    var data = f.read(data_len)
+
+    f.close()
+    return data
+}
+
+main() {
+    write_binary_data(&quot;data.bin&quot;)
+    var data = read_binary_data(&quot;data.bin&quot;)
+    print(&quot;读取了 &quot; + data.len() + &quot; 字节&quot;)
+}
+</code></pre>
+<h3 id="示例5-文件搜索和替换">示例5：文件搜索和替换</h3>
+<pre><code class="language-leno">import files
+
+func find_and_replace(path, old_str, new_str):bool {
+    // ⚠ 走**原始字节**通道（open &quot;rb&quot;/&quot;wb&quot;）：`files.read` 会剥 BOM，只有 `open(rb)` 拿得到原样字节
+    //   ⇒ 图省事写成 `files.write(path, files.read(path).replace(...))` 会**丢掉 BOM**
+    //   （见上文「字节保真（行尾 / BOM）」一节）。想连 BOM 一起保真就得这么写 ✓
+    var fin = files.open(path, &quot;rb&quot;)
+    var content = fin.read()
+    fin.close()
+
+    var new_content = content.replace(old_str, new_str)
+    if new_content == content { return false }   // 没命中就别重写（不动 mtime）
+
+    var fout = files.open(path, &quot;wb&quot;)
+    fout.write(new_content)
+    fout.close()
+    return true
+}
+
+func find_in_file(path, search_str) {
+    var f = files.open(path, &quot;r&quot;)
+    var line_num = 1
+    var matches = []
+
+    while true {
+        var line = f.readline()
+        if line == &quot;&quot; and f.eof() {
+            break
+        }
+
+        if line.contains(search_str) {
+            matches.add({&quot;line&quot;: line_num, &quot;content&quot;: line})
+        }
+
+        line_num = line_num + 1
+    }
+
+    f.close()
+    return matches
+}
+
+main() {
+    // 查找
+    var results = find_in_file(&quot;source.txt&quot;, &quot;TODO&quot;)
+    for results to r {
+        print(&quot;行 &quot; + r[&quot;line&quot;] + &quot;: &quot; + r[&quot;content&quot;])
+    }
+
+    // 替换
+    var changed = find_and_replace(&quot;config.txt&quot;, &quot;localhost&quot;, &quot;127.0.0.1&quot;)
+    if changed {
+        print(&quot;替换成功&quot;)
+    }
+}
+</code></pre>
+<hr>
+<h2 id="注意事项">注意事项</h2>
+<h3 id="1-文件编码">1. 文件编码</h3>
+<ul>
+<li>默认使用系统编码（Windows 通常是 GBK/UTF-8，Linux/macOS 通常是 UTF-8）</li>
+<li>中文内容建议使用 UTF-8 编码保存</li>
+</ul>
+<pre><code class="language-leno">// 确保正确处理中文
+files.write(&quot;chinese.txt&quot;, &quot;中文内容测试&quot;)
+var content = files.read(&quot;chinese.txt&quot;)
+print(content)  // 中文内容测试
+</code></pre>
+<h3 id="2-路径分隔符">2. 路径分隔符</h3>
+<ul>
+<li>Windows 支持 <code>/</code> 和 <code>\</code></li>
+<li>建议使用 <code>/</code> 或 <code>dirs.join()</code> 确保跨平台兼容</li>
+</ul>
+<pre><code class="language-leno">import dirs
+
+// 推荐：使用 dirs.join
+var path = dirs.join(&quot;folder&quot;, &quot;subfolder&quot;, &quot;file.txt&quot;)
+
+// 也可以直接使用 /
+var path2 = &quot;folder/subfolder/file.txt&quot;
+</code></pre>
+<h3 id="3-文件关闭">3. 文件关闭</h3>
+<ul>
+<li>文件使用完毕后应调用 <code>close()</code></li>
+<li>重复关闭是安全的，不会报错</li>
+<li>程序退出时会自动关闭未关闭的文件</li>
+</ul>
+<pre><code class="language-leno">var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+// ... 使用文件
+f.close()
+f.close()  // 安全，不会报错
+</code></pre>
+<h3 id="4-大文件处理">4. 大文件处理</h3>
+<ul>
+<li>大文件建议使用分块读取，避免内存不足</li>
+<li>使用 <code>"rb"</code> / <code>"wb"</code> 模式进行二进制操作</li>
+</ul>
+<pre><code class="language-leno">// 大文件复制（分块）
+var f1 = files.open(&quot;large.bin&quot;, &quot;rb&quot;)
+var f2 = files.open(&quot;large_copy.bin&quot;, &quot;wb&quot;)
+
+while not f1.eof() {
+    var chunk = f1.read(8192)  // 8KB 分块
+    f2.write(chunk)
+}
+
+f1.close()
+f2.close()
+</code></pre>
+<h3 id="5-错误处理">5. 错误处理</h3>
+<ul>
+<li>文件不存在时 <code>open()</code> 会抛出错误</li>
+<li>使用 <code>exists()</code> 预先检查或使用 try-catch</li>
+</ul>
+<pre><code class="language-leno">// 方式1：预先检查
+if files.exists(&quot;data.txt&quot;) {
+    var content = files.read(&quot;data.txt&quot;)
+} else {
+    print(&quot;文件不存在&quot;)
+}
+
+// 方式2：try-catch（如果语言支持）
+try {
+    var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
+} catch e {
+    print(&quot;打开失败: &quot; + e)
+}
+</code></pre>
+<hr>
+<h2 id="最佳实践">最佳实践</h2>
+<ol>
+<li>
+<p><strong>使用快捷方法处理简单场景</strong>
+   <code>leno
+   // 简单读写用快捷方法
+   var content = files.read("data.txt")
+   files.write("output.txt", content)</code></p>
+</li>
+<li>
+<p><strong>使用文件对象处理复杂操作</strong>
+   <code>leno
+   // 需要精细控制时用文件对象
+   var f = files.open("data.txt", "r")
+   while not f.eof() {
+       process_line(f.readline())
+   }
+   f.close()</code></p>
+</li>
+<li>
+<p><strong>及时关闭文件</strong>
+   <code>leno
+   // 使用完立即关闭
+   var f = files.open("data.txt", "r")
+   var data = f.read()
+   f.close()  // 不要遗忘</code></p>
+</li>
+<li>
+<p><strong>处理大文件使用分块</strong>
+   <code>leno
+   var f = files.open("large.bin", "rb")
+   while not f.eof() {
+       var chunk = f.read(4096)
+       process(chunk)
+   }
+   f.close()</code></p>
+</li>
+<li>
+<p><strong>使用 with 语句（如果语言支持）</strong>
+   <code>leno
+   // 自动关闭
+   with files.open("data.txt", "r") to f {
+       var content = f.read()
+   }  // 自动关闭</code></p>
+</li>
+<li>
+<p><strong>检查操作结果</strong>
+   <code>leno
+   var success = files.delete("old.txt")
+   if not success {
+       print("删除失败，可能文件不存在或无权限")
+   }</code></p>
+</li>
+</ol>
+<hr>
+<p><em>文档版本: 1.0</em><br>
+<em>最后更新: 2026-05-17</em></p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#使用方式">使用方式</a></li><li><a href="#文件打开模式">文件打开模式</a></li><ul class="lv3"><li><a href="#模式选择建议">模式选择建议</a></li></ul><li><a href="#模块方法-静态方法">模块方法（静态方法）</a></li><ul class="lv3"><li><a href="#open-path-mode">open(path, mode)</a></li><li><a href="#exists-path">exists(path)</a></li><li><a href="#delete-path">delete(path)</a></li><li><a href="#read-path">read(path)</a></li><li><a href="#write-path-content">write(path, content)</a></li></ul><li><a href="#文件对象方法">文件对象方法</a></li><ul class="lv3"><li><a href="#read-read-n">read() / read(n)</a></li><li><a href="#readline">readline()</a></li><li><a href="#readlines">readlines()</a></li><li><a href="#write-string">write(string)</a></li><li><a href="#writeln-string">writeln(string)</a></li><li><a href="#seek-pos-whence">seek(pos, whence)</a></li><li><a href="#tell">tell()</a></li><li><a href="#len">len()</a></li><li><a href="#eof">eof()</a></li><li><a href="#close">close()</a></li></ul><li><a href="#读取操作">读取操作</a></li><ul class="lv3"><li><a href="#读取整个文件">读取整个文件</a></li><li><a href="#逐行读取">逐行读取</a></li><li><a href="#分块读取-大文件">分块读取（大文件）</a></li></ul><li><a href="#写入操作">写入操作</a></li><ul class="lv3"><li><a href="#覆盖写入">覆盖写入</a></li><li><a href="#字节保真-行尾-bom-批量改写务必看这一节">字节保真（行尾 / BOM）—— 批量改写务必看这一节</a></li><li><a href="#追加写入">追加写入</a></li><li><a href="#写入格式化数据">写入格式化数据</a></li></ul><li><a href="#文件定位">文件定位</a></li><ul class="lv3"><li><a href="#随机访问">随机访问</a></li><li><a href="#修改文件特定位置">修改文件特定位置</a></li></ul><li><a href="#文件属性">文件属性</a></li><ul class="lv3"><li><a href="#获取文件大小">获取文件大小</a></li><li><a href="#检查文件状态">检查文件状态</a></li></ul><li><a href="#快捷操作">快捷操作</a></li><ul class="lv3"><li><a href="#复制文件">复制文件</a></li><li><a href="#大文件复制-分块">大文件复制（分块）</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-配置文件读写">示例1：配置文件读写</a></li><li><a href="#示例2-日志记录器">示例2：日志记录器</a></li><li><a href="#示例3-csv-文件处理">示例3：CSV 文件处理</a></li><li><a href="#示例4-二进制文件处理">示例4：二进制文件处理</a></li><li><a href="#示例5-文件搜索和替换">示例5：文件搜索和替换</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-文件编码">1. 文件编码</a></li><li><a href="#2-路径分隔符">2. 路径分隔符</a></li><li><a href="#3-文件关闭">3. 文件关闭</a></li><li><a href="#4-大文件处理">4. 大文件处理</a></li><li><a href="#5-错误处理">5. 错误处理</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="module_ffi_api.html">← 上一篇</a><a href="module_io.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

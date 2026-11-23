@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>区间口径约定（下标 / 整数一律闭区间） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="区间口径约定.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">01 入门 · 先读这些</a><span class="sep">/</span><span class="here">区间口径约定（下标 / 整数一律闭区间）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details open><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html" class="active" aria-current="page">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="区间口径约定-下标-整数一律闭区间">区间口径约定（下标 / 整数一律<strong>闭区间</strong>）</h1>
+<blockquote>
+<p>一句话：<strong>凡是"下标 / 整数区间"，两端都算</strong>（含 <code>b</code>）。
+这条规则 2026-10-10 在切片族上定下来，<strong>2026-11-20 收尾</strong>：把最后两处"半开"也改掉了
+（<code>RegexMatch.end</code> ⇒ <code>last</code>、<code>strings.rfind</code> 的 <code>before</code> ⇒ <code>last</code>）。
+本文是全仓唯一的口径来源；模块文档里各自重复的那一句只是为了就近可查。</p>
+</blockquote>
+<hr>
+<h2 id="一-规则">一、规则</h2>
+<table>
+<thead>
+<tr>
+<th>用法</th>
+<th>语义</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arr[a : b]</code> / <code>s[a : b]</code></td>
+<td>闭区间，含 <code>b</code></td>
+<td><code>[10,20,30,40][1:2]</code> ⇒ <code>[20, 30]</code></td>
+</tr>
+<tr>
+<td><code>strings.slice(s, a, b)</code> / <code>s.slice(a, b)</code></td>
+<td>闭区间（与语法切片同口径）</td>
+<td><code>"hello".slice(0, 2)</code> ⇒ <code>"hel"</code></td>
+</tr>
+<tr>
+<td><code>strings.byte_slice(s, a, b)</code></td>
+<td>闭区间（<strong>字节</strong>下标）</td>
+<td>——</td>
+</tr>
+<tr>
+<td><code>for a : b to i</code></td>
+<td>闭区间，<code>a</code>、<code>b</code> 都跑到</td>
+<td><code>for 0 : 3 to i</code> ⇒ 4 轮</td>
+</tr>
+<tr>
+<td><code>switch case a : b</code></td>
+<td>闭区间</td>
+<td><code>case 1:4</code> 命中 1..4</td>
+</tr>
+<tr>
+<td><code>rands.ints(min, max)</code> / <code>rands.int_array(...)</code></td>
+<td>闭区间</td>
+<td><code>rands.ints(1, 6)</code> ⇒ 1..6</td>
+</tr>
+<tr>
+<td><code>RegexMatch.start</code> / <code>.last</code></td>
+<td>闭区间两端（<code>last</code> = 末位）</td>
+<td><code>s[m.start : m.last]</code> ⇒ 整段</td>
+</tr>
+<tr>
+<td><code>strings.rfind(pat, last?)</code></td>
+<td><code>last</code> = <strong>允许的匹配起点上界（含）</strong></td>
+<td><code>"a.b.c".rfind(".", 2)</code> ⇒ 1</td>
+</tr>
+<tr>
+<td><code>rands.floats(min, max)</code></td>
+<td>按 <code>[min, max]</code> 表述</td>
+<td>⚠ 连续分布，<code>max</code> 命中概率为 0（见下）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="负下标">负下标</h3>
+<ul>
+<li><strong>起点</strong>负数 ⇒ 从末尾数（<code>arr[-3 : 2]</code> = 倒数第 3 个到下标 2）✓</li>
+<li><strong>终点</strong>负数 ⇒ <strong>结果恒为空</strong>（不是"从末尾数"✗）⇒ 编译器给 <code>[切片负终点]</code> 警告。
+  要"去掉最后 N 个"写 <code>arr[0 : arr.len() - N - 1]</code> ✓</li>
+</ul>
+<h3 id="不是-区间-的长度参数-不参与本条规则">不是"区间"的长度参数（不参与本条规则）</h3>
+<p>参数名是 <code>n</code> / <code>len</code> 的，一律是<strong>长度</strong>，不是端点：</p>
+<pre><code class="language-leno">strings.take(s, start, n)        // 从 start 起取 n 个字符
+files.read(n)                    // 读 n 字节
+ffi.read_bytes(ptr, off, len)    // 从 off 起读 len 字节
+</code></pre>
+<p>判断方法：<strong>看参数名</strong> —— <code>end</code> / <code>last</code> 是端点，<code>len</code> / <code>n</code> / <code>count</code> 是长度。</p>
+<h3 id="浮点随机-表述为闭区间">浮点随机：表述为闭区间</h3>
+<p><code>rands.floats(min, max)</code> 按 <code>[min, max]</code> 表述。实现是 <code>min + r*(max-min)</code>、<code>r ∈ [0,1)</code>
+⇒ <strong><code>max</code> 恰好取到的概率是 0</strong>；连续分布下这与闭区间等价，所以口径统一写成闭区间 ✓
+（别据此以为 <code>max</code> 会以某个小概率出现 —— 它取不到。要"一定含端点"的离散语义用 <code>ints</code> ✓）</p>
+<hr>
+<h2 id="二-2026-11-20-的收尾-breaking">二、2026-11-20 的收尾（breaking）</h2>
+<h3 id="1-regexmatch-end-半开-regexmatch-last-闭区间末位">1. <code>RegexMatch.end</code>（半开）⇒ <code>RegexMatch.last</code>（闭区间末位）</h3>
+<pre><code class="language-leno">// ❌ 旧（v3.2.43 及以前）
+&quot;abc123def&quot;[m.start : m.end - 1]     // 要记得 -1
+var n = m.end - m.start              // 长度
+
+// ✅ 新（v3.2.44 起）
+&quot;abc123def&quot;[m.start : m.last]        // 与切片同一口径，不用算术
+var n = m.last - m.start + 1         // 长度（或直接 m.text.len()）
+</code></pre>
+<ul>
+<li><strong>为什么删字段、而不是把 <code>end</code> 的语义改成"含"</strong>：改语义不报错 ⇒ 旧代码
+  <code>s[m.start : m.end - 1]</code> 会<strong>静默少取最后一个字符</strong>、<code>end - start</code> 算长度会<strong>静默差 1</strong> ✓
+  删掉 ⇒ 旧代码在<strong>编译期</strong>报错并给出改名提示（不会静默错一格）✓</li>
+<li>旧 <code>end</code> 的值 = 新 <code>last + 1</code>；<strong>空匹配</strong>时 <code>last = start - 1</code>（<code>s[a : a-1]</code> 得空串 ✓）</li>
+<li>字节码 <strong>v3.2.43 → v3.2.44</strong>、模块缓存 <strong>v58 → v59</strong>：字段号含义变了 ⇒
+  旧 <code>.lenb</code> / <code>.lenomc</code> 整体失效重编（旧的 1 号位会读到 <code>last</code>，静默差一格 ✗）</li>
+</ul>
+<h3 id="2-strings-rfind-pattern-before-rfind-pattern-last">2. <code>strings.rfind(pattern, before?)</code> ⇒ <code>rfind(pattern, last?)</code></h3>
+<pre><code class="language-leno">// ❌ 旧：before 不含 ⇒ 只在 [0, before) 里找
+&quot;a.b.c&quot;.rfind(&quot;.&quot;, 3)      // 1
+
+// ✅ 新：last 含 ⇒ 起点 ≤ last
+&quot;a.b.c&quot;.rfind(&quot;.&quot;, 3)      // 3     想保持旧结果写 2
+</code></pre>
+<ul>
+<li>换算：旧 <code>before = n</code> ⇔ 新 <code>last = n - 1</code> ✓</li>
+<li>负数照旧从末尾数（<code>-1</code> = 末位）✓</li>
+</ul>
+<h3 id="3-编译器怎么兜">3. 编译器怎么兜</h3>
+<ul>
+<li><code>m.end</code> ⇒ <code>error: struct 'RegexMatch' 没有字段 'end' —— 它**改名**了…</code>（附新名字与换算）</li>
+<li><code>arr[i].end</code> / <code>arr[i].nope</code> 这种<strong>索引接收者</strong>形态也一起兜住了
+  （此前这条"索引路"只查脚本 struct 的字段表，native struct 整块跳过 ⇒ 运行期才炸 ✗）</li>
+<li>迁移提示表在 <code>src/semantic/semantic_type_utils.c</code> 的 <code>semantic_renamed_field_hint()</code>；
+  仓内 + 下游项目都迁移完后可以删（删前 grep 一遍 <code>\.end\b</code>）✓</li>
+</ul>
+<hr>
+<h2 id="三-为什么要统一">三、为什么要统一</h2>
+<ol>
+<li><strong>同一个符号 <code>a : b</code> 出现在切片、<code>for</code>、<code>switch case</code> 里</strong> —— 它们早就都是闭区间。
+   若某个字段/参数是半开，就会出现"同一个 <code>a : b</code> 写法，一处含、一处不含"，只能靠记忆 ✓</li>
+<li>半开的错法是<strong>静默差一格</strong>（多一个字符 / 少一个字符），结果"看着像对的"，
+   是排查成本最高的一类 ✗</li>
+<li><code>.len()</code>、<code>strings.find</code>、切片、<code>for</code> 全在一个口径上 ⇒ 一个偏移量可以<strong>直接</strong>用于另一处，
+   不需要 <code>-1</code>/<code>+1</code> 中转 ✓</li>
+</ol>
+<hr>
+<h2 id="四-历史">四、历史</h2>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-10</td>
+<td>切片族统一到<strong>闭区间</strong>（语法切片 / <code>strings.slice</code> / <code>byte_slice</code> 曾为"不含 end"；全仓 248 处调用点同步改写）</td>
+</tr>
+<tr>
+<td>2026-10-25</td>
+<td>负终点（<code>arr[:-1]</code> 恒空）出 <code>[切片负终点]</code> 警告</td>
+</tr>
+<tr>
+<td>2026-11-20</td>
+<td>收尾：<code>RegexMatch.end</code> ⇒ <code>last</code>、<code>strings.rfind</code> 的 <code>before</code> ⇒ <code>last</code>、<code>rands.floats</code> 表述改闭区间；字节码 v3.2.44 / 缓存 v59</td>
+</tr>
+</tbody>
+</table></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-规则">一、规则</a></li><ul class="lv3"><li><a href="#负下标">负下标</a></li><li><a href="#不是-区间-的长度参数-不参与本条规则">不是"区间"的长度参数（不参与本条规则）</a></li><li><a href="#浮点随机-表述为闭区间">浮点随机：表述为闭区间</a></li></ul><li><a href="#二-2026-11-20-的收尾-breaking">二、2026-11-20 的收尾（breaking）</a></li><ul class="lv3"><li><a href="#1-regexmatch-end-半开-regexmatch-last-闭区间末位">1. RegexMatch.end（半开）⇒ RegexMatch.last（闭区间末位）</a></li><li><a href="#2-strings-rfind-pattern-before-rfind-pattern-last">2. strings.rfind(pattern, before?) ⇒ rfind(pattern, last?)</a></li><li><a href="#3-编译器怎么兜">3. 编译器怎么兜</a></li></ul><li><a href="#三-为什么要统一">三、为什么要统一</a></li><li><a href="#四-历史">四、历史</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="Leno_规范草稿.html">← 上一篇</a><a href="module_arrays.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

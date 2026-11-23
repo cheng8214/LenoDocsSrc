@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>布局配方（LenoSDL3） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="布局配方.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">03 使用指南</a><span class="sep">/</span><span class="here">布局配方（LenoSDL3）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details open><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html" class="active" aria-current="page">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="布局配方-lenosdl3">布局配方（LenoSDL3）</h1>
+<blockquote>
+<p>这不是 API 手册 —— 参数表从源码注释就能查到，而且会跟着代码变。
+这里回答的是<strong>"我想要 X 效果，该用哪几个组合"</strong>，以及<strong>哪些写法一定会翻车</strong>。</p>
+<p>配方全部来自实际项目（Aria 播放器）里跑通的代码；反模式全部是真实踩过的。</p>
+</blockquote>
+<hr>
+<h2 id="一-从零开一个窗口">一、从零开一个窗口</h2>
+<p>最小的可运行骨架：</p>
+<pre><code class="language-leno">import &quot;SDL3&quot; as SDL3
+use SDL3.(Event, Renderer, Window, VBox, HBox, Label)
+
+func run() {
+    SDL3.ttfInit()                       // 用文字就必须先初始化字体（忘了直接崩）
+    SDL3.setTheme(SDL3.darkTheme())
+
+    Window w = SDL3.createWindow({title: &quot;Demo&quot;, w: 800, h: 600})
+    if not w.ok { SDL3.ttfQuit(); return }   // ⚠ 必须判：创建失败时后面全崩
+
+    // ① 建根容器（贴满窗口的竖排）
+    VBox root = SDL3.createVBox({x: 0, y: 0, w: 800, h: 600,
+                                 pad_x: 16, pad_y: 12, spacing: 8})
+    w.add(root)
+
+    // ② 往里塞控件
+    root.add(SDL3.createLabel({text: &quot;你好&quot;, font_size: 20}),
+             {grow: 0, shrink: 0, basis: 32, align: 3})
+
+    // ③ 跑主循环：第一参数收事件（返回 false = 退出），第二参数每帧画背景
+    w.run(func(Event ev): bool {
+              if ev.isQuit() or ev.isWindowClose() { return false }
+              return true
+          },
+          func(Renderer r) { /* 画背景渐变等 */ })
+
+    SDL3.ttfQuit()
+}
+</code></pre>
+<h3 id="关键点">关键点</h3>
+<table>
+<thead>
+<tr>
+<th>事情</th>
+<th>怎么做</th>
+<th>坑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化</td>
+<td><code>SDL3.ttfInit()</code> / 退出时 <code>ttfQuit()</code></td>
+<td>漏了就崩溃，不是报错</td>
+</tr>
+<tr>
+<td>建窗口</td>
+<td><code>createWindow({title, w, h})</code></td>
+<td>返回的 <code>w.ok</code> <strong>必须判</strong></td>
+</tr>
+<tr>
+<td>加控件</td>
+<td><code>w.add(控件)</code></td>
+<td>加进去就贴窗口绝对坐标</td>
+</tr>
+<tr>
+<td>主循环</td>
+<td><code>w.run(onEvent, onRender)</code></td>
+<td><code>onEvent</code> 返回 <code>false</code> 才退出</td>
+</tr>
+<tr>
+<td>定时器</td>
+<td><code>w.addTimer(毫秒, func() {...})</code></td>
+<td>周期任务（比如每 200ms 轮询）放这里</td>
+</tr>
+<tr>
+<td>每帧逻辑</td>
+<td>同上，或用 <code>onRender</code> 回调</td>
+<td>逐帧重算的东西别放 <code>onEvent</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="一个必须知道的事">⚠ 一个必须知道的事</h3>
+<p><code>w.run</code> 的<strong>事件钩子只收到「窗口级事件」</strong>（resize / quit / close / focus），
+<strong>收不到鼠标事件</strong> —— 鼠标是框架派发给各个控件的。</p>
+<p>想在应用层监听"点了哪"：</p>
+<ul>
+<li>控件上挂 <code>on_click</code>（正路）</li>
+<li>或者用 <code>set_modal</code> / <code>set_click_outside</code>（见 §五）</li>
+</ul>
+<pre><code class="language-leno">// 反例：这样写永远不触发
+w.run(func(Event ev): bool {
+          if ev.isMouseButtonDown() { print(&quot;never&quot;) }   // ✗ 收不到
+          return true
+      }, ...)
+</code></pre>
+<hr>
+<h2 id="二-先选容器-30-秒决策">二、先选容器（30 秒决策）</h2>
+<table>
+<thead>
+<tr>
+<th>你要的效果</th>
+<th>用哪个</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>竖着一列</td>
+<td><code>VBox</code></td>
+<td>最常用</td>
+</tr>
+<tr>
+<td>横着一行</td>
+<td><code>HBox</code></td>
+<td>次常用</td>
+</tr>
+<tr>
+<td>叠在一起 / 绝对定位</td>
+<td><code>AnchorBox</code></td>
+<td>用 <code>{left, top, w, h}</code> 定位</td>
+</tr>
+<tr>
+<td>等宽网格（海报墙）</td>
+<td><code>GridLayout</code></td>
+<td>支持运行时改列数（<code>set_cols</code>）</td>
+</tr>
+<tr>
+<td>内容超出要滚</td>
+<td><code>ScrollView</code> + 一个 <code>VBox</code></td>
+<td><strong>内容高必须自己给</strong>，见 §四-6</td>
+</tr>
+<tr>
+<td>一块带背景/圆角/裁剪的区域</td>
+<td><code>Panel</code></td>
+<td><code>setLayout(vbox)</code> 装内容；要内边距用 <code>setLayoutPadded(vbox, pad)</code></td>
+</tr>
+<tr>
+<td>可点的整块卡片</td>
+<td><code>Card</code></td>
+<td><code>content_click_through: true</code> 让内容不吞点击</td>
+</tr>
+</tbody>
+</table>
+<p><strong>经验</strong>：先想"主方向"，主方向用 <code>HBox</code>/<code>VBox</code>，不规则的叠层再套 <code>AnchorBox</code>。
+不要一上来就 <code>AnchorBox</code> 手摆坐标 —— 窗口一缩放全乱。</p>
+<hr>
+<h2 id="三-五个键的语义-一张表看完">三、五个键的语义（一张表看完）</h2>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>作用方向</th>
+<th>语义</th>
+<th>常见误用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grow</code></td>
+<td><strong>主轴</strong></td>
+<td>吃掉<strong>剩余空间</strong>，<code>&gt;0</code> 时还会顺带撑满交叉轴</td>
+<td>以为它能"让内容靠左"</td>
+</tr>
+<tr>
+<td><code>shrink</code></td>
+<td>主轴</td>
+<td>空间不够时压缩自己（<code>1</code> = 允许）</td>
+<td>不加它，长文字会把容器撑破</td>
+</tr>
+<tr>
+<td><code>basis</code></td>
+<td>主轴</td>
+<td>主轴方向的基础尺寸（<code>VBox</code> 里是高）</td>
+<td>和 <code>w</code>/<code>h</code> 混着写，不知道谁生效</td>
+</tr>
+<tr>
+<td><code>align</code></td>
+<td><strong>交叉轴</strong></td>
+<td><code>0</code> 起始 / <code>1</code> 居中 / <code>2</code> 末端 / <code>3</code> 撑满</td>
+<td>把 <code>2</code> 当居中（其实是靠右）</td>
+</tr>
+<tr>
+<td><code>justify</code></td>
+<td>主轴</td>
+<td>容器自己的对齐（<code>1</code> = 居中）</td>
+<td>和 <code>align</code> 搞混</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话记法</strong>：</p>
+<pre><code>grow   = 沿主方向抢空间（会把兄弟顶开）
+align  = 垂直于主方向摆位置（3 = 撑满）
+</code></pre>
+<p><code>align: 3</code> 会<strong>覆盖</strong>子控件自己声明的 <code>w</code>/<code>h</code>（源码里就是 <code>cw = innerW</code>）。
+所以"我明明写了 w: 300 怎么没用"—— 不是没生效，是被 <code>align: 3</code> 或 <code>grow</code> 覆盖了。</p>
+<hr>
+<h2 id="四-配方">四、配方</h2>
+<h3 id="1-行内-文字-紧跟的徽标">1. 行内「文字 + 紧跟的徽标」</h3>
+<p>文字<strong>超长要省略</strong>，徽标紧贴其后。</p>
+<pre><code class="language-leno">HBox row = createHBox({w: 120, h: 21, spacing: 6});     // w 只是占位，外层会撑开
+// ⚠ 关键：grow: 0 + shrink: 1
+row.add(ui.lblFit(title, 14, color, true), {grow: 0, shrink: 1, align: 3});
+row.add(qualityTag(...),                    {grow: 0, shrink: 0, align: 1});
+</code></pre>
+<ul>
+<li><code>grow: 1</code> → 文字吃满整行，徽标被顶到行尾（看起来像浮在中间）</li>
+<li><code>shrink: 1</code> → 文字超长时缩，<code>lblFit</code> 的省略号照常生效</li>
+</ul>
+<p><strong>这是 flex 的语义，不是框架问题</strong>：<code>grow</code> 抢剩余空间是它的本职。</p>
+<h3 id="2-整行铺满-卡片等宽">2. 整行铺满、卡片等宽</h3>
+<pre><code class="language-leno">int cols = cardSize.cols_of(avail);       // 按可用宽度算能放几张
+int cw   = cardSize.card_cw(avail);       // 卡宽 = (avail - 间距) / cols
+HBox row = createHBox({w: avail, h: h_of(cw), spacing: CELL_GAP, clip: true});
+for 0 : cols - 1 to i {
+    row.add(cards.wide_card(items[k + i], cw, false, cardSize, hooks),
+            {grow: 0, shrink: 0, basis: cw, align: 1});     // 卡宽固定，别 grow
+}
+</code></pre>
+<ul>
+<li>卡宽<strong>由列数推</strong>，不要让卡片 <code>grow</code> —— 否则最后一行只有 1 张时会被拉成整行宽</li>
+<li>不足一行时补空 <code>Label</code>（<code>{grow: 1, shrink: 1}</code>）占位</li>
+</ul>
+<h3 id="3-左右两端对齐">3. 左右两端对齐</h3>
+<pre><code class="language-leno">HBox head = createHBox({w: 800, h: 34, spacing: 10});
+head.add(title,            {grow: 0, shrink: 0, align: 1});   // 左
+head.add(createLabel({}),  {grow: 1, shrink: 1, align: 1});   // 中间海绵
+head.add(button,           {grow: 0, shrink: 0, align: 1});   // 右
+</code></pre>
+<p>中间的"空 Label 吃剩余空间"是标准做法，比算宽度稳。</p>
+<h3 id="4-元素叠在图上-角标-播放标记">4. 元素叠在图上（角标 / 播放标记）</h3>
+<pre><code class="language-leno">AnchorBox cov = createAnchorBox({w: 100, h: 100});
+cov.add(封面ImageView, {left: 0, top: 0, w: 100, h: 100});      // 底层
+cov.add(黑圆Panel,     {left: 28, top: 28, w: 44, h: 44});      // 中层
+cov.add(播放三角,      {left: 37, top: 37, w: 26, h: 26});      // 顶层
+</code></pre>
+<ul>
+<li><code>AnchorBox</code> 的子项都用 <code>{left, top, w, h}</code> <strong>绝对定位</strong>，尺寸不会跟着内容变</li>
+<li>想整体显隐：外层用 <code>Panel</code>（<code>AnchorBox</code> 早期版本没有 <code>set_visible</code>，
+  后来补了 —— 但现在仍推荐 <code>Panel</code>，因为它自带圆角底色，能省一层 <code>Canvas</code>）</li>
+</ul>
+<h3 id="5-居中-靠右">5. 居中 / 靠右</h3>
+<pre><code class="language-leno">{v: 控件, align: 1}     // 交叉轴上居中（VBox 里 = 水平居中）
+{v: 控件, align: 2}     // 交叉轴上靠末端（VBox 里 = 靠右）
+{v: 控件, align: 3}     // 撑满交叉轴
+</code></pre>
+<p><strong>别把 <code>align: 2</code> 当居中</strong> —— 那是靠右，我之前就搞错过。</p>
+<p>文字本身还想居中（而非控件框居中），要包一层：</p>
+<pre><code class="language-leno">HBox mid = createHBox({w: 48, h: 22, justify: 1});    // justify:1 = 主轴居中
+mid.add(label, {grow: 0, shrink: 0, align: 1});
+</code></pre>
+<h3 id="6-滚动区里放可变高内容">6. 滚动区里放可变高内容</h3>
+<pre><code class="language-leno">VBox inner = createVBox({w: w, h: 420, spacing: 12});
+// ... 往 inner 里塞内容 ...
+ScrollView sv = createScrollView({w: w, h: 380, smooth: true, bar_w: 6.0,
+                                  bar_color: #C9A9B880});
+sv.set_content(inner);
+</code></pre>
+<ul>
+<li><code>ScrollView</code> 的<strong>内容高是自然高</strong>，所以里面的表格即使 <code>grow: 1</code> 也只撑到自然高</li>
+<li>内容超高才出现滚动条；<code>content_h</code> 没给时框架自己测</li>
+<li>想在滚动区里做"整页撑满的表格" → <strong>别用 ScrollView</strong>，改用独立容器 + <code>win.add</code></li>
+</ul>
+<p><strong>读滚动状态</strong>（"滚到底加载更多"）：</p>
+<pre><code class="language-leno">sv.get_scroll_y()          // 当前偏移
+sv.get_content_h()         // 内容总高
+sv.near_bottom(200.0)      // 距底 200 以内 ⇒ true（内容比视口矮时恒 false）
+</code></pre>
+<h3 id="7-弹层贴在按钮上方">7. 弹层贴在按钮上方</h3>
+<p><strong>坐标必须在打开时现算</strong>，不能建面板时写死：</p>
+<pre><code class="language-leno">float bx = btn.get_x() + btn.get_w() / 2.0 - panel.get_w() / 2.0;   // 按钮水平中心
+float by = btn.get_y() - panel.get_h() - 8.0;                       // 按钮上沿再往上
+panel.set_pos(bx, by);
+</code></pre>
+<p>写死常量的话，窗口一缩放浮层就飘在中间。</p>
+<p>配套两件事：</p>
+<pre><code class="language-leno">win.set_modal(panel, panel.get_x(), panel.get_y(), panel.get_w(), panel.get_h());
+// 落在浮层矩形内的事件只派发给它 ⇒ 防穿透
+
+win.set_click_outside(panel.get_x(), panel.get_y(), panel.get_w(), panel.get_h(),
+                      func() { close_panel() });
+// 点外面 ⇒ 自动收起
+</code></pre>
+<p>窗口尺寸变化时记得收起浮层（尺寸变了位置就不对了）：</p>
+<pre><code class="language-leno">if ev.isWindowResized() { close_panel(); win.clear_modal(); win.clear_click_outside() }
+</code></pre>
+<h3 id="8-竖向滑块-音量条">8. 竖向滑块（音量条）</h3>
+<p><strong>别交给 <code>VBox</code> 的 <code>grow</code> 撑</strong>：滑块圆点直径按 <code>w * 0.45</code> 算，被撑到容器宽就变成一根温度计。</p>
+<pre><code class="language-leno">AnchorBox col = createAnchorBox({w: 40, h: 176});
+col.add(数字,  {left: 0,  top: 0,  w: 40, h: 22});
+col.add(滑块,  {left: 14, top: 28, w: 12, h: 146});   // 显式给宽
+</code></pre>
+<p>滑块自己也要 <code>show_value: false</code>，否则它自带的数值会和外面的百分比挤在一起。</p>
+<hr>
+<h2 id="五-反模式-每条都真实翻过车">五、反模式（每条都真实翻过车）</h2>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>后果</th>
+<th>正确做法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文字用 <code>grow: 1</code>，后面还想跟徽标</td>
+<td>徽标被顶到行尾</td>
+<td><code>grow: 0, shrink: 1</code></td>
+</tr>
+<tr>
+<td>把 <code>w</code> 写成比真实列宽更大的值</td>
+<td>里面的 HBox 按那个宽排，后续元素位置错</td>
+<td>写小值让外层撑开</td>
+</tr>
+<tr>
+<td>竖直 <code>Slider</code> 交给 <code>VBox</code> 的 <code>grow</code></td>
+<td>变成温度计</td>
+<td><code>AnchorBox</code> + 显式 <code>w</code></td>
+</tr>
+<tr>
+<td>滚动区无限加载、不做虚拟化</td>
+<td>控件数线性涨，内存一直爬</td>
+<td>行槽 + 只填可见区（见 §六）</td>
+</tr>
+<tr>
+<td>用空 <code>Label</code> 当整行点击区</td>
+<td>命中区常常是空的，点了没反应</td>
+<td>用 <code>Card</code> + <code>content_click_through</code></td>
+</tr>
+<tr>
+<td>整行 <code>Button</code> 想装"封面 + 两行字"</td>
+<td>只能一行字</td>
+<td>同上，用 <code>Card</code></td>
+</tr>
+<tr>
+<td>弹层坐标建面板时写死</td>
+<td>窗口缩放后飘在中间</td>
+<td>打开时现算（§四-7）</td>
+</tr>
+<tr>
+<td>在 <code>w.run</code> 的钩子里监听鼠标</td>
+<td>永远收不到</td>
+<td>控件 <code>on_click</code> / <code>set_click_outside</code></td>
+</tr>
+<tr>
+<td>重建容器时只 <code>clear()</code> 不 <code>dispose()</code></td>
+<td>纹理/字体泄漏，内存只涨不降</td>
+<td><code>reset()</code>（= dispose + clear）</td>
+</tr>
+<tr>
+<td>模块级变量写 <code>var x = []</code></td>
+<td>推断成 <code>Array[any]</code>，元素上调方法编译不过</td>
+<td><code>Array[VBox] x = []</code> 显式写类型</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="六-大数据量列表-行槽-虚拟滚动">六、大数据量列表：行槽 + 虚拟滚动</h2>
+<p>固定行高的网格/列表，卡片多了（几百张）不要一次全建：</p>
+<pre><code class="language-leno">// ① 先铺**空行槽**（每行 1 个 VBox，很轻）
+Array[VBox] rows = []
+for 0 : totalRows - 1 to r {
+    VBox slot = createVBox({w: w, h: rowH, spacing: 0});
+    container.add(slot, {grow: 0, shrink: 0, basis: rowH, align: 3});
+    rows.add(slot);
+    rowState.add(-1);                 // -1 = 空
+}
+
+// ② 每帧按滚动位置填/收
+int first = _int((scrollY - 160.0) / rowH);            // 上留 1 行余量
+int last  = _int((scrollY + viewH + 160.0) / rowH);    // 下留 1 行
+for 0 : n - 1 to r {
+    if need and rowState[r] &lt; 0 { fill_row(r) }
+    else if not need and rowState[r] &gt;= 0 {
+        rows[r].reset();               // dispose + clear
+        rowState[r] = -1;
+    }
+}
+</code></pre>
+<p>实测：180 个卡片从 248MB 降到 150MB，且页数不再需要封顶。</p>
+<p><strong>要点</strong>：
+- 空槽本身很轻（1 个控件），所以"铺 30 个空槽"完全没问题
+- 上下各留一行余量，快速拖动才不会看到空白
+- <code>reset()</code> 而不是 <code>clear()</code> —— 前者会 release 纹理</p>
+<hr>
+<h2 id="七-还有几条零碎的">七、还有几条零碎的</h2>
+<pre><code class="language-leno">// 控件通用（现在所有 impl Widget 的控件都有）
+w.set_visible(false)      // 显隐
+w.set_enabled(false)      // 禁用（不吃事件）
+w.get_x() / get_y() / get_w() / get_h()
+w.is_hover()              // 语义看控件：容器 = 鼠标在矩形内；
+                          // 表格/列表 = 「有某行被悬停」（看各自的注释）
+
+// 颜色
+#RRGGBBAA                 // 8 位，Alpha 在最后
+</code></pre>
+<p><strong>样式统一</strong>：颜色、字号散落在各页面里时会越来越乱。
+Aria 的做法是每个页面模块自带一份常量（<code>const Color TXT = #35262BFF</code>），
+等稳定了再统一收进一个 <code>theme</code> 模块 —— 不要中途一次性改几百处引用。</p>
+<hr>
+<h2 id="附-这份文档怎么用">附：这份文档怎么用</h2>
+<ul>
+<li>写新页面前：看 §二选容器，§四找最接近的配方</li>
+<li>布局不对时：先看 §三的语义表，再对照 §五反模式</li>
+<li>加新配方时：只写<strong>跑通过的代码</strong>，反模式只写<strong>真踩过的</strong></li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-从零开一个窗口">一、从零开一个窗口</a></li><ul class="lv3"><li><a href="#关键点">关键点</a></li><li><a href="#一个必须知道的事">⚠ 一个必须知道的事</a></li></ul><li><a href="#二-先选容器-30-秒决策">二、先选容器（30 秒决策）</a></li><li><a href="#三-五个键的语义-一张表看完">三、五个键的语义（一张表看完）</a></li><li><a href="#四-配方">四、配方</a></li><ul class="lv3"><li><a href="#1-行内-文字-紧跟的徽标">1. 行内「文字 + 紧跟的徽标」</a></li><li><a href="#2-整行铺满-卡片等宽">2. 整行铺满、卡片等宽</a></li><li><a href="#3-左右两端对齐">3. 左右两端对齐</a></li><li><a href="#4-元素叠在图上-角标-播放标记">4. 元素叠在图上（角标 / 播放标记）</a></li><li><a href="#5-居中-靠右">5. 居中 / 靠右</a></li><li><a href="#6-滚动区里放可变高内容">6. 滚动区里放可变高内容</a></li><li><a href="#7-弹层贴在按钮上方">7. 弹层贴在按钮上方</a></li><li><a href="#8-竖向滑块-音量条">8. 竖向滑块（音量条）</a></li></ul><li><a href="#五-反模式-每条都真实翻过车">五、反模式（每条都真实翻过车）</a></li><li><a href="#六-大数据量列表-行槽-虚拟滚动">六、大数据量列表：行槽 + 虚拟滚动</a></li><li><a href="#七-还有几条零碎的">七、还有几条零碎的</a></li><li><a href="#附-这份文档怎么用">附：这份文档怎么用</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="并发选择指引.html">← 上一篇</a><a href="Leno跨模块clib开发经验.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

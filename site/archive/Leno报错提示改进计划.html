@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 报错提示改进计划 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="archive/Leno报错提示改进计划.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">07 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">Leno 报错提示改进计划</span></span>
+</header>
+<div class="banner">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；现行状态请看 <a href="../index.html">索引</a>。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">18</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html" class="active" aria-current="page">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-报错提示改进计划">Leno 报错提示改进计划</h1>
+<blockquote>
+<p>⚠ <strong>局部过时（2026-10-02 注）</strong>：文中"已在 <code>op_utils.inc</code> 的 <code>OP_INDEX</code> 增加排查提示"
+——<code>op_utils.inc</code> 是栈式文件，已删除（<code>0f0cf52</code>）⇒ 勾选项的<strong>落点需按现行
+<code>src/vm/vminc/run/*.inc</code> 复核</strong>；清单本身（哪些报错该更清楚）仍可作现行待办。</p>
+<p>背景：在集成 Blend2D + LenoSDL3 的开发过程中，反复遇到了若干"编译器无提示、运行时才崩溃"或"提示过于模糊"的问题。本文档系统性地梳理这些问题，按优先级给出改进方案并落地实施。</p>
+</blockquote>
+<hr>
+<h2 id="一-问题清单与归类">一、问题清单与归类</h2>
+<h3 id="a-类-我写错了-无需改编译器-记录即可">A 类：我写错了（无需改编译器，记录即可）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问题</th>
+<th>说明</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>Blend2D 函数名记错 <code>bl_context_set_stroke_width_d</code></td>
+<td>该函数没有 <code>_d</code> 后缀</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>clib 签名漏参数</td>
+<td><code>fill_path_d(self, origin, path)</code> 实际 3 参数</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>cstruct 值类型与堆指针错配</td>
+<td>用值类型字段存 <code>malloc()</code> 的堆指针</td>
+<td>已修复</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b-类-编译器-框架行为导致-值得改进报错">B 类：编译器/框架行为导致（值得改进报错）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问题</th>
+<th>当前表现</th>
+<th>危害</th>
+<th>优先级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td><strong>clib 调用时接收方为 null 不报错</strong></td>
+<td>直接 0xC0000005 访问违规崩溃</td>
+<td>极难定位</td>
+<td>高</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>运行时"索引操作需要对象类型，但实际类型为 'null'"</td>
+<td>不指出是哪个变量、哪个方法</td>
+<td>排查困难</td>
+<td>高</td>
+</tr>
+<tr>
+<td>B3</td>
+<td><code>.lenb</code> 编译后 <code>dirs.script_dir()</code> 语义改变</td>
+<td>DLL 路径解析失败，<code>ffi.load</code> 返回 null 无提示</td>
+<td>隐藏路径问题</td>
+<td>中</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>clib 实例不能作为 struct 字段 / 函数返回</td>
+<td>引用丢失后报"库对象已释放"</td>
+<td>语义不清</td>
+<td>中</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>跨模块导入的 clib 跳过参数/类型校验</td>
+<td>第 418 行"允许任意调用"</td>
+<td>错误延迟到运行时</td>
+<td>中</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>✅ <strong>已修（2026-10-11）</strong> 给"本 struct 的 struct 型字段"嵌套赋值 ⇒ 报错指错靶子</td>
+<td>修前：<code>inner.value = 1.0</code> ⇒ 「字段 'inner' 类型不匹配: 期望 'struct Inner'，实际 'float'」</td>
+<td>照着报错去查"右边那个值 / 字段类型"，查不出真因（<strong>是会去改 RHS 的那种误导</strong>）；且看着像<strong>编译器 bug</strong>（同类写法经局部量/参数却正常 ✓）</td>
+<td>高</td>
+</tr>
+<tr>
+<td>B7</td>
+<td>🟡 <strong>已修一半（2026-10-11，改进 6 的 ②）</strong> <code>--check</code> 不检查被 import 的模块里的函数体</td>
+<td>坏模块放进 <code>import</code>，<code>--check</code> 打印"检查通过"（<strong>哪怕入口真的调了它</strong> ✗），真编译才报</td>
+<td>"我已经 check 过了"是假的安心；B6 就是这么混过第一道筛子的</td>
+<td>中</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="二-改进方案-按优先级">二、改进方案（按优先级）</h2>
+<h3 id="改进-1-高-clib-调用接收方为空时给出明确报错">改进 1（高）：clib 调用接收方为空时给出明确报错</h3>
+<p><strong>现状</strong>：<code>_b2d.bl_xxx(...)</code> 里 <code>_b2d</code> 若为 <code>null</code>，语义检查不拦（TYPE_CLIB 类型），运行时直接解引用崩溃。</p>
+<p><strong>目标</strong>：在 codegen 或运行时把"clib 接收方为 null"转为可读错误。</p>
+<p><strong>实施位置</strong>：clib 调用 codegen（<code>src/codegen</code>）。</p>
+<h3 id="改进-2-高-运行时-null-索引报错补充上下文">改进 2（高）：运行时 null 索引报错补充上下文</h3>
+<p><strong>现状</strong>：<code>op_utils.inc</code> 只输出 <code>value_type_desc(obj_val)</code>。</p>
+<p><strong>目标</strong>：报错中附加源码行号（已有）+ 尽量提供操作上下文。</p>
+<p><strong>实施位置</strong>：<code>src/vm/vminc/op_utils.inc</code>（已有行号），增强文案描述。</p>
+<h3 id="改进-3-中-ffi-load-全失败时给出汇总提示">改进 3（中）：<code>ffi.load</code> 全失败时给出汇总提示</h3>
+<p><strong>现状</strong>：<code>lib()</code> 里 7 个候选路径都失败时 <code>g_b2d</code> 保持 null，无提示。</p>
+<p><strong>目标</strong>：当 <code>ffi.load</code> 从未被成功调用（或全部候选失败）时，提示"所有候选路径均未找到库"。</p>
+<p><strong>实施位置</strong>：<code>sdl_blend2d.leno</code> 的 <code>lib()</code>（脚本层包装）+ <code>ffi.c</code> 加载失败文案已有，可补充候选路径汇总。</p>
+<h3 id="改进-4-中-跨模块-clib-增加-空接收方-提示">改进 4（中）：跨模块 clib 增加"空接收方"提示</h3>
+<p><strong>现状</strong>：第 417-420 行"允许任意调用"导致 <code>null.bl_xxx</code> 无编译期提示。</p>
+<p><strong>目标</strong>：当接收方类型为 clib 但值为 null 时，在语义阶段给出警告或运行时明确报错。</p>
+<p><strong>实施位置</strong>：<code>src/semantic/visitinc/visit_expr.inc</code> + codegen。</p>
+<h3 id="改进-5-高-2026-10-11-登记-嵌套字段赋值的报错-要么支持它-要么说清-这条路没通">改进 5（高，2026-10-11 登记）：嵌套字段赋值的报错 —— 要么支持它、要么说清"这条路没通"</h3>
+<p><strong>现象</strong>（最小复现 12 行，实测 2026-10-11 ✓）：</p>
+<pre><code class="language-leno">struct Inner {
+    float value = 0.0
+}
+
+struct Outer {
+    Inner inner
+    func f() { inner.value = 1.0 }     // ← 报的就是这一行
+}
+</code></pre>
+<pre><code>error: [类型不匹配] 字段 'inner' 类型不匹配: 期望 'struct Inner'，实际 'float'
+</code></pre>
+<p><strong>为什么误导</strong>：报的字段名是<strong>外层</strong>字段 <code>inner</code>、期望类型是<strong>外层字段的类型</strong>、实际类型是
+<strong>右边那个值</strong>的类型 —— 读起来像"你把 float 赋给了 struct 字段" ✗，可源码里<strong>压根没有
+"给 inner 赋值"这回事</strong>（写的是 <code>inner.value</code> ✓）。真正的问题是"<strong>嵌套成员赋值</strong>
+（<code>字段.字段 = v</code>）这条路没走通" ✓，报错却把靶子立在别处 ⇒ 照着它去查 RHS 表达式 /
+字段声明，查不出所以然（<strong>本次就是这么被带偏的</strong>：还一度误判成"<code>value</code> 是关键字"✗，
+实测 <code>value</code> 当字段名/读/写都完全正常 ✓ —— 换任何名字一样报 ✓）。</p>
+<p><strong>边界</strong>（同一份探针里逐格实测 2026-10-11 ✓）：</p>
+<table>
+<thead>
+<tr>
+<th>接收者是</th>
+<th>写法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>本 struct 的字段</strong></td>
+<td><code>inner.value = x</code></td>
+<td>✗ 报上面那条</td>
+</tr>
+<tr>
+<td>局部量（<code>new</code> 出来的）</td>
+<td><code>o.inner.value = x</code></td>
+<td>✅ 正常编译</td>
+</tr>
+<tr>
+<td>参数</td>
+<td><code>func g(Outer o) { o.inner.value = x }</code></td>
+<td>✅ 正常编译</td>
+</tr>
+<tr>
+<td>局部量（绕一手 copy）</td>
+<td><code>Inner c = inner; c.value = x; inner = c</code></td>
+<td>✅ 正常编译</td>
+</tr>
+<tr>
+<td>本 struct 的<strong>标量</strong>字段</td>
+<td><code>other = x</code></td>
+<td>✅ 正常编译</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ 只差"<strong>基座是自己的字段</strong>"这一格 ✗ ⇒ 更像<strong>编译器 bug</strong>（不是有意的语言限制：
+struct 是<strong>引用语义</strong>，<code>o.inner.value = x</code> 与 <code>inner.value = x</code> 语义上是一回事 ✓）。</p>
+<p><strong>两种修法（择一，都能让这条误导消失）</strong>：</p>
+<ul>
+<li>①（推荐）<strong>把它支持起来</strong>：<code>字段.字段 = v</code> 按"先取外层字段（引用）⇒ 再写内层字段"处理
+  ⇒ 与 <code>o.inner.value = v</code> 走同一条路，报错自然没了 ✓（也顺手消掉一类"合法代码被拒" ✓）；</li>
+<li>② 若确实<strong>不打算支持</strong>：报错要说到点上，例如
+  「嵌套字段赋值暂不支持：'inner.value' —— 可以先取出来改再放回：
+   <code>Inner c = inner; c.value = …; inner = c</code>」✓
+  ⚠ 且<strong>不能再用</strong>"字段 'inner' 类型不匹配"这种<strong>把外层字段当靶子</strong>的文案 ✗。
+  文案口径照本文档「改进 1 / 改进 2」那两条的先例：<strong>说清"差什么" + 顺手给一句"怎么改"</strong> ✓。</li>
+</ul>
+<p><strong>实施位置</strong>（本次只<strong>定位到</strong>这两处，<strong>未逐行走查</strong> ✗ —— 开工前先把这一段补完）：</p>
+<ul>
+<li>赋值目标的解析：<code>src/parser/parser_expr.c:1237-1307</code>（左值是 <code>AST_MODULE_ACCESS</code> 时建
+  <code>AST_ASSIGN{names[0] = module_name, targets[0] = &lt;module_access&gt;}</code> —— 注意 <code>names[0]</code> 取的是
+  <strong>最左边那个名字</strong> ✓ 与报错里的 <code>inner</code> 吻合 ✓）；</li>
+<li>报错来源：<code>src/semantic/visitinc/visit_expr.inc:400</code>
+  （<code>AST_INDEX_ASSIGN</code> 的 struct 分支 <code>"字段 '%s3' 类型不匹配: 期望 '%s1'，实际 '%s2'"</code>，
+  <code>field_name</code> 取自 <code>ast-&gt;u.index_assign.index</code> 的字符串 ✓ —— 即那条被脱糖出来的"单层"字段名 ✓）；</li>
+<li>⚠ 同一个分支还吃 <code>.field = v</code> / <code>pa["x"] = v</code> / <code>pa.x += v</code> 的<strong>脱糖形态</strong>（见该段注释 ✓）
+  ⇒ 动它要连带回归 <code>assert/test_diag_static_errors.leno</code> 与 examples 全量扫描 ✓。</li>
+</ul>
+<h4 id="已修-2026-10-11-按上面的修法-①-把它支持起来-顺带补了-成员不存在-的编译期诊断">✅ 已修（2026-10-11）：按上面的<strong>修法 ①</strong>（把它支持起来）+ 顺带补了"成员不存在"的编译期诊断</h4>
+<p><strong>真因不在上面那两处定位里</strong>（照那两处查会查空 —— 记一笔，免得下次又绕）：报错<strong>确实</strong>出自
+<code>visit_expr.inc</code> 的 <code>AST_INDEX_ASSIGN</code> struct 分支，但让它"指错靶子"的是<strong>前一步</strong>：
+<code>src/semantic/semantic_visit_method.c</code> 的 <code>transform_method_body_ex</code>（<code>case AST_ASSIGN</code>）里那条
+"裸字段名 ⇒ <code>self[字段] = 值</code>"的整句重写 —— 它<strong>只看 <code>names[i]</code>（最左边那个名字）</strong>，
+于是把 <code>inner.value = 1.0</code> 改写成 <code>self["inner"] = 1.0</code>：<strong>末级成员被丢掉</strong> ⇒ 期望类型变成外层
+字段的类型、实际类型变成 RHS 的类型 ⇒ 报出那条假错 ✗。（而 <code>o.inner.value = v</code> 走的是
+parser 的 <code>AST_INDEX_ASSIGN</code> 分支，不经这里 ⇒ 才出现"两种写法行为不一致"✓）</p>
+<p><strong>改动两处</strong></p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/semantic/semantic_visit_method.c</code></td>
+<td><code>case AST_ASSIGN</code>：targets 已被 transform 成<strong>嵌套访问</strong>（<code>AST_INDEX</code>）时，按"先取外层字段（引用）⇒ 再写内层字段"收尾 —— 直接复用 <code>targets[i]</code> 的 obj/index 建 <code>AST_INDEX_ASSIGN</code>，<strong>不再</strong>按裸字段名整句重写 ✓（与经局部量/参数走同一条路 ✓）</td>
+</tr>
+<tr>
+<td><code>src/semantic/visitinc/visit_expr.inc</code></td>
+<td>同分支补：<strong>字段表已知</strong>（<code>struct_def_sym</code> 拿得到、字段数 &gt; 0）却查不到这个名字，且 <code>infer_field_type</code> 也落空 ⇒ 报 <code>struct 'X' 没有字段 'y'</code>（与<strong>读</strong>路径同一句文案，读写对称 ✓）。加了 <code>field_table_known</code> 闸门 ⇒ "struct 定义不在当前作用域"（跨模块等，两级都查不到）<strong>不报</strong>，避免误伤 ✓</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证</strong>（全部实跑 ✓）</p>
+<ul>
+<li>值级：<code>inner.value = 1.5</code> + <code>inner.value = inner.value + 2.0</code> ⇒ <code>3.5</code> ✓（钉"真的写进同一个对象"，
+  不只是"能编译"—— struct 是引用语义 ✓）；三层 <code>mid.deep.value = 4.5</code> ✓；参数/局部量/拷回照旧 ✓</li>
+<li>诊断：<code>inner.nope = 1.0</code> ⇒ 编译期 <code>struct 'Inner' 没有字段 'nope'</code>（此前只报<strong>运行时</strong>错 ✗，
+  而经局部量的同一句是编译期错 ⇒ 现在两条路一致 ✓）；<code>inner.value = "oops"</code> ⇒ 靶子是 <code>value</code> ✓</li>
+<li>回归：<code>assert/test_nested_field_assign.leno</code>（新增，6 组）；套件 <strong>437/437</strong> ✓；
+  LenoSDL3 全 52 个库文件 <code>--check</code> 全过 ✓；<code>showcase / file_manager / cleaner_master / dashboard /
+  gomoku</code> 真编译（<code>-c</code>）通过 ✓</li>
+</ul>
+<h3 id="改进-6-中-2026-10-11-登记-check-的检查范围要说清-或补齐">改进 6（中，2026-10-11 登记）：<code>--check</code> 的检查范围要说清（或补齐）</h3>
+<p><strong>现象</strong>（实测 2026-10-11 ✓，见 <code>语言陷阱速查.md</code> §四 的表）：把带类型错误的模块放进
+<code>import</code>，<code>--check 入口</code> 打印「检查通过」✗ —— <strong>哪怕入口真的调用了那个坏函数</strong> ✓；
+而同一个坏模块<strong>自己当入口</strong>时 <code>--check</code> 会报 ✓；真编译/真跑当然也报 ✓。</p>
+<p><strong>目标（择一）</strong>：
+- ① 让 <code>--check</code> 也把<strong>被引用模块的函数体</strong>过一遍（代价：慢一些；好处："改完 check 一下"才名副其实 ✓）；
+- ② 至少在<strong>输出里说清范围</strong> —— 例如结尾打印
+  「检查通过（<strong>仅入口文件</strong>；被 import 的模块函数体未检查 ⇒ 发版前请真编译一次 ✓）」
+  ⇒ 这个更便宜，且能掐掉"我已经 check 过了"这种假安心 ✓（B6 正是这么混过去的 ✓）。</p>
+<p><strong>实施位置</strong>：<code>src/main.c</code> 的 <code>--check</code> 分支（① = 走完整模块语义；② = 只改收尾文案 ✓）。</p>
+<h4 id="已按-②-落地-2026-10-11">✅ 已按 ② 落地（2026-10-11）</h4>
+<p><code>src/main.c</code> 的 <code>--check</code> 收尾改两行：第一行把范围写进"检查通过"里，第二行点名边界并给出正解：</p>
+<pre><code>检查通过: &lt;入口文件&gt;（仅入口文件；未产出 .lenb）
+          ⚠ 被 import 的模块「函数体」未检查 —— 发版前请真编译一次：leno -c &lt;入口&gt;
+</code></pre>
+<p>⚠ ① 当时<strong>没做</strong>，理由（代价 + 风险，不只是"慢一点"）：要让 <code>--check</code> 真去过模块体，就得把模块编译
+管线（parse + 语义）对每个被引用模块跑一遍，同时还得管住 <strong><code>.lenomc</code> 缓存写入</strong>（<code>--check</code> 现在
+的卖点之一正是"<strong>无副作用</strong>" ✓）与<strong>错误归属</strong>（模块编译自己有一套 <code>errors.count</code> 前后差分，
+见 <code>module_compiler.c</code> ✓）⇒ 收益不抵风险 ✓ —— 想查模块体时：<code>-c</code> 一次，或对那个模块<strong>自己</strong>
+跑 <code>--check</code>（它自己当入口时，函数体是查的 ✓，本轮 52 个库文件的回归就是这么做的 ✓）。</p>
+<h4 id="①-已落地-2026-10-20-而且比预想的便宜">✅ ① 已落地（2026-10-20）—— 而且比预想的便宜</h4>
+<p><strong>用户判断</strong>：「<code>--check</code> 我认为没啥暖用」——成立。实测：模块里放 <code>int x = "oops"</code>，
+<code>--check</code> 打印"检查通过"，<code>-c</code> 才报错；而 <code>--check</code> 只比 <code>-c</code> 快 28ms（39 vs 67ms）⇒
+<strong>用一个不可信的结论换 28ms</strong>，不值。</p>
+<p><strong>根因（比原判断简单得多）</strong>：模块是在 <strong>codegen 遇到 <code>OP_IMPORT</code> 时</strong>才真正编译的
+（DCE 需要完整引用图，见 <code>main.c</code> 的 compileMode 注释）。旧 <code>--check</code> 早退在<strong>语义之后</strong>、
+codegen 之前 ⇒ 模块根本没被编译 ⇒ 当然查不到。</p>
+<p><strong>修法</strong>：把早退点从"语义之后"挪到"codegen 之后、serialize 之前"（<code>main.c</code> 的 <code>lenolang_compile</code>）。
+不用碰模块加载管线、不用管错误归属 —— 那些担心在"复用现有编译流程"面前都不成立。</p>
+<p><strong>代价（实测）</strong>：<code>--check</code> 也要跑 codegen ⇒ <code>site.leno</code> 39ms → <strong>38~45ms</strong>（<code>-c</code> 是 63ms）。
+副作用：模块 <code>.lenomc</code> 缓存照常写（与 <code>-c</code> 一致，缓存可重建）。成功文案改为
+「编译检查通过: &lt;入口&gt;（未产出 .lenb）」。</p>
+<p><strong>回归</strong>：<code>assert/test_check_flag.leno</code> 改成三条 ——
+① 好文件退出 0 且<strong>不产出 .lenb</strong>；② <strong>模块里的类型错误必须被抓</strong>（点名模块文件）；③ 入口自身错误 ✓
+（原先那条"钉住边界仍然存在"的 ④ 已随 ① 落地改成 ② 的正向断言 ✓）</p>
+<hr>
+<h2 id="三-已确认的既有良好机制-勿破坏">三、已确认的既有良好机制（勿破坏）</h2>
+<ul>
+<li><code>ffi_load_func</code> 加载失败已 <code>native_throw_error</code>（<code>ffi.c:419</code>），含错误码/搜索路径。</li>
+<li>clib 本文件定义时已有参数数量/类型校验（<code>visit_expr.inc:360-378</code>）。</li>
+<li><code>format_type_error</code> 的 <code>%s1~%s4</code> 位置占位符是<strong>有意设计</strong>，非 bug。</li>
+</ul>
+<hr>
+<h2 id="四-实施记录">四、实施记录</h2>
+<p>（实施过程中逐项勾选）
+- [x] 改进 1：clib 空接收方报错 —— 已在 <code>ffi.c</code> 的 <code>ffi_call_impl()</code> 开头增加 <code>val_is_null/val_is_obj</code> 检查，报错含函数名、可能原因、排查建议。验证：<code>test_null_clib.leno</code> 由崩溃变为可读运行时错误。
+- [x] 改进 2：运行时 null 索引报错文案增强 —— 已在 <code>op_utils.inc</code> 的 <code>OP_INDEX</code> 增加排查提示。验证：<code>test_null_index.leno</code> 报错含提示。
+- [x] 改进 3：ffi.load 全失败提示 —— 已在 <code>sdl_blend2d.leno</code> 的 <code>lib()</code> 增加"所有候选路径均未找到"的汇总打印。
+- [x] 改进 4：跨模块 clib 空接收方提示 —— 与改进 1 共用运行时检查（<code>ffi_call_impl</code> 对 null 库对象的检查对本地/导入 clib 均生效）。
+- [x] 改进 5：<strong>嵌套字段赋值的报错</strong>（B6）—— 2026-10-11 登记并<strong>当天修好</strong> ✓（按修法 ① 支持它，
+  顺带补了"内层成员不存在"的<strong>编译期</strong>诊断；真因在 <code>semantic_visit_method.c</code> 而非原先定位的报错点、
+  改动与验证见该节末的 ✅ 块；回归 <code>assert/test_nested_field_assign.leno</code> ✓）
+- [x] 改进 6：<strong><code>--check</code> 的检查范围说清或补齐</strong>（B7）—— 2026-10-11 按更便宜的 ② <strong>落地</strong> ✓
+  （成功输出自报范围；①「让 <code>--check</code> 也过一遍模块体」<strong>未做</strong>，理由见该节的 ✅ 块 ✓）
+  （两者都是"在 LenoMusic 移植过程中实测撞到并定位"的 ✓ 出处：<code>语言陷阱速查.md</code> §三 ㉙ / §四 ✓）</p>
+<h3 id="改动文件清单">改动文件清单</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/module/ffi/ffi.c</code></td>
+<td><code>ffi_call_impl</code> 开头增加库对象 null 检查，报错含函数名/原因/建议</td>
+</tr>
+<tr>
+<td><code>src/vm/vminc/op_utils.inc</code></td>
+<td><code>OP_INDEX</code> null 对象报错增加排查提示</td>
+</tr>
+<tr>
+<td><code>leno_module/LenoSDL3/lib/sdl_blend2d.leno</code></td>
+<td><code>lib()</code> 候选路径全失败时打印汇总</td>
+</tr>
+<tr>
+<td><code>archive/Leno报错提示改进计划.md</code></td>
+<td>本文档</td>
+</tr>
+</tbody>
+</table>
+<h3 id="验证结果">验证结果</h3>
+<ul>
+<li>编译器重新构建成功（gcc 无警告）</li>
+<li><code>test_null_clib.leno</code>：null clib 调用 → 从 0xC0000005 崩溃 → 变为可读运行时错误</li>
+<li><code>test_null_index.leno</code>：null 索引 → 报错含排查提示</li>
+</ul>
+<h3 id="测试脚本">测试脚本</h3>
+<ul>
+<li><code>examples/改进测试/test_null_clib.leno</code></li>
+<li><code>examples/改进测试/test_null_index.leno</code></li>
+</ul>
+<hr>
+<h2 id="五-2026-10-20-写-lenohttp-时撞到的两个报错问题-都已修">五、2026-10-20：写 LenoHTTP 时撞到的两个报错问题（都已修）</h2>
+<h3 id="1-if-a-b-then-报-if-表达式需要使用-then-关键字-已修-解析-bug">1. <code>if (a) == b then …</code> 报「if 表达式需要使用 'then' 关键字」—— ✅ 已修（解析 bug）</h3>
+<p><strong>现象</strong>：<code>if (id + 1) == 4 then 10 else 20</code> 编译失败，报"if 表达式需要使用 then"；
+而 <code>if (id + 1 &gt; 4) then ...</code> 正常。写
+<code>out.send(if (r as string) == expect then 1 else -3)</code> 时撞到，第一反应是"我忘写 then 了" ✗</p>
+<p><strong>根因</strong>（<code>src/parser/parser_expr.c</code> 的 <code>parse_if_expr</code>）：看到 <code>if</code> 后面是 <code>(</code> 就<strong>手工消费</strong>
+它、再 <code>consume(')')</code>，等于假设"括号正好包住整个条件"。于是解析完 <code>(id + 1)</code> 就去找 <code>then</code>，
+撞上 <code>==</code> ⇒ 报「需要使用 then」。而 <code>(a) == b</code> 在普通表达式里完全合法 ⇒ 报错误导 ✗</p>
+<p><strong>修法</strong>：条件整体交给 <code>parse_expression</code>（括号由分组规则处理），删掉手工消费。
+覆盖：<code>(a &gt; b)</code> / <code>(a) == b</code> / <code>and</code> 链 / 嵌套 if 表达式 / <code>eif</code> 链 / 条件里带函数调用。
+用例 <code>assert\test_if_expr_paren.leno</code>（7 条断言）。</p>
+<h3 id="2-dict-opts-报-默认值必须是字面量常量-文案已改">2. <code>Dict opts = {}</code> 报「默认值必须是字面量常量」—— ✅ 文案已改</h3>
+<p><strong>现象</strong>：<code>{}</code> 明明是字面量，报错却说"必须是字面量常量或编译期常量表达式" ⇒ <strong>自相矛盾</strong>，
+让人以为是"我写错语法了"，实际是"数组/字典字面量不支持作默认值"。</p>
+<p><strong>修法</strong>（<code>src/semantic/semantic_visit_func.c</code>）：单独识别 <code>AST_DICT</code> / <code>AST_ARRAY</code>，文案改为</p>
+<blockquote>
+<p>参数 'opts' 的默认值不支持 数组/字典 字面量 —— 请改用 <code>null</code>（函数内判空）或模块级常量</p>
+<p>附带影响：<code>http.get(app, path, handler, Dict opts = {})</code> 因此写成 <code>any opts = null</code>（函数内判空）。
+这是受该限制影响的真实写法，见 <code>LenoHTTP/lib/http_app.leno</code>。</p>
+</blockquote>
+<h3 id="3-x-use-报-期望属性名-use-语句期望模块名-已改成说清-保留字">3. <code>x.use(...)</code> 报「期望属性名」+「use 语句期望模块名」—— ✅ 已改成说清"保留字"</h3>
+<p><strong>现象</strong>：给 LenoHTTP 加中间件时把方法名起成 <code>use</code>（<code>http.use(app, fn)</code>）：</p>
+<pre><code>error: [语法错误] 期望属性名          ← 看不出是 `use` 的问题
+error: [语法错误] use 语句期望模块名   ← 更远，因为 `use` 又被当成语句开头
+</code></pre>
+<p><strong>根因</strong>（<code>parser_expr.c</code> 的 <code>parse_dot</code>）：<code>.</code> 后面不是标识符时，旧代码只区分
+"内建类型关键字"与"其他"两种，后者一律说「期望属性名」；而 <code>use</code> 恰好在"其他"里。
+报错后返回也没吞掉这个 token ⇒ 外层又把它当语句开头，再报一条。</p>
+<p><strong>修法</strong>（与 M5b 的「保留字撞名」同族，<code>parser_func.c</code> 的参数名那处同款）：</p>
+<pre><code>error: [语法错误] 'use' 是**保留字** ✗ 不能用作方法名/字段名 —— 换个名字（如 before / apply / with）；
+       若确实要用这个键名，写成 x[&quot;use&quot;] ✓
+</code></pre>
+<ul>
+<li><code>parse_dot</code> 与 <code>parse_safe_dot</code>（<code>?.</code>）都改</li>
+<li>报错后 <code>lexer_next</code> 吞掉非法 token，避免它再被当语句开头</li>
+<li>用例：<code>assert\test_diag_static_errors.leno</code> 的 E2 组（<code>f.use(1)</code> ⇒ 文案含"是<strong>保留字</strong>"，落点行 3）</li>
+<li>⚠ 仍会伴随 1–2 条「期望 ')'」之类的<strong>级联</strong>（解析器恢复的老问题，见 T20）；
+  但<strong>第一条就是真因</strong>，不再把人往"忘写属性名"上引</li>
+</ul></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-问题清单与归类">一、问题清单与归类</a></li><ul class="lv3"><li><a href="#a-类-我写错了-无需改编译器-记录即可">A 类：我写错了（无需改编译器，记录即可）</a></li><li><a href="#b-类-编译器-框架行为导致-值得改进报错">B 类：编译器/框架行为导致（值得改进报错）</a></li></ul><li><a href="#二-改进方案-按优先级">二、改进方案（按优先级）</a></li><ul class="lv3"><li><a href="#改进-1-高-clib-调用接收方为空时给出明确报错">改进 1（高）：clib 调用接收方为空时给出明确报错</a></li><li><a href="#改进-2-高-运行时-null-索引报错补充上下文">改进 2（高）：运行时 null 索引报错补充上下文</a></li><li><a href="#改进-3-中-ffi-load-全失败时给出汇总提示">改进 3（中）：ffi.load 全失败时给出汇总提示</a></li><li><a href="#改进-4-中-跨模块-clib-增加-空接收方-提示">改进 4（中）：跨模块 clib 增加"空接收方"提示</a></li><li><a href="#改进-5-高-2026-10-11-登记-嵌套字段赋值的报错-要么支持它-要么说清-这条路没通">改进 5（高，2026-10-11 登记）：嵌套字段赋值的报错 —— 要么支持它、要么说清"这条路没通"</a></li><li><a href="#改进-6-中-2026-10-11-登记-check-的检查范围要说清-或补齐">改进 6（中，2026-10-11 登记）：--check 的检查范围要说清（或补齐）</a></li></ul><li><a href="#三-已确认的既有良好机制-勿破坏">三、已确认的既有良好机制（勿破坏）</a></li><li><a href="#四-实施记录">四、实施记录</a></li><ul class="lv3"><li><a href="#改动文件清单">改动文件清单</a></li><li><a href="#验证结果">验证结果</a></li><li><a href="#测试脚本">测试脚本</a></li></ul><li><a href="#五-2026-10-20-写-lenohttp-时撞到的两个报错问题-都已修">五、2026-10-20：写 LenoHTTP 时撞到的两个报错问题（都已修）</a></li><ul class="lv3"><li><a href="#1-if-a-b-then-报-if-表达式需要使用-then-关键字-已修-解析-bug">1. if (a) == b then … 报「if 表达式需要使用 'then' 关键字」—— ✅ 已修（解析 bug）</a></li><li><a href="#2-dict-opts-报-默认值必须是字面量常量-文案已改">2. Dict opts = {} 报「默认值必须是字面量常量」—— ✅ 文案已改</a></li><li><a href="#3-x-use-报-期望属性名-use-语句期望模块名-已改成说清-保留字">3. x.use(...) 报「期望属性名」+「use 语句期望模块名」—— ✅ 已改成说清"保留字"</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="../archive/leno对比.html">← 上一篇</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
