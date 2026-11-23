@@ -20,12 +20,12 @@ const LENOREPO = "../../../Leno/build/leno_module"
 //   两个数组按下标一一对应；用平行数组而不是 struct 数组，是为了让"加一行要改两处"
 //   这件事在 diff 里一眼可见 ✓
 var IMPORTS = ["CLI", "Compress", "Crypto", "CSV", "FS", "Glob", "GameHelper", "HTTP",
-               "Log", "Music", "QR", "Result", "SDL3", "sqlite3", "Stats", "Sys",
-               "UUID", "Win32", "XLSX", "Zip", "Web"]
+               "Log", "Markdown", "Music", "QR", "Result", "SDL3", "sqlite3", "Stats",
+               "Sys", "UUID", "Win32", "XLSX", "Zip", "Web"]
 var PKGS = ["LenoCLI", "LenoCompress", "LenoCrypto", "LenoCSV", "LenoFS", "LenoGlob",
-            "LenoHack", "LenoHTTP", "LenoLog", "LenoMusic", "LenoQR", "LenoResult",
-            "LenoSDL3", "LenoSqlite", "LenoStats", "LenoSys", "LenoUUID", "LenoWin32",
-            "LenoXLSX", "LenoZip", "LenoWeb"]
+            "LenoHack", "LenoHTTP", "LenoLog", "LenoMarkdown", "LenoMusic", "LenoQR",
+            "LenoResult", "LenoSDL3", "LenoSqlite", "LenoStats", "LenoSys", "LenoUUID",
+            "LenoWin32", "LenoXLSX", "LenoZip", "LenoWeb"]
 
 // 多入口模块（import 名有几个）
 func imports_of(string name):string {

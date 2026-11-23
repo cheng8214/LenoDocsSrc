@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoMarkdown · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/LenoMarkdown.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">08 扩展模块（独立包）</a><span class="sep">/</span><span class="here">LenoMarkdown</span></span>
+</header>
+<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href="../扩展模块/_总览.html">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details open><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoMarkdown.html" class="active" aria-current="page">LenoMarkdown</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno 与其他语言对比</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><blockquote>
+<p>📦 <strong>扩展模块</strong>（非语言内置标准库）· 包名 <code>LenoMarkdown</code> · import 名 "Markdown"
+源 README：<code>Leno/build/leno_module/LenoMarkdown/README.md</code>（本页是同步副本，改请改源）</p>
+</blockquote>
+<h1 id="lenomarkdown">LenoMarkdown</h1>
+<p><strong>Markdown → HTML</strong>（纯 Leno，无原生依赖）。为「在 Leno 里渲染 Markdown」提供基础能力 ——
+文档站、README 预览、日志/报告渲染都不必再外挂 Python 的 <code>markdown</code> 包。</p>
+<pre><code class="language-leno">import &quot;Markdown&quot; as md
+
+main() {
+    print(md.to_html(&quot;## 标题\n\n正文 **加粗** 与 `代码`。\n&quot;))
+    // &lt;h2 id=&quot;标题&quot;&gt;标题&lt;/h2&gt;
+    // &lt;p&gt;正文 &lt;strong&gt;加粗&lt;/strong&gt; 与 &lt;code&gt;代码&lt;/code&gt;。&lt;/p&gt;
+
+    for md.headings(&quot;# 一\n## 二&quot;) to h {
+        print(_str(h.level) + &quot; &quot; + h.text + &quot; → #&quot; + h.id + &quot;\n&quot;)
+    }
+}
+</code></pre>
+<h2 id="api">API</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>to_html(text)</code></td>
+<td>Markdown → HTML 片段（块级 + 行内）</td>
+</tr>
+<tr>
+<td><code>headings(text)</code></td>
+<td>标题列表 <code>Array[Heading{level,text,id}]</code>，供目录/锚点用（代码块里的 <code>#</code> 不算）</td>
+</tr>
+<tr>
+<td><code>slug(text)</code></td>
+<td>锚点名：小写；字母/数字/汉字/<code>_</code>/<code>-</code> 保留，其余压成 <code>-</code>；保留中文</td>
+</tr>
+<tr>
+<td><code>escape(text)</code></td>
+<td>HTML 转义（<code>&amp; &lt; &gt; "</code>）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="支持范围">支持范围</h2>
+<p>块级：ATX 标题（<code>#</code>..<code>######</code>，带 id）/ 段落（软换行保留、行尾两空格 → <code>&lt;br&gt;</code>）/
+围栏代码（<code>```lang</code>，语言进 <code>class="language-xx"</code>）/ 表格（GFM，含 <code>:</code> 对齐）/
+无序与有序列表（含嵌套，遵守 <code>sane_lists</code>：<strong>列表前要有空行</strong>）/ 引用（含嵌套，<strong>引用里也能放代码块</strong>）/
+分隔线 / 原始 HTML 块透传。</p>
+<p>行内：<code>`code`</code> / <code>**粗**</code> / <code>*斜*</code> / <code>[链接](url)</code> / <code>![图](src)</code> / <code>\</code> 转义。</p>
+<h2 id="刻意不支持">刻意不支持</h2>
+<ul>
+<li>下划线斜体 <code>_x_</code>：Leno 代码里 <code>snake_case</code> 满地都是，误判代价远大于收益；</li>
+<li>引用式链接 <code>[a][ref]</code>、脚注、定义列表、任务列表；</li>
+<li>行内原始 HTML（<strong>块级</strong>会整段原样透传，这是文档站需要的）。</li>
+</ul>
+<h2 id="与-python-markdown-的关系">与 python-markdown 的关系</h2>
+<p>输出形状（<code>&lt;th&gt;</code> 一行一个、<code>&lt;hr&gt;</code> 不闭合、代码块结尾换行、行内 <code>&lt;code&gt;</code> 不转义引号…）
+是<strong>照它生成的 HTML 抄的</strong>，可以直接逐字节对拍。已知差异：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>python-markdown</th>
+<th>本库</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>引用里的围栏代码 <code>&gt; ```leno</code></td>
+<td>不认识，退化成段落 + 行内 <code>&lt;code&gt;</code>（文档站为此写了 <code>lift_blockquote_fences</code> 补丁）</td>
+<td>正常渲染成 <code>&lt;pre&gt;&lt;code&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="自测">自测</h2>
+<pre><code class="language-bat">build\leno.exe build\leno_module\LenoMarkdown\test\test_markdown.leno
+</code></pre>
+<p>或随模块套件一起跑：<code>build\leno.exe build\leno_module\run_all_tests.leno build\leno.exe --only LenoMarkdown</code></p></main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#支持范围">支持范围</a></li><li><a href="#刻意不支持">刻意不支持</a></li><li><a href="#与-python-markdown-的关系">与 python-markdown 的关系</a></li><li><a href="#自测">自测</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoHTTP.html">← 上一篇</a><a href="../扩展模块/LenoLog.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
