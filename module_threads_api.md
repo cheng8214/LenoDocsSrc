@@ -47,7 +47,7 @@
 import threads
 
 // 顶层函数
-func worker(var x, var y) {
+func worker(int x, int y): int {
     return x + y
 }
 
@@ -60,7 +60,7 @@ var t1 = threads.start(func(){
 // 闭包捕获 + 参数传递
 var prefix = "result"
 var t2 = threads.start(func(int n){
-    return prefix + "_" + n
+    return prefix + "_" + _str(n)
 }, 42)
 
 main() {
@@ -84,7 +84,7 @@ main() {
 ```leno
 import threads
 
-func producer(var ch) {
+func producer(Channel ch): void {
     ch.send("hello")
     ch.close()
 }
@@ -185,6 +185,8 @@ print(doubled[3])   // 43（4*10+3）
 | `local_set(key, value)` | 只写**本线程**那份（其它线程读不到） | `null` |
 
 ```leno
+import threads
+
 main() {
     threads.local_set("n", 1)
     print(_int(threads.local_get("n", 0)))     // 1
@@ -543,18 +545,18 @@ main() {
 ```leno
 import threads
 
-func producer(var ch) {
-    for 5 to var i {
+func producer(Channel ch): void {
+    for 0:4 to i {
         ch.send(i * i)
     }
     ch.close()
 }
 
-func consumer(var ch) {
+func consumer(Channel ch): void {
     while true {
         var msg = ch.receive()
         if msg == null { break }
-        print("收到: " + msg)
+        print("收到: " + _str(msg))
     }
 }
 

@@ -698,8 +698,8 @@ main() {
 ### 示例2：去重（使用辅助数组）
 
 ```leno
-func unique(arr) {
-    var result = []
+func unique(Array[int] arr): Array[int] {
+    Array[int] result = []
     for arr to item {
         if not result.has(item) {
             result.add(item)
@@ -709,8 +709,8 @@ func unique(arr) {
 }
 
 main() {
-    var arr = [1, 2, 2, 3, 3, 3, 4]
-    var unique_arr = unique(arr)
+    Array[int] arr = [1, 2, 2, 3, 3, 3, 4]
+    Array[int] unique_arr = unique(arr)
     print(unique_arr)  // [1, 2, 3, 4]
 }
 ```
@@ -719,37 +719,37 @@ main() {
 
 ```leno
 // 使用数组实现栈
-func stack_new() {
+func stack_new(): Array[int] {
     return []
 }
 
-func stack_push(stack, value) {
+func stack_push(Array[int] stack, int value): void {
     stack.add(value)
 }
 
-func stack_pop(stack) {
+func stack_pop(Array[int] stack): int {
     return stack.pop()
 }
 
-func stack_peek(stack) {
+func stack_peek(Array[int] stack): int {
     return stack[stack.len() - 1]
 }
 
-func stack_is_empty(stack) {
+func stack_is_empty(Array[int] stack): bool {
     return stack.len() == 0
 }
 
 main() {
-    var stack = stack_new()
-    
+    Array[int] stack = stack_new()
+
     stack_push(stack, 1)
     stack_push(stack, 2)
     stack_push(stack, 3)
-    
-    print("栈顶: " + stack_peek(stack))  // 3
-    
+
+    print("栈顶: " + _str(stack_peek(stack)))  // 3
+
     while not stack_is_empty(stack) {
-        print("弹出: " + stack_pop(stack))
+        print("弹出: " + _str(stack_pop(stack)))
     }
 }
 ```
@@ -758,24 +758,24 @@ main() {
 
 ```leno
 // 使用数组实现队列
-func queue_new() {
+func queue_new(): Array[string] {
     return []
 }
 
-func queue_enqueue(queue, value) {
+func queue_enqueue(Array[string] queue, string value): void {
     queue.add(value)
 }
 
-func queue_dequeue(queue) {
+func queue_dequeue(Array[string] queue): string {
     return queue.remove(0)
 }
 
-func queue_is_empty(queue) {
+func queue_is_empty(Array[string] queue): bool {
     return queue.len() == 0
 }
 
 main() {
-    var queue = queue_new()
+    Array[string] queue = queue_new()
     
     queue_enqueue(queue, "A")
     queue_enqueue(queue, "B")

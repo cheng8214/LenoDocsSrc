@@ -278,17 +278,17 @@ main() {
     print("任务调度器启动")
     
     var last_run = times.ms()
-    var interval = 2000  // 每 2 秒执行一次
-    
+    var interval = 200  // 演示用 200ms（`times.ms()` 返回 float ⇒ sleep 前要 _int）
+
     for 1:5 to count {
         var now = times.ms()
         var elapsed = now - last_run
-        
+
         if (elapsed < interval) {
-            sleep(interval - elapsed)
+            sleep(_int(interval - elapsed))
         }
-        
-        print("执行任务 #" + count + " (" + times.format(times.now(), "%H:%M:%S") + ")")
+
+        print("执行任务 #" + _str(count) + " (" + times.format(times.now(), "%H:%M:%S") + ")")
         last_run = times.ms()
     }
 }
@@ -304,7 +304,7 @@ main() {
     
     // 判断是否是周末
     var weekday = times.format(times.now(), "%w")  // 0=周日, 1=周一...
-    if (weekday == "0" || weekday == "6") {
+    if (weekday == "0" or weekday == "6") {
         print("今天是周末，好好休息!")
     } else {
         print("今天是工作日，加油!")
