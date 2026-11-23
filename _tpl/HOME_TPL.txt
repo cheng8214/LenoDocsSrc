@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{site} · 文档门户</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="">
+<header class="topbar">
+  <span class="brand">{site}</span>
+  <div class="searchbox wide">
+    <input id="q" type="search" placeholder="搜索 {n} 篇文档：语言特性 / 报错症状 / 模块 API / 排查记录…" autocomplete="off" spellcheck="false" autofocus>
+    <div id="results" class="results"></div>
+  </div>
+  {tools}
+  <span class="crumb">{n} 篇 · {total}</span>
+</header>
+<main class="home">
+  <div class="hero">
+    <h1>第一次用 Leno？从这三步开始</h1>
+    <p>不用先学完整个语言。<b>照着顺序走</b>：先跑起来 → 再懂语法 → 然后抄现成的。
+       已经在写代码了？直接在上面搜索框里搜关键词（按 <kbd>/</kbd> 聚焦）。全站 {n} 篇。</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="Leno零基础入门.html"><span class="k">①</span> 零基础学 Leno</a>
+      <a class="btn" href="安装与第一个项目.html"><span class="k">②</span> 装好并跑起来</a>
+      <a class="btn" href="常见任务cookbook.html"><span class="k">③</span> 抄一段就用</a>
+    </div>
+  </div>
+  <section class="steps">
+    <a class="step" href="Leno零基础入门.html">
+      <span class="no">1</span><span class="t">约 2 小时</span>
+      <h3>先看懂代码</h3>
+      <p>18 章，从"打印一行字"讲到结构体/枚举/异常。每章都能直接运行，附真实输出和常见错误。</p>
+    </a>
+    <a class="step" href="安装与第一个项目.html">
+      <span class="no">2</span><span class="t">约 15 分钟</span>
+      <h3>让它在你机器上跑</h3>
+      <p>拿 exe → 配 PATH → <code>--init</code> 建项目 → 打包成能双击的 exe。含环境坑速查。</p>
+    </a>
+    <a class="step" href="常见任务cookbook.html">
+      <span class="no">3</span><span class="t">随时查</span>
+      <h3>按任务抄代码</h3>
+      <p>读文件 / JSON / 命令行参数 / 线程 / 随机数 …15 个完整程序，复制就能用。</p>
+    </a>
+  </section>
+  <section class="stuck">
+    <h3>卡住了？三条急救线</h3>
+    <ul>
+      <li>报错看不懂 → <a href="语言陷阱速查.html">语言陷阱速查</a>（按<b>症状</b>查：一句话说明原因和改法）</li>
+      <li>某个函数怎么用 → <a href="module_strings.html">模块 API</a>（19 个标准模块的函数清单，含示例）</li>
+      <li>不知道该怎么写才对 → <a href="idioms.html">惯用写法速查</a>（别再写 <code>Array[Array[string]]</code> 这种）</li>
+    </ul>
+  </section>
+  <section class="intro">
+    <div class="intro-text">
+      <h2>Leno 是什么</h2>
+      <p>一门自研 VM 上的<strong>工程脚本语言</strong>：兼具静态类型检查与运行时灵活性，
+         适合桌面应用、工具链、系统封装与脚本内核开发。既能写业务层，也能用 FFI / cstruct / Ptr 下探到原生内存。</p>
+      <div class="intro-tags">
+        <span>类型收窄 · 可空类型 · 泛型</span>
+        <span>struct / enum / face</span>
+        <span>模块系统 + 19 个标准模块</span>
+        <span>线程并发 + async / await</span>
+        <span>FFI · cstruct · Ptr 原生内存</span>
+        <span>int48 内联 · 自研字节码 VM</span>
+      </div>
+      <p class="intro-links"><a href="Leno零基础入门.html">零基础入门 →</a>
+        <a href="Leno入门教程.html">语言全貌 →</a>
+        <a href="module_ffi_api.html">模块 API →</a></p>
+    </div>
+    <div class="intro-code">
+      <div class="ic-bar"><span>hello.leno</span><span class="ic-run">leno hello.leno</span></div>
+      <pre><code class="language-leno">main() {{
+    print("Hello, Leno!")
+}}</code></pre>
+    </div>
+  </section>
+  {paths}
+  {recent}
+  {sections}
+  <div class="footnote">由 <code>build_html.py</code> 从 <code>LenoDocsSrc/*.md</code> 生成 ·
+    <a href="INDEX_raw.html">查看原始索引全文</a> · 标题右侧的 <code>#</code> 可复制直达链接<br>
+    ⚠ 这里是**生成物**（<code>LenoDocsSrc/site/</code>）：要改文档请改上一层的 <code>*.md</code>，
+    再跑一次 <code>python build_html.py</code>；手改本目录的 html 会在下次生成时被整目录覆盖</div>
+</main>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

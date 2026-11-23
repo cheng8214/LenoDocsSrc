@@ -1,0 +1,759 @@
+// build_html.leno —— 把本仓 md 生成静态站点（site/），取代 build_html.py
+//
+// 为什么能换了：Markdown 渲染过去只能靠 Python 的 `markdown` 包；现在有纯 Leno 的
+//   `LenoMarkdown`（Leno 仓 build/leno_module/LenoMarkdown）⇒ 整条链路都可以用 Leno 跑。
+//
+// 组成：
+//   _tpl/CSS.txt · APP_JS.txt · TOOLS.txt · PAGE_TPL.txt · HOME_TPL.txt
+//        页面骨架与静态资源（从原 py 原样抽出；改样式改这些文件）
+//   _tpl/site_data.leno
+//        分类表 / 显示名 / 首页快捷卡（**唯一事实来源**，改分类改它）
+//   build_html.leno
+//        本文件：扫 md → 渲染 → 套模板 → 写 site/（含搜索索引、全站目录、上/下一篇）
+//
+// 用法：build\leno.exe build_html.leno [输出目录]
+//   ⚠ 产物最后整体换目录（先改名备份）——上一版 py 是 `rmtree(site)` 再生成，
+//     中途一崩站点就全没了（2026-11-23 的事故），这里不能再犯。
+import dirs
+import files
+import jsons
+import strings
+import "Markdown" as md
+import "_tpl/site_data.leno" as data
+
+var SRC = ""
+var OUT = ""
+var ASSETS = ""
+var TPL = ""
+
+var T_TOOLS = ""
+var T_PAGE = ""
+var T_HOME = ""
+var T_CSS = ""
+var T_JS = ""
+
+// INDEX.md 里读出来的每篇描述/状态（两个字典而不是 struct：省掉可空类型的收窄）
+Dict[string, string] META_DESC = {}
+Dict[string, string] META_STATUS = {}
+
+// classify 的返回值（模块级 out 参数：Leno 里返回自定义 struct 的跨调用写法更容易出错）
+var g_cat = ""
+var g_rank = 0
+
+struct Item {
+    string name = ""
+    string file = ""
+    string desc = ""
+    string status = ""
+    int rank = 0
+}
+
+struct Cat2 {
+    string name = ""
+    bool fold = false
+    string desc = ""
+    Array[Item] items = []
+}
+
+// ---------------------------------------------------------------- 小工具
+
+func esc_html(string s):string {
+    var t = strings.replace(s, "&", "&amp;")
+    t = strings.replace(t, "<", "&lt;")
+    return strings.replace(t, ">", "&gt;")
+}
+
+func strip_ticks(string s):string {
+    return strings.replace(strings.replace(s, "`", ""), "*", "")
+}
+
+func index_of(Array[string] keys, string key):int {
+    var i = 0
+    while i < keys.len() {
+        if keys[i] == key { return i }
+        i += 1
+    }
+    return -1
+}
+
+// 单趟替换 `{key}`：**不重扫替换进去的值**（正文里可能本来就有 `{prev}` 这类字样）
+func fill(string tpl, Array[string] keys, Array[string] vals):string {
+    Array[string] out = []
+    var i = 0
+    var n = tpl.len()
+    while i < n {
+        // ⚠ 模板里 `{{` / `}}` 是**字面大括号**（Python str.format 的约定，模板是从它抽出来的）
+        //   ⇒ 这里也要按同样规则折叠，否则首页示例里的 `main() {` 会显示成 `main() {{`
+        if tpl.slice(i, i) == "{" and i + 1 < n and tpl.slice(i + 1, i + 1) == "{" {
+            out.add("{")
+            i += 2
+            continue
+        }
+        if tpl.slice(i, i) == "}" and i + 1 < n and tpl.slice(i + 1, i + 1) == "}" {
+            out.add("}")
+            i += 2
+            continue
+        }
+        if tpl.slice(i, i) == "{" {
+            var close = strings.find(tpl.slice(i, n - 1), "}")
+            if close > 0 {
+                var key = tpl.slice(i + 1, i + close - 1)
+                var idx = index_of(keys, key)
+                if idx >= 0 {
+                    out.add(vals[idx])
+                    i = i + close + 1
+                    continue
+                }
+            }
+        }
+        out.add(tpl.slice(i, i))
+        i += 1
+    }
+    return strings.join(out, "")
+}
+
+func read_tpl(string name):string {
+    var t = files.read(dirs.join(TPL, name))
+    if t == null { return "" }
+    return _str(t)
+}
+
+// ⚠ 参数不能叫 `to`（保留字）⇒ 用 stop
+func join_range(Array[string] lines, int from, int stop):string {
+    Array[string] part = []
+    var i = from
+    while i < stop and i < lines.len() {
+        part.add(lines[i])
+        i += 1
+    }
+    return strings.join(part, "\n")
+}
+
+// ---------------------------------------------------------------- 分类
+
+func classify(string rel) {
+    var path = strings.replace(rel, "\\", "/")
+    var parts = strings.split(path, "/")
+    var name = parts[parts.len() - 1]
+    var ci = 0
+    while ci < data.CATEGORIES.len() - 1 {
+        var rules = data.CATEGORIES[ci].rules
+        var ri = 0
+        while ri < rules.len() {
+            var r = rules[ri]
+            var hit = false
+            if strings.starts_with(r, "PREFIX:") {
+                var p = r.slice(7, r.len() - 1)
+                hit = strings.starts_with(path, p) or strings.starts_with(name, p)
+            } else if strings.starts_with(r, "SUFFIX:") {
+                hit = strings.ends_with(name, r.slice(7, r.len() - 1))
+            } else {
+                hit = name == r
+            }
+            if hit {
+                g_cat = data.CATEGORIES[ci].name
+                g_rank = ri
+                return
+            }
+            ri += 1
+        }
+        ci += 1
+    }
+    g_cat = data.CATEGORIES[data.CATEGORIES.len() - 1].name
+    g_rank = 999
+}
+
+func display_name(string stem):string {
+    if data.EXT_DISPLAY.has(stem) { return _str(data.EXT_DISPLAY.get(stem)) }
+    if data.DISPLAY_NAME.has(stem) { return _str(data.DISPLAY_NAME.get(stem)) }
+    if strings.starts_with(stem, "module_") {
+        var name = stem.slice(7, stem.len() - 1)
+        if strings.ends_with(name, "_api") { name = name.slice(0, name.len() - 5) }
+        return name + " 模块 API"
+    }
+    return stem
+}
+
+func stem_of(string rel):string {
+    var parts = strings.split(rel, "/")
+    var name = parts[parts.len() - 1]
+    if strings.ends_with(name, ".md") { return name.slice(0, name.len() - 4) }
+    return name
+}
+
+// ---------------------------------------------------------------- INDEX.md
+
+func parse_index(string text) {
+    META_DESC = {}
+    META_STATUS = {}
+    var lines = strings.split(text, "\n")
+    for lines to line {
+        if not strings.starts_with(line, "|") { continue }
+        var cells = strings.split(strings.trim(line), "|")
+        if cells.len() < 3 { continue }
+        var first = strings.trim(cells[1])
+        var lp = strings.find(first, "](")
+        if lp < 0 { continue }
+        var rp = strings.find(first.slice(lp + 2, first.len() - 1), ")")
+        if rp < 0 { continue }
+        var target = first.slice(lp + 3, lp + rp + 1)
+        var hash = strings.find(target, "#")
+        if hash >= 0 { target = target.slice(0, hash - 1) }
+        if not strings.ends_with(target, ".md") { continue }
+        META_DESC.set(target, strings.trim(cells[2]))
+        var st = ""
+        if cells.len() > 3 { st = strings.trim(cells[3]) }
+        META_STATUS.set(target, st)
+    }
+}
+
+func status_badge(string s):string {
+    if s == "" { return "" }
+    var cls = ""
+    if strings.has(s, "归档") or strings.has(s, "过时") or strings.has(s, "已废") { cls = " old" }
+    return "<span class=\"badge" + cls + "\">" + strings.replace(s, "|", "") + "</span>"
+}
+
+// ---------------------------------------------------------------- 扫描与排序
+
+func walk_md(string base, string rel, Array[string] out) {
+    var full = dirs.join(base, rel)
+    var names = dirs.listdir(full)
+    if names == null { return }
+    for names to n {
+        if strings.starts_with(n, ".") { continue }
+        if n == "site" or n == "_site" or n == "_build_vendor" or n == "_tpl" { continue }
+        var child = n
+        if rel != "" { child = rel + "/" + n }
+        if dirs.is_dir(dirs.join(base, child)) {
+            walk_md(base, child, out)
+        } else if strings.ends_with(n, ".md") {
+            if n == "README.md" or n == "INDEX.md" { continue }
+            out.add(child)
+        }
+    }
+}
+
+func sort_strings(Array[string] arr) {
+    var i = 1
+    while i < arr.len() {
+        var key = arr[i]
+        var j = i - 1
+        while j >= 0 and strings.to_lower(arr[j]) > strings.to_lower(key) {
+            arr[j + 1] = arr[j]
+            j -= 1
+        }
+        arr[j + 1] = key
+        i += 1
+    }
+}
+
+func sort_items(Array[Item] arr) {
+    var i = 1
+    while i < arr.len() {
+        var key = arr[i]
+        var j = i - 1
+        while j >= 0 and (arr[j].rank > key.rank or (arr[j].rank == key.rank and arr[j].name > key.name)) {
+            arr[j + 1] = arr[j]
+            j -= 1
+        }
+        arr[j + 1] = key
+        i += 1
+    }
+}
+
+// ---------------------------------------------------------------- 渲染辅助
+
+// hs 的层级/文本/锚点先摊成三个平行数组（跨模块 struct 类型不互相赋值，摊平最省事）
+Array[int] H_LV = []
+Array[string] H_TX = []
+Array[string] H_ID = []
+
+func collect_headings(string text) {
+    H_LV = []
+    H_TX = []
+    H_ID = []
+    for md.headings(text) to h {
+        H_LV.add(h.level)
+        H_TX.add(h.text)
+        H_ID.add(h.id)
+    }
+}
+
+func toc_html():string {
+    Array[int] keep = []
+    var i = 0
+    while i < H_LV.len() {
+        if H_LV[i] == 2 or H_LV[i] == 3 { keep.add(i) }
+        i += 1
+    }
+    if keep.len() == 0 { return "<div class=\"side-title\">（无小节标题）</div>" }
+    Array[string] out = ["<ul>"]
+    var depth = 0
+    for keep to k {
+        var lv = H_LV[k]
+        if lv == 3 and depth == 0 {
+            out.add("<ul class=\"lv3\">")
+            depth = 1
+        } else if lv == 2 and depth == 1 {
+            out.add("</ul>")
+            depth = 0
+        }
+        out.add("<li><a href=\"#" + H_ID[k] + "\">" + strip_ticks(H_TX[k]) + "</a></li>")
+    }
+    if depth == 1 { out.add("</ul>") }
+    out.add("</ul>")
+    return strings.join(out, "")
+}
+
+func breadcrumb(string cat, string title, string base):string {
+    var home = "<a href=\"" + base + "index.html\">首页</a>"
+    var c = "文档"
+    if cat != "" { c = "<a href=\"" + base + "index.html\">" + esc_html(cat) + "</a>" }
+    return home + "<span class=\"sep\">/</span>" + c + "<span class=\"sep\">/</span><span class=\"here\">"
+           + esc_html(title) + "</span>"
+}
+
+func global_nav(Array[Cat2] cats, string cur_rel, string base):string {
+    Array[string] out = []
+    for cats to c {
+        if c.items.len() == 0 { continue }
+        var cur_in = false
+        for c.items to it {
+            if it.file == cur_rel { cur_in = true }
+        }
+        var open = ""
+        if cur_in { open = " open" }
+        out.add("<details" + open + "><summary>" + esc_html(c.name)
+                + " <span style=\"color:var(--muted);font-weight:400\">" + _str(c.items.len())
+                + "</span></summary>")
+        out.add("<div class=\"nv-group\">")
+        for c.items to it2 {
+            var active = ""
+            if it2.file == cur_rel { active = " class=\"active\" aria-current=\"page\"" }
+            out.add("<a href=\"" + base + strings.replace(it2.file, ".md", ".html") + "\"" + active + ">"
+                    + esc_html(it2.name) + "</a>")
+        }
+        out.add("</div></details>")
+    }
+    return strings.join(out, "")
+}
+
+// ---------------------------------------------------------------- 链接改写
+
+func fix_links(string s, bool subdir):string {
+    Array[string] out = []
+    var pos = 0
+    var n = s.len()
+    while pos < n {
+        var h = strings.find(s.slice(pos, n - 1), "href=\"")
+        if h < 0 {
+            out.add(s.slice(pos, n - 1))
+            break
+        }
+        h = pos + h
+        var vs = h + 6
+        var ve = strings.find(s.slice(vs, n - 1), "\"")
+        if ve < 0 {
+            out.add(s.slice(pos, n - 1))
+            break
+        }
+        ve = vs + ve
+        out.add(s.slice(pos, vs - 1))                 // 已含开头那个 `"`
+        out.add(rewrite_url(s.slice(vs, ve - 1), subdir) + "\"")
+        pos = ve + 1
+    }
+    return strings.join(out, "")
+}
+
+func rewrite_url(string u, bool subdir):string {
+    if strings.starts_with(u, "http:") or strings.starts_with(u, "https:") { return u }
+    if strings.starts_with(u, "mailto:") or strings.starts_with(u, "javascript:") { return u }
+    if strings.starts_with(u, "data:") or strings.starts_with(u, "#") { return u }
+    if subdir { return u }
+    if strings.starts_with(u, "../docs/") {
+        u = u.slice(8, u.len() - 1)
+    } else {
+        if strings.starts_with(u, "../examples/") or strings.starts_with(u, "../src/")
+           or strings.starts_with(u, "../build/") or strings.starts_with(u, "../android/")
+           or strings.starts_with(u, "../assert/") or strings.starts_with(u, "../leno_gui/") {
+            u = "../Leno/" + u.slice(3, u.len() - 1)
+        }
+        if strings.starts_with(u, "../") { u = "../" + u }
+    }
+    if not strings.has(u, "build/leno_module/") {
+        u = strings.replace(u, ".md", ".html")
+    }
+    return u
+}
+
+// ---------------------------------------------------------------- 搜索索引文本
+
+func strip_md(string s):string {
+    Array[string] lines = strings.split(s, "\n")
+    Array[string] kept = []
+    for lines to ln {
+        if strings.starts_with(strings.trim(ln), "```") {
+            kept.add(" ")
+        } else {
+            kept.add(ln)
+        }
+    }
+    var body = strings.join(kept, " ")
+    body = strings.replace(body, "`", "")
+    body = strip_link_text(body)
+    // 表格分隔行（只剩 | - : 的词，直接丢掉）
+    Array[string] ws = strings.split(body, " ")
+    Array[string] kept2 = []
+    for ws to w {
+        var only_sep = w != ""
+        var k = 0
+        while k < w.len() {
+            var c = w.slice(k, k)
+            if c != "|" and c != "-" and c != ":" { only_sep = false; break }
+            k += 1
+        }
+        if only_sep { continue }
+        kept2.add(w)
+    }
+    body = strings.join(kept2, " ")
+    Array[string] marks = ["|", "*", ">", "#"]
+    for marks to m { body = strings.replace(body, m, " ") }
+    while strings.find(body, "  ") >= 0 { body = strings.replace(body, "  ", " ") }
+    return strings.trim(body)
+}
+
+func strip_link_text(string s):string {
+    Array[string] out = []
+    var pos = 0
+    var n = s.len()
+    while pos < n {
+        var b = strings.find(s.slice(pos, n - 1), "](")
+        if b < 0 {
+            out.add(s.slice(pos, n - 1))
+            break
+        }
+        b = pos + b
+        var lb = -1
+        var k = b - 1
+        while k >= pos {
+            if s.slice(k, k) == "[" { lb = k; break }
+            if s.slice(k, k) == "]" { break }
+            k -= 1
+        }
+        if lb < 0 {
+            out.add(s.slice(pos, b + 1))
+            pos = b + 2
+            continue
+        }
+        var rp = strings.find(s.slice(b + 2, n - 1), ")")
+        if rp < 0 {
+            out.add(s.slice(pos, n - 1))
+            break
+        }
+        rp = b + 2 + rp
+        out.add(s.slice(pos, lb - 1))
+        out.add(s.slice(lb + 1, b - 1))
+        pos = rp + 1
+    }
+    return strings.join(out, "")
+}
+
+// 按 H2/H3 切段 → 搜索跳转用的 [{h,a,x}]
+func split_sections(string text):Array[Dict[string, string]] {
+    Array[Dict[string, string]] secs = []
+    var lines = strings.split(text, "\n")
+    Array[int] starts = []
+    Array[string] titles = []
+    var hi = 0
+    var li = 0
+    while li < lines.len() and hi < H_LV.len() {
+        var lv = H_LV[hi]
+        if lv != 2 and lv != 3 {
+            hi += 1
+            continue
+        }
+        var got = 0
+        while got < lines[li].len() and got < 3 and lines[li].slice(got, got) == "#" { got += 1 }
+        if got == lv {
+            starts.add(li)
+            titles.add(H_ID[hi])
+            hi += 1
+        }
+        li += 1
+    }
+
+    var head_end = lines.len()
+    if starts.len() > 0 { head_end = starts[0] }
+    var head_text = strip_md(join_range(lines, 0, head_end))
+    if head_text != "" {
+        Dict[string, string] d0 = {}
+        d0.set("h", "开头")
+        d0.set("a", "")
+        d0.set("x", head_text)
+        secs.add(d0)
+    }
+    var si = 0
+    while si < starts.len() {
+        var stop_line = lines.len()
+        if si + 1 < starts.len() { stop_line = starts[si + 1] }
+        var chunk = strip_md(join_range(lines, starts[si] + 1, stop_line))
+        if chunk != "" {
+            Dict[string, string] d = {}
+            d.set("h", titles[si])
+            d.set("a", titles[si])
+            d.set("x", chunk)
+            secs.add(d)
+        }
+        si += 1
+    }
+    return secs
+}
+
+// ---------------------------------------------------------------- 目录拷贝（二进制）
+
+// ⚠ 参数不能叫 to（保留字）
+func copy_tree(string src_dir, string dst_dir) {
+    dirs.mkdir_p(dst_dir)
+    var names = dirs.listdir(src_dir)
+    if names == null { return }
+    for names to n {
+        var s = dirs.join(src_dir, n)
+        var d = dirs.join(dst_dir, n)
+        if dirs.is_dir(s) {
+            copy_tree(s, d)
+        } else {
+            var fin = files.open(s, "rb")
+            if fin == null { continue }
+            var content = fin.read()
+            fin.close()
+            var fout = files.open(d, "wb")
+            if fout == null { continue }
+            fout.write(content)
+            fout.close()
+        }
+    }
+}
+
+// ---------------------------------------------------------------- 主流程
+
+main() {
+    SRC = dirs.script_dir()
+    TPL = dirs.join(SRC, "_tpl")
+    var args = _args()
+    if args.len() > 0 { OUT = dirs.abspath(args[0]) } else { OUT = dirs.join(SRC, "site") }
+    ASSETS = dirs.join(OUT, "assets")
+
+    T_TOOLS = read_tpl("TOOLS.txt")
+    T_PAGE = read_tpl("PAGE_TPL.txt")
+    T_HOME = read_tpl("HOME_TPL.txt")
+    T_CSS = read_tpl("CSS.txt")
+    T_JS = read_tpl("APP_JS.txt")
+    if T_PAGE == "" {
+        print("缺少模板：" + TPL + "\n")
+        _exit(2)
+    }
+
+    var idx_t = files.read(dirs.join(SRC, "INDEX.md"))
+    if idx_t != null { parse_index(_str(idx_t)) }
+
+    Array[string] rels = []
+    walk_md(SRC, "", rels)
+    sort_strings(rels)
+
+    Array[Cat2] cats = []
+    for data.CATEGORIES to c0 {
+        Cat2 c = new Cat2()
+        c.name = c0.name
+        c.fold = c0.fold
+        c.desc = c0.desc
+        cats.add(c)
+    }
+
+    for rels to rel {
+        classify(rel)
+        Item it = new Item()
+        it.name = display_name(stem_of(rel))
+        it.file = rel
+        it.desc = ""
+        if META_DESC.has(rel) { it.desc = META_DESC.get(rel) }
+        if it.desc == "" and data.DESC_FALLBACK.has(stem_of(rel)) {
+            it.desc = _str(data.DESC_FALLBACK.get(stem_of(rel)))
+        }
+        it.status = ""
+        if META_STATUS.has(rel) { it.status = META_STATUS.get(rel) }
+        it.rank = g_rank
+        var ci = 0
+        while ci < cats.len() {
+            if cats[ci].name == g_cat { cats[ci].items.add(it) }
+            ci += 1
+        }
+    }
+    for cats to c2 { sort_items(c2.items) }
+
+    Array[string] ordered = []
+    Dict[string, string] cat_of = {}
+    for cats to c3 {
+        for c3.items to it3 {
+            ordered.add(it3.file)
+            cat_of.set(it3.file, c3.name)
+        }
+    }
+
+    // 先备份旧站点（失败可回滚），成功后才删
+    var bak = OUT + ".bak"
+    if dirs.exists(bak) { dirs.delete(bak) }
+    if dirs.exists(OUT) { dirs.rename(OUT, bak) }
+    dirs.mkdir_p(ASSETS)
+
+    Array[Dict[string, any]] docs = []
+    var total_bytes = 0
+    var pos = 0
+    while pos < ordered.len() {
+        var rel = ordered[pos]
+        var path = dirs.join(SRC, rel)
+        var text = ""
+        var t = files.read(path)
+        if t != null { text = strings.replace(_str(t), "\r\n", "\n") }
+        total_bytes += files.size(path)
+
+        var subdir = strings.starts_with(rel, "扩展模块/") or strings.starts_with(rel, "archive/")
+        var body = fix_links(md.to_html(text), subdir)
+        collect_headings(text)
+        var toc = toc_html()
+
+        var archived = strings.has(rel, "archive/")
+        var cat = ""
+        if cat_of.has(rel) { cat = cat_of.get(rel) }
+        var base = ""
+        if subdir { base = "../" }
+
+        var title = stem_of(rel)
+        for strings.split(text, "\n") to ln {
+            if strings.starts_with(ln, "# ") {
+                title = strip_ticks(strings.trim(ln.slice(2, ln.len() - 1)))
+                break
+            }
+        }
+
+        var banner = ""
+        var head1500 = text
+        if head1500.len() > 1500 { head1500 = head1500.slice(0, 1499) }
+        if archived {
+            banner = "<div class=\"banner\">⛔ 已归档文档 —— 描述的实现已不在当前代码中，仅供考古；"
+                     + "现行状态请看 <a href=\"" + base + "index.html\">索引</a>。</div>"
+        } else if strings.starts_with(cat, "08") {
+            banner = "<div class=\"banner\">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href=\""
+                     + base + "扩展模块/_总览.html\">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>"
+        } else if strings.has(head1500, "历史") or strings.has(head1500, "过时") {
+            banner = "<div class=\"banner\">🟡 本文档部分内容已标记「历史 / 局部过时」，引用前请先核对源码。</div>"
+        }
+
+        var prev_link = "<span></span>"
+        if pos > 0 {
+            prev_link = "<a href=\"" + base + strings.replace(ordered[pos - 1], ".md", ".html") + "\">← 上一篇</a>"
+        }
+        var next_link = "<span></span>"
+        if pos + 1 < ordered.len() {
+            next_link = "<a href=\"" + base + strings.replace(ordered[pos + 1], ".md", ".html") + "\">下一篇 →</a>"
+        }
+
+        Array[string] keys = ["title", "site", "base", "crumb", "tools", "nav", "doc",
+                              "banner", "toc", "body", "prev", "next"]
+        Array[string] vals = [title, data.SITE_TITLE, base, breadcrumb(cat, title, base), T_TOOLS,
+                              global_nav(cats, rel, base), strings.replace(rel, ".md", ".html"),
+                              banner, toc, body, prev_link, next_link]
+        var out_path = dirs.join(OUT, strings.replace(rel, ".md", ".html"))
+        dirs.mkdir_p(dirs.dirname(out_path))
+        files.write(out_path, fill(T_PAGE, keys, vals))
+
+        Dict[string, any] doc = {}
+        doc.set("f", strings.replace(rel, ".md", ".html"))
+        doc.set("t", display_name(stem_of(rel)))
+        doc.set("c", cat)
+        doc.set("a", 0)
+        if archived { doc.set("a", 1) }
+        doc.set("s", split_sections(text))
+        docs.add(doc)
+        pos += 1
+    }
+
+    // INDEX 原文页
+    var idx_body = ""
+    var idx_toc = ""
+    if idx_t != null {
+        idx_body = fix_links(md.to_html(_str(idx_t)), false)
+        collect_headings(_str(idx_t))
+        idx_toc = toc_html()
+    }
+    Array[string] ikeys = ["title", "site", "base", "crumb", "tools", "nav", "doc",
+                           "banner", "toc", "body", "prev", "next"]
+    Array[string] ivals = ["INDEX 原文 · 文档索引", data.SITE_TITLE, "",
+                           "<a href=\"index.html\">首页</a><span class=\"sep\">/</span><span class=\"here\">索引原文</span>",
+                           T_TOOLS, global_nav(cats, "__INDEX__", ""), "INDEX_raw.html", "",
+                           idx_toc, idx_body,
+                           "<a href=\"index.html\">← 返回门户</a>", "<span></span>"]
+    files.write(dirs.join(OUT, "INDEX_raw.html"), fill(T_PAGE, ikeys, ivals))
+
+    // 首页
+    Array[string] cards0 = []
+    for data.PATHS to p {
+        cards0.add("<a class=\"path-card\" href=\"" + p[2] + "\"><span class=\"pc-tag\">" + p[3]
+                   + "</span><strong>" + p[0] + "</strong><span class=\"pc-desc\">" + p[1] + "</span></a>")
+    }
+    var paths_html = "<section class=\"paths\"><h2>从这里开始</h2><div class=\"path-grid\">"
+                     + strings.join(cards0, "") + "</div></section>"
+
+    Array[string] sections = []
+    for cats to c4 {
+        if c4.items.len() == 0 { continue }
+        Array[string] cards = []
+        for c4.items to it4 {
+            var badge = ""
+            if strings.has(it4.file, "archive/") {
+                badge = "<span class=\"badge arch\">归档</span>"
+            } else {
+                badge = status_badge(it4.status)
+            }
+            var desc4 = strings.replace(strings.replace(it4.desc, "`", ""), "*", "")
+            cards.add("<a class=\"card\" href=\"" + strings.replace(it4.file, ".md", ".html")
+                      + "\"><div class=\"f\">" + it4.name + badge + "</div><div class=\"d\">" + desc4 + "</div></a>")
+        }
+        var n_items = c4.items.len()
+        if c4.fold {
+            sections.add("<details class=\"cat fold\"><summary><h2>" + c4.name
+                         + "<span class=\"n\">" + _str(n_items) + " 篇 · 点击展开</span></h2>"
+                         + "<p class=\"cat-desc\">" + c4.desc + "</p></summary><div class=\"grid\">"
+                         + strings.join(cards, "") + "</div></details>")
+        } else {
+            sections.add("<section class=\"cat\"><h2>" + c4.name
+                         + "<span class=\"n\">" + _str(n_items) + " 篇</span></h2>"
+                         + "<p class=\"cat-desc\">" + c4.desc + "</p><div class=\"grid\">"
+                         + strings.join(cards, "") + "</div></section>")
+        }
+    }
+
+    var mb = strings.format("%.1f MB 原文", _float(total_bytes) / 1048576.0)
+    Array[string] hkeys = ["site", "n", "tools", "total", "recent", "paths", "sections"]
+    Array[string] hvals = [data.SITE_TITLE, _str(docs.len()), T_TOOLS, mb,
+                           "<div class=\"recent\" id=\"recent\"></div>", paths_html,
+                           strings.join(sections, "\n")]
+    files.write(dirs.join(OUT, "index.html"), fill(T_HOME, hkeys, hvals))
+
+    // 静态资源
+    files.write(dirs.join(ASSETS, "style.css"), T_CSS)
+    files.write(dirs.join(ASSETS, "app.js"), T_JS)
+    var js = "/* 由 build_html.leno 生成；用 script src 加载以绕开 file:// 下 fetch 的 CORS 限制 */\n"
+             + "var SEARCH_DOCS=" + jsons.encode(docs) + ";\n"
+    files.write(dirs.join(ASSETS, "search-index.js"), js)
+
+    var img_src = dirs.join(SRC, "images")
+    if dirs.is_dir(img_src) { copy_tree(img_src, dirs.join(OUT, "images")) }
+
+    if dirs.exists(bak) { dirs.delete(bak) }
+
+    print("生成完成: " + OUT + "\n")
+    print("文档 " + _str(docs.len()) + " 篇 | 分类 " + _str(cats.len()) + " 组 | 搜索索引 "
+          + _str(files.size(dirs.join(ASSETS, "search-index.js")) / 1024) + " KB\n")
+    print("入口: " + dirs.join(OUT, "index.html") + "\n")
+}

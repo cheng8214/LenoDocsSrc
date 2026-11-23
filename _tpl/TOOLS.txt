@@ -1,0 +1,6 @@
+<span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>

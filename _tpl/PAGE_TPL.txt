@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title} · {site}</title>
+<link rel="stylesheet" href="{base}assets/style.css">
+<script charset="utf-8" src="{base}assets/search-index.js" defer></script>
+<script charset="utf-8" src="{base}assets/app.js" defer></script>
+</head><body data-doc="{doc}">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="{base}index.html">{site}</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  {tools}
+  <span class="crumb">{crumb}</span>
+</header>
+{banner}
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div>{nav}</nav>
+  <main class="content" id="top">{body}</main>
+  <aside class="side"><div class="side-title">本页目录</div>{toc}</aside>
+</div>
+<nav class="pager">{prev}{next}</nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

@@ -9,5 +9,7 @@ Thumbs.db
 desktop.ini
 # Leno 编译缓存（在本目录跑 leno.exe 时生成，如 import_module_docs.leno）
 .lenocache/
-# build_html.py 失败时的站点备份（成功会自删；失败留着可回滚）
+# 站点构建失败时的备份（成功会自删；失败留着可回滚）
 site.bak/
+# build_html.leno 的对照产物（用 Leno 版构建到独立目录，和 py 版逐页比）
+site_leno/
