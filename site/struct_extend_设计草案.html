@@ -440,16 +440,16 @@ error: extend 不能扩展 face / enum / cstruct（'Widget'）
 </ol>
 <h2 id="9-验收清单">9. 验收清单</h2>
 <ul>
-<li>[ ] 单文件：<code>struct P { }</code> + <code>extend P { func get() }</code> ⇒ 能调 <code>p.get()</code></li>
-<li>[ ] 顺序：<code>extend P</code> 写在 <code>struct P</code> <strong>之前</strong> ⇒ 同样能编</li>
-<li>[ ] <code>extend</code> 加字段 ⇒ 报错</li>
-<li>[ ] 重名方法 ⇒ 报错，带两个行号</li>
-<li>[ ] <code>extend</code> 目标不存在 ⇒ 报错</li>
-<li>[ ] extend 块内访问 <code>pri</code> 字段 ⇒ 允许（同模块）</li>
-<li>[ ] 跨文件（同模块两个 .leno）⇒ 能编能跑</li>
-<li>[ ] 跨模块调用 extend 出来的方法 ⇒ 能编能跑（走 <code>.lenosymc</code>）</li>
-<li>[ ] <code>--check</code> 全量套件零误报</li>
-<li>[ ] Aria 拆出下载页后：<code>--check</code> 通过 + 下载功能正常</li>
+<li><input type="checkbox" disabled> 单文件：<code>struct P { }</code> + <code>extend P { func get() }</code> ⇒ 能调 <code>p.get()</code></li>
+<li><input type="checkbox" disabled> 顺序：<code>extend P</code> 写在 <code>struct P</code> <strong>之前</strong> ⇒ 同样能编</li>
+<li><input type="checkbox" disabled> <code>extend</code> 加字段 ⇒ 报错</li>
+<li><input type="checkbox" disabled> 重名方法 ⇒ 报错，带两个行号</li>
+<li><input type="checkbox" disabled> <code>extend</code> 目标不存在 ⇒ 报错</li>
+<li><input type="checkbox" disabled> extend 块内访问 <code>pri</code> 字段 ⇒ 允许（同模块）</li>
+<li><input type="checkbox" disabled> 跨文件（同模块两个 .leno）⇒ 能编能跑</li>
+<li><input type="checkbox" disabled> 跨模块调用 extend 出来的方法 ⇒ 能编能跑（走 <code>.lenosymc</code>）</li>
+<li><input type="checkbox" disabled> <code>--check</code> 全量套件零误报</li>
+<li><input type="checkbox" disabled> Aria 拆出下载页后：<code>--check</code> 通过 + 下载功能正常</li>
 </ul>
 <h2 id="10-风险与取舍">10. 风险与取舍</h2>
 <table>

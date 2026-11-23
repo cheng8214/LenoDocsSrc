@@ -78,12 +78,13 @@ main() {
 <h2 id="支持范围">支持范围</h2>
 <p>块级：ATX 标题（<code>#</code>..<code>######</code>，带 id）/ 段落（软换行保留、行尾两空格 → <code>&lt;br&gt;</code>）/
 围栏代码（<code>```lang</code>，语言进 <code>class="language-xx"</code>，<strong>只认裸 <code>```</code> 闭合</strong>）/
-<strong>缩进代码块</strong>（4 空格或 tab）/ 表格（GFM，含 <code>:</code> 对齐、单元格内 <code>\|</code> 转义）/
+<strong>缩进代码块</strong>（4 空格或 tab）/ 表格（GFM，含 <code>:</code> 对齐、单元格内 <code>\|</code> 转义、
+<strong>单元格里 <code>`a|b`</code> 的竖线不拆格</strong>）/ <strong>任务列表</strong>（<code>- [ ]</code> / <code>- [x]</code> → <code>&lt;input type="checkbox" disabled&gt;</code>）/
 无序与有序列表（含嵌套；<strong>紧凑</strong>时 <code>&lt;li&gt;文字&lt;/li&gt;</code>、<strong>松散</strong>（项间有空行）时 <code>&lt;li&gt;&lt;p&gt;文字&lt;/p&gt;&lt;/li&gt;</code>；
 遵守 <code>sane_lists</code>：列表前要有空行）/ 引用（含嵌套、<strong>懒续行</strong>（不写 <code>&gt;</code> 的续行仍属引用）、引用里也能放代码块）/
 分隔线 / 原始 HTML 块透传。</p>
 <p>行内：<code>`code`</code>（<strong>开闭反引号等长</strong>）/ <code>**粗**</code> / <code>*斜*</code> / <code>~~删除线~~</code> /
-<code>[链接](url)</code> / <code>![图](src)</code> / <strong>行内 HTML 透传</strong>（<code>&lt;br&gt;</code> <code>&lt;kbd&gt;</code> <code>&lt;sub&gt;</code>…）/ <code>\</code> 转义。</p>
+<code>[链接](url)</code> / <code>![图](src)</code> / <code>![图](src "标题")</code>（title 属性）/ <strong>行内 HTML 透传</strong>（<code>&lt;br&gt;</code> <code>&lt;kbd&gt;</code> <code>&lt;sub&gt;</code>…）/ <code>\</code> 转义。</p>
 <h2 id="刻意不支持">刻意不支持</h2>
 <ul>
 <li>下划线斜体 <code>_x_</code>：Leno 代码里 <code>snake_case</code> 满地都是，误判代价远大于收益；</li>
@@ -103,9 +104,9 @@ main() {
 </thead>
 <tbody>
 <tr>
-<td>引用里的围栏代码 <code>&gt; </code>``leno`</td>
-<td>不认识，退化成段落 + 行内 <code>&lt;code&gt;</code>（文档站为此写了 <code>lift_blockquote_fences</code> 补丁）</td>
-<td>正常渲染成 <code>&lt;pre&gt;&lt;code&gt;</code></td>
+<td>引用里的围栏代码 <code>&gt; </code>``leno<code>| 不认识，退化成段落 + 行内</code><code><code>（文档站为此写了 </code>lift_blockquote_fences<code>补丁） | 正常渲染成</code><pre><code>`</td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td><code>~~删除线~~</code></td>
@@ -114,8 +115,8 @@ main() {
 </tr>
 <tr>
 <td>围栏闭合</td>
-<td>宽松：任意 <code>```</code> 都算闭合 ⇒ 漏写一个闭合就奇偶颠倒、整篇被吞</td>
-<td>严格：只认<strong>裸</strong> <code>```</code>（CommonMark）⇒ 出错只影响那一段</td>
+<td>宽松：任意 <code>```</code> 都算闭合 ⇒ 漏写一个闭合就奇偶颠倒、整篇被吞 | 严格：只认<strong>裸</strong> <code>```</code>（CommonMark）⇒ 出错只影响那一段</td>
+<td></td>
 </tr>
 </tbody>
 </table>

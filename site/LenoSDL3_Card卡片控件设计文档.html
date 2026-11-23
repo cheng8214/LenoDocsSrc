@@ -739,8 +739,8 @@ build\leno.exe leno_gui\应用\影视海报墙\movie_wall.leno
 <hr>
 <h2 id="十-遗留与后续-p1-p2-p3-待办">十、遗留与后续（P1/P2/P3 待办）</h2>
 <ul>
-<li>[x] 圆角图片（<code>image_radius</code>）：<strong>已落地</strong> —— 复用 <code>sdl_renderer</code> 的圆角覆盖率蒙版 + 离屏合成（<code>drawTextureRounded</code>，混合模式为自定义「只乘 alpha」<code>maskAlphaBlend()</code> ✓）</li>
-<li>[x] <strong>右键上下文菜单</strong>（2026-10-13 补 ✓ <strong>框架缺口</strong>：媒体库/商品墙必用的「右键 → 播放/收藏/详情」以前挂不上，只有 <code>Table</code>/<code>TreeView</code>/<code>ListBox</code> 有 ✓）：
+<li><input type="checkbox" disabled checked> 圆角图片（<code>image_radius</code>）：<strong>已落地</strong> —— 复用 <code>sdl_renderer</code> 的圆角覆盖率蒙版 + 离屏合成（<code>drawTextureRounded</code>，混合模式为自定义「只乘 alpha」<code>maskAlphaBlend()</code> ✓）</li>
+<li><input type="checkbox" disabled checked> <strong>右键上下文菜单</strong>（2026-10-13 补 ✓ <strong>框架缺口</strong>：媒体库/商品墙必用的「右键 → 播放/收藏/详情」以前挂不上，只有 <code>Table</code>/<code>TreeView</code>/<code>ListBox</code> 有 ✓）：
       API 与那三者<strong>同名同义</strong>（<code>addContextItem</code> / <code>on_context_select(func(id):void)</code> / <code>on_context_will_open</code> /
       <code>clearContextItems</code> / <code>is_context_menu_open</code> / <code>set_context_menu_enabled</code> …）；
       菜单本体共用 <code>sdl_menu</code>（弹出/命中/关闭/边界夹紧都由它管 ✓、窗口第二遍 <code>renderContextMenus</code> 统一画 ✓）；
@@ -748,14 +748,14 @@ build\leno.exe leno_gui\应用\影视海报墙\movie_wall.leno
       顺带修掉一个旧毛病：<strong>右键也会触发整卡 <code>on_click</code></strong>（等于"右键打开详情"✗）—— 现在右键先拦下并弹菜单 ✓
       （回归件：<code>leno_gui/应用/影视海报墙/movie_wall.leno</code> 的 <code>WALL_RCLICK=n</code> 钩子 —— 注入右键 + 3 帧后点第 3 项，
       日志应<strong>各只出现一次</strong> ✓ 实测 ✓）</li>
-<li>[x] 多角标（<code>badge</code> 单值 → <code>badges</code> / <code>add_badge</code>，旧键与旧行为全保留 ⇒ 零破坏 ✓）</li>
-<li>[ ] <strong>列表行变体（图在左、文/内容在右）</strong>：当前 <code>image_pos</code> 固定"图在上" ⇒ 真列表行需要新增
+<li><input type="checkbox" disabled checked> 多角标（<code>badge</code> 单值 → <code>badges</code> / <code>add_badge</code>，旧键与旧行为全保留 ⇒ 零破坏 ✓）</li>
+<li><input type="checkbox" disabled> <strong>列表行变体（图在左、文/内容在右）</strong>：当前 <code>image_pos</code> 固定"图在上" ⇒ 真列表行需要新增
   <code>image_pos: left/right</code> + <code>image_w</code>（图占宽/占高两种口径）——<strong>下一批的首选项</strong></li>
-<li>[ ] <code>content_clip</code> 的 D3D 实测（与 <code>docs/LenoSDL3_裁剪过多导致闪烁排查记录.md</code> 的记录交叉验证）</li>
-<li>[ ] 圆角图的 9 宫格优化：现在每张卡每帧一次离屏合成（同尺寸共享 target ⇒ 已不算多）；
+<li><input type="checkbox" disabled> <code>content_clip</code> 的 D3D 实测（与 <code>docs/LenoSDL3_裁剪过多导致闪烁排查记录.md</code> 的记录交叉验证）</li>
+<li><input type="checkbox" disabled> 圆角图的 9 宫格优化：现在每张卡每帧一次离屏合成（同尺寸共享 target ⇒ 已不算多）；
   想再省可以"同尺寸同图 ⇒ 缓存合成结果"，但会占显存 ⇒ 待评估</li>
-<li>[ ] 虚拟化网格（<code>ScrollView</code> 侧）：按可见区只 <code>render</code> 命中行 —— 这才是"上千张海报"的瓶颈</li>
-<li>[ ] 键盘焦点链（框架级）：<code>Tab</code> 能在卡片/按钮间移动</li>
+<li><input type="checkbox" disabled> 虚拟化网格（<code>ScrollView</code> 侧）：按可见区只 <code>render</code> 命中行 —— 这才是"上千张海报"的瓶颈</li>
+<li><input type="checkbox" disabled> 键盘焦点链（框架级）：<code>Tab</code> 能在卡片/按钮间移动</li>
 </ul>
 <hr>
 <h2 id="十一-v2-实施记录-2026-10-13">十一、v2 实施记录（2026-10-13）</h2>

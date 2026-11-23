@@ -10023,8 +10023,8 @@ i = 49..99  → 000001b5ea3cec80  ✗（裸堆指针；且**恒定**⇒同一对
 <tr>
 <td>①</td>
 <td><strong>序言 §8.48 类型化形参快路径</strong>（<code>x86_64.c</code>，<strong>主因</strong>）</td>
-<td>对 <code>param_types[slot]==TYPE_INT</code> 的形参<strong>无条件</strong> <code>&lt;&lt;16 &gt;&gt;16</code> 取"int48 载荷" ✗ —— 可 <strong>bigint 的静态类型同样是 <code>int</code></strong>（值是 `0xFFFC</td>
-<td>对象指针`）⇒ <strong>标签被削掉、只剩裸指针</strong> ✗</td>
+<td>对 <code>param_types[slot]==TYPE_INT</code> 的形参<strong>无条件</strong> <code>&lt;&lt;16 &gt;&gt;16</code> 取"int48 载荷" ✗ —— 可 <strong>bigint 的静态类型同样是 <code>int</code></strong>（值是 <code>0xFFFC|对象指针</code>）⇒ <strong>标签被削掉、只剩裸指针</strong> ✗</td>
+<td>编译后的 <code>add64(int a, int b)</code> 拿到裸指针，其后全在指针上算 ✗</td>
 </tr>
 <tr>
 <td>②</td>
@@ -13167,7 +13167,7 @@ JIT 机器码返回非 0（bailout / <code>jit_callout_failed</code>）时，把
 <tr>
 <td>JIT 覆盖普查</td>
 <td><code>jit_probes\jit_census.ps1</code></td>
-<td>出直方图 ✓（看 `func</td>
+<td>出直方图 ✓（看 <code>func|函数体含循环</code> 等拒收理由）</td>
 </tr>
 </tbody>
 </table>

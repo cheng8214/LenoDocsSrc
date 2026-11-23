@@ -188,12 +188,12 @@ if (gen-&gt;last_emission.opcode == OP_CALL_NATIVE) {
 <h3 id="5-6-代码审查检查清单">5.6 代码审查检查清单</h3>
 <p>引入任何字节码修补型优化时，逐条确认：</p>
 <ul>
-<li>[ ] 是否检查了 <code>code[len-N]</code> 的字节值？如果是，<strong>停止</strong>，改用其他方案</li>
-<li>[ ] 优化的触发条件是否依赖特定指令长度？如果指令集未来新增变长指令，条件是否仍然安全？</li>
-<li>[ ] 操作数字节的取值范围是否与目标 opcode 的枚举值有重叠？（必然有，因为操作数字节是 0-255 全覆盖）</li>
-<li>[ ] 优化跳过 <code>OP_POP</code> 后，是否在所有可能的代码路径组合下都保证栈平衡？</li>
-<li>[ ] 是否有对应的 <code>_NOPUSH</code> / <code>_VOID</code> opcode 在 VM 端实现？</li>
-<li>[ ] 优化是否被 <code>.lenocache</code> 缓存？缓存失效后重新编译是否仍然正确？</li>
+<li><input type="checkbox" disabled> 是否检查了 <code>code[len-N]</code> 的字节值？如果是，<strong>停止</strong>，改用其他方案</li>
+<li><input type="checkbox" disabled> 优化的触发条件是否依赖特定指令长度？如果指令集未来新增变长指令，条件是否仍然安全？</li>
+<li><input type="checkbox" disabled> 操作数字节的取值范围是否与目标 opcode 的枚举值有重叠？（必然有，因为操作数字节是 0-255 全覆盖）</li>
+<li><input type="checkbox" disabled> 优化跳过 <code>OP_POP</code> 后，是否在所有可能的代码路径组合下都保证栈平衡？</li>
+<li><input type="checkbox" disabled> 是否有对应的 <code>_NOPUSH</code> / <code>_VOID</code> opcode 在 VM 端实现？</li>
+<li><input type="checkbox" disabled> 优化是否被 <code>.lenocache</code> 缓存？缓存失效后重新编译是否仍然正确？</li>
 </ul>
 <h2 id="6-时间线">6. 时间线</h2>
 <table>

@@ -528,14 +528,14 @@ export func createHBox(Dict opts): HBox { HBox b = new HBox(); b.set(opts); retu
 其余控件可按同一模式增量补（键表直接抄 <code>_opts_keys()</code>）。</p>
 <h2 id="13-验收清单">13. 验收清单</h2>
 <ul>
-<li>[ ] <code>@optkeys(["w"])</code> + <code>createHBox({w: 1, tip: "x"})</code> ⇒ 编译期报 <code>tip</code>，带"见 xxx:行"</li>
-<li>[ ] <code>@optkeys("*")</code> ⇒ 不报</li>
-<li>[ ] <code>createHBox(o)</code>（非字面量）⇒ 不报</li>
-<li>[ ] <code>@optkey</code>（拼错注解）⇒ 报"不认识的注解 + 是不是想要 @optkeys"</li>
-<li>[ ] <code>@optkeys</code> 挂到 <code>var</code> 上 ⇒ 报"注解只能用在……"</li>
-<li>[ ] <code>--check</code> 全量套件零误报（存量 532 个用例）</li>
-<li>[ ] 对账用例通过（声明 ⊇ 实现读到的键）</li>
-<li>[ ] 删掉 <code>dochk.check</code> 后 Aria 全功能回归正常</li>
+<li><input type="checkbox" disabled> <code>@optkeys(["w"])</code> + <code>createHBox({w: 1, tip: "x"})</code> ⇒ 编译期报 <code>tip</code>，带"见 xxx:行"</li>
+<li><input type="checkbox" disabled> <code>@optkeys("*")</code> ⇒ 不报</li>
+<li><input type="checkbox" disabled> <code>createHBox(o)</code>（非字面量）⇒ 不报</li>
+<li><input type="checkbox" disabled> <code>@optkey</code>（拼错注解）⇒ 报"不认识的注解 + 是不是想要 @optkeys"</li>
+<li><input type="checkbox" disabled> <code>@optkeys</code> 挂到 <code>var</code> 上 ⇒ 报"注解只能用在……"</li>
+<li><input type="checkbox" disabled> <code>--check</code> 全量套件零误报（存量 532 个用例）</li>
+<li><input type="checkbox" disabled> 对账用例通过（声明 ⊇ 实现读到的键）</li>
+<li><input type="checkbox" disabled> 删掉 <code>dochk.check</code> 后 Aria 全功能回归正常</li>
 </ul>
 <hr>
 <h2 id="14-键值类型检查-2026-11-01">14. 键值类型检查（2026-11-01）</h2>
@@ -691,15 +691,15 @@ if (got) type_free(got);                                         // 返回值是
 </table>
 <h3 id="14-7-验收清单">14.7 验收清单</h3>
 <ul>
-<li>[ ] <code>@optkeys(["visible:bool"])</code> + <code>createXxx({visible: "yes"})</code> ⇒ 编译期警告（期望 bool，实际 string）</li>
-<li>[ ] <code>{visible: flag}</code>（flag 是 string 变量）⇒ 同样报</li>
-<li>[ ] <code>{w: 30}</code> 对着 <code>"w:float"</code> ⇒ <strong>不报</strong>（int→float 合法）</li>
-<li>[ ] <code>{padding: 0}</code> 对着 <code>"padding:int"</code> ⇒ 不报；<code>{padding: 0.5}</code> 对着 <code>"padding:int"</code> ⇒ 报</li>
-<li>[ ] 不写类型的键（<code>"align"</code>）⇒ 传什么都不报</li>
-<li>[ ] <code>"headers:Array"</code> + <code>{headers: ["a"]}</code> ⇒ 不报；<code>{headers: "a,b"}</code> ⇒ 报</li>
-<li>[ ] 拼错类型词（<code>"visible:bolean"</code>）⇒ 不报错、退化成不查</li>
-<li>[ ] <code>--check</code> 全量套件零误报；Aria（5000+ 行、大量控件调用）零误报</li>
-<li>[ ] 断言用例 <code>assert/test_anno_optkeys_type.leno</code></li>
+<li><input type="checkbox" disabled> <code>@optkeys(["visible:bool"])</code> + <code>createXxx({visible: "yes"})</code> ⇒ 编译期警告（期望 bool，实际 string）</li>
+<li><input type="checkbox" disabled> <code>{visible: flag}</code>（flag 是 string 变量）⇒ 同样报</li>
+<li><input type="checkbox" disabled> <code>{w: 30}</code> 对着 <code>"w:float"</code> ⇒ <strong>不报</strong>（int→float 合法）</li>
+<li><input type="checkbox" disabled> <code>{padding: 0}</code> 对着 <code>"padding:int"</code> ⇒ 不报；<code>{padding: 0.5}</code> 对着 <code>"padding:int"</code> ⇒ 报</li>
+<li><input type="checkbox" disabled> 不写类型的键（<code>"align"</code>）⇒ 传什么都不报</li>
+<li><input type="checkbox" disabled> <code>"headers:Array"</code> + <code>{headers: ["a"]}</code> ⇒ 不报；<code>{headers: "a,b"}</code> ⇒ 报</li>
+<li><input type="checkbox" disabled> 拼错类型词（<code>"visible:bolean"</code>）⇒ 不报错、退化成不查</li>
+<li><input type="checkbox" disabled> <code>--check</code> 全量套件零误报；Aria（5000+ 行、大量控件调用）零误报</li>
+<li><input type="checkbox" disabled> 断言用例 <code>assert/test_anno_optkeys_type.leno</code></li>
 </ul>
 <h3 id="14-8-实现检查清单-防漏">14.8 实现检查清单（防漏）</h3>
 <ol>
