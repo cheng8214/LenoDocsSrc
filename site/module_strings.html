@@ -380,6 +380,11 @@ while pos &gt;= 0 {
 <blockquote>
 <p>⚠ 边界（2026-11-16 实测）：<code>rep(负数)</code> ⇒ <code>""</code>（当 0 处理，不报错）；<code>rep(n)</code> 的结果长度
 是 <code>len * n</code>，对大串 × 大 n 要自己估一下内存（没有上限保护）。</p>
+<p>★ <strong>别名（2026-11-23）</strong>：<code>strings.repeat(n)</code> 与 <code>rep(n)</code> <strong>完全等价</strong>（同一实现）。
+同理 <code>upper</code> / <code>lower</code> 是 <code>to_upper</code> / <code>to_lower</code> 的别名。
+只有这三个名字有别名，其余方法保持单一名字（仓库里仍反对"同一功能两个叫法"）——
+理由是实测 <code>rep</code> / <code>to_upper</code> 是<strong>最常写错的两个</strong>，而 <code>repeat</code> / <code>upper</code> / <code>lower</code>
+在各家 stdlib 里几乎就是唯一写法，写成它们却报错会让人以为语言不支持。</p>
 </blockquote>
 <h4 id="count-substr"><code>count(substr)</code></h4>
 <p>统计子串在字符串中出现的次数（不重叠计数）。</p>
@@ -764,7 +769,16 @@ format(&quot;Char: %c&quot;, 65)                      // &quot;Char: A&quot;
 - <code>format</code> 既可以作为全局函数使用，也可以通过 <code>strings.format</code> 模块调用
 - <code>%s</code> 对非字符串参数会尝试自动转换（int/float/bool），无法转换的显示 <code>&lt;value&gt;</code>
 - 类型不匹配时（如 <code>%d</code> 传入字符串）显示 <code>&lt;type_error&gt;</code>
-- 参数不足时显示 <code>&lt;missing&gt;</code></p>
+- 参数不足时显示 <code>&lt;missing&gt;</code>
+- <strong><code>%s</code> 的宽度与精度都按「字符」计</strong>（2026-11-23 修；此前按<strong>字节</strong>，一个汉字 3 字节
+  ⇒ <code>%-10s</code> 对中文只补 1~2 个空格，表格列必然错位）。与 <code>strings.len</code> / <code>pad_end</code> 同一口径：</p>
+<pre><code class="language-leno">main() {
+    // 中文按 10「列」对齐（不是 10 字节）
+    print(&quot;[&quot; + format(&quot;%-10s|&quot;, &quot;中文&quot;) + &quot;]\n&quot;)   // [中文        |]
+    print(&quot;[&quot; + format(&quot;%10s|&quot;, &quot;中文&quot;) + &quot;]\n&quot;)    // [        中文|]
+    print(&quot;[&quot; + format(&quot;%.2s&quot;, &quot;中文字符&quot;) + &quot;]\n&quot;) // [中文]（按字符截断）
+}
+</code></pre>
 <hr>
 <h3 id="字符编码">字符编码</h3>
 <h4 id="byte-pos"><code>byte(pos?)</code></h4>
