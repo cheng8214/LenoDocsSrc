@@ -8,7 +8,7 @@
 >
 > 新的 7 类（**分类逻辑在 `build_html.py` 的 `CATEGORIES`，不靠本文件**）：
 >   
-> ① 入门 · 先读这些（6） ② 模块 API 参考（19） ③ 使用指南（9）
+> ① 入门 · 先读这些（6） ② 模块 API 参考（20） ③ 使用指南（9）
 >   
 > ④ 语言设计与实现（14） ⑤ GUI · 平台（11）
 >   
@@ -1253,7 +1253,7 @@
 | [加密算法示例指南.md](加密算法示例指南.md) | `examples/` 里纯 Leno 密码学算法导览 | ✅ |
 | [Leno跨模块clib开发经验.md](Leno跨模块clib开发经验.md) | 跨模块 clib 的踩坑与写法 | ✅ |
 
-## 二、模块 API 参考（18 篇）
+## 二、模块 API 参考（20 篇）
 
 | 文档 | 内容 |
 |---|---|
@@ -1276,6 +1276,7 @@
 | [module_cstructs.md](module_cstructs.md) | cstruct 内存布局 |
 | [module_threads_api.md](module_threads_api.md) | 线程 / Channel（命名带 `_api`，历史遗留） |
 | [module_web.md](module_web.md) | **LenoWeb**（HTTP / HTML / 字符集 / **gzip 解压** / 爬虫 / 无头浏览器）；2026-10-14 首份文档 |
+| [module_reflect.md](module_reflect.md) | **运行期只读反射**（字段名 / 声明类型 / 方法名；覆盖 struct 与 cstruct；不做 set 与 enum 值反查）；2026-11-24 新增 |
 
 ## 三、GUI / LenoSDL3
 

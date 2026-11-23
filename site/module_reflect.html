@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>reflect 模块 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="module_reflect.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">02 模块 API 参考</a><span class="sep">/</span><span class="here">reflect 模块</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details open><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_reflect.html" class="active" aria-current="page">reflect 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">19</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>07 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">30</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="reflect-模块">reflect 模块</h1>
+<p>运行期<strong>只读反射</strong>：把编译器早就写进字节码的类型元数据（字段名、字段声明类型、方法名）
+在脚本里开放出来。</p>
+<pre><code class="language-leno">import reflect
+</code></pre>
+<blockquote>
+<p><strong>一句话定位</strong>：<code>jsons.fill</code> / <code>jsons.encode</code> 一直在用这些元数据，但只有 C 侧能读。
+<code>reflect</code> 把同一份数据开放给脚本，于是"通用序列化 / 表单 / 表格列 / 文档生成"
+可以写一次，而不是每个 struct 抄一遍。</p>
+</blockquote>
+<hr>
+<h2 id="为什么需要它">为什么需要它</h2>
+<p>在这之前，想拿"一个 struct 有哪些字段"只有两条路：</p>
+<pre><code class="language-leno">// ❌ 手抄字段名：加字段忘了改这里，不报错，只是少一行
+Array[string] COLS = [&quot;id&quot;, &quot;name&quot;, &quot;size&quot;]
+
+// ❌ 每个类型写一份 to_dict
+func song_to_dict(Song s):Dict[string, any] {
+    return {&quot;name&quot;: s.name, &quot;dur&quot;: s.dur}
+}
+</code></pre>
+<p>两种都是"抄漏一处不会错，只会少东西"。而编译器<strong>本来就知道</strong> —— <code>ObjStructDef</code> 里有
+字段名、字段声明类型、<code>Array[Item]</code> 的元素 struct 名、<code>Dict[K,V]</code> 的键值类型、
+完整容器类型树（<code>Array[Array[int]]</code> 也逐层记录）、可空标记、泛型实参名、方法表。</p>
+<p><code>reflect</code> 只是把那层数据原样读出来，不引入任何新机制、不改字节码格式。</p>
+<hr>
+<h2 id="api-总表">API 总表</h2>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>签名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reflect.kind(v)</code></td>
+<td><code>(any) -&gt; string</code></td>
+<td>宽类别，见下表。<strong>对任意值都有定义</strong>，不抛错</td>
+</tr>
+<tr>
+<td><code>reflect.type_name(v)</code></td>
+<td><code>(any) -&gt; string</code></td>
+<td>有声明名的给声明名（<code>"Song"</code> / <code>"Vec2"</code>），其余与 <code>kind</code> 同名</td>
+</tr>
+<tr>
+<td><code>reflect.fields(v)</code></td>
+<td><code>(any) -&gt; Array[string]</code></td>
+<td>字段名，<strong>按声明顺序</strong>（与 <code>jsons.encode</code> 的顺序同源）</td>
+</tr>
+<tr>
+<td><code>reflect.field_count(v)</code></td>
+<td><code>(any) -&gt; int</code></td>
+<td>字段个数</td>
+</tr>
+<tr>
+<td><code>reflect.has_field(v, name)</code></td>
+<td><code>(any, string) -&gt; bool</code></td>
+<td>有没有这个字段。<strong>探测用，不抛错</strong></td>
+</tr>
+<tr>
+<td><code>reflect.get(v, name)</code></td>
+<td><code>(any, string) -&gt; any</code></td>
+<td>字段值原样（引用类型是<strong>同一个对象</strong>）。字段名不存在 ⇒ 抛错</td>
+</tr>
+<tr>
+<td><code>reflect.field_type(v, name)</code></td>
+<td><code>(any, string) -&gt; string</code></td>
+<td>字段的声明类型，Leno 写法。字段名不存在 ⇒ 抛错</td>
+</tr>
+<tr>
+<td><code>reflect.methods(v)</code></td>
+<td><code>(any) -&gt; Array[string]</code></td>
+<td>写在 <code>struct</code> 体内的方法名</td>
+</tr>
+</tbody>
+</table>
+<p><code>v</code> 可以是 <strong>GC struct</strong>、<strong>cstruct</strong>、或<strong>带载荷 enum</strong>（三者走同一套 API）。
+其余类型（<code>int</code> / <code>Array</code> / <code>Dict</code>…）只有 <code>kind</code> / <code>type_name</code> 有意义 —— 传给
+<code>fields</code> / <code>get</code> 之类会<strong>明确报错</strong>，不是静默给空结果。</p>
+<hr>
+<h2 id="kind-返回什么"><code>kind</code> 返回什么</h2>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th><code>kind</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>null</code></td>
+<td><code>"null"</code></td>
+</tr>
+<tr>
+<td><code>true</code></td>
+<td><code>"bool"</code></td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td><code>"int"</code></td>
+</tr>
+<tr>
+<td><code>2.5</code></td>
+<td><code>"float"</code></td>
+</tr>
+<tr>
+<td><code>"x"</code></td>
+<td><code>"string"</code></td>
+</tr>
+<tr>
+<td><code>[1,2]</code></td>
+<td><code>"array"</code></td>
+</tr>
+<tr>
+<td><code>{"a":1}</code></td>
+<td><code>"dict"</code></td>
+</tr>
+<tr>
+<td>大整数</td>
+<td><code>"bigint"</code></td>
+</tr>
+<tr>
+<td><code>new Song()</code></td>
+<td><code>"struct"</code></td>
+</tr>
+<tr>
+<td><code>Vec2.malloc()</code></td>
+<td><code>"cstruct"</code></td>
+</tr>
+<tr>
+<td><code>Msg.progress(3, 10)</code></td>
+<td><code>"enum"</code></td>
+</tr>
+<tr>
+<td>闭包 / 函数</td>
+<td><code>"func"</code></td>
+</tr>
+<tr>
+<td><code>File</code> / <code>Socket</code> / <code>Channel</code> / <code>Thread</code> / <code>Future</code></td>
+<td><code>"File"</code> / <code>"Socket"</code> / …</td>
+</tr>
+<tr>
+<td>FFI 指针</td>
+<td><code>"Ptr"</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>带载荷 <code>enum</code> 在运行期是"降级 struct"，<code>kind</code> 仍报 <code>"enum"</code> —— 对外语义是 enum。</p>
+</blockquote>
+<hr>
+<h2 id="field_type-的类型串"><code>field_type</code> 的类型串</h2>
+<p>风格与报错信息、LSP hover、<code>type_to_string</code> <strong>一致</strong>，不另起一套写法：</p>
+<table>
+<thead>
+<tr>
+<th>字段声明</th>
+<th><code>field_type</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int id = 0</code></td>
+<td><code>"int"</code></td>
+</tr>
+<tr>
+<td><code>string name = ""</code></td>
+<td><code>"string"</code></td>
+</tr>
+<tr>
+<td><code>string? note = null</code></td>
+<td><code>"string?"</code></td>
+</tr>
+<tr>
+<td><code>Array[int] nums = []</code></td>
+<td><code>"Array[int]"</code></td>
+</tr>
+<tr>
+<td><code>Array[Item] items = []</code></td>
+<td><code>"Array[struct Item]"</code></td>
+</tr>
+<tr>
+<td><code>Dict[string, int] score = {}</code></td>
+<td><code>"Dict[string, int]"</code></td>
+</tr>
+<tr>
+<td><code>Item? one = null</code></td>
+<td><code>"struct Item?"</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>cstruct</code> 那一侧如实给<strong>宽度</strong>（数据导向下 <code>i32</code> 和 <code>int</code> 不是一回事）：</p>
+<table>
+<thead>
+<tr>
+<th>cstruct 字段</th>
+<th><code>field_type</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>i32 id</code></td>
+<td><code>"i32"</code></td>
+</tr>
+<tr>
+<td><code>u8 flag</code></td>
+<td><code>"u8"</code></td>
+</tr>
+<tr>
+<td><code>f32 ratio</code></td>
+<td><code>"f32"</code></td>
+</tr>
+<tr>
+<td><code>u8 data[4]</code></td>
+<td><code>"u8[4]"</code></td>
+</tr>
+<tr>
+<td><code>u32 bits : 3</code></td>
+<td><code>"u32 : 3"</code></td>
+</tr>
+<tr>
+<td><code>Ptr[i32] p</code></td>
+<td><code>"Ptr[i32]"</code></td>
+</tr>
+<tr>
+<td><code>Vec2 inner</code></td>
+<td><code>"struct Vec2"</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="例子-通用-struct-dict">例子：通用 struct → Dict</h2>
+<p>这是反射最直接的收益 —— 一个函数覆盖所有类型：</p>
+<pre><code class="language-leno">import reflect
+
+struct Song {
+    string name = &quot;&quot;
+    int dur = 0
+}
+
+func to_dict(any obj):Dict[string, any] {
+    Dict[string, any] out = {}
+    var fs = reflect.fields(obj)
+    for fs to f {
+        out[f] = reflect.get(obj, f)
+    }
+    return out
+}
+
+main() {
+    var s = new Song(name = &quot;晴天&quot;, dur = 269)
+    var d = to_dict(s)
+    print(_str(d[&quot;name&quot;]))     // 晴天
+    print(_str(d[&quot;dur&quot;]))      // 269
+}
+</code></pre>
+<blockquote>
+<p><code>fields</code> 的顺序就是声明顺序，所以 <code>to_dict</code> 的结果在 <code>Dict</code> 里也是稳定的插入顺序。</p>
+</blockquote>
+<hr>
+<h2 id="例子-按类型分派-表格-表单">例子：按类型分派（表格 / 表单）</h2>
+<pre><code class="language-leno">import reflect
+
+struct Row {
+    int id = 0
+    string title = &quot;&quot;
+    Array[string] tags = []
+}
+
+func describe(any obj) {
+    var fs = reflect.fields(obj)
+    for fs to f {
+        var t = reflect.field_type(obj, f)
+        if t == &quot;int&quot; {
+            print(f + &quot; 是整数&quot;)
+        } else if t == &quot;Array[string]&quot; {
+            print(f + &quot; 是字符串数组&quot;)
+        } else {
+            print(f + &quot; 是 &quot; + t)
+        }
+    }
+}
+
+main() {
+    describe(new Row())
+}
+</code></pre>
+<hr>
+<h2 id="对-cstruct">对 cstruct</h2>
+<pre><code class="language-leno">import reflect
+
+cstruct V3 {
+    f32 x
+    f32 y
+    f32 z
+}
+
+main() {
+    var v = V3.malloc()
+    v.x = 1.5
+
+    print(reflect.kind(v))          // cstruct
+    print(reflect.type_name(v))     // V3
+    print(reflect.field_type(v, &quot;x&quot;))  // f32
+
+    var xv = reflect.get(v, &quot;x&quot;)
+    if xv is float =&gt; xf {
+        print(_str(xf))             // 1.5
+    }
+
+    v.free()
+}
+</code></pre>
+<p><code>reflect.get</code> 对 cstruct 和 VM 的字段指令走<strong>同一条存活判定</strong>：<code>free()</code> / <code>free_all()</code>
+之后读会抛错，不会读已释放内存。</p>
+<hr>
+<h2 id="带载荷-enum">带载荷 enum</h2>
+<pre><code class="language-leno">import reflect
+
+enum Msg {
+    progress(int done, int total)
+    finished()
+}
+
+main() {
+    var m = Msg.progress(3, 10)
+    print(reflect.kind(m))            // enum
+    print(_str(reflect.fields(m).len()))  // 0
+}
+</code></pre>
+<p><code>fields</code> / <code>field_count</code> 对带载荷 enum 返回<strong>空</strong> —— 它的字段是 <code>tag</code> / <code>p0</code> / <code>p1</code>
+这类内部表示，不是对外契约。读载荷请用 <code>case</code>：</p>
+<pre><code class="language-leno">switch m {
+    case Msg.progress(d, t) { print(_str(d) + &quot;/&quot; + _str(t)) }
+    case Msg.finished() { print(&quot;done&quot;) }
+}
+</code></pre>
+<hr>
+<h2 id="有意不做的三件事">有意不做的三件事</h2>
+<table>
+<thead>
+<tr>
+<th>没有</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reflect.set(v, name, val)</code></td>
+<td>写已有两条<strong>安全</strong>通道：<code>s.f = x</code>（编译期检查）、<code>jsons.fill(s, dict)</code>（按声明类型转换）。<code>set</code> 会绕过类型检查，<code>set(s, "age", "abc")</code> 要跑到很远才炸 —— 与"写错就要报出来"相反</td>
+</tr>
+<tr>
+<td><code>reflect.enum_members(e)</code> / 值反查名字</td>
+<td>本语言的 enum 成员运行期就是 <code>int</code> 常量（不带载荷时连对象都没有）⇒ 从 <code>1</code> 无从知道它属于哪个 enum。<strong>靠猜的 API 比没有更糟</strong>；按名取成员用 <code>Color.RED</code> 这类编译期常量</td>
+</tr>
+<tr>
+<td>宏 / 语法改写</td>
+<td>会削弱定向诊断（报错行号指向展开产物、<code>--check</code> 的处方失效）。这是本语言最稀缺的能力，不拿它换元编程</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="与-jsons-的分工">与 <code>jsons</code> 的分工</h2>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>用哪个</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>struct ↔ JSON</td>
+<td><code>jsons.encode</code> / <code>jsons.fill</code></td>
+</tr>
+<tr>
+<td>struct ← <code>Dict</code>（DB 行）</td>
+<td><code>jsons.fill</code></td>
+</tr>
+<tr>
+<td>遍历字段（展示 / 表格 / 表单）</td>
+<td><code>reflect.fields</code> + <code>reflect.get</code></td>
+</tr>
+<tr>
+<td>按声明类型分派</td>
+<td><code>reflect.field_type</code></td>
+</tr>
+<tr>
+<td>按下标/名字读写单个已知字段</td>
+<td>直接 <code>s.field</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>reflect</code> 只回答"有什么"，不负责"怎么变成 JSON"—— 那件事 <code>jsons</code> 已经做对了
+（含容器逐层转换、字符串转数字、未知字段忽略）。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#为什么需要它">为什么需要它</a></li><li><a href="#api-总表">API 总表</a></li><li><a href="#kind-返回什么">kind 返回什么</a></li><li><a href="#field_type-的类型串">field_type 的类型串</a></li><li><a href="#例子-通用-struct-dict">例子：通用 struct → Dict</a></li><li><a href="#例子-按类型分派-表格-表单">例子：按类型分派（表格 / 表单）</a></li><li><a href="#对-cstruct">对 cstruct</a></li><li><a href="#带载荷-enum">带载荷 enum</a></li><li><a href="#有意不做的三件事">有意不做的三件事</a></li><li><a href="#与-jsons-的分工">与 jsons 的分工</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="module_rands.html">← 上一篇</a><a href="module_regexs.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

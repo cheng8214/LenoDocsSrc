@@ -23,7 +23,7 @@ export var SITE_TITLE = "Leno Docs"
 export var CATEGORIES = [
     cat("01 入门 · 先读这些", false, "第一次接触 Leno：从教程到惯用写法，按顺序读",
         ["Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md", "示例程序导览.md", "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md", "Leno_规范草稿.md", "区间口径约定.md"]),
-    cat("02 模块 API 参考", false, "19 个标准模块的函数清单 —— 写代码时最常翻的",
+    cat("02 模块 API 参考", false, "20 个标准模块的函数清单 —— 写代码时最常翻的",
         ["PREFIX:module_"]),
     cat("03 使用指南", false, "按任务查：import / 打包 / 并发 / FFI / 加密 / GUI 布局",
         ["SUFFIX:使用指南.md", "并发选择指引.md", "布局配方.md", "包管理与安装使用指南.md", "单文件打包使用指南.md", "Leno跨模块clib开发经验.md", "加密算法示例指南.md"]),
@@ -48,5 +48,5 @@ export var DESC_FALLBACK = {"idioms": "高频惯用写法：数组 / 字典构�
 export var EXT_DISPLAY = {"_总览": "扩展模块总览", "LenoCLI": "CLI · 命令行解析", "LenoCompress": "Compress · 压缩", "LenoCrypto": "Crypto · 加密", "LenoCSV": "CSV · 表格读写", "LenoFS": "FS · 文件系统", "LenoGlob": "Glob · 通配匹配", "LenoHTTP": "HTTP · 服务端", "LenoLog": "Log · 日志", "LenoMusic": "Music · 音频", "LenoQR": "QR · 二维码", "LenoResult": "Result · 错误与空值", "LenoSDL3": "SDL3 · GUI 渲染", "LenoSqlite": "sqlite3 · 数据库", "LenoStats": "Stats · 统计", "LenoUUID": "UUID · 唯一 ID", "LenoWeb": "Web · HTTP/HTML/爬虫", "LenoXLSX": "XLSX · Excel", "LenoZip": "Zip · 归档"}
 
 // 首页「从这里开始」的快捷卡：(标题, 说明, 链接, 角标)
-export var PATHS = [["零基础学 Leno", "从没写过代码？从这里开始", "Leno零基础入门.html", "① 小白入门"], ["装好并跑起来", "拿 exe → 第一个项目 → 打包成 exe", "安装与第一个项目.html", "② 安装上手"], ["抄一段就用", "读写文件 / JSON / 参数 / 线程 15 个现成任务", "常见任务cookbook.html", "③ 任务配方"], ["学 Leno（全貌）", "语法 + 类型系统 + 模块", "Leno入门教程.html", "入门教程"], ["看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"], ["查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"], ["查模块 API", "19 个标准模块的函数清单", "module_strings.html", "模块索引"], ["扩展模块", "压缩 / 加密 / HTTP / SQLite / Web / GUI…", "扩展模块/_总览.html", "独立包"]]
+export var PATHS = [["零基础学 Leno", "从没写过代码？从这里开始", "Leno零基础入门.html", "① 小白入门"], ["装好并跑起来", "拿 exe → 第一个项目 → 打包成 exe", "安装与第一个项目.html", "② 安装上手"], ["抄一段就用", "读写文件 / JSON / 参数 / 线程 15 个现成任务", "常见任务cookbook.html", "③ 任务配方"], ["学 Leno（全貌）", "语法 + 类型系统 + 模块", "Leno入门教程.html", "入门教程"], ["看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"], ["查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"], ["查模块 API", "20 个标准模块的函数清单", "module_strings.html", "模块索引"], ["扩展模块", "压缩 / 加密 / HTTP / SQLite / Web / GUI…", "扩展模块/_总览.html", "独立包"]]
 
