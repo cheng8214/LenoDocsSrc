@@ -188,19 +188,17 @@ ffi.write_int8(buf, off, 32); ffi.write_int8(buf, off+1, 0)
 混合平台同理：<code>.dll</code> 与 <code>.so</code> 放同一层，看一眼分不清谁是谁的产物。</p>
 <h3 id="两条配套约束-漏了就跑不起来">两条配套约束（漏了就跑不起来）</h3>
 <ol>
-<li>
-<p><strong><code>ffi.load</code> 要能吃子目录相对路径。</strong>
+<li><strong><code>ffi.load</code> 要能吃子目录相对路径。</strong>
    它原来的自动搜索会把传入路径<strong>剥成纯文件名</strong>（<code>filename = last_sep + 1</code>）再拼模块目录
    ⇒ <code>ffi.load("win/quirc.dll")</code> 永远命中不了子目录。
    已在 <code>src/module/ffi/ffi.c</code> 补了 2a-2「模块目录 + 完整相对路径」，<strong>并且 2c
    （遍历所有已加载模块目录那一轮）也补了</strong> —— 编译期内联的模块 <code>source_path</code> 可能为空，
-   <code>mod_dir</code> 取不到时 2a/2a-2/2b 全跳过，真正救场的是 2c。</p>
-</li>
-<li>
-<p><strong>loader 要「子目录 → 裸名」两路。</strong>
+   <code>mod_dir</code> 取不到时 2a/2a-2/2b 全跳过，真正救场的是 2c。</li>
+</ol>
+<ol>
+<li><strong>loader 要「子目录 → 裸名」两路。</strong>
    打包时 <code>collector_add</code> 只取<strong>文件名</strong>复制到 exe 同目录（子目录前缀被剥掉）
-   ⇒ 打包产物里没有 <code>win/</code> 这层，只能按纯名字找到。</p>
-</li>
+   ⇒ 打包产物里没有 <code>win/</code> 这层，只能按纯名字找到。</li>
 </ol>
 <pre><code class="language-leno">// 平台子目录优先，兜底裸文件名（打包产物 / 旧布局）
 try { g_lib = ffi.load(libPath(&quot;SDL3&quot;)) }
@@ -245,7 +243,8 @@ catch e { g_lib = ffi.load(libBare(&quot;SDL3&quot;)) }
 <strong>必须排在 <code>__linux__</code> 之前</strong>（bionic 同时定义 <code>__linux__</code>）。
 这是<strong>行为变更</strong>：原来 <code>_os() == "linux"</code> 在 Android 上成立，现在不成立
 （<code>LenoSys.isLinux()</code> 因此返回 false，语义上更正确）。
-要表达"POSIX 就行"必须写 <code>_os() == "linux" or _os() == "android"</code>。</p></main>
+要表达"POSIX 就行"必须写 <code>_os() == "linux" or _os() == "android"</code>。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-跨模块调用-clib-方法的正确姿势">1. 跨模块调用 clib 方法的正确姿势</a></li><li><a href="#2-返回类型标注限制">2. 返回类型标注限制</a></li><li><a href="#3-ffi-内存写入方法">3. ffi 内存写入方法</a></li><li><a href="#4-windows-dll-函数归属">4. Windows DLL 函数归属</a></li><li><a href="#5-模块结构约定">5. 模块结构约定</a></li><li><a href="#6-原生库按平台分目录-2026-11-19-起全模块统一">6. 原生库按平台分目录（2026-11-19 起全模块统一）</a></li><ul class="lv3"><li><a href="#布局">布局</a></li><li><a href="#为什么必须分目录">为什么必须分目录</a></li><li><a href="#两条配套约束-漏了就跑不起来">两条配套约束（漏了就跑不起来）</a></li><li><a href="#三个会吃时间坑">三个会吃时间坑</a></li><li><a href="#新增一个模块到新平台时的清单">新增一个模块到新平台时的清单</a></li><li><a href="#相关-_os-能分辨-android-了">相关：_os() 能分辨 Android 了</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="布局配方.html">← 上一篇</a><a href="加密算法示例指南.html">下一篇 →</a></nav>

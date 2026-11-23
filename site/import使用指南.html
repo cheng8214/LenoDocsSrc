@@ -213,10 +213,12 @@ main() {
 <li><strong>写</strong>（2026-10-25 起）：<code>m.变量 = 值</code> / <code>m.变量 += 值</code> 编译成
   <code>OP_INDEX_SET(值, 模块对象, "变量名")</code>，VM 按 <code>module-&gt;export_mappings</code> 写穿到
   <code>module-&gt;globals[槽位]</code> 并同步 exports ⇒ <strong>模块内外是同一份存储</strong>（此前 <code>m.x = v</code> 是
-  "零报错零效果"：赋值指令压根没生成）。</li>
+  "零报错零效果"：赋值指令压根没生成）。<ul>
 <li>⚠ <code>m.变量++</code> <strong>不支持</strong>（<code>++</code> 只用于变量或索引）；写 <code>m.变量 += 1</code>。</li>
 <li>⚠ 只能写 <code>export var</code>：<code>const</code> 变量、函数、类型、未导出成员都写不了（编译期拦）。</li>
 <li>⚠ 会按提供端声明的类型做检查（<code>m.count = "hi"</code> ⇒ 编译错误）。</li>
+</ul>
+</li>
 <li>跨模块改<strong>容器元素</strong>一直是引用语义（<code>c.items.add(1)</code>、<code>c.items[0] = 99</code> 改的是同一个
   对象 ✓）；<code>c.items = [...]</code> 换整个容器走上面那条写穿路径。</li>
 </ul>
@@ -787,10 +789,10 @@ main() {
 <p>三条纪律：
 1. <strong>允许并推荐</strong>：它与"自用 <code>use</code>"共用同一行语法、同一条实现 ✓（不必绕 <code>export</code>）
 2. <strong>意图靠注释说清</strong>：<code>use c.Vec3</code> 后面写一句 <code>// 传导：给下游用</code> —— 因为语法上区分不出来 ✓
-   （<code>use</code> 只有一种写法；本仓也<strong>没有</strong>"<code>use</code> 了没用"的诊断 ✓ 见 <code>语言陷阱速查</code> ㉝ 一带）
+（<code>use</code> 只有一种写法；本仓也<strong>没有</strong>"<code>use</code> 了没用"的诊断 ✓ 见 <code>语言陷阱速查</code> ㉝ 一带）
 3. <strong>★ 但</strong>：<strong>2026-10-12（US1）起优先直接写限定名</strong> ✓ —— 下游<strong>不必</strong>再依赖中间层传导：
-   谁是类型的<strong>定义者</strong>就写谁（<code>import "d.leno" as d</code> + <code>d.Vec3 v = …</code> ✓）。
-   ⇒ 传导链只在"想让下游少写一个 import"时才有必要 ✓</p>
+谁是类型的<strong>定义者</strong>就写谁（<code>import "d.leno" as d</code> + <code>d.Vec3 v = …</code> ✓）。
+⇒ 传导链只在"想让下游少写一个 import"时才有必要 ✓</p>
 <p><strong>决定：不引入 <code>export use</code></strong>（原 US4 的"另一半"）。理由：Rust 需要 <code>pub use</code> 是因为
 <strong>没有</strong>"类型位置可以全限定"这条路；Leno 有了（US1）⇒ 新增关键字的收益是"少写一个 import"，
 代价是多一条语法与一条"它算导出吗"的规则 ⇒ <strong>不划算</strong> ✗。要重新导出就写普通 <code>use</code> +
@@ -1100,54 +1102,50 @@ import &quot;math.leno&quot;
 <h2 id="10-最佳实践总结">10. 最佳实践总结</h2>
 <h3 id="推荐做法">✅ 推荐做法</h3>
 <ol>
-<li>
-<p><strong>使用有意义的别名</strong>
-   <code>leno
-   import "string_utilities.leno" as str  // 简洁明了</code></p>
-</li>
-<li>
-<p><strong>控制导出范围</strong>
-   <code>leno
-   var _internal = 0  // 不导出内部状态
-   var public_api = {}  // 只导出必要的</code></p>
-</li>
-<li>
-<p><strong>避免循环依赖</strong>
-   <code>leno
-   // 优先单向依赖，循环依赖作为最后手段</code></p>
-</li>
-<li>
-<p><strong>利用模块缓存</strong>
-   <code>leno
-   // 需要共享状态时使用模块级变量</code></p>
-</li>
-<li>
-<p><strong>版本管理</strong>
-   <code>leno
-   // 在模块中导出版本信息
-   var VERSION = "1.0.0"</code></p>
-</li>
+<li><strong>使用有意义的别名</strong></li>
 </ol>
+<pre><code class="language-leno">   import &quot;string_utilities.leno&quot; as str  // 简洁明了
+</code></pre>
+<ol>
+<li><strong>控制导出范围</strong></li>
+</ol>
+<pre><code class="language-leno">   var _internal = 0  // 不导出内部状态
+   var public_api = {}  // 只导出必要的
+</code></pre>
+<ol>
+<li><strong>避免循环依赖</strong></li>
+</ol>
+<pre><code class="language-leno">   // 优先单向依赖，循环依赖作为最后手段
+</code></pre>
+<ol>
+<li><strong>利用模块缓存</strong></li>
+</ol>
+<pre><code class="language-leno">   // 需要共享状态时使用模块级变量
+</code></pre>
+<ol>
+<li><strong>版本管理</strong></li>
+</ol>
+<pre><code class="language-leno">   // 在模块中导出版本信息
+   var VERSION = &quot;1.0.0&quot;
+</code></pre>
 <h3 id="避免的做法">❌ 避免的做法</h3>
 <ol>
-<li>
-<p><strong>运行时动态构造导入路径</strong>
-   <code>leno
-   // ❌ 语法错误！import 路径必须是编译期字符串字面量，不接受表达式
-   import ("module_" + suffix + ".leno")  // 编译报错</code></p>
-</li>
-<li>
-<p><strong>模块间紧密耦合</strong>
-   <code>leno
-   // 避免模块 A 依赖 B，B 依赖 C，C 又依赖 A</code></p>
-</li>
-<li>
-<p><strong>在模块初始化时执行复杂逻辑</strong>
-   <code>leno
-   // 避免在模块加载时做大量计算
-   var result = heavy_computation()  // 不推荐</code></p>
-</li>
+<li><strong>运行时动态构造导入路径</strong></li>
 </ol>
+<pre><code class="language-leno">   // ❌ 语法错误！import 路径必须是编译期字符串字面量，不接受表达式
+   import (&quot;module_&quot; + suffix + &quot;.leno&quot;)  // 编译报错
+</code></pre>
+<ol>
+<li><strong>模块间紧密耦合</strong></li>
+</ol>
+<pre><code class="language-leno">   // 避免模块 A 依赖 B，B 依赖 C，C 又依赖 A
+</code></pre>
+<ol>
+<li><strong>在模块初始化时执行复杂逻辑</strong></li>
+</ol>
+<pre><code class="language-leno">   // 避免在模块加载时做大量计算
+   var result = heavy_computation()  // 不推荐
+</code></pre>
 <hr>
 <h2 id="11-常见问题">11. 常见问题</h2>
 <h3 id="q-如何查看模块导出了什么">Q: 如何查看模块导出了什么？</h3>
@@ -1199,7 +1197,8 @@ func start() {
 <hr>
 <blockquote>
 <p><strong>核心原则</strong>：模块是组织代码的基本单元，合理使用可以让代码更清晰、更可维护。</p>
-</blockquote></main>
+</blockquote>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#快速入门">快速入门</a></li><ul class="lv3"><li><a href="#基本语法">基本语法</a></li></ul><li><a href="#0-三条硬约束-先看这个">0. 三条硬约束（先看这个）</a></li><ul class="lv3"><li><a href="#0-1-import-必须写在任何使用它的语句之前-含-const-定义">0.1 import 必须写在任何使用它的语句之前（含 const 定义）</a></li><li><a href="#0-2-use-必须列全本文件源码里真正用到的类型">0.2 use 必须列全本文件源码里真正用到的类型</a></li><li><a href="#0-3-模块级只要不加-export-就是文件私有-pri-只用于结构体成员">0.3 模块级只要不加 export 就是文件私有；pri 只用于结构体成员</a></li></ul><li><a href="#1-导入方式详解">1. 导入方式详解</a></li><ul class="lv3"><li><a href="#1-1-基本导入">1.1 基本导入</a></li><li><a href="#1-2-使用别名">1.2 使用别名</a></li><li><a href="#1-3-特殊字符路径">1.3 特殊字符路径</a></li><li><a href="#1-4-内置模块名是保留名-2026-11-18-起">1.4 内置模块名是保留名（2026-11-18 起）</a></li></ul><li><a href="#2-模块导出规则">2. 模块导出规则</a></li><ul class="lv3"><li><a href="#2-1-显式导出">2.1 显式导出</a></li><li><a href="#2-2-私有成员">2.2 私有成员</a></li><li><a href="#2-3-导出控制建议">2.3 导出控制建议</a></li><li><a href="#2-4-导出变量-读写都是同一份存储-实时">2.4 导出变量：读写都是同一份存储（实时）</a></li></ul><li><a href="#3-模块使用模式">3. 模块使用模式</a></li><ul class="lv3"><li><a href="#3-1-命名空间模式">3.1 命名空间模式</a></li><li><a href="#3-2-选择性导入">3.2 选择性导入</a></li><li><a href="#3-3-重导出-re-export">3.3 重导出（Re-export）</a></li><li><a href="#3-4-导出类型别名-export-alias">3.4 导出类型别名（export alias）</a></li><li><a href="#3-5-导出-face-类型">3.5 导出 face 类型</a></li></ul><li><a href="#4-循环依赖处理">4. 循环依赖处理</a></li><ul class="lv3"><li><a href="#4-1-循环依赖支持">4.1 循环依赖支持</a></li><li><a href="#4-2-循环依赖注意事项">4.2 循环依赖注意事项</a></li><li><a href="#4-3-循环依赖最佳实践">4.3 循环依赖最佳实践</a></li></ul><li><a href="#5-模块缓存机制">5. 模块缓存机制</a></li><ul class="lv3"><li><a href="#5-1-单例模式">5.1 单例模式</a></li><li><a href="#5-2-利用缓存实现状态共享">5.2 利用缓存实现状态共享</a></li></ul><li><a href="#6-错误处理">6. 错误处理</a></li><ul class="lv3"><li><a href="#6-1-导入错误类型">6.1 导入错误类型</a></li><li><a href="#6-2-防御性导入">6.2 防御性导入</a></li><li><a href="#6-3-模块版本检查">6.3 模块版本检查</a></li></ul><li><a href="#7-高级用法">7. 高级用法</a></li><ul class="lv3"><li><a href="#7-1-模块条件选择">7.1 模块条件选择</a></li><li><a href="#7-2-插件系统实现">7.2 插件系统实现</a></li><li><a href="#7-3-模块装饰器模式">7.3 模块装饰器模式</a></li></ul><li><a href="#8-跨模块类型使用">8. 跨模块类型使用</a></li><ul class="lv3"><li><a href="#8-1-导出-struct">8.1 导出 Struct</a></li><li><a href="#8-2-使用-use-语句导入类型">8.2 使用 use 语句导入类型</a></li><li><a href="#8-2-1-使用-use-导入-enum">8.2.1 使用 use 导入 enum</a></li><li><a href="#8-3-use-类型链式传导">8.3 use 类型链式传导</a></li><li><a href="#8-4-use-类型作为-export-func-返回类型">8.4 use 类型作为 export func 返回类型</a></li><li><a href="#8-5-use-face-类型">8.5 use face 类型</a></li><li><a href="#8-6-clib-类型跨模块使用">8.6 clib 类型跨模块使用</a></li><li><a href="#8-7-cstruct-跨模块使用">8.7 cstruct 跨模块使用</a></li><li><a href="#8-8-类型守卫与跨模块类型">8.8 类型守卫与跨模块类型</a></li></ul><li><a href="#9-性能考虑">9. 性能考虑</a></li><ul class="lv3"><li><a href="#9-1-导入开销">9.1 导入开销</a></li><li><a href="#9-2-大型项目组织">9.2 大型项目组织</a></li><li><a href="#9-3-避免过度模块化">9.3 避免过度模块化</a></li></ul><li><a href="#10-最佳实践总结">10. 最佳实践总结</a></li><ul class="lv3"><li><a href="#推荐做法">✅ 推荐做法</a></li><li><a href="#避免的做法">❌ 避免的做法</a></li></ul><li><a href="#11-常见问题">11. 常见问题</a></li><ul class="lv3"><li><a href="#q-如何查看模块导出了什么">Q: 如何查看模块导出了什么？</a></li><li><a href="#q-模块可以热重载吗">Q: 模块可以热重载吗？</a></li><li><a href="#q-如何处理模块版本冲突">Q: 如何处理模块版本冲突？</a></li><li><a href="#q-相对路径的基准是什么">Q: 相对路径的基准是什么？</a></li></ul><li><a href="#12-示例项目结构">12. 示例项目结构</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="FFI使用指南.html">← 上一篇</a><a href="threads使用指南.html">下一篇 →</a></nav>

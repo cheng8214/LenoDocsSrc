@@ -32,13 +32,13 @@
 现行是<strong>寄存器式</strong> <code>iABC/iABx/iAsBx/iAsJ/iAx</code> 4 字节定长指令（<code>src/vm/vminc/run/*.inc</code>），
 文中引用的 <code>op_variables.inc</code> / <code>op_struct.inc</code> / <code>vm_run.inc</code> 均已不存在。
 「方案 5 <code>OP_SET_LOCAL_CONST</code> 已完成」等单条结论仍可对照现行指令名核查，但<strong>别按文中 file:line 找源码</strong>。</p>
+</blockquote>
+<blockquote>
 <p>分析日期：2026-09-02</p>
 <p>源文件：<code>examples/性能测试/光线追踪对象版.leno</code></p>
 <p>字节码输出命令：</p>
-</blockquote>
 <pre><code>leno --debug-out 光线追踪对象版_bytecode.txt &quot;examples\性能测试\光线追踪对象版.leno&quot;
 </code></pre>
-<blockquote>
 <p>背景：将字节码发给其他 AI 分析后，收到 7 条融合指令优化建议。
 经逐条审查 VM 源码（<code>vm_run.inc</code>、<code>op_variables.inc</code>、<code>op_struct.inc</code> 等）后确认可行。</p>
 </blockquote>
@@ -48,7 +48,7 @@
 - 操作数栈：<code>vm.stack[]</code> + <code>vm.sp</code>
 - 局部变量：<code>frame-&gt;locals[]</code>（随机访问，不经过栈）
 - 已有的融合指令先例：<code>OP_SET_LOCAL_POP</code>、<code>OP_INC_LOCAL_NOPUSH</code>、<code>OP_MOVE_LOCAL_POP</code>、
-  <code>OP_CALL_GLOBAL_FUNC</code>、<code>OP_INVOKE_METHOD_TYPED</code>、<code>OP_CALL_NATIVE</code>
+<code>OP_CALL_GLOBAL_FUNC</code>、<code>OP_INVOKE_METHOD_TYPED</code>、<code>OP_CALL_NATIVE</code>
 - 分发方式：GCC labels-as-values 跳转表（<code>VM_USE_JUMPTABLE</code>）</p>
 <p>这些融合指令的设计哲学是：<strong>允许指令直接读写 local slot，不经过操作数栈</strong>。
 以下方案完全延续此设计。</p>
@@ -301,7 +301,7 @@ OP_POP                   ; 手动弹掉 bool (1 byte)
 1. 条件是 <code>AST_BINOP</code> 且是比较运算符（<code>&gt;=</code>、<code>&lt;</code>、<code>==</code> 等）
 2. 两个操作数都是 <code>AST_VAR</code> 且类型为 <code>TYPE_INT</code>
 3. 操作数来源组合：local-local → <code>OP_CMPJMP_LL_INT</code>；local-global → <code>OP_CMPJMP_LG_INT</code>；
-   global-local → 反转比较符 + <code>OP_CMPJMP_LG_INT</code>
+global-local → 反转比较符 + <code>OP_CMPJMP_LG_INT</code>
 4. 满足条件则直接发射融合指令，跳过 <code>gen_expr + JUMP_IF_FALSE + POP</code> 序列
 5. 同时消除 then/else 分支的 <code>OP_POP</code>（因为融合指令不碰栈）</p>
 <p><strong>优化后字节码</strong>（benchIndex 热循环）：</p>
@@ -568,7 +568,8 @@ OP_POP                   ; 丢弃返回值
 <p><strong>分析</strong>：
 - Phase A 中 Leno 已经比 Python 快 41%，归功于 <code>OP_ACC_FIELDS</code> + <code>OP_CMPJMP_LL_INT</code> + <code>OP_GET_FIELD_FAST</code> 的组合优化
 - Phase B/B2/C 与 Python 基本持平，进一步优化空间在于 struct 方法调用和 Hit 对象分配</p>
-<p><strong>断言测试</strong>：256/256 全通过 ✅</p></main>
+<p><strong>断言测试</strong>：256/256 全通过 ✅</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#架构前提">架构前提</a></li><li><a href="#已完成-方案-5-op_set_local_const-常量赋值合并">✅ 已完成：方案 5 — OP_SET_LOCAL_CONST（常量赋值合并）</a></li><li><a href="#已完成-方案-1-op_acc_fields-对象多字段累加">✅ 已完成：方案 1 — OP_ACC_FIELDS（对象多字段累加）</a></li><li><a href="#附带修复-复合赋值-float-类型特化">✅ 附带修复：复合赋值 float 类型特化</a></li><li><a href="#性能对比">性能对比</a></li><li><a href="#已完成-方案-6-op_cmpjmp_ll_int-op_cmpjmp_lg_int-比较-条件跳转合并">✅ 已完成：方案 6 — OP_CMPJMP_LL_INT / OP_CMPJMP_LG_INT（比较+条件跳转合并）</a></li><ul class="lv3"><li><a href="#方案-3-op_module_call_store-模块调用-存局部变量合并-优先级-中">方案 3：OP_MODULE_CALL_STORE — 模块调用+存局部变量合并（优先级：中）</a></li><li><a href="#方案-4-op_get_array_elem-数组取值合并-优先级-中">方案 4：OP_GET_ARRAY_ELEM — 数组取值合并（优先级：中）</a></li><li><a href="#方案-2-op_build_string-字符串批量拼接-优先级-中低">方案 2：OP_BUILD_STRING — 字符串批量拼接（优先级：中低）</a></li><li><a href="#方案-7-op_call_native_void-原生调用丢弃返回值-优先级-低">方案 7：OP_CALL_NATIVE_VOID — 原生调用丢弃返回值（优先级：低）</a></li></ul><li><a href="#性能对比-方案-6-后">性能对比（方案 6 后）</a></li><li><a href="#已完成-方案-8-op_get_field_fast-struct-字段快速访问">✅ 已完成：方案 8 — OP_GET_FIELD_FAST（struct 字段快速访问）</a></li><li><a href="#性能对比-方案-8-后">性能对比（方案 8 后）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/字节码优化分析.html">← 上一篇</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">下一篇 →</a></nav>

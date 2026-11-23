@@ -402,7 +402,7 @@
 - 默认模式：对选定的"结果确定"样例跑一遍，把<strong>归一化后</strong>的输出写成基线（<code>tools/baselines/*.txt</code>）；
 - <code>-Check</code> 模式：逐条对比，输出"与基线不一致"清单，退出码 = 不一致个数。
 - 归一化规则：指针地址 / 耗时 / 时间戳 / 可执行路径 / 空行（这些在样例里天然会漂，
-  实测 <code>examples</code> 里踩过的噪声类型见 ⑤-ab 的样例扫描说明）。</p>
+实测 <code>examples</code> 里踩过的噪声类型见 ⑤-ab 的样例扫描说明）。</p>
 <p><strong>挑样例的目录规模参考（约数）</strong>：<code>cstruct</code> 41 ｜ <code>struct\struct test</code> 36 ｜ <code>性能测试</code> 32 ｜
 <code>验证</code> 27 ｜ <code>clib</code> 24 ｜ <code>type类型</code> 22 ｜ <code>crypto</code> 21 ｜ <code>enum</code> 21 ｜ <code>ffi</code> 21 ｜ <code>struct\face</code> 18 ｜
 <code>array</code> 16 ｜ <code>bigint</code> 16 …</p>
@@ -415,33 +415,33 @@
 <code>Channel[T]</code> / <code>Thread[T]</code> <strong>同一范式</strong>：在 <code>TYPE_FUTURE</code> 的 <code>element_type</code> 槽上挂 <code>T</code> ✓。</p>
 <p><strong>落地（六处）</strong>：
 1. <code>src/type.c</code> + <code>src/include/leno_types.h</code>：新增 <code>type_future_generic()</code>；并在
-   <code>type_free</code>（本来全槽释放 ✓ 无需改）/ <code>type_copy</code> / <code>type_equals</code> / <code>type_to_string</code> /
-   <strong><code>type_is_compatible</code></strong> 五处按 kind 分派的开关里补 <code>TYPE_FUTURE</code>
-   （⚠ <strong>兼容性那条是关键</strong>：<code>asyncs.is_done</code> 的 native 形参规格是<strong>裸 <code>Future</code></strong>，
-   没有"裸 Future 收下任何 <code>Future[…]</code>"这条规则，C3 修完照样报类型不匹配 ✗）
+<code>type_free</code>（本来全槽释放 ✓ 无需改）/ <code>type_copy</code> / <code>type_equals</code> / <code>type_to_string</code> /
+<strong><code>type_is_compatible</code></strong> 五处按 kind 分派的开关里补 <code>TYPE_FUTURE</code>
+（⚠ <strong>兼容性那条是关键</strong>：<code>asyncs.is_done</code> 的 native 形参规格是<strong>裸 <code>Future</code></strong>，
+没有"裸 Future 收下任何 <code>Future[…]</code>"这条规则，C3 修完照样报类型不匹配 ✗）
 2. <code>src/parser/parser_func.c</code>：<code>Future[T]</code> 可写（此前<strong>只有 native 规格内部造得出来</strong>）
 3. <code>src/semantic/semantic_type.c</code>：
-   - async 调用 ⇒ <code>Future[声明的返回类型]</code>（原来 <code>type_new(TYPE_FUTURE)</code> 把类型<strong>丢在这里</strong> ✗）
-   - <code>AST_AWAIT</code> ⇒ <strong>元素类型优先</strong>（原来只认"被等待的恰好是调用"的启发式 ⇒ C3/C6 ✗），
-     元素未知时才退回那条启发式 ✓
-   - <code>infer_method_return_type</code> ⇒ async 方法返回 <code>Future[声明返回类型]</code>（C3 的那一半 ✓）
-   - <code>AST_SAFE_ACCESS</code> ⇒ <strong>可空性跟接收者一致</strong>（原来"总是可空" ⇒ 非空 <code>w?.go()</code> 也标可空 ⇒
-     传 <code>is_done</code> 假报「可空值不能直接传」✗）</p>
+- async 调用 ⇒ <code>Future[声明的返回类型]</code>（原来 <code>type_new(TYPE_FUTURE)</code> 把类型<strong>丢在这里</strong> ✗）
+- <code>AST_AWAIT</code> ⇒ <strong>元素类型优先</strong>（原来只认"被等待的恰好是调用"的启发式 ⇒ C3/C6 ✗），
+  元素未知时才退回那条启发式 ✓
+- <code>infer_method_return_type</code> ⇒ async 方法返回 <code>Future[声明返回类型]</code>（C3 的那一半 ✓）
+- <code>AST_SAFE_ACCESS</code> ⇒ <strong>可空性跟接收者一致</strong>（原来"总是可空" ⇒ 非空 <code>w?.go()</code> 也标可空 ⇒
+  传 <code>is_done</code> 假报「可空值不能直接传」✗）</p>
 <p><strong>验收（实测）</strong>：<code>assert/test_async_future_type.leno</code>（新增，C3/C6 正例 + 2 条负例）、
 <code>assert/test_async_func_param.leno</code>（补上"标注解"那条写法 —— 它自己头部就写着"等 T3 一起加" ✓）；
 套件 <strong>449 passed / 0 failed</strong>。探针实测：<code>w?.go()</code> 可传 <code>is_done</code> ✓、<code>await</code> 解包
 <code>7 / 5 / 5 / 5</code> ✓。</p>
 <p><strong>⚠ 两条要记住的口径</strong>（写用例/改代码时别当 bug）：
 - <strong>裸 <code>Future</code>（不写 <code>[T]</code>）元素未知 ⇒ <code>await</code> 不猜、仍是 <code>any</code></strong> ⇒ 在标了返回类型的函数里
-  仍会报「期望 int，实际 any」✓（<strong>信息不足就不猜</strong>，与"少报不误报"一致 ✓）。
-  ★ 这条与语言规矩<strong>完全一致</strong>（2026-10-12 确认）：<strong><code>any</code> 不能赋给任何东西</strong>是规矩本身
-  （除非转换 / <code>as</code>）⇒ 所以裸 <code>Future</code> 有两条<strong>明确</strong>出路，两条都已钉在
-  <code>assert/test_async_future_type.leno</code>：
-    ① <strong>精确写法</strong> <code>Future[int]</code>（推荐 ✓ —— <code>await</code> 直接给 <code>int</code>）
-    ② <strong>动态写法</strong> <code>(await x) as int</code>（<code>any</code> 那条规矩的通用逃生阀 ✓）
-  ⇒ <strong>下面 C6 的判据按这条修订</strong>（原判据写的是裸 <code>Future</code> 也该过；不是"没修"，是"按规矩就该这样" ✓）
+仍会报「期望 int，实际 any」✓（<strong>信息不足就不猜</strong>，与"少报不误报"一致 ✓）。
+★ 这条与语言规矩<strong>完全一致</strong>（2026-10-12 确认）：<strong><code>any</code> 不能赋给任何东西</strong>是规矩本身
+（除非转换 / <code>as</code>）⇒ 所以裸 <code>Future</code> 有两条<strong>明确</strong>出路，两条都已钉在
+<code>assert/test_async_future_type.leno</code>：
+ ① <strong>精确写法</strong> <code>Future[int]</code>（推荐 ✓ —— <code>await</code> 直接给 <code>int</code>）
+ ② <strong>动态写法</strong> <code>(await x) as int</code>（<code>any</code> 那条规矩的通用逃生阀 ✓）
+⇒ <strong>下面 C6 的判据按这条修订</strong>（原判据写的是裸 <code>Future</code> 也该过；不是"没修"，是"按规矩就该这样" ✓）
 - <strong>C5 的"编译错"症状在本轮动手之前就已不复现</strong>（T3 只动了 Future 元素类型与 <code>?.</code> 可空性，
-  没碰 <code>func</code> 形参那条推断路径）⇒ 本轮的价值是<strong>把两种写法都钉住</strong>，没去二分是哪一轮改好的 ✓</p>
+没碰 <code>func</code> 形参那条推断路径）⇒ 本轮的价值是<strong>把两种写法都钉住</strong>，没去二分是哪一轮改好的 ✓</p>
 <p><strong>下面保留原文</strong>（它记录了坑与判据的由来 ✓）。</p>
 </blockquote>
 <p><strong>为什么</strong>：这三条是<strong>同一个子系统</strong> —— "<code>Future</code> 出现在某个位置时，静态类型推不出来"，
@@ -670,9 +670,9 @@ async func driver() {
 <blockquote>
 <p>实现期间踩到的三个坑（都写进了 codegen 的注释，别重犯）：
 ① 跳过右值求值的条件必须与"真的会用立即数指令"完全一致 —— 否则 <code>n &lt;= 1</code> 会被编成
-   <code>OP_LE_INT A=1 B=1 C=0</code>＝<code>n &lt;= n</code> 恒真（fib 返回 30 而非 832040）；
+<code>OP_LE_INT A=1 B=1 C=0</code>＝<code>n &lt;= n</code> 恒真（fib 返回 30 而非 832040）；
 ② <code>gen_binop</code> 收尾是<strong>无条件</strong> <code>reg_free(gen, r)</code> ⇒ 立即数路径必须补一个占位
-   <code>reg_alloc</code>，否则 free 掉寄存器 0、分配器全乱（runner 里 351 个用例挂）；
+<code>reg_alloc</code>，否则 free 掉寄存器 0、分配器全乱（runner 里 351 个用例挂）；
 ③ 左操作数必须是 int：<code>big1 + 100</code>（左为 bigint）只有通用 ADD 能算。</p>
 </blockquote>
 <h4 id="又修两处-立即数比较-efde937-免掉多余-cast">✅ 又修两处：立即数比较（<code>efde937</code>）+ 免掉多余 CAST</h4>
@@ -793,7 +793,7 @@ async func driver() {
 <code>static inline</code>，<strong>显式传 VM 和参数</strong>（宏能靠 <code>#define vm (*vm_ptr)</code> 生效，函数不行）。</p>
 <p><strong>两个坑</strong>：
 1. handler 里的错误路径现在是"报错 + <code>DISPATCH()</code>"，抽出去的函数<strong>不能跳分发</strong> ⇒
-   必须用<strong>返回值/状态码</strong>表达失败，由 handler 决定怎么跳（别把控制流一起搬走）；
+必须用<strong>返回值/状态码</strong>表达失败，由 handler 决定怎么跳（别把控制流一起搬走）；
 2. 分块文件里不得出现<strong>文件级 <code>static</code></strong>（同一 TU include 两次会重复定义）。</p>
 <p><strong>判据</strong>：抽完后 <code>.\build.bat</code> + <strong>断言套件 353/353</strong>；每个被抽的 handler 体在
 原分块文件里显著变短（理想 &lt; 60 行）。（差分对照按需，不作日常判据。）</p>
@@ -887,12 +887,12 @@ async func driver() {
 这也解释了为什么 ⑤-c 把它列为"剩余嫌疑"却<strong>从来量不出收益</strong> —— 它本来就没有稳定收益。</p>
 <p><strong>⑤ 教训（写给下一次的自己）</strong>：
 - <strong>不要再试 T9</strong>（含抽 <code>OP_CALL</code>/<code>OP_STRUCT_INIT</code>/<code>OP_GET_METHOD</code>/<code>OP_STRUCT_DEF</code>）——
-  单次抽 5KB 已经证明是布局抽奖，抽更多只会换一个抽奖结果，<strong>没有可归因的杠杆</strong>；
+单次抽 5KB 已经证明是布局抽奖，抽更多只会换一个抽奖结果，<strong>没有可归因的杠杆</strong>；
 - 若要碰"代码布局"这条路，前提是先有<strong>布局可控</strong>的手段（例如把热 handler 集中到独立段、
-  或按 profile 重排、或 <code>__attribute__((aligned))</code>/链接脚本），<strong>否则任何"抽代码"的 A/B
-  都不可信</strong>（连"回退后恢复原值"这种验证都只能证明"这次抽奖抽到了坏签"）；
+或按 profile 重排、或 <code>__attribute__((aligned))</code>/链接脚本），<strong>否则任何"抽代码"的 A/B
+都不可信</strong>（连"回退后恢复原值"这种验证都只能证明"这次抽奖抽到了坏签"）；
 - <strong>回退验证很有用</strong>：回退后 <code>空调用</code> 回到 164.18~169.13（与基线同区间）⇒ 归因干净，
-  排除了"机器变慢/热漂移"这类解释。以后凡是"改动让某项变慢"，都做一次回退复测再下结论。</p>
+排除了"机器变慢/热漂移"这类解释。以后凡是"改动让某项变慢"，都做一次回退复测再下结论。</p>
 <hr>
 <h3 id="t10-p1-特化-融合指令对账-栈式有-我们缺">T10（P1）特化/融合指令对账：栈式有、我们缺</h3>
 <p><strong>做法</strong>（10 分钟可复现，两条集合差即可）：</p>
@@ -1001,14 +1001,16 @@ Compare-Object $reg $stk
 <li><strong>实测</strong>：fib 递归路径 <strong>9 → 8 条</strong>；<strong>同一份二进制 A/B</strong>（<code>LENO_NO_CMPJMP=1</code> 关闭融合）
   65.7ms → <strong>61.6ms = 0.938x</strong>；<code>assert/test_cmpjmp.leno</code> 在<strong>开/关两种模式下都过</strong>
   （语义等价的直接证据）；断言套件 <strong>354/354</strong>。</li>
-<li><strong>三个坑</strong>（都已踩过，后人别重踩）：
-  1. <code>patch_jmp</code> / <code>patch_jmp_to</code> 的偏移必须按<strong>指令自身长度</strong>扣（<code>len - pos - size</code>）：
-     融合指令是 8 字节，沿用 <code>- 4</code> 会静默写出错误的跳距 ⇒ 加了 <code>instr_bytes_at()</code>；
-  2. <strong>反汇编器</strong>（<code>decode_trailing</code>）与<strong>自检</strong>（<code>disasm_self_check</code>）都必须知道这 8 字节，
-     否则 <code>--debug</code> 的清单从那条指令起整体错位（看着像"凭空多出一条指令"），自检也核对不了它的跳转；
-  3. <strong>A/B 不要用"两次构建 + git stash"</strong>：慢、易被机器频率漂移误导，还有把改动留在 stash 里的
+<li><strong>三个坑</strong>（都已踩过，后人别重踩）：<ol>
+<li><code>patch_jmp</code> / <code>patch_jmp_to</code> 的偏移必须按<strong>指令自身长度</strong>扣（<code>len - pos - size</code>）：
+     融合指令是 8 字节，沿用 <code>- 4</code> 会静默写出错误的跳距 ⇒ 加了 <code>instr_bytes_at()</code>；</li>
+<li><strong>反汇编器</strong>（<code>decode_trailing</code>）与<strong>自检</strong>（<code>disasm_self_check</code>）都必须知道这 8 字节，
+     否则 <code>--debug</code> 的清单从那条指令起整体错位（看着像"凭空多出一条指令"），自检也核对不了它的跳转；</li>
+<li><strong>A/B 不要用"两次构建 + git stash"</strong>：慢、易被机器频率漂移误导，还有把改动留在 stash 里的
      风险（本次取消时正好停在那一步）。用 <code>LENO_NO_CMPJMP</code> 这类<strong>同二进制环境变量开关</strong>最稳
      —— 栈式本来就有这个开关，当时就该照抄。</li>
+</ol>
+</li>
 </ul>
 <p><strong>② 语句上下文 <code>*_NOPUSH</code> —— ✅ 已完成（只做 <code>arr.add</code>）</strong></p>
 <ul>
@@ -1030,12 +1032,14 @@ Compare-Object $reg $stk
   ⚠ 立即数路径的前提是<strong>左操作数静态类型为 int</strong>（沿用原有判断）—— 左值是 bigint 的
   <code>big * 100</code> 必须走通用 MUL，否则通用路径会读到空寄存器（原有注释里的老坑）。</li>
 <li><strong>清单纠错</strong>：<code>LE_INT</code>（双变量）<strong>本来就有</strong>（<code>leno_vm.h:82</code>），之前那条是 grep 漏看 ⇒ 无需补。</li>
-<li><strong>有意不做</strong>：</li>
+<li><strong>有意不做</strong>：<ul>
 <li><code>EQ_INT_IMM</code> / <code>NE_INT_IMM</code>：<strong>语义有风险</strong> —— <code>==</code>/<code>!=</code> 目前刻意走通用 <code>OP_EQ</code>（跨 int/bigint/float
     的相等语义与"按位比较"的 <code>*_INT</code> 家族不同），补特化版要先厘清 <code>1 == 1.0</code> 这类口径，
     收益却只有"省一次类型分支"⇒ 不值得冒险；</li>
 <li><code>MOD_INT</code>：通用 <code>OP_MOD</code> 的<strong>第一个分支就是 int 快路径</strong>（<code>val_is_int &amp;&amp; val_is_int</code>），
     特化版只省两次类型判断（~1–2ns）⇒ 收益太小，不值得多一条指令的维护面。</li>
+</ul>
+</li>
 </ul>
 <p><strong>④ 浮点有序比较特化 —— ✅ 已完成（附带一个通用收益）</strong></p>
 <ul>
@@ -1103,10 +1107,10 @@ Compare-Object $reg $stk
 </table>
 <p>（相对本会话开始时：函数调用 89.1 → <strong>69.1ms = -22%</strong>；5 参数 119.0 → <strong>99.1 = -17%</strong>。）
 - <strong>顺手澄清一件事</strong>：<code>call_reg</code> 里那条 <code>TYPE_INT &amp;&amp; val_is_float</code> 运行期转换分支，在本语言里
-  <strong>走不到</strong> —— 实测"浮点字面量传进 int 形参""<code>any</code> 传进 int 形参"都被<strong>语义层直接拦成编译期错误</strong>
-  （「参数类型不匹配」）。所以那条分支只有显式 <code>_int()</code> 这类转换后的值才可能碰到。
+<strong>走不到</strong> —— 实测"浮点字面量传进 int 形参""<code>any</code> 传进 int 形参"都被<strong>语义层直接拦成编译期错误</strong>
+（「参数类型不匹配」）。所以那条分支只有显式 <code>_int()</code> 这类转换后的值才可能碰到。
 - <strong>验证</strong>：<code>assert/test_typed_call.leno</code>（同类型 / int→float 加宽 / any 形参 / 默认参数 / 多参数混合 /
-  递归），<strong>typed 开与关两种模式都过</strong>；<strong>关掉 typed 跑全量套件也是 357/357</strong> ⇒ 语义等价的强证据。</p>
+递归），<strong>typed 开与关两种模式都过</strong>；<strong>关掉 typed 跑全量套件也是 357/357</strong> ⇒ 语义等价的强证据。</p>
 <blockquote>
 <p>调用形状的<strong>横向</strong>数据（同文件基准，栈式为参照）：纯调用 0.63x、用结果 0.75x、5 参数 0.63x、
 8 局部变量 0.50x —— 每种形状我们都比栈式快 25–37%，所以"调用是短板"只相对于我们自己的其它段而言；
@@ -1138,9 +1142,9 @@ Compare-Object $reg $stk
 </table>
 <p>⇒ 栈式的 <code>ACC_FIELDS</code> 把"连取 N 个字段并求和"合成一条指令。
 - <strong>已顺手修掉的一半（本次提交）</strong>：我们每个字段访问前都多一条 <code>OP_MOV</code>（对象被 <code>gen_expr</code>
-  一律搬进临时寄存器），<code>spheres[si]</code> 的下标同样被搬一次 —— 按"局部变量/参数直取其寄存器"
-  的手法修掉（与 <code>rl_direct</code>/右值直取同一论证，<code>*_is_temp</code> 守卫 <code>reg_free</code>）。
-  <strong>Phase A：131.3ms(1.31x) → 118.3ms(1.10x)</strong>，即快 ~16%；B/B2/C 也各快 3–8%。
+一律搬进临时寄存器），<code>spheres[si]</code> 的下标同样被搬一次 —— 按"局部变量/参数直取其寄存器"
+的手法修掉（与 <code>rl_direct</code>/右值直取同一论证，<code>*_is_temp</code> 守卫 <code>reg_free</code>）。
+<strong>Phase A：131.3ms(1.31x) → 118.3ms(1.10x)</strong>，即快 ~16%；B/B2/C 也各快 3–8%。
 - <strong>剩下的差距就是 <code>OP_ACC_FIELDS</code> 本身</strong>（2 条 vs 7 条）—— ✅ <strong>已完成</strong>，见下 ⑤-d。</p>
 <p><strong>⑤-d <code>OP_ACC_FIELDS</code> + <code>OP_GET_FIELD_FAST</code> —— ✅ 已完成（借鉴栈式的两条字段访问指令）</strong></p>
 <ul>
@@ -1191,14 +1195,14 @@ Compare-Object $reg $stk
 </tbody>
 </table>
 <p>⇒ Phase A <strong>368 → ~225ms（−39%）</strong>：从「比栈式慢 1.27x」变成「比栈式快 ~1.25x」，
-  四个 Phase <strong>全部快于栈式</strong>；校验和 <code>sum=50730000.000273108</code> <strong>逐位相同</strong>。
+四个 Phase <strong>全部快于栈式</strong>；校验和 <code>sum=50730000.000273108</code> <strong>逐位相同</strong>。
 - <strong>dump 证据</strong>：<code>benchIndex</code> 内层 <code>GET_FIELD×4 + ADD_F×3</code>（7 条派发）→
-  <code>OP_ACC_FIELDS A=10 B=8 C=4 | 字段个数=4 索引=[0,1,2,3]</code>（1 条），内层热路径 17 → 11 条指令；
-  同文件 18 处字段读取全部走 <code>OP_GET_FIELD_FAST</code>（旧 <code>OP_GET_FIELD</code> 0 次）。
+<code>OP_ACC_FIELDS A=10 B=8 C=4 | 字段个数=4 索引=[0,1,2,3]</code>（1 条），内层热路径 17 → 11 条指令；
+同文件 18 处字段读取全部走 <code>OP_GET_FIELD_FAST</code>（旧 <code>OP_GET_FIELD</code> 0 次）。
 - <strong>门禁</strong>：断言套件 <strong>358/358</strong>；植物大战僵尸连续 75s 无错误输出。
-  ⚠ 该崩溃的<strong>根因</strong>由 <code>cce4e7e</code> 正面修掉了（预留实参块时清掉落在保留区间里的陈旧空闲槽位，
-  回归网 <code>assert/test_call_arg_reg_reuse.leno</code>）—— 与本提交无关，别把功劳记到这里。
-  本次两遍 dump 核对：<code>spawnSkySun</code> 的实参已落在块内 <code>R5..R9</code>、临时寄存器在块外（<code>R10</code>）。</p>
+⚠ 该崩溃的<strong>根因</strong>由 <code>cce4e7e</code> 正面修掉了（预留实参块时清掉落在保留区间里的陈旧空闲槽位，
+回归网 <code>assert/test_call_arg_reg_reuse.leno</code>）—— 与本提交无关，别把功劳记到这里。
+本次两遍 dump 核对：<code>spawnSkySun</code> 的实参已落在块内 <code>R5..R9</code>、临时寄存器在块外（<code>R10</code>）。</p>
 <p><strong>⑤-e <code>OP_INVOKE_METHOD_TYPED</code> —— ✅ 已完成（struct 方法「取方法 + 调用」融合）</strong></p>
 <ul>
 <li><strong>做法</strong>：8 字节定长（头 = op/A/B/C；第二个字 = 方法名常量(16) + 静态类型名常量(16)。
@@ -1248,13 +1252,13 @@ Compare-Object $reg $stk
 </tbody>
 </table>
 <p>⇒ 调用密集的三个 Phase 各快 <strong>20–26%</strong>，对栈式领先 <strong>1.5x–1.9x</strong>；校验和逐位不变
-  （hits=900000 / 900000 / 585500，sum=50730000.000273108）。
+（hits=900000 / 900000 / 585500，sum=50730000.000273108）。
 - <strong>⚠ 踩过的坑（别再踩）</strong>：第一版按"R[A+1] 就是 self 副本"写成
-  <code>call_reg(cl, has_self=1, receiver, a+2, argc-1, ...)</code> ⇒ <strong>校验和直接变 hits=0</strong>（实参整体
-  错位）。真因：语义分析对 struct 方法调用<strong>是否把 receiver 塞进实参首位并不统一</strong>
-  （MODULE_CALL 改写的调用<strong>不含</strong>、AST_CALL 形态<strong>含</strong>），而且"值相等"会被<strong>自引用</strong>骗到
-  （<code>a.add(a)</code> 只传 1 个实参却被当成 [receiver]）。正解是<strong>逐字沿用</strong> <code>06_call.inc</code> 绑定方法
-  分支那段"首实参是否就是 receiver + 形参个数佐证"的判定，不要自己推布局。
+<code>call_reg(cl, has_self=1, receiver, a+2, argc-1, ...)</code> ⇒ <strong>校验和直接变 hits=0</strong>（实参整体
+错位）。真因：语义分析对 struct 方法调用<strong>是否把 receiver 塞进实参首位并不统一</strong>
+（MODULE_CALL 改写的调用<strong>不含</strong>、AST_CALL 形态<strong>含</strong>），而且"值相等"会被<strong>自引用</strong>骗到
+（<code>a.add(a)</code> 只传 1 个实参却被当成 [receiver]）。正解是<strong>逐字沿用</strong> <code>06_call.inc</code> 绑定方法
+分支那段"首实参是否就是 receiver + 形参个数佐证"的判定，不要自己推布局。
 - <strong>门禁</strong>：断言套件 <strong>358/358</strong>；植物大战僵尸连续 60s 无错误输出。
 - <strong>差集剩余</strong>：仅剩整数冷路径补洞（<code>OP_DIV_INT</code> / <code>OP_MOD_INT</code> / <code>OP_EQ_INT_IMM</code>）。</p>
 <p><strong>⑤-f <code>i++</code> 竟比 <code>i = i + 1</code> 慢 —— ✅ 已修（<code>OP_INC</code>/<code>OP_DEC</code> int 快路径）</strong></p>
@@ -1409,13 +1413,13 @@ Compare-Object $reg $stk
 </tbody>
 </table>
 <p>⇒ 空体 for <strong>105.6ms 已快于栈式 113.9ms</strong>、数组添加 for <strong>276.9ms 已快于栈式 344.4ms</strong>
-  （这两项此前分别落后 1.40x / 1.05x，是本轮"只剩 4 项落后栈式"里的两项）；
-  对 Lua 空体 for 仍差 2.8x（38ms）。
+（这两项此前分别落后 1.40x / 1.05x，是本轮"只剩 4 项落后栈式"里的两项）；
+对 Lua 空体 for 仍差 2.8x（38ms）。
 - <strong>语义变化（登记在案）</strong>：计数制下<strong>循环体给控制变量赋值不再影响迭代次数</strong>（与 Lua 一致）；
-  原先比较制下会提前/延后终止。断言套件 <strong>358/358</strong> 通过。
+原先比较制下会提前/延后终止。断言套件 <strong>358/358</strong> 通过。
 - <strong>门禁</strong>：断言套件 <strong>358/358</strong>；新增回归网 <code>examples/性能测试/for循环隔离微基准.leno</code>
-  （空体 / 含上界 / 带数组添加 / 带自增 / 步长2 / 嵌套 / 负步长倒序）。</p>
-<p><strong>⑤-j 结论（负）：K 常量操作数族</strong>不划算** —— 静态计数会骗人**</p>
+（空体 / 含上界 / 带数组添加 / 带自增 / 步长2 / 嵌套 / 负步长倒序）。</p>
+<p><strong>⑤-j 结论（负）：K 常量操作数族</strong>不划算<strong> —— 静态计数会骗人</strong></p>
 <ul>
 <li><strong>动机</strong>：Lua 5.5 有一整套 K 型常量操作数（<code>OP_ADDK/MULK/DIVK/IDIVK/MODK</code>、<code>OP_EQK/EQI</code>、
   <code>OP_SHLI/SHRI</code>，<code>lopcodes.h:261-315</code>），右操作数<strong>直接从常量表读</strong>（<code>lvm.c:1013</code> 的 <code>KC(i)</code>），
@@ -1472,13 +1476,15 @@ Compare-Object $reg $stk
 </tbody>
 </table>
 <ul>
-<li><strong>⚠ 两个坑（都别再踩）</strong>：
-  1. <strong>IC 挂错了 opcode</strong>：第一版接在 <code>OP_DICT_GET</code>/<code>OP_DICT_SET</code> 上，但实测 dump 里
+<li><strong>⚠ 两个坑（都别再踩）</strong>：<ol>
+<li><strong>IC 挂错了 opcode</strong>：第一版接在 <code>OP_DICT_GET</code>/<code>OP_DICT_SET</code> 上，但实测 dump 里
      <code>d[k]</code> / <code>d[k]=v</code> 走的是 <strong><code>OP_INDEX</code> / <code>OP_INDEX_SET</code> 的字典分支</strong>（那两条 opcode
-     的计数是 0）⇒ 白做。<strong>改 VM 前先 dump 确认 codegen 到底发哪条。</strong>
-  2. <strong>键轮换的调用点</strong>：每次未命中都回填的话要白付一次 <code>dict_slot_for</code> 探测（实测 +13%）。
+     的计数是 0）⇒ 白做。<strong>改 VM 前先 dump 确认 codegen 到底发哪条。</strong></li>
+<li><strong>键轮换的调用点</strong>：每次未命中都回填的话要白付一次 <code>dict_slot_for</code> 探测（实测 +13%）。
      加了"连续 3 次未命中就放弃"仍不够 —— 轮换键<strong>每 N 次会命中一次</strong>把计数清零，于是又继续
      回填 ✗。正解是 <code>dead</code> 标志<strong>不可逆</strong>（放弃后只多一次 load+compare，实测收敛到 +4%）。</li>
+</ol>
+</li>
 <li><strong>⑤-l 读路径 IC —— ✅ 已完成（真因：编译期字面量不在内化表里）</strong>：
   现象是给读路径接上同款 IC 后<strong>反而慢 52%</strong>（373.8 → 576.6ms）。
   <strong>真因</strong>：命中校验原先用 <code>entries[slot].key == idx</code> <strong>逐位比较</strong> —— 而<strong>编译期字符串字面量
@@ -1527,28 +1533,30 @@ Compare-Object $reg $stk
   <strong>为什么值得做</strong>：⑤-l 的 IC 只在<strong>命中</strong>时省掉探测；一旦 IC 未命中（键在轮换、调用点多、
   或抖动出槽位）仍要付全价探测，而探测里 <code>dict_key_equals</code> 是 <strong>memcmp</strong>（字面量不在表里
   ⇒ 与任何运行时字符串都不是同一对象）✗。内化后探测本身也退化成指针比较 ✓。
-  <strong>现状证据</strong>：</li>
+  <strong>现状证据</strong>：<ul>
 <li><code>intern_table_init()</code> 只在 <code>vm_init</code> 里调用（<code>src/vm/vminc/vm_init.inc:30</code>），而<strong>运行路径
     的编译发生在 <code>vm_init</code> 之前</strong>：<code>main.c:536</code> parse → <code>main.c:662-663</code> 才
     <code>gc_init()+vm_init_with_scope()</code> ⇒ 源码字面量<strong>全部没进表</strong> ✗（<code>-c</code> 路径恰好相反，
     <code>main.c:763-764</code> 先 <code>vm_init</code> 再 parse ⇒ 那条路径的字面量是内化的）。</li>
 <li>⇒ ① 同一字面量出现两次是<strong>两个对象</strong>（⑤-l 读侧 IC 逐位比较永不命中就是被它坑的）；
     ② 字面量与运行时字符串比较、<code>dict[字面量键]</code> 的<strong>每次探测</strong>都要 memcmp。
-    Lua 是 <strong>parse 期就内化短串</strong>（<code>lstring.c:240-263</code> <code>internshrstr</code>）⇒ 字符串相等 = 指针比较。
-  <strong>施工步骤</strong>：
-  1. <code>src/string_table.c: intern_table_init()</code> 加<strong>幂等</strong>护栏（已就绪即 return）——
-     否则提前初始化后 <code>vm_init</code> 再调一次会重建表，把已内化对象从表里<strong>孤立</strong>出去 ✗。
-  2. <code>src/object/object_string.c: str_new()</code> 里<strong>懒初始化</strong>兜底（表未就绪则 <code>intern_table_init()</code>）
-     ⇒ parse / codegen / <code>.lenb</code> 反序列化 / REPL 所有入口一处覆盖，不必逐处改 main；
-     长字符串走 <code>str_new_nointern</code>，不受影响。
-  3. 跨"编译-运行"轮次的悬垂条目：已确认 <code>gc_free_all()</code> 会清表（<code>gc.c:2107</code> 调
-     <code>intern_table_free()</code>）✓；free 后 <code>capacity=0</code>，懒初始化可再次生效 ✓。
-  <strong>预算的验证与度量</strong>：断言 358/358；字典差分脚本逐行一致；微基准取"探测变便宜"的两处
-  —— <code>d[k]=v</code> <strong>4 键轮换</strong>（IC 已永久放弃 ⇒ 全靠探测，当前 554.3ms）与<strong>字面量对运行时串
-  比较</strong>新循环；光线追踪三 Phase 校验和 + 耗时；植物大战僵尸回归。
-  <strong>风险</strong>：只改变"同内容字符串是否同一对象"，语义上应无可观察差异（有断言全套 + 差分脚本
-  兜底）；参考实现（Lua）就是 parse 期内化的口径。</li>
+    Lua 是 <strong>parse 期就内化短串</strong>（<code>lstring.c:240-263</code> <code>internshrstr</code>）⇒ 字符串相等 = 指针比较。</li>
 </ul>
+</li>
+</ul>
+<p><strong>施工步骤</strong>：
+1. <code>src/string_table.c: intern_table_init()</code> 加<strong>幂等</strong>护栏（已就绪即 return）——
+  否则提前初始化后 <code>vm_init</code> 再调一次会重建表，把已内化对象从表里<strong>孤立</strong>出去 ✗。
+2. <code>src/object/object_string.c: str_new()</code> 里<strong>懒初始化</strong>兜底（表未就绪则 <code>intern_table_init()</code>）
+  ⇒ parse / codegen / <code>.lenb</code> 反序列化 / REPL 所有入口一处覆盖，不必逐处改 main；
+  长字符串走 <code>str_new_nointern</code>，不受影响。
+3. 跨"编译-运行"轮次的悬垂条目：已确认 <code>gc_free_all()</code> 会清表（<code>gc.c:2107</code> 调
+  <code>intern_table_free()</code>）✓；free 后 <code>capacity=0</code>，懒初始化可再次生效 ✓。
+<strong>预算的验证与度量</strong>：断言 358/358；字典差分脚本逐行一致；微基准取"探测变便宜"的两处
+—— <code>d[k]=v</code> <strong>4 键轮换</strong>（IC 已永久放弃 ⇒ 全靠探测，当前 554.3ms）与<strong>字面量对运行时串
+比较</strong>新循环；光线追踪三 Phase 校验和 + 耗时；植物大战僵尸回归。
+<strong>风险</strong>：只改变"同内容字符串是否同一对象"，语义上应无可观察差异（有断言全套 + 差分脚本
+兜底）；参考实现（Lua）就是 parse 期内化的口径。</p>
 <p><strong>实测（同轮交替多轮取 min，<code>build/t_str_intern.leno</code>，各 1 千万次）</strong>：</p>
 <table>
 <thead>
@@ -1581,41 +1589,42 @@ Compare-Object $reg $stk
 </tbody>
 </table>
 <p>4 键轮换读三轮不重叠（568/570/579 → 488/488/494）✓ 这是本项的<strong>主要收益</strong>：探测里的
-  <code>dict_key_equals</code> 由 memcmp 变指针比较。<strong>全量测试</strong>（<code>examples/性能测试/全部测试.leno</code>
-  36 行计时）无回退：最差 1.06x、多数 1.00x。
-  <strong>门禁</strong>：断言套件 358/358；字典差分脚本逐行一致；光线追踪校验和逐位不变
-  （<code>sum=50730000.000273108</code>、<code>hits=900000/900000/585500</code>）。</p>
+<code>dict_key_equals</code> 由 memcmp 变指针比较。<strong>全量测试</strong>（<code>examples/性能测试/全部测试.leno</code>
+36 行计时）无回退：最差 1.06x、多数 1.00x。
+<strong>门禁</strong>：断言套件 358/358；字典差分脚本逐行一致；光线追踪校验和逐位不变
+（<code>sum=50730000.000273108</code>、<code>hits=900000/900000/585500</code>）。</p>
 <ul>
 <li><strong>⚠ 测量方法学（本次踩到的坑，务必沿用）</strong>：光线追踪 Phase B（3M 次「方法 + 每次构造一个
   <code>Hit</code>」）在新旧二进制之间<strong>稳定差 +6~7%</strong> ✗，而<strong>不分配</strong>的 Phase B2 反而 −5%、Phase A 持平。
-  查证结论：这<strong>不是</strong>内化的算法成本 ——</li>
+  查证结论：这<strong>不是</strong>内化的算法成本 ——<ul>
 <li>Phase B 热循环里<strong>零字符串操作</strong>（<code>OP_STRUCT_INIT</code> 的类型解析走的是按名字哈希的 IC，
     不是字符串比较；字段名→索引在编译期已定），内化只改变"字符串是否同一对象"，无从影响它；</li>
 <li><strong>同一个二进制</strong>跑 14 次，Phase B 自己就横跨 1369–1540（10%）✗；B2 单轮可差 19%（775→925）✗；</li>
 <li>方向还不一致（B 慢、B2 快）✗ —— 这是"构建布局/地址对齐彩票"的典型特征（新增代码改变了
-    函数与数据的摆放），与算法无关。
-  ⇒ <strong>这类"分配型 / 大堆操作型"基准，单轮或少量轮次的 A/B 不可信</strong>；要用<strong>多轮交替 + min 或
-  中位数</strong>，并且要意识到"换一次构建"本身就能带来 ±5~10% 的漂移。相对稳固的判据是
-  <strong>微基准里量级更大、多轮不重叠的差</strong>（如上面 −14%）与<strong>机制上说得通的差</strong>。</li>
-<li><strong>门禁</strong>：断言套件 <strong>358/358</strong>；字典差分脚本 <code>build/t_dict_correct.leno</code>
-  （单键反复写读 / 多键触发 rehash / 读回 / 重写 / 同一个调用点操作两个 dict / 整数键走数组部分 /
-  对象值考写屏障）与旧二进制<strong>逐行一致</strong>。</li>
+    函数与数据的摆放），与算法无关。</li>
 </ul>
+</li>
+</ul>
+<p>⇒ <strong>这类"分配型 / 大堆操作型"基准，单轮或少量轮次的 A/B 不可信</strong>；要用<strong>多轮交替 + min 或
+中位数</strong>，并且要意识到"换一次构建"本身就能带来 ±5~10% 的漂移。相对稳固的判据是
+<strong>微基准里量级更大、多轮不重叠的差</strong>（如上面 −14%）与<strong>机制上说得通的差</strong>。
+- <strong>门禁</strong>：断言套件 <strong>358/358</strong>；字典差分脚本 <code>build/t_dict_correct.leno</code>
+（单键反复写读 / 多键触发 rehash / 读回 / 重写 / 同一个调用点操作两个 dict / 整数键走数组部分 /
+对象值考写屏障）与旧二进制<strong>逐行一致</strong>。</p>
 <p><strong>⑤-n 两项指令数削减（无返回值函数末尾的 <code>LOADNIL</code>；Array 立即数下标）—— ✅ 已完成</strong></p>
 <p>两项都是「<strong>减少指令条数</strong>」而不是改结构 —— 与 ⑤-g 的结论一致（调用路径没有单点"肥肉"，
 可动的是条数）。</p>
 <ol>
-<li>
-<p><strong>无返回值函数末尾不再发 <code>LOADNIL</code></strong>（<code>codegen_func.c</code> 的补 return、<code>codegen_stmt.c</code> 的裸 <code>return</code>）：
+<li><strong>无返回值函数末尾不再发 <code>LOADNIL</code></strong>（<code>codegen_func.c</code> 的补 return、<code>codegen_stmt.c</code> 的裸 <code>return</code>）：
    <code>OP_RETURN</code> 在 <code>nresults == 0</code>（B 字段 = 1）时本就返回 null，与
    「<code>LOADNIL</code> + <code>RETURN(nresults=1)</code>」<strong>结果完全相同</strong>，但空体函数从 2 条降到 1 条
    （<code>func f() {}</code> 现在只有一条 <code>RETURN A=0 B=1</code>）。
    ⚠ <code>reg_alloc/reg_free</code> <strong>保留</strong> —— <code>max_reg</code>（→ <code>local_count</code> → locals 数组大小与 GC
    扫描范围）的记账必须与改动前逐位一致，不能顺手把槽位也省掉。
-   <strong>实测</strong>（<code>全部测试</code> 5 次取 min）：空函数调用 <strong>170.0 → 156.8ms（−7.8%）</strong>，双向 A/B 同向。</p>
-</li>
-<li>
-<p><strong>新增 <code>OP_INDEX_ARRAY_IMM</code>（iABC，C = 无符号 0..255 立即数下标）</strong>：
+   <strong>实测</strong>（<code>全部测试</code> 5 次取 min）：空函数调用 <strong>170.0 → 156.8ms（−7.8%）</strong>，双向 A/B 同向。</li>
+</ol>
+<ol>
+<li><strong>新增 <code>OP_INDEX_ARRAY_IMM</code>（iABC，C = 无符号 0..255 立即数下标）</strong>：
    <code>arr[0]</code> 原是「<code>LOADI tmp,0</code> + <code>OP_INDEX_ARRAY_INT</code>」两条派发 —— 那个临时寄存器纯为凑一个
    寄存器操作数（Lua 的 <code>GETI</code> 把小下标直接编在指令里）。现在一条：
    <code>OP_INDEX_ARRAY_IMM A=7 B=1 C=0</code>（循环体 3 条 → 2 条）。
@@ -1638,12 +1647,10 @@ Compare-Object $reg $stk
    在<strong>字典/字符串键</strong>上不划算（要过常量表 + 判型）；这里是「<strong>静态已特化的数组 + 整数下标</strong>」，
    省掉的是纯 <code>LOADI</code> 且保留了跳过判型的快路径 ⇒ 两头都赚。
    <strong>实测</strong>（同轮双向 A/B，<code>全部测试</code> 5 次取 min）：<code>arr[index]</code> <strong>50.7 → 35.8ms（−29.4%）</strong>，
-   反向复测 −25.9%，两次同向不重叠。</p>
-</li>
+   反向复测 −25.9%，两次同向不重叠。</li>
 </ol>
 <ul>
-<li>
-<p><strong>⑤-n 的负结论：handler 序言里的 <code>GET_CURRENT_LINE()</code> 不是瓶颈（别再改）</strong>。
+<li><strong>⑤-n 的负结论：handler 序言里的 <code>GET_CURRENT_LINE()</code> 不是瓶颈（别再改）</strong>。
   各算术 handler 开头都无条件算一次 <code>int line = GET_CURRENT_LINE();</code>，而
   <code>frame-&gt;chunk-&gt;lines[…]</code> 是 <strong>3 次依赖加载</strong>，看起来该下沉到错误分支。做法：把
   <code>GET_CURRENT_LINE()</code> 宏<strong>临时</strong>改成常量 <code>(0)</code> 出一个探针二进制，与正常构建做 36 项全量 A/B
@@ -1651,17 +1658,16 @@ Compare-Object $reg $stk
   机理与 ⑤-c 已排除项 3（缓存 <code>frame-&gt;locals</code> 为局部变量、中性）同源：这段在<strong>关键路径之外</strong>，
   <code>-O2</code> + 乱序执行已经吃掉它 ⇒ <strong>已回退，不做</strong>。
   <strong>连带影响</strong>：⑤-c「剩余嫌疑 3」里的"<code>frame-&gt;ip</code> 经结构体字段访问"据此<strong>进一步降权</strong> ——
-  同族手法（把指针从结构体搬进局部变量）已被<strong>两次实测</strong>判为中性。</p>
-</li>
-<li>
-<p><strong>顺带观察（按本文档的测量方法学，判为布局彩票，勿据此下结论）</strong>：本轮 <code>fib 经典递归</code> 与
+  同族手法（把指针从结构体搬进局部变量）已被<strong>两次实测</strong>判为中性。</li>
+</ul>
+<ul>
+<li><strong>顺带观察（按本文档的测量方法学，判为布局彩票，勿据此下结论）</strong>：本轮 <code>fib 经典递归</code> 与
   <code>while 空</code> 在两个方向的 A/B 里都稳定快 ~5%，但这两项与本次改动<strong>无逻辑关联</strong>（无数组下标、
-  无空体函数）⇒ 属于 ⑤-m 末尾记的"换一次构建 = ±5~10% 地址对齐漂移"，<strong>不计作收益</strong>。</p>
-</li>
-<li>
-<p><strong>门禁</strong>：断言套件 <strong>358/358</strong>；<code>--debug</code> 可见 <code>arr[0]</code> 已走 <code>OP_INDEX_ARRAY_IMM</code>、
-  空体函数只剩一条 <code>RETURN</code>。</p>
-</li>
+  无空体函数）⇒ 属于 ⑤-m 末尾记的"换一次构建 = ±5~10% 地址对齐漂移"，<strong>不计作收益</strong>。</li>
+</ul>
+<ul>
+<li><strong>门禁</strong>：断言套件 <strong>358/358</strong>；<code>--debug</code> 可见 <code>arr[0]</code> 已走 <code>OP_INDEX_ARRAY_IMM</code>、
+  空体函数只剩一条 <code>RETURN</code>。</li>
 </ul>
 <p><strong>⑤-o 调用路径第一步：<code>INLINE_LOCALS_MAX</code> 32 → 64 —— ✅ 已完成</strong></p>
 <p>调用路径是唯一 2x 级缺口（微基准 2.27x）。<strong>先量再改</strong>：写探针量「每次调用净成本」随
@@ -1770,15 +1776,17 @@ Compare-Object $reg $stk
 且只有<strong>被触到的</strong>帧影响缓存 ⇒ 上表未测到回退。
 <strong>门禁</strong>：断言套件 358/358；示例冒烟 15/15。</p>
 <ul>
-<li><strong>顺带量到、但登记不做的两件事</strong>（都低于或接近本机分辨率上限，且动之风险不成比例）：
-  1. <strong>整帧 null 初始化</strong>：<code>call_reg_impl</code> 每次都把 <code>locals[k+arg_count .. local_count)</code> 清成 null
+<li><strong>顺带量到、但登记不做的两件事</strong>（都低于或接近本机分辨率上限，且动之风险不成比例）：<ol>
+<li><strong>整帧 null 初始化</strong>：<code>call_reg_impl</code> 每次都把 <code>locals[k+arg_count .. local_count)</code> 清成 null
      （Lua 不做，靠 codegen 自己 init）。消融实测 <strong>≈0.32ns/槽</strong>：<code>loc32</code>（34 槽）省下
      <strong>11ns/次（约调用成本的 7%）</strong>，<code>loc16</code> 约 2~5ns。<strong>为什么不能直接删</strong>：帧槽是<strong>复用</strong>的，
      上一次调用的残留值可能是指向<strong>已回收对象</strong>的指针，GC 扫描到就是 use-after-free ⇒
      要删必须先有 codegen 的「<strong>确定赋值</strong>」证明（保守分析，任何存疑就不置标志），
-     风险与收益不成比例 ⇒ <strong>登记备查，暂不做</strong>。
-  2. <strong><code>arg1</code>/<code>arg5</code> 那两项测得极不稳</strong>（arg1 三次 56/39/42ms）⇒ 探针里这类小项
+     风险与收益不成比例 ⇒ <strong>登记备查，暂不做</strong>。</li>
+<li><strong><code>arg1</code>/<code>arg5</code> 那两项测得极不稳</strong>（arg1 三次 56/39/42ms）⇒ 探针里这类小项
      <strong>必须多轮取 min</strong>，单次读数不能采信。</li>
+</ol>
+</li>
 </ul>
 <p><strong>⑤-p 写路径直取变量寄存器（<code>arr[i] = v</code> / <code>obj.f = v</code>）—— ✅ 已完成</strong></p>
 <p><strong>动机</strong>：按 ⑤-n 的结论继续做"<strong>整条指令削减</strong>"（唯一被证明有效的杠杆），方法是
@@ -1809,14 +1817,14 @@ FOR_LOOP
 <p>⇒ 函数代码 176 → <strong>120 字节</strong>，内层 <strong>14 → 10 条</strong>（−29%）。</p>
 <p><strong>⚠ 安全性：写路径比读路径多一条约束（这是本次的核心难点）</strong>
 - 读路径的论证照旧：<code>OP_INDEX_SET</code> 是"先读 R[A]/R[B]/R[C]，再写数组元素"，
-  即使三者是同一个寄存器也安全（写的是数组内部，不是寄存器槽）。
+即使三者是同一个寄存器也安全（写的是数组内部，不是寄存器槽）。
 - <strong>新增约束</strong>：值的求值发生在<strong>派发 <code>INDEX_SET</code>/<code>SET_FIELD</code> 之前</strong> ⇒ 若右值会改写
-  「下标 / 接收者」所绑的局部量，直取就会读到<strong>新值</strong>：
-  <code>arr[i] = f()</code>，而 f 内部把 i 改了 ⇒ 直取版写 <code>arr[新 i]</code>、快照版写 <code>arr[旧 i]</code>。
+「下标 / 接收者」所绑的局部量，直取就会读到<strong>新值</strong>：
+<code>arr[i] = f()</code>，而 f 内部把 i 改了 ⇒ 直取版写 <code>arr[新 i]</code>、快照版写 <code>arr[旧 i]</code>。
 - 修法：新增 <code>ast_may_write_slot()</code>（<code>ast_may_read_slot()</code> 的写侧对偶）：认得的节点精确递归，
-  <strong>含调用/赋值一律返回 1</strong>（闭包可能改写捕获的局部量，编译期看不出来）⇒ 回退到
-  "先搬进临时寄存器"的老路径，只多占一个寄存器，语义不变。值那一侧只对<strong>裸变量</strong>
-  （<code>AST_VAR</code>，无副作用）直取。</p>
+<strong>含调用/赋值一律返回 1</strong>（闭包可能改写捕获的局部量，编译期看不出来）⇒ 回退到
+"先搬进临时寄存器"的老路径，只多占一个寄存器，语义不变。值那一侧只对<strong>裸变量</strong>
+（<code>AST_VAR</code>，无副作用）直取。</p>
 <p><strong>实测（同机同轮双向 A/B，用 <code>git stash</code> 出基线 exe，避免跨构建漂移）</strong>：</p>
 <table>
 <thead>
@@ -1868,11 +1876,11 @@ FOR_LOOP
 </table>
 <p><strong>门禁</strong>：断言套件 <strong>359/359</strong>（新增 <code>assert/test_write_path_direct_reg.leno</code>）+ 示例冒烟 15/15。
 - ⚠ 新用例按本文档的规矩做了"<strong>必须能红</strong>"的验证：把 <code>ast_may_write_slot()</code> 临时改成
-  恒返回 0（等于关掉 guard）后重建，该用例报 <strong>6 处失败</strong>（命中"右值改写接收者"两例）⇒
-  不是空用例。
+恒返回 0（等于关掉 guard）后重建，该用例报 <strong>6 处失败</strong>（命中"右值改写接收者"两例）⇒
+不是空用例。
 - 备注：用例里的「右值改写下标」那一例（case 4）在<strong>关掉 guard 时也没红</strong> ⇒ 说明该形态下
-  codegen 本来就没走直取（大概率被别的判据挡住）。仍保留它作为正确性检查，但<strong>不要</strong>
-  把它当成 guard 的守门用例。</p>
+codegen 本来就没走直取（大概率被别的判据挡住）。仍保留它作为正确性检查，但<strong>不要</strong>
+把它当成 guard 的守门用例。</p>
 <p><strong>⑤-q <code>while</code> 回边融合（每轮省一条 <code>JMP</code>）+ 顺手修掉 <code>while</code> 里 <code>continue</code> 的静默错值 —— ✅ 已完成</strong></p>
 <p><strong>起因</strong>：查 ⑤-p 之后的剩余项时回到 <code>while</code> —— 它不是"每条指令更贵"（那点早被证伪），
 而是<strong>每轮多一条控制指令</strong>：<code>CMPJMP_false(cond) → exit</code> + <code>&lt;body&gt;</code> + <code>JMP head</code>。</p>
@@ -1881,12 +1889,12 @@ FOR_LOOP
 那条 <code>OP_JMP</code> 的偏移停在 <strong>0</strong>，<code>frame-&gt;ip += 0</code> 等于<strong>不跳</strong> —— <code>continue</code> 之后的语句照样执行。
 - 实测：<code>while i &lt; 10 { i++; if i == 5 { continue }; s += i }</code> 得 <strong>s=55（应为 50）</strong>。
 - <strong>为什么一直没被发现</strong>：套件当时 359 项全绿 —— <code>continue</code> 的用例（<code>test_control_flow</code>、
-  <code>test_for</code>）<strong>全在 <code>for</code> 里</strong>，<code>while</code> 这一格零覆盖。
+<code>test_for</code>）<strong>全在 <code>for</code> 里</strong>，<code>while</code> 这一格零覆盖。
 - 修法：在 <code>gen_while</code> 里回填（目标 = 回边那次条件重测）。新增用例
-  <code>assert/test_while_continue.leno</code>（5 组判据：融合路径 / <strong>复合条件走回退路径</strong> / 嵌套只作用于
-  内层 / break 与 continue 混用 / continue 在体末）。
+<code>assert/test_while_continue.leno</code>（5 组判据：融合路径 / <strong>复合条件走回退路径</strong> / 嵌套只作用于
+内层 / break 与 continue 混用 / continue 在体末）。
 - <strong>"用例必须能红"的零构建验证</strong>：直接拿仓库里改动前的 <code>build/leno_old.exe</code>（<code>b49ada9</code>）跑新用例
-  ⇒ 报 <code>断言失败: 期望 50, 实际 55</code> ✓ 不是空用例（<strong>比临时回退再重建省一次构建</strong>，值得沿用）。</p>
+⇒ 报 <code>断言失败: 期望 50, 实际 55</code> ✓ 不是空用例（<strong>比临时回退再重建省一次构建</strong>，值得沿用）。</p>
 <p><strong>② 回边融合（本次的性能改动）</strong>：把条件的重测挪到循环体之后，复用「比较 + 条件跳转」指令：</p>
 <pre><code>原形态（每轮 2 条控制指令）              现形态（每轮 1 条）
 head: CMPJMP_false(cond) → exit          entry: CMPJMP_false(cond) → exit
@@ -1972,8 +1980,8 @@ STATUS_HEAP_CORRUPTION，堆损坏）</strong>、<strong>零输出</strong>、10
 1. <code>--debug</code> 能打出 98213 行反汇编 ⇒ <strong>编译没问题，崩在运行期</strong>。
 2. 最小 SDL3 例（<code>leno_gui/控件/画布/test_canvas_tab.leno</code>）跑得起来 ⇒ 不是环境/SDL3 模块。
 3. <strong>最小 import 探针</strong>（不用重建、最省力的缩小手段）：<code>import "SDL3"</code> 正常，
-   <code>import "trae_core.leno"</code> <strong>单独就崩</strong> → 再拆 <code>web_net</code> / 内置模块 / <code>trae_crypto.leno</code>
-   ⇒ 锁到 <strong><code>trae_crypto.leno</code></strong>（42 行）。
+<code>import "trae_core.leno"</code> <strong>单独就崩</strong> → 再拆 <code>web_net</code> / 内置模块 / <code>trae_crypto.leno</code>
+⇒ 锁到 <strong><code>trae_crypto.leno</code></strong>（42 行）。
 4. 该模块初始化只做两件事：<code>import "Crypto"</code> + 两个 64 元素数组字面量。造 <code>c1/c2/c9/c10</code> 二分：</p>
 <table>
 <thead>
@@ -2007,23 +2015,24 @@ STATUS_HEAP_CORRUPTION，堆损坏）</strong>、<strong>零输出</strong>、10
 </table>
 <p>⇒ 与"<strong>走 malloc 的动态 locals</strong>"绑定，<strong>与数组大小无关</strong>。
 5. 交叉排除"动态 locals 路径整体坏了"：普通函数 71 槽（<code>p_bigfunc</code>）、函数内 100 元素数组
-   （<code>p_farr100</code>）<strong>都正常</strong> ⇒ 只有<strong>模块初始化帧</strong>中招。
+（<code>p_farr100</code>）<strong>都正常</strong> ⇒ 只有<strong>模块初始化帧</strong>中招。
 6. <strong>哨兵诊断</strong>（动态 locals 尾部多留 8 槽写标记、free 前检查）：<strong>标记完好</strong>
-   ⇒ 否掉"写越界到数组尾"，转向<strong>释放路径</strong>。
+⇒ 否掉"写越界到数组尾"，转向<strong>释放路径</strong>。
 7. <strong>gdb + <code>-g -O0</code> 拿崩溃栈</strong>（Windows/MinGW 无 libasan，实测 <code>cannot find -lasan</code>；
-   ★ 2026-11-03 补：<strong>Linux 上 ASan 是可用的</strong>，内存问题建议在 Linux 侧跑一遍
-   <code>-fsanitize=address</code> —— 见 <code>docs/编译器崩溃排查手册.md</code> §五 的跑法）：
-   <code>#6 ucrtbase!_free_base
+★ 2026-11-03 补：<strong>Linux 上 ASan 是可用的</strong>，内存问题建议在 Linux 侧跑一遍
+<code>-fsanitize=address</code> —— 见 <code>docs/编译器崩溃排查手册.md</code> §五 的跑法）：</p>
+<pre><code>   #6 ucrtbase!_free_base
    #7 vm_run_chunk (...) at src/vm/vminc/vm_init.inc:302   ← free 时撞出堆损坏
-   #8 vm_run at src/vm/vminc/run/10_vars_module.inc:250    ← 模块导入</code></p>
+   #8 vm_run at src/vm/vminc/run/10_vars_module.inc:250    ← 模块导入
+</code></pre>
 <p><strong>根因：双重释放。</strong>
 - <code>REG_FINISH_RETURN</code>（<code>run/01_prologue.inc</code>）的<strong>三个分支各自都 free 了</strong>动态 locals
-  （236 / 246 / 265 行）—— 这就是"谁拥有这块内存"的答案：<strong>RETURN 路径负责释放</strong>。
+（236 / 246 / 265 行）—— 这就是"谁拥有这块内存"的答案：<strong>RETURN 路径负责释放</strong>。
 - 而 <code>vm_run_chunk</code>（模块初始化帧的收尾）返回后又 <code>if (dyn) free(locals);</code>
-  ⇒ <strong>第二次释放</strong> ⇒ 堆损坏，崩点正是这一行 ✓
+⇒ <strong>第二次释放</strong> ⇒ 堆损坏，崩点正是这一行 ✓
 - <strong>为什么长期没暴露</strong>：只有「模块 chunk 槽位 &gt; <code>INLINE_LOCALS_MAX</code>」才走 malloc：
-  内联帧 <code>locals_is_dynamic = 0</code> ⇒ 两条路径都不 free（不崩）；普通函数帧走 265 行那一支，
-  只 free 一次（不崩）。真实触发者：<code>trae_crypto.leno</code> 模块级两个 64 元素数组 ⇒ 模块 chunk <strong>66 槽</strong> ✓</p>
+内联帧 <code>locals_is_dynamic = 0</code> ⇒ 两条路径都不 free（不崩）；普通函数帧走 265 行那一支，
+只 free 一次（不崩）。真实触发者：<code>trae_crypto.leno</code> 模块级两个 64 元素数组 ⇒ 模块 chunk <strong>66 槽</strong> ✓</p>
 <p><strong>修法</strong>（<code>src/vm/vminc/vm_init.inc</code>，+9/−1）：宿主的释放改成"<strong>只在这个帧还挂在栈上时才释放</strong>"：</p>
 <pre><code class="language-c">if (dyn &amp;&amp; vm.frame_cnt &gt; prev_frame_cnt) {        /* 正常 return ⇒ RETURN 已释放，跳过 */
     CallFrame* own = &amp;vm.frames[prev_frame_cnt];   /* 按索引重取：vm_run 期间 vm.frames 可能已 realloc */
@@ -2038,20 +2047,20 @@ STATUS_HEAP_CORRUPTION，堆损坏）</strong>、<strong>零输出</strong>、10
 </ul>
 <p><strong>验证</strong>：
 - 原始应用：退出码 <strong>0</strong>，输出 <code>[gui] 首帧渲染 ok  日历=540.0x300.0  2026 年 9 月  账号=TRAE SOLO CN/cheng8214</code>、
-  <code>[gui] frames=30  accounts=2 ... 已签到日=5  状态=离线模式…</code> ✓
+<code>[gui] frames=30  accounts=2 ... 已签到日=5  状态=离线模式…</code> ✓
 - 六个复现用例（c9/c10/crypto/hist/core/all）全绿 ✓
 - 新增回归用例 <code>assert/test_module_dyn_locals.leno</code> + <code>assert/helpers/big_chunk_module.leno</code>
-  （故意用 <strong>200</strong> 元素而不是"刚过 64"：将来调大 <code>INLINE_LOCALS_MAX</code> 也不会绕过这条路径）。
-  ⚠ 按规矩做了"必须能红"的<strong>零构建验证</strong>：改动前的 <code>leno_old.exe</code> 跑该用例 ⇒
-  退出码 <code>-1073740940</code>、零输出 ✓ 判别力确认。
+（故意用 <strong>200</strong> 元素而不是"刚过 64"：将来调大 <code>INLINE_LOCALS_MAX</code> 也不会绕过这条路径）。
+⚠ 按规矩做了"必须能红"的<strong>零构建验证</strong>：改动前的 <code>leno_old.exe</code> 跑该用例 ⇒
+退出码 <code>-1073740940</code>、零输出 ✓ 判别力确认。
 - 门禁 <strong>362/362</strong> + 冒烟 15/15。
 - 顺手核查同类风险：协程挂起/恢复的 <code>saved_frames</code> 所有权链（<code>13_async_ffi.inc</code> 转出 /
-  <code>vm.c:1488</code> 转回 / <code>gc.c:1585</code> 回收）<strong>自洽</strong>（注释明写"所有权转给/转回"）⇒ 不构成同类双重释放 ✓。</p>
+<code>vm.c:1488</code> 转回 / <code>gc.c:1585</code> 回收）<strong>自洽</strong>（注释明写"所有权转给/转回"）⇒ 不构成同类双重释放 ✓。</p>
 <p><strong>⑤-t 位运算/移位的</strong>常量化<strong>（T14）—— ✅ 已完成</strong></p>
 <p><strong>起因</strong>：<code>examples/性能测试/bench_bitwise_loop.leno</code>（对齐 Java 的位运算跑分）实测
 <strong>Leno 慢 Lua 1.96x</strong>（2 亿轮：Leno 3002ms / Lua 1532ms，结果两边都是 1198）。
 - 该基准原先写 20 亿轮（Lua 侧要跑上百秒），已改成 <strong>2 亿</strong>并新增 <code>.lua</code> 对照
-  （<code>.leno</code> 的 <code>for 0 : N to i</code> 里 <code>:</code> 是<strong>闭区间</strong>，Lua 的 <code>for i = 0, N</code> 同样闭区间 ⇒ 轮数严格一致）。</p>
+（<code>.leno</code> 的 <code>for 0 : N to i</code> 里 <code>:</code> 是<strong>闭区间</strong>，Lua 的 <code>for i = 0, N</code> 同样闭区间 ⇒ 轮数严格一致）。</p>
 <p><strong>根因（反汇编）</strong>：每轮 <strong>10 条</strong>，其中 <strong>4 条 <code>LOADI</code> 是纯搬运</strong> ——
 <code>inp &amp; 7</code> 必须先 <code>LOADI r,7</code> 再 <code>OP_BITAND r</code>，而且<strong>每轮重装同一个常量</strong>：</p>
 <table>
@@ -2077,18 +2086,18 @@ STATUS_HEAP_CORRUPTION，堆损坏）</strong>、<strong>零输出</strong>、10
 （<code>A</code> = 结果寄存器，<code>B</code> = 左操作数寄存器，<code>C</code> = 常量索引；
 <code>C</code> 为 0 或 &gt;255 时紧随一条 <code>EXTRAARG</code> 携带 24 位索引 —— <strong>与 <code>OP_CALL_NATIVE</code> 同一惯例</strong>）。
 - <strong>为什么走常量表而不是 int8 立即数</strong>：<code>x &amp; 0xFFFF</code>、<code>x &amp; 1135</code> 这类超 8 位常量同样常见
-  （本例的 <code>1125</code>/<code>1135</code> 就在 int8 之外），常量表没有幅度限制。
+（本例的 <code>1125</code>/<code>1135</code> 就在 int8 之外），常量表没有幅度限制。
 - <strong>不复制 handler</strong>：把 6 个 op 的函数体抽成宏（<code>BITAND_BODY(CV)</code> …），
-  <strong>寄存器版与 K 版各实例化一次</strong> ⇒"语义逐字同体"由编译期强制成立（唯一差异是右操作数
-  取 <code>R[C]</code> 还是 <code>constants[C]</code>），bigint 免装箱快路径、移位量的边界判断等全部只有一份。
-  仓库有《单一事实来源与重复实现收敛》待办 ⇒ 新指令不该再抄一份 handler。
+<strong>寄存器版与 K 版各实例化一次</strong> ⇒"语义逐字同体"由编译期强制成立（唯一差异是右操作数
+取 <code>R[C]</code> 还是 <code>constants[C]</code>），bigint 免装箱快路径、移位量的边界判断等全部只有一份。
+仓库有《单一事实来源与重复实现收敛》待办 ⇒ 新指令不该再抄一份 handler。
 - <strong>codegen</strong>（<code>gen_binary</code>）：右操作数是整数字面量 ⇒ 右值<strong>不物化</strong>，直接走 K 版。
-  <strong>可交换的 AND/OR/XOR 还支持字面量在左边</strong>（<code>1125 ^ inp</code>）：常量放 <code>C</code>、变量放 <code>B</code>
-  （交换律保证等价；被换的只有"字面量那一侧"，字面量无副作用、另一侧又限定为普通局部变量
-  ⇒ 求值顺序不可观测）。位移类不可交换 ⇒ 只处理右操作数（移位量）。
+<strong>可交换的 AND/OR/XOR 还支持字面量在左边</strong>（<code>1125 ^ inp</code>）：常量放 <code>C</code>、变量放 <code>B</code>
+（交换律保证等价；被换的只有"字面量那一侧"，字面量无副作用、另一侧又限定为普通局部变量
+⇒ 求值顺序不可观测）。位移类不可交换 ⇒ 只处理右操作数（移位量）。
 - ⚠ <strong>两处占位寄存器必须补</strong>（<code>rl</code> 在"字面量在左边"时、<code>r</code> 在右值是字面量时）：
-  与 <code>rhs_imm</code> 同一坑 —— 不补占位，收尾会去 <code>reg_free</code> 寄存器 0 ⇒ <strong>整个分配器错乱</strong>
-  （文档里记过"单跑测试都过、runner 里 351 个用例全挂"）。
+与 <code>rhs_imm</code> 同一坑 —— 不补占位，收尾会去 <code>reg_free</code> 寄存器 0 ⇒ <strong>整个分配器错乱</strong>
+（文档里记过"单跑测试都过、runner 里 351 个用例全挂"）。
 - opcode 追加在末尾 ⇒ 既有编号不动、旧 <code>.lenb</code> 仍可执行。</p>
 <p><strong>实测（同机同轮 A/B，<code>git stash</code> 出基线，4 次取最小、交错）</strong>：</p>
 <table>
@@ -2120,27 +2129,27 @@ STATUS_HEAP_CORRUPTION，堆损坏）</strong>、<strong>零输出</strong>、10
 - 每删一条 <code>LOADI</code> 只省 <strong>~0.64ns</strong>（此前从 <code>a = 1</code> 反推的边际 ≈0.87ns）；
 - 更关键：<strong>K 版的单条均摊成本反而更高</strong> —— 11.35ns/6 = <strong>1.89ns/条</strong>，而改前是 13.9ns/10 = 1.39ns/条。
 - 怀疑是常量表访问链 <code>frame → chunk → constants → [idx] → Value</code>（4 级依赖加载）
-  比 <code>LOADI</code> 的立即数写更贵。<strong>候选</strong>：像 Lua 那样把常量表基址在帧建立时缓存进局部
-  （Lua 的 <code>k</code>）—— 但文档里"缓存 <code>frame-&gt;locals</code>"那次实测是<strong>中性</strong>（<code>-O2</code> 已缓存过一层），
-  所以这条只是候选，<strong>动前必须先量</strong>。
+比 <code>LOADI</code> 的立即数写更贵。<strong>候选</strong>：像 Lua 那样把常量表基址在帧建立时缓存进局部
+（Lua 的 <code>k</code>）—— 但文档里"缓存 <code>frame-&gt;locals</code>"那次实测是<strong>中性</strong>（<code>-O2</code> 已缓存过一层），
+所以这条只是候选，<strong>动前必须先量</strong>。
 - ✅ <strong>2026-09-22 已量、结账（上面的猜测只占缺口约 1/4）</strong>：新增隔离微基准
-  <code>examples/性能测试/位运算常量表隔离微基准.leno</code> —— 用<strong>同指令数</strong>的两段循环把"取操作数"
-  单独隔离：<code>x &amp; 1135</code>（字面量）⇒ <strong>1 条</strong> <code>OP_BITAND_K</code>（取常量表）；
-  <code>x &amp; y</code>（局部变量）⇒ <strong>1 条</strong> <code>OP_BITAND</code>（取寄存器）。两者是同一宏体实例化，唯一差异是
-  右操作数来源；<code>--debug</code> 反汇编核对过两条循环体都只有 1 条指令、寄存器布局一致、无 <code>EXTRAARG</code>。
-  同机<strong>交替 4 轮取 min</strong>（偶数轮正序、奇数轮逆序，消冷启动与顺序偏置）：
-  - 空体循环（纯循环开销）3.134 ns/轮；<code>x = 7</code>（<code>OP_LOADI</code>）<strong>0.785 ns/条</strong>；
-    <code>OP_BITAND_K</code> <strong>1.700 ns/条</strong>、<code>OP_BITAND</code> <strong>1.474 ns/条</strong>。
-  - ⇒ <strong>常量表取操作数比寄存器贵 0.225 ns/条</strong> —— 假设方向成立，但只占 K 版自身约 13%；
-    每替换一组 <code>LOADI + 通用位运算</code>（→ 1 条 K 版）实际只省 <strong>0.559 ns</strong>
-    （0.785 + 1.474 − 1.700，与上面 ~0.64ns 同量级），<strong>不是</strong>反推所用的平均值。
-  - <strong>缺口的真因是"按平均指令成本折算"这个模型本身</strong>：以改前 3002ms/10 条 = 1.50ns/条 折算，
-    4 条应省 ≈1200ms（3002 → 反推的 ~1800ms），实测只省 ≈447ms（→ 2565ms）。
-    缺口 ≈764ms 拆开是：<strong>~573ms（约 3/4）来自 <code>LOADI</code> 被按平均指令计价</strong>（它本就是全 VM
-    最便宜的指令之一，0.785ns），<strong>~180ms（约 1/4）才是常量表访问链</strong>。
-  - <strong>结论：不动代码</strong>。缓存常量表基址的上限只值那 ~180ms（整个基准 ~7%），且要与 175 处
-    帧重同步点挂钩 —— 与上面"缓存 <code>frame-&gt;locals</code> 在 <code>-O2</code> 下中性"属同一类低收益、
-    高不变量风险的改动，按"动前必须先量、中性收益不引入新不变量"的口径<strong>不做</strong>。</p>
+<code>examples/性能测试/位运算常量表隔离微基准.leno</code> —— 用<strong>同指令数</strong>的两段循环把"取操作数"
+单独隔离：<code>x &amp; 1135</code>（字面量）⇒ <strong>1 条</strong> <code>OP_BITAND_K</code>（取常量表）；
+<code>x &amp; y</code>（局部变量）⇒ <strong>1 条</strong> <code>OP_BITAND</code>（取寄存器）。两者是同一宏体实例化，唯一差异是
+右操作数来源；<code>--debug</code> 反汇编核对过两条循环体都只有 1 条指令、寄存器布局一致、无 <code>EXTRAARG</code>。
+同机<strong>交替 4 轮取 min</strong>（偶数轮正序、奇数轮逆序，消冷启动与顺序偏置）：
+- 空体循环（纯循环开销）3.134 ns/轮；<code>x = 7</code>（<code>OP_LOADI</code>）<strong>0.785 ns/条</strong>；
+ <code>OP_BITAND_K</code> <strong>1.700 ns/条</strong>、<code>OP_BITAND</code> <strong>1.474 ns/条</strong>。
+- ⇒ <strong>常量表取操作数比寄存器贵 0.225 ns/条</strong> —— 假设方向成立，但只占 K 版自身约 13%；
+ 每替换一组 <code>LOADI + 通用位运算</code>（→ 1 条 K 版）实际只省 <strong>0.559 ns</strong>
+ （0.785 + 1.474 − 1.700，与上面 ~0.64ns 同量级），<strong>不是</strong>反推所用的平均值。
+- <strong>缺口的真因是"按平均指令成本折算"这个模型本身</strong>：以改前 3002ms/10 条 = 1.50ns/条 折算，
+ 4 条应省 ≈1200ms（3002 → 反推的 ~1800ms），实测只省 ≈447ms（→ 2565ms）。
+ 缺口 ≈764ms 拆开是：<strong>~573ms（约 3/4）来自 <code>LOADI</code> 被按平均指令计价</strong>（它本就是全 VM
+ 最便宜的指令之一，0.785ns），<strong>~180ms（约 1/4）才是常量表访问链</strong>。
+- <strong>结论：不动代码</strong>。缓存常量表基址的上限只值那 ~180ms（整个基准 ~7%），且要与 175 处
+ 帧重同步点挂钩 —— 与上面"缓存 <code>frame-&gt;locals</code> 在 <code>-O2</code> 下中性"属同一类低收益、
+ 高不变量风险的改动，按"动前必须先量、中性收益不引入新不变量"的口径<strong>不做</strong>。</p>
 <p><strong>回退面</strong>：36 项里唯一 ≥4% 的是 <code>for 空体</code>（机制上不涉及位运算）——<strong>交错复测后降到 +1.8%</strong>
 ⇒ 布局漂移（那次非交错测量的 +6.3% 是顺序偏置），不是回归。</p>
 <p><strong>门禁</strong>：断言套件 <strong>361/361</strong> + 示例冒烟 15/15。
@@ -2289,11 +2298,11 @@ bigint 位运算那批用例（<code>test_bigint_arith</code> 等）正是"免�
 <p>⇒ 容器迭代的每轮开销是数值 for 的 <strong>3.2 倍</strong>，这就是要收的东西。</p>
 <p><strong>先否掉一个"看起来白赚"的改法：把长度提到循环外。</strong>
 - 先量现行为（改动前，<code>for a to x</code> 起于 <code>[1,2]</code>、每轮 <code>a.add(9)</code>）：
-  <strong>6 轮结束、最终 len=6</strong> ⇒ 长度是<strong>每轮重读</strong>的，追加会把循环"撑长"。
+<strong>6 轮结束、最终 len=6</strong> ⇒ 长度是<strong>每轮重读</strong>的，追加会把循环"撑长"。
 - 栈式实现的 <code>gen_for_iter</code> 同样每轮 <code>GET_LOCAL obj; OP_LENGTH; OP_LT</code>
-  ⇒ <strong>两侧口径一致，这是有意语义，不是缺陷</strong>。
+⇒ <strong>两侧口径一致，这是有意语义，不是缺陷</strong>。
 - 提到循环外会静默把它变成 <strong>2 轮</strong> —— 属于<strong>语义决策</strong>（还牵扯"迭代中 <code>remove</code> 会不会变成越界"），
-  不是代码生成优化，<strong>不做</strong>（要改必须两侧一起改 + 写进语言文档）。</p>
+不是代码生成优化，<strong>不做</strong>（要改必须两侧一起改 + 写进语言文档）。</p>
 <p><strong>改法：新增一条融合指令 <code>OP_CMPJMP_ITER</code></strong>（语义等价，长度仍在每次测试时读）：</p>
 <pre><code>原先每轮: LEN, LT, JMP_IF_FALSE, ITER_GET, [体], INC, JMP
 现在每轮: ITER_GET, [体], CMPJMP_ITER(先自增 + 比较 + 真则跳回)
@@ -2356,8 +2365,8 @@ bigint 位运算那批用例（<code>test_bigint_arith</code> 等）正是"免�
 <code>break</code>/<code>continue</code> 绑定、带索引变量、字典键/值两路、枚举成员、嵌套内层 <code>continue</code>、
 循环变量在体内被改写不影响下一轮）。
 - ⚠ 与"修 bug"的用例如意不同：<strong>这条用例在改动前、改动后的 exe 上都必须绿</strong>
-  （它锁的是<strong>既有语义</strong>，价值在于挡住将来"把长度提到循环外"那类静默语义漂移）。
-  先在新旧两个 exe 上都跑过确认 ✓。</p>
+（它锁的是<strong>既有语义</strong>，价值在于挡住将来"把长度提到循环外"那类静默语义漂移）。
+先在新旧两个 exe 上都跑过确认 ✓。</p>
 <p><strong>⑤-r T12：跳转偏移溢出从「静默截断」改成「编译期报错」—— ✅ 已完成（正确性优先）</strong></p>
 <p><strong>动机</strong>：⑤-q 做 <code>while</code> 回边融合时自己踩到了这条 —— <code>patch_common</code> 对超范围偏移是
 <strong>截断到边界</strong>（16 位编码把 <code>bx</code> 夹到 <code>[0,0xFFFF]</code>；<code>OP_JMP</code> 连夹都没有、直接按掩码写低 24 位），
@@ -2390,13 +2399,13 @@ bigint 位运算那批用例（<code>test_bigint_arith</code> 等）正是"免�
 <p>⇒ 三种表现都"没有任何有用诊断"（崩溃 / 垃圾错误 / 只有反汇编时才看得见）。</p>
 <p><strong>实现</strong>（<code>src/codegen/codegen_emit.c</code>）：
 - 新增 <code>report_jump_overflow(gen, pos, offset, limit)</code>：从 <code>chunk-&gt;lines[pos]</code> 取行号
-  （<code>lines</code> 是<strong>按字节偏移索引</strong>的，与 VM 的 <code>GET_CURRENT_LINE()</code> 同一张表），
-  <code>error_add(ERR_SEMANTIC, line, msg)</code>。
+（<code>lines</code> 是<strong>按字节偏移索引</strong>的，与 VM 的 <code>GET_CURRENT_LINE()</code> 同一张表），
+<code>error_add(ERR_SEMANTIC, line, msg)</code>。
 - <code>patch_common</code> 三种编码各加一道范围检查 + 夹断兜底（32 位不溢出）：
-  <code>OP_JMP</code> = 24 位有符号 ±8388607；<code>CMPJMP</code> 与 <code>iAsBx</code> = 16 位带偏置 ±32767。
+<code>OP_JMP</code> = 24 位有符号 ±8388607；<code>CMPJMP</code> 与 <code>iAsBx</code> = 16 位带偏置 ±32767。
 - <code>patch_sbx_at</code>（<code>FOR_PREP</code> 前跳 / <code>FOR_LOOP</code> 回跳，同样是 16 位）同样检查。
 - <strong>报错能让编译真的停下</strong>：<code>main.c:801</code> 在 <code>codegen()</code> 之后就有
-  <code>if (error_has_any()) goto compile_fail;</code> ⇒ 不会去写 <code>.lenb</code>、不会执行，<strong>退出码 -1</strong>（已实测）。</p>
+<code>if (error_has_any()) goto compile_fail;</code> ⇒ 不会去写 <code>.lenb</code>、不会执行，<strong>退出码 -1</strong>（已实测）。</p>
 <p><strong>修后表现</strong>（同一个 4 万字节程序）：</p>
 <pre><code>build\_big_if.leno(4,1): error: [语义错误] 跳转距离超出指令可达范围：需要 +40000 字节，
                                   该指令上限 ±32767 字节（单个分支或循环体的字节码过大，请拆成独立函数）
@@ -2418,7 +2427,7 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 差点得出"T12 没生效"的错误结论。
 - 判据：<code>Get-Item build\leno.exe</code> 的时间戳<strong>早于</strong>改动的源文件（21:09 vs 21:18）⇒ 立刻暴露。
 - 规矩：<strong>构建日志不许截断取前 N 行</strong>；只看 <code>Select-String -Pattern "error:"</code>，
-  并且验证前先比一次"exe 时间戳 ≥ 源文件时间戳"。</p>
+并且验证前先比一次"exe 时间戳 ≥ 源文件时间戳"。</p>
 <p><strong>门禁</strong>：断言套件 <strong>360/360</strong> + 示例冒烟 15/15（正常程序体量到不了 32KB ⇒ 零误报）。</p>
 <p><strong>⑤-c Leno vs Lua（新基准口径）—— 已排除项与剩余嫌疑</strong></p>
 <blockquote>
@@ -2522,7 +2531,7 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 <p><strong>⚠ 与 A/B 的交叉印证（两套独立测量必须对得上）</strong>：
 - 400000 原地快排：本表 215,825 → 186,544 = <strong>−13.6%</strong>，而 ⑤-p 的 A/B 说该档 <strong>−12.7%</strong> ✓ 同量级；
 - 400000 优化快排：本表 183,185 → 137,172 = <strong>−25.1%</strong>，而 ⑤-p（−6.6%）+ ⑤-q（−17.3%）累计
-  ≈ <strong>−22.8%</strong> ✓ 同量级。
+≈ <strong>−22.8%</strong> ✓ 同量级。
 两套口径（跨轮比值 vs 同轮 A/B）能这样对上，说明这批数字可信；<strong>对不上就说明有漂移，不能用</strong>。</p>
 <p><strong>⚠ 分辨率</strong>：Lua 侧 <code>os.clock()</code> 在 Windows 上<strong>粒度 1ms</strong>（读数全是 1000µs 的整数倍）⇒
 500 那档直接读成 <code>0</code>（不可用），<strong>2 万档（Lua 4–5ms）的量化误差可达 ±25%</strong>，
@@ -2593,8 +2602,8 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 <code>for arr.add</code> <strong>0.31x</strong>、<code>while arr.add</code> <strong>0.34x</strong>、<code>while 步长2</code> <strong>0.37x</strong>。</p>
 <p><strong>⚠ 以下几项的数字不能当差距用（口径不对等）</strong>：
 - <code>dict[k]=v</code> <strong>4.00x</strong>：Leno 跑的是 <code>d.set("key",1)</code>＝<strong>native 方法调用</strong>
-  （<code>MOV+GET_METHOD+CALL</code>），Lua 跑的是 <code>d["key"]=1</code>（1 条）—— <strong>两边不是一个东西</strong>，
-  而且正好绕开了 ⑤-k/⑤-l/⑤-m 新加的字典 IC；
+（<code>MOV+GET_METHOD+CALL</code>），Lua 跑的是 <code>d["key"]=1</code>（1 条）—— <strong>两边不是一个东西</strong>，
+而且正好绕开了 ⑤-k/⑤-l/⑤-m 新加的字典 IC；
 - <code>arr[index]</code> <strong>1.28x</strong>：Leno 是 <code>arr[0]</code>（<strong>结果丢弃</strong>），Lua 是 <code>k = arr1[1]</code>（存下来）；
 - <code>try 有</code> <strong>0.08x</strong>：Lua 每轮 <code>pcall(function() ... end)</code> 要<strong>新建闭包</strong>（天然极慢）；
 - <code>arr.add</code> / 步长2：Lua 的 <code>table.insert</code> 是函数调用；
@@ -2649,23 +2658,23 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 只是因为它<strong>多一对"比较+跳回"</strong>，而这一对的比值（1.59x）略高于融合指令对（1.48x），
 量级落在噪声内 ⇒ <strong>不是独立缺陷，并入下面的"基线"问题一起看</strong>。</p>
 <ul>
-<li><strong>已排除（都做了实测，别再重复试）</strong>：
-  1. 编译优化等级：两边 <code>build.bat</code> 都是 <code>-O2</code> ✗；
-  2. 每条指令的行号写回（<code>DISPATCH</code> 里的 <code>vm.current_line</code>）：消融只值 <strong>7–13%</strong>；
-  3. 寄存器基址缓存（把 <code>frame-&gt;locals</code> 缓存成局部 <code>cur_regs</code>、175 处改帧统一换成
+<li><strong>已排除（都做了实测，别再重复试）</strong>：<ol>
+<li>编译优化等级：两边 <code>build.bat</code> 都是 <code>-O2</code> ✗；</li>
+<li>每条指令的行号写回（<code>DISPATCH</code> 里的 <code>vm.current_line</code>）：消融只值 <strong>7–13%</strong>；</li>
+<li>寄存器基址缓存（把 <code>frame-&gt;locals</code> 缓存成局部 <code>cur_regs</code>、175 处改帧统一换成
      <code>FRAME_RESYNC()</code>）：<strong>完全中性</strong>（探针 1.02/1.00/1.01/0.98x、排序 1.94→1.96x）⇒
-     <code>-O2</code> 早已在寄存器里缓存了这一层 ⇒ <strong>已回退</strong>（中性收益不值得多一条不变量风险）；
-  4. 测量口径（见上）；
-  5. handler 序言里无条件算的 <code>GET_CURRENT_LINE()</code>（<code>frame-&gt;chunk-&gt;lines[…]</code>，3 次依赖加载）——
-     消融（宏改常量 <code>(0)</code>）后 36 项全量 A/B <strong>差异方向随测量顺序翻转</strong> ⇒ 中性，详见 <strong>⑤-n</strong>；
-  6. <strong>回边的 GC 安全点检查</strong>（<code>FOR_LOOP</code> 每轮一次的 <code>vm.gc_force_request</code> 全局加载 + 分支）——
+     <code>-O2</code> 早已在寄存器里缓存了这一层 ⇒ <strong>已回退</strong>（中性收益不值得多一条不变量风险）；</li>
+<li>测量口径（见上）；</li>
+<li>handler 序言里无条件算的 <code>GET_CURRENT_LINE()</code>（<code>frame-&gt;chunk-&gt;lines[…]</code>，3 次依赖加载）——
+     消融（宏改常量 <code>(0)</code>）后 36 项全量 A/B <strong>差异方向随测量顺序翻转</strong> ⇒ 中性，详见 <strong>⑤-n</strong>；</li>
+<li><strong>回边的 GC 安全点检查</strong>（<code>FOR_LOOP</code> 每轮一次的 <code>vm.gc_force_request</code> 全局加载 + 分支）——
      消融后 <code>for i++</code> 看似 −4.4%，但<strong>对调 A/B 顺序翻成 +3.5%</strong>，且完全不经过 <code>FOR_LOOP</code> 的
      <code>while</code> 三种形态也在同轮里动了 ±3.6~3.9% ⇒ 纯布局漂移，<strong>无信号</strong>。
-     （该检查是 <code>LENO_GC_FORCE_EVERY</code> 测试钩子的落点，别删。）
-  7. <strong><code>while true</code> 专精</strong>（入口恒真测试 + 回边 <code>LOADTRUE + JMP_IF_TRUE</code> ⇒ 单条 <code>OP_JMP</code>）：
+     （该检查是 <code>LENO_GC_FORCE_EVERY</code> 测试钩子的落点，别删。）</li>
+<li><strong><code>while true</code> 专精</strong>（入口恒真测试 + 回边 <code>LOADTRUE + JMP_IF_TRUE</code> ⇒ 单条 <code>OP_JMP</code>）：
      每外圈派发 <strong>26 → 19 条</strong>（dump 实证）却<strong>更慢 ~10%</strong>（隔离探针 7/7 次、双向顺序一致），
-     排序基准中性 ⇒ <strong>已回退</strong>，详见 <strong>⑤-af</strong>。教训：<strong>「砍跳转」≠「砍指令」</strong>，别去数跳转。
-  8. <strong>T9：抽巨型 handler 的冷路径成 <code>static</code> 函数（整条路线，含 <code>OP_CALL</code> / <code>OP_STRUCT_INIT</code> /
+     排序基准中性 ⇒ <strong>已回退</strong>，详见 <strong>⑤-af</strong>。教训：<strong>「砍跳转」≠「砍指令」</strong>，别去数跳转。</li>
+<li><strong>T9：抽巨型 handler 的冷路径成 <code>static</code> 函数（整条路线，含 <code>OP_CALL</code> / <code>OP_STRUCT_INIT</code> /
      <code>OP_GET_METHOD</code> / <code>OP_STRUCT_DEF</code> / <code>OP_INDEX</code> / <code>OP_INDEX_SET</code> 的</strong>任何一个<strong>）</strong> ——
      <strong>2026-09-24 已完整实施并回退</strong>：<code>vm_run</code> 机器码确实 <strong>120,256 B = 3.75× L1I(32KB)</strong>（动机成立），
      抽出 5KB 冷代码后 <code>vm_run</code> 缩到 115,168 B（−4.23%）、断言 367/367，
@@ -2675,6 +2684,8 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
      I-cache 组相联的 set 映射全变，极短循环体对 ±10% 的单循环级抖动最敏感、<strong>方向由运气决定</strong>。
      <strong>不要再试</strong>（除非先做出"布局可控"的手段：独立段 / profile 重排 / 链接脚本）。
      详见 §T9 末节；补丁留档 <code>build\_t9_reverted.patch</code>。</li>
+</ol>
+</li>
 <li><strong>⚠ 量测分辨率上限（本轮的新认识，比任何单项结论都重要）</strong>：
   本机 A/B 的噪声底约 <strong>±1ns/轮 ≈ ±4%</strong>（判据：同轮里<strong>与改动无关</strong>的项目也会动 ±4%）。
   由此把三次消融排成一列就看得很清楚：</li>
@@ -2711,35 +2722,35 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 </tbody>
 </table>
 <p>⇒ <strong>整条指令的削减（0.9~2.9ns）测得出来；几个 uop（0.1~0.3ns）测不出来。</strong>
-  继续在 handler 里抠 uop 等于闭着眼睛改 —— 要么先上<strong>周期级探针</strong>（rdtsc）把分辨率压下去，
-  要么只做"整条指令"级别的改动。<strong>别再交"中性"的微优化了。</strong>
+继续在 handler 里抠 uop 等于闭着眼睛改 —— 要么先上<strong>周期级探针</strong>（rdtsc）把分辨率压下去，
+要么只做"整条指令"级别的改动。<strong>别再交"中性"的微优化了。</strong>
 - <strong>剩余嫌疑（按可操作性，已按上面证据修订）</strong>：
-  1. <strong>代码密度 / I-cache</strong>：<code>vm_run</code> 是<strong>一个 4000+ 行的函数</strong>，其中 <code>OP_INDEX</code> 单个 handler
-     就有 256 行 ⇒ 热派发循环与巨型冷路径纠缠在一起（Lua 的 handler 大多 ~20 行）。
-     对应 <strong>T9</strong>（把巨型 handler 的冷路径抽成 <code>static</code> 函数）—— 现在多了一个<strong>性能</strong>理由；
-     ⚠ <strong>2026-09-24 已实测证伪</strong>：<code>vm_run</code> 机器码确实 <strong>120,256 B = 3.75× L1I</strong>（前提成立），
-     抽出 5KB 冷代码后 <code>vm_run</code> 缩到 115,168 B，但<strong>空调用探针稳定 +8.5%、广覆盖探针 +3.34%</strong>，
-     单循环级 ±10% 的抖动方向随机（B2 −7.3% 与 空调用 +8.5% 并存）⇒ <strong>是地址对齐抽奖，不是杠杆</strong>。
-     详见 §T9 末节；<strong>别再试</strong>（除非先有布局可控的手段）；
-  2. 各算子里比 Lua 多的检查（bigint/溢出/int48 范围/GC/类型派发）—— 由边际成本表算出：
-     <code>FOR_LOOP</code> 比 Lua 重 <strong>+7.8ms/1e7</strong>、<code>INC</code> <strong>+5.2ms</strong>、<code>ADD_INT</code> <strong>+8.2ms</strong>，
-     即<strong>每条指令额外 0.5~0.8ns</strong>。这是 Leno 数字语义（int48 提升 + bigint + null）的<strong>固有代价</strong>，
-     不是 bug，抠不掉；且逐项都<strong>低于上面的分辨率上限</strong> ⇒ 不构成可攻目标；
-     ⚠ <strong>2026-09-25 补一条例外（别把这条推广成"所有多出来的检查都抠不掉"）</strong>：⑤-ah 发现索引
-     <strong>写</strong>路径里那块成本根本不是语义 —— 是<strong>漏做静态类型特化</strong>（读侧三个变体早就有，
-     写侧一个都没有，还多绕一次 <code>value_to_double</code> 的 int→double→int 往返），补上后
-     写密集基准 <strong>−9~−12%</strong>。判据：先分清"这个检查是<strong>语义要求</strong>（bigint/null/int48）"，还是
-     "<strong>编译器没把已知信息传下来</strong>（该特化没特化）"——后者是可攻的，且量级远大于 0.1~0.3ns 那一档；
-  3. ~~派发本身的固定开销（间接跳转 + <code>ADVANCE</code> + <code>frame-&gt;ip</code> 经结构体字段访问）~~
-     —— <strong>已证伪（2026-09-22）</strong>：<code>MOV</code> 的边际成本两边<strong>几乎相同</strong>（+4.8 vs +5.0ms/1e7），
-     说明"多一条派发指令"的代价并不比 Lua 贵 ⇒ 派发机制不是瓶颈。
-     <code>frame-&gt;ip</code> 提局部变量 / 寄存器窗口这一族<strong>不必再试</strong>（与已排除项 3、5 同源，第三次同向否定）。
+1. <strong>代码密度 / I-cache</strong>：<code>vm_run</code> 是<strong>一个 4000+ 行的函数</strong>，其中 <code>OP_INDEX</code> 单个 handler
+  就有 256 行 ⇒ 热派发循环与巨型冷路径纠缠在一起（Lua 的 handler 大多 ~20 行）。
+  对应 <strong>T9</strong>（把巨型 handler 的冷路径抽成 <code>static</code> 函数）—— 现在多了一个<strong>性能</strong>理由；
+  ⚠ <strong>2026-09-24 已实测证伪</strong>：<code>vm_run</code> 机器码确实 <strong>120,256 B = 3.75× L1I</strong>（前提成立），
+  抽出 5KB 冷代码后 <code>vm_run</code> 缩到 115,168 B，但<strong>空调用探针稳定 +8.5%、广覆盖探针 +3.34%</strong>，
+  单循环级 ±10% 的抖动方向随机（B2 −7.3% 与 空调用 +8.5% 并存）⇒ <strong>是地址对齐抽奖，不是杠杆</strong>。
+  详见 §T9 末节；<strong>别再试</strong>（除非先有布局可控的手段）；
+2. 各算子里比 Lua 多的检查（bigint/溢出/int48 范围/GC/类型派发）—— 由边际成本表算出：
+  <code>FOR_LOOP</code> 比 Lua 重 <strong>+7.8ms/1e7</strong>、<code>INC</code> <strong>+5.2ms</strong>、<code>ADD_INT</code> <strong>+8.2ms</strong>，
+  即<strong>每条指令额外 0.5~0.8ns</strong>。这是 Leno 数字语义（int48 提升 + bigint + null）的<strong>固有代价</strong>，
+  不是 bug，抠不掉；且逐项都<strong>低于上面的分辨率上限</strong> ⇒ 不构成可攻目标；
+  ⚠ <strong>2026-09-25 补一条例外（别把这条推广成"所有多出来的检查都抠不掉"）</strong>：⑤-ah 发现索引
+  <strong>写</strong>路径里那块成本根本不是语义 —— 是<strong>漏做静态类型特化</strong>（读侧三个变体早就有，
+  写侧一个都没有，还多绕一次 <code>value_to_double</code> 的 int→double→int 往返），补上后
+  写密集基准 <strong>−9~−12%</strong>。判据：先分清"这个检查是<strong>语义要求</strong>（bigint/null/int48）"，还是
+  "<strong>编译器没把已知信息传下来</strong>（该特化没特化）"——后者是可攻的，且量级远大于 0.1~0.3ns 那一档；
+3. ~~派发本身的固定开销（间接跳转 + <code>ADVANCE</code> + <code>frame-&gt;ip</code> 经结构体字段访问）~~
+  —— <strong>已证伪（2026-09-22）</strong>：<code>MOV</code> 的边际成本两边<strong>几乎相同</strong>（+4.8 vs +5.0ms/1e7），
+  说明"多一条派发指令"的代价并不比 Lua 贵 ⇒ 派发机制不是瓶颈。
+  <code>frame-&gt;ip</code> 提局部变量 / 寄存器窗口这一族<strong>不必再试</strong>（与已排除项 3、5 同源，第三次同向否定）。
 - <strong>下一步建议（已改向）</strong>：
-  1. 唯一"量级够大"的剩余目标是<strong>调用路径（微基准 2.27x）</strong> —— 结构性：<code>CallFrame</code> ≈384B、
-     每次调用写 14 个字段跨 6 条 cache line；Lua 的 <code>CallInfo</code> 只有几十字节。风险高，需先想清方案。
-  2. 继续做<strong>整条指令削减</strong>（唯一被证明有效的杠杆：<code>a+=1</code> −28%、<code>arr[0]</code> −29%、空体返回 −7.8%）：
-     方法是 dump <strong>真实程序</strong>的字节码数条数，找可以整条删掉的，而不是在 handler 里省 uop。
-  3. 若仍要做微优化，<strong>先解决量测精度</strong>（周期级探针），否则做出来的结论不可信。</p>
+1. 唯一"量级够大"的剩余目标是<strong>调用路径（微基准 2.27x）</strong> —— 结构性：<code>CallFrame</code> ≈384B、
+  每次调用写 14 个字段跨 6 条 cache line；Lua 的 <code>CallInfo</code> 只有几十字节。风险高，需先想清方案。
+2. 继续做<strong>整条指令削减</strong>（唯一被证明有效的杠杆：<code>a+=1</code> −28%、<code>arr[0]</code> −29%、空体返回 −7.8%）：
+  方法是 dump <strong>真实程序</strong>的字节码数条数，找可以整条删掉的，而不是在 handler 里省 uop。
+3. 若仍要做微优化，<strong>先解决量测精度</strong>（周期级探针），否则做出来的结论不可信。</p>
 <p><strong>判据</strong>（每条独立验证、独立提交）：<code>leno --debug</code> 里能 dump 出新融合指令；
 相关样例耗时不变差；断言套件 <strong>366/366</strong>；提交信息附 <strong>同轮双向 A/B 数据</strong>
 （机器频率与<strong>构建布局</strong>都会漂移，跨轮比较不可信 —— F1 那次差点被误导；
@@ -2762,32 +2773,33 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 </ul>
 <p><strong>✅ 已完成（三笔，各自独立提交、独立验证）</strong></p>
 <ol>
-<li>
-<p><strong>零拷贝原地帧</strong>（<code>0cab715</code>）—— 照 Lua <code>luaD_precall / prepCallInfo</code>：被调方的寄存器区
+<li><strong>零拷贝原地帧</strong>（<code>0cab715</code>）—— 照 Lua <code>luaD_precall / prepCallInfo</code>：被调方的寄存器区
    <strong>直接复用调用方实参那一块</strong>（<code>locals = caller-&gt;locals + arg_base</code>）⇒ 实参零搬运、
-   非参数槽位零 nil 填充、不另占内存。原先每次调用要「另取一块 locals 数组 + 逐个复制实参
-   + 其余槽位全填 null」。
-   关键第二刀：判定用<strong>物理容量</strong>（新增 <code>CallFrame.locals_capacity</code>）而<strong>不是</strong> <code>local_count</code>
-   这个寄存器高水位 —— 自有 <code>inline_locals</code> 有 64 格，用高水位（往往一二十）会白白漏掉
-   一大片本来可以安全别名的空间。
-   实测 <strong>PBKDF2 主耗时 11.43ms → 10.07ms（−12%）</strong>，反超栈式（11.42ms）。
-   ⚠ 踩过的坑：<code>call_reg_impl</code> 漏写 <code>locals_capacity</code> ⇒ alias 帧读到<strong>帧槽复用的脏容量</strong>，
-   递归链上层层误判"装得下"直到数组越界（<code>fib(20)</code> 直接崩）⇒ <strong>6 处建帧点都要写</strong>。
-   ⚠ 帧数组扩容时 <code>locals</code> 指针的搬迁也改了：原实现无条件写成自己的 <code>inline_locals</code>，
-   会把原地帧指向调用方的指针改错 ⇒ 改成按地址差统一平移。</p>
+   非参数槽位零 nil 填充、不另占内存。原先每次调用要「另取一块 locals 数组 + 逐个复制实参<ul>
+<li>其余槽位全填 null」。</li>
+</ul>
 </li>
-<li>
-<p><strong>位运算快路径改"裸位运算"</strong>（<code>e91ed86</code>）—— 见 <code>04_compare_bit_cast.inc</code> 的 ★★ 注释。
+</ol>
+<p>关键第二刀：判定用<strong>物理容量</strong>（新增 <code>CallFrame.locals_capacity</code>）而<strong>不是</strong> <code>local_count</code>
+这个寄存器高水位 —— 自有 <code>inline_locals</code> 有 64 格，用高水位（往往一二十）会白白漏掉
+一大片本来可以安全别名的空间。
+实测 <strong>PBKDF2 主耗时 11.43ms → 10.07ms（−12%）</strong>，反超栈式（11.42ms）。
+⚠ 踩过的坑：<code>call_reg_impl</code> 漏写 <code>locals_capacity</code> ⇒ alias 帧读到<strong>帧槽复用的脏容量</strong>，
+递归链上层层误判"装得下"直到数组越界（<code>fib(20)</code> 直接崩）⇒ <strong>6 处建帧点都要写</strong>。
+⚠ 帧数组扩容时 <code>locals</code> 指针的搬迁也改了：原实现无条件写成自己的 <code>inline_locals</code>，
+会把原地帧指向调用方的指针改错 ⇒ 改成按地址差统一平移。</p>
+<ol>
+<li><strong>位运算快路径改"裸位运算"</strong>（<code>e91ed86</code>）—— 见 <code>04_compare_bit_cast.inc</code> 的 ★★ 注释。
    NaN 装箱下两个 int48 是 <code>T | p</code>（T = <code>QNAN|SIGN_BIT|TAG_INT</code> <strong>两侧相同</strong>，p 是 48 位补码
    载荷、只占 bit 0..47）⇒ <strong>AND/OR 直接在原始 64 位上做就是精确的</strong>，XOR 补回 T 即可
    （负数只是 48 位补码，照样成立）。省掉两次拆箱（其中符号扩展带<strong>分支</strong>）+ 一次装箱。
    实测 <code>bench_bitwise_loop</code>（2 亿轮 × 6 条）<strong>2588ms → 1946ms（−25%）</strong>，对 Lua <strong>1.80x → 1.36x</strong>。
    ⚠ 定位过程（方法论）：先反汇编确认<strong>指令数完全相同</strong>（Lua 的 <code>MMBINI/MMBINK</code> 在整数快路径上
    被 <code>pc++</code> <strong>跳过</strong>，实际每轮也是 6 条）⇒ 差距全在每指令成本；再两步消融：守卫 384ms、
-   拆箱/装箱 <strong>504ms</strong> ⇒ <strong>拆箱/装箱才是大头</strong>，不是类型检查。</p>
-</li>
-<li>
-<p><strong>int48 越界必须提升 bigint</strong>（<code>27669a0</code>）—— 正确性修复（静默错值，比崩溃更难查）。
+   拆箱/装箱 <strong>504ms</strong> ⇒ <strong>拆箱/装箱才是大头</strong>，不是类型检查。</li>
+</ol>
+<ol>
+<li><strong>int48 越界必须提升 bigint</strong>（<code>27669a0</code>）—— 正确性修复（静默错值，比崩溃更难查）。
    · 左移：守卫只看<strong>移位量</strong>、看不到<strong>左值大小</strong> ⇒ <code>123456789012345 &lt;&lt; 3</code> 静默截成
      -138245594743864（正确 987654312098760）。判据必须<strong>先比阈值再移位</strong>（先移位会撞
      int64 左移 UB，回绕后还会被误判成"在范围内"—— <code>hi &lt;&lt; 1</code> 就是这么算成 -2 的）。
@@ -2795,11 +2807,10 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
    · 同族已核过、<strong>无需改</strong>：ADD/SUB（<code>VM_INT_RESULT</code>）、MUL（<code>LENO_MUL_OVERFLOW</code>）、
      NEG（范围检查）、USHR（<code>val_int_safe</code>）、MOD（结果绝对值恒小于除数）、BITNOT（<code>~x</code> 封闭）。
    · 新增 <code>assert/test_int48_overflow.leno</code> —— <strong>这两个边界原先一个都没被覆盖</strong>，
-     套件全绿也漏（"全绿"不等于"覆盖到了"）。</p>
-</li>
+     套件全绿也漏（"全绿"不等于"覆盖到了"）。</li>
 </ol>
 <p><strong>❌ 已回退（中性 —— 接在 ⑤-c"已排除"清单的第 6 项之后，别再试）</strong></p>
-<ol start="7">
+<ol>
 <li><strong>把 <code>frame-&gt;ip</code> / <code>frame-&gt;locals</code> / <code>frame-&gt;chunk-&gt;constants</code> 提成局部量</strong>
    （207 处帧切换点统一 <code>RELOAD_FRAME()</code>）：改动正确（365/365）但<strong>零收益甚至略差</strong>
    （2622~2655ms vs 基线 2588ms）。与已排除项 3、5 同源 ⇒ <strong>第四次同向否定</strong>。</li>
@@ -2811,7 +2822,7 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 <li><strong>帧内联数组池化 / 共享寄存器池</strong>（<code>CallFrame</code> 664B → 152B）：结构性改造做完、断言 366/366、
    差分与基线逐文件一致，但<strong>收益没量出来</strong>（唯一确证：大帧不再 malloc，−4~8%），
    且协程帧要改成每次调用 malloc ⇒ 已整体回退。<strong>详见 ⑤-x</strong>（含三条判据：热路径别放扩池判定、
-   池窗口要给被调方留白、A/B 必须双向交替）。</li>
+   池窗口要给被调方留白、A/B 必须双向交替）。<ol>
 <li><strong>（2026-09-25 补）在 <code>vm_run</code> 所在 TU 里加减几十行冷代码 = 布局抽签，别再单点归因</strong>：
       <code>fib(30)</code> 从 41.9ms 退到 54~60ms（−25~30%），而字节码<strong>逐字节相同</strong>、热 handler 源码未动、
       干净进程跑 <code>.lenb</code> <strong>同样慢</strong>（与编译器驻留无关）。三笔修复尝试<strong>全部无效</strong>：
@@ -2820,8 +2831,10 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
       ⇒ 要动布局只剩两条路：<strong>PGO</strong>（能找回 ~85%：54.0→44.7，但需宽训练集 + 全量验收）或
       <strong>结构性拆分 <code>vm_run</code></strong>。详见 <strong>⑤-am / T18</strong>。</li>
 </ol>
+</li>
+</ol>
 <p><strong>✅ 本轮新做的一笔（整段级，非 uop 级）</strong></p>
-<ol start="4">
+<ol>
 <li><strong><code>OP_FOR_LOOP</code> 计数器"原始值减一"</strong>（Lua <code>chgivalue</code> 同口径）：end 槽本来就是 canonical
    的 int48 Value <code>T | count</code>，而 <code>count ∈ [1, 2^47-1]</code> ⇒ 减 1 <strong>不会借位到标签位</strong>，
    结果恰等于 <code>val_int(count-1)</code>。省掉「拆箱（含符号扩展分支）→ 减 → 装箱」三步。
@@ -2832,11 +2845,11 @@ Set-Content build\_big_if.leno $sb.ToString() -Encoding utf8
 </ol>
 <p><strong>⚠ 口径提醒（本轮复核，与 ⑤-c 结论一致）</strong>
 - <code>dict[k]=v</code> 在 <code>全部测试</code> 里 Leno 跑的是 <code>d.set("key",1)</code>＝<strong>方法调用</strong>（<code>GET_METHOD+CALL</code>），
-  Lua 跑的是 <code>d["key"]=1</code>（1 条）⇒ 表里的 <strong>4.10x 不是差距</strong>。同一二进制内实测三形态：
-  <code>d.set(k,v)</code> <strong>157.6ms</strong> / <code>d[k]=v</code> <strong>69.5ms</strong> / <code>d[k]</code> 读 <strong>62.1ms</strong>
-  ⇒ <strong>公平对照是 <code>d[k]=v</code> 对 Lua 的 41ms = 1.70x</strong>（与基线一致）。
+Lua 跑的是 <code>d["key"]=1</code>（1 条）⇒ 表里的 <strong>4.10x 不是差距</strong>。同一二进制内实测三形态：
+<code>d.set(k,v)</code> <strong>157.6ms</strong> / <code>d[k]=v</code> <strong>69.5ms</strong> / <code>d[k]</code> 读 <strong>62.1ms</strong>
+⇒ <strong>公平对照是 <code>d[k]=v</code> 对 Lua 的 41ms = 1.70x</strong>（与基线一致）。
 - 排序组（≥10 万档，Lua 量化误差 &lt;5%）：原地/优化快排 <strong>1.27–1.34x</strong>，
-  与 ⑤-c 记录的 1.26–1.37x 一致 ⇒ 那批数字仍然可信。</p>
+与 ⑤-c 记录的 1.26–1.37x 一致 ⇒ 那批数字仍然可信。</p>
 <hr>
 <p><strong>⑤-w <code>SHL</code> 越界语义的连锁反应：一次"修对了却让 PBKDF2 慢 2.6 倍"的教训</strong></p>
 <blockquote>
@@ -2866,12 +2879,12 @@ return _int32(hi | lo)
 同轮栈式 16.13ms ⇒ <strong>反超 33%</strong>。向量三个 PASS、与栈式逐行一致、断言 <strong>366/366</strong>。</p>
 <p><strong>可复用的判据（写进这里免得再踩）</strong>
 - 给"特化快路径"补越界检查时，<strong>必须同时看热点调用方</strong>是否依赖旧的截断行为 ——
-  补检查 = 把静默错值变成 bigint 分配，<strong>错值可能"恰好"被算法容忍（结果仍对），
-  但分配一定慢</strong>。<code>_int32(...)</code>/<code>_uint32(...)</code> 这类"取低 32 位"的写法是典型信号。
+补检查 = 把静默错值变成 bigint 分配，<strong>错值可能"恰好"被算法容忍（结果仍对），
+但分配一定慢</strong>。<code>_int32(...)</code>/<code>_uint32(...)</code> 这类"取低 32 位"的写法是典型信号。
 - 在"48 位整数 + 越界升 bigint"的语言里写 32 位定点运算，<strong>要主动拆位</strong>，
-  别指望高位溢出的中间结果被后面的 mask 救回来（求值顺序摆在那）。
+别指望高位溢出的中间结果被后面的 mask 救回来（求值顺序摆在那）。
 - 反过来说：<strong>这类改写属于"调用方适配语义"，不该为了它把 VM 的越界检查撤掉</strong> ——
-  撤掉就是退回 §8.123 明令修掉的 bug2，两个后端又会不一致。</p>
+撤掉就是退回 §8.123 明令修掉的 bug2，两个后端又会不一致。</p>
 <hr>
 <p><strong>⑤-x 调用路径第三步：把帧内联数组换成"共享寄存器池"（Lua 风格）—— ❌ 已整体回退</strong></p>
 <blockquote>
@@ -2965,9 +2978,9 @@ return _int32(hi | lo)
 而差距的<strong>形状</strong>在 Lua 源码里写得很清楚 —— 它把<strong>编译期可证的信息塞进字节码</strong>，
 运行期不为"不可能发生的事"付代价（<code>D:\Lua\lua-5.5.0\src</code>）：
 · 建帧只写 5 个字段（<code>ldo.c</code> 的 <code>prepCallInfo</code>）；参数<strong>不搬</strong>（实参本就在栈上连续）；
-  只补缺的形参，<strong>不整帧填 null</strong>；<code>CallInfo</code> 只有 ~56B（<code>lstate.h</code>）。
+只补缺的形参，<strong>不整帧填 null</strong>；<code>CallInfo</code> 只有 ~56B（<code>lstate.h</code>）。
 · 返回分 <strong>OP_RETURN0 / OP_RETURN1 / OP_RETURN</strong> 三条指令（<code>lvm.c</code>），前两条的非 hook 分支
-  只有 <code>L-&gt;ci = ci-&gt;previous</code> + 写结果 + <code>L-&gt;top.p</code>，然后 <code>goto ret</code> 刷新 <code>cl/k/pc/base</code>。
+只有 <code>L-&gt;ci = ci-&gt;previous</code> + 写结果 + <code>L-&gt;top.p</code>，然后 <code>goto ret</code> 刷新 <code>cl/k/pc/base</code>。
 · upvalue / hook 这类检查由<strong>返回指令的 k 位</strong>在编译期给出（<code>TESTARG_k(i)</code>），运行期零成本。
 我们则是一条通用 <code>OP_RETURN</code> 扛全部：每次返回约 18 次访存（含 <code>is_ctor</code> 的 3 次依赖加载、
 <code>FRAME_TRY_VALID</code> 的 2 次加载、只有宿主才需要的 <code>last_return_*</code> 三连写、<code>open_upvalues</code> 全局加载）。</p>
@@ -3080,8 +3093,10 @@ return _int32(hi | lo)
 </table>
 <ul>
 <li><strong>C 贵不是因为"没零拷贝"</strong>：绑定方法那条路 <code>self_in_args</code> 判定成立时走的是 <code>has_self = 0</code>
-  ⇒ <strong>本来就已经零拷贝</strong>了。它贵在<strong>前戏</strong>：receiver 去重（<code>expect_arity</code> 要 2~3 次依赖加载</li>
+  ⇒ <strong>本来就已经零拷贝</strong>了。它贵在<strong>前戏</strong>：receiver 去重（<code>expect_arity</code> 要 2~3 次依赖加载<ul>
 <li>6~8 次值比较）+ 逐参数转换（B 的 +5.4ns 那份）+ <code>is_async</code> 的 2 次加载。</li>
+</ul>
+</li>
 <li>于是试着让 <strong>has_self 也能零拷贝</strong>：把 receiver 填进 <code>R[arg_base - 1]</code>（= callee 值那个槽，
   调用期间已经没用、返回时结果正好覆盖它），被调方窗口从那里起算 ⇒ 理论上一个字节都不用搬。</li>
 <li><strong>实测（双向交替 A/B，各 4 轮取 min）</strong>：方法形态 <strong>中性</strong>（363.8 vs 364.7 —— 因为它本来
@@ -3217,8 +3232,8 @@ main() {
 探针实测 <strong>95.7ns/次</strong>，是融合路径（38.2ns）的 2.5 倍。
 <strong>先用临时插桩（env 开关的指令计数，验证后已全拆）把两条路的指令计数打出来</strong>，才看清钱花在哪：
 · face 探针：<code>OP_GET_METHOD</code>(struct 分支)=10M、<strong>IC 命中 9,999,999</strong>、<code>OP_CALL</code> 绑定分支=10M、<code>OP_INDEX</code>=0
-  ⇒ <strong>查找有 IC 且几乎全命中</strong>（⑤-aa 里"每轮重查方法"那句是错的），也<strong>不是</strong>调用前戏（~2~5ns）
-  —— 贵的是<strong>每轮分配一个 <code>ObjBoundMethod</code></strong>（64B 池化对象 + 它带来的 GC：10M 次触发 66 次 minor GC）；
+⇒ <strong>查找有 IC 且几乎全命中</strong>（⑤-aa 里"每轮重查方法"那句是错的），也<strong>不是</strong>调用前戏（~2~5ns）
+—— 贵的是<strong>每轮分配一个 <code>ObjBoundMethod</code></strong>（64B 池化对象 + 它带来的 GC：10M 次触发 66 次 minor GC）；
 · 只做"取方法 + 分配"、不调用（<code>var g = sp.get</code>）单这一半就是 <strong>83.5ns/次</strong>。</p>
 </blockquote>
 <p><strong>改法</strong>（只动 <code>12_fields_object.inc</code> 的 <code>OP_GET_METHOD</code> struct 分支）：加<strong>窥孔</strong>，条件与上文
@@ -3497,12 +3512,12 @@ main() {
 <strong>同一 exe 连跑两遍也不一致</strong> ⇒ 计时/随机类噪声，非回归。</p>
 <p><strong>遗留（下一刀的入口，别重复试本刀）</strong>
 - <strong><code>and</code>/<code>or</code> 链里的比较没被覆盖</strong>：<code>while j &gt;= left and a[j] &gt; key</code>（插入排序内层）走的是
-  <code>gen_binop</code> 的<strong>短路生成</strong>（每侧 <code>gen_expr</code> + <code>JMP_IF_FALSE</code>）⇒ 每侧仍是 2 条。
-  要吃掉它得在短路点<strong>逐侧</strong>调 <code>try_emit_cmpjmp</code>（短路语义与融合同向，极性按 <code>need_true</code> 传）。
-  插入排序那对 <code>GE_INT + JMP_IF_FALSE</code> / <code>GT_INT + JMP_IF_FALSE</code> 就是它。
-  ⇒ <strong><code>and</code> 链已由 ⑤-ae 完成</strong>（优化快速排序 −8~−10%）；<code>or</code> 链仍未做，见 ⑤-ae 的遗留。
+<code>gen_binop</code> 的<strong>短路生成</strong>（每侧 <code>gen_expr</code> + <code>JMP_IF_FALSE</code>）⇒ 每侧仍是 2 条。
+要吃掉它得在短路点<strong>逐侧</strong>调 <code>try_emit_cmpjmp</code>（短路语义与融合同向，极性按 <code>need_true</code> 传）。
+插入排序那对 <code>GE_INT + JMP_IF_FALSE</code> / <code>GT_INT + JMP_IF_FALSE</code> 就是它。
+⇒ <strong><code>and</code> 链已由 ⑤-ae 完成</strong>（优化快速排序 −8~−10%）；<code>or</code> 链仍未做，见 ⑤-ae 的遗留。
 - <strong><code>arr.len() &lt;= 1</code> 不融合</strong>：<code>.len()</code> 的静态类型不是 int（整条走通用 <code>OP_LE</code>，连 int 特化都没有）
-  ⇒ 得先给 <code>.len()</code>/<code>OP_LEN</code> 补 int 静态类型。那是<strong>类型推断</strong>的事，不是融合的判据问题。</p>
+⇒ 得先给 <code>.len()</code>/<code>OP_LEN</code> 补 int 静态类型。那是<strong>类型推断</strong>的事，不是融合的判据问题。</p>
 <hr>
 <p><strong>⑤-ae 「and 链」条件的逐侧融合（<code>while j &gt;= left and arr[j] &gt; key</code> 这类）—— ✅ 已完成：优化快速排序 −8~−10%</strong></p>
 <blockquote>
@@ -3572,7 +3587,7 @@ main() {
 会随机出现/消失。判据仍是"同一 exe 连跑两遍是否一致"，别把它当成回归。</p>
 </blockquote>
 <p><strong>与 Lua 的差距（同轮三方对比，2026-09-24 补测）</strong>：<code>lua 各种排序.lua</code> / <code>leno_base_cmpjmp1.exe</code>（⑤-ad 前）/
-  当前 exe 在同一轮里各跑一遍，微秒（第 1 轮）：</p>
+当前 exe 在同一轮里各跑一遍，微秒（第 1 轮）：</p>
 <table>
 <thead>
 <tr>
@@ -3636,8 +3651,8 @@ main() {
 </tbody>
 </table>
 <p>第 2 轮同向（原地 20000 1.39→1.29、100000 1.42→1.30、400000 1.42→1.27；优化 400000 1.41→1.27）
-  ⇒ 大中规模的差距 <strong>~1.42~1.46x → ~1.27~1.31x</strong>。
-  ⚠ <strong>2000 档不可用</strong>：Lua 的 <code>os.clock()</code> 粒度 1ms、小规模取平均后仍在 350~500 之间跳（两轮差 30%）。</p>
+⇒ 大中规模的差距 <strong>~1.42~1.46x → ~1.27~1.31x</strong>。
+⚠ <strong>2000 档不可用</strong>：Lua 的 <code>os.clock()</code> 粒度 1ms、小规模取平均后仍在 350~500 之间跳（两轮差 30%）。</p>
 <p><strong>遗留（留给下一刀）</strong>：<code>or</code> 链没做（短路方向相反：<code>a or b</code> 为假要"两侧都假" ⇒ 各侧发
 "真则跳真标签"、末侧"假则跳假标签"，形态与 and 对称，但要新加一条回填约定）；
 <code>for</code> 计数循环的条件由 <code>FOR_PREP/FOR_LOOP</code> 自己管，不经过这里。</p>
@@ -4586,7 +4601,7 @@ gcc -o build\leno_pgo_use.exe &lt;sources...&gt; -Isrc -std=c99 -O2 &quot;-fprof
 <hr>
 <h3 id="t17-p2-lenb-体积继续瘦身-构成已实测-三个候选方案待选">T17（P2）.lenb 体积继续瘦身：构成已实测，三个候选方案待选</h3>
 <blockquote>
-<h2 id="①-字符串-interning-已落地-2026-10-12">✅ ① 字符串 interning <strong>已落地</strong>（2026-10-12）</h2>
+<h2 id="字符串-interning-已落地-2026-10-12">✅ ① 字符串 interning <strong>已落地</strong>（2026-10-12）</h2>
 <p><strong>实测收益</strong>（同一台机、<code>--no-cache -c</code>；<strong>改前基线 = 2026-10-12 用旧编译器复测</strong> ✓）：</p>
 <table>
 <thead>
@@ -4626,22 +4641,22 @@ gcc -o build\leno_pgo_use.exe &lt;sources...&gt; -Isrc -std=c99 -O2 &quot;-fprof
 </table>
 <p>⚠ <strong>旧判据线作废，以本表为线</strong>（再降才算改进 ✓）：
 · 原文的"①：pvz ≤ 95 万 B、minilang ≤ 1.56 万 B"<strong>不再适用</strong> —— 前半句依赖的 pvz 样例
-  <strong>不在本仓</strong>（按名字找不到 ✗），后半句的 −13% 预估是<strong>旧产物</strong>（DCE 之前）测的：
-  那时的重复串里有大量"重复函数体里的同名串"，而 DCE 把这些函数体删了 ⇒ 重复率自然下降 ✓
-  ⇒ minilang 只剩 −5.5% 是<strong>正常</strong>的，不是实现没生效 ✓（大样例 −17.8~21% 与原文
-  "pvz −25~28%"同一量级 ✓）</p>
+<strong>不在本仓</strong>（按名字找不到 ✗），后半句的 −13% 预估是<strong>旧产物</strong>（DCE 之前）测的：
+那时的重复串里有大量"重复函数体里的同名串"，而 DCE 把这些函数体删了 ⇒ 重复率自然下降 ✓
+⇒ minilang 只剩 −5.5% 是<strong>正常</strong>的，不是实现没生效 ✓（大样例 −17.8~21% 与原文
+"pvz −25~28%"同一量级 ✓）</p>
 <p><strong>做法（<code>src/serialize/serialize.c</code>，读写两侧对称）</strong>：
 · 写侧：<code>wb_write_string</code> 先查一张 <strong>FNV-1a 开放寻址去重表</strong>（表挂在 <code>WriteBuffer</code> 上 ✓，
-  表里存<strong>首次出现的明文载荷</strong>便于 <code>memcmp</code> ✓）⇒ 命中就只写
-  <strong><code>u32(len|0x80000000) + u32 id</code></strong>（载荷一个字节都不写 ✓）
+表里存<strong>首次出现的明文载荷</strong>便于 <code>memcmp</code> ✓）⇒ 命中就只写
+<strong><code>u32(len|0x80000000) + u32 id</code></strong>（载荷一个字节都不写 ✓）
 · 读侧：<code>ctx_read_string</code> 见到高位就走引用（<code>id</code> 即<strong>下标</strong> ✓）；读侧表<strong>只存"载荷位置"</strong>
-  （off/len）⇒ 取用时现场 <code>memcpy + xor</code> ✓ <strong>不持有字符串、不额外分配、不可能悬空</strong> ✓
+（off/len）⇒ 取用时现场 <code>memcpy + xor</code> ✓ <strong>不持有字符串、不额外分配、不可能悬空</strong> ✓
 · <strong><code>len &gt;= 5</code> 才参与</strong>（引用 8 B vs 原样 4+len B ⇒ 短串引用反而更大 ✗；
-  读侧用<strong>同一个判据</strong>决定要不要登记 ⇒ 两侧 id 序列才对齐 ✓）
+读侧用<strong>同一个判据</strong>决定要不要登记 ⇒ 两侧 id 序列才对齐 ✓）
 · <strong>内存不足 ⇒ 降级为"不去重"</strong>，格式与正确性完全不受影响 ✓（宁可不省字节，不写坏格式 ✓）
 · <strong>版本号</strong>：<code>LENO_BIN_VERSION</code> v3.2.22 → <strong>v3.2.23</strong>、<code>LENO_MODCACHE_VERSION</code> v38 → <strong>v39</strong>
-  （格式变了：旧构建会把 <code>len|0x80000000</code> 当长度读 ⇒ 必须整体失效重编译 ✓ 已在
-  <code>leno_serialize.h</code> 按登记表写明 ✓）</p>
+（格式变了：旧构建会把 <code>len|0x80000000</code> 当长度读 ⇒ 必须整体失效重编译 ✓ 已在
+<code>leno_serialize.h</code> 按登记表写明 ✓）</p>
 <p><strong>⚠ 一处必须记住的作用域细节</strong>：去重表按"<strong>调用 <code>*_write_string</code>/<code>ctx_read_string</code> 的顺序</strong>"
 编号（与字节位置无关 ✓）。<code>.modc</code> 写侧是"<strong>body 先序列化进临时 <code>wb_body</code></strong>（id 从 0 起），
 再原样字节拷进外层 <code>wb</code>"；读侧却只有<strong>一个 ctx</strong> ⇒ 读 dep_paths 会先占掉 0..N-1 这些 id
@@ -4656,9 +4671,13 @@ gcc -o build\leno_pgo_use.exe &lt;sources...&gt; -Isrc -std=c99 -O2 &quot;-fprof
 <p><strong>性能</strong>：运行期<strong>零影响</strong>（只改文件格式，不改字节码与 VM 取值路径 ✓）；
 加载期读侧<strong>不新增任何分配</strong>（表里只存偏移 ✓），只是多一个 <code>u32</code> 读 + 一次数组下标 ✓；
 编译期写侧每个字符串多一次哈希 ✓（量级：毫秒以下 ✓）</p>
+</blockquote>
+<blockquote>
 <p><strong>已拍板：暂不做，先记账</strong>（2026-09-24）。行号表 RLE 已落地（<code>4c14ab1</code>）：
 minilang 34225 → 17829 B（−47.9%）、pvz 1972545 → 1254165 B（−36.4%）。
 下面是"<strong>还能压什么</strong>"的实测构成与候选。</p>
+</blockquote>
+<blockquote>
 <p><strong>2026-09-25 收工（裁剪侧到顶）</strong>：方法级 DCE + 两处结构去重落地后，
 <code>hello_window</code> <strong>432725 B</strong>、<code>pvz</code> <strong>505432 B</strong>（自 1.8 MB / 1.25 MB 下来，−50% / −47%）。
 结论：<strong>不再有死代码可删</strong>，剩余体积只能来自"压缩"（见 ③-补 的复测：当前产物 deflate 仍是 2.8×）。</p>
@@ -4891,11 +4910,11 @@ hello 要 2462 个 ⇒ 空壳自身 ≈187 KB、净收益只剩 ~4%，<strong>�
 <p>引用图（编译期收集，与 codegen 边生成边记）：
 - <strong>def 点</strong>：<code>SYM_GLOBAL_FUNC</code> / <code>SYM_MODULE</code> 的（槽位 ← 函数）；方法由 <code>gen_struct_def</code> 带类型名注册
 - <strong>use 点</strong>：全局/模块槽位引用（含 typed 直呼、<code>OP_GET_MODULE_VAR</code>）、跨模块名（<code>gen_module_call_prep</code> /
-  <code>gen_module_access</code>）、方法引用（<code>gen_method_call</code> / <code>gen_call_multi</code> / <code>?.</code> 三处）、类型引用
-  （类型名当值、<code>new T()</code>）、<strong>匿名闭包创建点</strong>（<code>dce_note_func_value</code>）
+<code>gen_module_access</code>）、方法引用（<code>gen_method_call</code> / <code>gen_call_multi</code> / <code>?.</code> 三处）、类型引用
+（类型名当值、<code>new T()</code>）、<strong>匿名闭包创建点</strong>（<code>dce_note_func_value</code>）
 - <strong>根</strong>：各编译单元的模块级/顶层代码引用（这些一定执行）+ <code>main</code> 槽位
 - 不动点收敛：名字/类型是间接引用 ⇒ 名字只命中顶层函数；方法由 (类型,名) 精确命中，
-  未命中则<strong>名字通配</strong>（再由"该类型是否被引用"过滤）</p>
+未命中则<strong>名字通配</strong>（再由"该类型是否被引用"过滤）</p>
 <p>三条 fail-safe（剪错的表现是<strong>静默返回 null</strong>，所以宁可少剪）：
 ① 未登记 ⇒ 保活；② 有模块来自 <code>.lenomc</code> 缓存 ⇒ 图不完整 ⇒ 整轮不剪；③ <strong>ctor/dtor 无条件全留</strong>
 （VM 按 <code>ctor_index</code>/<code>dtor_index</code> 隐式调用，静态<strong>没有任何</strong>引用点 —— 这条不花体积，实测开/关同尺寸）。</p>
@@ -5042,18 +5061,18 @@ pvz 1934 个 ⇒ 可达 601、剪 1333。
 （本次同样实测：删 <code>LenoHack</code> 三个副本后编译通过 ✓）</p>
 <p><strong>根因位置</strong>：
 - <strong>先到先得</strong>：<code>src/package/package_resolve.c:146-170</code>（<code>package_resolve_module_file</code> 顺序扫
-  <code>search_paths[]</code>，第一个命中就 <code>return 1</code>，不看后面还有没有）
+<code>search_paths[]</code>，第一个命中就 <code>return 1</code>，不看后面还有没有）
 - <strong>路径加入顺序</strong>：<code>src/main.c:1249-1314</code>（项目 <code>lib/</code> → toml 依赖 → <strong>入口文件所在目录</strong> →
-  <code>exe_dir/leno_module/</code>）＋ <code>src/package/package_install.c:110-150</code>（<code>add_pkg_lib_search_paths</code>
-  按目录名枚举 ⇒ 字母序）⇒ <code>LenoHack</code> 恒在 <code>LenoWin32</code> 之前，且<strong>导入文件自己的目录不在列表里</strong>
+<code>exe_dir/leno_module/</code>）＋ <code>src/package/package_install.c:110-150</code>（<code>add_pkg_lib_search_paths</code>
+按目录名枚举 ⇒ 字母序）⇒ <code>LenoHack</code> 恒在 <code>LenoWin32</code> 之前，且<strong>导入文件自己的目录不在列表里</strong>
 - 备注：<code>parser_module.c</code> 与 <code>module_symbol_table</code> 的 <code>resolve_module_full_path</code> 共用
-  <code>package_resolve_import_spec</code>（S9 收敛过）⇒ 只要改 resolve 层，两边同时生效 ✓</p>
+<code>package_resolve_import_spec</code>（S9 收敛过）⇒ 只要改 resolve 层，两边同时生效 ✓</p>
 <p><strong>建议修法</strong>（二选一或都做）：
 1. <strong>歧义即诊断</strong>（便宜、不动语义）：命中后<strong>继续扫完</strong>剩余搜索路径，若还有别的路径也命中 ⇒
-   编译期错误/警告：「两个包都提供 <code>w32_process.leno</code>：LenoHack / LenoWin32 ⇒
-   请改用 <code>./</code> 相对路径或包入口名（<code>import "Win32"</code>）」。这条能把"静默选错"变成"当场拦住"。
+编译期错误/警告：「两个包都提供 <code>w32_process.leno</code>：LenoHack / LenoWin32 ⇒
+请改用 <code>./</code> 相对路径或包入口名（<code>import "Win32"</code>）」。这条能把"静默选错"变成"当场拦住"。
 2. <strong>导入方优先</strong>：把"当前<strong>被编译文件</strong>所在目录"排到搜索路径最前（现在只加了<strong>入口</strong>文件目录），
-   让包内互相 import 天然取同目录 sibling；应用侧再叠加第 1 条诊断即可。</p>
+让包内互相 import 天然取同目录 sibling；应用侧再叠加第 1 条诊断即可。</p>
 <p><strong>判据（怎么算做完）</strong>：造"两个包撞名 + 只给后者加导出"的用例（<code>assert/</code> 或 tests/）：
 ① 打开诊断时，编译会<strong>明确报出歧义</strong>（不是"没有方法"）；② 用包入口名或 <code>./</code> 写法可消解；
 ③ 断言套件（373 passed）不回归 —— 若采用第 2 条修法，还要<strong>全量跑一遍 examples/ 确认解析结果没有意外改变</strong>。</p>
@@ -5178,7 +5197,7 @@ pvz 1934 个 ⇒ 可达 601、剪 1333。
 （本次 37 条里只合并掉 1 条）。总量阀门 <code>MAX_ERRORS</code>（<code>error.c:78</code>）只挡收集，不负责归并展示。</p>
 <p><strong>建议修法</strong>（成本从低到高）：
 1. <strong>打印层按 <code>(type, msg)</code> 归并</strong>：同类只打<strong>首处</strong>的完整信息，另加一行
-   「同类另有 N 处：行 25、41、43…」（不动收集器与 AST 流程，风险最小）；
+「同类另有 N 处：行 25、41、43…」（不动收集器与 AST 流程，风险最小）；
 2. 收集层给 <code>Error</code> 加"位置列表"，同一 <code>(type,msg)</code> 只留一条、位置累加；
 3. 加"同类报够 N 条即静默"的阀门（与 <code>MAX_ERRORS</code> 分开）。</p>
 <p><strong>判据</strong>：构造"同一根因重复 10 行"的用例 ⇒ 输出从 10+ 行降到 ≤2 行（<strong>位置列表必须可见</strong>，别丢信息）；
@@ -5709,10 +5728,10 @@ MOD / 位运算 / 移位在 <code>gen_binary</code> 那边也没有特化变体 
 在 <code>if</code> 的 then / else 分支内被 <code>visit_control.inc</code> 调用：
 - then 分支认 <code>a != null</code>、else 分支认 <code>a == null</code>（两者成立时都意味着 <code>a</code> 非空）；
 - 命中的变量若被 T11 置位（<code>is_null_value == 1</code>），在分支作用域建<strong>同名影子符号</strong>：
-  <code>index</code> 复用原槽位（代码生成读写同一变量）、<code>is_null_value = 0</code>、类型照抄原变量
-  ⇒ 分支内 <code>a</code> 解析到影子符号，<code>report_known_null_operand</code> 不再报错。
+<code>index</code> 复用原槽位（代码生成读写同一变量）、<code>is_null_value = 0</code>、类型照抄原变量
+⇒ 分支内 <code>a</code> 解析到影子符号，<code>report_known_null_operand</code> 不再报错。
 - 只认 <code>VAR != null</code> / <code>VAR == null</code>，且只沿 <code>and</code> 链（<code>or</code> 有短路语义，不收窄）；
-  未被 T11 置位的变量一律不动 —— 收紧改动面，保持「宁漏勿误报」。</p>
+未被 T11 置位的变量一律不动 —— 收紧改动面，保持「宁漏勿误报」。</p>
 <p><strong>判据</strong>：上面第一段能编译通过（第二段保持通过）；补 <code>assert\test_nullable_narrow.leno</code> 钉住两种形态。
 ⚠ <strong>不能因此回退 T11 的正当报错</strong>：<code>int? a = null; a + 1</code>（无窄化）必须<strong>仍然</strong>编译报错 ✓。
 （已把这条负例补进 <code>assert\test_diag_error_batteries.leno</code>；全量 assert 401/401 ✓。）</p>
@@ -5769,7 +5788,7 @@ MOD / 位运算 / 移位在 <code>gen_binary</code> 那边也没有特化变体 
   int48|bigint 二合一、VM 多处 <code>bigint_compact_to_int</code> 自愈、断言 416/0 覆盖整数/大整数转换；
   若要严格逐位等价，可再加"被调方返回点确实发了 CAST"的记账。</li>
 </ul>
-<p><strong>⑤-av 循环入口的 2 条 <code>LOADI</code> 改成立即数（<code>FOR_PREP</code> 10 字节 + <strong>入口</strong>物化步长）—— ✅ 已完成（<code>bc22dd1</code>）：float 调用再 −19.0%，循环侧零回归</strong></p>
+<p><strong>⑤-av 循环入口的 2 条 <code>LOADI</code> 改成立即数（<code>FOR_PREP</code> 10 字节 + </strong>入口<strong>物化步长）—— ✅ 已完成（<code>bc22dd1</code>）：float 调用再 −19.0%，循环侧零回归</strong></p>
 <ul>
 <li><strong>动机</strong>：<code>for N</code> / <code>for 1 {}</code> 的序言是「<code>LOADI</code> 起始 → <code>MOV</code>/<code>LOADI</code> 上界 → <code>LOADI</code> 步长 → <code>FOR_PREP</code>」——
   起始/步长几乎总是字面量（0/1/-1），那两条 <code>LOADI</code> 每次<strong>进循环</strong>都要付一次派发（≈2.7ns/条）；
@@ -5823,7 +5842,7 @@ MOD / 位运算 / 移位在 <code>gen_binary</code> 那边也没有特化变体 
 </table>
 <p>（⑤-au + ⑤-av 两刀合计：<code>调用开销微基准</code> float 调用 1019.2 → 805.1 = <strong>−21.0%</strong>、int 调用 → −5%）
 - <strong>字节码判据</strong>：callee 体 36 → 30 字节、<strong>6 条 → 4 条</strong>（<code>LOADI</code>×3 → 1，只剩 end）；
-  反汇编器与自检同步改成 10/8 字节两种长度。
+反汇编器与自检同步改成 10/8 字节两种长度。
 - <strong>版本号</strong>：<code>LENO_BIN_VERSION</code> → <strong>v3.2.16</strong>、<code>LENO_MODCACHE_VERSION</code> → <strong>v32</strong>（指令序列与长度都变了）。</p>
 <p><strong>下一步候选（还没做）</strong>：① <code>FOR_PREP</code> 的<strong>上界也立即数化</strong>（<code>for 1 {}</code> 再 −1 条，需给"计数槽"单独一个字节）；
 ② 实参/结果的 <code>MOV</code> 消除（需<strong>活跃性分析</strong>：T16 有前科——窗口曾踩掉调用方的 <code>for</code> 计数槽）；
@@ -5889,12 +5908,14 @@ T16 有前科（窗口曾踩掉调用方的 <code>for</code> 计数槽）。
 <li><strong>根因</strong>：<strong>基线取错了</strong>。我的操作顺序是「改源码 → 编译（顺便 dump 验证 ✓）→ 才去造基线」✗，
   而那时 <code>build\leno.exe</code> <strong>已经是改动后的</strong>✗ ⇒ <code>Copy-Item</code> 把"候选"复制成了"基线" ⇒
   <strong>拿同一版本互比</strong> ⇒ 当然全中性 ✗。</li>
-<li><strong>判据/预防（两条，都要）</strong>：
-  1. <strong>先复制 exe，再改源码</strong> —— 顺序固定为「复制基线 → 改源码 → 编一次 → A/B」✓
-     （本次因为顺序错了，还白编了两遍 stash/build ✗）；
-  2. A/B 前必须用<strong>功能性判据</strong>确认两个二进制<strong>不是同一版本</strong> ✓：dump 一段受影响的字节码
+<li><strong>判据/预防（两条，都要）</strong>：<ol>
+<li><strong>先复制 exe，再改源码</strong> —— 顺序固定为「复制基线 → 改源码 → 编一次 → A/B」✓
+     （本次因为顺序错了，还白编了两遍 stash/build ✗）；</li>
+<li>A/B 前必须用<strong>功能性判据</strong>确认两个二进制<strong>不是同一版本</strong> ✓：dump 一段受影响的字节码
      或用 <code>--debug</code> 对比 ✓。<strong>文件哈希不能当判据</strong>✗ —— 同一份源码隔几分钟重编哈希也不同
      （本次两个 exe 哈希确实不同 ✗，我因此误以为版本不同 ✓）。</li>
+</ol>
+</li>
 <li><strong>心态</strong>：结论是"中性/无收益"时，<strong>先怀疑测量，再怀疑改动</strong> ✓（尤其当字节码/指令数
   明明变了的时候）。</li>
 </ul>
@@ -5909,16 +5930,16 @@ T16 有前科（窗口曾踩掉调用方的 <code>for</code> 计数槽）。
 <p><strong>为什么这条够格做</strong>（照本文档自己的判据）：
 - <strong>整条指令级别</strong>（≈1.1ns，⑤-c 的分辨率表：只有这一档测得出来 ✓；⑤-ag 的隔离探针实测 −13.4% ✓）；
 - <strong>零语义风险</strong>：只改"用哪个寄存器"，不碰算子、不碰求值顺序（右值是裸变量 ⇒ 无副作用 ⇒
-  直接读它的槽位与"先搬再读"逐位等价）；
+直接读它的槽位与"先搬再读"逐位等价）；
 - <strong>有现成手法与判据可抄</strong>：⑤-ag 的 <code>gen_unary</code> 用的是 <code>gen_binop</code> 那套 <code>rl_direct</code>
-  （操作数是 <code>SYM_LOCAL</code>/<code>SYM_PARAM</code> ⇒ 直接用 <code>ref-&gt;index</code>，不 <code>gen_expr</code>、不 <code>reg_free</code>）；
-  本例的落点在 <code>codegen_stmt.c</code> 的 <code>emit_compound_value</code>：<code>int r = gen_expr(gen, value)</code> 之前
-  先判"裸变量直取"。</p>
+（操作数是 <code>SYM_LOCAL</code>/<code>SYM_PARAM</code> ⇒ 直接用 <code>ref-&gt;index</code>，不 <code>gen_expr</code>、不 <code>reg_free</code>）；
+本例的落点在 <code>codegen_stmt.c</code> 的 <code>emit_compound_value</code>：<code>int r = gen_expr(gen, value)</code> 之前
+先判"裸变量直取"。</p>
 <p><strong>⚠ 立项前的两条检查</strong>（免得白做）：
 1. ⑤-at 已经把算子换成特化版了 ⇒ 本条只赚那条 <code>MOV</code>（~1.1ns/轮 量级）。<strong>先量清</strong>：
-   在 ⑤-at 的探针 <code>cassign.leno</code> 上加 <code>+= &lt;裸变量&gt;</code> 一项，用双向交替 A/B + 不重叠判据；
+在 ⑤-at 的探针 <code>cassign.leno</code> 上加 <code>+= &lt;裸变量&gt;</code> 一项，用双向交替 A/B + 不重叠判据；
 2. 右值是<strong>字段访问</strong>（<code>s += p.x</code>）时<strong>不能</strong>照抄 —— 字段得先 <code>GET_FIELD</code> 读出来，
-   那条不是多余的 ✓（A5 的 <code>ACC_FIELDS</code> 同理 ✓）。只处理 <code>AST_VAR</code>。</p>
+那条不是多余的 ✓（A5 的 <code>ACC_FIELDS</code> 同理 ✓）。只处理 <code>AST_VAR</code>。</p>
 <hr>
 <h3 id="t30-p2-return-非裸变量-直落返回寄存器-已完成-光追-phase-c-2-8-不重叠">T30（P2）<code>return &lt;非裸变量&gt;</code> 直落返回寄存器 —— ✅ 已完成：光追 Phase C −2.8%（不重叠）</h3>
 <p><strong>线索</strong>（扫 <code>hit()</code> 字节码时看到）：4 处 <code>return new Hit(...)</code> 全是
@@ -5988,29 +6009,39 @@ T16 有前科（窗口曾踩掉调用方的 <code>for</code> 计数槽）。
 </blockquote>
 <p><strong>A. 调用路径</strong>（微基准：Leno <strong>149.4ms</strong> / Lua <strong>72ms</strong> @1e7 次空调用，同轮三次取最小 ⇒ <strong>2.08x</strong> ✗）</p>
 <ol>
-<li>⛔ <strong>帧布局重排 = 中性 ✗</strong>（把热字段提前、<code>inline_locals[64]</code> 挪到结构末尾；纯字段顺序、语义零变化）
-   - 动机：「<code>CallFrame</code> ≈384B、14 个字段跨 6 条 cache line（Lua 的 <code>CallInfo</code> 只几十字节）」—— 这是本节的<strong>主导假设</strong> ✗
-   - 实测：空调用 <strong>15.33 → 15.71 ns</strong>（4 次取最小，噪声内）⇒ <strong>假设证伪</strong> ✓
-   - ⇒ <strong>别再试</strong>「结构体字段按访问热度重排」这一族（与 ⑤-c 已排除项 3、5 同向，这是<strong>第 4 次</strong>同向否定）</li>
-<li>⛔ <strong>返回侧 <code>frame--</code> 取代 <code>&amp;vm.frames[vm.frame_cnt-1]</code> = 中性 ✗</strong>
-   - 动机：调用方帧恒为 <code>frame-1</code>（帧只由 <code>call_reg_impl</code> 相邻压入，返回路径不触发 <code>vm_grow_frames</code>）
-     ⇒ 可省 <code>vm.frames</code> 指针加载 + <code>frame_cnt</code> 加载 + 索引缩放寻址
-   - 实测：<strong>15.33 → 15.46 ns</strong>（噪声内）；断言 <strong>416/0</strong> ✓ ⇒ 改动<strong>本身是对的</strong>，只是<strong>测不出收益</strong> ✗</li>
-<li>⛔ <strong>消融「GC 安全点计数 + 全部 <code>GET_CURRENT_LINE()</code>」= 无收益 ✗</strong>
-   - 实测：两处一起摘掉 <strong>反而慢 4.1%</strong>（纯噪声）⇒ 这两处<strong>根本不在账上</strong> ✓
-   - ⚠ <strong>本项是重犯</strong>：⑤-c 已排除项 <strong>5</strong>（<code>GET_CURRENT_LINE</code> 消融中性）、<strong>6</strong>（回边 GC 检查无信号）<strong>早就记着</strong> ✗</li>
-<li>⛔ <strong>LICM（循环不变量实参提到循环外）= 原理上不可行 ✗</strong>（不是「没量出收益」，是<strong>不能做</strong>）
-   - 依据：零拷贝原地帧把被调方 <code>locals</code> <strong>别名</strong>到调用方实参区（<code>locals = caller-&gt;locals + arg_base</code>）
-     ⇒ 一次调用后调用方实参槽已被被调方当寄存器<strong>写坏</strong> ✗ ⇒ 每轮<strong>必须</strong>重设实参，外提＝复用脏值
-   - ⇒ 本文档 3542-3545 行把 <code>benchHit</code> 那 6 条 MOV 列为「顺带确认的剩余大块（LICM 地盘）」✗ <strong>应作废</strong>
+<li>⛔ <strong>帧布局重排 = 中性 ✗</strong>（把热字段提前、<code>inline_locals[64]</code> 挪到结构末尾；纯字段顺序、语义零变化）<ul>
+<li>动机：「<code>CallFrame</code> ≈384B、14 个字段跨 6 条 cache line（Lua 的 <code>CallInfo</code> 只几十字节）」—— 这是本节的<strong>主导假设</strong> ✗</li>
+<li>实测：空调用 <strong>15.33 → 15.71 ns</strong>（4 次取最小，噪声内）⇒ <strong>假设证伪</strong> ✓</li>
+<li>⇒ <strong>别再试</strong>「结构体字段按访问热度重排」这一族（与 ⑤-c 已排除项 3、5 同向，这是<strong>第 4 次</strong>同向否定）</li>
+</ul>
+</li>
+<li>⛔ <strong>返回侧 <code>frame--</code> 取代 <code>&amp;vm.frames[vm.frame_cnt-1]</code> = 中性 ✗</strong><ul>
+<li>动机：调用方帧恒为 <code>frame-1</code>（帧只由 <code>call_reg_impl</code> 相邻压入，返回路径不触发 <code>vm_grow_frames</code>）
+     ⇒ 可省 <code>vm.frames</code> 指针加载 + <code>frame_cnt</code> 加载 + 索引缩放寻址</li>
+<li>实测：<strong>15.33 → 15.46 ns</strong>（噪声内）；断言 <strong>416/0</strong> ✓ ⇒ 改动<strong>本身是对的</strong>，只是<strong>测不出收益</strong> ✗</li>
+</ul>
+</li>
+<li>⛔ <strong>消融「GC 安全点计数 + 全部 <code>GET_CURRENT_LINE()</code>」= 无收益 ✗</strong><ul>
+<li>实测：两处一起摘掉 <strong>反而慢 4.1%</strong>（纯噪声）⇒ 这两处<strong>根本不在账上</strong> ✓</li>
+<li>⚠ <strong>本项是重犯</strong>：⑤-c 已排除项 <strong>5</strong>（<code>GET_CURRENT_LINE</code> 消融中性）、<strong>6</strong>（回边 GC 检查无信号）<strong>早就记着</strong> ✗</li>
+</ul>
+</li>
+<li>⛔ <strong>LICM（循环不变量实参提到循环外）= 原理上不可行 ✗</strong>（不是「没量出收益」，是<strong>不能做</strong>）<ul>
+<li>依据：零拷贝原地帧把被调方 <code>locals</code> <strong>别名</strong>到调用方实参区（<code>locals = caller-&gt;locals + arg_base</code>）
+     ⇒ 一次调用后调用方实参槽已被被调方当寄存器<strong>写坏</strong> ✗ ⇒ 每轮<strong>必须</strong>重设实参，外提＝复用脏值</li>
+<li>⇒ 本文档 3542-3545 行把 <code>benchHit</code> 那 6 条 MOV 列为「顺带确认的剩余大块（LICM 地盘）」✗ <strong>应作废</strong>
      （Lua 同样要搬，两边同构 —— 这不是 Leno 的落后点）</li>
+</ul>
+</li>
 <li>✅ <strong>已完成（列出来是免得被误当死路）</strong>：全局直呼走 <code>vm.global_funcs[slot]</code> <strong>数组直取</strong>（无哈希 ✗）、typed 版、
    零拷贝原地帧、<strong>无 try 函数跳过 try 字段初始化</strong>（<code>vm_call.inc:458</code>，读取点由 <code>FRAME_TRY_VALID</code> 守护 ✓，
    异常展开 <code>09_exception.inc:154</code> 也用 <code>has_try</code> 过滤 ✓）、返回 <code>specialized</code> 位、T30 返回直落寄存器、
-   <code>+= 裸变量</code> 直取（−13.2% ✓，本轮已 <strong>dump 复证</strong>：<code>+= b</code> 与 <code>s = s + b</code> 编出来同一形态 ✓）
-   - ⇒ 结论：调用路径的 2.08x 是<strong>每调用约 15 个 store/uop 的密度差</strong>，按本文档分辨率表
+   <code>+= 裸变量</code> 直取（−13.2% ✓，本轮已 <strong>dump 复证</strong>：<code>+= b</code> 与 <code>s = s + b</code> 编出来同一形态 ✓）<ul>
+<li>⇒ 结论：调用路径的 2.08x 是<strong>每调用约 15 个 store/uop 的密度差</strong>，按本文档分辨率表
      （<strong>只有「整条指令」级 ≥0.9ns 测得出来</strong> ✗，uop 级 0.1~0.3ns 测不出）<strong>已无整条指令可砍</strong> ✓
      ⇒ 要再碰这条路，<strong>必须先上周期级探针（rdtsc）</strong>，否则改出来还是「中性」✗</li>
+</ul>
+</li>
 </ol>
 <p><strong>B. 「内存爆炸」（CodeBuddy 涨到 22GB ⇒ 你手动结束 ⇒ 系统重启）</strong></p>
 <ol>
@@ -6150,14 +6181,14 @@ CMPJMP 族（LT/LE/GT/GE）与"立即数内联进 C"的编码<strong>早就有</
 <p><strong>正确性</strong>：断言 <strong>416/0</strong>（冷跑）；12 个加密样例<strong>新旧 exe 逐字一致 12/12</strong> ✓</p>
 <p><strong>⚠ 本轮踩到的三个测量坑（以后别再踩）</strong>：
 1. <strong>A/B 必须带 <code>--no-cache</code></strong> ✗ —— 前面那次 <code>-c --debug</code>（compile 模式）已经把探针的 <code>.lenb</code> 缓存写下了 ✓，
-   之后所有运行直接加载<strong>同一份缓存字节码</strong> ✗ ⇒ 两种配置跑的是同一份代码 ⇒ <strong>Δ≈0 的假象</strong> ✗
-   （我因此一度误判"融合没用"，白绕了两轮 ❗）
+之后所有运行直接加载<strong>同一份缓存字节码</strong> ✗ ⇒ 两种配置跑的是同一份代码 ⇒ <strong>Δ≈0 的假象</strong> ✗
+（我因此一度误判"融合没用"，白绕了两轮 ❗）
 2. <strong>跨构建 A/B 会被"地址对齐彩票"污染</strong> ✗ —— 对照项动了 +17.9% 且<strong>分布完全不重叠</strong>（不是噪声 ✓）。
-   要干净归因就得用<strong>同一份二进制里的环境变量开关</strong> ✓；接受"带布局的总账"时也必须同时报对照项 ✓。
+要干净归因就得用<strong>同一份二进制里的环境变量开关</strong> ✓；接受"带布局的总账"时也必须同时报对照项 ✓。
 3. <strong>切环境变量别依赖 shell 的 <code>$env:X=</code> + <code>Remove-Item Env:</code></strong> ✗ —— 删除会被安全策略拦下 ⇒
-   状态<strong>粘住</strong> ⇒ 后面的轮次其实全是同一个配置 ✗（Δ≈0 的第二个假象来源 ✗）。
-   ⇒ 改用 <code>ProcessStartInfo.EnvironmentVariables</code> <strong>每进程注入</strong> ✓（或 <code>cmd /c set X=1&amp;&amp; …</code>，但注意
-   嵌套引号会把整条命令拐进 cmd ✗）。</p>
+状态<strong>粘住</strong> ⇒ 后面的轮次其实全是同一个配置 ✗（Δ≈0 的第二个假象来源 ✗）。
+⇒ 改用 <code>ProcessStartInfo.EnvironmentVariables</code> <strong>每进程注入</strong> ✓（或 <code>cmd /c set X=1&amp;&amp; …</code>，但注意
+嵌套引号会把整条命令拐进 cmd ✗）。</p>
 <hr>
 <h3 id="t32-cmpjmp-族立即数-int8-int16-已完成-隔离探针-16-27-对照项不动">T32：CMPJMP 族立即数 <code>int8 → int16</code> —— ✅ 已完成（隔离探针 <strong>−16~−27%</strong>，对照项不动）</h3>
 <p><strong>动机</strong>：T31 之后 <code>if i == 500</code> 仍是<strong>两条</strong>（<code>LOADI</code> + 融合指令）✗ —— 因为立即数原先挤在
@@ -6237,21 +6268,46 @@ CMPJMP 族（LT/LE/GT/GE）与"立即数内联进 C"的编码<strong>早就有</
 寄存器高水位被"声明量"顶上去（SDL <code>Window.run</code> 655 / <code>process</code> 563 就是这么来的）。</p>
 <p><strong>改法（纯编译器侧：零 VM 改动、零指令编码改动、不 bump 版本）</strong>：
 - <code>local_index</code> 改为可回退；五个语句边界成对 <code>sem_local_mark</code> / <code>sem_local_release</code>
-  （<code>for</code> / <code>while</code> / <code>if</code> / <code>switch</code> / <code>try</code>）—— 一并覆盖循环隐藏槽位、绑定槽位、体内局部变量。
+（<code>for</code> / <code>while</code> / <code>if</code> / <code>switch</code> / <code>try</code>）—— 一并覆盖循环隐藏槽位、绑定槽位、体内局部变量。
 - <strong>钉住下界</strong> <code>func_pinned[level]</code>：被闭包<strong>按引用捕获</strong>（<code>is_value_capture=0</code>）的槽位不许复用
-  （upvalue 持有 <code>frame-&gt;locals + slot</code> 裸指针）；值捕获（循环体内定义的闭包）不受影响。
-  记账<strong>按函数层级分开</strong>（分析内层函数时外层状态是挂起的），写点在 <code>resolve_variable_with_upvalue</code>。
+（upvalue 持有 <code>frame-&gt;locals + slot</code> 裸指针）；值捕获（循环体内定义的闭包）不受影响。
+记账<strong>按函数层级分开</strong>（分析内层函数时外层状态是挂起的），写点在 <code>resolve_variable_with_upvalue</code>。
 - <strong>历史高水位</strong> <code>func_max_index[level]</code>：<code>func-&gt;local_count</code> 必须取高水位，<strong>不能</strong>取回退后的当前值
-  （偏小 ⇒ codegen 的临时寄存器起点偏低 ⇒ 临时值盖掉变量）。
+（偏小 ⇒ codegen 的临时寄存器起点偏低 ⇒ 临时值盖掉变量）。
 - <code>Semantic</code> 是栈变量、不 memset ⇒ 两个新数组必须显式清零（<code>semantic_init</code>）。</p>
-<p><strong>实测</strong>（同机同轮、清 <code>.lenocache</code> 重编、交错执行取中位；对照 = 改动前同版本 exe）：
-| 基准 | 改动前 | 改动后 |
-|---|---|---|
-| 各种排序.leno · 优化快排(400000) | 134579 微秒 | <strong>133837 微秒</strong>（−0.6%） |
-| 光线追踪对比.leno 墙钟 | 1.934s | <strong>1.923s</strong> |
-| 全部测试.leno 墙钟 | 1.74s | <strong>1.72s</strong> |
-| 经典斐波那契 int | 57ms | 57ms |
-⇒ <strong>性能中性（略优）</strong>；真正的收益是上限：60 个 for 循环的函数（300 槽位）改动前报
+<p><strong>实测</strong>（同机同轮、清 <code>.lenocache</code> 重编、交错执行取中位；对照 = 改动前同版本 exe）：</p>
+<table>
+<thead>
+<tr>
+<th>基准</th>
+<th>改动前</th>
+<th>改动后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>各种排序.leno · 优化快排(400000)</td>
+<td>134579 微秒</td>
+<td><strong>133837 微秒</strong>（−0.6%）</td>
+</tr>
+<tr>
+<td>光线追踪对比.leno 墙钟</td>
+<td>1.934s</td>
+<td><strong>1.923s</strong></td>
+</tr>
+<tr>
+<td>全部测试.leno 墙钟</td>
+<td>1.74s</td>
+<td><strong>1.72s</strong></td>
+</tr>
+<tr>
+<td>经典斐波那契 int</td>
+<td>57ms</td>
+<td>57ms</td>
+</tr>
+</tbody>
+</table>
+<p>⇒ <strong>性能中性（略优）</strong>；真正的收益是上限：60 个 for 循环的函数（300 槽位）改动前报
 <strong>63 个</strong>「寄存器号超出 8 位上限」编译错误，改动后正常跑出 <code>180</code>。</p>
 <p><strong>验证</strong>：断言 416 → <strong>417/0</strong>（新增 <code>assert/test_slot_recycle.leno</code>：300 槽位可编可跑 +
 引用捕获钉住压测：闭包捕获的变量在经过 20 个循环的槽位复用后仍须读出 114）。</p>
@@ -6270,7 +6326,7 @@ CMPJMP 族（LT/LE/GT/GE）与"立即数内联进 C"的编码<strong>早就有</
 ⚠ 原立项文档 <code>docs/待办_寄存器号8位上限.md</code> <strong>已删除</strong>（照上面的修复记录执行完毕 ⇒ 不必再留）。
 后续若还要动这条线，只有"同作用域内 &gt;255 个同时存活变量"这一种情形（见上面的边界说明）。</p>
 <blockquote>
-<p><strong>修复记录（2026-11-04）：错误消息的</strong>误报** —— 字段索引被当成寄存器号**</p>
+<p><strong>修复记录（2026-11-04）：错误消息的</strong>误报<strong> —— 字段索引被当成寄存器号</strong></p>
 <p>现象（Aria 加功能时撞到）：<code>lib/player_tick.leno(996): 寄存器号超出 8 位上限（opcode 137：
 A=12 B=0 C=258）：单个函数的寄存器高水位不能超过 255；请把该函数拆小…</code>
 但给编译器加一次性诊断打印 <code>gen-&gt;max_reg</code> 后，该函数实测 <strong>max_reg=46</strong>（<code>self_test</code> 也只有 32）
@@ -6281,8 +6337,8 @@ A=12 B=0 C=258）：单个函数的寄存器高水位不能超过 255；请把�
 ⇒ 字段索引 258 被报成"寄存器号 258"✗（C=258 与 max_reg=46 的差值就是线索）。</p>
 <p>改法（纯诊断，零编码改动、不 bump 版本）：
 - <code>codegen_emit.c</code>：新增 <code>op_c_is_field_index()</code>，字段类指令的 C 越界改报
-  「结构体字段数超出上限（… C 是<strong>字段索引</strong>不是寄存器号）：单个 struct / face 最多 255 个字段…」，
-  并直接给出该走的路（拆小 struct / 把状态放到模块级变量或单独的结构体）；
+「结构体字段数超出上限（… C 是<strong>字段索引</strong>不是寄存器号）：单个 struct / face 最多 255 个字段…」，
+并直接给出该走的路（拆小 struct / 把状态放到模块级变量或单独的结构体）；
 - 寄存器类指令仍报原来的"寄存器号"消息（判据不变）。</p>
 <p>验证：300 字段的 struct 现在报
 <code>结构体字段数超出 8 位上限（opcode 97：C=299，C 是字段索引不是寄存器号）…</code> ✓；
@@ -6291,33 +6347,37 @@ Leno 断言 <strong>566/0</strong> ✓；Aria 侧把广场状态收进子结构�
 以后遇到这条错误，先看 <code>max_reg</code> 是否真的接近 255，再怀疑结构体成员数 ✓。</p>
 <p><strong>追加（同日）：把上限检查提到编译期（<code>visit_type_def.inc</code>）</strong>
 - struct 定义处：<code>field_count &gt; 255</code> 与 <code>method_count &gt; 255</code> 直接报错；face 定义处：
-  <code>method_count &gt; 255</code> 报错。消息里写明"拆成几个小 struct / 用 extend 挂方法"。
+<code>method_count &gt; 255</code> 报错。消息里写明"拆成几个小 struct / 用 extend 挂方法"。
 - ⚠ <strong>上限是 255，不是 256</strong>：<code>OP_STRUCT_DEF</code> 紧随其后的元数据用 <code>cw_u8(field_count)</code>
-  （<code>(uint8_t)(v &amp; 0xFF)</code> <strong>静默截断</strong>）⇒ 256 个字段会被写成 <strong>0</strong>。实测（改检查前）：
-  255 字段的脚本可编可跑且取值正确，<strong>256 字段的脚本编译通过、运行 exit=-1 直接挂</strong>
-  （按"没有字段"建实例，之后写字段就越界）。字段索引那一维本来能放 256 个，
-  被这个 1 字节计数先卡住了。
+（<code>(uint8_t)(v &amp; 0xFF)</code> <strong>静默截断</strong>）⇒ 256 个字段会被写成 <strong>0</strong>。实测（改检查前）：
+255 字段的脚本可编可跑且取值正确，<strong>256 字段的脚本编译通过、运行 exit=-1 直接挂</strong>
+（按"没有字段"建实例，之后写字段就越界）。字段索引那一维本来能放 256 个，
+被这个 1 字节计数先卡住了。
 - 验证：255 → 通过且输出正确；256 → 编译期报
-  「struct 'S256' 有 256 个字段，超出上限（最多 255 个）…」；Aria 的 <code>Player</code> 244 → 通过；
-  断言 <strong>566/0</strong>；LenoSDL3 的 <code>sdl_edit / sdl_table / sdl_window / sdl_renderer / sdl_card</code>
-  单独 <code>--check</code> 均无上限错误（没误伤现有大结构体）。
+「struct 'S256' 有 256 个字段，超出上限（最多 255 个）…」；Aria 的 <code>Player</code> 244 → 通过；
+断言 <strong>566/0</strong>；LenoSDL3 的 <code>sdl_edit / sdl_table / sdl_window / sdl_renderer / sdl_card</code>
+单独 <code>--check</code> 均无上限错误（没误伤现有大结构体）。
 - 遗留（未做，按"性能优先"压着）：<code>OP_STRUCT_DEF</code> 的字段数/方法数、<code>OP_FACE_DEF</code> 的方法数
-  仍是 u8 ⇒ 真实上限锁在 255。要抬到 65535 得动指令编码（2 字节计数或 iABx），
-  与"寄存器加宽"同一个坑，暂不做。</p>
+仍是 u8 ⇒ 真实上限锁在 255。要抬到 65535 得动指令编码（2 字节计数或 iABx），
+与"寄存器加宽"同一个坑，暂不做。</p>
+</blockquote>
+<blockquote>
 <p>✅ <strong>2026-11-10 已解除（P3 前半：字段数 255 → 65535）</strong>
 上面那条"遗留"解决了，两处都动了：
 1. <strong>字段索引</strong>：新增 4 条宽索引 opcode（<code>OP_GET_FIELD_W</code> / <code>OP_SET_FIELD_W</code> /
-   <code>OP_GET_FIELD_FAST_W</code> / <code>OP_GET_FIELD_ADDR_W</code>）——<code>C=0</code> + <strong>紧随一条 EXTRAARG</strong>
-   携带 24 位字段索引（与 <code>OP_CALL_NATIVE</code> 的宽常量索引同一惯例，VM 用 <code>READ_CONST_IDX(0)</code>）。
-   codegen 统一走 <code>emit_field_op()</code>：索引 ≤255 发老的 4 字节指令（<strong>既有字节码逐位不变</strong>），</p>
+<code>OP_GET_FIELD_FAST_W</code> / <code>OP_GET_FIELD_ADDR_W</code>）——<code>C=0</code> + <strong>紧随一条 EXTRAARG</strong>
+携带 24 位字段索引（与 <code>OP_CALL_NATIVE</code> 的宽常量索引同一惯例，VM 用 <code>READ_CONST_IDX(0)</code>）。
+codegen 统一走 <code>emit_field_op()</code>：索引 ≤255 发老的 4 字节指令（<strong>既有字节码逐位不变</strong>），</p>
 <blockquote>
-<p>255 才发宽索引版。
-2. <strong><code>OP_STRUCT_DEF</code> 的字段数</strong>：<code>cw_u8</code> → <code>cw_u16</code>（大端），读取侧同步：
-   VM <code>11_struct_face_enum.inc</code>、<code>bytecode_verify.c</code> 的 <code>scan_struct_def</code>、
-   <code>debug.c</code> 的 <code>decode_trailing</code>。
-3. 语义阶段的 <code>field_count &gt; 255</code> 检查改成 <code>&gt; 65535</code>；<code>LENO_BIN_VERSION</code> v3.2.30 /
-   <code>LENO_MODCACHE_VERSION</code> v45 双版本 bump（旧字节码含新 opcode 必须整体失效）。</p>
+<p>255 才发宽索引版。</p>
 </blockquote>
+<ol>
+<li><strong><code>OP_STRUCT_DEF</code> 的字段数</strong>：<code>cw_u8</code> → <code>cw_u16</code>（大端），读取侧同步：
+   VM <code>11_struct_face_enum.inc</code>、<code>bytecode_verify.c</code> 的 <code>scan_struct_def</code>、
+   <code>debug.c</code> 的 <code>decode_trailing</code>。</li>
+<li>语义阶段的 <code>field_count &gt; 255</code> 检查改成 <code>&gt; 65535</code>；<code>LENO_BIN_VERSION</code> v3.2.30 /
+   <code>LENO_MODCACHE_VERSION</code> v45 双版本 bump（旧字节码含新 opcode 必须整体失效）。</li>
+</ol>
 <p>顺手把一个坑记进 <code>assert/helpers/wide_struct.leno</code> 的文件头：<strong><code>f32</code> / <code>f64</code> 是类型关键字</strong>，
 字段名叫 <code>f32</code> 会让解析器在"期望字段名"处报错（写 300 字段测试时踩的）。</p>
 <p>验证：新增 <code>assert/test_wide_fields.leno</code>（300 字段：宽索引读/写 + 方法内读/写 + 0 号字段老路径对照），
@@ -6366,22 +6426,21 @@ LenoMusic 现在编得过；把 WorkBuddy 的 <code>LenoLog</code> 改成 <code>
 （<code>artist + "/"</code>、<code>done + "/" + total</code>），真正拼文件路径的只有 2 处，都改成 <code>dirs.join</code>：
 - Aria <code>tools/dl_hq.leno</code>：<code>outDir + "\\" + 文件名</code>（写死反斜杠，outDir 以 <code>/</code> 结尾还会拼出 <code>a//b</code>）
 - LenoTrae <code>trae_tray.leno</code> 的 <code>_ip()</code>：同一文件的第 115 行给 <code>_imgDir</code> 赋值时用的就是
-  <code>dirs.join</code>，唯独这里写死 <code>/</code> ⇒ Windows 下混出 <code>...\images/xx.png</code></p>
+<code>dirs.join</code>，唯独这里写死 <code>/</code> ⇒ Windows 下混出 <code>...\images/xx.png</code></p>
 <h3 id="p4-第二批-2026-11-10-switch-的-enum-穷尽性">✅ P4 第二批（2026-11-10）：switch 的 enum 穷尽性</h3>
 <p>新增 <code>WARN_SWITCH_NOT_EXHAUSTIVE</code>：<code>switch</code> 的主题是 <strong>enum 类型</strong>、case 没盖全、又没有
 <code>default</code> ⇒ 警告并列出漏掉的成员：</p>
-<pre><code>函数里 switch 的主题是 enum 'Color'，但少了 1 个成员（blue）且没有 default：
-这些值会直接穿过去、什么都不做；请补 case，或加 default（哪怕只写 throw / 赋一个兜底值）
-</code></pre>
+<p> 函数里 switch 的主题是 enum 'Color'，但少了 1 个成员（blue）且没有 default：
+ 这些值会直接穿过去、什么都不做；请补 case，或加 default（哪怕只写 throw / 赋一个兜底值）</p>
 <p>设计取舍：
 - <strong>只警告不报错</strong>：运行期语义就是"没命中就穿过去"，那不算错；而且 <code>switch x { case A {…} }</code>
-  只关心一个分支的写法在既有代码里合法（评估报告要的是"别劝退"，提示不是拦截）。
+只关心一个分支的写法在既有代码里合法（评估报告要的是"别劝退"，提示不是拦截）。
 - <strong>宁漏勿误报</strong>：case 值里只要有一个编译期认不出的形状（表达式 / 变量 / 函数调用 /
-  <code>case is</code>）就整条放弃检查。
+<code>case is</code>）就整条放弃检查。
 - <strong>按值比，不按名字</strong>：位标志 enum（<code>low=1, mid=2, high=4</code>）与别名都自然正确。
 - 实现要点：枚举成员访问在语义阶段<strong>已经被改写成 <code>AST_NUM</code></strong>（visit_module.inc 的
-  "enum 值解析成常量"那段），所以检查主要读 <code>AST_NUM</code>；同模块的 <code>Color.red</code> 若仍是
-  <code>AST_FIELD_ACCESS</code> 也认。enum 符号用 <code>scope_resolve</code> 沿作用域链找。</p>
+"enum 值解析成常量"那段），所以检查主要读 <code>AST_NUM</code>；同模块的 <code>Color.red</code> 若仍是
+<code>AST_FIELD_ACCESS</code> 也认。enum 符号用 <code>scope_resolve</code> 沿作用域链找。</p>
 <p>验证：四个项目全量 <code>--check</code> —— 该警告 <strong>0 条</strong>（既有代码要么写全、要么有 default）；
 新增 <code>assert/test_switch_enum_exhaustive.leno</code> 钉住"检查不许改坏语义"
 （盖全 / 有 default / int 主题 / 位标志 enum / <code>case is</code> 五组），断言 <strong>579 / 0</strong>；模块测试 <strong>50 / 0</strong>。</p>
@@ -6458,13 +6517,13 @@ Aria / LenoMusic <code>--check</code> 通过。</p>
 热路径全体变慢、反汇编/校验/序列化全线改 —— <strong>纯成本、零收益</strong> ⇒ 不做。</p>
 <p>替代动作（已落地）：
 1. <strong>跑道提醒</strong> <code>WARN_REG_PRESSURE</code>：某函数高水位 ≥ 200 就警告
-   「寄存器高水位 214（上限 255，只剩 41 个槽位）：再涨就编不过了…… 拆函数 / 把相关局部量收进 struct」
-   —— 撞硬错误之前先有预警（实测 210 个局部量的函数会触发；四个项目 0 条噪声）。
+「寄存器高水位 214（上限 255，只剩 41 个槽位）：再涨就编不过了…… 拆函数 / 把相关局部量收进 struct」
+—— 撞硬错误之前先有预警（实测 210 个局部量的函数会触发；四个项目 0 条噪声）。
 2. 报错/警告里给的处方改用<strong>现在已经可行的</strong>手段：struct 字段数上限已抬到 65535 ⇒
-   "把一组局部量收进 struct" 是真正能装下状态的路（不再受 255 限制）。</p>
+"把一组局部量收进 struct" 是真正能装下状态的路（不再受 255 限制）。</p>
 <p>若将来真要做（例如出现自动生成的巨型函数），可行路线按代价排序：
 ① 只给「寄存器操作数」的那批指令加 <code>_X</code> 变体（16 位索引放 EXTRAARG），按需逐个加 —— 增量式，
-   但代码量随指令数线性涨；② 全指令改 6 字节或引入 bank 前缀 —— 一次性但会影响所有热路径。
+但代码量随指令数线性涨；② 全指令改 6 字节或引入 bank 前缀 —— 一次性但会影响所有热路径。
 两条都要重跑 <code>build_vm.bat</code> 并 bump 双版本号。</p>
 <hr>
 <h3 id="t33-立即数族整体-int8-int32-指令-4-字节-8-字节-已回退-2026-10-03">T33：立即数族整体 <code>int8 → int32</code>（指令 4 字节 → 8 字节）—— ✗ 已回退（2026-10-03）</h3>
@@ -6555,8 +6614,8 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 - <code>--debug</code> dump：<code>ADD/SUB/MUL/LT/GE_INT_IMM</code> 各<strong>一条</strong>，立即数正确（<code>&lt;imm=500&gt;</code> / <code>&lt;imm=2000&gt;</code> ✓）
 - 断言 <strong>416/0</strong>（冷跑 ✓）；6 个加密样例与<strong>逐字基线一致 6/6</strong> ✓
 - <strong>同轮双向 A/B</strong>（探针 <code>imm32_bench.leno</code>，N=2e7×REPS=3，<code>--no-cache</code>，5 轮交替、min~max ✓；
-  基线 = <strong>T31 版 exe</strong> <code>leno_pre_int16.exe</code> —— T32 只动了 CMPJMP（<strong>条件</strong>上下文）✓，
-  对本次这两条形态<strong>没有影响</strong> ⇒ 是干净基线 ✓）：</p>
+基线 = <strong>T31 版 exe</strong> <code>leno_pre_int16.exe</code> —— T32 只动了 CMPJMP（<strong>条件</strong>上下文）✓，
+对本次这两条形态<strong>没有影响</strong> ⇒ 是干净基线 ✓）：</p>
 <table>
 <thead>
 <tr>
@@ -6592,7 +6651,7 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 </tbody>
 </table>
 <p>⚠ 如实记一笔：<strong>我是先提交并推送、后补的这次 A/B</strong> ✗ —— 台账纪律写的是"提交信息要附同轮 A/B 数据" ✓，
-  这次顺序错了 ✓；该数据由紧随的补记提交补上 ✓</p>
+这次顺序错了 ✓；该数据由紧随的补记提交补上 ✓</p>
 <p><strong>边界（如实）</strong>：<strong>大整数字面量</strong>（Leno 的 int 是任意精度）在解析阶段就被标成 <code>bigint</code> ✗ ⇒
 本来就不走立即数路径 ✓（既有行为，与本次无关 ✓）</p>
 <p><strong>版本</strong>：<code>LENO_BIN_VERSION</code> v3.2.20→<strong>v3.2.21</strong>、<code>LENO_MODCACHE_VERSION</code> v36→<strong>v37</strong> ✓
@@ -6645,7 +6704,7 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 换一组只省 <strong>0.559 ns</strong>、且"静态计数会骗人"）⇒ <strong>不再重复立项</strong> ✓。</p>
 <p><strong>下一步候选（按优先级）</strong>：
 1. <strong>寄存器号 8 位上限</strong> —— ✅ <strong>已修</strong>（2026-10-03：语义阶段槽位回收，见上方那一节；断言 417/0）。
-   剩下的只有"同作用域内 &gt;255 个同时存活变量"这一种病态情形（T34 的编译硬错误即正确行为）；
+剩下的只有"同作用域内 &gt;255 个同时存活变量"这一种病态情形（T34 的编译硬错误即正确行为）；
 2. 调用路径 2.08x ✗ —— 已证伪到"只剩 uop 密度"（见上方死路清单 A ✓）⇒ 要动<strong>必须先上周期级探针</strong> ✗。</p>
 <hr>
 <h2 id="四-常用命令">四、常用命令</h2>
@@ -6676,19 +6735,23 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
    结论写进 §三；<strong>不与任何第二实现做对照</strong>。</li>
 <li><strong>动手前先查 §T5 的「已排除（都做了实测，别再重复试）」清单</strong>（当前 8 条）—— 尤其是
    <strong>第 8 条：T9 / 抽 handler 冷路径整条路线已实测证伪（是"代码布局抽奖"，不是杠杆）</strong>。</li>
-<li><strong>A/B 的三条硬规矩</strong>（都是踩过的坑）：
-   - <strong>同二进制 env 开关</strong>（<code>LENO_NO_CMPJMP</code> 之类）<strong>必须带 <code>--no-cache</code></strong> —— 入口缓存只认
-     "源码哈希 + exe 指纹"、<strong>不含环境变量</strong>，否则第二次运行直接吃第一次编译的字节码（见 ⑤-af）；
-   - <strong>跨 exe 对比天然安全</strong>（指纹不同），但<strong>每次 A/B 都要对调顺序</strong>再下结论；
-   - <strong>"改动让某项变慢"必须做一次回退复测</strong>（还原后回到原区间才叫归因干净）—— 见 §T9 的 ⑤。</li>
-<li><strong>探针 / 脚本的归置（三分法 —— 别再往 <code>build\</code> 堆散件 ✗）</strong>：
-   - <strong>会反复跑的</strong>（AA 保真度量化、蒙版/渲染变体微基准、预热与性能基线）⇒ <strong>升格进既有目录 + 稳定文件名</strong>：
+<li><strong>A/B 的三条硬规矩</strong>（都是踩过的坑）：<ul>
+<li><strong>同二进制 env 开关</strong>（<code>LENO_NO_CMPJMP</code> 之类）<strong>必须带 <code>--no-cache</code></strong> —— 入口缓存只认
+     "源码哈希 + exe 指纹"、<strong>不含环境变量</strong>，否则第二次运行直接吃第一次编译的字节码（见 ⑤-af）；</li>
+<li><strong>跨 exe 对比天然安全</strong>（指纹不同），但<strong>每次 A/B 都要对调顺序</strong>再下结论；</li>
+<li><strong>"改动让某项变慢"必须做一次回退复测</strong>（还原后回到原区间才叫归因干净）—— 见 §T9 的 ⑤。</li>
+</ul>
+</li>
+<li><strong>探针 / 脚本的归置（三分法 —— 别再往 <code>build\</code> 堆散件 ✗）</strong>：<ul>
+<li><strong>会反复跑的</strong>（AA 保真度量化、蒙版/渲染变体微基准、预热与性能基线）⇒ <strong>升格进既有目录 + 稳定文件名</strong>：
      图形类 → <code>build\leno_module\LenoSDL3\examples\图形绘制\</code>；性能类 → 同模块 <code>examples\性能测试\</code>
-     （或仓库根 <code>examples\性能测试\</code>）；行为断言 → <code>assert\</code> ✓
-   - <strong>一次性假设探针</strong>（只为验证某个猜想临时插桩的）⇒ <strong>量完就删</strong>，只把「口径 + 数字」写进 §三 ✓
-   - <strong><code>build\_*.leno</code> / <code>build\_*.png</code> 散件一律不留</strong>（未跟踪、污染 <code>git status</code>、也没人记得哪份还有效 ✗）
-   - ⚠ 文档引用探针必须给<strong>升格后的稳定路径</strong>，否则判据悬空 ✗（2026-09-27 踩过一次：⑤-an 引用的
+     （或仓库根 <code>examples\性能测试\</code>）；行为断言 → <code>assert\</code> ✓</li>
+<li><strong>一次性假设探针</strong>（只为验证某个猜想临时插桩的）⇒ <strong>量完就删</strong>，只把「口径 + 数字」写进 §三 ✓</li>
+<li><strong><code>build\_*.leno</code> / <code>build\_*.png</code> 散件一律不留</strong>（未跟踪、污染 <code>git status</code>、也没人记得哪份还有效 ✗）</li>
+<li>⚠ 文档引用探针必须给<strong>升格后的稳定路径</strong>，否则判据悬空 ✗（2026-09-27 踩过一次：⑤-an 引用的
      <code>build\_ripple_probe.leno</code> 在一次清理后消失 ✗）</li>
+</ul>
+</li>
 </ol>
 <hr>
 <h2 id="六-2026-10-02-文档整理批次-已做">六、2026-10-02 文档整理批次（已做）</h2>
@@ -6729,11 +6792,11 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 <p><strong>顺手记下两笔账</strong>（本轮不修）：</p>
 <ul>
 <li><strong>新账（挂 ⑤-g / ⑤-y 这条线下）：寄存器式 codegen 缺函数内联器。</strong>
-  <code>src/codegen/codegen_inline.c</code> 在 <code>0f0cf52</code>（"删除 codegen_inline.c + 36 个栈式 op_*.inc"）中被删，
-  至今<strong>未移植</strong>（全仓无 <code>try_inline_call</code> 引用）。后果：<strong>所有脚本函数调用都是真调用</strong>；
-  而栈式那些"空调用 193ms / 1 参调用 611ms"的对拍数字，其实是<strong>内联后剩下的空循环 / 内联体</strong>
+  <code>src/codegen/codegen_inline.c</code> 在 <code>0f0cf52</code>（"删除 codegen_inline.c + 36 个栈式 op_<em>.inc"）中被删，
+  至今</em>*未移植<strong>（全仓无 <code>try_inline_call</code> 引用）。后果：</strong>所有脚本函数调用都是真调用<strong>；
+  而栈式那些"空调用 193ms / 1 参调用 611ms"的对拍数字，其实是</strong>内联后剩下的空循环 / 内联体<strong>
   （同探针实测：栈式空调用 108.8ms ≈ 空循环 108.6ms，Δ≈0.02ns/次；寄存器式 541.6ms vs 空循环 95.7ms，
-  Δ≈44.6ns/次）。⇒ <strong>判据</strong>：<code>.probe_pvz/bench_call.leno</code> 与
+  Δ≈44.6ns/次）。⇒ </strong>判据**：<code>.probe_pvz/bench_call.leno</code> 与
   <code>examples\性能测试\空调用与自增隔离微基准.leno</code> 的空调用项应降到 ≈空循环量级，
   且"快速排序内层小函数调用"那类负载同步受益（快排"慢 2 倍"很可能就是这个根因，待验）。
   移植必带两处历史坑：<code>inline_return_jump_count</code> 嵌套重置（<code>archive/VM字节码校验与崩溃防护设计方案.md</code>）、
@@ -6766,9 +6829,9 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 - 构建 <strong>0 warning / 0 error</strong>（<code>build.bat</code> 目标）；
 - 断言套件 <strong>431 passed / 0 failed</strong>（<code>dirs.walk(assert/)</code> 自动发现的全量）；
 - 模块离线单元测试 11 个全绿：charset 54 · crawler_queue 23 · crawler_state 18 · gzip 51 ·
-  priority_queue 15 · selector_ext 47 · utf8_text 24 · headers_api 17 · multipart 15 · LenoSys selftest ·
-  LenoHack byte_find；<strong>加密 KAT <code>LenoCrypto/test/test_crypto_vectors.leno</code> passed</strong> ——
-  PKCS7 去填充那 8 处 <code>byte_slice</code> 改写被<strong>字节级</strong>验证过；
+priority_queue 15 · selector_ext 47 · utf8_text 24 · headers_api 17 · multipart 15 · LenoSys selftest ·
+LenoHack byte_find；<strong>加密 KAT <code>LenoCrypto/test/test_crypto_vectors.leno</code> passed</strong> ——
+PKCS7 去填充那 8 处 <code>byte_slice</code> 改写被<strong>字节级</strong>验证过；
 - 危险形状全仓扫描：字面量 <code>0</code> 终点 <strong>0 处</strong>、负字面量终点 <strong>1 处</strong>（已手工改，见上）。</p>
 <p><strong>遗留（登记在案，别当已修）</strong>：</p>
 <ol>
@@ -6795,11 +6858,11 @@ int32 的<strong>边际代价为 0</strong> ✓（先前判"int32 不划算"的�
 <p><strong>1. <code>sub_str</code> 直接删除、改名 <code>take(start, n)</code></strong>（<strong>不留别名、不发弃用警告</strong> —— 用户明确要求）：
 - 内部 <code>str_sub_str</code> ⇒ <code>str_take</code>；模块 + 实例两处注册只保留 <code>take</code>（<code>src/module/strings/strings.c</code>）。
 - 全仓 18 处调用点改名（7 文件：<code>assert/</code> 4 个 + <code>examples/minilang</code> + <code>LenoHack</code> + <code>leno_gui</code>），
-  另有 4 处注释/测试标签里的旧名同步。
+另有 4 处注释/测试标签里的旧名同步。
 - 文档 5 处：<code>module_strings.md</code>（整段重写 + 3 处提及）、<code>Leno入门教程.md</code>（API 表 + 4 处示例）、
-  <code>module_sockets.md</code>（1 处示例）、<code>examples_smoke.list</code>（1 处注释）。
+<code>module_sockets.md</code>（1 处示例）、<code>examples_smoke.list</code>（1 处注释）。
 - <strong>为什么删而不留别名</strong>：名字不带口径就是本次两起静默 bug 的温床（<code>slice(i,1)</code> 被当"取 1 个字符"用）；
-  留别名等于把坑留着。</p>
+留别名等于把坑留着。</p>
 <p><strong>2. 语法 <code>[a:b]</code> 的负索引与方法统一</strong>（<code>src/vm/vminc/run/08_slice_iter.inc</code> 数组/字符串两分支）：
 负起点从末尾数（<code>s[-2:]</code>）；<strong>终点负数一律给空串</strong>（此前钳到 0 ⇒ <code>s[0:-1]</code> 会给第一个元素）。
 全仓扫描确认无人依赖旧行为（命中的 <code>n[-1]</code> 是 dict 负键、<code>for 3:0:-1</code> 是 range step，都与切片无关）。</p>
@@ -6821,6 +6884,8 @@ breaking；发行目录 v0.2.0；<code>README.md</code> / <code>README_EN.md</co
 表格停留在 <strong>v3.2.10 / v26 / v37</strong>（<code>.lenb</code> / <code>.lenomc</code> / <code>.lenosymc</code> 三行都落后），与源码差
 十余个版本 ⇒ 要么按 git 历史补全，要么把表格改成<strong>指向</strong> <code>leno_serialize.h</code> 的宏注释（那才是
 单一事实来源）。本批只把该文件头部那句"现 v3.2.12"改成"以源码为准、不回填"。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>本批踩到并修掉的一个改写缺陷（写给以后搞同类迁移的人）</strong>：
 "末位实参是<strong>纯 <code>X.len()</code></strong> ⇒ 靠钳位不动"这条豁免<strong>只对"同一个接收者"成立</strong> ——
 <code>s.slice(0, base.len())</code> 里 <code>.len()</code> 是<strong>别的变量</strong>的长度，钳位（按 <code>s</code> 的长度）根本不触发 ⇒
@@ -7077,7 +7142,7 @@ v0.2.0 起<strong>一字未改</strong> ✓（无新 opcode / 无编码变化 / 
 table/treeview <code>row_h</code>→<code>item_h</code>、删掉 table 的 <code>multi</code> 别名）。
 <strong>旧名一律不留</strong>（改名表当天撤）：传旧键会报"不认识的选项 + <strong>你是不是想要 X</strong>" ✓
 （字段名 / 局部变量不动 —— 它们不是暴露给用户的字典键 ✓）。</p>
-<h3 id="三-新增能力_1">三、新增能力</h3>
+<h3 id="三-新增能力">三、新增能力</h3>
 <ul>
 <li><strong>LenoSys 桌面能力</strong>：<code>sysInfo</code> / <code>isElevated</code> / <code>volumeOf</code> / <code>listTrash</code> / <code>processPath</code>、
   桌面集成 <code>openWith</code> / <code>revealInFolder</code> / <code>notify</code>、<strong>回收站跨分区</strong>（清空 + 移入）+
@@ -7113,7 +7178,7 @@ table/treeview <code>row_h</code>→<code>item_h</code>、删掉 table 的 <code
 <li><strong>产物洁癖</strong>：无控制台发布版的日志改<strong>延迟创建</strong>（成功跑完连 <code>logs\</code> 都不出现 ✓）；
   <code>.lenocache</code> / <code>.lenocache_lsp</code> 同样<strong>延迟创建</strong>（不写东西就不建空目录 ✓）</li>
 </ul>
-<h3 id="四-修复-真-bug_1">四、修复（真 bug）</h3>
+<h3 id="四-修复-真-bug">四、修复（真 bug）</h3>
 <ul>
 <li><strong>前缀 <code>++i</code> / <code>--i</code> 当语句被上一行吃掉</strong>（后缀 <code>++</code>/<code>--</code> 不许跨行，与 JS 同一条规则 ✓）</li>
 <li><strong>无控制台产物日志 0 字节</strong>：GUI 进程 <code>stderr</code> 根本没关联（<code>_fileno(stderr)</code> = <strong>-2</strong>）⇒
@@ -7164,8 +7229,10 @@ table/treeview <code>row_h</code>→<code>item_h</code>、删掉 table 的 <code
 <li>编译器 / VM / <strong>LSP</strong> 三个构建目标 <strong>0 warning</strong> ✓（LSP 那条既有的
   <code>-Wformat-truncation</code> 已随 <code>cache_dir</code> 缓冲区改大消掉 ✓）</li>
 <li>断言套件 <strong>460 passed / 0 failed</strong> ✓（v0.2.2 时 451）</li>
-<li><strong>全仓 <code>.leno</code> 编译检查 0 失败</strong> ✓：内置模块 <strong>264</strong> + <code>examples/</code> <strong>811</strong> + <code>leno_gui/</code> <strong>108</strong></li>
+<li><strong>全仓 <code>.leno</code> 编译检查 0 失败</strong> ✓：内置模块 <strong>264</strong> + <code>examples/</code> <strong>811</strong> + <code>leno_gui/</code> <strong>108</strong><ul>
 <li><code>tools/</code> <strong>2</strong> = <strong>1185 个文件</strong>（<code>assert/</code> 里的<strong>故意错误</strong>用例不纳入 ✓）</li>
+</ul>
+</li>
 <li><strong><code>.lenb</code> 往返正确</strong> ✓：<code>examples/minilang</code> 直跑 <code>.leno</code> 与 <code>leno_vm.exe</code> 跑 <code>.lenb</code>
   <strong>输出逐字一致</strong> ✓</li>
 <li><strong>打包用例</strong> ✓：<code>-p --onefile</code> 产出的单文件 exe（827 KB）能直接运行</li>
@@ -7252,6 +7319,8 @@ codegen 未动）⇒ 旧 <code>.lenb</code> / <code>.lenomc</code> <strong>格�
 写路径只多一次指针判空、无新指令、无格式变更。
 仍然没打通的是<strong>跨模块写</strong>（<code>m.var = v</code> 保持编译错误 + setter 处方）——
 那需要"写穿到别人的 globals"，属上表 ② 的范畴。</p>
+</blockquote>
+<blockquote>
 <p>相关：<code>docs/线程并发能力修复追踪.md</code> 的 TH14–TH17（select 后端的当前能力与已知上限）。</p>
 </blockquote>
 <hr>
@@ -7406,7 +7475,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<p><strong>追加（2026-11-10 第四轮）：载荷 enum 的</strong>显示** + switch 模式错误<strong>只报根因</strong>（两处打磨）**</p>
+<p><strong>追加（2026-11-10 第四轮）：载荷 enum 的</strong>显示<strong> + switch 模式错误</strong>只报根因<strong>（两处打磨）</strong></p>
 <table>
 <thead>
 <tr>
@@ -7480,22 +7549,22 @@ main() {
    <strong>唯一剩下的</strong>是 Aria 那两个表格 —— 经评估<strong>不做</strong>，理由在下面写清了。</li>
 </ol>
 <p><strong>协议层收尾（LenoMusic <code>da906aa</code>）</strong>：<code>songrow.leno</code> 补了「具名写入」
-   （<code>put</code> + <code>setid/setext/setbytes/setsrc/seturl…</code>，越界先补空串），
-   <code>kugou_core / qq_core / netease_core / dl_engine / kugou_lyric</code> 的<strong>写入</strong>全改走 setter；
-   <code>dl_engine</code> 里那 10 条 <code>export const int F_* = srow.F_*</code> 转发<strong>已删</strong>（全项目无人使用）。
-   钉子：<code>test/test_songrow_put.leno</code>（补齐语义 / 老 8 段行 / 10 个 setter 对称 / 覆盖 / 往返）。</p>
+（<code>put</code> + <code>setid/setext/setbytes/setsrc/seturl…</code>，越界先补空串），
+<code>kugou_core / qq_core / netease_core / dl_engine / kugou_lyric</code> 的<strong>写入</strong>全改走 setter；
+<code>dl_engine</code> 里那 10 条 <code>export const int F_* = srow.F_*</code> 转发<strong>已删</strong>（全项目无人使用）。
+钉子：<code>test/test_songrow_put.leno</code>（补齐语义 / 老 8 段行 / 10 个 setter 对称 / 覆盖 / 往返）。</p>
 <p><strong>LenoMusic 第二轮（2026-11-10）</strong>：<code>bang_page</code> / <code>search_page</code> 不再直接读 <code>eng.F_*</code> ——
-   行协议只在 <code>songrow.from_row</code> 一处解码，页面拿到 <code>SongRow</code> 具名字段；<code>fmt_ok</code> /
-   格式下拉 / 合计字节 / 合并 ff 行四处也改走 <code>rowext</code> / <code>rowbytes</code> / <code>from_row</code>+<code>to_row</code>。
-   两个页面里<strong>非注释的 <code>F_*</code> 引用现在是 0</strong>。</p>
+行协议只在 <code>songrow.from_row</code> 一处解码，页面拿到 <code>SongRow</code> 具名字段；<code>fmt_ok</code> /
+格式下拉 / 合计字节 / 合并 ff 行四处也改走 <code>rowext</code> / <code>rowbytes</code> / <code>from_row</code>+<code>to_row</code>。
+两个页面里<strong>非注释的 <code>F_*</code> 引用现在是 0</strong>。</p>
 <p><strong>Aria 的两个表格：评估后不做（记下原因，免得下次又试）</strong>：<code>tbSearch</code> 的第 0 列是
-   序号/播放图标控件、第 1 列是<strong>整行控件</strong>（<code>set_cell_builder</code> 返回 <code>tblRowV[row]</code>，封面/歌名/
-   收藏/下载都在里面），真正按位置传的只有 <code>[2]=专辑 [3]=时长 [4]=大小</code> 这三格；而且
-   普通页 5 列、歌手页 4 列（<strong>同一张表两种列数</strong>）。记录行在这里既省不掉列号、还要多维护两套
-   keys ⇒ 收益为负。真要动，正解是把「行控件那两列」变成框架能力（列可绑定 Widget），
-   那是 SDK 改动，不是应用重构。
+序号/播放图标控件、第 1 列是<strong>整行控件</strong>（<code>set_cell_builder</code> 返回 <code>tblRowV[row]</code>，封面/歌名/
+收藏/下载都在里面），真正按位置传的只有 <code>[2]=专辑 [3]=时长 [4]=大小</code> 这三格；而且
+普通页 5 列、歌手页 4 列（<strong>同一张表两种列数</strong>）。记录行在这里既省不掉列号、还要多维护两套
+keys ⇒ 收益为负。真要动，正解是把「行控件那两列」变成框架能力（列可绑定 Widget），
+那是 SDK 改动，不是应用重构。
 2. <strong>switch 跳转表</strong>（O(1)）：树已经把 100 case 压到 21ms，跳转表最多再省一半，
-   但要新 opcode + 常量池 + 三处读取方同步 + 版本 bump ⇒ 性价比低。
+但要新 opcode + 常量池 + 三处读取方同步 + 版本 bump ⇒ 性价比低。
 3. <strong>寄存器加宽</strong>：量过（1.6 万函数、最高 134/255）⇒ 不做，只保留 <code>WARN_REG_PRESSURE</code> 预警。
 4. <code>jsons.fill</code> 反填带载荷 enum：载荷归属是运行期概念，目前请用 <code>switch</code> 分派。</p>
 <hr>
@@ -8492,7 +8561,7 @@ LenoQR / LenoCLI / LenoGlob / LenoFS / LenoStats / LenoLog / LenoUUID / LenoResu
 <blockquote>
 <p>应用侧：<strong>Aria（原 AlkaidMusic）已迁出主仓库</strong>，改为独立项目；本仓只留语言、模块、示例与文档。</p>
 </blockquote>
-<h3 id="七-版本_1">七、版本</h3>
+<h3 id="七-版本">七、版本</h3>
 <p><code>LENO_VERSION</code> 0.2.3 → <strong>0.2.4</strong>（patch 位 ✓；发行目录 <strong>v0.2.4</strong>；<code>README.md</code> 的 <code>| 版本 |</code> 与
 <code>README_EN.md</code> 的 <code>| Version |</code> 两行同步 ✓）。</p>
 <p><strong>格式变了（本版必读）</strong>：<code>LENO_BIN_VERSION</code> v3.2.23 → <strong>v3.2.42</strong>、
@@ -8504,8 +8573,10 @@ Ptr 下标特化 / 宽字段索引 / 带载荷 enum 的构造与匹配 …）。
 <li>编译器 / VM 两个构建目标 <strong>0 warning</strong> ✓</li>
 <li>断言套件 <strong>641 passed / 0 failed</strong> ✓（v0.2.3 时 460）</li>
 <li><strong>模块级测试 52 passed / 0 failed / 0 skipped</strong> ✓</li>
-<li><strong>全仓 <code>.leno</code> 编译检查 0 失败</strong> ✓：<code>examples/</code> <strong>813</strong> + <code>leno_gui/</code> <strong>110</strong> + <code>tools/</code> <strong>16</strong></li>
+<li><strong>全仓 <code>.leno</code> 编译检查 0 失败</strong> ✓：<code>examples/</code> <strong>813</strong> + <code>leno_gui/</code> <strong>110</strong> + <code>tools/</code> <strong>16</strong><ul>
 <li>扩展模块（不含 <code>test/</code>）<strong>310</strong> = <strong>1249 个文件</strong></li>
+</ul>
+</li>
 <li><strong><code>.lenb</code> 往返正确</strong> ✓（<code>-c</code> 产物交给 <code>leno_vm.exe</code> 跑，输出一致）</li>
 <li><strong>打包用例</strong> ✓：<code>-p --onefile</code> 产出 1019.2 KB 单文件 exe，直接运行正常</li>
 <li><strong>LSP 自检</strong> ✓：<code>leno_lsp/test_lsp_surface.ps1</code> —— 21 / 21</li>
@@ -9091,11 +9162,11 @@ main() {
 <blockquote>
 <p>⚠ <strong>两次更正（2026-11-23），都记在这里免得再踩</strong>：
 1. 最早写"10 万比特乘法 0.6x、移位 0.7x —— 已反超"，是<strong>测量错误</strong>：老 py 驱动
-   <code>subprocess.run</code> 后量整段墙钟，把 <strong>Python 解释器启动（≈45ms）</strong> 算进了用例。
+<code>subprocess.run</code> 后量整段墙钟，把 <strong>Python 解释器启动（≈45ms）</strong> 算进了用例。
 2. 改成 Leno 驱动后一度读到"乘法慢 12.8x"，是<strong>输入退化</strong>：<code>(2^n-1)×(2^n+1)</code> 的第二个
-   操作数只有 2 个非零位，CPython 在这种<strong>稀疏</strong>输入上快 20 多倍（1M 比特 3ms vs 随机 67ms）。
-   乘法用例改成稠密操作数（<code>(2^n-1)/3</code> 与 <code>/5</code>）后，<strong>Leno 三项都更快</strong>（0.63~0.90x）；
-   稀疏形态单列一行（<code>mul_sparse_1m</code>）继续可见 —— 我们暂时不利用稀疏性。
+操作数只有 2 个非零位，CPython 在这种<strong>稀疏</strong>输入上快 20 多倍（1M 比特 3ms vs 随机 67ms）。
+乘法用例改成稠密操作数（<code>(2^n-1)/3</code> 与 <code>/5</code>）后，<strong>Leno 三项都更快</strong>（0.63~0.90x）；
+稀疏形态单列一行（<code>mul_sparse_1m</code>）继续可见 —— 我们暂时不利用稀疏性。
 ⇒ 教训：<strong>基准脚本本身要被审</strong>；先启动的时间、退化输入都会造出"假结论"。</p>
 </blockquote>
 <hr>
@@ -9130,7 +9201,7 @@ enum C { c1(int n) c2(int n) }    switch z { case C.c1(n) {…} }     → ✅ �
 下一次动这块之前，先打一行临时输出确认"普通 enum 的成员名在语义期存在哪"。</p>
 <hr>
 <h1 id="追加-2026-11-23-三处-诊断不如实际-的修复-一条测试自证">追加（2026-11-23）：三处"诊断不如实际"的修复 + 一条测试自证</h1>
-<h2 id="①-普通-enum-的-switch-穷尽性-9757fc67">① 普通 enum 的 switch 穷尽性（<code>9757fc67</code>）</h2>
+<h2 id="普通-enum-的-switch-穷尽性-9757fc67">① 普通 enum 的 switch 穷尽性（<code>9757fc67</code>）</h2>
 <p>根因<strong>不是</strong>"没挂检查"，而是主题变量的类型：枚举成员在语义期被折成纯数字（口径「枚举 = int」），
 <code>var m = Mode.on</code> 的 m 因此是 int，检查要求 <code>TYPE_ENUM</code> ⇒ 看不到 enum。</p>
 <blockquote>
@@ -9139,11 +9210,11 @@ enum C { c1(int n) c2(int n) }    switch z { case C.c1(n) {…} }     → ✅ �
 <p>修法只加"来源"记号：<code>AST_NUM.enum_owner</code>（折叠处记来源）→ <code>Symbol.enum_origin</code>（变量声明转移）
 → 检查兜底。<strong>类型语义一字未改</strong>（m 仍是 int）。回归用例 <code>test_switch_enum_exhaustive.leno</code>
 7 条（含"盖全了 / 有 default / 普通 int"三条<strong>不该报</strong>对照），下游 4 项目新增警告 0 条。</p>
-<h2 id="②-方法调用的参数类型错带属主类型-88e7abea">② 方法调用的参数类型错带属主类型（<code>88e7abea</code>）</h2>
+<h2 id="方法调用的参数类型错带属主类型-88e7abea">② 方法调用的参数类型错带属主类型（<code>88e7abea</code>）</h2>
 <p>同一份代码三种叫法：模块函数 <code>m.mk …</code> ✓、struct 方法裸 <code>setV …</code> ✗（像自由函数）。
 改成 <code>P.setV 第 1 个参数类型不匹配</code>。回归用例 <code>test_method_arg_owner.leno</code>
 （含对照：自由函数仍用裸名字，不能凭空加前缀）。</p>
-<h2 id="③-format-末尾裸-a5c45d0d">③ <code>format</code> 末尾裸 <code>%</code>（<code>a5c45d0d</code>）</h2>
+<h2 id="format-末尾裸-a5c45d0d">③ <code>format</code> 末尾裸 <code>%</code>（<code>a5c45d0d</code>）</h2>
 <p><code>format("100%")</code> 运行期原样输出 <code>%</code>、编译期零提示；正确写法是 <code>%%</code>。
 现在警告「末尾的 <code>%</code> 后面没有转换符 … 要输出百分号请写 <code>%%</code>」，<strong>只警告不拦</strong>
 （原样输出本身不算错）。裸调与 <code>strings.format</code> 共用同一份实现 ⇒ 两种写法同时生效。
@@ -9159,8 +9230,9 @@ enum C { c1(int n) c2(int n) }    switch z { case C.c1(n) {…} }     → ✅ �
 <h2 id="这条线的教训-值得记进方法论">这条线的教训（值得记进方法论）</h2>
 <p>最近 6 处修复全是同一类：<strong>行为大多是对的，错的是它怎么解释自己</strong>
 （<code>f32</code> 字段名、<code>strings.format</code> 不检查、<code>类型未解析</code>却说"没有方法"、<code>没有方法</code>其实是没 export、
-方法参数不带属主、末尾裸 <code>%</code> 不提示）。这类修复风险最低、对使用者收益最直接 —— 下一步继续扫。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现状快照">一、现状快照</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-逐项详情">三、逐项详情</a></li><ul class="lv3"><li><a href="#t1-全量差分扫描-已取消-2026-09-23">~~T1 全量差分扫描~~ ⇒ 已取消（2026-09-23）</a></li><li><a href="#t2-p0-输出快照基线-golden-files">T2（P0）输出快照基线（golden files）</a></li><li><a href="#t3-p1-async-类型推断三连-c3-c6-c5-已修-2026-10-12">T3（P1）async 类型推断三连：C3 + C6 + C5 —— ✅ 已修（2026-10-12）</a></li><li><a href="#t4-p2-asyncs-all-的语义-c8-c10-已收口-2026-10-12-走方向-b">T4（P2）asyncs.all 的语义：C8 + C10 —— ✅ 已收口（2026-10-12，走方向 (b)）</a></li><li><a href="#t5-p3-性能">T5（P3）性能</a></li><li><a href="#t9-p3-解释器-抽巨型-handler-成-static-函数-方案-b">T9（P3）解释器：抽巨型 handler 成 static 函数（方案 B）</a></li><li><a href="#t10-p1-特化-融合指令对账-栈式有-我们缺">T10（P1）特化/融合指令对账：栈式有、我们缺</a></li><li><a href="#t6-t7-顺手-已取消-2026-09-23">~~T6 / T7（顺手）~~ ⇒ 已取消（2026-09-23）</a></li><li><a href="#t17-p2-lenb-体积继续瘦身-构成已实测-三个候选方案待选">T17（P2）.lenb 体积继续瘦身：构成已实测，三个候选方案待选</a></li></ul><li><a href="#①-字符串-interning-已落地-2026-10-12">✅ ① 字符串 interning 已落地（2026-10-12）</a></li><ul class="lv3"><li><a href="#t19-p1-裸文件名-import-的歧义没有诊断-搜索路径-先到先得-静默选错文件-诊断-导入方优先-lsp-全部落地-2026-09-26-b2edbb7-8ed41e2">T19（P1）裸文件名 import 的歧义没有诊断：搜索路径"先到先得"，静默选错文件 ⇒ 诊断 + 导入方优先 + LSP 全部落地（2026-09-26，b2edbb7 / 8ed41e2）</a></li><li><a href="#t20-p2-同类错误的级联噪音-3-处根因打出-37-条-已修-2026-09-26-错误-6a72d77-警告-1c284b1">T20（P2）同类错误的级联噪音：3 处根因打出 37 条 ⇒ 已修（2026-09-26；错误 6a72d77 / 警告 1c284b1）</a></li><li><a href="#t21-p2-jsons-的-any-收窄样板-把-每个项目自造一层-做进标准库-已做-2026-09-26">T21（P2）jsons 的 any 收窄样板：把"每个项目自造一层"做进标准库 ⇒ 已做（2026-09-26）</a></li><li><a href="#t22-p2-的残留半-cli-旗标-脚本路径之后解释器不再吃任何旗标-已修-2026-09-26">T22（P2 的残留半）CLI 旗标：脚本路径之后解释器不再吃任何旗标 ⇒ 已修（2026-09-26）</a></li><li><a href="#t27-p1-int-a-null-if-a-null-的窄化被忽略-编译误报">T27（P1）int? a = null + if a != null 的窄化被忽略 ⇒ 编译误报</a></li><li><a href="#t28-p2-arr-不是合法语法-双侧全省略">T28（P2）arr[:] 不是合法语法（双侧全省略）</a></li><li><a href="#t29-p2-复合赋值右值的冗余-mov-裸变量被先搬进临时寄存器-已完成-裸变量-13-2-15-0">T29（P2）复合赋值右值的冗余 MOV（裸变量被先搬进临时寄存器）—— ✅ 已完成：+= 裸变量 −13.2% / −15.0%</a></li><li><a href="#t30-p2-return-非裸变量-直落返回寄存器-已完成-光追-phase-c-2-8-不重叠">T30（P2）return &lt;非裸变量&gt; 直落返回寄存器 —— ✅ 已完成：光追 Phase C −2.8%（不重叠）</a></li><li><a href="#死路清单-2026-10-03-调用路径-2-08x-内存爆炸-两条线">死路清单（2026-10-03）：调用路径 2.08x +「内存爆炸」两条线</a></li><li><a href="#t31-进-cmpjmp-融合族-已完成-隔离探针-13-25-分布不重叠">T31：== / != 进 CMPJMP 融合族 —— ✅ 已完成（隔离探针 −13~−25%，分布不重叠）</a></li><li><a href="#t32-cmpjmp-族立即数-int8-int16-已完成-隔离探针-16-27-对照项不动">T32：CMPJMP 族立即数 int8 → int16 —— ✅ 已完成（隔离探针 −16~−27%，对照项不动）</a></li><li><a href="#单独立项-指针-寄存器号-8-位上限-寄存器号溢出-已修-2026-10-03-槽位回收">✅ 单独立项（指针）：寄存器号 8 位上限（[寄存器号溢出]）—— 已修（2026-10-03：槽位回收）</a></li><li><a href="#p4-第三批-2026-11-10-requires-补齐-手拼路径-评估-5-3-5-4">✅ P4 第三批（2026-11-10）：[requires] 补齐 + 手拼路径（评估 §5.3/§5.4）</a></li><li><a href="#p4-第二批-2026-11-10-switch-的-enum-穷尽性">✅ P4 第二批（2026-11-10）：switch 的 enum 穷尽性</a></li><li><a href="#p4-第一批-2026-11-10-补缺口-去重复">✅ P4 第一批（2026-11-10）：补缺口 + 去重复</a></li><li><a href="#p3-后半-寄存器加宽-量完决定不做-2026-11-10">❌ P3 后半（寄存器加宽）：量完决定不做（2026-11-10）</a></li><li><a href="#t33-立即数族整体-int8-int32-指令-4-字节-8-字节-已回退-2026-10-03">T33：立即数族整体 int8 → int32（指令 4 字节 → 8 字节）—— ✗ 已回退（2026-10-03）</a></li><li><a href="#对账收尾-2026-10-03-立即数加宽这条线到此为止">对账收尾（2026-10-03）：立即数加宽这条线到此为止 ✗</a></li></ul><li><a href="#四-常用命令">四、常用命令</a></li><li><a href="#五-维护约定">五、维护约定</a></li><li><a href="#六-2026-10-02-文档整理批次-已做">六、2026-10-02 文档整理批次（已做）</a></li><li><a href="#七-2026-10-10-切片口径统一批次-已完成-slice-byte_slice-翻成闭区间">七、2026-10-10 切片口径统一批次（✅ 已完成）—— slice / byte_slice 翻成闭区间</a></li><li><a href="#八-2026-10-10-续批-sub_str-删除改-take-语法负索引统一-两个外部项目迁移-已完成">八、2026-10-10 续批：sub_str 删除改 take + 语法负索引统一 + 两个外部项目迁移（✅ 已完成）</a></li><li><a href="#v0-2-1-第四个对外发行版-2026-10-11">v0.2.1 —— 第四个对外发行版（2026-10-11）</a></li><ul class="lv3"><li><a href="#一-新增编译期诊断-五条">一、新增编译期诊断（五条）</a></li><li><a href="#二-行为变更-三处-旧代码若依赖旧行为会显形-这是有意的">二、行为变更（三处 —— 旧代码若依赖旧行为会显形 ✓ 这是有意的 ✓）</a></li><li><a href="#三-修掉的真-bug-三处-静默算错-静态类型撒谎">三、修掉的真 bug（三处"静默算错" / "静态类型撒谎"）</a></li><li><a href="#四-改名">四、改名</a></li><li><a href="#五-实测-windows-x64-gcc-15-2-0">五、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#六-版本">六、版本</a></li></ul><li><a href="#v0-2-2-第五个对外发行版-2026-10-12">v0.2.2 —— 第五个对外发行版（2026-10-12）</a></li><ul class="lv3"><li><a href="#一-语言放宽-纯加法-旧代码不受影响">一、语言放宽（纯加法 —— 旧代码不受影响 ✓）</a></li><li><a href="#二-行为变更-三条-都是-原来静默给错-现在明说-有意">二、行为变更（三条 —— 都是"原来静默给错 ⇒ 现在明说" ✓ 有意）</a></li><li><a href="#三-新增能力">三、新增能力</a></li><li><a href="#四-修复-真-bug">四、修复（真 bug）</a></li><li><a href="#五-体积-本版唯一一处格式变更">五、体积（本版唯一一处格式变更）</a></li><li><a href="#六-本版明确不做-记账-避免反复拉扯">六、本版明确不做（记账，避免反复拉扯）</a></li><li><a href="#七-实测-windows-x64-gcc-15-2-0">七、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#八-版本">八、版本</a></li></ul><li><a href="#v0-2-3-第六个对外发行版-2026-10-17">v0.2.3 —— 第六个对外发行版（2026-10-17）</a></li><ul class="lv3"><li><a href="#一-行为变更-3-条">一、行为变更（3 条）</a></li><li><a href="#二-模块-api-迁移-唯一需要改代码的一处-lenosdl3">二、模块 API 迁移（唯一需要改代码的一处 · LenoSDL3）</a></li><li><a href="#三-新增能力_1">三、新增能力</a></li><li><a href="#四-修复-真-bug_1">四、修复（真 bug）</a></li><li><a href="#五-明确不做-记账">五、明确不做（记账）</a></li><li><a href="#六-实测-windows-x64-gcc-15-2-0">六、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#七-版本">七、版本</a></li></ul><li><a href="#九-2026-10-20-async-io-后端评估-t35-iocp-epoll-暂不做">九、2026-10-20 async IO 后端评估（T35：IOCP / epoll）—— 暂不做</a></li><li><a href="#十-跨模块导出变量-只有一份存储-2026-10-25-已解决-留档">十、跨模块导出变量"只有一份存储"（2026-10-25 已解决，留档）</a></li><li><a href="#五-已确认但暂不修的缺陷-含最小复现">五、已确认但暂不修的缺陷（含最小复现）</a></li><ul class="lv3"><li><a href="#1-跨模块的-func-bool-参数不校验返回类型-静默">1. 跨模块的 func(...):bool 参数不校验返回类型（静默）</a></li></ul><li><a href="#收尾状态-2026-11-10-会话末">收尾状态（2026-11-10 会话末）</a></li><ul class="lv3"><li><a href="#已完成-本会话累计">已完成（本会话累计）</a></li><li><a href="#当前基线-收尾时实测">当前基线（收尾时实测）</a></li><li><a href="#明确不做-留给下一轮">明确不做 / 留给下一轮</a></li></ul><li><a href="#追加-2026-11-11-第-6-轮-协程异常状态隔离-诊断文案三补">追加（2026-11-11 第 6 轮）：协程异常状态隔离 + 诊断文案三补</a></li><li><a href="#追加-2026-11-11-第-7-轮-jsons-fill-数组元素按声明类型转换">追加（2026-11-11 第 7 轮）：jsons.fill 数组元素按声明类型转换</a></li><li><a href="#追加-2026-11-11-第-8-轮-泛型约束-face-的方法调用-三处误报">追加（2026-11-11 第 8 轮）：泛型约束 face 的方法调用（三处误报）</a></li><li><a href="#追加-2026-11-11-第-9-轮-format-插值对-bigint-的精确输出">追加（2026-11-11 第 9 轮）：format / 插值对 bigint 的精确输出</a></li><li><a href="#追加-2026-11-11-第-10-轮-switch-是-break-目标-语义期误报">追加（2026-11-11 第 10 轮）：switch 是 break 目标（语义期误报）</a></li><li><a href="#追加-2026-11-11-第-11-轮-jsons-对非有限浮点-非法数字的静默错值">追加（2026-11-11 第 11 轮）：jsons 对非有限浮点 / 非法数字的静默错值</a></li><li><a href="#追加-2026-11-11-第-12-轮-_int-大浮点-静默夹到-int64_max">追加（2026-11-11 第 12 轮）：_int(大浮点) 静默夹到 INT64_MAX</a></li><li><a href="#追加-2026-11-11-第-13-轮-跨模块泛型字段类型退化成-any">追加（2026-11-11 第 13 轮）：跨模块泛型字段类型退化成 any</a></li><li><a href="#追加-2026-11-11-第-14-轮-times-format-的三条静默错值">追加（2026-11-11 第 14 轮）：times.format 的三条静默错值</a></li><li><a href="#追加-2026-11-11-第-15-轮-regexs-的-按字节前进">追加（2026-11-11 第 15 轮）：regexs 的 . 按字节前进</a></li><li><a href="#追加-2026-11-11-第-16-轮-files-exists-对目录返回-false">追加（2026-11-11 第 16 轮）：files.exists 对目录返回 false</a></li><li><a href="#追加-2026-11-11-第-17-轮-glob-的通配符按字节">追加（2026-11-11 第 17 轮）：Glob 的通配符按字节</a></li><li><a href="#追加-2026-11-15-第-18-轮-int-自动提升后参与-int-特化比较-静默错值">追加（2026-11-15 第 18 轮）：int 自动提升后参与 int 特化比较 → 静默错值</a></li><li><a href="#追加-2026-11-15-第-19-轮-泛型-face-的类型实参没对上-把-struct-塞进-int-形参">追加（2026-11-15 第 19 轮）：泛型 face 的类型实参没对上 → 把 struct 塞进 int 形参</a></li><ul class="lv3"><li><a href="#本轮误判记录-避免以后重复报">本轮误判记录（避免以后重复报）</a></li></ul><li><a href="#追加-2026-11-15-第-20-轮-build-leno_module-的-2-个既有失败-是过期示例-不是编译器-bug">追加（2026-11-15 第 20 轮）：build/leno_module 的 2 个既有失败 —— 是过期示例，不是编译器 bug</a></li><li><a href="#追加-2026-11-15-第-21-轮-json-超-int64-整数丢精度-块形式-defer-漏警告">追加（2026-11-15 第 21 轮）：JSON 超 int64 整数丢精度 + 块形式 defer 漏警告</a></li><li><a href="#追加-2026-11-15-第-22-轮-lsp-补课-新语法-大纲-enum-载荷-内置表">追加（2026-11-15 第 22 轮）：LSP 补课（新语法 / 大纲 / enum 载荷 / 内置表）</a></li><li><a href="#v0-2-4-第七个对外发行版-2026-11-16">v0.2.4 —— 第七个对外发行版（2026-11-16）</a></li><ul class="lv3"><li><a href="#一-行为变更-旧代码若依赖旧行为会显形-有意">一、行为变更（旧代码若依赖旧行为会显形 —— 有意）</a></li><li><a href="#二-语言能力-新增-纯加法">二、语言能力（新增，纯加法）</a></li><li><a href="#三-标准库与扩展模块">三、标准库与扩展模块</a></li><li><a href="#四-修复-真-bug-只列有代表性的">四、修复（真 bug，只列有代表性的）</a></li><li><a href="#五-性能-实测数字-windows-x64">五、性能（实测数字，Windows x64）</a></li><li><a href="#六-明确不做-记账">六、明确不做（记账）</a></li><li><a href="#七-版本_1">七、版本</a></li><li><a href="#八-实测-windows-x64-gcc-15-2-0">八、实测（Windows x64 · gcc 15.2.0）</a></li></ul><li><a href="#一-四层一起落地-f2">一、四层一起落地（F2）</a></li><li><a href="#二-修掉的-bug">二、修掉的 bug</a></li><li><a href="#三-新增诊断">三、新增诊断</a></li><li><a href="#四-性能-删除">四、性能 / 删除</a></li><li><a href="#五-验证">五、验证</a></li><li><a href="#a-lenomusic-移植音乐下载器-遗留">A. LenoMusic（移植音乐下载器）遗留</a></li><li><a href="#b-lenoweb-遗留">B. LenoWeb 遗留</a></li><li><a href="#已验证正确-不用改">已验证正确（不用改）</a></li><li><a href="#已修-2026-11-22-夜-fa28efa8-可空表达式流入非可空形参">✅ 已修（2026-11-22 夜，fa28efa8）：可空表达式流入非可空形参</a></li><li><a href="#原记录-可空表达式流入非可空形参-零诊断-运行期静默得-null">⛔ 原记录：可空表达式流入非可空形参，零诊断、运行期静默得 null</a></li><li><a href="#已做-076277fe">已做（076277fe）</a></li><li><a href="#还没做-真正的次平方转换-分治-快速除法">⛔ 还没做：真正的次平方转换（分治 + 快速除法）</a></li><ul class="lv3"><li><a href="#补记-2026-11-22-深夜-乘法已做-打印仍等次平方除法">补记（2026-11-22 深夜）：乘法已做，打印仍等次平方除法</a></li><li><a href="#补记二-2026-11-22-深夜-十进制转换已改次平方-f180dd82">补记二（2026-11-22 深夜）：十进制转换已改次平方（f180dd82）</a></li><li><a href="#补记三-2026-11-22-深夜-十进制解析也改分治-1ddc0816">补记三（2026-11-22 深夜）：十进制解析也改分治（1ddc0816）</a></li><li><a href="#两项试过但不改的-结论留档-别重复试">两项试过但不改的（结论留档，别重复试）</a></li><li><a href="#现在的-bigint-对-python-bench-bigint_bench-leno">现在的 bigint 对 Python（bench/bigint_bench.leno）</a></li></ul><li><a href="#已修-cedf1e72">已修（cedf1e72）</a></li><li><a href="#同批确认正常的-10-例">同批确认正常的（10 例）</a></li><li><a href="#已修-2026-11-23-9757fc67-普通-enum-的-switch-穷尽性检查">✅ 已修（2026-11-23，9757fc67）：普通 enum 的 switch 穷尽性检查</a></li><li><a href="#原记录-普通-enum-的-switch-穷尽性检查不触发-带载荷的会报">⛔ 原记录：普通 enum 的 switch 穷尽性检查不触发（带载荷的会报）</a></li><li><a href="#①-普通-enum-的-switch-穷尽性-9757fc67">① 普通 enum 的 switch 穷尽性（9757fc67）</a></li><li><a href="#②-方法调用的参数类型错带属主类型-88e7abea">② 方法调用的参数类型错带属主类型（88e7abea）</a></li><li><a href="#③-format-末尾裸-a5c45d0d">③ format 末尾裸 %（a5c45d0d）</a></li><li><a href="#顺带-让回归用例自证它守得住">顺带：让回归用例自证它守得住</a></li><li><a href="#现状">现状</a></li><li><a href="#这条线的教训-值得记进方法论">这条线的教训（值得记进方法论）</a></li></ul></aside>
+方法参数不带属主、末尾裸 <code>%</code> 不提示）。这类修复风险最低、对使用者收益最直接 —— 下一步继续扫。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现状快照">一、现状快照</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-逐项详情">三、逐项详情</a></li><ul class="lv3"><li><a href="#t1-全量差分扫描-已取消-2026-09-23">~~T1 全量差分扫描~~ ⇒ 已取消（2026-09-23）</a></li><li><a href="#t2-p0-输出快照基线-golden-files">T2（P0）输出快照基线（golden files）</a></li><li><a href="#t3-p1-async-类型推断三连-c3-c6-c5-已修-2026-10-12">T3（P1）async 类型推断三连：C3 + C6 + C5 —— ✅ 已修（2026-10-12）</a></li><li><a href="#t4-p2-asyncs-all-的语义-c8-c10-已收口-2026-10-12-走方向-b">T4（P2）asyncs.all 的语义：C8 + C10 —— ✅ 已收口（2026-10-12，走方向 (b)）</a></li><li><a href="#t5-p3-性能">T5（P3）性能</a></li><li><a href="#t9-p3-解释器-抽巨型-handler-成-static-函数-方案-b">T9（P3）解释器：抽巨型 handler 成 static 函数（方案 B）</a></li><li><a href="#t10-p1-特化-融合指令对账-栈式有-我们缺">T10（P1）特化/融合指令对账：栈式有、我们缺</a></li><li><a href="#t6-t7-顺手-已取消-2026-09-23">~~T6 / T7（顺手）~~ ⇒ 已取消（2026-09-23）</a></li><li><a href="#t17-p2-lenb-体积继续瘦身-构成已实测-三个候选方案待选">T17（P2）.lenb 体积继续瘦身：构成已实测，三个候选方案待选</a></li><li><a href="#t19-p1-裸文件名-import-的歧义没有诊断-搜索路径-先到先得-静默选错文件-诊断-导入方优先-lsp-全部落地-2026-09-26-b2edbb7-8ed41e2">T19（P1）裸文件名 import 的歧义没有诊断：搜索路径"先到先得"，静默选错文件 ⇒ 诊断 + 导入方优先 + LSP 全部落地（2026-09-26，b2edbb7 / 8ed41e2）</a></li><li><a href="#t20-p2-同类错误的级联噪音-3-处根因打出-37-条-已修-2026-09-26-错误-6a72d77-警告-1c284b1">T20（P2）同类错误的级联噪音：3 处根因打出 37 条 ⇒ 已修（2026-09-26；错误 6a72d77 / 警告 1c284b1）</a></li><li><a href="#t21-p2-jsons-的-any-收窄样板-把-每个项目自造一层-做进标准库-已做-2026-09-26">T21（P2）jsons 的 any 收窄样板：把"每个项目自造一层"做进标准库 ⇒ 已做（2026-09-26）</a></li><li><a href="#t22-p2-的残留半-cli-旗标-脚本路径之后解释器不再吃任何旗标-已修-2026-09-26">T22（P2 的残留半）CLI 旗标：脚本路径之后解释器不再吃任何旗标 ⇒ 已修（2026-09-26）</a></li><li><a href="#t27-p1-int-a-null-if-a-null-的窄化被忽略-编译误报">T27（P1）int? a = null + if a != null 的窄化被忽略 ⇒ 编译误报</a></li><li><a href="#t28-p2-arr-不是合法语法-双侧全省略">T28（P2）arr[: 不是合法语法（双侧全省略）</a></li><li><a href="#t29-p2-复合赋值右值的冗余-mov-裸变量被先搬进临时寄存器-已完成-裸变量-13-2-15-0">T29（P2）复合赋值右值的冗余 MOV（裸变量被先搬进临时寄存器）—— ✅ 已完成：+= 裸变量 −13.2% / −15.0%</a></li><li><a href="#t30-p2-return-非裸变量-直落返回寄存器-已完成-光追-phase-c-2-8-不重叠">T30（P2）return <非裸变量> 直落返回寄存器 —— ✅ 已完成：光追 Phase C −2.8%（不重叠）</a></li><li><a href="#死路清单-2026-10-03-调用路径-2-08x-内存爆炸-两条线">死路清单（2026-10-03）：调用路径 2.08x +「内存爆炸」两条线</a></li><li><a href="#t31-进-cmpjmp-融合族-已完成-隔离探针-13-25-分布不重叠">T31：== / != 进 CMPJMP 融合族 —— ✅ 已完成（隔离探针 −13~−25%，分布不重叠）</a></li><li><a href="#t32-cmpjmp-族立即数-int8-int16-已完成-隔离探针-16-27-对照项不动">T32：CMPJMP 族立即数 int8 → int16 —— ✅ 已完成（隔离探针 −16~−27%，对照项不动）</a></li><li><a href="#单独立项-指针-寄存器号-8-位上限-寄存器号溢出-已修-2026-10-03-槽位回收">✅ 单独立项（指针）：寄存器号 8 位上限（[寄存器号溢出）—— 已修（2026-10-03：槽位回收）</a></li><li><a href="#p4-第三批-2026-11-10-requires-补齐-手拼路径-评估-5-3-5-4">✅ P4 第三批（2026-11-10）：[requires 补齐 + 手拼路径（评估 §5.3/§5.4）</a></li><li><a href="#p4-第二批-2026-11-10-switch-的-enum-穷尽性">✅ P4 第二批（2026-11-10）：switch 的 enum 穷尽性</a></li><li><a href="#p4-第一批-2026-11-10-补缺口-去重复">✅ P4 第一批（2026-11-10）：补缺口 + 去重复</a></li><li><a href="#p3-后半-寄存器加宽-量完决定不做-2026-11-10">❌ P3 后半（寄存器加宽）：量完决定不做（2026-11-10）</a></li><li><a href="#t33-立即数族整体-int8-int32-指令-4-字节-8-字节-已回退-2026-10-03">T33：立即数族整体 int8 → int32（指令 4 字节 → 8 字节）—— ✗ 已回退（2026-10-03）</a></li><li><a href="#对账收尾-2026-10-03-立即数加宽这条线到此为止">对账收尾（2026-10-03）：立即数加宽这条线到此为止 ✗</a></li></ul><li><a href="#四-常用命令">四、常用命令</a></li><li><a href="#五-维护约定">五、维护约定</a></li><li><a href="#六-2026-10-02-文档整理批次-已做">六、2026-10-02 文档整理批次（已做）</a></li><li><a href="#七-2026-10-10-切片口径统一批次-已完成-slice-byte_slice-翻成闭区间">七、2026-10-10 切片口径统一批次（✅ 已完成）—— slice / byte_slice 翻成闭区间</a></li><li><a href="#八-2026-10-10-续批-sub_str-删除改-take-语法负索引统一-两个外部项目迁移-已完成">八、2026-10-10 续批：sub_str 删除改 take + 语法负索引统一 + 两个外部项目迁移（✅ 已完成）</a></li><li><a href="#v0-2-1-第四个对外发行版-2026-10-11">v0.2.1 —— 第四个对外发行版（2026-10-11）</a></li><ul class="lv3"><li><a href="#一-新增编译期诊断-五条">一、新增编译期诊断（五条）</a></li><li><a href="#二-行为变更-三处-旧代码若依赖旧行为会显形-这是有意的">二、行为变更（三处 —— 旧代码若依赖旧行为会显形 ✓ 这是有意的 ✓）</a></li><li><a href="#三-修掉的真-bug-三处-静默算错-静态类型撒谎">三、修掉的真 bug（三处"静默算错" / "静态类型撒谎"）</a></li><li><a href="#四-改名">四、改名</a></li><li><a href="#五-实测-windows-x64-gcc-15-2-0">五、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#六-版本">六、版本</a></li></ul><li><a href="#v0-2-2-第五个对外发行版-2026-10-12">v0.2.2 —— 第五个对外发行版（2026-10-12）</a></li><ul class="lv3"><li><a href="#一-语言放宽-纯加法-旧代码不受影响">一、语言放宽（纯加法 —— 旧代码不受影响 ✓）</a></li><li><a href="#二-行为变更-三条-都是-原来静默给错-现在明说-有意">二、行为变更（三条 —— 都是"原来静默给错 ⇒ 现在明说" ✓ 有意）</a></li><li><a href="#三-新增能力">三、新增能力</a></li><li><a href="#四-修复-真-bug">四、修复（真 bug）</a></li><li><a href="#五-体积-本版唯一一处格式变更">五、体积（本版唯一一处格式变更）</a></li><li><a href="#六-本版明确不做-记账-避免反复拉扯">六、本版明确不做（记账，避免反复拉扯）</a></li><li><a href="#七-实测-windows-x64-gcc-15-2-0">七、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#八-版本">八、版本</a></li></ul><li><a href="#v0-2-3-第六个对外发行版-2026-10-17">v0.2.3 —— 第六个对外发行版（2026-10-17）</a></li><ul class="lv3"><li><a href="#一-行为变更-3-条">一、行为变更（3 条）</a></li><li><a href="#二-模块-api-迁移-唯一需要改代码的一处-lenosdl3">二、模块 API 迁移（唯一需要改代码的一处 · LenoSDL3）</a></li><li><a href="#三-新增能力_1">三、新增能力</a></li><li><a href="#四-修复-真-bug_1">四、修复（真 bug）</a></li><li><a href="#五-明确不做-记账">五、明确不做（记账）</a></li><li><a href="#六-实测-windows-x64-gcc-15-2-0">六、实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#七-版本">七、版本</a></li></ul><li><a href="#九-2026-10-20-async-io-后端评估-t35-iocp-epoll-暂不做">九、2026-10-20 async IO 后端评估（T35：IOCP / epoll）—— 暂不做</a></li><li><a href="#十-跨模块导出变量-只有一份存储-2026-10-25-已解决-留档">十、跨模块导出变量"只有一份存储"（2026-10-25 已解决，留档）</a></li><li><a href="#五-已确认但暂不修的缺陷-含最小复现">五、已确认但暂不修的缺陷（含最小复现）</a></li><ul class="lv3"><li><a href="#1-跨模块的-func-bool-参数不校验返回类型-静默">1. 跨模块的 func(...):bool 参数不校验返回类型（静默）</a></li></ul><li><a href="#收尾状态-2026-11-10-会话末">收尾状态（2026-11-10 会话末）</a></li><ul class="lv3"><li><a href="#已完成-本会话累计">已完成（本会话累计）</a></li><li><a href="#当前基线-收尾时实测">当前基线（收尾时实测）</a></li><li><a href="#明确不做-留给下一轮">明确不做 / 留给下一轮</a></li></ul><li><a href="#追加-2026-11-11-第-6-轮-协程异常状态隔离-诊断文案三补">追加（2026-11-11 第 6 轮）：协程异常状态隔离 + 诊断文案三补</a></li><li><a href="#追加-2026-11-11-第-7-轮-jsons-fill-数组元素按声明类型转换">追加（2026-11-11 第 7 轮）：jsons.fill 数组元素按声明类型转换</a></li><li><a href="#追加-2026-11-11-第-8-轮-泛型约束-face-的方法调用-三处误报">追加（2026-11-11 第 8 轮）：泛型约束 face 的方法调用（三处误报）</a></li><li><a href="#追加-2026-11-11-第-9-轮-format-插值对-bigint-的精确输出">追加（2026-11-11 第 9 轮）：format / 插值对 bigint 的精确输出</a></li><li><a href="#追加-2026-11-11-第-10-轮-switch-是-break-目标-语义期误报">追加（2026-11-11 第 10 轮）：switch 是 break 目标（语义期误报）</a></li><li><a href="#追加-2026-11-11-第-11-轮-jsons-对非有限浮点-非法数字的静默错值">追加（2026-11-11 第 11 轮）：jsons 对非有限浮点 / 非法数字的静默错值</a></li><li><a href="#追加-2026-11-11-第-12-轮-_int-大浮点-静默夹到-int64_max">追加（2026-11-11 第 12 轮）：_int(大浮点) 静默夹到 INT64_MAX</a></li><li><a href="#追加-2026-11-11-第-13-轮-跨模块泛型字段类型退化成-any">追加（2026-11-11 第 13 轮）：跨模块泛型字段类型退化成 any</a></li><li><a href="#追加-2026-11-11-第-14-轮-times-format-的三条静默错值">追加（2026-11-11 第 14 轮）：times.format 的三条静默错值</a></li><li><a href="#追加-2026-11-11-第-15-轮-regexs-的-按字节前进">追加（2026-11-11 第 15 轮）：regexs 的 . 按字节前进</a></li><li><a href="#追加-2026-11-11-第-16-轮-files-exists-对目录返回-false">追加（2026-11-11 第 16 轮）：files.exists 对目录返回 false</a></li><li><a href="#追加-2026-11-11-第-17-轮-glob-的通配符按字节">追加（2026-11-11 第 17 轮）：Glob 的通配符按字节</a></li><li><a href="#追加-2026-11-15-第-18-轮-int-自动提升后参与-int-特化比较-静默错值">追加（2026-11-15 第 18 轮）：int 自动提升后参与 int 特化比较 → 静默错值</a></li><li><a href="#追加-2026-11-15-第-19-轮-泛型-face-的类型实参没对上-把-struct-塞进-int-形参">追加（2026-11-15 第 19 轮）：泛型 face 的类型实参没对上 → 把 struct 塞进 int 形参</a></li><ul class="lv3"><li><a href="#本轮误判记录-避免以后重复报">本轮误判记录（避免以后重复报）</a></li></ul><li><a href="#追加-2026-11-15-第-20-轮-build-leno_module-的-2-个既有失败-是过期示例-不是编译器-bug">追加（2026-11-15 第 20 轮）：build/leno_module 的 2 个既有失败 —— 是过期示例，不是编译器 bug</a></li><li><a href="#追加-2026-11-15-第-21-轮-json-超-int64-整数丢精度-块形式-defer-漏警告">追加（2026-11-15 第 21 轮）：JSON 超 int64 整数丢精度 + 块形式 defer 漏警告</a></li><li><a href="#追加-2026-11-15-第-22-轮-lsp-补课-新语法-大纲-enum-载荷-内置表">追加（2026-11-15 第 22 轮）：LSP 补课（新语法 / 大纲 / enum 载荷 / 内置表）</a></li><li><a href="#v0-2-4-第七个对外发行版-2026-11-16">v0.2.4 —— 第七个对外发行版（2026-11-16）</a></li><ul class="lv3"><li><a href="#一-行为变更-旧代码若依赖旧行为会显形-有意">一、行为变更（旧代码若依赖旧行为会显形 —— 有意）</a></li><li><a href="#二-语言能力-新增-纯加法">二、语言能力（新增，纯加法）</a></li><li><a href="#三-标准库与扩展模块">三、标准库与扩展模块</a></li><li><a href="#四-修复-真-bug-只列有代表性的">四、修复（真 bug，只列有代表性的）</a></li><li><a href="#五-性能-实测数字-windows-x64">五、性能（实测数字，Windows x64）</a></li><li><a href="#六-明确不做-记账">六、明确不做（记账）</a></li><li><a href="#七-版本_1">七、版本</a></li><li><a href="#八-实测-windows-x64-gcc-15-2-0">八、实测（Windows x64 · gcc 15.2.0）</a></li></ul><li><a href="#一-四层一起落地-f2">一、四层一起落地（F2）</a></li><li><a href="#二-修掉的-bug">二、修掉的 bug</a></li><li><a href="#三-新增诊断">三、新增诊断</a></li><li><a href="#四-性能-删除">四、性能 / 删除</a></li><li><a href="#五-验证">五、验证</a></li><li><a href="#a-lenomusic-移植音乐下载器-遗留">A. LenoMusic（移植音乐下载器）遗留</a></li><li><a href="#b-lenoweb-遗留">B. LenoWeb 遗留</a></li><li><a href="#已验证正确-不用改">已验证正确（不用改）</a></li><li><a href="#已修-2026-11-22-夜-fa28efa8-可空表达式流入非可空形参">✅ 已修（2026-11-22 夜，fa28efa8）：可空表达式流入非可空形参</a></li><li><a href="#原记录-可空表达式流入非可空形参-零诊断-运行期静默得-null">⛔ 原记录：可空表达式流入非可空形参，零诊断、运行期静默得 null</a></li><li><a href="#已做-076277fe">已做（076277fe）</a></li><li><a href="#还没做-真正的次平方转换-分治-快速除法">⛔ 还没做：真正的次平方转换（分治 + 快速除法）</a></li><ul class="lv3"><li><a href="#补记-2026-11-22-深夜-乘法已做-打印仍等次平方除法">补记（2026-11-22 深夜）：乘法已做，打印仍等次平方除法</a></li><li><a href="#补记二-2026-11-22-深夜-十进制转换已改次平方-f180dd82">补记二（2026-11-22 深夜）：十进制转换已改次平方（f180dd82）</a></li><li><a href="#补记三-2026-11-22-深夜-十进制解析也改分治-1ddc0816">补记三（2026-11-22 深夜）：十进制解析也改分治（1ddc0816）</a></li><li><a href="#两项试过但不改的-结论留档-别重复试">两项试过但不改的（结论留档，别重复试）</a></li><li><a href="#现在的-bigint-对-python-bench-bigint_bench-leno">现在的 bigint 对 Python（bench/bigint_bench.leno）</a></li></ul><li><a href="#已修-cedf1e72">已修（cedf1e72）</a></li><li><a href="#同批确认正常的-10-例">同批确认正常的（10 例）</a></li><li><a href="#已修-2026-11-23-9757fc67-普通-enum-的-switch-穷尽性检查">✅ 已修（2026-11-23，9757fc67）：普通 enum 的 switch 穷尽性检查</a></li><li><a href="#原记录-普通-enum-的-switch-穷尽性检查不触发-带载荷的会报">⛔ 原记录：普通 enum 的 switch 穷尽性检查不触发（带载荷的会报）</a></li><li><a href="#普通-enum-的-switch-穷尽性-9757fc67">① 普通 enum 的 switch 穷尽性（9757fc67）</a></li><li><a href="#方法调用的参数类型错带属主类型-88e7abea">② 方法调用的参数类型错带属主类型（88e7abea）</a></li><li><a href="#format-末尾裸-a5c45d0d">③ format 末尾裸 %（a5c45d0d）</a></li><li><a href="#顺带-让回归用例自证它守得住">顺带：让回归用例自证它守得住</a></li><li><a href="#现状">现状</a></li><li><a href="#这条线的教训-值得记进方法论">这条线的教训（值得记进方法论）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/LenoNet_崩溃问题排查记录.html">← 上一篇</a><a href="待修_2026-11-17_实测发现.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

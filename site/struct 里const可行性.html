@@ -128,15 +128,13 @@ if (sym-&gt;is_const) {
 <p><code>src/semantic/visitinc/visit_module.inc:1652-1855</code> —— <code>AST_MODULE_ACCESS</code> 处理：</p>
 <p>当解析 <code>StructName.MEMBER</code> 时（<code>StructName</code> 不是模块别名，而是作用域中的变量/类型符号）：</p>
 <ol>
-<li>
-<p><strong>enum 类型</strong>（行 1714-1765）：查找 <code>sym-&gt;enum_value_names</code> 数组，找到后将 <code>AST_MODULE_ACCESS</code> <strong>直接转换为 <code>AST_NUM</code> 常量</strong>。这正是关联常量应该复用的模式。</p>
-</li>
-<li>
-<p><strong>struct/cstruct/face 类型</strong>（行 1766-1783）：转换为 <code>AST_FIELD_ACCESS</code>，即当作"访问 struct 实例的字段"处理。</p>
-</li>
-<li>
-<p><strong>普通变量</strong>（行 1784-1794）：转换为 <code>AST_INDEX</code>（<code>obj["member"]</code>）。</p>
-</li>
+<li><strong>enum 类型</strong>（行 1714-1765）：查找 <code>sym-&gt;enum_value_names</code> 数组，找到后将 <code>AST_MODULE_ACCESS</code> <strong>直接转换为 <code>AST_NUM</code> 常量</strong>。这正是关联常量应该复用的模式。</li>
+</ol>
+<ol>
+<li><strong>struct/cstruct/face 类型</strong>（行 1766-1783）：转换为 <code>AST_FIELD_ACCESS</code>，即当作"访问 struct 实例的字段"处理。</li>
+</ol>
+<ol>
+<li><strong>普通变量</strong>（行 1784-1794）：转换为 <code>AST_INDEX</code>（<code>obj["member"]</code>）。</li>
 </ol>
 <p><strong>关键洞察</strong>：enum 的 <code>TypeName.MEMBER</code> 访问路径已经是"编译期常量解析"的实现。struct 关联常量可以在 enum 路径旁边加一个分支，以相同方式将 <code>StructName.CONST_NAME</code> 解析为编译期常量值。</p>
 <hr>
@@ -657,21 +655,19 @@ if (sdef &amp;&amp; sdef-&gt;const_count &gt; 0) {
 <p><strong>值得做，但优先级中等。</strong></p>
 <p><strong>理由</strong>：</p>
 <ol>
-<li>
-<p><strong>痛点真实存在</strong>：LenoSDL3 和 LenoWin32 中有大量散落在模块顶层的关联常量，命名空间扁平、LSP 补全断裂。</p>
-</li>
-<li>
-<p><strong>实现量可控</strong>：约 200 行代码，其中 80% 是机械式扩展。核心逻辑（parser 加分支 + 语义分析加路由）不超过 50 行。</p>
-</li>
-<li>
-<p><strong>与现有架构契合度高</strong>：enum 的 <code>TypeName.MEMBER</code> 编译期常量解析路径已经验证了这条路线可行，struct 关联常量只是复用同一模式。</p>
-</li>
-<li>
-<p><strong>不引入运行时复杂度</strong>：关联常量在编译期求值，不占实例内存，不影响 GC，不影响 NaN-boxing。</p>
-</li>
-<li>
-<p><strong>非阻塞性</strong>：当前模块级 const + 命名前缀约定"勉强够用"，不做不会阻碍开发。但 LSP 补全优化时会显著放大价值。</p>
-</li>
+<li><strong>痛点真实存在</strong>：LenoSDL3 和 LenoWin32 中有大量散落在模块顶层的关联常量，命名空间扁平、LSP 补全断裂。</li>
+</ol>
+<ol>
+<li><strong>实现量可控</strong>：约 200 行代码，其中 80% 是机械式扩展。核心逻辑（parser 加分支 + 语义分析加路由）不超过 50 行。</li>
+</ol>
+<ol>
+<li><strong>与现有架构契合度高</strong>：enum 的 <code>TypeName.MEMBER</code> 编译期常量解析路径已经验证了这条路线可行，struct 关联常量只是复用同一模式。</li>
+</ol>
+<ol>
+<li><strong>不引入运行时复杂度</strong>：关联常量在编译期求值，不占实例内存，不影响 GC，不影响 NaN-boxing。</li>
+</ol>
+<ol>
+<li><strong>非阻塞性</strong>：当前模块级 const + 命名前缀约定"勉强够用"，不做不会阻碍开发。但 LSP 补全优化时会显著放大价值。</li>
 </ol>
 <h3 id="9-2-实现顺序建议">9.2 实现顺序建议</h3>
 <ol>
@@ -756,7 +752,8 @@ float w = Widget.DEFAULT_WIDTH
 <p><strong>实现方式</strong>：struct 内 const 分支直接复用全局 const 的解析逻辑——即 <code>parse_var_decl_internal</code> 中行 648-662 的预读判定。无需额外设计，保证两种上下文行为完全一致。</p>
 <blockquote>
 <p><strong>注</strong>：虽然 Leno 当前实际代码库中（LenoSDL3/LenoWin32）所有 const 均使用类型推断形式，但 parser 已完整支持显式类型形式，struct 关联常量应保持一致。</p>
-</blockquote></main>
+</blockquote>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-当前-struct-成员体系-源码确认">一、当前 struct 成员体系（源码确认）</a></li><ul class="lv3"><li><a href="#1-1-ast-层">1.1 AST 层</a></li><li><a href="#1-2-运行时对象层">1.2 运行时对象层</a></li><li><a href="#1-3-解析层">1.3 解析层</a></li><li><a href="#1-4-字段访问层">1.4 字段访问层</a></li></ul><li><a href="#二-模块级-const-的现有机制-可复用基础">二、模块级 const 的现有机制（可复用基础）</a></li><ul class="lv3"><li><a href="#2-1-解析">2.1 解析</a></li><li><a href="#2-2-语义分析">2.2 语义分析</a></li><li><a href="#2-3-跨模块传播">2.3 跨模块传播</a></li><li><a href="#2-4-类型级访问的语义路径-关键复用点">2.4 类型级访问的语义路径（关键复用点）</a></li></ul><li><a href="#三-实际代码中的常量散落问题-痛点验证">三、实际代码中的常量散落问题（痛点验证）</a></li><ul class="lv3"><li><a href="#3-1-lenosdl3-中的典型模式">3.1 LenoSDL3 中的典型模式</a></li><li><a href="#3-2-跨模块重新导出-sdl3-leno-的转发层">3.2 跨模块重新导出（SDL3.leno 的转发层）</a></li><li><a href="#3-3-lenowin32-中的同类模式">3.3 LenoWin32 中的同类模式</a></li><li><a href="#3-4-私有常量的-假作用域">3.4 私有常量的"假作用域"</a></li><li><a href="#3-5-痛点量化">3.5 痛点量化</a></li></ul><li><a href="#四-方案对比-关联常量-vs-实例-const-字段">四、方案对比：关联常量 vs 实例 const 字段</a></li><ul class="lv3"><li><a href="#4-1-关联常量-static-const-推荐">4.1 关联常量（static const，推荐）</a></li><li><a href="#4-2-实例-const-字段-c-风格-不推荐">4.2 实例 const 字段（C++ 风格，不推荐）</a></li><li><a href="#4-3-对比">4.3 对比</a></li></ul><li><a href="#五-关联常量的全链路改动评估">五、关联常量的全链路改动评估</a></li><ul class="lv3"><li><a href="#5-1-parser-层">5.1 Parser 层</a></li><li><a href="#5-2-ast-层">5.2 AST 层</a></li><li><a href="#5-3-语义分析层">5.3 语义分析层</a></li><li><a href="#5-4-codegen-层">5.4 Codegen 层</a></li><li><a href="#5-5-运行时对象层">5.5 运行时对象层</a></li><li><a href="#5-6-lsp-补全层">5.6 LSP 补全层</a></li><li><a href="#5-7-其他需要更新的文件">5.7 其他需要更新的文件</a></li></ul><li><a href="#六-与-enum-的关系">六、与 enum 的关系</a></li><ul class="lv3"><li><a href="#6-1-enum-的局限">6.1 enum 的局限</a></li><li><a href="#6-2-关联常量的补充能力">6.2 关联常量的补充能力</a></li></ul><li><a href="#七-与泛型的交互">七、与泛型的交互</a></li><li><a href="#八-全链路改动文件清单">八、全链路改动文件清单</a></li><li><a href="#九-最终结论与建议">九、最终结论与建议</a></li><ul class="lv3"><li><a href="#9-1-是否值得做">9.1 是否值得做？</a></li><li><a href="#9-2-实现顺序建议">9.2 实现顺序建议</a></li><li><a href="#9-3-不建议做的">9.3 不建议做的</a></li><li><a href="#9-4-语法设计建议">9.4 语法设计建议</a></li><li><a href="#9-4-1-语法一致性说明">9.4.1 语法一致性说明</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="注解系统与optkeys设计草案.html">← 上一篇</a><a href="struct_extend_设计草案.html">下一篇 →</a></nav>

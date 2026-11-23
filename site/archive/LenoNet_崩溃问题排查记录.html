@@ -84,28 +84,28 @@
 <h3 id="阶段4-定位堆损坏根因">阶段4: 定位堆损坏根因</h3>
 <p>查看 <code>archive/性能优化记录.md</code>，发现:</p>
 <ol>
-<li>
-<p><strong><code>vm_stack_push_fast</code> 不检查栈溢出</strong>（<code>leno_vm.h:507</code>）:
-   <code>c
-   static inline void vm_stack_push_fast(VM* vm, Value v) {
+<li><strong><code>vm_stack_push_fast</code> 不检查栈溢出</strong>（<code>leno_vm.h:507</code>）:</li>
+</ol>
+<pre><code class="language-c">   static inline void vm_stack_push_fast(VM* vm, Value v) {
        vm-&gt;stack[vm-&gt;sp++] = v;  // 无边界检查！
-   }</code></p>
+   }
+</code></pre>
+<ol>
+<li><strong><code>op_type_specialized.inc</code> 大量使用 <code>vm_stack_push_fast</code></strong>:<ul>
+<li><code>OP_ADD_INT</code>, <code>OP_SUB_INT</code>, <code>OP_MUL_INT</code> 等 ~30 个指令</li>
+<li>这些指令在 FFI 回调执行 Leno 字节码时会被触发</li>
+</ul>
 </li>
-<li>
-<p><strong><code>op_type_specialized.inc</code> 大量使用 <code>vm_stack_push_fast</code></strong>:
-   - <code>OP_ADD_INT</code>, <code>OP_SUB_INT</code>, <code>OP_MUL_INT</code> 等 ~30 个指令
-   - 这些指令在 FFI 回调执行 Leno 字节码时会被触发</p>
-</li>
-<li>
-<p><strong>FFI 回调 <code>callback_dispatch_direct</code> 用 <code>vm_stack_push</code>（安全版）压入参数</strong>:
-   <code>c
-   // ffi.c:2354 - 用安全版
-   vm_stack_push(vm_ptr, leno_arg);</code>
-   但回调函数体内部执行的字节码使用 <code>vm_stack_push_fast</code>（不安全版）</p>
-</li>
-<li>
-<p><strong><code>op_type_specialized.inc</code> 的快速栈操作在 2026-05-28 曾因 <code>更多排序.leno</code> 测试失败而部分回退</strong>，但类型特化指令中的使用被保留</p>
-</li>
+</ol>
+<ol>
+<li><strong>FFI 回调 <code>callback_dispatch_direct</code> 用 <code>vm_stack_push</code>（安全版）压入参数</strong>:</li>
+</ol>
+<pre><code class="language-c">   // ffi.c:2354 - 用安全版
+   vm_stack_push(vm_ptr, leno_arg);
+</code></pre>
+<p>但回调函数体内部执行的字节码使用 <code>vm_stack_push_fast</code>（不安全版）</p>
+<ol>
+<li><strong><code>op_type_specialized.inc</code> 的快速栈操作在 2026-05-28 曾因 <code>更多排序.leno</code> 测试失败而部分回退</strong>，但类型特化指令中的使用被保留</li>
 </ol>
 <p><strong>根因链</strong>:</p>
 <pre><code>FFI 回调 (libcurl write_callback)
@@ -403,7 +403,8 @@ libcurl 会自动添加 <code>Accept-Encoding: gzip, deflate</code> header 并�
 <td>~3% (203ms → ~210ms)</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#概述">概述</a></li><li><a href="#崩溃现象">崩溃现象</a></li><li><a href="#排查过程">排查过程</a></li><ul class="lv3"><li><a href="#阶段1-怀疑-gc-回收-objfficallback">阶段1: 怀疑 GC 回收 ObjFFICallback</a></li><li><a href="#阶段2-怀疑-ffi-参数传递">阶段2: 怀疑 FFI 参数传递</a></li><li><a href="#阶段3-gdb-堆栈回溯-关键突破">阶段3: gdb 堆栈回溯（关键突破）</a></li><li><a href="#阶段4-定位堆损坏根因">阶段4: 定位堆损坏根因</a></li></ul><li><a href="#涉及的文件和代码">涉及的文件和代码</a></li><ul class="lv3"><li><a href="#根因文件">根因文件</a></li><li><a href="#性能优化记录中的警告">性能优化记录中的警告</a></li></ul><li><a href="#修复方案">修复方案</a></li><ul class="lv3"><li><a href="#方案-a-回退-op_type_specialized-inc-中的快速栈操作-推荐-安全">方案 A: 回退 op_type_specialized.inc 中的快速栈操作（推荐，安全）</a></li><li><a href="#方案-b-在-ffi-回调中增加栈空间预留">方案 B: 在 FFI 回调中增加栈空间预留</a></li><li><a href="#方案-c-给-vm_stack_push_fast-加-debug-断言">方案 C: 给 vm_stack_push_fast 加 debug 断言</a></li><li><a href="#推荐组合-a-c">推荐组合: A + C</a></li></ul><li><a href="#开发-lenonet-过程中发现的所有问题">开发 LenoNet 过程中发现的所有问题</a></li><ul class="lv3"><li><a href="#问题1-ffi_call_impl-的-gc-禁用策略不当-已修复">问题1: ~~ffi_call_impl 的 GC 禁用策略不当~~ （已修复）</a></li><li><a href="#问题2-gc-mark_roots-可能遗漏非活跃模块的全局变量-已修复">问题2: ~~GC mark_roots 可能遗漏非活跃模块的全局变量~~ （已修复）</a></li><li><a href="#问题3-cfunc-类型不能跨模块-use-导入">问题3: cfunc 类型不能跨模块 use 导入</a></li><li><a href="#问题4-clib-不支持变参函数声明">问题4: clib 不支持变参函数声明</a></li><li><a href="#问题5-enum-不支持位运算表达式作为成员值-已修复">问题5: ~~enum 不支持位运算表达式作为成员值~~ （已修复）</a></li><li><a href="#问题6-clib-声明的-str8-参数不接受-leno-string-类型-已修复">问题6: ~~clib 声明的 str8 参数不接受 Leno string 类型~~ （已修复）</a></li><li><a href="#问题7-double-不是有效的-leno-类型-已修复">问题7: ~~double 不是有效的 Leno 类型~~ （已修复）</a></li><li><a href="#问题8-setopt_ptr-参数类型必须用-any-而不能用-var-ptr">问题8: setopt_ptr 参数类型必须用 any 而不能用 var/Ptr</a></li><li><a href="#问题9-字符串方法命名与常见语言不同-已修复错误提示">问题9: ~~字符串方法命名与常见语言不同~~ （已修复错误提示）</a></li><li><a href="#问题10-curlinfo_size_download-信息码可能不正确-已修复">问题10: ~~CURLINFO_SIZE_DOWNLOAD 信息码可能不正确~~ （已修复）</a></li><li><a href="#问题11-opt-accept_encoding-设为空字符串-的行为-已确认正常">问题11: ~~Opt.ACCEPT_ENCODING 设为空字符串 "" 的行为~~ （已确认正常）</a></li></ul><li><a href="#时间线">时间线</a></li><li><a href="#总结">总结</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoWeb.html">← 上一篇</a><a href="../待办与路线图.html">下一篇 →</a></nav>

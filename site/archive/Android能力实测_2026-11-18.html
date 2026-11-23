@@ -168,15 +168,15 @@ PNG/JPEG/WebP 编解码、字体栅格化、音频、FFI 全部实测可用，�
 <tbody>
 <tr>
 <td>SQLite</td>
-<td>随模块分发 <code>libsqlite3.so</code>（<code>build/leno_module/LenoSqlite/lib/android/&lt;abi&gt;/</code>），<br><code>build_android.sh</code> 自动收进 APK。系统自带的 <code>libsqlite.so</code> <strong>不能</strong> dlopen —— 见下</td>
+<td>随模块分发 <code>libsqlite3.so</code>（<code>build/leno_module/LenoSqlite/lib/android/&lt;abi&gt;/</code>），&lt;br&gt;<code>build_android.sh</code> 自动收进 APK。系统自带的 <code>libsqlite.so</code> <strong>不能</strong> dlopen —— 见下</td>
 </tr>
 <tr>
 <td>系统库 FFI</td>
-<td>只能加载 <code>public.libraries.txt</code>（28 个）里的库。<code>libEGL/liblog/libandroid/libOpenSLES/libz</code> 在；<br><code>libsqlite/libmedia</code> 等私有库被 namespace 拒绝</td>
+<td>只能加载 <code>public.libraries.txt</code>（28 个）里的库。<code>libEGL/liblog/libandroid/libOpenSLES/libz</code> 在；&lt;br&gt;<code>libsqlite/libmedia</code> 等私有库被 namespace 拒绝</td>
 </tr>
 <tr>
 <td>HTTPS</td>
-<td>已解决：自带 <code>libcurl.so</code>（curl 8.23.0 + mbedTLS 3.6.8 静态链入），<br>证书运行时由 <code>caBundle()</code> 从 <code>/system/etc/security/cacerts</code> 拼 bundle。见 c16</td>
+<td>已解决：自带 <code>libcurl.so</code>（curl 8.23.0 + mbedTLS 3.6.8 静态链入），&lt;br&gt;证书运行时由 <code>caBundle()</code> 从 <code>/system/etc/security/cacerts</code> 拼 bundle。见 c16</td>
 </tr>
 </tbody>
 </table>
@@ -402,36 +402,34 @@ freetype/harfbuzz 全部静态链入，所以 <code>libSDL3_image.so</code> / <c
    必须 <code>bash build.sh</code> <strong>和</strong> <code>bash build_vm.sh</code> 都跑一遍。否则会出现
    "<code>leno_vm.exe</code> 跑 <code>.lenb</code> 正常、<code>leno.exe</code> 跑 <code>.leno</code> 却报库加载失败"这种极难归因的现象
    —— 本轮就因为只重编了 VM，<code>run_all_tests.leno</code> 里 LenoSqlite 一路报错。</li>
-<li>
-<p><strong><code>run_all_tests.leno</code> 要用 <code>leno.exe</code> 跑，不能用 <code>leno_vm.exe</code></strong>。它内部用
+<li><strong><code>run_all_tests.leno</code> 要用 <code>leno.exe</code> 跑，不能用 <code>leno_vm.exe</code></strong>。它内部用
    <code>_executable()</code> 拼子进程命令，而 VM 只吃 <code>.lenb</code> ⇒ 拿 VM 当 runner 会全线 <code>exit=1</code>
-   （看着像"所有模块都挂了"，其实是一个都用错了工具）。</p>
-</li>
-<li>
-<p><strong><code>dlopen</code> 不会触发 <code>JNI_OnLoad</code></strong>。SDL3 的 JavaVM 是靠<strong>它自己的</strong> <code>JNI_OnLoad</code>
+   （看着像"所有模块都挂了"，其实是一个都用错了工具）。</li>
+</ol>
+<ol>
+<li><strong><code>dlopen</code> 不会触发 <code>JNI_OnLoad</code></strong>。SDL3 的 JavaVM 是靠<strong>它自己的</strong> <code>JNI_OnLoad</code>
    缓存的，而那个钩子只有 <code>System.loadLibrary</code> 才会被调 ⇒ <code>ffi.load("libSDL3.so")</code> 之后
    <code>SDL_Init</code> 一律失败：<code>Failed, there is no JavaVM</code>。
    <strong>不要</strong>试图手动调它的 <code>JNI_OnLoad</code> —— 里面 <code>FindClass("org/libsdl/app/SDLActivity")</code>
    找不到就抛 pending exception，ART 的 <code>AssertNoPendingException</code> 直接杀进程
    （实测 tombstone：<code>ClassLinker::FindClass</code> → <code>Thread::Abort</code>）。
-   正路是把宿主改成 SDL 官方的 <code>android-project</code> 形态（Java 继承 <code>SDLActivity</code>）。</p>
-</li>
-<li>
-<p><strong>mbedTLS 3.6 的 git 源码树不含生成文件</strong>。GitHub 上按 tag/branch 下载是 git 检出，
+   正路是把宿主改成 SDL 官方的 <code>android-project</code> 形态（Java 继承 <code>SDLActivity</code>）。</li>
+</ol>
+<ol>
+<li><strong>mbedTLS 3.6 的 git 源码树不含生成文件</strong>。GitHub 上按 tag/branch 下载是 git 检出，
    没有 <code>error.c</code> / <code>version_features.c</code> / <code>ssl_debug_helpers_generated.c</code> /
    <code>psa_crypto_driver_wrappers.{h,c}</code> ⇒ 必须 <code>-DGEN_FILES=ON</code> 现场生成
-   （要 Perl + Python + jsonschema + jinja2）。官方 <strong>release 压缩包</strong>里才带这些文件。</p>
-</li>
-<li>
-<p><strong>CMake 会自己挑 Python</strong>。脚本里检查的是 PATH 上那个，<code>find_package(Python3)</code>
+   （要 Perl + Python + jsonschema + jinja2）。官方 <strong>release 压缩包</strong>里才带这些文件。</li>
+</ol>
+<ol>
+<li><strong>CMake 会自己挑 Python</strong>。脚本里检查的是 PATH 上那个，<code>find_package(Python3)</code>
     可能挑到另一个（实测 3.13.12 vs <code>Program Files</code> 下的 3.13.2）⇒ 必须在 configure 时
-    显式 <code>-DPython3_EXECUTABLE=...</code>，否则要等 build 阶段才报 <code>No module named 'jsonschema'</code>。</p>
-</li>
-<li>
-<p><strong>删上游目录前先确认 CMake 是否引用</strong>。curl 的 <code>add_subdirectory(scripts)</code> 是<strong>无条件</strong>的；
+    显式 <code>-DPython3_EXECUTABLE=...</code>，否则要等 build 阶段才报 <code>No module named 'jsonschema'</code>。</li>
+</ol>
+<ol>
+<li><strong>删上游目录前先确认 CMake 是否引用</strong>。curl 的 <code>add_subdirectory(scripts)</code> 是<strong>无条件</strong>的；
     libpng 的 <code>scripts/cmake/*.cmake</code>、libwebp 的 <code>cmake/</code>、freetype 的 <code>builds/</code>
-    都是 CMake 的输入。剪枝只删 <code>test/ examples/ docs/ Xcode/ VisualC/</code> 是安全的。</p>
-</li>
+    都是 CMake 的输入。剪枝只删 <code>test/ examples/ docs/ Xcode/ VisualC/</code> 是安全的。</li>
 </ol>
 <h2 id="怎么复跑">怎么复跑</h2>
 <pre><code class="language-bash">bash android/build_android.sh                 # 出 APK（含 assets 自动重编）
@@ -460,7 +458,8 @@ c16_curl          7      0
    再补 Image/Bitmap 与权限，UI 交给原生 View。</li>
 <li><strong>无论哪条路</strong>，先把 <code>libsqlite3.so</code> 这一步固化进构建脚本（本轮已加），
    因为离线缓存是几乎所有 app 的共同需求。</li>
-</ol></main>
+</ol>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一句话结论">一句话结论</a></li><li><a href="#第一档-实测可用-写-app-的日常">第一档：实测可用（写 app 的日常）</a></li><li><a href="#第二档-有条件可用">第二档：有条件可用</a></li><li><a href="#第三档-现在做不了-按工作量排">第三档：现在做不了（按工作量排）</a></li><li><a href="#本轮顺带修掉的两个运行时缺陷">本轮顺带修掉的两个运行时缺陷</a></li><li><a href="#模块-leno_module-在-android-上的可用性">模块（leno_module/）在 Android 上的可用性</a></li><ul class="lv3"><li><a href="#库文件按平台分目录-2026-11-18-起的布局">库文件按平台分目录（2026-11-18 起的布局）</a></li><li><a href="#为什么-android-运行时加载的是-裸文件名">为什么 Android 运行时加载的是"裸文件名"</a></li></ul><li><a href="#五个模块的-android-产物-2026-11-19-补齐">五个模块的 Android 产物（2026-11-19 补齐）</a></li><ul class="lv3"><li><a href="#各模块的取舍">各模块的取舍</a></li></ul><li><a href="#十一个必须记住的坑-都是实测撞出来的">十一个必须记住的坑（都是实测撞出来的）</a></li><li><a href="#怎么复跑">怎么复跑</a></li><li><a href="#下一步建议">下一步建议</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../Android正经App路线.html">← 上一篇</a><a href="../LenoWeb能力缺口与修复路线.html">下一篇 →</a></nav>

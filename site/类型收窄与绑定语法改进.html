@@ -104,13 +104,13 @@ if mixed_arr is Array[int] { }    // ❌ false（即便第一个元素是 int）
 </code></pre>
 <p>因此：
 - <code>Array[int]</code> 语义 = "<strong>全是 int 的数组</strong>"，混入其他类型即为 <code>false</code>。
-- 想匹配"首个元素是 int"而不是"全部是 int"，应使用<strong>元素级收窄</strong>：
-  <code>leno
-  if x is Array =&gt; arr {
+- 想匹配"首个元素是 int"而不是"全部是 int"，应使用<strong>元素级收窄</strong>：</p>
+<pre><code class="language-leno">  if x is Array =&gt; arr {
       if arr[0] is int =&gt; n {   // 只关心第一个元素
           // ...
       }
-  }</code></p>
+  }
+</code></pre>
 <h2 id="二-绑定语法基础回顾">二、<code>=&gt;</code> 绑定语法基础回顾</h2>
 <p><code>if expr is Type =&gt; var { ... }</code> 一次性解决三个问题：<strong>临时变量泄漏</strong>、<strong>重复求值</strong>、<strong>冗余 <code>as</code> 转换</strong>。</p>
 <pre><code class="language-leno">if expr is Type =&gt; var {
@@ -226,12 +226,33 @@ if x is Array =&gt; arr {
     }
 }
 </code></pre>
-<p>支持的索引类型：
-| 索引形式 | 示例 | 守卫符号 |
-|---------|------|---------|
-| 数字常量 | <code>arr[0]</code>、<code>arr[10]</code> | <code>"arr[0]"</code>、<code>"arr[10]"</code> |
-| 字符串常量 | <code>d["name"]</code> | <code>"d[name]"</code> |
-| 变量索引 | <code>arr[i]</code> | <code>"arr[i]"</code> |</p>
+<p>支持的索引类型：</p>
+<table>
+<thead>
+<tr>
+<th>索引形式</th>
+<th>示例</th>
+<th>守卫符号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数字常量</td>
+<td><code>arr[0]</code>、<code>arr[10]</code></td>
+<td><code>"arr[0]"</code>、<code>"arr[10]"</code></td>
+</tr>
+<tr>
+<td>字符串常量</td>
+<td><code>d["name"]</code></td>
+<td><code>"d[name]"</code></td>
+</tr>
+<tr>
+<td>变量索引</td>
+<td><code>arr[i]</code></td>
+<td><code>"arr[i]"</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="四-最佳实践">四、最佳实践</h2>
 <h3 id="场景-1-逐步解包嵌套容器-数组-dict-字段">场景 1：逐步解包嵌套容器（数组→Dict→字段）</h3>
 <p><strong>唯一类型安全且能编译的写法是嵌套 <code>=&gt;</code> 绑定</strong>：</p>
@@ -531,8 +552,9 @@ Array[int] flat = matrix.flatten()     // 类型精确是 Array[int] ⇒ flat[0]
 <td><code>Array.flatten()</code>（2026-10-22）：类型精确性 + 混装/空/不修改源</td>
 </tr>
 </tbody>
-</table></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-核心语义-泛型收窄决定取出元素的类型">一、核心语义：泛型收窄决定取出元素的类型</a></li><ul class="lv3"><li><a href="#泛型收窄是运行时元素类型检查">泛型收窄是运行时元素类型检查</a></li></ul><li><a href="#二-绑定语法基础回顾">二、=&gt; 绑定语法基础回顾</a></li><li><a href="#三-已验证的边界行为与限制">三、已验证的边界行为与限制</a></li><ul class="lv3"><li><a href="#限制-1-and-守卫链-绑定已修复">✅ 限制 1：and 守卫链 + =&gt; 绑定已修复</a></li><li><a href="#限制-2-连续索引收窄已修复">✅ 限制 2：连续索引收窄已修复</a></li><li><a href="#限制-3-收窄信息传导到局部变量已修复">✅ 限制 3：收窄信息传导到局部变量已修复</a></li><li><a href="#限制-4-数组索引收窄已修复-原编译器-bug">✅ 限制 4：数组索引收窄已修复（原编译器 bug）</a></li></ul><li><a href="#四-最佳实践">四、最佳实践</a></li><ul class="lv3"><li><a href="#场景-1-逐步解包嵌套容器-数组-dict-字段">场景 1：逐步解包嵌套容器（数组→Dict→字段）</a></li><li><a href="#场景-2-嵌套太深时-拆小函数">场景 2：嵌套太深时，拆小函数</a></li><li><a href="#场景-3-单层容器-元素级收窄">场景 3：单层容器 + 元素级收窄</a></li><li><a href="#场景-4-能提前确定元素类型时-直接用泛型收窄">场景 4：能提前确定元素类型时，直接用泛型收窄</a></li><li><a href="#场景-5-dict-k-v-的逐键值校验-v3-2-1">场景 5：Dict[K, V] 的逐键值校验（v3.2.1）</a></li><li><a href="#场景-6-泛型实参递归校验-嵌套位置的名字校验-v3-2-2">场景 6：泛型实参递归校验 + 嵌套位置的名字校验（v3.2.2）</a></li></ul><li><a href="#五-编译器改进记录">五、编译器改进记录</a></li><ul class="lv3"><li><a href="#已修复">已修复</a></li><li><a href="#全部限制已修复">全部限制已修复</a></li></ul><li><a href="#五-补-集合查询-过滤-映射-收窄的推荐写法-2026-10-22-实测">五·补、集合查询：过滤 / 映射 / 收窄的推荐写法（2026-10-22 实测）</a></li><ul class="lv3"><li><a href="#1-过滤-映射-直接用-array-方法">1. 过滤 / 映射：直接用 Array 方法</a></li><li><a href="#2-收窄过滤-filter-推不出-array-t">2. 收窄过滤（filter 推不出 Array[T]）</a></li><li><a href="#3-扁平化-array-flatten-2026-10-22-新增">3. 扁平化：Array.flatten()（2026-10-22 新增）</a></li><li><a href="#4-为什么不再加-where-语法">4. 为什么不再加 where 语法</a></li></ul><li><a href="#六-相关测试文件">六、相关测试文件</a></li></ul></aside>
+</table>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-核心语义-泛型收窄决定取出元素的类型">一、核心语义：泛型收窄决定取出元素的类型</a></li><ul class="lv3"><li><a href="#泛型收窄是运行时元素类型检查">泛型收窄是运行时元素类型检查</a></li></ul><li><a href="#二-绑定语法基础回顾">二、=> 绑定语法基础回顾</a></li><li><a href="#三-已验证的边界行为与限制">三、已验证的边界行为与限制</a></li><ul class="lv3"><li><a href="#限制-1-and-守卫链-绑定已修复">✅ 限制 1：and 守卫链 + => 绑定已修复</a></li><li><a href="#限制-2-连续索引收窄已修复">✅ 限制 2：连续索引收窄已修复</a></li><li><a href="#限制-3-收窄信息传导到局部变量已修复">✅ 限制 3：收窄信息传导到局部变量已修复</a></li><li><a href="#限制-4-数组索引收窄已修复-原编译器-bug">✅ 限制 4：数组索引收窄已修复（原编译器 bug）</a></li></ul><li><a href="#四-最佳实践">四、最佳实践</a></li><ul class="lv3"><li><a href="#场景-1-逐步解包嵌套容器-数组-dict-字段">场景 1：逐步解包嵌套容器（数组→Dict→字段）</a></li><li><a href="#场景-2-嵌套太深时-拆小函数">场景 2：嵌套太深时，拆小函数</a></li><li><a href="#场景-3-单层容器-元素级收窄">场景 3：单层容器 + 元素级收窄</a></li><li><a href="#场景-4-能提前确定元素类型时-直接用泛型收窄">场景 4：能提前确定元素类型时，直接用泛型收窄</a></li><li><a href="#场景-5-dict-k-v-的逐键值校验-v3-2-1">场景 5：Dict[K, V 的逐键值校验（v3.2.1）</a></li><li><a href="#场景-6-泛型实参递归校验-嵌套位置的名字校验-v3-2-2">场景 6：泛型实参递归校验 + 嵌套位置的名字校验（v3.2.2）</a></li></ul><li><a href="#五-编译器改进记录">五、编译器改进记录</a></li><ul class="lv3"><li><a href="#已修复">已修复</a></li><li><a href="#全部限制已修复">全部限制已修复</a></li></ul><li><a href="#五-补-集合查询-过滤-映射-收窄的推荐写法-2026-10-22-实测">五·补、集合查询：过滤 / 映射 / 收窄的推荐写法（2026-10-22 实测）</a></li><ul class="lv3"><li><a href="#1-过滤-映射-直接用-array-方法">1. 过滤 / 映射：直接用 Array 方法</a></li><li><a href="#2-收窄过滤-filter-推不出-array-t">2. 收窄过滤（filter 推不出 Array[T）</a></li><li><a href="#3-扁平化-array-flatten-2026-10-22-新增">3. 扁平化：Array.flatten()（2026-10-22 新增）</a></li><li><a href="#4-为什么不再加-where-语法">4. 为什么不再加 where 语法</a></li></ul><li><a href="#六-相关测试文件">六、相关测试文件</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="F2_非可空与可空类型设计.html">← 上一篇</a><a href="解构语法实现文档.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

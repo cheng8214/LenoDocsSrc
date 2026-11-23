@@ -268,6 +268,8 @@ var bad = [1, &quot;a&quot;]
 <p>⚠ 为什么<strong>不</strong>做"全整数就返回 <code>int</code>"（曾这么设计，实测后改掉）：返回<strong>规格</strong>只能标一个类型 ——
 标 <code>ANY</code> 会让 <code>int t = xs.sum()</code> 编不过，标 <code>INT</code> 又对含小数的数组说谎 ⇒ 统一 <code>float</code>，
 把转换交给调用点，是唯一不撒谎的写法 ✓</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>为什么不一起做 <code>sorted</code> / <code>enumerate</code> / 数组版 <code>min</code>/<code>max</code></strong>（2026-10-01 的决定）：
 - <code>sorted</code>：<code>arr.copy().sort()</code> 已经能表达 ⇒ 再加一个入口就是同一件事两种写法 ✗
 - <code>enumerate</code>：<strong>语言自带</strong> —— <code>for xs to x, i { ... }</code> 直接给元素与下标 ✓
@@ -312,8 +314,8 @@ print(arr.last_index_of(&quot;grape&quot;))    // -1
 </blockquote>
 <p><strong>参数</strong>:
 - <code>cmp</code> (function, 可选): <code>cmp(a, b)</code> 返回 <strong>int</strong> —— 负数 ⇒ <code>a</code> 排在前面，
-  <code>0</code> ⇒ 相等，正数 ⇒ <code>b</code> 排在前面（与 C <code>qsort</code> / Java <code>Comparator</code> 同口径）。
-  返回 <code>float</code> 也可以（按正负判断）。</p>
+<code>0</code> ⇒ 相等，正数 ⇒ <code>b</code> 排在前面（与 C <code>qsort</code> / Java <code>Comparator</code> 同口径）。
+返回 <code>float</code> 也可以（按正负判断）。</p>
 <p><strong>返回</strong>: <code>Array</code> - 原数组（支持链式调用）</p>
 <p><strong>内置规则</strong>（不传比较器）:
 - 数字：按数值大小
@@ -325,15 +327,12 @@ print(arr.last_index_of(&quot;grape&quot;))    // -1
 ② <strong>回调里改数组不会崩</strong>：排序前会把元素复制一份，回调中 <code>arr.add()</code> /
 <code>arr.clear()</code> 只会影响写回的元素个数，不会野指针。</p>
 <p>⚠ <strong>比较器必须返回数字</strong>（<code>int</code> / <code>float</code> / <code>bigint</code>）：返回 <code>bool</code> / <code>string</code> 等会让所有比较都
-变成"相等" ⇒ 排序<strong>整体静默失效</strong>。2026-11-15 起改成<strong>运行时错误</strong>（数组保持原样）：
-</p>
-</blockquote>
+变成"相等" ⇒ 排序<strong>整体静默失效</strong>。2026-11-15 起改成<strong>运行时错误</strong>（数组保持原样）：</p>
 <pre><code class="language-leno">// ✗ 返回 bool ⇒ 现在抛错（此前静默不排序）
 a.sort(func(int x, int y) { return x &lt; y })
 // ✓ Leno 的三元是 `if 条件 then A else B`（不是 C 的 `?:`）
 a.sort(func(int x, int y) { return if x &lt; y then -1 else (if x &gt; y then 1 else 0) })
 </code></pre>
-<blockquote>
 <p>⚠ 回调<strong>中途抛异常</strong>时，数组同样<strong>保持原样</strong>（2026-11-15 起；此前会留下排了一半的中间态）。
 ⚠ "稳定"只对<strong>带比较器</strong>的排序成立；不传比较器走 C 的 <code>qsort</code>，相等元素的相对顺序不保证
 （同类型同值的元素本来就不可区分，实际观察不到差异）。</p>
@@ -921,45 +920,44 @@ print(mixed.join(&quot;-&quot;))  // 1-2-a-b
 <hr>
 <h2 id="最佳实践">最佳实践</h2>
 <ol>
-<li><strong>使用实例方法</strong>：代码更简洁易读
-   ```leno
-   // 推荐
-   arr.sort().reverse()</li>
+<li><strong>使用实例方法</strong>：代码更简洁易读</li>
 </ol>
-<p>// 不推荐
+<pre><code class="language-leno">   // 推荐
+   arr.sort().reverse()
+
+   // 不推荐
    arrays.reverse(arrays.sort(arr))
-   ```</p>
-<ol start="2">
-<li>
-<p><strong>链式操作</strong>：利用返回自身的特性
-   <code>leno
-   var result = arr.copy().sort().reverse()</code></p>
-</li>
-<li>
-<p><strong>预分配容量</strong>：如果知道大致大小，可以先添加再修改
-   <code>leno
-   var arr = []
+</code></pre>
+<ol>
+<li><strong>链式操作</strong>：利用返回自身的特性</li>
+</ol>
+<pre><code class="language-leno">   var result = arr.copy().sort().reverse()
+</code></pre>
+<ol>
+<li><strong>预分配容量</strong>：如果知道大致大小，可以先添加再修改</li>
+</ol>
+<pre><code class="language-leno">   var arr = []
    for 0 : 1000 to i {
        arr.add(0)  // 预分配
    }
    // 然后修改
    for 0 : 999 to i {
        arr[i] = i * 2
-   }</code></p>
-</li>
-<li>
-<p><strong>使用 <code>has()</code> 替代 <code>index_of()</code></strong>：如果只需要检查存在性
-   ```leno
-   // 推荐
-   if arr.has(value) { ... }</p>
-</li>
+   }
+</code></pre>
+<ol>
+<li><strong>使用 <code>has()</code> 替代 <code>index_of()</code></strong>：如果只需要检查存在性</li>
 </ol>
-<p>// 不推荐（如果不需要索引）
+<pre><code class="language-leno">   // 推荐
+   if arr.has(value) { ... }
+
+   // 不推荐（如果不需要索引）
    if arr.index_of(value) != -1 { ... }
-   ```</p>
+</code></pre>
 <hr>
 <p><em>文档版本: 1.0</em><br>
-<em>最后更新: 2026-05-17</em></p></main>
+<em>最后更新: 2026-05-17</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#返回类型-跟入参-接收者一致">返回类型（跟入参 / 接收者一致）</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#数组创建">数组创建</a></li><ul class="lv3"><li><a href="#字面量创建">字面量创建</a></li><li><a href="#类型注解">类型注解</a></li></ul><li><a href="#核心方法">核心方法</a></li><ul class="lv3"><li><a href="#len">len()</a></li><li><a href="#add-value">add(value)</a></li><li><a href="#pop">pop()</a></li><li><a href="#insert-index-value">insert(index, value)</a></li><li><a href="#remove-index">remove(index)</a></li><li><a href="#has-value">has(value)</a></li><li><a href="#copy">copy()</a></li><li><a href="#clear">clear()</a></li><li><a href="#sum">sum()</a></li></ul><li><a href="#查找方法">查找方法</a></li><ul class="lv3"><li><a href="#index_of-value">index_of(value)</a></li><li><a href="#last_index_of-value">last_index_of(value)</a></li></ul><li><a href="#排序和反转">排序和反转</a></li><ul class="lv3"><li><a href="#sort-cmp">sort(cmp?)</a></li><li><a href="#reverse">reverse()</a></li></ul><li><a href="#字符串操作">字符串操作</a></li><ul class="lv3"><li><a href="#join-separator">join(separator)</a></li></ul><li><a href="#函数式方法">函数式方法</a></li><ul class="lv3"><li><a href="#map-callback">map(callback)</a></li><li><a href="#filter-callback">filter(callback)</a></li><li><a href="#reduce-callback-initial">reduce(callback, initial)</a></li><li><a href="#链式调用">链式调用</a></li></ul><li><a href="#批量操作">批量操作</a></li><ul class="lv3"><li><a href="#数组切片-语法糖">数组切片（语法糖）</a></li></ul><li><a href="#实例方法-vs-模块方法">实例方法 vs 模块方法</a></li><ul class="lv3"><li><a href="#选择建议">选择建议</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-数据处理管道">示例1：数据处理管道</a></li><li><a href="#示例2-去重-使用辅助数组">示例2：去重（使用辅助数组）</a></li><li><a href="#示例3-栈的实现">示例3：栈的实现</a></li><li><a href="#示例4-队列的实现">示例4：队列的实现</a></li><li><a href="#示例5-与-cstruct-结合使用">示例5：与 cstruct 结合使用</a></li></ul><li><a href="#性能说明">性能说明</a></li><ul class="lv3"><li><a href="#时间复杂度">时间复杂度</a></li><li><a href="#空间复杂度">空间复杂度</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-索引越界">1. 索引越界</a></li><li><a href="#2-原地操作">2. 原地操作</a></li><li><a href="#3-深拷贝-vs-浅拷贝">3. 深拷贝 vs 浅拷贝</a></li><li><a href="#4-类型混合">4. 类型混合</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="区间口径约定.html">← 上一篇</a><a href="module_asyncs.html">下一篇 →</a></nav>

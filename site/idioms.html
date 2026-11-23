@@ -265,8 +265,9 @@ defer font.close()
 <li>编译器/LSP 不提示（还没做）；</li>
 <li>前人用了行数组，后人照着抄。</li>
 </ol>
-<p><strong>先解决第 1 条，成本最低。</strong></p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-数据-用-array-struct-不要用-array-array-string">1. 数据：用 Array[struct]，不要用 Array[Array[string]]</a></li><ul class="lv3"><li><a href="#为什么-字段要原地更新-不是理由-实测">为什么“字段要原地更新”不是理由（实测）</a></li><li><a href="#什么时候必须用行数组">什么时候必须用行数组</a></li></ul><li><a href="#2-状态-用-enum-常量-不要魔法整数-字符串码">2. 状态：用 enum 常量，不要魔法整数 / 字符串码</a></li><li><a href="#3-排序-sort-比较器-不要手写插入-冒泡">3. 排序：sort(比较器)，不要手写插入/冒泡</a></li><li><a href="#4-字符串-先查标准库-别自己写">4. 字符串：先查标准库，别自己写</a></li><li><a href="#5-已知缺口-写不出来-不是-不想写">5. 已知缺口（写不出来，不是“不想写”）</a></li><li><a href="#6-资源-open-纹理-字体-一律-defer-释放">6. 资源：open / 纹理 / 字体，一律 defer 释放</a></li><li><a href="#7-一句话">7. 一句话</a></li></ul></aside>
+<p><strong>先解决第 1 条，成本最低。</strong></p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-数据-用-array-struct-不要用-array-array-string">1. 数据：用 Array[struct，不要用 Array[Array[string</a></li><ul class="lv3"><li><a href="#为什么-字段要原地更新-不是理由-实测">为什么“字段要原地更新”不是理由（实测）</a></li><li><a href="#什么时候必须用行数组">什么时候必须用行数组</a></li></ul><li><a href="#2-状态-用-enum-常量-不要魔法整数-字符串码">2. 状态：用 enum 常量，不要魔法整数 / 字符串码</a></li><li><a href="#3-排序-sort-比较器-不要手写插入-冒泡">3. 排序：sort(比较器)，不要手写插入/冒泡</a></li><li><a href="#4-字符串-先查标准库-别自己写">4. 字符串：先查标准库，别自己写</a></li><li><a href="#5-已知缺口-写不出来-不是-不想写">5. 已知缺口（写不出来，不是“不想写”）</a></li><li><a href="#6-资源-open-纹理-字体-一律-defer-释放">6. 资源：open / 纹理 / 字体，一律 defer 释放</a></li><li><a href="#7-一句话">7. 一句话</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="FAQ.html">← 上一篇</a><a href="语言陷阱速查.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

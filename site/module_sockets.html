@@ -101,7 +101,7 @@ Socket conn = sockets.connect(&quot;www.example.com&quot;, 443)  // 支持 DNS �
 <p><strong>返回</strong>: 
 - 成功: 服务器 Socket 对象
 - 参数错误: <strong>抛错</strong>（端口越界 / 地址解析不出来，2026-11-14 起；此前端口会被
-  <code>htons((short)port)</code> 静默截断、解析失败会静默 bind 到 0.0.0.0 ✗）
+<code>htons((short)port)</code> 静默截断、解析失败会静默 bind 到 0.0.0.0 ✗）
 - 失败（端口被占用等）: <code>null</code></p>
 <pre><code class="language-leno">Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
 if server != null {
@@ -193,9 +193,9 @@ if conn != null {
 - 成功: 接收到的字符串数据
 - 失败/连接关闭: <code>null</code>
 - <strong>误用 ⇒ 抛错（2026-11-14 起）</strong>：在<strong>监听 socket</strong>（还没 <code>accept</code>）或<strong>未连接的 TCP socket</strong>
-  上调用时，直接报错。此前这两种情况静默返回 <code>null</code>，与"对端关闭"完全分不开 ✗
+上调用时，直接报错。此前这两种情况静默返回 <code>null</code>，与"对端关闭"完全分不开 ✗
 - <strong><code>max_bytes &lt;= 0</code> ⇒ 抛错（2026-11-16 起）</strong>：此前静默当成 1024 ⇒ 没数据时一直阻塞
-  （没有 <code>set_timeout</code> 就是永久卡死，看起来像"对端没发数据"）。<code>recvfrom</code> / <code>arecv</code> 同口径。</p>
+（没有 <code>set_timeout</code> 就是永久卡死，看起来像"对端没发数据"）。<code>recvfrom</code> / <code>arecv</code> 同口径。</p>
 <pre><code class="language-leno">var data = conn.recv(1024)
 if data != null {
     io.print(&quot;收到: &quot; + data)
@@ -306,9 +306,9 @@ if data == null {
 <p>优雅关闭连接（不释放文件描述符）。</p>
 <p><strong>参数</strong>:
 - <code>how</code> (int): 关闭方式
-  - <code>0</code> - 关闭读取端（SHUT_RD）
-  - <code>1</code> - 关闭写入端（SHUT_WR）
-  - <code>2</code> - 关闭两端（SHUT_RDWR）</p>
+- <code>0</code> - 关闭读取端（SHUT_RD）
+- <code>1</code> - 关闭写入端（SHUT_WR）
+- <code>2</code> - 关闭两端（SHUT_RDWR）</p>
 <p><strong>返回</strong>: <code>bool</code> - 是否成功</p>
 <pre><code class="language-leno">// 关闭写入端，发送 EOF 给对端，但仍可接收
 conn.shutdown(1)
@@ -1004,67 +1004,83 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>阻塞操作</strong>
-   - <code>sockets.connect()</code> 是阻塞的，直到连接建立或失败
-   - 默认情况下 <code>sock.accept()</code>、<code>sock.recv()</code> 和 <code>sock.recvfrom()</code> 是阻塞的
-   - 使用 <code>sock.set_nonblocking(true)</code> 可以设置为非阻塞模式</p>
+<li><strong>阻塞操作</strong><ul>
+<li><code>sockets.connect()</code> 是阻塞的，直到连接建立或失败</li>
+<li>默认情况下 <code>sock.accept()</code>、<code>sock.recv()</code> 和 <code>sock.recvfrom()</code> 是阻塞的</li>
+<li>使用 <code>sock.set_nonblocking(true)</code> 可以设置为非阻塞模式</li>
+</ul>
 </li>
-<li>
-<p><strong>资源管理</strong>
-   - 每个创建的 socket 都应该通过 <code>sock.close()</code> 关闭
-   - 服务器 socket 和客户端 socket 需要分别关闭
-   - <code>sock.shutdown()</code> 不释放资源，仍需调用 <code>sock.close()</code></p>
+</ol>
+<ol>
+<li><strong>资源管理</strong><ul>
+<li>每个创建的 socket 都应该通过 <code>sock.close()</code> 关闭</li>
+<li>服务器 socket 和客户端 socket 需要分别关闭</li>
+<li><code>sock.shutdown()</code> 不释放资源，仍需调用 <code>sock.close()</code></li>
+</ul>
 </li>
-<li>
-<p><strong>错误处理</strong>
-   - 所有操作都可能失败，应该检查返回值
-   - <code>sockets.connect()</code> 返回 <code>null</code> 表示连接失败
-   - <code>sock.recv()</code> 返回 <code>null</code> 表示连接已关闭或出错
-   - 使用 <code>sock.error()</code> 获取具体错误码</p>
+</ol>
+<ol>
+<li><strong>错误处理</strong><ul>
+<li>所有操作都可能失败，应该检查返回值</li>
+<li><code>sockets.connect()</code> 返回 <code>null</code> 表示连接失败</li>
+<li><code>sock.recv()</code> 返回 <code>null</code> 表示连接已关闭或出错</li>
+<li>使用 <code>sock.error()</code> 获取具体错误码</li>
+</ul>
 </li>
-<li>
-<p><strong>超时控制</strong>
-   - 使用 <code>sock.set_timeout(ms)</code> 设置收发超时
-   - 超时后 <code>recv()</code> 返回 <code>null</code>，<code>sock.error()</code> 可查看错误码</p>
+</ol>
+<ol>
+<li><strong>超时控制</strong><ul>
+<li>使用 <code>sock.set_timeout(ms)</code> 设置收发超时</li>
+<li>超时后 <code>recv()</code> 返回 <code>null</code>，<code>sock.error()</code> 可查看错误码</li>
+</ul>
 </li>
-<li>
-<p><strong>缓冲区限制</strong>
-   - <code>sock.recv()</code> 和 <code>sock.recvfrom()</code> 的 <code>max_bytes</code> 最大为 65536
-   - 超过限制的数据会被截断</p>
+</ol>
+<ol>
+<li><strong>缓冲区限制</strong><ul>
+<li><code>sock.recv()</code> 和 <code>sock.recvfrom()</code> 的 <code>max_bytes</code> 最大为 65536</li>
+<li>超过限制的数据会被截断</li>
+</ul>
 </li>
-<li>
-<p><strong>字符编码</strong>
-   - 所有数据以字符串形式传输
-   - 二进制数据需要自行编码/解码</p>
+</ol>
+<ol>
+<li><strong>字符编码</strong><ul>
+<li>所有数据以字符串形式传输</li>
+<li>二进制数据需要自行编码/解码</li>
+</ul>
 </li>
-<li>
-<p><strong>DNS 解析</strong>
-   - <code>sockets.connect()</code> 支持域名和 IP 地址
-   - 使用 <code>sockets.resolve()</code> 单独进行 DNS 解析
-   - 域名解析失败会返回 <code>null</code></p>
+</ol>
+<ol>
+<li><strong>DNS 解析</strong><ul>
+<li><code>sockets.connect()</code> 支持域名和 IP 地址</li>
+<li>使用 <code>sockets.resolve()</code> 单独进行 DNS 解析</li>
+<li>域名解析失败会返回 <code>null</code></li>
+</ul>
 </li>
-<li>
-<p><strong>端口绑定</strong>
-   - <code>sockets.listen()</code> 和 <code>sockets.udp_bind()</code> 需要指定端口
-   - 端口 0 表示让系统自动分配</p>
+</ol>
+<ol>
+<li><strong>端口绑定</strong><ul>
+<li><code>sockets.listen()</code> 和 <code>sockets.udp_bind()</code> 需要指定端口</li>
+<li>端口 0 表示让系统自动分配</li>
+</ul>
 </li>
-<li>
-<p><strong>地址格式</strong>
-   - IPv4 地址格式: "127.0.0.1"
-   - "0.0.0.0" 表示监听所有网络接口
-   - "127.0.0.1" 表示仅本地访问</p>
+</ol>
+<ol>
+<li><strong>地址格式</strong><ul>
+<li>IPv4 地址格式: "127.0.0.1"</li>
+<li>"0.0.0.0" 表示监听所有网络接口</li>
+<li>"127.0.0.1" 表示仅本地访问</li>
+</ul>
 </li>
-<li>
-<p><strong>空字符串发送行为</strong></p>
+</ol>
+<ol>
+<li><strong>空字符串发送行为</strong></li>
+</ol>
 <ul>
 <li><code>sock.send("")</code> 是合法的无操作，立即返回 <code>true</code></li>
 <li><strong>TCP 模式</strong>: 不发送零长度段（TCP 层面不传输数据），对端的 <code>arecv()</code> 不会因此被唤醒</li>
 <li><strong>UDP 模式</strong>: <code>sendto("")</code> 发送空数据报是合法的，对端 <code>recvfrom()</code> 会返回空字符串</li>
 <li>如果需要确保对端感知到事件，请发送至少 1 字节数据</li>
 </ul>
-</li>
-</ol>
 <pre><code class="language-leno">// 正确做法：发送心跳时包含数据
 sock.send(&quot;PING&quot;)
 
@@ -1087,20 +1103,20 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sockets.connect(host, port)</code></td>
 <td>string, int</td>
-<td>Socket|null</td>
-<td>TCP 连接</td>
+<td>Socket\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sockets.listen(host, port)</code></td>
 <td>string, int</td>
-<td>Socket|null</td>
-<td>TCP 监听</td>
+<td>Socket\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sockets.udp_bind(host, port)</code></td>
 <td>string, int</td>
-<td>Socket|null</td>
-<td>UDP 绑定</td>
+<td>Socket\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sockets.select(socks, timeout_ms)</code></td>
@@ -1111,8 +1127,8 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sockets.resolve(host)</code></td>
 <td>string</td>
-<td>string|null</td>
-<td>DNS 解析</td>
+<td>string\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sockets.htons(host_short)</code></td>
@@ -1160,8 +1176,8 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sock.recv(max)</code></td>
 <td>int</td>
-<td>string|null</td>
-<td>TCP 接收</td>
+<td>string\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.close()</code></td>
@@ -1172,8 +1188,8 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sock.accept()</code></td>
 <td>-</td>
-<td>Socket|null</td>
-<td>接受连接（服务器，阻塞）</td>
+<td>Socket\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.sendto(data, addr, port)</code></td>
@@ -1184,8 +1200,8 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sock.recvfrom(max)</code></td>
 <td>int</td>
-<td>array|null</td>
-<td>UDP 接收</td>
+<td>array\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.set_nonblocking(flag)</code></td>
@@ -1196,26 +1212,26 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <tr>
 <td><code>sock.peer_addr()</code></td>
 <td>-</td>
-<td>string|null</td>
-<td>获取对端IP</td>
+<td>string\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.peer_port()</code></td>
 <td>-</td>
-<td>int|null</td>
-<td>获取对端端口</td>
+<td>int\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.local_addr()</code></td>
 <td>-</td>
-<td>string|null</td>
-<td>获取本地IP</td>
+<td>string\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.local_port()</code></td>
 <td>-</td>
-<td>int|null</td>
-<td>获取本地端口</td>
+<td>int\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>sock.error()</code></td>
@@ -1255,19 +1271,19 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <td><code>sock.arecv(max_bytes)</code></td>
 <td>int</td>
 <td>Future</td>
-<td>异步接收数据，await 返回 string|null</td>
+<td>异步接收数据，await 返回 string\</td>
 </tr>
 <tr>
 <td><code>sock.aaccept()</code></td>
 <td>-</td>
 <td>Future</td>
-<td>异步接受连接，await 返回 Socket|null</td>
+<td>异步接受连接，await 返回 Socket\</td>
 </tr>
 </tbody>
 </table>
 <p><strong>注意</strong>: 调用 <code>sock.arecv()</code> 或 <code>sock.aaccept()</code> 立即返回 Future 对象，需要 <code>await</code> 等待结果。在 <code>await</code> 期间，事件循环可以执行其他协程。</p>
 <hr>
-<h2 id="字节序转换_1">字节序转换</h2>
+<h2 id="字节序转换">字节序转换</h2>
 <p>sockets 模块提供字节序转换函数，用于处理网络协议中的多字节数据。</p>
 <h3 id="为什么需要字节序转换">为什么需要字节序转换？</h3>
 <p>不同计算机架构使用不同的字节序存储多字节数据：
@@ -1305,7 +1321,8 @@ var addr_be = sockets.htonl(addr)
 - <code>net_long</code> (int): 网络字节序的 32 位整数</p>
 <p><strong>返回</strong>: 主机字节序的 32 位整数</p>
 <hr>
-<p><em>最后更新: 2026-08-01</em></p></main>
+<p><em>最后更新: 2026-08-01</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#socket-对象">Socket 对象</a></li></ul><li><a href="#模块方法-工厂方法">模块方法（工厂方法）</a></li><ul class="lv3"><li><a href="#sockets-connect-host-port">sockets.connect(host, port)</a></li><li><a href="#sockets-listen-host-port">sockets.listen(host, port)</a></li><li><a href="#sockets-udp_bind-host-port">sockets.udp_bind(host, port)</a></li><li><a href="#sockets-select-sockets_array-timeout_ms">sockets.select(sockets_array, timeout_ms)</a></li><li><a href="#sockets-resolve-host">sockets.resolve(host)</a></li><li><a href="#字节序转换">字节序转换</a></li></ul><li><a href="#实例方法">实例方法</a></li><ul class="lv3"><li><a href="#sock-send-data">sock.send(data)</a></li><li><a href="#sock-recv-max_bytes">sock.recv(max_bytes)</a></li><li><a href="#sock-close">sock.close()</a></li><li><a href="#sock-accept">sock.accept()</a></li><li><a href="#sock-sendto-data-addr-port">sock.sendto(data, addr, port)</a></li><li><a href="#sock-recvfrom-max_bytes">sock.recvfrom(max_bytes)</a></li><li><a href="#sock-set_nonblocking-flag">sock.set_nonblocking(flag)</a></li><li><a href="#sock-peer_addr">sock.peer_addr()</a></li><li><a href="#sock-peer_port">sock.peer_port()</a></li><li><a href="#sock-local_addr">sock.local_addr()</a></li><li><a href="#sock-local_port">sock.local_port()</a></li><li><a href="#sock-error">sock.error()</a></li><li><a href="#sock-shutdown-how">sock.shutdown(how)</a></li><li><a href="#sock-arecv-max_bytes-异步方法">sock.arecv(max_bytes) (异步方法)</a></li><li><a href="#sock-aaccept-异步方法">sock.aaccept() (异步方法)</a></li><li><a href="#sock-set_timeout-ms">sock.set_timeout(ms)</a></li></ul><li><a href="#tcp-客户端">TCP 客户端</a></li><li><a href="#tcp-服务器">TCP 服务器</a></li><li><a href="#udp-通信">UDP 通信</a></li><li><a href="#非阻塞-io">非阻塞 IO</a></li><ul class="lv3"><li><a href="#基本用法">基本用法</a></li></ul><li><a href="#异步-io-arecv-aaccept">异步 IO (arecv / aaccept)</a></li><ul class="lv3"><li><a href="#基本模式">基本模式</a></li><li><a href="#与阻塞-io-的对比">与阻塞 IO 的对比</a></li><li><a href="#大数据分片接收">大数据分片接收</a></li><li><a href="#超时处理">超时处理</a></li></ul><li><a href="#连接信息与错误处理">连接信息与错误处理</a></li><ul class="lv3"><li><a href="#获取连接信息">获取连接信息</a></li><li><a href="#错误处理模式">错误处理模式</a></li><li><a href="#优雅关闭">优雅关闭</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-http-客户端">1. HTTP 客户端</a></li><li><a href="#2-echo-tcp-服务器">2. Echo TCP 服务器</a></li><li><a href="#3-udp-聊天程序">3. UDP 聊天程序</a></li><li><a href="#4-非阻塞多客户端聊天服务器">4. 非阻塞多客户端聊天服务器</a></li><li><a href="#5-dns-解析">5. DNS 解析</a></li></ul><li><a href="#与-asyncs-模块配合使用">与 asyncs 模块配合使用</a></li><ul class="lv3"><li><a href="#并发-http-请求">并发 HTTP 请求</a></li><li><a href="#协程间协作的服务器">协程间协作的服务器</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#完整-api-速查表">完整 API 速查表</a></li><ul class="lv3"><li><a href="#模块方法-sockets-xxx">模块方法（sockets.xxx）</a></li><li><a href="#实例方法-同步-sock-xxx">实例方法 - 同步（sock.xxx）</a></li><li><a href="#异步实例方法-sock-a">异步实例方法（sock.a）</a></li></ul><li><a href="#字节序转换_1">字节序转换</a></li><ul class="lv3"><li><a href="#为什么需要字节序转换">为什么需要字节序转换？</a></li><li><a href="#sockets-htons-host_short">sockets.htons(host_short)</a></li><li><a href="#sockets-htonl-host_long">sockets.htonl(host_long)</a></li><li><a href="#sockets-ntohs-net_short">sockets.ntohs(net_short)</a></li><li><a href="#sockets-ntohl-net_long">sockets.ntohl(net_long)</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="module_regexs.html">← 上一篇</a><a href="module_strings.html">下一篇 →</a></nav>

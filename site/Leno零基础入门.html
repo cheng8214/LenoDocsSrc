@@ -1345,21 +1345,15 @@ e E g G 科学计数与通用 / c 字符 / % 百分号
 <p>每题都给了答案，<strong>但请先自己写</strong>，写完对一下哪里不同。全部答案都实际跑过。</p>
 <p><strong>练习 1</strong>：打印 1 到 10 的平方。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     for 1:10 to i {
         print(i * i)
     }
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 2</strong>：判断一个数是奇数还是偶数（用 <code>%</code>）。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var n = 7
     if n % 2 == 0 {
@@ -1369,13 +1363,9 @@ e E g G 科学计数与通用 / c 字符 / % 百分号
     }
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 3</strong>：求 1 到 100 的和。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var total = 0
     for 1:100 to i {
@@ -1384,38 +1374,26 @@ e E g G 科学计数与通用 / c 字符 / % 百分号
     print(total)     // 5050
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 4</strong>：把数组 <code>[5, 3, 8, 1]</code> 从小到大排序并打印。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var a = [5, 3, 8, 1]
     a.sort()
     print(a)         // [1, 3, 5, 8]
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 5</strong>：统计一段文字里出现了几个逗号。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var text = &quot;苹果,香蕉,橘子,西瓜&quot;
     print(text.count(&quot;,&quot;))   // 3
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 6</strong>：把一句话里的每个词倒序（比如 <code>"我 爱 学 习"</code> → <code>"习 学 爱 我"</code>）。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var words = &quot;我 爱 学 习&quot;.split(&quot; &quot;)
     var result = &quot;&quot;
@@ -1429,13 +1407,9 @@ e E g G 科学计数与通用 / c 字符 / % 百分号
     print(result)     // 习 学 爱 我
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 7</strong>：写一个函数 <code>is_even(int n): bool</code>。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     print(is_even(4))    // true
     print(is_even(7))    // false
@@ -1445,13 +1419,9 @@ func is_even(int n): bool {
     return n % 2 == 0
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 8</strong>：用字典统计每个字出现的次数（<code>"aabbb"</code> → a:2, b:3）。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     var text = &quot;aabbb&quot;
     var counts = {}
@@ -1469,13 +1439,9 @@ func is_even(int n): bool {
     }
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 9</strong>：写一个"学生"结构体，有姓名和三门成绩，并算平均分。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">struct Student {
     string name = &quot;&quot;
     Array[int] scores = [0, 0, 0]     // ← 字段必须写具体类型，不能写 var
@@ -1494,13 +1460,9 @@ main() {
     print(s.name + &quot; 的平均分是 &quot; + s.average())   // 小明 的平均分是 80.0
 }
 </code></pre>
-
 </details>
-
 <p><strong>练习 10</strong>：写一个安全的除法：除数为 0 时返回 null 而不是崩溃。</p>
 <details><summary>答案</summary>
-
-
 <pre><code class="language-leno">main() {
     print(safe_div(10, 2))    // 5.0
     print(safe_div(10, 0))    // null
@@ -1513,9 +1475,7 @@ func safe_div(float a, float b): float? {
     return a / b
 }
 </code></pre>
-
 </details>
-
 <h3 id="接下来写点什么">接下来写点什么</h3>
 <p>从<strong>能用起来的小工具</strong>开始最有效，比如：</p>
 <ul>
@@ -1715,20 +1675,11 @@ main() {
 <td><code>def f(x):</code></td>
 <td>`func f(int x): int {</td>
 </tr>
-<tr>
-<td>return x</td>
-<td></td>
-</tr>
-<tr>
-<td>}` ← 参数和返回值都要写类型</td>
-<td></td>
-</tr>
-<tr>
-<td>整数无限精度</td>
-<td>也无限（会自动变大，不用 <code>int</code> / <code>long</code> 区分）</td>
-</tr>
 </tbody>
 </table>
+<p> return x
+}<code>← 参数和返回值都要写类型 |
+| 整数无限精度 | 也无限（会自动变大，不用</code>int<code>/</code>long` 区分） |</p>
 <h3 id="18-4-三条最值钱的经验">18.4 三条最值钱的经验</h3>
 <ol>
 <li><strong>报错先看行号，再读中文</strong>：Leno 的报错几乎都写好了改法。</li>
@@ -1744,7 +1695,8 @@ main() {
 <li>写并发/线程 → <a href="并发选择指引.html"><code>并发选择指引.md</code></a></li>
 <li>想看看真实项目怎么写 → 仓库的 <code>examples/</code> 目录（800 多个例子，按主题分文件夹）</li>
 </ul>
-</blockquote></main>
+</blockquote>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#1-先跑起来-你的第一个程序">1. 先跑起来：你的第一个程序</a></li><ul class="lv3"><li><a href="#1-1-装什么">1.1 装什么</a></li><li><a href="#1-2-第一个程序">1.2 第一个程序</a></li><li><a href="#1-3-让程序说更多">1.3 让程序说更多</a></li></ul><li><a href="#2-变量-把东西装进盒子">2. 变量：把东西装进盒子</a></li><ul class="lv3"><li><a href="#2-1-var-和-写清楚类型">2.1 var 和"写清楚类型"</a></li><li><a href="#2-2-名字可以改-但类型不能乱换">2.2 名字可以改，但类型不能乱换</a></li><li><a href="#2-3-一次造好几个">2.3 一次造好几个</a></li><li><a href="#2-4-名字的规矩">2.4 名字的规矩</a></li></ul><li><a href="#3-基本类型-数字-文字-真假-空">3. 基本类型：数字、文字、真假、空</a></li><ul class="lv3"><li><a href="#3-1-数字-整数和小数的区别很重要">3.1 数字：整数和小数的区别很重要</a></li><li><a href="#3-2-整数没有上限-会自动变大">3.2 整数没有上限（会自动变大）</a></li><li><a href="#3-3-文字-字符串">3.3 文字（字符串）</a></li><li><a href="#3-4-真假-bool">3.4 真假（bool）</a></li><li><a href="#3-5-空-null">3.5 空（null）</a></li></ul><li><a href="#4-运算-算数-比较-串门">4. 运算：算数、比较、串门</a></li><ul class="lv3"><li><a href="#4-1-算术">4.1 算术</a></li><li><a href="#4-2-比较-结果是-true-false">4.2 比较（结果是 true / false）</a></li><li><a href="#4-3-逻辑-and-or-not">4.3 逻辑：and / or / not</a></li><li><a href="#4-4-把文字接起来">4.4 把文字接起来</a></li><li><a href="#4-5-更方便的拼接-插值-变量">4.5 更方便的拼接：插值 $"...{变量}..."</a></li><li><a href="#4-6-一行内做选择-if-then-else">4.6 一行内做选择：if ... then ... else</a></li></ul><li><a href="#5-让程序做选择-if">5. 让程序做选择：if</a></li><ul class="lv3"><li><a href="#5-1-判断-是不是空">5.1 判断"是不是空"</a></li><li><a href="#5-2-多个条件">5.2 多个条件</a></li></ul><li><a href="#6-让程序重复做事-循环">6. 让程序重复做事：循环</a></li><ul class="lv3"><li><a href="#6-1-for-数数-最常用">6.1 for 数数（最常用）</a></li><li><a href="#6-2-想跳着数-倒着数">6.2 想跳着数 / 倒着数</a></li><li><a href="#6-3-把一排东西挨个过一遍">6.3 把一排东西挨个过一遍</a></li><li><a href="#6-4-while-条件成立就一直做">6.4 while：条件成立就一直做</a></li><li><a href="#6-5-提前退出-跳过这一轮">6.5 提前退出 / 跳过这一轮</a></li></ul><li><a href="#7-一排盒子-数组">7. 一排盒子：数组</a></li><ul class="lv3"><li><a href="#7-1-增-删-改">7.1 增、删、改</a></li><li><a href="#7-2-切片-一次拿一段">7.2 切片：一次拿一段</a></li><li><a href="#7-3-常用操作">7.3 常用操作</a></li><li><a href="#7-4-对每个元素做同一件事-map-filter-reduce">7.4 对每个元素做同一件事：map / filter / reduce</a></li></ul><li><a href="#8-查字典-字典">8. 查字典：字典</a></li><ul class="lv3"><li><a href="#8-1-遍历字典">8.1 遍历字典</a></li><li><a href="#8-2-改-删-数">8.2 改、删、数</a></li></ul><li><a href="#9-字符串的日常操作">9. 字符串的日常操作</a></li><ul class="lv3"><li><a href="#9-1-拼-重复-补位">9.1 拼、重复、补位</a></li><li><a href="#9-2-一条一条看">9.2 一条一条看</a></li><li><a href="#9-3-文字和数字互转">9.3 文字和数字互转</a></li></ul><li><a href="#10-函数-给一段代码起名字">10. 函数：给一段代码起名字</a></li><ul class="lv3"><li><a href="#10-1-不需要返回值">10.1 不需要返回值</a></li><li><a href="#10-2-参数可以有默认值">10.2 参数可以有默认值</a></li><li><a href="#10-3-一次还两个值">10.3 一次还两个值</a></li><li><a href="#10-4-函数也是-可以装进盒子的东西-闭包">10.4 函数也是"可以装进盒子的东西"（闭包）</a></li></ul><li><a href="#11-结构体-把相关的东西捆在一起">11. 结构体：把相关的东西捆在一起</a></li><ul class="lv3"><li><a href="#11-1-让狗会叫-方法">11.1 让狗会叫：方法</a></li><li><a href="#11-2-结构体是-同一个东西-不是复制">11.2 结构体是"同一个东西"，不是复制</a></li></ul><li><a href="#12-枚举-一组固定的选项">12. 枚举：一组固定的选项</a></li><ul class="lv3"><li><a href="#12-1-让选项带上数据-很有用">12.1 让选项带上数据（很有用）</a></li></ul><li><a href="#13-出错怎么办-try-catch-defer">13. 出错怎么办：try / catch / defer</a></li><ul class="lv3"><li><a href="#13-1-主动报错-throw">13.1 主动报错：throw</a></li><li><a href="#13-2-finally-不管成功失败都执行">13.2 finally：不管成功失败都执行</a></li><li><a href="#13-3-defer-离开这一块时再做">13.3 defer：离开这一块时再做</a></li></ul><li><a href="#14-拆成多个文件-模块">14. 拆成多个文件：模块</a></li><li><a href="#15-常用工具箱-几个够用的模块">15. 常用工具箱：几个够用的模块</a></li><ul class="lv3"><li><a href="#15-1-maths-数学">15.1 maths：数学</a></li><li><a href="#15-2-times-时间">15.2 times：时间</a></li><li><a href="#15-3-files-读写文件">15.3 files：读写文件</a></li><li><a href="#15-4-io-输入">15.4 io：输入</a></li><li><a href="#15-5-想查更多">15.5 想查更多</a></li></ul><li><a href="#16-读懂报错-leno-的报错会告诉你怎么改">16. 读懂报错：Leno 的报错会告诉你怎么改</a></li><ul class="lv3"><li><a href="#16-1-报错长什么样">16.1 报错长什么样</a></li><li><a href="#16-2-新手最常遇到的-7-个报错">16.2 新手最常遇到的 7 个报错</a></li><li><a href="#16-3-警告-warning-也要看">16.3 警告（warning）也要看</a></li><li><a href="#16-4-三个通用排查步骤">16.4 三个通用排查步骤</a></li></ul><li><a href="#17-十个练习-带答案">17. 十个练习（带答案）</a></li><ul class="lv3"><li><a href="#接下来写点什么">接下来写点什么</a></li></ul><li><a href="#18-速查表">18. 速查表</a></li><ul class="lv3"><li><a href="#18-1-骨架">18.1 骨架</a></li><li><a href="#18-2-常用语法一张表">18.2 常用语法一张表</a></li><li><a href="#18-3-和-python-的几处主要不同">18.3 和 Python 的几处主要不同</a></li><li><a href="#18-4-三条最值钱的经验">18.4 三条最值钱的经验</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><span></span><a href="安装与第一个项目.html">下一篇 →</a></nav>

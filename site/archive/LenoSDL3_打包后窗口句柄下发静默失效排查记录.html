@@ -107,7 +107,7 @@ build\leno_vm.exe app.lenb
       → lay.passWindowHandle → … → Edit.set_window(hwnd) ✓
 </code></pre>
 <hr>
-<h2 id="四-根因-①-跨模块同名符号在合并单元里串了">四、根因 ①：跨模块<strong>同名符号</strong>在合并单元里串了</h2>
+<h2 id="四-根因-跨模块同名符号在合并单元里串了">四、根因 ①：跨模块<strong>同名符号</strong>在合并单元里串了</h2>
 <p><code>sdl_layout.leno</code> 与 <code>sdl_window.leno</code> 里各有一个 <code>_passWindowHandle</code>：</p>
 <table>
 <thead>
@@ -143,6 +143,8 @@ build\leno_vm.exe app.lenb
 <blockquote>
 <p>加一次探针即确认：把同款包装<strong>另起一个名字</strong>（<code>passWindowHandle2</code>）后，
 两个包装的 print 都正常，而它们内部对 <code>_passWindowHandle</code> 的调用依然无声 ⇒ 名字本身是变量 ✓</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>2026-10-10 复核（治本时做的）</strong>：本条描述的"顶层自由函数被绑到同名方法上"<strong>未能复现</strong> ✗。
 两个最小复现（<code>sdl_layout</code> 那种形状：自由函数 <code>f(a,b)</code> + 另一个模块里的方法 <code>T.f(a)</code>，
 调用点在<strong>同模块的另一个自由函数</strong>体内）在 <code>.leno</code> 直跑与单文件 <code>.lenb</code> 两条路上<strong>行为都正确</strong> ✓；
@@ -152,7 +154,7 @@ build\leno_vm.exe app.lenb
 真·同名 bug（已修 ✓）。</p>
 </blockquote>
 <hr>
-<h2 id="五-根因-②-合并-case-is-a-b-c-的动态派发被-dce-剪成空桩">五、根因 ②：合并 <code>case is A, B, C</code> 的动态派发被 <strong>DCE 剪成空桩</strong></h2>
+<h2 id="五-根因-合并-case-is-a-b-c-的动态派发被-dce-剪成空桩">五、根因 ②：合并 <code>case is A, B, C</code> 的动态派发被 <strong>DCE 剪成空桩</strong></h2>
 <p>句柄下发路径上到处是<strong>合并 case</strong>（这也是它当初的写法）：</p>
 <pre><code class="language-leno">switch c {
     case is HBox, VBox, AnchorBox { c._bind_window(hwnd); return }
@@ -329,7 +331,7 @@ case is AnchorBox { c._bind_window(hwnd); return }
 </blockquote>
 <hr>
 <h2 id="九-编译器侧治本记录-2026-10-10-补做">九、编译器侧治本记录（2026-10-10 补做）</h2>
-<h3 id="9-1-复核-①-未能复现-②-复现并修好">9.1 复核：① 未能复现，② 复现并修好</h3>
+<h3 id="9-1-复核-未能复现-复现并修好">9.1 复核：① 未能复现，② 复现并修好</h3>
 <ul>
 <li><strong>① 未能复现</strong> ✗：照本文§四的形状做了两个最小复现，<code>.leno</code> 直跑与单文件 <code>.lenb</code> 两条路<strong>都正确</strong> ✓；
   且那条路径若真命中，编译器会<strong>当场报"参数过多"</strong>（响的 ✗）而不是静默 ✓ ⇒ 与§四的观测不符 ✓。
@@ -420,11 +422,11 @@ case is AnchorBox { c._bind_window(hwnd); return }
 </tr>
 <tr>
 <td><strong>端到端（决定性）</strong></td>
-<td>把§六的绕过<strong>改回绕前写法</strong>（合并 <code>case is HBox, VBox, AnchorBox</code> ✓）+ 在 <code>Edit.set_window</code> 插探针 ✓<br>⇒ 新编译器的入口 <code>.lenb</code> 里 <code>[probe] Edit.set_window null=false</code> ✓、裁剪清单无 <code>_bind_window</code> ✓<br>⇒ <strong>那个绕过不再需要</strong> ✓</td>
+<td>把§六的绕过<strong>改回绕前写法</strong>（合并 <code>case is HBox, VBox, AnchorBox</code> ✓）+ 在 <code>Edit.set_window</code> 插探针 ✓&lt;br&gt;⇒ 新编译器的入口 <code>.lenb</code> 里 <code>[probe] Edit.set_window null=false</code> ✓、裁剪清单无 <code>_bind_window</code> ✓&lt;br&gt;⇒ <strong>那个绕过不再需要</strong> ✓</td>
 </tr>
 <tr>
 <td><strong>正式回归（改回合并写法之后）</strong></td>
-<td>框架 5 处合并 case 已<strong>正式改回</strong> ✓（sdl_layout 1 处 + sdl_window 5 组 ✓），再跑一次同一探针 ⇒ <code>.lenb</code> 里仍是 <code>null=false</code> ✓、链上零裁剪 ✓；<br>断言套件 <strong>432 passed / 0 failed</strong> ✓；编译电池（框架 5 + 用例 1 + 游戏 2 + 应用 2）<strong>10/10 OK、0 警告</strong> ✓</td>
+<td>框架 5 处合并 case 已<strong>正式改回</strong> ✓（sdl_layout 1 处 + sdl_window 5 组 ✓），再跑一次同一探针 ⇒ <code>.lenb</code> 里仍是 <code>null=false</code> ✓、链上零裁剪 ✓；&lt;br&gt;断言套件 <strong>432 passed / 0 failed</strong> ✓；编译电池（框架 5 + 用例 1 + 游戏 2 + 应用 2）<strong>10/10 OK、0 警告</strong> ✓</td>
 </tr>
 </tbody>
 </table>
@@ -435,8 +437,9 @@ case is AnchorBox { c._bind_window(hwnd); return }
 <li>"同名且<strong>形参个数相同</strong>"的裸调用仍按<strong>方法优先</strong>（兼容 ✓）+ 告警 ✓ —— 口径未改 ✓；
   框架里那条"函数名全模块树唯一"的规矩<strong>可以在个数不同时放宽</strong> ✓（§八 已注 ✓）——
   本仓已据此把当初的绕行<strong>改名改回同名</strong> ✓（<code>sdl_layout._passWindowHandle</code> ✓，改动与复验见 §六 更新 ✓）。</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现象-用户原话">一、现象（用户原话）</a></li><li><a href="#二-快速复现法-打包专属-bug-不必真打包">二、快速复现法（打包专属 bug，不必真打包）</a></li><li><a href="#三-链条与定位-插桩结论">三、链条与定位（插桩结论）</a></li><li><a href="#四-根因-①-跨模块同名符号在合并单元里串了">四、根因 ①：跨模块同名符号在合并单元里串了</a></li><li><a href="#五-根因-②-合并-case-is-a-b-c-的动态派发被-dce-剪成空桩">五、根因 ②：合并 case is A, B, C 的动态派发被 DCE 剪成空桩</a></li><li><a href="#六-本次改动清单-模块侧-已随本记录一起提交">六、本次改动清单（模块侧，已随本记录一起提交）</a></li><li><a href="#七-建议的治本改动-编译器侧-2026-10-10-已做-见-九">七、建议的治本改动（编译器侧 —— 2026-10-10 已做，见 §九）</a></li><li><a href="#八-自查清单-以后再遇到-只有打包才犯-的怪事-照这个顺序走">八、自查清单（以后再遇到"只有打包才犯"的怪事，照这个顺序走）</a></li><ul class="lv3"><li><a href="#附-同类同名撞车清单-本次全模块扫描所得-均只在打包-单文件时暴露">附：同类同名撞车清单（本次全模块扫描所得，均只在打包 / 单文件时暴露）</a></li></ul><li><a href="#九-编译器侧治本记录-2026-10-10-补做">九、编译器侧治本记录（2026-10-10 补做）</a></li><ul class="lv3"><li><a href="#9-1-复核-①-未能复现-②-复现并修好">9.1 复核：① 未能复现，② 复现并修好</a></li><li><a href="#9-2-改了什么-两件-互补">9.2 改了什么（两件，互补）</a></li><li><a href="#9-3-验证-每条都实测">9.3 验证（每条都实测）</a></li><li><a href="#9-4-未做-保留">9.4 未做 / 保留</a></li></ul></ul></aside>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现象-用户原话">一、现象（用户原话）</a></li><li><a href="#二-快速复现法-打包专属-bug-不必真打包">二、快速复现法（打包专属 bug，不必真打包）</a></li><li><a href="#三-链条与定位-插桩结论">三、链条与定位（插桩结论）</a></li><li><a href="#四-根因-跨模块同名符号在合并单元里串了">四、根因 ①：跨模块同名符号在合并单元里串了</a></li><li><a href="#五-根因-合并-case-is-a-b-c-的动态派发被-dce-剪成空桩">五、根因 ②：合并 case is A, B, C 的动态派发被 DCE 剪成空桩</a></li><li><a href="#六-本次改动清单-模块侧-已随本记录一起提交">六、本次改动清单（模块侧，已随本记录一起提交）</a></li><li><a href="#七-建议的治本改动-编译器侧-2026-10-10-已做-见-九">七、建议的治本改动（编译器侧 —— 2026-10-10 已做，见 §九）</a></li><li><a href="#八-自查清单-以后再遇到-只有打包才犯-的怪事-照这个顺序走">八、自查清单（以后再遇到"只有打包才犯"的怪事，照这个顺序走）</a></li><ul class="lv3"><li><a href="#附-同类同名撞车清单-本次全模块扫描所得-均只在打包-单文件时暴露">附：同类同名撞车清单（本次全模块扫描所得，均只在打包 / 单文件时暴露）</a></li></ul><li><a href="#九-编译器侧治本记录-2026-10-10-补做">九、编译器侧治本记录（2026-10-10 补做）</a></li><ul class="lv3"><li><a href="#9-1-复核-未能复现-复现并修好">9.1 复核：① 未能复现，② 复现并修好</a></li><li><a href="#9-2-改了什么-两件-互补">9.2 改了什么（两件，互补）</a></li><li><a href="#9-3-验证-每条都实测">9.3 验证（每条都实测）</a></li><li><a href="#9-4-未做-保留">9.4 未做 / 保留</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">← 上一篇</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

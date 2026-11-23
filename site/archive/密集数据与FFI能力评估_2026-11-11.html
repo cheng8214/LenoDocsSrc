@@ -132,14 +132,12 @@ q[-1] = 1.0                → 0xC0000005 崩溃（静默越界）        → [�
 <p><strong>修复</strong>：新增两条融合指令（追加在 opcode 枚举末尾，序列化版本 bump 到 v3.2.33）</p>
 <ul>
 <li><code>OP_CSTRUCT_ARR_GETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[A] = R[B][R[C]].field(fi)</code></li>
-<li>
-<p><code>OP_CSTRUCT_ARR_SETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[B][R[C]].field(fi) = R[A]</code></p>
-</li>
-<li>
-<p>codegen：<code>codegen_expr.c</code> 的 <code>AST_INDEX</code> 分支（读）、<code>codegen_stmt.c</code> 的 <code>gen_index_assign</code>
+<li><code>OP_CSTRUCT_ARR_SETF A B C</code> + <code>OP_EXTRAARG fi24</code>：<code>R[B][R[C]].field(fi) = R[A]</code></li>
+</ul>
+<ul>
+<li>codegen：<code>codegen_expr.c</code> 的 <code>AST_INDEX</code> 分支（读）、<code>codegen_stmt.c</code> 的 <code>gen_index_assign</code>
   <strong>与 <code>gen_assign</code></strong>（写）三处发射 —— <strong>语句位置的赋值走 <code>gen_assign</code>，只改
-  <code>gen_index_assign</code> 时基准一点没变</strong>（踩过一次，注释已写明）。</p>
-</li>
+  <code>gen_index_assign</code> 时基准一点没变</strong>（踩过一次，注释已写明）。</li>
 <li>VM：<code>12_fields_object.inc</code>。标量字段用 <strong>C 栈上临时 <code>ObjCStruct</code></strong> 直接算地址
   （零 GC 分配）；"数组字段 / 嵌套 cstruct"仍走真视图对象（视图里存了父对象指针，
   父对象必须在 GC 堆上）。<code>f32 / i32 / f64</code> 走 memcpy 快路径，其余类型回落
@@ -370,10 +368,10 @@ defer ffi.free(saved) 之后改 p              → 不报 ✓
 </tr>
 </tbody>
 </table>
-<p><strong><code>Ptr[Ptr[T]]</code>（C 的 <code>char**</code>）现状</strong>：声明、写入、读回、传参、二级指针出参<strong>全部支持</strong>
-（类型树完整：<code>Ptr[Ptr[u8]]</code> 是 40/40/18，见 <code>type_copy</code> 对 PTR 的递归）；
-<code>assert/test_ptr_ptr_charpp.leno</code> 是 argv 风格的完整示例（造 char*[] → 遍历
-<code>ffi.read_string</code> → 显式标注后按字节访问 → <code>func(char**)</code> 形态的出参 → 逐层 free）。</p>
+<p><strong><code>Ptr[Ptr[T]]</code>（C 的 `char</strong><code>）现状**：声明、写入、读回、传参、二级指针出参**全部支持**
+（类型树完整：</code>Ptr[Ptr[u8]]<code>是 40/40/18，见</code>type_copy<code> 对 PTR 的递归）；
+</code>assert/test_ptr_ptr_charpp.leno<code> 是 argv 风格的完整示例（造 char*[] → 遍历
+</code>ffi.read_string<code>→ 显式标注后按字节访问 →</code>func(char**)` 形态的出参 → 逐层 free）。</p>
 <p><strong>元素类型的"第二层"已经补上（§7）</strong>：原先 <code>ObjFFIPointer.element_type</code> 只有一个
 <code>TypeKind</code>（一层），<code>Ptr[Ptr[u8]]</code> 的第二层在运行期丢失 ⇒ 只能靠 codegen 在 5 个
 "值落点"补标注，<code>var x = pp[0]</code> 这种纯推断拿不到。现在元素是复合类型时改发
@@ -522,10 +520,10 @@ u.f               // 1.0   ← 类型双关
 <p>实现要点：
 - <code>CStructFieldInfo</code> 增加 <code>bit_offset</code> / <code>bit_width</code>；
 - <code>OP_CSTRUCT_DEF</code> 的字段表<strong>每字段 +2 字节</strong>（bit_offset / bit_width）⇒ 写端（codegen）、
-  读端（VM handler）、反汇编（debug）、<strong>字节码校验（bytecode_verify 的 scan_cstruct_def）</strong>
-  四处必须同步，<code>LENO_BIN_VERSION</code> v3.2.37 / modcache v52 一并升；
+读端（VM handler）、反汇编（debug）、<strong>字节码校验（bytecode_verify 的 scan_cstruct_def）</strong>
+四处必须同步，<code>LENO_BIN_VERSION</code> v3.2.37 / modcache v52 一并升；
 - <code>OP_CSTRUCT_ARR_SETF</code> 的 f32/i32/f64 <strong>快路径必须绕开位域</strong>（它们按整字段宽度 memcpy，
-  会把同一单元里的相邻位域一起冲掉）。</p>
+会把同一单元里的相邻位域一起冲掉）。</p>
 <p>限制：只支持小端；不支持 union 里的位域；宽度必须 ≤ 声明类型的位数、不能是数组。</p>
 <p><strong>大端护栏</strong>（2026-11-12）：位域按小端打包，大端平台上位序会反、且<strong>没有任何提示</strong>
 ⇒ 语义层在<strong>定义位域时</strong>直接编译报错（<code>LENO_HOST_BIG_ENDIAN</code> 编译期宏，运行时零开销）。
@@ -560,10 +558,11 @@ Ptr[V3]      leaf = mid[0]     // ✅
 请显式标注一次元素类型：<code>Ptr[u8] x = pp[0]</code>」。</p>
 <p>用例钉住：<code>assert/test_ptr_ptr_cstruct.leno</code> 的 ④ 段（断言文案含「深度 ≥3」与
 <code>Ptr[V3] x = ppp[0]</code>，并验证显式标注后深度 3 可读）。</p>
-<h3 id="验收_1">验收</h3>
+<h3 id="验收">验收</h3>
 <p>断言 <strong>615/615</strong>；<code>examples</code> + <code>build/leno_module</code> 全量 <code>--check</code> 只剩 2 个既存无关失败；
-<code>build.bat</code> + <code>build_vm.bat</code> 均已重建（<code>ObjFFIPointer</code> / <code>CStructFieldInfo</code> 布局与字节码格式都变了）。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-实测数据-先看数">0. 实测数据（先看数）</a></li><li><a href="#1-三条建议的判定">1. 三条建议的判定</a></li><li><a href="#2-真正该修的问题-按优先级-全部已修">2. 真正该修的问题（按优先级，全部已修）</a></li><ul class="lv3"><li><a href="#p0-a-i-field-每次分配一个视图对象-已修">P0 — a[i].field 每次分配一个视图对象 ✅ 已修</a></li><li><a href="#p1-ptr-t-不支持-p-i-已修">P1 — Ptr[T] 不支持 p[i] ✅ 已修</a></li><li><a href="#p2-defer-的参数-退出时求值-是静默陷阱-已加提示">P2 — defer 的参数"退出时求值"是静默陷阱 ✅ 已加提示</a></li><li><a href="#p3-buffer-门面-评估后不做">P3 — Buffer 门面（评估后不做）</a></li></ul><li><a href="#3-为什么不做-打包数值数组">3. 为什么不做"打包数值数组"</a></li><li><a href="#4-结论">4. 结论</a></li><li><a href="#5-压测记录-2026-11-11-p0-p1-p2-全量-奇葩用例">5. 压测记录（2026-11-11，P0/P1/P2 全量 + 奇葩用例）</a></li><li><a href="#6-第二轮压测-2026-11-11-奇葩组合">6. 第二轮压测（2026-11-11，奇葩组合）</a></li><li><a href="#7-ptr-t-的元素类型-从-一层-typekind-到-完整规格-2026-11-11">7. Ptr[T] 的元素类型：从"一层 TypeKind"到"完整规格"（2026-11-11）</a></li><ul class="lv3"><li><a href="#问题">问题</a></li><li><a href="#方案">方案</a></li><li><a href="#效果">效果</a></li><li><a href="#改动清单-新增-opcode-的-7-步全走了一遍">改动清单（新增 opcode 的 7 步全走了一遍）</a></li><li><a href="#验收">验收</a></li></ul><li><a href="#8-并发与-cstruct-ptr-的边界-2026-11-12-实测">8. 并发与 cstruct / Ptr 的边界（2026-11-12 实测）</a></li><li><a href="#9-收尾三项-越界策略-union-位域-2026-11-12">9. 收尾三项：越界策略 / union / 位域（2026-11-12）</a></li><ul class="lv3"><li><a href="#9-1-ptr-t-的越界策略-size-已知就查">9.1 Ptr[T] 的越界策略：size 已知就查</a></li><li><a href="#9-2-union-c-布局联合体">9.2 union（C 布局联合体）</a></li><li><a href="#9-3-位域-u32-flags-3">9.3 位域（u32 flags : 3）</a></li><li><a href="#9-4-深度-3-的-ptr-决定-不做-但把报错改成-指路">9.4 深度 ≥3 的 Ptr（决定：不做，但把报错改成"指路"）</a></li><li><a href="#验收_1">验收</a></li></ul></ul></aside>
+<code>build.bat</code> + <code>build_vm.bat</code> 均已重建（<code>ObjFFIPointer</code> / <code>CStructFieldInfo</code> 布局与字节码格式都变了）。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-实测数据-先看数">0. 实测数据（先看数）</a></li><li><a href="#1-三条建议的判定">1. 三条建议的判定</a></li><li><a href="#2-真正该修的问题-按优先级-全部已修">2. 真正该修的问题（按优先级，全部已修）</a></li><ul class="lv3"><li><a href="#p0-a-i-field-每次分配一个视图对象-已修">P0 — a[i.field 每次分配一个视图对象 ✅ 已修</a></li><li><a href="#p1-ptr-t-不支持-p-i-已修">P1 — Ptr[T 不支持 p[i ✅ 已修</a></li><li><a href="#p2-defer-的参数-退出时求值-是静默陷阱-已加提示">P2 — defer 的参数"退出时求值"是静默陷阱 ✅ 已加提示</a></li><li><a href="#p3-buffer-门面-评估后不做">P3 — Buffer 门面（评估后不做）</a></li></ul><li><a href="#3-为什么不做-打包数值数组">3. 为什么不做"打包数值数组"</a></li><li><a href="#4-结论">4. 结论</a></li><li><a href="#5-压测记录-2026-11-11-p0-p1-p2-全量-奇葩用例">5. 压测记录（2026-11-11，P0/P1/P2 全量 + 奇葩用例）</a></li><li><a href="#6-第二轮压测-2026-11-11-奇葩组合">6. 第二轮压测（2026-11-11，奇葩组合）</a></li><li><a href="#7-ptr-t-的元素类型-从-一层-typekind-到-完整规格-2026-11-11">7. Ptr[T 的元素类型：从"一层 TypeKind"到"完整规格"（2026-11-11）</a></li><ul class="lv3"><li><a href="#问题">问题</a></li><li><a href="#方案">方案</a></li><li><a href="#效果">效果</a></li><li><a href="#改动清单-新增-opcode-的-7-步全走了一遍">改动清单（新增 opcode 的 7 步全走了一遍）</a></li><li><a href="#验收">验收</a></li></ul><li><a href="#8-并发与-cstruct-ptr-的边界-2026-11-12-实测">8. 并发与 cstruct / Ptr 的边界（2026-11-12 实测）</a></li><li><a href="#9-收尾三项-越界策略-union-位域-2026-11-12">9. 收尾三项：越界策略 / union / 位域（2026-11-12）</a></li><ul class="lv3"><li><a href="#9-1-ptr-t-的越界策略-size-已知就查">9.1 Ptr[T 的越界策略：size 已知就查</a></li><li><a href="#9-2-union-c-布局联合体">9.2 union（C 布局联合体）</a></li><li><a href="#9-3-位域-u32-flags-3">9.3 位域（u32 flags : 3）</a></li><li><a href="#9-4-深度-3-的-ptr-决定-不做-但把报错改成-指路">9.4 深度 ≥3 的 Ptr（决定：不做，但把报错改成"指路"）</a></li><li><a href="#验收_1">验收</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/字节码融合指令优化_光线追踪对象版.html">← 上一篇</a><a href="../archive/性能_分支与枚举.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

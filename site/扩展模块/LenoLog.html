@@ -97,16 +97,19 @@ log.error(lg, &quot;任务失败：ID=&quot; + _str(42))
 <li><strong>每次写文件都 <code>open("a")/writeln/close</code></strong>：慢一点，但不会因为忘记 <code>close</code> 丢最后几行
   —— 日志场景可靠性优先。要高频写请自己攒批。</li>
 <li><strong>不做自动轮转</strong>（按大小/按天）：需要时用 <code>files</code>/<code>dirs</code> 自己切。</li>
-<li>两个实现坑（都已写进代码注释）：
-  1. 函数不能叫 <code>new</code>（保留字，<code>log.new(...)</code> 直接语法错误）⇒ 叫 <code>create</code>；
-  2. <strong>默认参数必须是字面量</strong>：<code>int level = INFO</code> 会让默认值变成 0（什么都输出），
+<li>两个实现坑（都已写进代码注释）：<ol>
+<li>函数不能叫 <code>new</code>（保留字，<code>log.new(...)</code> 直接语法错误）⇒ 叫 <code>create</code>；</li>
+<li><strong>默认参数必须是字面量</strong>：<code>int level = INFO</code> 会让默认值变成 0（什么都输出），
      必须写 <code>20</code>。</li>
+</ol>
+</li>
 </ul>
 <h2 id="验证">验证</h2>
 <pre><code class="language-bat">build\leno.exe build\leno_module\LenoLog\test\test_log.leno
 </code></pre>
 <p>8 组断言：INFO 级过滤掉 debug / 行格式（时间戳+等级补位+名字）/ 改等级后 debug 可见 /
-同一文件追加不覆盖 / 中文 / 子 logger 名字 / <code>levelName</code> / <code>OFF</code> 全静默。</p></main>
+同一文件追加不覆盖 / 中文 / 子 logger 名字 / <code>levelName</code> / <code>OFF</code> 全静默。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#设计取舍">设计取舍</a></li><li><a href="#验证">验证</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoMarkdown.html">← 上一篇</a><a href="../扩展模块/LenoMusic.html">下一篇 →</a></nav>

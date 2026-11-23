@@ -169,7 +169,7 @@ if exist &lt;用例目录&gt;\.lenocache (echo 编译完成，崩在运行/退�
 </ol>
 <hr>
 <h2 id="四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</h2>
-<h3 id="①-共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</h3>
+<h3 id="共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</h3>
 <pre><code class="language-c">// ❌ 错：两个节点拥有同一对子节点 ⇒ 析构时释放两遍
 Ast* read = ast_new(AST_INDEX, line);
 read-&gt;u.index.obj   = left-&gt;u.index.obj;
@@ -188,13 +188,13 @@ free(left);                             // 壳用普通 free，不递归
 </code></pre>
 <p><strong>规则</strong>：<code>ast_free</code> 对每种节点都会递归释放子节点 ⇒ <strong>任何子节点只能有一个父节点</strong>。
 要"两处用同一个表达式"，只能<strong>深拷贝</strong>（见下），不能共享指针。</p>
-<h3 id="②-就地改-kind">② 就地改 kind</h3>
+<h3 id="就地改-kind">② 就地改 kind</h3>
 <pre><code class="language-c">ast-&gt;kind = AST_INDEX_ASSIGN;    // ⚠ union 里还留着 AST_ASSIGN 的旧字节
 </code></pre>
 <p>实测后果：新加的 <code>op</code> 字段读到旧字节的非零值，被误判成"复合赋值"，
 <strong>18 个测试同时挂</strong>（值全错但不崩，更难查）。</p>
 <p><strong>规则</strong>：改 kind 后<strong>逐个字段显式赋值</strong>，不要依赖"其他字段是 0"。</p>
-<h3 id="③-固定数组无上限">③ 固定数组无上限</h3>
+<h3 id="固定数组无上限">③ 固定数组无上限</h3>
 <pre><code class="language-c">// 原来：只判了 r，没判 freetop —— free_regs[] 只有 MAX_REG(256) 个槽
 gen-&gt;free_regs[gen-&gt;freetop++] = r;
 </code></pre>
@@ -234,12 +234,11 @@ gen-&gt;free_regs[gen-&gt;freetop++] = r;
 不是 Leno 的问题。<strong>Linux（glibc + gcc/clang）上 <code>-fsanitize=address</code> 完全可用</strong>，
 断言套件与模块测试能跑出 0 泄漏 —— 实测已用它抓到过两类真问题：
 - 箭头函数投机解析每次失败漏 120B <code>TypeInfo</code>（<code>parse_type</code> 成功但下一 token 不是标识符时
-  直接 <code>goto fail</code>，没释放刚建的类型）；
+直接 <code>goto fail</code>，没释放刚建的类型）；
 - <code>x =&gt; { … }</code> 错误分支已分配的 <code>params/types</code> 没释放。</p>
 <p><strong>所以内存问题的最佳路径是：Windows 写代码 → Linux 跑 ASAN。</strong>
 本机的 gdb 只用于"已经崩了"的现场；ASAN 用于"还没崩但已经漏了"的预防。
 具体跑法（Linux）：</p>
-</blockquote>
 <pre><code class="language-bash"># 一次性构建带 ASan 的编译器（不要覆盖 build/leno.exe）
 gcc -std=c11 -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer \
     src/*.c src/*/*.c src/*/*/*.c -o build/leno_asan.exe -lm -lpthread
@@ -248,7 +247,6 @@ gcc -std=c11 -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer \
 ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
   ./build/leno_asan.exe assert/run_tests.leno ./build/leno_asan.exe assert
 </code></pre>
-<blockquote>
 <p>看到一个 <code>SUMMARY: AddressSanitizer: … leaked in N allocation(s)</code> 就说明有漏，
 堆栈里的 <code>#0 … #1 …</code> 直接指到分配点。（源文件清单按实际构建脚本调整。）</p>
 </blockquote>
@@ -272,8 +270,9 @@ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
 <code>-O0 -g</code> 编调试版，gdb <code>bt</code> 拿行号；
 看到 <code>0xFEEEFEEE</code> ⇒ 双重释放 ⇒ 找"谁还拥有这块内存"；
 修复后跑最小复现 + 单测 + 全量。</p>
-</blockquote></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-先认症状-这些是崩溃-不是报错">一、先认症状：这些是崩溃，不是报错</a></li><li><a href="#二-最重要的教训-环境不同-是假象">二、最重要的教训：「环境不同」是假象</a></li><li><a href="#三-定位流程-按顺序做-别跳">三、定位流程（按顺序做，别跳）</a></li><ul class="lv3"><li><a href="#第-1-步-判断崩在编译期还是运行期">第 1 步：判断崩在编译期还是运行期</a></li><li><a href="#第-2-步-二分到最小用例">第 2 步：二分到最小用例</a></li><li><a href="#第-3-步-编调试版-gdb-核心一步">第 3 步：编调试版 + gdb（核心一步）</a></li><li><a href="#第-4-步-认-毒值">第 4 步：认"毒值"</a></li><li><a href="#第-5-步-顺着栈找-第二个所有者">第 5 步：顺着栈找"第二个所有者"</a></li></ul><li><a href="#四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</a></li><ul class="lv3"><li><a href="#①-共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</a></li><li><a href="#②-就地改-kind">② 就地改 kind</a></li><li><a href="#③-固定数组无上限">③ 固定数组无上限</a></li></ul><li><a href="#五-工具可用性-本机实测">五、工具可用性（本机实测）</a></li><li><a href="#六-修复后的验证清单">六、修复后的验证清单</a></li><li><a href="#七-一句话速查">七、一句话速查</a></li></ul></aside>
+</blockquote>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-先认症状-这些是崩溃-不是报错">一、先认症状：这些是崩溃，不是报错</a></li><li><a href="#二-最重要的教训-环境不同-是假象">二、最重要的教训：「环境不同」是假象</a></li><li><a href="#三-定位流程-按顺序做-别跳">三、定位流程（按顺序做，别跳）</a></li><ul class="lv3"><li><a href="#第-1-步-判断崩在编译期还是运行期">第 1 步：判断崩在编译期还是运行期</a></li><li><a href="#第-2-步-二分到最小用例">第 2 步：二分到最小用例</a></li><li><a href="#第-3-步-编调试版-gdb-核心一步">第 3 步：编调试版 + gdb（核心一步）</a></li><li><a href="#第-4-步-认-毒值">第 4 步：认"毒值"</a></li><li><a href="#第-5-步-顺着栈找-第二个所有者">第 5 步：顺着栈找"第二个所有者"</a></li></ul><li><a href="#四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</a></li><ul class="lv3"><li><a href="#共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</a></li><li><a href="#就地改-kind">② 就地改 kind</a></li><li><a href="#固定数组无上限">③ 固定数组无上限</a></li></ul><li><a href="#五-工具可用性-本机实测">五、工具可用性（本机实测）</a></li><li><a href="#六-修复后的验证清单">六、修复后的验证清单</a></li><li><a href="#七-一句话速查">七、一句话速查</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="窥孔优化复盘.html">← 上一篇</a><a href="语法改进建议_2026-11-02.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

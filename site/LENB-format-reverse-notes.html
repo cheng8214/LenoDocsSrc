@@ -45,8 +45,10 @@
 </code></pre>
 <ul>
 <li>密钥表位于 <code>.rdata</code> VA <code>0x1400D483B</code>，内容：<code>4c 45 4e 4f 00 42 4e 45 4c 00 03 02 1c ...</code> = <code>"LENO"</code> + <code>"BNEL"</code> + 版本常量。</li>
-<li>解码原语 VA <code>0x1400B3A40</code>：读 4B 大端长度 → malloc(len+1) → memcpy → 首字节 xor 0x4c → i&gt;=1 循环 xor key[i &amp; 3]。</li>
+<li>解码原语 VA <code>0x1400B3A40</code>：读 4B 大端长度 → malloc(len+1) → memcpy → 首字节 xor 0x4c → i&gt;=1 循环 xor key[i &amp; 3]。<ul>
 <li>其调用 <code>0x1400B3A10</code> 是 4 字节大端读原语（bswap）。</li>
+</ul>
+</li>
 <li>验证样本（blob 中）：<code>3c 37 27 21 38</code> → <code>print</code>；<code>2d 36 3d 2a 3e 31</code> → <code>assert</code>。</li>
 </ul>
 <h2 id="3-标题记录定位与替换示例">3. 标题记录定位与替换示例</h2>
@@ -70,11 +72,13 @@
 <h2 id="5-运行时内存布局-单次实例-地址随-aslr-变化">5. 运行时内存布局（单次实例，地址随 ASLR 变化）</h2>
 <ul>
 <li>内存 LENB 副本 = 磁盘 blob（逐字节一致）。</li>
-<li>内存解码表记录格式：<code>[4B hash][00][2B id LE][1B type][UTF-8 payload]</code>，32 字节对齐。</li>
+<li>内存解码表记录格式：<code>[4B hash][00][2B id LE][1B type][UTF-8 payload]</code>，32 字节对齐。<ul>
 <li><code>de 83 a7 49 00 67 03 97</code> → "Spectrum"+"乐"</li>
 <li><code>d8 83 a1 49 00 68 03 94</code> → "ProgressBar"+"失败："</li>
 <li><code>da 83 a3 49 00 69 03 8e</code> → "Aria — LenoSDL3"（标题 id=0x0369, type=0x8e）</li>
 <li><code>d4 83 ad 49 00 6a 03 96</code> → "ARIA_FONT"</li>
+</ul>
+</li>
 <li>id 连续 <code>0x0367–0x036c</code>；4B hash <strong>不是</strong> FNV-1a（第 2 字节固定 0x83、第 4 字节固定 0x49），算法未确定。</li>
 <li>其它 type（0x97/0x94/0x96/0x90）语义不明。</li>
 </ul>
@@ -103,7 +107,8 @@
 <li>原文件：<code>D:\ceshi\aria.exe</code>（保留），备份 <code>aria_orig_backup.exe</code></li>
 <li>已交付副本：<code>aria_patch_tailmagic.exe</code> / <code>version</code> / <code>midbyte</code> / <code>headmagic</code> / <code>bypassver</code> / <code>skipver</code> / <code>badver_skip</code> / <code>blobdata</code> / <code>blobdata_only1</code> / <code>bloblen</code> / <strong><code>aria_patch_title.exe</code></strong>（最新，标题=<code>破解版LenoSDL3</code>）</li>
 <li>内存 dump：<code>D:/ceshi/_mem_lenb_full_0.bin</code>（1,306,624 字节）、<code>D:/ceshi/_mem_table1.bin</code>（104,576 字节，解码表）</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-总体结构">1. 总体结构</a></li><li><a href="#2-字符串编码算法-核心结论">2. 字符串编码算法（核心结论）</a></li><li><a href="#3-标题记录定位与替换示例">3. 标题记录定位与替换示例</a></li><li><a href="#4-修改约束-重要">4. 修改约束（重要）</a></li><li><a href="#5-运行时内存布局-单次实例-地址随-aslr-变化">5. 运行时内存布局（单次实例，地址随 ASLR 变化）</a></li><li><a href="#6-lenb-加载器-解析函数-va-供后续分析">6. LENB 加载器 / 解析函数（VA，供后续分析）</a></li><li><a href="#7-反调试环境注意">7. 反调试环境注意</a></li><li><a href="#8-踩坑记录-不要重走">8. 踩坑记录（不要重走）</a></li><li><a href="#9-相关产物">9. 相关产物</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/JIT闭包与upvalue设计_R5.html">← 上一篇</a><a href="archive/leno对比.html">下一篇 →</a></nav>

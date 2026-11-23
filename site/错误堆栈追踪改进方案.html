@@ -29,11 +29,11 @@
 <blockquote>
 <p>⚠ <strong>局部过时（2026-10-02 注）—— 正文其余部分仍属现行，只有下面三点请按现状重读：</strong>
 ① §「内联优化对调用栈的影响」说"Leno 编译器实现了函数内联优化（<code>codegen_inline.c</code>）"——
-   该文件<strong>已随寄存器式改造删除</strong>（<code>0f0cf52</code>，621 行）且<strong>尚未移植</strong> ⇒ "被内联的函数不会出现在
-   调用栈中"这条<strong>当前不成立</strong>（所有脚本函数调用都是真帧，调用栈里都能看到）；
+该文件<strong>已随寄存器式改造删除</strong>（<code>0f0cf52</code>，621 行）且<strong>尚未移植</strong> ⇒ "被内联的函数不会出现在
+调用栈中"这条<strong>当前不成立</strong>（所有脚本函数调用都是真帧，调用栈里都能看到）；
 ② 文中 <code>LENO_BIN_VERSION</code> v3.2.10 / v3.2.11 是当时值，现为 <strong>v3.2.12</strong>（<code>src/include/leno_serialize.h:157</code>）；
 ③ 文中断言数「412/0」是当时值 —— 本仓库<strong>不再在文档里钉断言总数</strong>，一律以实跑
-   <code>.\build\leno.exe assert\run_tests.leno build\leno.exe assert</code> 为准。</p>
+<code>.\build\leno.exe assert\run_tests.leno build\leno.exe assert</code> 为准。</p>
 </blockquote>
 <h2 id="现状分析">现状分析</h2>
 <p>Leno 的异常系统<strong>已有</strong>基础的调用链支持：</p>
@@ -48,13 +48,38 @@
     print(e.stack)   // [&quot;&lt;main&gt;&quot;, &quot;inner&quot;, &quot;middle&quot;, &quot;outer&quot;]
 }
 </code></pre>
-<p>异常对象是一个 Dict，包含：
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| <code>msg</code> | string | 错误消息 |
-| <code>line</code> | int | 错误发生的行号 |
-| <code>file</code> | string | 错误发生的文件名 |
-| <code>stack</code> | array | 调用栈（函数名数组） |</p>
+<p>异常对象是一个 Dict，包含：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>msg</code></td>
+<td>string</td>
+<td>错误消息</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td>int</td>
+<td>错误发生的行号</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>string</td>
+<td>错误发生的文件名</td>
+</tr>
+<tr>
+<td><code>stack</code></td>
+<td>array</td>
+<td>调用栈（函数名数组）</td>
+</tr>
+</tbody>
+</table>
 <h3 id="存在的差距">存在的差距</h3>
 <table>
 <thead>
@@ -342,18 +367,16 @@ main() {
 <h2 id="实际实现说明">实际实现说明</h2>
 <h3 id="已实现的改进">已实现的改进</h3>
 <ol>
-<li>
-<p><strong><code>e.stack</code> 格式升级</strong>：从纯函数名数组 <code>["inner", "middle", "&lt;main&gt;"]</code> 变为 <code>"func (file:line)"</code> 格式 <code>["inner (script.leno:3)", "middle (script.leno:6)", "&lt;main&gt; (script.leno:10)"]</code>。仍是字符串数组，不影响遍历。</p>
-</li>
-<li>
-<p><strong>未捕获异常打印调用栈</strong>：所有未捕获异常路径（<code>throw_runtime_error</code>、<code>OP_THROW</code>、<code>OP_END_TRY</code>）现在都会通过 <code>print_unhandled_exception()</code> 打印完整的调用栈到 stderr。</p>
-</li>
-<li>
-<p><strong><code>throw</code> 字符串向后兼容</strong>：<code>throw "string"</code> 保持原行为，<code>catch e</code> 拿到的 <code>e</code> 仍然是字符串本身。但未捕获时也会实时构建并打印调用栈。</p>
-</li>
-<li>
-<p><strong>未捕获异常消息提取</strong>：当异常是 Dict 时，从 <code>e.msg</code> 提取消息字符串传给 <code>runtime_error</code>，避免打印整个 Dict 表示。</p>
-</li>
+<li><strong><code>e.stack</code> 格式升级</strong>：从纯函数名数组 <code>["inner", "middle", "&lt;main&gt;"]</code> 变为 <code>"func (file:line)"</code> 格式 <code>["inner (script.leno:3)", "middle (script.leno:6)", "&lt;main&gt; (script.leno:10)"]</code>。仍是字符串数组，不影响遍历。</li>
+</ol>
+<ol>
+<li><strong>未捕获异常打印调用栈</strong>：所有未捕获异常路径（<code>throw_runtime_error</code>、<code>OP_THROW</code>、<code>OP_END_TRY</code>）现在都会通过 <code>print_unhandled_exception()</code> 打印完整的调用栈到 stderr。</li>
+</ol>
+<ol>
+<li><strong><code>throw</code> 字符串向后兼容</strong>：<code>throw "string"</code> 保持原行为，<code>catch e</code> 拿到的 <code>e</code> 仍然是字符串本身。但未捕获时也会实时构建并打印调用栈。</li>
+</ol>
+<ol>
+<li><strong>未捕获异常消息提取</strong>：当异常是 Dict 时，从 <code>e.msg</code> 提取消息字符串传给 <code>runtime_error</code>，避免打印整个 Dict 表示。</li>
 </ol>
 <h3 id="内联优化对调用栈的影响">内联优化对调用栈的影响</h3>
 <p>Leno 编译器实现了函数内联优化（<code>codegen_inline.c</code>），满足以下条件的函数会被内联到调用点：
@@ -399,7 +422,7 @@ main() {
 <p><strong>改法</strong>（<code>src/vm/vminc/vm_exception.inc</code>）：</p>
 <ol>
 <li><code>throw_runtime_error()</code> 在 <code>msg</code> 里<strong>没有</strong> <code>[位置]</code> 时，补
-   <code>[位置] file:line (func: 名)</code> + <code>[调用栈] …</code>（有则原样保留 ⇒ 富文案不会被二次追加）。
+   <code>  [位置] file:line (func: 名)</code> + <code>  [调用栈] …</code>（有则原样保留 ⇒ 富文案不会被二次追加）。
    行号取调用方传入的 <code>line</code>（即 <code>GET_CURRENT_LINE()</code>），保证与 <code>e.line</code> 同源。
    覆盖：原生模块错误 + 所有裸 <code>throw_runtime_error("…")</code> 的操作码错误。</li>
 <li><strong>行号 off-by-one 修复</strong>：<code>get_current_context()</code> / <code>append_stack_trace()</code> /
@@ -562,7 +585,7 @@ JS/Python 的语义是：<code>break</code>/<code>continue</code> <strong>覆盖
 <p>如果需要完整的调用栈信息用于调试，可以：
 - 在函数中添加 <code>try-catch</code>（会使函数不被内联）
 - 或使用 <code>--no-inline</code> 编译选项（如已实现）</p>
-<h3 id="涉及文件_1">涉及文件</h3>
+<h3 id="涉及文件">涉及文件</h3>
 <table>
 <thead>
 <tr>
@@ -586,7 +609,8 @@ JS/Python 的语义是：<code>break</code>/<code>continue</code> <strong>覆盖
 <li><code>build_stack_trace()</code> 只在异常发生时调用，不在热路径上</li>
 <li><code>print_unhandled_exception()</code> 只在未捕获异常时调用</li>
 <li>正常执行流程零开销</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#现状分析">现状分析</a></li><ul class="lv3"><li><a href="#已有能力">已有能力</a></li><li><a href="#存在的差距">存在的差距</a></li></ul><li><a href="#改进目标">改进目标</a></li><ul class="lv3"><li><a href="#1-丰富-e-stack-内容-每帧包含-函数名-文件-行号">1. 丰富 e.stack 内容：每帧包含 函数名 (文件:行号)</a></li><li><a href="#2-throw-语句也捕获调用栈">2. throw 语句也捕获调用栈</a></li><li><a href="#3-未捕获异常打印完整调用栈">3. 未捕获异常打印完整调用栈</a></li></ul><li><a href="#实现方案">实现方案</a></li><ul class="lv3"><li><a href="#涉及文件">涉及文件</a></li><li><a href="#3-1-新增-build_stack_trace-辅助函数">3.1 新增 build_stack_trace() 辅助函数</a></li><li><a href="#3-2-改进-throw_runtime_error">3.2 改进 throw_runtime_error()</a></li><li><a href="#3-3-未捕获异常打印调用栈">3.3 未捕获异常打印调用栈</a></li><li><a href="#3-4-op_throw-包装字符串异常">3.4 OP_THROW 包装字符串异常</a></li><li><a href="#3-5-未捕获异常在-op_throw-中也打印调用栈">3.5 未捕获异常在 OP_THROW 中也打印调用栈</a></li></ul><li><a href="#使用示例">使用示例</a></li><ul class="lv3"><li><a href="#改进后的效果">改进后的效果</a></li><li><a href="#throw-字符串也支持-stack">throw 字符串也支持 stack</a></li><li><a href="#未捕获-throw-也打印调用栈">未捕获 throw 也打印调用栈</a></li></ul><li><a href="#实际实现说明">实际实现说明</a></li><ul class="lv3"><li><a href="#已实现的改进">已实现的改进</a></li><li><a href="#内联优化对调用栈的影响">内联优化对调用栈的影响</a></li></ul><li><a href="#2026-10-02-更新-报错文案统一-引擎错误一律自带位置">2026-10-02 更新：报错文案统一（引擎错误一律自带位置）</a></li><ul class="lv3"><li><a href="#第二批-同日-异常跨边界不再被-重造">第二批（同日）：异常跨边界不再被"重造"</a></li><li><a href="#第三批-同日-回调调用点不再传-line-0">第三批（同日）：回调调用点不再传 line = 0</a></li><li><a href="#第四批-同日-宿主回调边界的异常展开下界-f6-修崩溃">第四批（同日）：宿主回调边界的异常展开下界（f6，修崩溃）</a></li><li><a href="#第五批-同日-try-finally-无-catch-静默吞掉异常-f7">第五批（同日）：try { … } finally { … }（无 catch）静默吞掉异常（f7）</a></li><li><a href="#涉及文件_1">涉及文件</a></li><li><a href="#性能影响">性能影响</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="寄存式与栈式的差异清单.html">← 上一篇</a><a href="LenoSDL3_Card卡片控件设计文档.html">下一篇 →</a></nav>

@@ -103,14 +103,16 @@
 <ul>
 <li><strong>根因</strong>：<code>src/vm/vm.c</code> 的 <code>vm_as_cast()</code> switch <strong>没有 <code>TYPE_FUNCTION</code> 分支</strong> ⇒ 落 default ⇒
   <code>matches = 0</code> ⇒ 返回 null（静默）。语义层的"as 恒失败"清单里也没有函数类型，所以编译期没拦。</li>
-<li><strong>修法（两步）</strong>：
-  1. <code>vm_as_cast</code> 补 <code>TYPE_FUNCTION</code>：值确实是闭包 / 原生函数 ⇒ <strong>透传</strong>（不复制、保留 upvalue）；
-  2. <code>emit_type_op</code>（<code>src/codegen/codegen_expr.c</code>）对函数类型把 C 操作数改记<strong>形参个数</strong>
+<li><strong>修法（两步）</strong>：<ol>
+<li><code>vm_as_cast</code> 补 <code>TYPE_FUNCTION</code>：值确实是闭包 / 原生函数 ⇒ <strong>透传</strong>（不复制、保留 upvalue）；</li>
+<li><code>emit_type_op</code>（<code>src/codegen/codegen_expr.c</code>）对函数类型把 C 操作数改记<strong>形参个数</strong>
      （255 = 裸 <code>func</code>，不检查）⇒ <code>vm_as_cast</code> 比 <code>arity</code>，不符 ⇒ null；
      <code>OP_AS_CAST</code> 处理器（<code>src/vm/vminc/run/13_async_ffi.inc</code>）在"值本来是函数、但签名不符"时
      打一条<strong>带行号</strong>的警告：
      <code>警告: as func(...) 签名不符（第 N 行）：闭包有 1 个参数，目标签名有 0 个 ⇒ 结果是 null</code></li>
-<li><strong>第二阶段（2026-11-17 同日补完）：形参类型也能校验了</strong></li>
+</ol>
+</li>
+<li><strong>第二阶段（2026-11-17 同日补完）：形参类型也能校验了</strong><ul>
 <li>类型规格新增 <code>TYPE_FUNCTION</code> 变体：<code>param_count(u8) + spec(形参)* + spec(返回)</code>，
     255 = 不校验形参（裸 <code>func</code>）。发射端 <code>codegen_expr.c</code> 的 <code>emit_type_spec</code>、
     执行端 <code>vm.c</code> 的 <code>type_spec_size_impl</code> / <code>type_spec_match</code>、校验器
@@ -126,6 +128,8 @@
     <code>警告: as func(int):void 失败（第 62 行）：实际拿到 func(string)（形参不符）⇒ 结果是 null</code></li>
 <li><strong>格式变了</strong>：<code>LENO_BIN_VERSION</code> v3.2.42 → <strong>v3.2.43</strong>、<code>LENO_MODCACHE_VERSION</code> v57 → <strong>v58</strong>
     （变长尾随字节，旧 VM 会把签名当指令）⇒ 旧缓存整体失效重编，<strong>打包产物要重打</strong>。</li>
+</ul>
+</li>
 <li><strong>仍未做</strong>：返回类型与复合形参的精确比对（需要把完整类型树也存进 <code>ObjFunction</code>，
   且 <code>param_types</code> 目前只记 kind）。</li>
 <li><strong>回归</strong>：<code>assert/test_as_func_cast.leno</code>（4 条）。断言套件 <strong>642 / 0</strong>；模块测试 <strong>52 / 0</strong>。</li>
@@ -191,9 +195,11 @@ if onPick != null { onPick(out) }     // 恒 false ⇒ 永远不会调用
 所以一直没被报上来 —— 属"沉默死代码"。</p>
 <h3 id="修法-建议-按成本从低到高">修法（建议，按成本从低到高）</h3>
 <ol>
-<li><strong>运行时</strong>：<code>as</code> 到函数类型时<strong>永不产出 null</strong>
-   - 签名匹配 ⇒ <strong>透传原闭包</strong>（保留捕获环境，别复制）；
-   - 签名不匹配 ⇒ 抛<strong>可捕获</strong>错误并带行号：<code>期望 func(int):void，实际 func():void</code>。</li>
+<li><strong>运行时</strong>：<code>as</code> 到函数类型时<strong>永不产出 null</strong><ul>
+<li>签名匹配 ⇒ <strong>透传原闭包</strong>（保留捕获环境，别复制）；</li>
+<li>签名不匹配 ⇒ 抛<strong>可捕获</strong>错误并带行号：<code>期望 func(int):void，实际 func():void</code>。</li>
+</ul>
+</li>
 <li><strong>编译期</strong>：源为 <code>any</code>、目标为函数类型时，生成 <code>rt_as_fn(v, sig_hash, line)</code>，而不是裸转换
    （<code>sig_hash</code> 可由形参个数 + 各参数类型 hash 得到，闭包本身已带 arity 信息）。</li>
 <li><strong>不要</strong>"直接禁掉 <code>any as func(...)</code>"：那只是把成本转嫁给所有使用者（每个回调都得写具名形参）。</li>
@@ -343,10 +349,12 @@ border: true, border_color: 0x00000088
 但键类型后缀机制已存在（<code>"spacing:num"</code>、<code>":float"</code>、<code>":bool"</code>）⇒ 照抄一个 <code>:color</code> 即可。</p>
 <h3 id="分期-阶段一先堵坑-不动语义">分期（阶段一先堵坑，不动语义）</h3>
 <ul>
-<li><strong>阶段一</strong>：
-  1. @optkeys 增加 <code>:color</code> 键类型 + <code>set()</code> 侧校验；
-  2. 新增告警：<strong>Color 类型的形参 / 字段被裸 int 字面量赋值</strong>时提示（<code>0x00000088</code> 会被点名）。
+<li><strong>阶段一</strong>：<ol>
+<li>@optkeys 增加 <code>:color</code> 键类型 + <code>set()</code> 侧校验；</li>
+<li>新增告警：<strong>Color 类型的形参 / 字段被裸 int 字面量赋值</strong>时提示（<code>0x00000088</code> 会被点名）。
      只对字面量生效 ⇒ 零误伤存量代码。</li>
+</ol>
+</li>
 <li><strong>阶段二</strong>：<code>Color</code> 从 alias 变 distinct type，<code>#RRGGBBAA</code> 字面量直接产出 Color，
   与 int 之间要显式 <code>as</code>（成本：alias 语义、<code>#</code> 字面量、@optkeys 键类型三处一起动）。</li>
 </ul>
@@ -378,7 +386,7 @@ border: true, border_color: 0x00000088
 <code>:color</code> 键 <strong>154 个</strong>；用例 <code>assert/test_optkeys_color.leno</code>（5 例）。</p>
 <hr>
 <h2 id="f4-requestredraw-是全局单标志">F4 <code>requestRedraw()</code> 是全局单标志 ✅</h2>
-<h3 id="已修-2026-11-17_1">已修（2026-11-17）</h3>
+<h3 id="已修-2026-11-17">已修（2026-11-17）</h3>
 <ul>
 <li><code>sdl_core.leno</code> 新增 <code>requestRedrawWindow(wid)</code> / <code>hasWindowRedraw()</code> / <code>takeWindowRedraw(wid)</code> /
   <code>clearWindowRedraws()</code>；<code>requestRedraw()</code> 保持原义 = <strong>所有窗口脏</strong>（控件内部没有窗口上下文）。</li>
@@ -507,15 +515,15 @@ border: true, border_color: 0x00000088
 </table>
 <p>⚠ 三个坑（都是实测踩到的，别再踩）：
 0. <strong><code>_pendingFull</code> 必须声明在 <code>while</code> 外面</strong>（2026-11-17 复审修）。上一版把它写在循环体里
-   ⇒ 每轮开头重置成 false，而帧末 <code>if consumeRedrawRequest() { _pendingFull = true }</code> 写的是
-   <strong>同一个会被重置的局部量</strong> ⇒ "跨轮次保留"从未生效。真实后果（静默丢一次重绘）：
-   渲染中应用回调调了 <code>requestRedraw()</code>（全局）⇒ 帧末被 consume ⇒ 下一轮若恰好还有别的窗口
-   的 <code>requestRedrawWindow</code> 挂着，<code>hasWindowRedraw()</code> 非空使"兜底全脏"不触发 ⇒ 只画了那个窗口，
-   <strong>这次全局重绘永久丢失</strong>（不报错、不闪，就是那一帧该更新没更新 ✗）
+⇒ 每轮开头重置成 false，而帧末 <code>if consumeRedrawRequest() { _pendingFull = true }</code> 写的是
+<strong>同一个会被重置的局部量</strong> ⇒ "跨轮次保留"从未生效。真实后果（静默丢一次重绘）：
+渲染中应用回调调了 <code>requestRedraw()</code>（全局）⇒ 帧末被 consume ⇒ 下一轮若恰好还有别的窗口
+的 <code>requestRedrawWindow</code> 挂着，<code>hasWindowRedraw()</code> 非空使"兜底全脏"不触发 ⇒ 只画了那个窗口，
+<strong>这次全局重绘永久丢失</strong>（不报错、不闪，就是那一帧该更新没更新 ✗）
 1. <code>_fullFrame</code> 初值取 <code>_needRedraw</code> 会把"<strong>欠一帧</strong>"和"<strong>全脏</strong>"混为一谈 —— 节流攒下的 carry
-   会让下一帧全脏，分窗收益漏回去。真正的兜底是"欠一帧且<strong>没有任何窗口被点名</strong>才全画"。
+会让下一帧全脏，分窗收益漏回去。真正的兜底是"欠一帧且<strong>没有任何窗口被点名</strong>才全画"。
 2. <code>consumeRedrawRequest()</code> 提前消费 = 全局请求被静默吞掉（标志清了、帧没画）⇒ 表现为
-   "某个窗口再也不重绘"，而且不报错。必须等真出帧再消费。</p>
+"某个窗口再也不重绘"，而且不报错。必须等真出帧再消费。</p>
 <p><strong>回归用例</strong>：<code>examples/基础示例/窗口管理/test_mark_attribution.leno</code>（两窗口，300ms 窗口）
 + <code>test_timer_redraw.leno</code>（稳态 A=1 / B=25）。
 ⚠ 两条都<strong>只能在真实视频驱动下跑</strong>：<code>SDL_VIDEODRIVER=dummy</code> 时 SDL 会持续吐窗口事件
@@ -612,10 +620,10 @@ headless / CI 直接 <code>[SKIP]</code>，别让它留下"看起来是回归"�
 <p>⇒ <strong>−10.4%/帧</strong>；批次数几乎一致（输出等价），Aria 首页截图核对方形卡、文字、滚动位置全对 ✓。</p>
 <p><strong>下一步（还没做）</strong>：
 - <strong>脏控件</strong>：真正省掉"可见但没变化"的绘制（现在可见区域仍每帧全画）。要先定"哪些控件可缓存"
-  （纯文本/图片类可，动画/交互态不可），风险比裁剪高。
+（纯文本/图片类可，动画/交互态不可），风险比裁剪高。
 - <strong>每帧 relayout</strong>：HBox/VBox/GridLayout 的 <code>process()</code> 与 <code>render()</code> 都会调 <code>relayout()</code>，
-  一帧里同一容器可能算好几遍（纯 CPU、不涉及绘制）⇒ 用"本帧已排过"标记（<code>frameId</code> 比对）可省，
-  改动小、但要确认"帧内改尺寸"的路径会失效缓存。</p>
+一帧里同一容器可能算好几遍（纯 CPU、不涉及绘制）⇒ 用"本帧已排过"标记（<code>frameId</code> 比对）可省，
+改动小、但要确认"帧内改尺寸"的路径会失效缓存。</p>
 <h3 id="2026-11-17-四-事件循环末尾那-5ms-补睡-真正的-每帧浪费">✅ 2026-11-17（四）：事件循环末尾那 5ms 补睡 —— 真正的"每帧浪费"</h3>
 <p><strong>怎么找到的</strong>：给 run 循环加分段计时（<code>[SDL-BENCH]</code> 现在会打
 <code>draw_us_avg / present_us_avg / cb_us_avg / ev_us / begin_us / timer_us / cursor_us / wait_us / body_us</code>）。</p>
@@ -730,11 +738,11 @@ if not ev.has and _wakeWait &lt; 5 { core.delay(5 - _wakeWait) }
 <strong>卡片带 tooltip</strong>，悬停触发 <code>tipReport</code> ⇒ 框架为 tooltip 叠加层强制整窗出帧 ✗</p>
 <p><strong>下一步（收益明确的）</strong>
 1. <strong>tooltip 也走脏区</strong>：它就是一个小矩形，记录自己的 bounds 即可，不必整窗重绘 —— 这一条能让
-   绝大多数 hover 帧变成局部帧（当前 83% 的整窗帧都来自它）
+绝大多数 hover 帧变成局部帧（当前 83% 的整窗帧都来自它）
 2. <strong>motion 事件剪枝</strong>：现在每次 motion 都派发给<strong>全部</strong>控件（首页 90 张卡各算一次 contains），
-   9% 的纯事件成本主要在这儿；按"容器先做矩形命中，命中才深入子控件"可以砍掉大半</p>
+9% 的纯事件成本主要在这儿；按"容器先做矩形命中，命中才深入子控件"可以砍掉大半</p>
 <h2 id="原始分析-留档">原始分析（留档）</h2>
-<h3 id="现状_1">现状</h3>
+<h3 id="现状">现状</h3>
 <pre><code class="language-leno">// build/leno_module/LenoSDL3/lib/sdl_core.leno
 :740  bool _redrawRequested = false
 :745  export func requestRedraw() { _redrawRequested = true }
@@ -758,14 +766,14 @@ if not ev.has and _wakeWait &lt; 5 { core.delay(5 - _wakeWait) }
 它们<strong>不知道自己属于哪个窗口</strong> ⇒ 需要一个"渲染期当前窗口"上下文（<code>ren.windowID()</code> 或
 thread-local 当前窗口），否则这些路径只能退化成"全窗口脏"。
 定时器侧已经按窗口注册（<code>timer.unregisterByWindow(getID())</code>），天然支持；各窗口 HWND 独立，无 z 序问题。</p>
-<h3 id="判据_1">判据</h3>
+<h3 id="判据">判据</h3>
 <ul>
 <li>dummy 驱动下给 run 循环加"每窗口 render 次数"计数：请求 A 窗口红绘时，B 的计数不增；</li>
 <li>Aria 实测：空闲时主窗口 render 次数应归零（只有桌面歌词窗在刷）。</li>
 </ul>
 <hr>
 <h2 id="f5-leno_version-从不校验">F5 <code>leno_version</code> 从不校验 ✅</h2>
-<h3 id="已修-2026-11-17_2">已修（2026-11-17）</h3>
+<h3 id="已修-2026-11-17">已修（2026-11-17）</h3>
 <ul>
 <li>新增 <code>package_check_leno_version(source_file, current_version, out_msg, out_len)</code>
   （<code>src/package/package_toml.c</code>，头文件声明在 <code>leno_package.h</code>）：从入口文件向上找最近的
@@ -778,8 +786,8 @@ thread-local 当前窗口），否则这些路径只能退化成"全窗口脏"�
   <code>[错误] 本项目要求 leno &gt;=0.3.0，当前编译器是 0.2.4</code> + 两条提示，退出码 1 ✓</li>
 <li>全仓 939 个 <code>.leno</code> 编译检查仍 0 失败（模块包都没声明这个字段）。</li>
 </ul>
-<h2 id="原始分析-留档_1">原始分析（留档）</h2>
-<h3 id="现状_2">现状</h3>
+<h2 id="原始分析-留档">原始分析（留档）</h2>
+<h3 id="现状">现状</h3>
 <ul>
 <li><code>src/main.c:134</code> 有 <code>#define LENO_VERSION "0.2.4"</code>；</li>
 <li><code>leno.toml</code> 的 <code>leno_version</code> <strong>只解析、只写进 lock</strong>，全仓没有任何一处与 <code>LENO_VERSION</code> 比较
@@ -796,11 +804,11 @@ thread-local 当前窗口），否则这些路径只能退化成"全窗口脏"�
 <pre><code>需要 leno ≥ X（当前 Y）：请换用新版 leno / 或更新 leno_version
 </code></pre>
 <p>（<code>.lenb</code> 侧口径照抄，不要两套话术。）</p>
-<h3 id="判据_2">判据</h3>
+<h3 id="判据">判据</h3>
 <p>把 <code>leno.toml</code> 的 <code>leno_version</code> 改高一个版本 ⇒ 期望<strong>明确报错</strong>，而不是静默继续。</p>
 <hr>
 <h2 id="f6-无-must_use-defer-全库-0-处使用-主体已修-must_use-缓">F6 无 <code>@must_use</code>；<code>defer</code> 全库 0 处使用 ✅（主体已修，<code>@must_use</code> 缓）</h2>
-<h3 id="已修-2026-11-17_3">已修（2026-11-17）</h3>
+<h3 id="已修-2026-11-17">已修（2026-11-17）</h3>
 <ol>
 <li><strong>两个 runner 都加了"跑完仓库根不该多出东西"的收尾断言</strong>
    （<code>assert/run_tests.leno</code>、<code>build/leno_module/run_all_tests.leno</code> 的 <code>top_snapshot()</code>）：
@@ -815,7 +823,7 @@ thread-local 当前窗口），否则这些路径只能退化成"全窗口脏"�
    全员挨警告 = 训练用户忽略警告 ✗。合适的形态是<strong>按函数 opt-in 的注解</strong>，要跨模块登记进
    符号表（牵动 <code>.lenosymc</code> 版本），等真有第三方需求再做。</li>
 </ol>
-<h2 id="原始分析-留档_2">原始分析（留档）</h2>
+<h2 id="原始分析-留档">原始分析（留档）</h2>
 <h3 id="数据">数据</h3>
 <ul>
 <li><code>@must_use</code> 机制：全仓 grep <strong>0 命中</strong>；</li>
@@ -835,19 +843,19 @@ files.delete(name)              // Windows 上句柄没关 ⇒ 返回 false，�
    （<code>open</code> / <code>loadImageTexture</code> / <code>acquireFont</code> 一律 <code>defer</code> 释放）；</li>
 <li><strong>lint</strong>：<code>open(...)</code> 之后同一作用域没有 <code>defer close</code> ⇒ 提示。</li>
 </ol>
-<h3 id="判据_3">判据</h3>
+<h3 id="判据">判据</h3>
 <p>跑完 <code>assert/run_tests.leno</code> 与 <code>build/leno_module/run_all_tests.leno</code> 后，仓库内<strong>无新增文件</strong>
 （把"跑完目录快照为空"做进两个 runner 的收尾断言）。</p>
 <hr>
 <h2 id="f7-多返回值-只差-实际类型带出处">F7 多返回值：只差"实际类型带出处" ✅</h2>
-<h3 id="已修-2026-11-17_4">已修（2026-11-17）</h3>
+<h3 id="已修-2026-11-17">已修（2026-11-17）</h3>
 <ul>
 <li><code>visit_stmt.inc</code> 的 <code>return</code> 类型检查里，若返回表达式是<strong>调用</strong>，给"实际类型"补出处：
   <code>期望 [int, string]，实际 [int, int]（two() 的返回值）（多返回值按位置逐项比较：第 2 个不同）</code>
   （<code>AST_VAR</code> / <code>AST_FIELD_ACCESS</code> / <code>AST_MODULE_ACCESS</code> 三种 callee 都能点名）。</li>
 <li>实测：上面那行就是 <code>build/leno.exe --check</code> 的原样输出 ✓</li>
 </ul>
-<h2 id="原始分析-留档_3">原始分析（留档）</h2>
+<h2 id="原始分析-留档">原始分析（留档）</h2>
 <ul>
 <li>逐位 diff <strong>已经做了</strong>：<code>src/semantic/visitinc/visit_stmt.inc:86</code>（"声明 %d 个，实际 %d 个"）、
   <code>:101</code>（"第 %d 个不同"）；</li>
@@ -935,12 +943,12 @@ files.delete(name)              // Windows 上句柄没关 ⇒ 返回 false，�
 <tr>
 <td><code>T x = null</code> 粗匹配处数</td>
 <td>Aria 29 / LenoSDL3 31</td>
-<td><code>\b[A-Z]\w*\s+\w+\s*(=\|:)\s*null\b</code></td>
+<td>`b[A-Z]w<em>s+w+s</em>(=\</td>
 </tr>
 <tr>
 <td>MenuBar Dict <code>action:</code> 用量</td>
 <td>Aria + LenoTrae 合计 2 处</td>
-<td><code>createMenuBar\|addMenu(\|action:</code></td>
+<td>`createMenuBar\</td>
 </tr>
 <tr>
 <td><code>leno_version</code> 命中</td>
@@ -992,7 +1000,7 @@ cd d:\CLeno\Aria; ..\Leno\build\leno.exe --check aria.leno                  # �
 <p>把 <code>D:\CLeno</code> 下<strong>同级目录的 11 个项目</strong>（Aria / AriaDeployd / LenoCleaner / LenoDumate /
 LenoGame / LenoMusic / LenoPet / LenoTrae / LenoWhale_Pet / LenoWorkBuddy / Lenodocs）
 全部拉齐到当前编译器：<strong>203 个 .leno 逐文件编译，0 失败</strong>。原有 20 个失败，4 类根因：</p>
-<h2 id="①-编译器-bug-requires-自我引用误报-lenomusic-14-文件">① 编译器 bug：<code>[requires]</code> 自我引用误报（LenoMusic，14 文件）</h2>
+<h2 id="编译器-bug-requires-自我引用误报-lenomusic-14-文件">① 编译器 bug：<code>[requires]</code> 自我引用误报（LenoMusic，14 文件）</h2>
 <p><strong>症状</strong>：<code>模块包 'LenoMusic' 版本 0.2.2 不满足项目要求 '&gt;=2.0.0'</code>，14 个文件全红；
 但 <strong>在项目根目录下跑就正常</strong>（<code>cd LenoMusic &amp;&amp; leno --check bang_page.leno</code> ⇒ 通过）。</p>
 <p><strong>根因</strong>：项目名（<code>LenoMusic</code> 0.2.2）与它依赖的运行时模块包同名（<code>LenoMusic</code> 2.0.0）。
@@ -1001,18 +1009,18 @@ LenoGame / LenoMusic / LenoPet / LenoTrae / LenoWhale_Pet / LenoWorkBuddy / Leno
 ⇒ 判不出"自我引用" ⇒ 拿项目自己的 0.2.2 去比模块要求 <code>&gt;=2.0.0</code> ✗</p>
 <p><strong>修法</strong>（<code>src/package/package_toml.c</code> + <code>main.c</code>）：
 - <code>main</code> 启动时把<strong>项目自己那份 leno.toml 的绝对路径</strong>记进 <code>g_self_toml</code>
-  （<code>package_set_self_toml()</code>），与该文件"从哪个 cwd、编哪个文件"无关；
+（<code>package_set_self_toml()</code>），与该文件"从哪个 cwd、编哪个文件"无关；
 - <code>is_self</code> 比较统一走 <code>req_same_path()</code>（<code>_fullpath</code> 规整 + Windows 不分大小写 +
-  分隔符归一）—— 原来用 <code>strcmp</code> 比字符串，相对/绝对、<code>/</code> 与 <code>\</code>、盘符大小写都会误判。</p>
-<h2 id="②-lenogame-本地-struct-anim-与-sdl3-导出同名-4-文件">② LenoGame：本地 <code>struct Anim</code> 与 SDL3 导出同名（4 文件）</h2>
+分隔符归一）—— 原来用 <code>strcmp</code> 比字符串，相对/绝对、<code>/</code> 与 <code>\</code>、盘符大小写都会误判。</p>
+<h2 id="lenogame-本地-struct-anim-与-sdl3-导出同名-4-文件">② LenoGame：本地 <code>struct Anim</code> 与 SDL3 导出同名（4 文件）</h2>
 <p>编译器的"同名 struct 字段布局不一致"检查拦住了（这条检查本身是对的：布局不同会让
 <code>读 A 的字段拿到 B 的值</code>，且运行期不报错）。项目自己的两份同名 struct 分别是
 <code>pvz_types.leno</code> 的 15 字段版与 <code>anim_editor.leno</code> 的 4 字段版 ⇒ 改名：
 <code>PvzAnim</code>（pvz_types / pvz_art / pvz 三个文件统一）与 <code>EditorAnim</code>（anim_editor）。</p>
-<h2 id="③-lenocleaner-模块级重复声明-1-文件">③ LenoCleaner：模块级重复声明（1 文件）</h2>
+<h2 id="lenocleaner-模块级重复声明-1-文件">③ LenoCleaner：模块级重复声明（1 文件）</h2>
 <p><code>test//test_rules.leno</code> 顶层有三个 <code>var rd</code> 系列同名声明（旧行为是后者静默覆盖前者）。
 现在这是编译错误 ⇒ 第三处改名 <code>rdKeep</code>（前两处 <code>rd</code> / <code>rd2</code> 保持原义）。</p>
-<h2 id="④-lenopet-anim-上没有-count-成员方法不能直接挂在索引表达式上-1-文件">④ LenoPet：<code>Anim</code> 上没有 <code>count()</code>；成员方法不能直接挂在索引表达式上（1 文件）</h2>
+<h2 id="lenopet-anim-上没有-count-成员方法不能直接挂在索引表达式上-1-文件">④ LenoPet：<code>Anim</code> 上没有 <code>count()</code>；成员方法不能直接挂在索引表达式上（1 文件）</h2>
 <ul>
 <li><code>GClickPool[GClickSel].count()</code> —— SDL3 的 <code>Anim</code> 没有 <code>count()</code>，帧数是 <code>frames.len()</code>；</li>
 <li><code>GClickPool[GClickSel].reset()</code> / <code>.tick()</code> / <code>.drawToFlip()</code> 报
@@ -1052,8 +1060,9 @@ LenoGame / LenoMusic / LenoPet / LenoTrae / LenoWhale_Pet / LenoWorkBuddy / Leno
 <td><strong>0 warning</strong></td>
 </tr>
 </tbody>
-</table></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#台账">台账</a></li><li><a href="#f1-any-as-func-恒产出-null">F1 any as func(...) 恒产出 null ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17">已修（2026-11-17）</a></li><li><a href="#现象-最小复现">现象（最小复现）</a></li><li><a href="#为什么危害大">为什么危害大</a></li><li><a href="#已存在的受害路径-修完-f1-要顺手回归">已存在的受害路径（修完 F1 要顺手回归）</a></li><li><a href="#修法-建议-按成本从低到高">修法（建议，按成本从低到高）</a></li><li><a href="#位置">位置</a></li><li><a href="#判据-回归用例">判据（回归用例）</a></li></ul><li><a href="#f2-struct-与-null-先修误报-再禁字面量-最后才能升错误">F2 struct 与 null：先修误报，再禁字面量，最后才能升错误 🟡</a></li><ul class="lv3"><li><a href="#已修-2026-11-17-误报">已修（2026-11-17）：误报</a></li><li><a href="#现状-实测">现状（实测）</a></li><li><a href="#现有-warning-的误报-先修这个">现有 warning 的误报（先修这个）</a></li><li><a href="#正确顺序">正确顺序</a></li><li><a href="#迁移规模-先量过再动手">迁移规模（先量过再动手）</a></li></ul><li><a href="#f3-color-只是-int-别名-阶段一-2026-11-17-落地-2026-11-18-结案-阶段二不做">F3 Color 只是 int 别名 ✅（阶段一 2026-11-17 落地；2026-11-18 结案，阶段二不做）</a></li><ul class="lv3"><li><a href="#阶段一-颜色字面量身份-optkeys-color">✅ 阶段一：颜色字面量身份 + @optkeys(...:color)</a></li><li><a href="#现状">现状</a></li><li><a href="#本轮实例-真实事故">本轮实例（真实事故）</a></li><li><a href="#optkeys-现状">@optkeys 现状</a></li><li><a href="#分期-阶段一先堵坑-不动语义">分期（阶段一先堵坑，不动语义）</a></li><li><a href="#判据">判据</a></li><li><a href="#结案-2026-11-18-颜色不做成类型-阶段一即最终形态">⛔ 结案（2026-11-18）：颜色不做成类型，阶段一即最终形态</a></li></ul><li><a href="#f4-requestredraw-是全局单标志">F4 requestRedraw() 是全局单标志 ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_1">已修（2026-11-17）</a></li><li><a href="#应用侧必读-addtimer-默认-autoredraw-true-会静默吃掉-f4-的收益-2026-11-17-实测">⚠ 应用侧必读：addTimer() 默认 autoRedraw = true 会静默吃掉 F4 的收益（2026-11-17 实测）</a></li><li><a href="#2026-11-17-已从框架侧根治-定时器重绘按注册窗口归属">✅ 2026-11-17 已从框架侧根治：定时器重绘按注册窗口归属</a></li><li><a href="#2026-11-17-二-控件与事件的重绘也按窗口归属">✅ 2026-11-17（二）：控件与事件的重绘也按窗口归属</a></li><li><a href="#2026-11-17-三-容器级视口裁剪-剔除屏幕外的子项">✅ 2026-11-17（三）：容器级视口裁剪（剔除屏幕外的子项）</a></li><li><a href="#2026-11-17-四-事件循环末尾那-5ms-补睡-真正的-每帧浪费">✅ 2026-11-17（四）：事件循环末尾那 5ms 补睡 —— 真正的"每帧浪费"</a></li><li><a href="#2026-11-17-五-应用侧按需-mark-脏矩形局部重绘-已删除-见-b">✅ 2026-11-17（五）：应用侧按需 mark（脏矩形局部重绘：已删除，见 B）</a></li></ul><li><a href="#原始分析-留档">原始分析（留档）</a></li><ul class="lv3"><li><a href="#现状_1">现状</a></li><li><a href="#影响-本轮实测">影响（本轮实测）</a></li><li><a href="#建议-api">建议 API</a></li><li><a href="#实现边界-难点写在这里-免得低估">实现边界（难点写在这里，免得低估）</a></li><li><a href="#判据_1">判据</a></li></ul><li><a href="#f5-leno_version-从不校验">F5 leno_version 从不校验 ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_2">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_1">原始分析（留档）</a></li><ul class="lv3"><li><a href="#现状_2">现状</a></li><li><a href="#症状-本轮踩到">症状（本轮踩到）</a></li><li><a href="#修法">修法</a></li><li><a href="#判据_2">判据</a></li></ul><li><a href="#f6-无-must_use-defer-全库-0-处使用-主体已修-must_use-缓">F6 无 @must_use；defer 全库 0 处使用 ✅（主体已修，@must_use 缓）</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_3">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_2">原始分析（留档）</a></li><ul class="lv3"><li><a href="#数据">数据</a></li><li><a href="#本轮实例-真事故">本轮实例（真事故）</a></li><li><a href="#建议">建议</a></li><li><a href="#判据_3">判据</a></li></ul><li><a href="#f7-多返回值-只差-实际类型带出处">F7 多返回值：只差"实际类型带出处" ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_4">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_3">原始分析（留档）</a></li><li><a href="#已修-本轮不要再排查">已修（本轮不要再排查）</a></li><li><a href="#明确不做-本轮共识">明确不做（本轮共识）</a></li><li><a href="#附-本轮实测数据-供复验">附：本轮实测数据（供复验）</a></li><li><a href="#复验入口">复验入口</a></li><li><a href="#2026-11-17-撤回-视口裁剪-relayout-帧内去重-其余优化保留">⛔ 2026-11-17 撤回：视口裁剪 + relayout 帧内去重（其余优化保留）</a></li><li><a href="#①-编译器-bug-requires-自我引用误报-lenomusic-14-文件">① 编译器 bug：[requires] 自我引用误报（LenoMusic，14 文件）</a></li><li><a href="#②-lenogame-本地-struct-anim-与-sdl3-导出同名-4-文件">② LenoGame：本地 struct Anim 与 SDL3 导出同名（4 文件）</a></li><li><a href="#③-lenocleaner-模块级重复声明-1-文件">③ LenoCleaner：模块级重复声明（1 文件）</a></li><li><a href="#④-lenopet-anim-上没有-count-成员方法不能直接挂在索引表达式上-1-文件">④ LenoPet：Anim 上没有 count()；成员方法不能直接挂在索引表达式上（1 文件）</a></li><li><a href="#回归">回归</a></li></ul></aside>
+</table>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#台账">台账</a></li><li><a href="#f1-any-as-func-恒产出-null">F1 any as func(...) 恒产出 null ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17">已修（2026-11-17）</a></li><li><a href="#现象-最小复现">现象（最小复现）</a></li><li><a href="#为什么危害大">为什么危害大</a></li><li><a href="#已存在的受害路径-修完-f1-要顺手回归">已存在的受害路径（修完 F1 要顺手回归）</a></li><li><a href="#修法-建议-按成本从低到高">修法（建议，按成本从低到高）</a></li><li><a href="#位置">位置</a></li><li><a href="#判据-回归用例">判据（回归用例）</a></li></ul><li><a href="#f2-struct-与-null-先修误报-再禁字面量-最后才能升错误">F2 struct 与 null：先修误报，再禁字面量，最后才能升错误 🟡</a></li><ul class="lv3"><li><a href="#已修-2026-11-17-误报">已修（2026-11-17）：误报</a></li><li><a href="#现状-实测">现状（实测）</a></li><li><a href="#现有-warning-的误报-先修这个">现有 warning 的误报（先修这个）</a></li><li><a href="#正确顺序">正确顺序</a></li><li><a href="#迁移规模-先量过再动手">迁移规模（先量过再动手）</a></li></ul><li><a href="#f3-color-只是-int-别名-阶段一-2026-11-17-落地-2026-11-18-结案-阶段二不做">F3 Color 只是 int 别名 ✅（阶段一 2026-11-17 落地；2026-11-18 结案，阶段二不做）</a></li><ul class="lv3"><li><a href="#阶段一-颜色字面量身份-optkeys-color">✅ 阶段一：颜色字面量身份 + @optkeys(...:color)</a></li><li><a href="#现状">现状</a></li><li><a href="#本轮实例-真实事故">本轮实例（真实事故）</a></li><li><a href="#optkeys-现状">@optkeys 现状</a></li><li><a href="#分期-阶段一先堵坑-不动语义">分期（阶段一先堵坑，不动语义）</a></li><li><a href="#判据">判据</a></li><li><a href="#结案-2026-11-18-颜色不做成类型-阶段一即最终形态">⛔ 结案（2026-11-18）：颜色不做成类型，阶段一即最终形态</a></li></ul><li><a href="#f4-requestredraw-是全局单标志">F4 requestRedraw() 是全局单标志 ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_1">已修（2026-11-17）</a></li><li><a href="#应用侧必读-addtimer-默认-autoredraw-true-会静默吃掉-f4-的收益-2026-11-17-实测">⚠ 应用侧必读：addTimer() 默认 autoRedraw = true 会静默吃掉 F4 的收益（2026-11-17 实测）</a></li><li><a href="#2026-11-17-已从框架侧根治-定时器重绘按注册窗口归属">✅ 2026-11-17 已从框架侧根治：定时器重绘按注册窗口归属</a></li><li><a href="#2026-11-17-二-控件与事件的重绘也按窗口归属">✅ 2026-11-17（二）：控件与事件的重绘也按窗口归属</a></li><li><a href="#2026-11-17-三-容器级视口裁剪-剔除屏幕外的子项">✅ 2026-11-17（三）：容器级视口裁剪（剔除屏幕外的子项）</a></li><li><a href="#2026-11-17-四-事件循环末尾那-5ms-补睡-真正的-每帧浪费">✅ 2026-11-17（四）：事件循环末尾那 5ms 补睡 —— 真正的"每帧浪费"</a></li><li><a href="#2026-11-17-五-应用侧按需-mark-脏矩形局部重绘-已删除-见-b">✅ 2026-11-17（五）：应用侧按需 mark（脏矩形局部重绘：已删除，见 B）</a></li></ul><li><a href="#原始分析-留档">原始分析（留档）</a></li><ul class="lv3"><li><a href="#现状_1">现状</a></li><li><a href="#影响-本轮实测">影响（本轮实测）</a></li><li><a href="#建议-api">建议 API</a></li><li><a href="#实现边界-难点写在这里-免得低估">实现边界（难点写在这里，免得低估）</a></li><li><a href="#判据_1">判据</a></li></ul><li><a href="#f5-leno_version-从不校验">F5 leno_version 从不校验 ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_2">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_1">原始分析（留档）</a></li><ul class="lv3"><li><a href="#现状_2">现状</a></li><li><a href="#症状-本轮踩到">症状（本轮踩到）</a></li><li><a href="#修法">修法</a></li><li><a href="#判据_2">判据</a></li></ul><li><a href="#f6-无-must_use-defer-全库-0-处使用-主体已修-must_use-缓">F6 无 @must_use；defer 全库 0 处使用 ✅（主体已修，@must_use 缓）</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_3">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_2">原始分析（留档）</a></li><ul class="lv3"><li><a href="#数据">数据</a></li><li><a href="#本轮实例-真事故">本轮实例（真事故）</a></li><li><a href="#建议">建议</a></li><li><a href="#判据_3">判据</a></li></ul><li><a href="#f7-多返回值-只差-实际类型带出处">F7 多返回值：只差"实际类型带出处" ✅</a></li><ul class="lv3"><li><a href="#已修-2026-11-17_4">已修（2026-11-17）</a></li></ul><li><a href="#原始分析-留档_3">原始分析（留档）</a></li><li><a href="#已修-本轮不要再排查">已修（本轮不要再排查）</a></li><li><a href="#明确不做-本轮共识">明确不做（本轮共识）</a></li><li><a href="#附-本轮实测数据-供复验">附：本轮实测数据（供复验）</a></li><li><a href="#复验入口">复验入口</a></li><li><a href="#2026-11-17-撤回-视口裁剪-relayout-帧内去重-其余优化保留">⛔ 2026-11-17 撤回：视口裁剪 + relayout 帧内去重（其余优化保留）</a></li><li><a href="#编译器-bug-requires-自我引用误报-lenomusic-14-文件">① 编译器 bug：[requires 自我引用误报（LenoMusic，14 文件）</a></li><li><a href="#lenogame-本地-struct-anim-与-sdl3-导出同名-4-文件">② LenoGame：本地 struct Anim 与 SDL3 导出同名（4 文件）</a></li><li><a href="#lenocleaner-模块级重复声明-1-文件">③ LenoCleaner：模块级重复声明（1 文件）</a></li><li><a href="#lenopet-anim-上没有-count-成员方法不能直接挂在索引表达式上-1-文件">④ LenoPet：Anim 上没有 count()；成员方法不能直接挂在索引表达式上（1 文件）</a></li><li><a href="#回归">回归</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="待办与路线图.html">← 上一篇</a><a href="待修_编译与语义问题.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

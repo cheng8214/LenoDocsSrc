@@ -96,10 +96,12 @@
 <ol>
 <li>❌ <code>op_constants.inc</code> 中的快速栈操作</li>
 <li>❌ <code>op_variables.inc</code> 中的部分快速栈操作</li>
-<li>❌ <strong>部分快速栈操作</strong> (<code>vm_stack_pop_fast</code>, <code>vm_stack_push_fast</code>, <code>vm_stack_peek_fast</code>) - 2026-05-28 回退
-   - 涉及文件: <code>op_call.inc</code>, <code>op_jump.inc</code>, <code>op_variables.inc</code>
-   - 原因: <code>更多排序.leno</code> 测试失败，这些指令中的快速栈操作在复杂场景下导致栈边界错误
-   - <strong>例外</strong>: <code>op_type_specialized.inc</code> 中的快速栈操作已恢复，因其栈操作确定且由编译器生成，相对安全</li>
+<li>❌ <strong>部分快速栈操作</strong> (<code>vm_stack_pop_fast</code>, <code>vm_stack_push_fast</code>, <code>vm_stack_peek_fast</code>) - 2026-05-28 回退<ul>
+<li>涉及文件: <code>op_call.inc</code>, <code>op_jump.inc</code>, <code>op_variables.inc</code></li>
+<li>原因: <code>更多排序.leno</code> 测试失败，这些指令中的快速栈操作在复杂场景下导致栈边界错误</li>
+<li><strong>例外</strong>: <code>op_type_specialized.inc</code> 中的快速栈操作已恢复，因其栈操作确定且由编译器生成，相对安全</li>
+</ul>
+</li>
 </ol>
 <h2 id="当前性能">当前性能</h2>
 <ul>
@@ -124,22 +126,22 @@ if (gc_requested &amp;&amp; gc.enabled &amp;&amp; !gc.running) {
 <p><strong>性能影响</strong>: 从 280ms 提升到 210ms</p>
 <p><strong>风险</strong>: 低 - GC 检查点从指令边界移到分配点，对象已初始化，状态相对安全</p>
 <hr>
-<h3 id="2-快速栈操作函数-leno_vm-h">2. 快速栈操作函数 (leno_vm.h)</h3>
+<h3 id="2-快速栈操作函数-leno-_vm-h">2. 快速栈操作函数 (leno_vm.h)</h3>
 <p><strong>文件</strong>: <code>src/include/leno_vm.h</code></p>
 <p><strong>新增函数</strong>:</p>
-<h4 id="vm_stack_pop_fast">vm_stack_pop_fast</h4>
+<h4 id="vm-_stack-_pop-_fast">vm_stack_pop_fast</h4>
 <pre><code class="language-c">// 栈操作：弹出值（不检查下溢，用于性能关键路径）
 static inline Value vm_stack_pop_fast(VM* vm) {
     return vm-&gt;stack[--vm-&gt;sp];
 }
 </code></pre>
-<h4 id="vm_stack_push_fast">vm_stack_push_fast</h4>
+<h4 id="vm-_stack-_push-_fast">vm_stack_push_fast</h4>
 <pre><code class="language-c">// 栈操作：压入值（不检查溢出，用于性能关键路径）
 static inline void vm_stack_push_fast(VM* vm, Value v) {
     vm-&gt;stack[vm-&gt;sp++] = v;
 }
 </code></pre>
-<h4 id="vm_stack_peek_fast">vm_stack_peek_fast</h4>
+<h4 id="vm-_stack-_peek-_fast">vm_stack_peek_fast</h4>
 <pre><code class="language-c">// 栈操作：查看栈顶值（不检查边界，用于性能关键路径）
 static inline Value vm_stack_peek_fast(VM* vm, int distance) {
     return vm-&gt;stack[vm-&gt;sp - 1 - distance];
@@ -147,7 +149,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </code></pre>
 <p><strong>风险</strong>: 中 - 只在确定栈状态安全时使用，否则会导致未定义行为</p>
 <hr>
-<h3 id="3-快速整数运算宏-vm_helpers-inc">3. 快速整数运算宏 (vm_helpers.inc)</h3>
+<h3 id="3-快速整数运算宏-vm-_helpers-inc">3. 快速整数运算宏 (vm_helpers.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/vm_helpers.inc</code></p>
 <p><strong>新增宏</strong>:</p>
 <ul>
@@ -158,7 +160,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>风险</strong>: 中 - 只在类型特化指令中使用</p>
 <hr>
-<h3 id="4-类型特化指令优化-op_type_specialized-inc">4. 类型特化指令优化 (op_type_specialized.inc)</h3>
+<h3 id="4-类型特化指令优化-op-_type-_specialized-inc">4. 类型特化指令优化 (op_type_specialized.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_type_specialized.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ol>
@@ -180,7 +182,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>性能影响</strong>: 从 210ms 提升到 203ms</p>
 <p><strong>风险</strong>: 中 - 类型特化指令由编译器生成，保证栈状态正确</p>
 <hr>
-<h3 id="5-变量操作指令优化-op_variables-inc">5. 变量操作指令优化 (op_variables.inc)</h3>
+<h3 id="5-变量操作指令优化-op-_variables-inc">5. 变量操作指令优化 (op_variables.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_variables.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ol>
@@ -189,7 +191,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ol>
 <p><strong>风险</strong>: 低 - 局部变量操作不会修改 frame</p>
 <hr>
-<h3 id="6-跳转指令优化-op_jump-inc">6. 跳转指令优化 (op_jump.inc)</h3>
+<h3 id="6-跳转指令优化-op-_jump-inc">6. 跳转指令优化 (op_jump.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_jump.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -198,7 +200,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>风险</strong>: 低 - 跳转前栈顶一定有值</p>
 <hr>
-<h3 id="7-函数调用优化-op_call-inc">7. 函数调用优化 (op_call.inc)</h3>
+<h3 id="7-函数调用优化-op-_call-inc">7. 函数调用优化 (op_call.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_call.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ol>
@@ -207,7 +209,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ol>
 <p><strong>风险</strong>: 中 - <code>OP_CALL</code> 的 <code>frame</code> 更新保留，因为 <code>call</code> 函数可能修改 <code>vm.frame_cnt</code></p>
 <hr>
-<h3 id="8-通用算术指令优化-op_arith-inc">8. 通用算术指令优化 (op_arith.inc)</h3>
+<h3 id="8-通用算术指令优化-op-_arith-inc">8. 通用算术指令优化 (op_arith.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_arith.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -216,7 +218,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>注意</strong>: 通用指令不使用 <code>vm_stack_pop_fast</code>，因为栈状态不确定</p>
 <p><strong>风险</strong>: 低 - 这些指令不会调用修改 <code>vm.frame_cnt</code> 的函数</p>
 <hr>
-<h3 id="9-常量加载指令优化-op_constants-inc">9. 常量加载指令优化 (op_constants.inc)</h3>
+<h3 id="9-常量加载指令优化-op-_constants-inc">9. 常量加载指令优化 (op_constants.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_constants.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -226,7 +228,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>风险</strong>: 低 - 常量加载不会修改 frame</p>
 <hr>
-<h3 id="10-变量操作指令优化-op_variables-inc">10. 变量操作指令优化 (op_variables.inc)</h3>
+<h3 id="10-变量操作指令优化-op-_variables-inc">10. 变量操作指令优化 (op_variables.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_variables.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -239,7 +241,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>经验</strong>: 某些 <code>frame</code> 更新可能帮助编译器优化，不能随意移除</p>
 <hr>
-<h3 id="11-vm-主循环优化-vm_run-inc">11. VM 主循环优化 (vm_run.inc)</h3>
+<h3 id="11-vm-主循环优化-vm-_run-inc">11. VM 主循环优化 (vm_run.inc)</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/vm_run.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -249,7 +251,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>风险</strong>: 中 - 需要确保异常发生时 frame 指针正确；操作码检查移除后，非法字节码可能导致未定义行为</p>
 <hr>
 <h2 id="测试验证">测试验证</h2>
-<h3 id="当前性能_1">当前性能</h3>
+<h3 id="当前性能">当前性能</h3>
 <pre><code>fib(30): 203ms
 </code></pre>
 <h3 id="需要验证的功能">需要验证的功能</h3>
@@ -266,16 +268,22 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <h2 id="回滚指南">回滚指南</h2>
 <p>如果发现 bug，按以下优先级回滚：</p>
 <ol>
-<li><strong>高优先级</strong>（最可能导致问题）:
-   - <code>vm_stack_pop_fast</code> / <code>vm_stack_push_fast</code> / <code>vm_stack_peek_fast</code> 的使用
-   - <code>FETCH_DISPATCH</code> 的修改</li>
-<li><strong>中优先级</strong>:
-   - 类型特化指令的 <code>frame</code> 更新移除
-   - <code>OP_CALL</code> / <code>OP_RETURN</code> 的优化</li>
-<li><strong>低优先级</strong>（相对安全）:
-   - <code>OP_ADD</code> 的 <code>frame</code> 更新移除
-   - <code>OP_SET_LOCAL</code> / <code>OP_GET_LOCAL</code> 的优化
-   - GC 检查点移动</li>
+<li><strong>高优先级</strong>（最可能导致问题）:<ul>
+<li><code>vm_stack_pop_fast</code> / <code>vm_stack_push_fast</code> / <code>vm_stack_peek_fast</code> 的使用</li>
+<li><code>FETCH_DISPATCH</code> 的修改</li>
+</ul>
+</li>
+<li><strong>中优先级</strong>:<ul>
+<li>类型特化指令的 <code>frame</code> 更新移除</li>
+<li><code>OP_CALL</code> / <code>OP_RETURN</code> 的优化</li>
+</ul>
+</li>
+<li><strong>低优先级</strong>（相对安全）:<ul>
+<li><code>OP_ADD</code> 的 <code>frame</code> 更新移除</li>
+<li><code>OP_SET_LOCAL</code> / <code>OP_GET_LOCAL</code> 的优化</li>
+<li>GC 检查点移动</li>
+</ul>
+</li>
 </ol>
 <hr>
 <h2 id="已完成的优化项">已完成的优化项</h2>
@@ -292,7 +300,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ol>
 <hr>
 <h2 id="新增优化-已回退">新增优化（已回退）</h2>
-<h3 id="12-比较指令优化-op_compare-inc-已回退">12. 比较指令优化 (op_compare.inc) ❌ 已回退</h3>
+<h3 id="12-比较指令优化-op-_compare-inc-已回退">12. 比较指令优化 (op_compare.inc) ❌ 已回退</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_compare.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -300,7 +308,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>回退原因</strong>: 即使性能无变化，但后续发现其他优化导致性能下降，统一回退</p>
 <hr>
-<h3 id="13-一元运算指令优化-op_unary-inc-已回退">13. 一元运算指令优化 (op_unary.inc) ❌ 已回退</h3>
+<h3 id="13-一元运算指令优化-op-_unary-inc-已回退">13. 一元运算指令优化 (op_unary.inc) ❌ 已回退</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_unary.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -309,7 +317,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 </ul>
 <p><strong>回退原因</strong>: 统一回退所有 frame 更新移除优化</p>
 <hr>
-<h3 id="14-字符串操作指令优化-op_string-inc-已回退">14. 字符串操作指令优化 (op_string.inc) ❌ 已回退</h3>
+<h3 id="14-字符串操作指令优化-op-_string-inc-已回退">14. 字符串操作指令优化 (op_string.inc) ❌ 已回退</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_string.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -318,7 +326,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p><strong>回退原因</strong>: 移除后性能反而下降（从 187ms 变慢）</p>
 <p><strong>经验</strong>: 即使指令没有错误处理，某些 <code>frame</code> 更新也可能帮助编译器优化，不能随意移除</p>
 <hr>
-<h3 id="15-算术指令快速栈操作优化-op_arith-inc-待测试">15. 算术指令快速栈操作优化 (op_arith.inc) ⏳ 待测试</h3>
+<h3 id="15-算术指令快速栈操作优化-op-_arith-inc-待测试">15. 算术指令快速栈操作优化 (op_arith.inc) ⏳ 待测试</h3>
 <p><strong>文件</strong>: <code>src/vm/vminc/op_arith.inc</code></p>
 <p><strong>优化内容</strong>:</p>
 <ul>
@@ -469,18 +477,16 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <h3 id="根因分析">根因分析</h3>
 <p><code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 虽然看似冗余，但实际上对编译器优化至关重要：</p>
 <ol>
-<li>
-<p><strong>寄存器分配锚点</strong>: frame 赋值给编译器一个明确的“重新加载点”，让 <code>frame</code> 指针保持在寄存器中。移除后，编译器可能无法证明 <code>frame</code> 在跨函数调用后仍然有效，被迫从内存重新加载</p>
-</li>
-<li>
-<p><strong>别名分析屏障</strong>: <code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 明确告诉编译器 <code>frame</code> 指向 <code>vm.frames</code> 数组的具体位置。没有这行，编译器可能保守地认为 <code>frame</code> 指向的内存可能被任何函数调用修改，从而生成更多的内存读写</p>
-</li>
-<li>
-<p><strong>指令调度优化</strong>: frame 赋值后的代码块，编译器可以更激进地重排指令。移除后编译器变得保守，指令调度质量下降</p>
-</li>
-<li>
-<p><strong>与 #10、#14 一致</strong>: 之前移除 <code>OP_CLOSE_UPVALUE</code>、<code>OP_DEFINE_GLOBAL</code>、<code>OP_GET_NATIVE</code>、<code>OP_STRING_ADD</code> 的 frame 更新时也观测到性能下降，这次是大规模验证了这一现象</p>
-</li>
+<li><strong>寄存器分配锚点</strong>: frame 赋值给编译器一个明确的“重新加载点”，让 <code>frame</code> 指针保持在寄存器中。移除后，编译器可能无法证明 <code>frame</code> 在跨函数调用后仍然有效，被迫从内存重新加载</li>
+</ol>
+<ol>
+<li><strong>别名分析屏障</strong>: <code>frame = &amp;vm.frames[vm.frame_cnt - 1];</code> 明确告诉编译器 <code>frame</code> 指向 <code>vm.frames</code> 数组的具体位置。没有这行，编译器可能保守地认为 <code>frame</code> 指向的内存可能被任何函数调用修改，从而生成更多的内存读写</li>
+</ol>
+<ol>
+<li><strong>指令调度优化</strong>: frame 赋值后的代码块，编译器可以更激进地重排指令。移除后编译器变得保守，指令调度质量下降</li>
+</ol>
+<ol>
+<li><strong>与 #10、#14 一致</strong>: 之前移除 <code>OP_CLOSE_UPVALUE</code>、<code>OP_DEFINE_GLOBAL</code>、<code>OP_GET_NATIVE</code>、<code>OP_STRING_ADD</code> 的 frame 更新时也观测到性能下降，这次是大规模验证了这一现象</li>
 </ol>
 <h3 id="核心教训">核心教训</h3>
 <blockquote>
@@ -503,7 +509,7 @@ static inline Value vm_stack_peek_fast(VM* vm, int distance) {
 <p>涉及 ~30 个类型特化指令（OP_ADD_INT, OP_SUB_INT, OP_MUL_INT, OP_DIV_INT, OP_MOD_INT,
 OP_ADD_FLOAT ~ OP_DIV_FLOAT, OP_NEG_INT, OP_NEG_FLOAT, OP_EQ_INT ~ OP_GE_INT,
 OP_EQ_FLOAT ~ OP_GE_FLOAT, OP_ADD_INT_IMM ~ OP_EQ_INT_IMM）。</p>
-<h3 id="回退原因_1">回退原因</h3>
+<h3 id="回退原因">回退原因</h3>
 <p>开发 LenoNet（libcurl 绑定）时，<code>HttpClient</code> 多次请求触发 FFI 回调，
 回调中执行 Leno 字节码使用了 <code>vm_stack_push_fast</code>，
 该函数不检查栈溢出，越界写入破坏了堆元数据，
@@ -523,7 +529,7 @@ OP_EQ_FLOAT ~ OP_GE_FLOAT, OP_ADD_INT_IMM ~ OP_EQ_INT_IMM）。</p>
 <p>详见 <code>archive/LenoNet_崩溃问题排查记录.md</code></p>
 <h3 id="性能影响">性能影响</h3>
 <p>从 ~203ms 回退到 ~210ms（约 3% 性能损失）。</p>
-<h3 id="核心教训_1">核心教训</h3>
+<h3 id="核心教训">核心教训</h3>
 <blockquote>
 <p><strong><code>vm_stack_push_fast</code> / <code>vm_stack_pop_fast</code> 不检查栈边界，在任何可能栈空间不足的场景都不安全。</strong></p>
 <p>2026-05-28 曾因 <code>更多排序.leno</code> 失败而部分回退，但保留了 <code>op_type_specialized.inc</code> 中的使用。
@@ -533,18 +539,20 @@ OP_EQ_FLOAT ~ OP_GE_FLOAT, OP_ADD_INT_IMM ~ OP_EQ_INT_IMM）。</p>
 </blockquote>
 <hr>
 <h2 id="19-回退-op_call-inc-和-vm_helpers-inc-中残留的-vm_stack_push_fast-已回退-2026-08-15">19. 回退 <code>op_call.inc</code> 和 <code>vm_helpers.inc</code> 中残留的 <code>vm_stack_push_fast</code> ❌ 已回退 (2026-08-15)</h2>
-<h3 id="回退内容_1">回退内容</h3>
+<h3 id="回退内容">回退内容</h3>
 <p>将以下文件中残留的 <code>vm_stack_push_fast</code> 调用全部替换为安全的 <code>vm_stack_push</code>：</p>
 <ol>
 <li><strong><code>src/vm/vminc/op_call.inc</code></strong> — <code>OP_CALL_GLOBAL_FUNC</code> 中的 1 处调用</li>
-<li><strong><code>src/vm/vminc/vm_helpers.inc</code></strong> — 5 个 <code>_FAST</code> 宏中共 11 处调用：
-   - <code>PUSH_INT_WRAP_FAST</code> (1 处)
-   - <code>PUSH_INT64_RESULT_FAST</code> (2 处)
-   - <code>PUSH_SAFE_INT64_ADD_FAST</code> (3 处)
-   - <code>PUSH_SAFE_INT64_SUB_FAST</code> (3 处)
-   - <code>PUSH_SAFE_INT64_MUL_FAST</code> (2 处)</li>
+<li><strong><code>src/vm/vminc/vm_helpers.inc</code></strong> — 5 个 <code>_FAST</code> 宏中共 11 处调用：<ul>
+<li><code>PUSH_INT_WRAP_FAST</code> (1 处)</li>
+<li><code>PUSH_INT64_RESULT_FAST</code> (2 处)</li>
+<li><code>PUSH_SAFE_INT64_ADD_FAST</code> (3 处)</li>
+<li><code>PUSH_SAFE_INT64_SUB_FAST</code> (3 处)</li>
+<li><code>PUSH_SAFE_INT64_MUL_FAST</code> (2 处)</li>
+</ul>
+</li>
 </ol>
-<h3 id="回退原因_2">回退原因</h3>
+<h3 id="回退原因">回退原因</h3>
 <p>继 #18 回退 <code>op_type_specialized.inc</code> 之后，发现 <code>op_call.inc</code> 的 <code>OP_CALL_GLOBAL_FUNC</code> 指令和 <code>vm_helpers.inc</code> 的 <code>_FAST</code> 宏中仍残留 <code>vm_stack_push_fast</code> 调用。</p>
 <ul>
 <li><code>OP_CALL_GLOBAL_FUNC</code> 是性能优化提交 <code>51aec011</code> 引入的融合指令，直接用 <code>vm_stack_push_fast</code> 压入 callee</li>
@@ -556,19 +564,21 @@ OP_EQ_FLOAT ~ OP_GE_FLOAT, OP_ADD_INT_IMM ~ OP_EQ_INT_IMM）。</p>
 </blockquote>
 <ul>
 <li><code>vm_stack_push_fast</code> 函数定义保留在 <code>leno_vm.h</code> 中</li>
-<li><code>vm_helpers.inc</code> 中的所有宏（<code>PUSH_INT_WRAP</code>、<code>PUSH_INT64_RESULT</code>、<code>PUSH_SAFE_INT64_ADD/SUB/MUL</code> 及对应 <code>_FAST</code> 版本）<strong>仍使用 <code>vm_stack_push_fast</code></strong>，被 <code>op_arith.inc</code> 的通用算术指令调用</li>
+<li><code>vm_helpers.inc</code> 中的所有宏（<code>PUSH_INT_WRAP</code>、<code>PUSH_INT64_RESULT</code>、<code>PUSH_SAFE_INT64_ADD/SUB/MUL</code> 及对应 <code>_FAST</code> 版本）<strong>仍使用 <code>vm_stack_push_fast</code></strong>，被 <code>op_arith.inc</code> 的通用算术指令调用<ul>
 <li><strong>安全理由</strong>：这些宏用于 <code>OP_ADD</code>/<code>OP_SUB</code>/<code>OP_MUL</code> 等通用指令的快速路径，栈操作模式固定（pop 2 → push 1），不会在 FFI 回调中触发栈溢出</li>
 <li>FFI 回调崩库的根因是 <code>op_type_specialized.inc</code> 中的 <code>vm_stack_push_fast</code>（已在 #18 回退），不是 <code>vm_helpers.inc</code> 的宏</li>
+</ul>
+</li>
 <li><code>vm_stack_pop_fast</code> 和 <code>vm_stack_peek_fast</code> 仍被 <code>op_arith.inc</code>、<code>op_call.inc</code>、<code>op_jump.inc</code>、<code>op_variables.inc</code>、<code>op_stack.inc</code> 等使用</li>
 <li><code>op_type_specialized.inc</code> 中已全部使用安全版本（<code>vm_stack_push</code> / <code>vm_stack_pop</code>），不使用任何 <code>_fast</code> 函数</li>
 </ul>
-<h3 id="核心教训_2">核心教训</h3>
+<h3 id="核心教训">核心教训</h3>
 <blockquote>
 <p><strong><code>vm_stack_push_fast</code> 的安全性取决于使用场景。</strong> <code>op_type_specialized.inc</code> 中不安全是因为 FFI 回调复用 VM 栈时可能栈空间不足。<code>vm_helpers.inc</code> 的宏用于通用算术指令，栈操作模式固定（pop 2 → push 1），且 FFI 回调中不会走到通用算术路径，因此安全。</p>
 </blockquote>
 <hr>
 <h2 id="20-op_return-快速路径优化-已回退-2026-08-15">20. OP_RETURN 快速路径优化 ❌ 已回退 (2026-08-15)</h2>
-<h3 id="回退原因_3">回退原因</h3>
+<h3 id="回退原因">回退原因</h3>
 <p>A/B 测试证明此优化<strong>无实际效果</strong>。</p>
 <p>对 fib(30) 各跑 30 次的对比结果：
 - <strong>无优化组（A 组）</strong>：中位数 78ms，众数 78ms
@@ -582,11 +592,12 @@ OP_EQ_FLOAT ~ OP_GE_FLOAT, OP_ADD_INT_IMM ~ OP_EQ_INT_IMM）。</p>
 <p>已执行回退。代码已恢复为原始版本。</p>
 <hr>
 <h2 id="21-call-帧异常字段懒初始化-已回退-2026-08-15">21. call() 帧异常字段懒初始化 ❌ 已回退 (2026-08-15)</h2>
-<h3 id="回退原因_4">回退原因</h3>
+<h3 id="回退原因">回退原因</h3>
 <p>利用 <code>has_try</code> 标志跳过异常字段初始化的优化对 fib(30) 提升仅 ~1-2%（79ms → 78ms），在测量误差范围内，实际收益可以忽略。引入的分支复杂度和潜在风险不值得这点提升。</p>
-<h3 id="回退方法_1">回退方法</h3>
-<p>将 <code>vm_call.inc</code> 和 <code>op_call.inc</code> 中的 <code>if (likely(!func-&gt;has_try))</code> 分支替换回无条件初始化全部 7 个异常字段。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#优化目标">优化目标</a></li><li><a href="#当前状态-安全版本">当前状态（安全版本）</a></li><li><a href="#优化进展">优化进展</a></li><li><a href="#优化状态更新">优化状态更新</a></li><ul class="lv3"><li><a href="#已保留的优化">已保留的优化</a></li><li><a href="#回退的优化">回退的优化</a></li></ul><li><a href="#当前性能">当前性能</a></li><li><a href="#优化详情">优化详情</a></li><ul class="lv3"><li><a href="#1-gc-检查优化-gc-c">1. GC 检查优化 (gc.c)</a></li><li><a href="#2-快速栈操作函数-leno_vm-h">2. 快速栈操作函数 (leno_vm.h)</a></li><li><a href="#3-快速整数运算宏-vm_helpers-inc">3. 快速整数运算宏 (vm_helpers.inc)</a></li><li><a href="#4-类型特化指令优化-op_type_specialized-inc">4. 类型特化指令优化 (op_type_specialized.inc)</a></li><li><a href="#5-变量操作指令优化-op_variables-inc">5. 变量操作指令优化 (op_variables.inc)</a></li><li><a href="#6-跳转指令优化-op_jump-inc">6. 跳转指令优化 (op_jump.inc)</a></li><li><a href="#7-函数调用优化-op_call-inc">7. 函数调用优化 (op_call.inc)</a></li><li><a href="#8-通用算术指令优化-op_arith-inc">8. 通用算术指令优化 (op_arith.inc)</a></li><li><a href="#9-常量加载指令优化-op_constants-inc">9. 常量加载指令优化 (op_constants.inc)</a></li><li><a href="#10-变量操作指令优化-op_variables-inc">10. 变量操作指令优化 (op_variables.inc)</a></li><li><a href="#11-vm-主循环优化-vm_run-inc">11. VM 主循环优化 (vm_run.inc)</a></li></ul><li><a href="#测试验证">测试验证</a></li><ul class="lv3"><li><a href="#当前性能_1">当前性能</a></li><li><a href="#需要验证的功能">需要验证的功能</a></li></ul><li><a href="#回滚指南">回滚指南</a></li><li><a href="#已完成的优化项">已完成的优化项</a></li><li><a href="#待优化项">待优化项</a></li><li><a href="#新增优化-已回退">新增优化（已回退）</a></li><ul class="lv3"><li><a href="#12-比较指令优化-op_compare-inc-已回退">12. 比较指令优化 (op_compare.inc) ❌ 已回退</a></li><li><a href="#13-一元运算指令优化-op_unary-inc-已回退">13. 一元运算指令优化 (op_unary.inc) ❌ 已回退</a></li><li><a href="#14-字符串操作指令优化-op_string-inc-已回退">14. 字符串操作指令优化 (op_string.inc) ❌ 已回退</a></li><li><a href="#15-算术指令快速栈操作优化-op_arith-inc-待测试">15. 算术指令快速栈操作优化 (op_arith.inc) ⏳ 待测试</a></li><li><a href="#16-快速栈操作部分回退与恢复-2026-05-28">16. 快速栈操作部分回退与恢复 (2026-05-28)</a></li></ul><li><a href="#记录时间">记录时间</a></li><li><a href="#17-批量移除-opcode-开头-frame-更新-已回退-2026-08-10">17. 批量移除 opcode 开头 frame 更新 ❌ 已回退 (2026-08-10)</a></li><ul class="lv3"><li><a href="#尝试内容">尝试内容</a></li><li><a href="#回退原因">回退原因</a></li><li><a href="#根因分析">根因分析</a></li><li><a href="#核心教训">核心教训</a></li><li><a href="#最终结论">最终结论</a></li></ul><li><a href="#18-回退-op_type_specialized-inc-快速栈操作-已回退-2026-08-14">18. 回退 op_type_specialized.inc 快速栈操作 ❌ 已回退 (2026-08-14)</a></li><ul class="lv3"><li><a href="#回退内容">回退内容</a></li><li><a href="#回退原因_1">回退原因</a></li><li><a href="#性能影响">性能影响</a></li><li><a href="#核心教训_1">核心教训</a></li></ul><li><a href="#19-回退-op_call-inc-和-vm_helpers-inc-中残留的-vm_stack_push_fast-已回退-2026-08-15">19. 回退 op_call.inc 和 vm_helpers.inc 中残留的 vm_stack_push_fast ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退内容_1">回退内容</a></li><li><a href="#回退原因_2">回退原因</a></li><li><a href="#当前状态-2026-08-15-修正">当前状态（2026-08-15 修正）</a></li><li><a href="#核心教训_2">核心教训</a></li></ul><li><a href="#20-op_return-快速路径优化-已回退-2026-08-15">20. OP_RETURN 快速路径优化 ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退原因_3">回退原因</a></li><li><a href="#原优化内容-已移除">原优化内容（已移除）</a></li><li><a href="#同时回退的优化">同时回退的优化</a></li><li><a href="#回退方法">回退方法</a></li></ul><li><a href="#21-call-帧异常字段懒初始化-已回退-2026-08-15">21. call() 帧异常字段懒初始化 ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退原因_4">回退原因</a></li><li><a href="#回退方法_1">回退方法</a></li></ul></ul></aside>
+<h3 id="回退方法">回退方法</h3>
+<p>将 <code>vm_call.inc</code> 和 <code>op_call.inc</code> 中的 <code>if (likely(!func-&gt;has_try))</code> 分支替换回无条件初始化全部 7 个异常字段。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#优化目标">优化目标</a></li><li><a href="#当前状态-安全版本">当前状态（安全版本）</a></li><li><a href="#优化进展">优化进展</a></li><li><a href="#优化状态更新">优化状态更新</a></li><ul class="lv3"><li><a href="#已保留的优化">已保留的优化</a></li><li><a href="#回退的优化">回退的优化</a></li></ul><li><a href="#当前性能">当前性能</a></li><li><a href="#优化详情">优化详情</a></li><ul class="lv3"><li><a href="#1-gc-检查优化-gc-c">1. GC 检查优化 (gc.c)</a></li><li><a href="#2-快速栈操作函数-leno-_vm-h">2. 快速栈操作函数 (leno\_vm.h)</a></li><li><a href="#3-快速整数运算宏-vm-_helpers-inc">3. 快速整数运算宏 (vm\_helpers.inc)</a></li><li><a href="#4-类型特化指令优化-op-_type-_specialized-inc">4. 类型特化指令优化 (op\_type\_specialized.inc)</a></li><li><a href="#5-变量操作指令优化-op-_variables-inc">5. 变量操作指令优化 (op\_variables.inc)</a></li><li><a href="#6-跳转指令优化-op-_jump-inc">6. 跳转指令优化 (op\_jump.inc)</a></li><li><a href="#7-函数调用优化-op-_call-inc">7. 函数调用优化 (op\_call.inc)</a></li><li><a href="#8-通用算术指令优化-op-_arith-inc">8. 通用算术指令优化 (op\_arith.inc)</a></li><li><a href="#9-常量加载指令优化-op-_constants-inc">9. 常量加载指令优化 (op\_constants.inc)</a></li><li><a href="#10-变量操作指令优化-op-_variables-inc">10. 变量操作指令优化 (op\_variables.inc)</a></li><li><a href="#11-vm-主循环优化-vm-_run-inc">11. VM 主循环优化 (vm\_run.inc)</a></li></ul><li><a href="#测试验证">测试验证</a></li><ul class="lv3"><li><a href="#当前性能_1">当前性能</a></li><li><a href="#需要验证的功能">需要验证的功能</a></li></ul><li><a href="#回滚指南">回滚指南</a></li><li><a href="#已完成的优化项">已完成的优化项</a></li><li><a href="#待优化项">待优化项</a></li><li><a href="#新增优化-已回退">新增优化（已回退）</a></li><ul class="lv3"><li><a href="#12-比较指令优化-op-_compare-inc-已回退">12. 比较指令优化 (op\_compare.inc) ❌ 已回退</a></li><li><a href="#13-一元运算指令优化-op-_unary-inc-已回退">13. 一元运算指令优化 (op\_unary.inc) ❌ 已回退</a></li><li><a href="#14-字符串操作指令优化-op-_string-inc-已回退">14. 字符串操作指令优化 (op\_string.inc) ❌ 已回退</a></li><li><a href="#15-算术指令快速栈操作优化-op-_arith-inc-待测试">15. 算术指令快速栈操作优化 (op\_arith.inc) ⏳ 待测试</a></li><li><a href="#16-快速栈操作部分回退与恢复-2026-05-28">16. 快速栈操作部分回退与恢复 (2026-05-28)</a></li></ul><li><a href="#记录时间">记录时间</a></li><li><a href="#17-批量移除-opcode-开头-frame-更新-已回退-2026-08-10">17. 批量移除 opcode 开头 frame 更新 ❌ 已回退 (2026-08-10)</a></li><ul class="lv3"><li><a href="#尝试内容">尝试内容</a></li><li><a href="#回退原因">回退原因</a></li><li><a href="#根因分析">根因分析</a></li><li><a href="#核心教训">核心教训</a></li><li><a href="#最终结论">最终结论</a></li></ul><li><a href="#18-回退-op_type_specialized-inc-快速栈操作-已回退-2026-08-14">18. 回退 op_type_specialized.inc 快速栈操作 ❌ 已回退 (2026-08-14)</a></li><ul class="lv3"><li><a href="#回退内容">回退内容</a></li><li><a href="#回退原因_1">回退原因</a></li><li><a href="#性能影响">性能影响</a></li><li><a href="#核心教训_1">核心教训</a></li></ul><li><a href="#19-回退-op_call-inc-和-vm_helpers-inc-中残留的-vm_stack_push_fast-已回退-2026-08-15">19. 回退 op_call.inc 和 vm_helpers.inc 中残留的 vm_stack_push_fast ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退内容_1">回退内容</a></li><li><a href="#回退原因_2">回退原因</a></li><li><a href="#当前状态-2026-08-15-修正">当前状态（2026-08-15 修正）</a></li><li><a href="#核心教训_2">核心教训</a></li></ul><li><a href="#20-op_return-快速路径优化-已回退-2026-08-15">20. OP_RETURN 快速路径优化 ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退原因_3">回退原因</a></li><li><a href="#原优化内容-已移除">原优化内容（已移除）</a></li><li><a href="#同时回退的优化">同时回退的优化</a></li><li><a href="#回退方法">回退方法</a></li></ul><li><a href="#21-call-帧异常字段懒初始化-已回退-2026-08-15">21. call() 帧异常字段懒初始化 ❌ 已回退 (2026-08-15)</a></li><ul class="lv3"><li><a href="#回退原因_4">回退原因</a></li><li><a href="#回退方法_1">回退方法</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/性能_分支与枚举.html">← 上一篇</a><a href="../archive/性能测试总结_Leno_vs_Python.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

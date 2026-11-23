@@ -260,8 +260,10 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <li>重建 VM（build.bat）</li>
 <li>光线追踪对比三阶段 vs Python——预期 Phase B/B2/C 差距消除或反转</li>
 <li>参数扩展性微基准——预期每参增量降到 ~10ns 级</li>
-<li>回归：assert/run_tests.leno 全量 + test_multi_ret.leno（多返回值语义）
-   + test_destruct<em>.leno（解构语义）+ test_try_catch</em>.leno（帧复用安全）</li>
+<li>回归：assert/run_tests.leno 全量 + test_multi_ret.leno（多返回值语义）<ul>
+<li>test_destruct<em>.leno（解构语义）+ test_try_catch</em>.leno（帧复用安全）</li>
+</ul>
+</li>
 </ol>
 <h2 id="验证结果-2026-08-29-实测">验证结果（2026-08-29 实测）</h2>
 <h3 id="回归测试">回归测试</h3>
@@ -355,7 +357,7 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 </ul>
 <hr>
 <h1 id="第二轮-数组索引快速路径-赋值-cast-编译期消除">第二轮：数组索引快速路径 + 赋值 CAST 编译期消除</h1>
-<h2 id="背景_1">背景</h2>
+<h2 id="背景">背景</h2>
 <p>第一轮后剩余差距：Phase A 慢 1.24x、Phase B/B2 慢 1.11~1.15x、Phase C 慢 1.06x。
 <code>--debug</code> 分析 <code>index_micro.leno</code> 热点循环字节码发现两个可消除的开销：</p>
 <ol>
@@ -390,7 +392,7 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 </ul>
 <p>与多返回值解构的 CAST 消除（第一轮优化 2）同一原则：能在编译时确定，就不给运行时。</p>
 <h2 id="验证结果-2026-08-29-实测-同机同批运行">验证结果（2026-08-29 实测，同机同批运行）</h2>
-<h3 id="回归测试_1">回归测试</h3>
+<h3 id="回归测试">回归测试</h3>
 <p><code>assert/run_tests.leno</code> 全量：<strong>256 passed, 0 failed</strong>。</p>
 <h3 id="光线追踪对比">光线追踪对比</h3>
 <table>
@@ -435,9 +437,9 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 </tbody>
 </table>
 <p>（B/B2/C 单次运行波动 ±8% 左右，多轮取中值）</p>
-<h3 id="参数扩展性微基准_1">参数扩展性微基准</h3>
+<h3 id="参数扩展性微基准">参数扩展性微基准</h3>
 <p>1 参 406ms / 7 参 547ms → 每参增量 <strong>23.5ns</strong>（Python 同批 23.8ns，完全同级）。</p>
-<h3 id="结论_1">结论</h3>
+<h3 id="结论">结论</h3>
 <ul>
 <li>Phase A 反超 Python（CAST 消除 + 索引快速路径各贡献约一半）；</li>
 <li>Phase C 与 Python 完全打平；</li>
@@ -522,13 +524,15 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <ol>
 <li><strong>方法查找内联缓存</strong>（op_struct.inc OP_GET_METHOD）：新增
    <code>InlineMethodCacheEntry</code>（def 指针 + name_hash + 代数 + closure），
-   以指令地址哈希索引，命中 O(1) 取预创建闭包。安全性：
-   - ObjStructDef 由 <code>struct_def_mark_all()</code> 作为 GC 根标记，closure 经
-     def 可达，缓存裸指针不悬空；GC 非移动（晋升仅翻转 generation 标志）
-   - 新增 <code>struct_def_generation()</code> 代数计数器（struct_def_register
-     注册/覆盖时递增），缓存校验代数防止同名 def 被重定义后拿到旧方法
-   - 仅缓存预创建闭包（upvalue_count==0）；需要 upvalue 的方法每次动态
+   以指令地址哈希索引，命中 O(1) 取预创建闭包。安全性：<ul>
+<li>ObjStructDef 由 <code>struct_def_mark_all()</code> 作为 GC 根标记，closure 经
+     def 可达，缓存裸指针不悬空；GC 非移动（晋升仅翻转 generation 标志）</li>
+<li>新增 <code>struct_def_generation()</code> 代数计数器（struct_def_register
+     注册/覆盖时递增），缓存校验代数防止同名 def 被重定义后拿到旧方法</li>
+<li>仅缓存预创建闭包（upvalue_count==0）；需要 upvalue 的方法每次动态
      创建，不入缓存</li>
+</ul>
+</li>
 <li><strong>struct 分配单次系统调用</strong>（object_struct.c struct_instance_new_depth）：
    头 + 字段数组一次 <code>gc_alloc</code>（尾随内联数组），省掉独立 <code>calloc</code> +
    <code>gc_track_memory</code>；<code>ObjStruct.fields_inline</code> 标记，gc.c 释放路径跳过
@@ -560,7 +564,7 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <li>sweep_young / sweep_old / gc_free_all 的对象释放统一走
   <code>gc_free_object()</code>：池化对象清零整个槽后归还 free-list，否则系统 free；
   gc_free_all 遍历池块列表统一释放</li>
-<li>安全性设计：</li>
+<li>安全性设计：<ul>
 <li>池类别编码在 <code>Object.flags</code>（0x80=池化位 | 低 4 位=class 索引），
     <strong>不按 obj-&gt;size 反推 class</strong>——gc_track_memory 会改写 size（数组/
     字符串/字典扩容记账），按 size 反推会把槽挂错链导致堆损坏</li>
@@ -569,6 +573,8 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <li>GC 非移动（晋升仅翻转 generation 标志），槽地址稳定；分代记账
     （young_allocated/old_allocated）按请求 size 计，与池无关，GC 触发
     逻辑不变</li>
+</ul>
+</li>
 </ul>
 <h2 id="优化方向">优化方向</h2>
 <p>见"方向 1.5"——三项修复（方法 IC、def 免查找、field_values 内联分配）
@@ -607,10 +613,10 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 <p>Lua 5.4 也是栈机，多数场景不输 CPython。Leno 落后的 7~17% 是分配器和
 帧管理没优化到位，不是"栈机到头了"。</p>
 <h2 id="优化决策分类">优化决策分类</h2>
-<h3 id="❶-边际优化-停止">❶ 边际优化——停止</h3>
+<h3 id="边际优化-停止">❶ 边际优化——停止</h3>
 <p>继续微调指令编码、IC 容量、内联阈值——投入产出比太低。三轮优化收益递减
 （第一轮 25%→第二轮 2%→第三轮对象版 2%），边际优化到此为止。</p>
-<h3 id="❷-结构性优化-顺手修-不立项">❷ 结构性优化——顺手修，不立项</h3>
+<h3 id="结构性优化-顺手修-不立项">❷ 结构性优化——顺手修，不立项</h3>
 <p>从数据中能直接看到三个尚未触及的结构性短板，修好不是挤 2%，可能是 20~50%：</p>
 <h4 id="结构短板-a-对象分配器改-bump-allocator-free-list-方向-5-已实施">结构短板 A：对象分配器改 bump allocator / free-list（= 方向 5）——已实施</h4>
 <ul>
@@ -640,13 +646,15 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 </ul>
 <h4 id="结构短板-c-数组-bytes-切片零拷贝">结构短板 C：数组/bytes 切片零拷贝</h4>
 <ul>
-<li>现状：Python bytearray 切片是零拷贝视图，Leno 的 ffi.copy4 有函数调用</li>
+<li>现状：Python bytearray 切片是零拷贝视图，Leno 的 ffi.copy4 有函数调用<ul>
 <li>边界检查开销</li>
+</ul>
+</li>
 <li>预期收益：图形类应用（SDL、图像处理）显著受益</li>
 <li>工作量：低（1 周内）</li>
 <li>策略：遇到数组/FFI 相关代码时顺手做</li>
 </ul>
-<h3 id="❸-寄存器机重写-否决">❸ 寄存器机重写——否决</h3>
+<h3 id="寄存器机重写-否决">❸ 寄存器机重写——否决</h3>
 <p>即使定位高性能脚本语言，也不建议现在做寄存器机重写：</p>
 <ul>
 <li><strong>风险极高</strong>：几个月重写，可能引入大量 bug，FFI/模块/GC 都要重构</li>
@@ -743,7 +751,7 @@ local_count 路径的局部槽位存储点调用，顶层时补齐 <code>chunk-&
 独立 locals 模式下 <code>inline_locals</code> 内嵌在 <code>CallFrame</code> 中，拷贝帧=拷贝
 locals。值栈模式下 locals 在值栈上，协程挂起时值栈顶部可能不是当前
 帧的 locals（中间有其他帧的临时表达式值），提取和恢复都极复杂。</p>
-<h4 id="结论_2">结论</h4>
+<h4 id="结论">结论</h4>
 <p><strong>方向 2 不适用于 Leno 当前架构</strong>。CPython 3.11 的收益来自其整体设计
 （专用 <code>LOAD_FAST</code> 指令 + 寄存器缓存 localsplus + 不在值栈上放操作数
 临时值 + 值栈扩容时集中修复 upvalue）。Leno 栈机架构下，独立 locals
@@ -808,13 +816,16 @@ B/B2 剩余 4~6% 差距属架构性成本，不再追究。</p>
 现在该把 90% 的精力从"怎么让 Leno 更快"转到"怎么让更多人用 Leno"上了。</p>
 <h2 id="风险">风险</h2>
 <ul>
-<li>CallFrame 变大后，<code>vm_grow_frames</code> 的 realloc 修复逻辑（inline_locals 指针</li>
-<li>open upvalue location 回填）不受影响——它按 <code>!locals_is_dynamic</code> 判断，
-  与数组大小无关</li>
-<li>object_thread_fixed.c 的线程栈快照按 local_count 拷贝 locals 数组，
-  与 INLINE_LOCALS_MAX 无关（动态分配分支行为不变）</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#背景">背景</a></li><li><a href="#测量数据-定位过程">测量数据（定位过程）</a></li><ul class="lv3"><li><a href="#基准数据">基准数据</a></li><li><a href="#参数扩展性隔离-函数体完全相同-仅参数数量不同">参数扩展性隔离（函数体完全相同，仅参数数量不同）</a></li></ul><li><a href="#根因分析">根因分析</a></li><ul class="lv3"><li><a href="#根因-1-主因-inline_locals_max-8-导致每调用一次-malloc-free">根因 1（主因）：INLINE_LOCALS_MAX = 8 导致每调用一次 malloc/free</a></li><li><a href="#根因-2-次因-多返回值解构的冗余指令">根因 2（次因）：多返回值解构的冗余指令</a></li></ul><li><a href="#优化方案">优化方案</a></li><ul class="lv3"><li><a href="#优化-1-inline_locals_max-8-32">优化 1：INLINE_LOCALS_MAX 8 → 32</a></li><li><a href="#优化-2-多返回值解构直接存储">优化 2：多返回值解构直接存储</a></li><li><a href="#已评估但不实施的方案">已评估但不实施的方案</a></li></ul><li><a href="#实现中发现的-bug-顶层代码局部槽位记账缺失">实现中发现的 bug：顶层代码局部槽位记账缺失</a></li><li><a href="#验证计划">验证计划</a></li><li><a href="#验证结果-2026-08-29-实测">验证结果（2026-08-29 实测）</a></li><ul class="lv3"><li><a href="#回归测试">回归测试</a></li><li><a href="#光线追踪对比-优化前-优化后">光线追踪对比（优化前 → 优化后）</a></li><li><a href="#参数扩展性微基准">参数扩展性微基准</a></li><li><a href="#调用开销微基准-对照">调用开销微基准（对照）</a></li><li><a href="#结论">结论</a></li></ul><li><a href="#背景_1">背景</a></li><li><a href="#优化实现">优化实现</a></li><ul class="lv3"><li><a href="#优化-3-op_index-op_iter_get-数组-int-索引快速路径-vm-侧">优化 3：OP_INDEX / OP_ITER_GET 数组 int 索引快速路径（VM 侧）</a></li><li><a href="#优化-4-赋值-声明处-cast-编译期消除-codegen-侧">优化 4：赋值/声明处 CAST 编译期消除（codegen 侧）</a></li></ul><li><a href="#验证结果-2026-08-29-实测-同机同批运行">验证结果（2026-08-29 实测，同机同批运行）</a></li><ul class="lv3"><li><a href="#回归测试_1">回归测试</a></li><li><a href="#光线追踪对比">光线追踪对比</a></li><li><a href="#参数扩展性微基准_1">参数扩展性微基准</a></li><li><a href="#结论_1">结论</a></li></ul><li><a href="#实测-2026-08-29-同机同批">实测（2026-08-29，同机同批）</a></li><li><a href="#为什么对象版比-python-慢-debug-字节码-源码定位">为什么对象版比 Python 慢（--debug 字节码 + 源码定位）</a></li><li><a href="#已实施的优化-第三轮-2026-08-29">已实施的优化（第三轮，2026-08-29）</a></li><ul class="lv3"><li><a href="#优化后剩余差距分析">优化后剩余差距分析</a></li></ul><li><a href="#已实施的优化-第四轮-2026-08-29-gc_alloc-size-class-池">已实施的优化（第四轮，2026-08-29）：gc_alloc size-class 池</a></li><li><a href="#优化方向">优化方向</a></li><li><a href="#修正-栈机到顶了-不准确">修正："栈机到顶了"——不准确</a></li><li><a href="#优化决策分类">优化决策分类</a></li><ul class="lv3"><li><a href="#❶-边际优化-停止">❶ 边际优化——停止</a></li><li><a href="#❷-结构性优化-顺手修-不立项">❷ 结构性优化——顺手修，不立项</a></li><li><a href="#❸-寄存器机重写-否决">❸ 寄存器机重写——否决</a></li></ul><li><a href="#已实施-已放弃的方向索引">已实施/已放弃的方向索引</a></li><ul class="lv3"><li><a href="#方向-1-专用化算术指令">方向 1：专用化算术指令</a></li><li><a href="#方向-1-5-struct-对象路径三大热点-已全部实施">方向 1.5：struct 对象路径三大热点——已全部实施</a></li><li><a href="#方向-2-locals-迁移到值栈-已实验放弃">方向 2：locals 迁移到值栈——已实验放弃</a></li><li><a href="#实验结果-2026-08-29-已放弃">实验结果（2026-08-29，已放弃）</a></li><li><a href="#方向-3-方法调用内联缓存审计">方向 3：方法调用内联缓存审计</a></li><li><a href="#方向-4-寄存器机-vm-架构级重写-否决">方向 4：寄存器机 VM（架构级重写）——否决</a></li><li><a href="#方向-5-gc_alloc-小对象-size-class-池-结构短板-a-已实施">方向 5：gc_alloc 小对象 size-class 池（= 结构短板 A）——已实施</a></li></ul><li><a href="#最终优先级">最终优先级</a></li><li><a href="#风险">风险</a></li></ul></aside>
+<li>CallFrame 变大后，<code>vm_grow_frames</code> 的 realloc 修复逻辑（inline_locals 指针<ul>
+<li>open upvalue location 回填）不受影响——它按 <code>!locals_is_dynamic</code> 判断，</li>
+</ul>
+</li>
+</ul>
+<p>与数组大小无关
+- object_thread_fixed.c 的线程栈快照按 local_count 拷贝 locals 数组，
+与 INLINE_LOCALS_MAX 无关（动态分配分支行为不变）</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#背景">背景</a></li><li><a href="#测量数据-定位过程">测量数据（定位过程）</a></li><ul class="lv3"><li><a href="#基准数据">基准数据</a></li><li><a href="#参数扩展性隔离-函数体完全相同-仅参数数量不同">参数扩展性隔离（函数体完全相同，仅参数数量不同）</a></li></ul><li><a href="#根因分析">根因分析</a></li><ul class="lv3"><li><a href="#根因-1-主因-inline_locals_max-8-导致每调用一次-malloc-free">根因 1（主因）：INLINE_LOCALS_MAX = 8 导致每调用一次 malloc/free</a></li><li><a href="#根因-2-次因-多返回值解构的冗余指令">根因 2（次因）：多返回值解构的冗余指令</a></li></ul><li><a href="#优化方案">优化方案</a></li><ul class="lv3"><li><a href="#优化-1-inline_locals_max-8-32">优化 1：INLINE_LOCALS_MAX 8 → 32</a></li><li><a href="#优化-2-多返回值解构直接存储">优化 2：多返回值解构直接存储</a></li><li><a href="#已评估但不实施的方案">已评估但不实施的方案</a></li></ul><li><a href="#实现中发现的-bug-顶层代码局部槽位记账缺失">实现中发现的 bug：顶层代码局部槽位记账缺失</a></li><li><a href="#验证计划">验证计划</a></li><li><a href="#验证结果-2026-08-29-实测">验证结果（2026-08-29 实测）</a></li><ul class="lv3"><li><a href="#回归测试">回归测试</a></li><li><a href="#光线追踪对比-优化前-优化后">光线追踪对比（优化前 → 优化后）</a></li><li><a href="#参数扩展性微基准">参数扩展性微基准</a></li><li><a href="#调用开销微基准-对照">调用开销微基准（对照）</a></li><li><a href="#结论">结论</a></li></ul><li><a href="#背景_1">背景</a></li><li><a href="#优化实现">优化实现</a></li><ul class="lv3"><li><a href="#优化-3-op_index-op_iter_get-数组-int-索引快速路径-vm-侧">优化 3：OP_INDEX / OP_ITER_GET 数组 int 索引快速路径（VM 侧）</a></li><li><a href="#优化-4-赋值-声明处-cast-编译期消除-codegen-侧">优化 4：赋值/声明处 CAST 编译期消除（codegen 侧）</a></li></ul><li><a href="#验证结果-2026-08-29-实测-同机同批运行">验证结果（2026-08-29 实测，同机同批运行）</a></li><ul class="lv3"><li><a href="#回归测试_1">回归测试</a></li><li><a href="#光线追踪对比">光线追踪对比</a></li><li><a href="#参数扩展性微基准_1">参数扩展性微基准</a></li><li><a href="#结论_1">结论</a></li></ul><li><a href="#实测-2026-08-29-同机同批">实测（2026-08-29，同机同批）</a></li><li><a href="#为什么对象版比-python-慢-debug-字节码-源码定位">为什么对象版比 Python 慢（--debug 字节码 + 源码定位）</a></li><li><a href="#已实施的优化-第三轮-2026-08-29">已实施的优化（第三轮，2026-08-29）</a></li><ul class="lv3"><li><a href="#优化后剩余差距分析">优化后剩余差距分析</a></li></ul><li><a href="#已实施的优化-第四轮-2026-08-29-gc_alloc-size-class-池">已实施的优化（第四轮，2026-08-29）：gc_alloc size-class 池</a></li><li><a href="#优化方向">优化方向</a></li><li><a href="#修正-栈机到顶了-不准确">修正："栈机到顶了"——不准确</a></li><li><a href="#优化决策分类">优化决策分类</a></li><ul class="lv3"><li><a href="#边际优化-停止">❶ 边际优化——停止</a></li><li><a href="#结构性优化-顺手修-不立项">❷ 结构性优化——顺手修，不立项</a></li><li><a href="#寄存器机重写-否决">❸ 寄存器机重写——否决</a></li></ul><li><a href="#已实施-已放弃的方向索引">已实施/已放弃的方向索引</a></li><ul class="lv3"><li><a href="#方向-1-专用化算术指令">方向 1：专用化算术指令</a></li><li><a href="#方向-1-5-struct-对象路径三大热点-已全部实施">方向 1.5：struct 对象路径三大热点——已全部实施</a></li><li><a href="#方向-2-locals-迁移到值栈-已实验放弃">方向 2：locals 迁移到值栈——已实验放弃</a></li><li><a href="#实验结果-2026-08-29-已放弃">实验结果（2026-08-29，已放弃）</a></li><li><a href="#方向-3-方法调用内联缓存审计">方向 3：方法调用内联缓存审计</a></li><li><a href="#方向-4-寄存器机-vm-架构级重写-否决">方向 4：寄存器机 VM（架构级重写）——否决</a></li><li><a href="#方向-5-gc_alloc-小对象-size-class-池-结构短板-a-已实施">方向 5：gc_alloc 小对象 size-class 池（= 结构短板 A）——已实施</a></li></ul><li><a href="#最终优先级">最终优先级</a></li><li><a href="#风险">风险</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/内联器崩溃排查记录.html">← 上一篇</a><a href="../archive/多线程struct与模块全局变量问题记录.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

@@ -352,7 +352,8 @@ if ch is Channel {
 <blockquote>
 <p><strong>算得慢用 threads，等得久用 async，两者之间传数据用 Channel。</strong></p>
 <p><strong>执行模型有两种，通信模型只有一种。</strong></p>
-</blockquote></main>
+</blockquote>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一分钟决策表">一分钟决策表</a></li><li><a href="#threads-os-级并行">threads：OS 级并行</a></li><li><a href="#async-await-单线程协作调度">async/await：单线程协作调度</a></li><ul class="lv3"><li><a href="#真实用法-并发网络客户端-不是-sleep-玩具">真实用法：并发网络客户端（不是 sleep 玩具）</a></li><li><a href="#协作-async-等线程算完的结果">协作：async 等线程算完的结果</a></li></ul><li><a href="#channel-统一通信管道">Channel：统一通信管道</a></li><li><a href="#组合模式-gui-threads-channel-实战范式">组合模式：GUI + threads + Channel（实战范式）</a></li><li><a href="#完成检测-先探后取-state-join-组合">完成检测：先探后取（state() + join() 组合）</a></li><li><a href="#线程函数的两条纪律-入口形态-来自实战的坑">线程函数的两条纪律 + 入口形态（来自实战的坑）</a></li><li><a href="#反模式-避免踩坑">反模式（避免踩坑）</a></li><li><a href="#总结-两句话">总结：两句话</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="单文件打包使用指南.html">← 上一篇</a><a href="布局配方.html">下一篇 →</a></nav>

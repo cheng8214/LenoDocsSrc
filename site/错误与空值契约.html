@@ -126,13 +126,15 @@ use res.(Result, Option)
 修前跨模块读泛型字段会把类型退化成 <code>any</code>（<code>Box[Pay].v</code> 同样中招）——
 同模块内测不出来，只在"库 + 应用"分仓时暴露；回归见
 <code>assert/test_generic_field_cross_module.leno</code>。</p>
+</blockquote>
+<blockquote>
 <p><strong>为什么是 struct 而不是载荷 enum</strong>（2026-11-10 两次实测复核）：
 · enum 现在<strong>能带载荷</strong>（<code>enum Msg { progress(int done, int total) }</code>）；
 · <strong>泛型载荷 enum 现在完整可用</strong>（2026-11-10，步 1~3）：声明 / 构造（类型实参从上下文
-  推断）/ 匹配都通；
+推断）/ 匹配都通；
 · 但 <strong>enum 不能挂方法</strong>（<code>extend</code> 只接受 struct）—— 而 <code>Result</code> 的价值全在方法上
-  （<code>isOk / orElse / unwrap / errText</code>）⇒ 换 enum 等于让所有调用点改成 <code>switch</code>，
-  是破坏性变更，还丢掉 <code>orElse(默认值)</code> 的显式性。
+（<code>isOk / orElse / unwrap / errText</code>）⇒ 换 enum 等于让所有调用点改成 <code>switch</code>，
+是破坏性变更，还丢掉 <code>orElse(默认值)</code> 的显式性。
 ⇒ 结论：<code>Result[T]</code> / <code>Option[T]</code> 保持 struct —— <strong>不是"语言不支持泛型 enum"</strong>（已经支持了），
 而是"enum 是值、不能有方法"这条更有意的限制。
 <strong>反过来</strong>：不需要泛型的结果形态<strong>应当</strong>写成载荷 enum（可读性更好，还能吃到 <code>switch</code>
@@ -350,8 +352,9 @@ NULL ⇒ <code>null</code>（不再是 <code>""</code>）、BLOB ⇒ 字节数�
 <pre><code class="language-leno">var n = _int(regexs.extract(s, &quot;-?[0-9]+&quot;))   // 明确&quot;我要前缀&quot;
 var m = _int_or(s, 0)                          // 明确&quot;失败就用默认值&quot;
 </code></pre>
-<p>报错文案已带这条提示（<code>无法将字符串转换为整数："12x"（要求整串都是数字，**不取前缀**；…）</code>）。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-修前是什么样-问题">1. 修前是什么样（问题）</a></li><li><a href="#2-修后-一套形态">2. 修后：一套形态</a></li><ul class="lv3"><li><a href="#2-1-result-t">2.1 Result[T]</a></li><li><a href="#2-2-option-t">2.2 Option[T]</a></li><li><a href="#2-3-严格解析">2.3 严格解析</a></li></ul><li><a href="#3-迁移对照-旧写法-新写法">3. 迁移对照（旧写法 → 新写法）</a></li><li><a href="#4-sqlite-null-语义-2026-11-09-起">4. SQLite NULL 语义（2026-11-09 起）</a></li><li><a href="#5-哪些模块已经收敛了-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</a></li><li><a href="#6-还没做的-诚实清单">6. 还没做的（诚实清单）</a></li><li><a href="#7-运行期错误的-可捕获性-2026-11-22-实测钉住">7. 运行期错误的"可捕获性"（2026-11-22 实测钉住）</a></li></ul></aside>
+<p>报错文案已带这条提示（<code>无法将字符串转换为整数："12x"（要求整串都是数字，**不取前缀**；…）</code>）。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-修前是什么样-问题">1. 修前是什么样（问题）</a></li><li><a href="#2-修后-一套形态">2. 修后：一套形态</a></li><ul class="lv3"><li><a href="#2-1-result-t">2.1 Result[T</a></li><li><a href="#2-2-option-t">2.2 Option[T</a></li><li><a href="#2-3-严格解析">2.3 严格解析</a></li></ul><li><a href="#3-迁移对照-旧写法-新写法">3. 迁移对照（旧写法 → 新写法）</a></li><li><a href="#4-sqlite-null-语义-2026-11-09-起">4. SQLite NULL 语义（2026-11-09 起）</a></li><li><a href="#5-哪些模块已经收敛了-2026-11-09">5. 哪些模块已经收敛了（2026-11-09）</a></li><li><a href="#6-还没做的-诚实清单">6. 还没做的（诚实清单）</a></li><li><a href="#7-运行期错误的-可捕获性-2026-11-22-实测钉住">7. 运行期错误的"可捕获性"（2026-11-22 实测钉住）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="cstruct_packed_align_设计文档.html">← 上一篇</a><a href="单一事实来源与重复实现收敛.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

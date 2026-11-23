@@ -209,7 +209,7 @@ print(&quot;现在是 &quot; + dt[0] + &quot;年&quot; + dt[1] + &quot;月&quot;
 - 需要存储或传输时间 → 使用 <code>now()</code>
 - 需要格式化显示 → 使用 <code>now()</code> + <code>format()</code>
 - <strong>计时把量程拉长</strong>：单项负载跑到 ≥100ms（或重复多轮取最小值）。
-  短负载的分辨率与抖动会淹没差异 —— 例如 15ms 的负载在 15.625ms 粒度下会变成"1 个刻度"的假数</p>
+短负载的分辨率与抖动会淹没差异 —— 例如 15ms 的负载在 15.625ms 粒度下会变成"1 个刻度"的假数</p>
 <hr>
 <h2 id="格式化说明符">格式化说明符</h2>
 <table>
@@ -390,35 +390,42 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>计时分辨率与量程（2026-09-16 修正）</strong>
-   - <code>ms()</code>/<code>us()</code>/<code>ns()</code> 共用同一高精度单调时钟源（Windows QPC / POSIX CLOCK_MONOTONIC）：
-     <strong>精度由时钟源决定，与单位无关</strong> —— 换算成毫秒不丢精度，所以 <code>ms()</code> 也返回 <code>float</code>
-   - 三者都是<strong>单调计数</strong>，只用于取差值；挂钟时间请用 <code>now()</code> / <code>format()</code> / <code>datetime()</code>
-   - <strong>量程比分辨率更容易毁掉测量</strong>：单项负载请跑到 ≥100ms，或重复多轮取最小值，
-     否则调度/缓存/频率抖动会让数字不可复现
-   - 历史问题：<code>ms()</code> 曾用 <code>GetTickCount64</code>（分辨率 ≈15.625ms）且返回 <code>int</code>，
-     短测量会出现"整刻度"假象（如 16ms 实为 1 个刻度，真值可能只有 0.4ms）</p>
+<li><strong>计时分辨率与量程（2026-09-16 修正）</strong><ul>
+<li><code>ms()</code>/<code>us()</code>/<code>ns()</code> 共用同一高精度单调时钟源（Windows QPC / POSIX CLOCK_MONOTONIC）：
+     <strong>精度由时钟源决定，与单位无关</strong> —— 换算成毫秒不丢精度，所以 <code>ms()</code> 也返回 <code>float</code></li>
+<li>三者都是<strong>单调计数</strong>，只用于取差值；挂钟时间请用 <code>now()</code> / <code>format()</code> / <code>datetime()</code></li>
+<li><strong>量程比分辨率更容易毁掉测量</strong>：单项负载请跑到 ≥100ms，或重复多轮取最小值，
+     否则调度/缓存/频率抖动会让数字不可复现</li>
+<li>历史问题：<code>ms()</code> 曾用 <code>GetTickCount64</code>（分辨率 ≈15.625ms）且返回 <code>int</code>，
+     短测量会出现"整刻度"假象（如 16ms 实为 1 个刻度，真值可能只有 0.4ms）</li>
+</ul>
 </li>
-<li>
-<p><strong>时区问题</strong>
-   - <code>now()</code> 和 <code>format()</code> 使用本地时区
-   - 如果需要 UTC 时间，目前需要自行转换</p>
+</ol>
+<ol>
+<li><strong>时区问题</strong><ul>
+<li><code>now()</code> 和 <code>format()</code> 使用本地时区</li>
+<li>如果需要 UTC 时间，目前需要自行转换</li>
+</ul>
 </li>
-<li>
-<p><strong>sleep 精度</strong>
-   - <code>sleep()</code> 的实际休眠时间可能略长于指定时间
-   - 系统调度和其他因素会导致微小延迟</p>
+</ol>
+<ol>
+<li><strong>sleep 精度</strong><ul>
+<li><code>sleep()</code> 的实际休眠时间可能略长于指定时间</li>
+<li>系统调度和其他因素会导致微小延迟</li>
+</ul>
 </li>
-<li>
-<p><strong>性能考虑</strong>
-   - 频繁调用高精度计时函数 (<code>us()</code>, <code>ns()</code>) 可能有一定开销
-   - 在性能关键代码中，建议减少调用次数</p>
+</ol>
+<ol>
+<li><strong>性能考虑</strong><ul>
+<li>频繁调用高精度计时函数 (<code>us()</code>, <code>ns()</code>) 可能有一定开销</li>
+<li>在性能关键代码中，建议减少调用次数</li>
+</ul>
 </li>
 </ol>
 <hr>
 <p><em>文档版本: 1.0</em><br>
-<em>最后更新: 2026-09-16</em></p></main>
+<em>最后更新: 2026-09-16</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#全局函数">全局函数</a></li><ul class="lv3"><li><a href="#sleep-ms">sleep(ms)</a></li></ul><li><a href="#时间戳获取">时间戳获取</a></li><ul class="lv3"><li><a href="#ms">ms()</a></li><li><a href="#us">us()</a></li><li><a href="#ns">ns()</a></li><li><a href="#now">now()</a></li></ul><li><a href="#时间格式化">时间格式化</a></li><ul class="lv3"><li><a href="#format-timestamp-fmt">format(timestamp, fmt)</a></li></ul><li><a href="#日期时间操作">日期时间操作</a></li><ul class="lv3"><li><a href="#datetime">datetime()</a></li></ul><li><a href="#时间单位对比">时间单位对比</a></li><li><a href="#格式化说明符">格式化说明符</a></li><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-性能测试">1. 性能测试</a></li><li><a href="#2-倒计时程序">2. 倒计时程序</a></li><li><a href="#3-定时任务">3. 定时任务</a></li><li><a href="#4-获取当前日期信息">4. 获取当前日期信息</a></li><li><a href="#5-格式化时间显示">5. 格式化时间显示</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_threads_api.html">← 上一篇</a><a href="module_types.html">下一篇 →</a></nav>

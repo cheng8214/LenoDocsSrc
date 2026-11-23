@@ -30,7 +30,7 @@
 <p>状态：<strong>已实现并收官</strong>（2026-11-10）：步 1~4 + 断言 + 跨模块 + <code>==</code> 按值 + <code>jsons.encode</code>。
 目标：把"enum 只能当 int 常量用"补成"enum 成员可以带数据"，且<strong>不破坏</strong>现有 int 枚举。
 ⚠ 实现与本文初稿<strong>有三处偏离</strong>（都是为了不退回 <code>any</code>、不让类型名对不上），
-  见文末 §7「实现记录」——读 §2/§3 时以 §7 为准。</p>
+见文末 §7「实现记录」——读 §2/§3 时以 §7 为准。</p>
 </blockquote>
 <hr>
 <h2 id="1-现状与痛点">1. 现状与痛点</h2>
@@ -187,21 +187,21 @@ struct Msg {
 <hr>
 <h2 id="7-实现记录-2026-11-10-与初稿的三处偏离">7. 实现记录（2026-11-10）—— 与初稿的三处偏离</h2>
 <p>初稿有三处在实现时被否掉了，原因都是"照草案写会退回 <code>any</code> 或让类型名对不上"：</p>
-<h3 id="①-隐藏-struct-用-enum-同名-不是-__msg">① 隐藏 struct 用 <strong>enum 同名</strong>，不是 <code>__Msg</code></h3>
+<h3 id="隐藏-struct-用-enum-同名-不是-__msg">① 隐藏 struct 用 <strong>enum 同名</strong>，不是 <code>__Msg</code></h3>
 <p>初稿：<code>__Msg</code> + 在类型解析处做名字映射。
 实现：直接叫 <code>Msg</code>。理由：类型名一旦对不上，<code>Msg m = Msg.progress(...)</code>、形参/返回/字段
 声明、<code>m.tag</code> 的字段索引、<code>OP_STRUCT_INIT</code> 的运行时名字查找 —— 每处都要多一条映射规则，
 漏一处就是<strong>静默错配</strong>（本仓最怕的失效形态）。同名则整条链路零改动。
 代价：<code>Msg</code> 不能再被别的同名类型占用（合成阶段直接报"与第 N 行声明的同名类型冲突"）；
 显式 <code>new Msg(...)</code> 要在 <code>visit_struct_init.inc</code> 里拦掉（那是实现细节，不是用户 API）。</p>
-<h3 id="②-载荷槽-按成员分段-不是-按位置取共同类型">② 载荷槽 <strong>按成员分段</strong>，不是"按位置取共同类型"</h3>
+<h3 id="载荷槽-按成员分段-不是-按位置取共同类型">② 载荷槽 <strong>按成员分段</strong>，不是"按位置取共同类型"</h3>
 <p>初稿：第 k 个槽取所有成员第 k 个参数的"最宽共同类型"，不可统一就不支持。
 问题是初稿 §2 自己的例子（<code>progress(int,int)</code> + <code>finished(string)</code> + <code>failed(string,int)</code>）
 第 1 个位置就是 <code>int</code> vs <code>string</code> —— 照初稿要么不支持、要么退回 <code>any</code>。
 实现：<code>base(m) = Σ_{j&lt;m} 参数个数(j)</code>，成员 m 的第 k 个参数落在 <code>p&lt;base(m)+k&gt;</code>，
 类型就是这个参数自己声明的类型。<strong>一个 <code>any</code> 都没有</strong>，初稿那个例子原样能用。
 代价：字段数 = 1 + 所有参数个数之和（多几个恒为 null 的槽）。</p>
-<h3 id="③-switch-是-换主题-注入绑定-不是-展开成多个-case-is">③ <code>switch</code> 是"换主题 + 注入绑定"，不是"展开成多个 case is"</h3>
+<h3 id="switch-是-换主题-注入绑定-不是-展开成多个-case-is">③ <code>switch</code> 是"换主题 + 注入绑定"，不是"展开成多个 case is"</h3>
 <p>初稿说"整段改写成若干个 case is 形态"。实现更简单且<strong>保住 break/default 语义</strong>：
 把主题换成 <code>m.tag</code>（<code>AST_FIELD_ACCESS</code>，复用原 AST_VAR 节点），case 值换成 tag 常量，
 绑定变成注入 case 体最前面的 <code>AST_VAR_DECL</code>（<code>var d = m.p0</code>）。
@@ -260,7 +260,7 @@ struct Msg {
 <h2 id="8-压力测试记录-2026-11-10-测出-3-个-bug-已修">8. 压力测试记录（2026-11-10）—— 测出 3 个 bug，已修</h2>
 <p>用例固化在 <code>assert/test_enum_payload_stress.leno</code>（8 组：载荷类型 / 零参数变体 / 容器相等 /
 5 层嵌套 / 名字撞车 / 322 槽宽索引 / 跨模块 / JSON）。三处<strong>都是收官提交里没覆盖到</strong>的：</p>
-<h3 id="①-a-b-为真-arr-has-b-为假-值比较有两条路-结论不一致">① <code>a == b</code> 为真，<code>arr.has(b)</code> 为假（值比较有两条路，结论不一致）</h3>
+<h3 id="a-b-为真-arr-has-b-为假-值比较有两条路-结论不一致">① <code>a == b</code> 为真，<code>arr.has(b)</code> 为假（值比较有两条路，结论不一致）</h3>
 <ul>
 <li>现象：5 层嵌套载荷 <code>==</code> 给 true、<code>has</code> 给 false；载荷里装 <code>Array[int]</code> 时同样打架。</li>
 <li>根因：<code>==</code> 走 <code>vm.c</code> 的 <code>value_eq_depth</code>（深度上限 <strong>8</strong>、容器逐元素），
@@ -270,7 +270,7 @@ struct Msg {
   覆盖数值/字符串/数组/字典/嵌套载荷），两条路都调它；深度上限统一成
   <code>LENO_VALUE_EQ_MAX_DEPTH = 8</code>。普通 struct 仍是引用语义（零变化）。</li>
 </ul>
-<h3 id="②-enum-cmd-add-int-n-stop-被判成-混用带载荷与不带载荷">② <code>enum Cmd { add(int n)  stop() }</code> 被判成"混用带载荷与不带载荷"</h3>
+<h3 id="enum-cmd-add-int-n-stop-被判成-混用带载荷与不带载荷">② <code>enum Cmd { add(int n)  stop() }</code> 被判成"混用带载荷与不带载荷"</h3>
 <ul>
 <li>现象：零参数变体（Option 的 <code>None</code>、命令的 <code>Stop</code>）<strong>根本写不出来</strong>，直接报混用。</li>
 <li>根因：判据是"参数个数 &gt; 0"，而 <code>stop()</code> 的参数个数也是 0，与老写法的 <code>stop</code> 不可区分。</li>
@@ -279,7 +279,7 @@ struct Msg {
 <li>顺带堵一个洞：<code>export</code> 一个<strong>全部成员零参数</strong>的带载荷 enum 会明确报错
   （模块符号表靠"参数总数 &gt; 0"决定存不存载荷表，全零会静默退化）—— 报错而不是错值。</li>
 </ul>
-<h3 id="③-只要-enum-里有一个-struct-载荷-整条-enum-的-全部变-false">③ 只要 enum 里有一个 struct 载荷，整条 enum 的 <code>==</code> 全部变 false</h3>
+<h3 id="只要-enum-里有一个-struct-载荷-整条-enum-的-全部变-false">③ 只要 enum 里有一个 struct 载荷，整条 enum 的 <code>==</code> 全部变 false</h3>
 <ul>
 <li>现象：<code>enum P { num(int v)  pt(Pt p) }</code>，<code>P.num(5) == P.num(5)</code> 是 <strong>false</strong>。
   4 个成员时正常、加到第 5 个（含 struct 成员）就崩 —— 非常像"随机"。</li>
@@ -288,7 +288,7 @@ struct Msg {
   两个不同对象 ⇒ 逐字段比较必不等。</li>
 <li>修法：合成时给<strong>引用类</strong>载荷槽显式默认 <code>null</code>（标量槽不能写 null，交给原零值默认）。</li>
 </ul>
-<h3 id="④-两个模块导出同名但不同形的带载荷-enum-运行期才报-已改成编译期">④ 两个模块导出<strong>同名但不同形</strong>的带载荷 enum：运行期才报（已改成编译期）</h3>
+<h3 id="两个模块导出同名但不同形的带载荷-enum-运行期才报-已改成编译期">④ 两个模块导出<strong>同名但不同形</strong>的带载荷 enum：运行期才报（已改成编译期）</h3>
 <ul>
 <li>现象：<code>import a</code> + <code>import b</code>，两边都 <code>export enum Ev</code>（成员不同），消费端 <code>use a.Ev</code> +
   <code>use b.Ev</code> ⇒ <strong>编译通过</strong>，程序先跑完 main（打印了 "ok"），然后在收尾时报
@@ -299,7 +299,7 @@ struct Msg {
 <li>修法：导入时按<strong>成员名 + 参数个数</strong>比形状（与 <code>def_owner_conflict</code> 同口径），一致才幂等放行，
   不一致就在<strong>编译期</strong>报错并点名"给其中一个改名 / 别 use、用限定名 <code>a.Ev</code> / <code>b.Ev</code>"。</li>
 </ul>
-<h3 id="⑤-泛型-并发-json-往返-压测通过-无-bug">⑤ 泛型 / 并发 / JSON 往返：压测通过，无 bug</h3>
+<h3 id="泛型-并发-json-往返-压测通过-无-bug">⑤ 泛型 / 并发 / JSON 往返：压测通过，无 bug</h3>
 <table>
 <thead>
 <tr>
@@ -360,7 +360,8 @@ struct Msg {
 <p>现在这些都能编译且零诊断：</p>
 <p><code>leno
 enum Res[T] { ok(T v); err(int code, string msg) }
-func sig(Res[int] r): string { return "x" }</code></p>
+func sig(Res[int] r): string { return "x" }
+</code></p>
 <h3 id="已完成-步-3-3-构造的类型实参推断">已完成（步 3/3）：构造的类型实参推断</h3>
 <p><strong>五条来源</strong>，优先级从高到低：</p>
 <ol>
@@ -416,11 +417,13 @@ func sig(Res[int] r): string { return "x" }</code></p>
 <p>过程记录：这条我先做过一版"给模块符号表加类型参数"的大改（ModuleEnumSymbol、
 <code>.lenosymc</code> v45、导出/导入三处 + 消费端重建），<strong>把同模块主路径改回归了</strong>（<code>'(null)' 里没有成员</code>），
 全量回滚后才发现真正缺的只是上面那一处兼容判断。教训：这类改动要<strong>先看最小复现</strong>，
-别一上来动符号表格式 —— 版本号一 bump，所有模块缓存失效，定位成本翻倍。
-- <strong>enum 不能挂方法</strong>（<code>extend Res { … }</code> 会报"extend 只能给 struct 加方法"）⇒ 即使载荷
-  enum 运行期就是个 struct，<code>isOk/orElse/…</code> 这类方法也挂不上去。<strong>这正是 <code>LenoResult</code> 的
-  <code>Result[T]</code> / <code>Option[T]</code> 必须保持 struct 的决定性理由</strong>（不是"不能泛型"了 —— 那个已经支持）。</p>
+别一上来动符号表格式 —— 版本号一 bump，所有模块缓存失效，定位成本翻倍。</p>
 </blockquote>
+<ul>
+<li><strong>enum 不能挂方法</strong>（<code>extend Res { … }</code> 会报"extend 只能给 struct 加方法"）⇒ 即使载荷
+  enum 运行期就是个 struct，<code>isOk/orElse/…</code> 这类方法也挂不上去。<strong>这正是 <code>LenoResult</code> 的
+  <code>Result[T]</code> / <code>Option[T]</code> 必须保持 struct 的决定性理由</strong>（不是"不能泛型"了 —— 那个已经支持）。</li>
+</ul>
 <h3 id="显示-_str-print-用成员式-2026-11-10">显示：<code>_str</code> / <code>print</code> 用成员式（2026-11-10）</h3>
 <p>此前打印带载荷 enum 会暴露降级布局：<code>Msg{tag=0, p0=7, p1=null, p2=null}</code>。
 现在 <code>value.c</code>（<code>_str</code>）与 <code>io.c</code>（<code>print</code> / <code>print_value</code> / <code>print_value_quoted</code>）都走
@@ -430,8 +433,9 @@ _str(Msg.b(&quot;hi&quot;, 2.5))     // Msg.b(hi, 2.5)     —— _str 的字符
 _str([Msg.a(1), Msg.c()])  // [Msg.a(1), Msg.c()]
 </code></pre>
 <p>签名缺失 / tag 越界 / tag 不是 int ⇒ <strong>退回</strong>通用 <code>Name{field=value}</code> 显示（宁可多暴露字段，不崩）。
-钉子：<code>assert/test_enum_payload.leno</code> 的 ④ 段。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-现状与痛点">1. 现状与痛点</a></li><li><a href="#2-语言形态-提案">2. 语言形态（提案）</a></li><li><a href="#3-降级-lowering-一个隐藏-struct-tag">3. 降级（lowering）：一个隐藏 struct + tag</a></li><ul class="lv3"><li><a href="#为什么用-tag-位置槽-而不是-每个成员一个-struct-类型">为什么用 tag + 位置槽，而不是"每个成员一个 struct 类型"</a></li></ul><li><a href="#4-需要动的地方-按顺序-每步都能独立编译-全绿">4. 需要动的地方（按顺序，每步都能独立编译 + 全绿）</a></li><li><a href="#5-兼容性与迁移">5. 兼容性与迁移</a></li><li><a href="#6-验收标准">6. 验收标准</a></li><li><a href="#7-实现记录-2026-11-10-与初稿的三处偏离">7. 实现记录（2026-11-10）—— 与初稿的三处偏离</a></li><ul class="lv3"><li><a href="#①-隐藏-struct-用-enum-同名-不是-__msg">① 隐藏 struct 用 enum 同名，不是 __Msg</a></li><li><a href="#②-载荷槽-按成员分段-不是-按位置取共同类型">② 载荷槽 按成员分段，不是"按位置取共同类型"</a></li><li><a href="#③-switch-是-换主题-注入绑定-不是-展开成多个-case-is">③ switch 是"换主题 + 注入绑定"，不是"展开成多个 case is"</a></li><li><a href="#顺手补的两处">顺手补的两处</a></li><li><a href="#三处缺口-已补齐-2026-11-10-第二轮">三处缺口：已补齐（2026-11-10 第二轮）</a></li><li><a href="#仍未做-明确不做">仍未做（明确不做）</a></li></ul><li><a href="#8-压力测试记录-2026-11-10-测出-3-个-bug-已修">8. 压力测试记录（2026-11-10）—— 测出 3 个 bug，已修</a></li><ul class="lv3"><li><a href="#①-a-b-为真-arr-has-b-为假-值比较有两条路-结论不一致">① a == b 为真，arr.has(b) 为假（值比较有两条路，结论不一致）</a></li><li><a href="#②-enum-cmd-add-int-n-stop-被判成-混用带载荷与不带载荷">② enum Cmd { add(int n) stop() } 被判成"混用带载荷与不带载荷"</a></li><li><a href="#③-只要-enum-里有一个-struct-载荷-整条-enum-的-全部变-false">③ 只要 enum 里有一个 struct 载荷，整条 enum 的 == 全部变 false</a></li><li><a href="#④-两个模块导出同名但不同形的带载荷-enum-运行期才报-已改成编译期">④ 两个模块导出同名但不同形的带载荷 enum：运行期才报（已改成编译期）</a></li><li><a href="#⑤-泛型-并发-json-往返-压测通过-无-bug">⑤ 泛型 / 并发 / JSON 往返：压测通过，无 bug</a></li><li><a href="#已知边界-不是-bug-写在这里免得下次又踩">已知边界（不是 bug，写在这里免得下次又踩）</a></li></ul><li><a href="#9-泛型载荷-enum-2026-11-10-起-进度-2-3">9. 泛型载荷 enum（2026-11-10 起，进度 2/3）</a></li><ul class="lv3"><li><a href="#决定-走擦除-与泛型-struct-同一条路">决定：走擦除，与泛型 struct 同一条路</a></li><li><a href="#已完成-步-1-步-2">已完成（步 1 + 步 2）</a></li><li><a href="#已完成-步-3-3-构造的类型实参推断">已完成（步 3/3）：构造的类型实参推断</a></li><li><a href="#已知边界">已知边界</a></li><li><a href="#跨模块-2026-11-10-补齐-已支持">跨模块（2026-11-10 补齐，已支持）</a></li><li><a href="#显示-_str-print-用成员式-2026-11-10">显示：_str / print 用成员式（2026-11-10）</a></li></ul></ul></aside>
+钉子：<code>assert/test_enum_payload.leno</code> 的 ④ 段。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-现状与痛点">1. 现状与痛点</a></li><li><a href="#2-语言形态-提案">2. 语言形态（提案）</a></li><li><a href="#3-降级-lowering-一个隐藏-struct-tag">3. 降级（lowering）：一个隐藏 struct + tag</a></li><ul class="lv3"><li><a href="#为什么用-tag-位置槽-而不是-每个成员一个-struct-类型">为什么用 tag + 位置槽，而不是"每个成员一个 struct 类型"</a></li></ul><li><a href="#4-需要动的地方-按顺序-每步都能独立编译-全绿">4. 需要动的地方（按顺序，每步都能独立编译 + 全绿）</a></li><li><a href="#5-兼容性与迁移">5. 兼容性与迁移</a></li><li><a href="#6-验收标准">6. 验收标准</a></li><li><a href="#7-实现记录-2026-11-10-与初稿的三处偏离">7. 实现记录（2026-11-10）—— 与初稿的三处偏离</a></li><ul class="lv3"><li><a href="#隐藏-struct-用-enum-同名-不是-__msg">① 隐藏 struct 用 enum 同名，不是 __Msg</a></li><li><a href="#载荷槽-按成员分段-不是-按位置取共同类型">② 载荷槽 按成员分段，不是"按位置取共同类型"</a></li><li><a href="#switch-是-换主题-注入绑定-不是-展开成多个-case-is">③ switch 是"换主题 + 注入绑定"，不是"展开成多个 case is"</a></li><li><a href="#顺手补的两处">顺手补的两处</a></li><li><a href="#三处缺口-已补齐-2026-11-10-第二轮">三处缺口：已补齐（2026-11-10 第二轮）</a></li><li><a href="#仍未做-明确不做">仍未做（明确不做）</a></li></ul><li><a href="#8-压力测试记录-2026-11-10-测出-3-个-bug-已修">8. 压力测试记录（2026-11-10）—— 测出 3 个 bug，已修</a></li><ul class="lv3"><li><a href="#a-b-为真-arr-has-b-为假-值比较有两条路-结论不一致">① a == b 为真，arr.has(b) 为假（值比较有两条路，结论不一致）</a></li><li><a href="#enum-cmd-add-int-n-stop-被判成-混用带载荷与不带载荷">② enum Cmd { add(int n)  stop() } 被判成"混用带载荷与不带载荷"</a></li><li><a href="#只要-enum-里有一个-struct-载荷-整条-enum-的-全部变-false">③ 只要 enum 里有一个 struct 载荷，整条 enum 的 == 全部变 false</a></li><li><a href="#两个模块导出同名但不同形的带载荷-enum-运行期才报-已改成编译期">④ 两个模块导出同名但不同形的带载荷 enum：运行期才报（已改成编译期）</a></li><li><a href="#泛型-并发-json-往返-压测通过-无-bug">⑤ 泛型 / 并发 / JSON 往返：压测通过，无 bug</a></li><li><a href="#已知边界-不是-bug-写在这里免得下次又踩">已知边界（不是 bug，写在这里免得下次又踩）</a></li></ul><li><a href="#9-泛型载荷-enum-2026-11-10-起-进度-2-3">9. 泛型载荷 enum（2026-11-10 起，进度 2/3）</a></li><ul class="lv3"><li><a href="#决定-走擦除-与泛型-struct-同一条路">决定：走擦除，与泛型 struct 同一条路</a></li><li><a href="#已完成-步-1-步-2">已完成（步 1 + 步 2）</a></li><li><a href="#已完成-步-3-3-构造的类型实参推断">已完成（步 3/3）：构造的类型实参推断</a></li><li><a href="#已知边界">已知边界</a></li><li><a href="#跨模块-2026-11-10-补齐-已支持">跨模块（2026-11-10 补齐，已支持）</a></li><li><a href="#显示-_str-print-用成员式-2026-11-10">显示：_str / print 用成员式（2026-11-10）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="解构语法实现文档.html">← 上一篇</a><a href="注解系统与optkeys设计草案.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

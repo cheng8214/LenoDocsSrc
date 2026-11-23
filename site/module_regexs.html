@@ -30,13 +30,15 @@
 <h2 id="目录">目录</h2>
 <ul>
 <li><a href="#使用方式">使用方式</a></li>
-<li><a href="#方法列表">方法列表</a></li>
+<li><a href="#方法列表">方法列表</a><ul>
 <li><a href="#匹配检查">匹配检查</a></li>
 <li><a href="#查找与提取">查找与提取</a></li>
 <li><a href="#替换">替换</a></li>
 <li><a href="#分割">分割</a></li>
 <li><a href="#分组">分组</a></li>
 <li><a href="#工具">工具</a></li>
+</ul>
+</li>
 <li><a href="#正则表达式语法">正则表达式语法</a></li>
 <li><a href="#示例代码">示例代码</a></li>
 </ul>
@@ -218,16 +220,15 @@ regexs.replace_all(&quot;hello world hello&quot;, &quot;hello&quot;, &quot;hi&qu
 <li>组存在但<strong>本次没参与匹配</strong>（可选组没匹配上）⇒ 展开成空串</li>
 <li>⚠ <strong>引用不存在的组 ⇒ 运行时错误</strong>（2026-11-15 起；此前静默展开成空串 ——
   实测 <code>replace("cost: b", "b", "$100")</code> 得到 <code>"cost: 00"</code>：想写字面价格却被当成 <code>$1</code>+"00"，
-  数据被静默吃掉 ✗）
-</li>
+  数据被静默吃掉 ✗）</li>
 </ul>
-</blockquote>
 <pre><code class="language-leno">regexs.replace(&quot;abc123&quot;, &quot;[0-9]+&quot;, &quot;&lt;$0&gt;&quot;)     // &quot;abc&lt;123&gt;&quot;
 regexs.replace(&quot;abc&quot;, &quot;(b)&quot;, &quot;[$1]&quot;)           // &quot;a[b]c&quot;
 regexs.replace(&quot;2026-10-01&quot;, &quot;(\\d+)-(\\d+)-(\\d+)&quot;, &quot;$3/$2/$1&quot;)  // &quot;01/10/2026&quot;
 regexs.replace(&quot;x&quot;, &quot;x&quot;, &quot;$$100&quot;)              // &quot;$100&quot;   （字面 $）
 regexs.replace(&quot;x&quot;, &quot;x&quot;, &quot;$100&quot;)               // ✗ 运行时错误：模式里没有第 1 个组
 </code></pre>
+</blockquote>
 <hr>
 <h3 id="分割">分割</h3>
 <h4 id="split-str-pattern-limit"><code>split(str, pattern, limit?)</code></h4>
@@ -244,9 +245,9 @@ regexs.split(&quot;a,b,c,d&quot;, &quot;,&quot;, 2)         // [&quot;a&quot;, &
 <blockquote>
 <p>★ 2026-11-15 两条修正（都与 <code>strings.split</code> 对齐）：
 - <strong>尾部空段保留</strong>：<code>"a,b,"</code> ⇒ <code>["a","b",""]</code>（旧实现静默丢掉最后那段 ⇒ 同一文本
-  <code>strings.split</code> 给 3 段、<code>regexs.split</code> 给 2 段）
+<code>strings.split</code> 给 3 段、<code>regexs.split</code> 给 2 段）
 - <strong>零宽模式不再崩溃</strong>：<code>regexs.split("ab", "")</code> 此前会无限追空串、把数组撑爆后
-  <strong>0xC0000005</strong>；现在跳过零宽匹配 ⇒ 返回 <code>["ab"]</code>（原串原样）
+<strong>0xC0000005</strong>；现在跳过零宽匹配 ⇒ 返回 <code>["ab"]</code>（原串原样）
 - 空输入 ⇒ <code>[]</code>（同 <code>strings.split("", ",")</code>）</p>
 </blockquote>
 <hr>
@@ -301,9 +302,9 @@ Python 的 <code>re</code>，只支持下面这些。</p>
 - <code>(...)</code> <strong>真的产生捕获</strong> —— <code>groups()</code> 返回 <code>[整体, 组1, 组2, ...]</code>（见「分组」一节 ✓）；
 - 替换串里可用<strong>反向引用</strong> —— <code>$1</code> / <code>$0</code> / <code>$$</code>（见 <code>replace</code> 一节 ✓）；
 - <strong>转义简写</strong>：<code>\d</code> = <code>[0-9]</code>、<code>\w</code> = <code>[A-Za-z0-9_]</code>、<code>\s</code> = 空白，取反 <code>\D</code> <code>\W</code> <code>\S</code> ✓
-  （字符类<strong>内</strong>只认小写：<code>[\d]</code> ✓；<code>[\D]</code> 语义含糊 ⇒ 报错 ✓）；
+（字符类<strong>内</strong>只认小写：<code>[\d]</code> ✓；<code>[\D]</code> 语义含糊 ⇒ 报错 ✓）；
 - <strong>词边界</strong> <code>\b</code> / <code>\B</code>（零宽断言 ✓）、<strong>控制字符</strong> <code>\t</code> <code>\n</code> <code>\r</code> <code>\f</code> <code>\v</code> ✓
-  —— 于是"只替换整词"这种常见需求可以直接写：<code>replace_all(s, "\\bcat\\b", "DOG")</code> ✓；
+—— 于是"只替换整词"这种常见需求可以直接写：<code>replace_all(s, "\\bcat\\b", "DOG")</code> ✓；
 - 代价：病态 pattern（如 <code>(a+)+b</code> 匹配一长串 a 而<strong>没有</strong> b）会触发"灾难回溯"——<strong>慢但不会错</strong>，改用更具体的 pattern 即可 ✓</p>
 <h3 id="基本元字符">基本元字符</h3>
 <table>
@@ -361,9 +362,9 @@ Python 的 <code>re</code>，只支持下面这些。</p>
 <td><code>[0-9]{2,4}</code> 匹配 2~4 位数字</td>
 </tr>
 <tr>
-<td><code>\|</code></td>
+<td>`\</td>
+<td>`</td>
 <td>或运算</td>
-<td><code>cat\|dog</code> 匹配 "cat" 或 "dog"</td>
 </tr>
 </tbody>
 </table>
@@ -453,7 +454,7 @@ Python 的 <code>re</code>，只支持下面这些。</p>
 <code>regexs.match("123", "\d+")</code> 返回 <code>false</code> 却毫无提示（而 <code>match("d", "\d")</code> 返回 <code>true</code>），
 从 Python 搬过来的 <code>r"\d+"</code> 正是这个下场，<strong>且编译器不给任何警告</strong> ✗ ⇒ 现在编译期就炸 ✓</p>
 </blockquote>
-<h3 id="分组_1">分组</h3>
+<h3 id="分组">分组</h3>
 <table>
 <thead>
 <tr>
@@ -690,31 +691,29 @@ main() {
 </code></pre>
 <hr>
 <h2 id="注意事项">注意事项</h2>
-<ol start="0">
-<li>
-<p><strong>线程安全（2026-11-15 起）</strong>：解析用的节点池与组号计数器是<strong>每线程一份</strong>
+<ol>
+<li><strong>线程安全（2026-11-15 起）</strong>：解析用的节点池与组号计数器是<strong>每线程一份</strong>
    （<code>_Thread_local</code>）⇒ 多个线程同时调 <code>regexs.*</code> 互不干扰。此前是普通 static，
    实测 4 线程各 500 次 <code>match</code> 会<strong>直接 0xC0000005 崩溃</strong>（A 线程释放了 B 线程正在用的节点）。
-   ⚠ 同一线程内<strong>重入</strong>仍不支持（本模块不会回调进 Leno，正常调用不会重入）。</p>
-</li>
-<li>
-<p><strong>正则表达式编译错误</strong>：模式语法错误 ⇒ <strong>抛运行时错误</strong>（不是静默不匹配 ✓）
-   <code>leno
-   regexs.match("test", "[invalid")      // 抛错：无效的正则表达式（未闭合的字符类）
-   regexs.match("test", "\\q")           // 抛错：无效的正则表达式：不支持的转义 "\q"
-   regexs.match("test", "a{3,2}")        // 抛错：无效的量词 'a{3,2}' —— 写法只有 {n} / {n,} / {n,m}
-   regexs.match("test", "a{2}")          // ✅ 合法（2026-11-19 起支持），不抛错</code></p>
-</li>
-<li>
-<p><strong>贪婪匹配</strong>：<code>*</code>、<code>+</code>、<code>{n,m}</code> 默认都是贪婪的，尽可能匹配更多字符（匹配不上再回退）
-   <code>leno
-   regexs.extract("&lt;div&gt;content&lt;/div&gt;", "&lt;.*&gt;")       // "&lt;div&gt;content&lt;/div&gt;"
-   regexs.extract("aaaa", "a{2,3}")                  // "aaa"（先吃满 3 个）
-   regexs.match("aaab", "^a{2,3}b$")                 // true（回退到 2 个才对得上 b）</code></p>
-</li>
-<li>
-<p><strong>空匹配</strong>：某些模式可能产生空匹配，函数会正确处理避免无限循环</p>
-</li>
+   ⚠ 同一线程内<strong>重入</strong>仍不支持（本模块不会回调进 Leno，正常调用不会重入）。</li>
+</ol>
+<ol>
+<li><strong>正则表达式编译错误</strong>：模式语法错误 ⇒ <strong>抛运行时错误</strong>（不是静默不匹配 ✓）</li>
+</ol>
+<pre><code class="language-leno">   regexs.match(&quot;test&quot;, &quot;[invalid&quot;)      // 抛错：无效的正则表达式（未闭合的字符类）
+   regexs.match(&quot;test&quot;, &quot;\\q&quot;)           // 抛错：无效的正则表达式：不支持的转义 &quot;\q&quot;
+   regexs.match(&quot;test&quot;, &quot;a{3,2}&quot;)        // 抛错：无效的量词 'a{3,2}' —— 写法只有 {n} / {n,} / {n,m}
+   regexs.match(&quot;test&quot;, &quot;a{2}&quot;)          // ✅ 合法（2026-11-19 起支持），不抛错
+</code></pre>
+<ol>
+<li><strong>贪婪匹配</strong>：<code>*</code>、<code>+</code>、<code>{n,m}</code> 默认都是贪婪的，尽可能匹配更多字符（匹配不上再回退）</li>
+</ol>
+<pre><code class="language-leno">   regexs.extract(&quot;&lt;div&gt;content&lt;/div&gt;&quot;, &quot;&lt;.*&gt;&quot;)       // &quot;&lt;div&gt;content&lt;/div&gt;&quot;
+   regexs.extract(&quot;aaaa&quot;, &quot;a{2,3}&quot;)                  // &quot;aaa&quot;（先吃满 3 个）
+   regexs.match(&quot;aaab&quot;, &quot;^a{2,3}b$&quot;)                 // true（回退到 2 个才对得上 b）
+</code></pre>
+<ol>
+<li><strong>空匹配</strong>：某些模式可能产生空匹配，函数会正确处理避免无限循环</li>
 </ol>
 <p>3.1 <strong><code>.</code> 按字符、字符类按 ASCII 字节</strong>（2026-11-11 起）：<code>.</code> 会吃掉<strong>一整个 UTF-8 字符</strong>
 （<code>extract("中文", ".")</code> ⇒ <code>"中"</code>，以前给半个汉字 = 非法 UTF-8 ✗）。而 <code>[...]</code>、<code>\w</code>、<code>\d</code>
@@ -724,13 +723,14 @@ main() {
 <p>3.2 <strong><code>{n,m}</code> 重复"零宽单元"不会成功</strong>（有意）：<code>(){2}</code> / <code>(a|){2}</code> 这类单元一次都不消耗字符，
 匹配器数到 0 次就停（防死循环），于是 <code>n &gt; 0</code> 时判失败 —— Python 在这里会给"空匹配成功"。
 正常写法（<code>a{2}</code>、<code>[0-9]{11}</code>、<code>(ab){3}</code>）不受影响 ✓</p>
-<ol start="4">
+<ol>
 <li><strong>性能考虑</strong>：复杂的正则表达式在大文本上可能较慢，尽量使用具体的字符类
    （<code>{n,m}</code> 的上界限制在 1000、回退是 O(重复次数²)，所以别拿它当"大段重复"用）</li>
 </ol>
 <hr>
 <p><em>文档版本: 1.1</em><br>
-<em>最后更新: 2026-11-19（新增 <code>{n}</code> / <code>{n,}</code> / <code>{n,m}</code> 量词）</em></p></main>
+<em>最后更新: 2026-11-19（新增 <code>{n}</code> / <code>{n,}</code> / <code>{n,m}</code> 量词）</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><ul class="lv3"><li><a href="#模块调用">模块调用</a></li></ul><li><a href="#方法列表">方法列表</a></li><ul class="lv3"><li><a href="#匹配检查">匹配检查</a></li><li><a href="#查找与提取">查找与提取</a></li><li><a href="#替换">替换</a></li><li><a href="#分割">分割</a></li><li><a href="#分组">分组</a></li><li><a href="#工具">工具</a></li></ul><li><a href="#正则表达式语法">正则表达式语法</a></li><ul class="lv3"><li><a href="#基本元字符">基本元字符</a></li><li><a href="#字符类">字符类</a></li><li><a href="#转义">转义</a></li><li><a href="#分组_1">分组</a></li><li><a href="#不支持清单-写了会报错-别照搬-python-posix">⚠ 不支持清单（写了会报错，别照搬 Python / POSIX）</a></li><li><a href="#find_between-s-open-close-截-一对标记之间的内容-2026-11-23-新增">find_between(s, open, close)：截「一对标记之间的内容」（2026-11-23 新增）</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#验证邮箱格式">验证邮箱格式</a></li><li><a href="#提取-url-中的域名">提取 URL 中的域名</a></li><li><a href="#解析日期">解析日期</a></li><li><a href="#清理文本">清理文本</a></li><li><a href="#统计单词数">统计单词数</a></li><li><a href="#敏感信息脱敏">敏感信息脱敏</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_rands.html">← 上一篇</a><a href="module_sockets.html">下一篇 →</a></nav>

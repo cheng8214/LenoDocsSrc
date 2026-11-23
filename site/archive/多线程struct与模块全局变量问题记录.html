@@ -32,19 +32,19 @@
 状态：<strong>部分修复</strong>（struct 定义跨线程已修；模块级全局变量串台待重构）</p>
 <p>★ <strong>2026-10-12 后记（本文之后又修了三处，待办台账见 <code>线程并发能力修复追踪.md</code>）</strong>：
 - <strong>TH1</strong>：struct <strong>实例</strong>现在能跨线程了（深克隆 + 接收侧按定义重建）—— 本文原先"只能传
-  纯字符串数组"的实践约束<strong>不再是语言限制</strong> ✓；
+纯字符串数组"的实践约束<strong>不再是语言限制</strong> ✓；
 - <strong>TH2</strong>：<strong>模块函数可以直接作线程入口</strong>（根因是协程首帧漏设 <code>frame-&gt;module</code>）——
-  本文 §四"模块函数在子线程里跑不起来"那段描述的现象属于那个 bug，现在不会了 ✓，
-  但"<strong>模块级 <code>var</code> 跨线程共享</strong>"这条<strong>依然成立</strong>（恰恰因为共享才串台 ✓）；
+本文 §四"模块函数在子线程里跑不起来"那段描述的现象属于那个 bug，现在不会了 ✓，
+但"<strong>模块级 <code>var</code> 跨线程共享</strong>"这条<strong>依然成立</strong>（恰恰因为共享才串台 ✓）；
 - 另更正一处口径：本文 §二 原写"主脚本全局变量<strong>深拷贝</strong>到子线程"，实测是<strong>浅拷贝</strong>
-  （对象本身共享）⇒ 见下方 §二 ✓；
+（对象本身共享）⇒ 见下方 §二 ✓；
 - <strong>2026-10-20（TH8）</strong>：浅拷贝已改成<strong>深拷贝</strong> —— 全局 <code>string</code>/<code>Array</code>/<code>Dict</code>/<code>struct</code>/闭包
-  现在克隆进子线程堆（旧行为会跨堆写，偶发 <code>0xC0000374</code>）。模块级 <code>var</code> 不受影响，仍是共享 ✓。
+现在克隆进子线程堆（旧行为会跨堆写，偶发 <code>0xC0000374</code>）。模块级 <code>var</code> 不受影响，仍是共享 ✓。
 - <strong>2026-11-08（见 §八）</strong>：deployd 实测到「模块级可变数组跑一阵变成空」⇒ 所有走白名单的接口 403，
-  而 <code>/status</code> 正常。核查后<strong>现有的 <code>mark_roots</code> 已经包含模块 globals</strong>（理论上不该被回收），
-  但那次<strong>没开 <code>LENO_GC_TRACE</code> 就拿不到现场</strong> ⇒ 无法断定是 GC 回收还是模块实例重建；
-  <strong>规避方式已上线并验证</strong>：模块级可变状态一律改 <code>threads.local_*</code> ✓
-  （§八 里写了完整现象、错误假设清单、代码事实和"要继续查该按什么顺序"）</p>
+而 <code>/status</code> 正常。核查后<strong>现有的 <code>mark_roots</code> 已经包含模块 globals</strong>（理论上不该被回收），
+但那次<strong>没开 <code>LENO_GC_TRACE</code> 就拿不到现场</strong> ⇒ 无法断定是 GC 回收还是模块实例重建；
+<strong>规避方式已上线并验证</strong>：模块级可变状态一律改 <code>threads.local_*</code> ✓
+（§八 里写了完整现象、错误假设清单、代码事实和"要继续查该按什么顺序"）</p>
 </blockquote>
 <hr>
 <h2 id="一-背景">一、背景</h2>
@@ -94,17 +94,21 @@ void struct_def_import_from_thread(ObjStructDef** defs, int count);
 </code></pre>
 <p><strong><code>src/include/leno_value.h</code></strong>：声明上述 3 个函数。</p>
 <p><strong><code>src/object/object_thread.c</code>：</strong>
-- <code>ThreadStartArgs</code> 结构体新增字段：
-  <code>c
-  ObjStructDef** struct_defs;   // 主线程结构体定义快照（供子线程注册）
-  int struct_def_count;</code>
-- <code>thread_new_with_args()</code>（主线程上下文）：调用 <code>struct_def_get_count()</code> / <code>struct_def_get()</code>
-  抓取主线程 struct 定义快照，存入 args。
-- <code>thread_entry_point()</code>（子线程上下文）：
-  - 在 <code>threads_init_instance_methods()</code> 之后调用
+- <code>ThreadStartArgs</code> 结构体新增字段：</p>
+<pre><code class="language-c">  ObjStructDef** struct_defs;   // 主线程结构体定义快照（供子线程注册）
+  int struct_def_count;
+</code></pre>
+<ul>
+<li><code>thread_new_with_args()</code>（主线程上下文）：调用 <code>struct_def_get_count()</code> / <code>struct_def_get()</code>
+  抓取主线程 struct 定义快照，存入 args。</li>
+<li><code>thread_entry_point()</code>（子线程上下文）：<ul>
+<li>在 <code>threads_init_instance_methods()</code> 之后调用
     <code>struct_def_import_from_thread(saved_struct_defs, saved_struct_def_count)</code>
-    把主线程定义注册进子线程。
-  - 闭包失败、协程失败、正常退出三条路径都 <code>free(saved_struct_defs)</code> 释放快照内存。</p>
+    把主线程定义注册进子线程。</li>
+<li>闭包失败、协程失败、正常退出三条路径都 <code>free(saved_struct_defs)</code> 释放快照内存。</li>
+</ul>
+</li>
+</ul>
 <h3 id="验证">验证</h3>
 <ul>
 <li>最小多线程 struct 测试（<strong>已收编</strong>进 <code>assert/test_threads.leno</code>；原 <code>examples/threads/test_thread_struct.leno</code>
@@ -114,7 +118,7 @@ void struct_def_import_from_thread(ObjStructDef** defs, int count);
 </ul>
 <hr>
 <h2 id="四-问题二-模块级全局变量多线程串台-未修复-待重构">四、问题二：模块级全局变量多线程串台（⚠️ 未修复，待重构）</h2>
-<h3 id="根因_1">根因</h3>
+<h3 id="根因">根因</h3>
 <p><code>web_html.leno</code> 用<strong>模块级可变全局变量</strong>做解析状态：</p>
 <pre><code class="language-leno">var _g_pos = 0       // 解析光标（模块级全局）
 var _g_html = &quot;&quot;     // 当前 HTML 文本（模块级全局）
@@ -148,21 +152,25 @@ var _g_html = &quot;&quot;     // 当前 HTML 文本（模块级全局）
 <li>把 <code>_g_pos</code> / <code>_g_html</code> 收进一个<strong>解析上下文对象</strong>（例如 <code>_ParseCtx</code> struct：
   <code>string html</code> + <code>int pos</code>）。</li>
 <li><code>parse()</code> 每次创建独立上下文，内部解析函数通过上下文读写。</li>
-<li>收益：</li>
+<li>收益：<ul>
 <li>天然线程安全，支持"多线程并发解析不同 HTML"</li>
 <li>与 Python html5lib 的"解析器实例化"设计一致</li>
 <li>只改 <code>web_html.leno</code> 一个文件（63 处引用替换），不碰语言运行时，风险可控</li>
+</ul>
+</li>
 <li>成本：60+ 处 <code>_g_pos</code>/<code>_g_html</code> 引用要改为上下文成员访问。</li>
 </ul>
 <h3 id="方案-c-改语言运行时-让模块级变量按线程隔离-不建议">方案 C：改语言运行时，让模块级变量按线程隔离（❌ 不建议）</h3>
 <ul>
 <li>让 <code>.leno</code> 模块的 globals 也按线程深拷贝隔离。</li>
-<li><strong>硬性障碍</strong>：
-  1. <code>ObjModule</code> 由 <code>loaded_modules</code> 全局缓存共享，子线程 import 同一模块返回
-     同一个共享对象，globals 仍是共享的。
-  2. 强行隔离会破坏模块缓存一致性、模块全局语义（模块级状态本该跨调用共享）、
-     GC 的模块对象 mark 逻辑。
-  3. 这是动语言核心根基，风险不可控，可能引发新的内存/并发 bug。</li>
+<li><strong>硬性障碍</strong>：<ol>
+<li><code>ObjModule</code> 由 <code>loaded_modules</code> 全局缓存共享，子线程 import 同一模块返回
+     同一个共享对象，globals 仍是共享的。</li>
+<li>强行隔离会破坏模块缓存一致性、模块全局语义（模块级状态本该跨调用共享）、
+     GC 的模块对象 mark 逻辑。</li>
+<li>这是动语言核心根基，风险不可控，可能引发新的内存/并发 bug。</li>
+</ol>
+</li>
 <li><strong>唯一值得做的场景</strong>：未来 Leno 若需要类似 Python <code>threading.local()</code> 的能力，
   那是独立需求，不是修此 bug 的合理手段。</li>
 </ul>
@@ -182,12 +190,14 @@ struct _ParseCtx {
 <ul>
 <li>删除模块级全局 <code>var _g_pos = 0</code> / <code>var _g_html = ""</code></li>
 <li>新增 <code>_ParseCtx</code> struct</li>
-<li>解析函数全部改为接收 <code>_ParseCtx</code> 参数，全局访问改为 <code>ctx.html</code>/<code>ctx.pos</code>：</li>
+<li>解析函数全部改为接收 <code>_ParseCtx</code> 参数，全局访问改为 <code>ctx.html</code>/<code>ctx.pos</code>：<ul>
 <li><code>_parseTagName(_ParseCtx ctx)</code></li>
 <li><code>_skipWs(_ParseCtx ctx)</code></li>
 <li><code>_parseAttrs(_ParseCtx ctx)</code></li>
 <li><code>_parseText(_ParseCtx ctx)</code></li>
 <li><code>_parseElement(_ParseCtx ctx)</code></li>
+</ul>
+</li>
 <li><code>parse(html)</code> 每次创建独立 <code>_ParseCtx</code> 实例（<code>new _ParseCtx()</code>），天然线程安全</li>
 </ul>
 <h3 id="验证结果">验证结果</h3>
@@ -340,7 +350,7 @@ struct _ParseCtx {
 <p><code>curl_global_init</code> 是 libcurl 文档明确标注的<strong>非线程安全</strong>函数，原实现放在
 <code>HttpClient.init()</code> 里 ⇒ 多线程并发建客户端时并发进入全局初始化。
 修法：<code>web_net.leno</code> 提到<strong>模块加载时</strong>做一次（<code>int _g_curlGlobalReady = core.globalInit(...)</code>）。</p>
-<h4 id="验证_1">验证</h4>
+<h4 id="验证">验证</h4>
 <table>
 <thead>
 <tr>
@@ -567,7 +577,8 @@ for (int i = 0; i &lt; module-&gt;global_count; i++) {
 <td>用 <code>Channel</code> 传值，别靠模块级变量</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-背景">一、背景</a></li><li><a href="#二-leno-线程模型-关键前提">二、Leno 线程模型（关键前提）</a></li><li><a href="#三-问题一-struct-定义跨线程不可见-已修复">三、问题一：struct 定义跨线程不可见（✅ 已修复）</a></li><ul class="lv3"><li><a href="#根因">根因</a></li><li><a href="#修复内容-3-个文件-60-行">修复内容（3 个文件，+60 行）</a></li><li><a href="#验证">验证</a></li></ul><li><a href="#四-问题二-模块级全局变量多线程串台-未修复-待重构">四、问题二：模块级全局变量多线程串台（⚠️ 未修复，待重构）</a></li><ul class="lv3"><li><a href="#根因_1">根因</a></li><li><a href="#实测现象-test_thread_parse-leno-8-线程">实测现象（test_thread_parse.leno，8 线程）</a></li><li><a href="#与-python-的对照">与 Python 的对照</a></li></ul><li><a href="#五-后续优化方向-方案评估">五、后续优化方向（方案评估）</a></li><ul class="lv3"><li><a href="#方案-a-重构-web_html-leno-移除模块级全局解析状态-推荐-治本">方案 A：重构 web_html.leno，移除模块级全局解析状态（✅ 推荐，治本）</a></li><li><a href="#方案-c-改语言运行时-让模块级变量按线程隔离-不建议">方案 C：改语言运行时，让模块级变量按线程隔离（❌ 不建议）</a></li><li><a href="#结论">结论</a></li></ul><li><a href="#六-方案-a-实施记录-已完成-2026-08-16">六、方案 A 实施记录（✅ 已完成，2026-08-16）</a></li><ul class="lv3"><li><a href="#重构内容-leno_module-lenoweb-lib-web_html-leno">重构内容（leno_module/LenoWeb/lib/web_html.leno）</a></li><li><a href="#验证结果">验证结果</a></li></ul><li><a href="#七-补充">七、补充</a></li><ul class="lv3"><li><a href="#已保留的改动">已保留的改动</a></li><li><a href="#相关测试文件">相关测试文件</a></li><li><a href="#后续可选优化">后续可选优化</a></li></ul><li><a href="#八-后续-web_net-leno-的同类全局状态已移除-2026-10-06">八、后续：web_net.leno 的同类全局状态已移除（✅ 2026-10-06）</a></li><ul class="lv3"><li><a href="#http-多线程-已打通-根因在运行时的-ffi-回调-2026-10-06-修">✅ "HTTP 多线程"已打通——根因在运行时的 FFI 回调（2026-10-06 修）</a></li></ul><li><a href="#九-接着查到的两个语言缺陷-2026-10-06-修">九、接着查到的两个语言缺陷（✅ 2026-10-06 修）</a></li><ul class="lv3"><li><a href="#9-1-abc-1-len-恒为-0-string_add-漏设-char_len">9.1 ("abc" + 1).len() 恒为 0（string_add 漏设 char_len）</a></li><li><a href="#9-2-use-mod-structtype-后-跨模块方法默认参数丢失">9.2 use mod.(StructType) 后，跨模块方法默认参数丢失</a></li><li><a href="#9-3-链式接收者-省略默认参数-2026-10-06-修">9.3 ✅ 链式接收者 + 省略默认参数（2026-10-06 修）</a></li><li><a href="#验证-9-三个缺陷修完后的最终状态">验证（§9 三个缺陷修完后的最终状态）</a></li></ul><li><a href="#八-2026-11-08-现场记录-deployd-的模块级白名单-跑一阵就空">八、2026-11-08 现场记录：deployd 的模块级白名单「跑一阵就空」</a></li><ul class="lv3"><li><a href="#现象">现象</a></li><li><a href="#走过的错误假设-都验证过-都不成立">走过的错误假设（都验证过，都不成立）</a></li><li><a href="#代码核查结论-现有防护看起来是对的">代码核查结论（现有防护看起来是对的）</a></li><li><a href="#尚未确认的部分-诚实标注-别当成结论">尚未确认的部分（诚实标注，别当成结论）</a></li><li><a href="#有效的规避-已上线并验证">有效的规避（已上线并验证）</a></li><li><a href="#如果还要继续查-按这个顺序">如果还要继续查，按这个顺序</a></li><li><a href="#对使用者的建议">对使用者的建议</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">← 上一篇</a><a href="../archive/字节码优化分析.html">下一篇 →</a></nav>

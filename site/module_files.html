@@ -145,15 +145,14 @@ f.close()
 <p>⚠ <strong>改二进制文件（图片/音频/压缩包）必须用 <code>"rb+"</code>，不能用 <code>"r+"</code></strong>
 <code>"r+"</code> 是文本模式，写入时会把 <code>0x0A</code> 转成 <code>0x0D 0x0A</code>（CRLF），直接把文件写坏。
 实测（2026-10-28）：用 <code>"r+"</code> 在二进制文件中间写 4 字节，后续字节全部错位；
-换成 <code>"rb+"</code> 后同样操作<strong>字节完全一致</strong> ✓
-</p>
-</blockquote>
+换成 <code>"rb+"</code> 后同样操作<strong>字节完全一致</strong> ✓</p>
 <pre><code class="language-leno">// 原地改文件的一段（不改变长度）
 var f = files.open(&quot;song.flac&quot;, &quot;rb+&quot;)
 f.seek(4, &quot;set&quot;)
 f.write(patch)      // 二进制，原样写入 ✓
 f.close()
 </code></pre>
+</blockquote>
 <h3 id="模式选择建议">模式选择建议</h3>
 <pre><code class="language-leno">// 读取配置文件
 var f = files.open(&quot;config.ini&quot;, &quot;r&quot;)
@@ -382,9 +381,9 @@ f.close()
 <p><strong>参数</strong>:
 - <code>pos</code> (int): 偏移量
 - <code>whence</code> (string, 可选): 起始位置
-  - <code>"set"</code> - 从文件开头（默认）
-  - <code>"cur"</code> - 从当前位置
-  - <code>"end"</code> - 从文件末尾</p>
+- <code>"set"</code> - 从文件开头（默认）
+- <code>"cur"</code> - 从当前位置
+- <code>"end"</code> - 从文件末尾</p>
 <p><strong>返回</strong>: <code>int</code> - 操作结果（0 表示成功）</p>
 <pre><code class="language-leno">import files
 
@@ -1061,61 +1060,60 @@ try {
 <hr>
 <h2 id="最佳实践">最佳实践</h2>
 <ol>
-<li>
-<p><strong>使用快捷方法处理简单场景</strong>
-   <code>leno
-   // 简单读写用快捷方法
-   var content = files.read("data.txt")
-   files.write("output.txt", content)</code></p>
-</li>
-<li>
-<p><strong>使用文件对象处理复杂操作</strong>
-   <code>leno
-   // 需要精细控制时用文件对象
-   var f = files.open("data.txt", "r")
+<li><strong>使用快捷方法处理简单场景</strong></li>
+</ol>
+<pre><code class="language-leno">   // 简单读写用快捷方法
+   var content = files.read(&quot;data.txt&quot;)
+   files.write(&quot;output.txt&quot;, content)
+</code></pre>
+<ol>
+<li><strong>使用文件对象处理复杂操作</strong></li>
+</ol>
+<pre><code class="language-leno">   // 需要精细控制时用文件对象
+   var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
    while not f.eof() {
        process_line(f.readline())
    }
-   f.close()</code></p>
-</li>
-<li>
-<p><strong>及时关闭文件</strong>
-   <code>leno
-   // 使用完立即关闭
-   var f = files.open("data.txt", "r")
+   f.close()
+</code></pre>
+<ol>
+<li><strong>及时关闭文件</strong></li>
+</ol>
+<pre><code class="language-leno">   // 使用完立即关闭
+   var f = files.open(&quot;data.txt&quot;, &quot;r&quot;)
    var data = f.read()
-   f.close()  // 不要遗忘</code></p>
-</li>
-<li>
-<p><strong>处理大文件使用分块</strong>
-   <code>leno
-   var f = files.open("large.bin", "rb")
+   f.close()  // 不要遗忘
+</code></pre>
+<ol>
+<li><strong>处理大文件使用分块</strong></li>
+</ol>
+<pre><code class="language-leno">   var f = files.open(&quot;large.bin&quot;, &quot;rb&quot;)
    while not f.eof() {
        var chunk = f.read(4096)
        process(chunk)
    }
-   f.close()</code></p>
-</li>
-<li>
-<p><strong>使用 with 语句（如果语言支持）</strong>
-   <code>leno
-   // 自动关闭
-   with files.open("data.txt", "r") to f {
-       var content = f.read()
-   }  // 自动关闭</code></p>
-</li>
-<li>
-<p><strong>检查操作结果</strong>
-   <code>leno
-   var success = files.delete("old.txt")
-   if not success {
-       print("删除失败，可能文件不存在或无权限")
-   }</code></p>
-</li>
+   f.close()
+</code></pre>
+<ol>
+<li><strong>使用 with 语句（如果语言支持）</strong></li>
 </ol>
+<pre><code class="language-leno">   // 自动关闭
+   with files.open(&quot;data.txt&quot;, &quot;r&quot;) to f {
+       var content = f.read()
+   }  // 自动关闭
+</code></pre>
+<ol>
+<li><strong>检查操作结果</strong></li>
+</ol>
+<pre><code class="language-leno">   var success = files.delete(&quot;old.txt&quot;)
+   if not success {
+       print(&quot;删除失败，可能文件不存在或无权限&quot;)
+   }
+</code></pre>
 <hr>
 <p><em>文档版本: 1.0</em><br>
-<em>最后更新: 2026-05-17</em></p></main>
+<em>最后更新: 2026-05-17</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#使用方式">使用方式</a></li><li><a href="#文件打开模式">文件打开模式</a></li><ul class="lv3"><li><a href="#模式选择建议">模式选择建议</a></li></ul><li><a href="#模块方法-静态方法">模块方法（静态方法）</a></li><ul class="lv3"><li><a href="#open-path-mode">open(path, mode)</a></li><li><a href="#exists-path">exists(path)</a></li><li><a href="#delete-path">delete(path)</a></li><li><a href="#read-path">read(path)</a></li><li><a href="#write-path-content">write(path, content)</a></li></ul><li><a href="#文件对象方法">文件对象方法</a></li><ul class="lv3"><li><a href="#read-read-n">read() / read(n)</a></li><li><a href="#readline">readline()</a></li><li><a href="#readlines">readlines()</a></li><li><a href="#write-string">write(string)</a></li><li><a href="#writeln-string">writeln(string)</a></li><li><a href="#seek-pos-whence">seek(pos, whence)</a></li><li><a href="#tell">tell()</a></li><li><a href="#len">len()</a></li><li><a href="#eof">eof()</a></li><li><a href="#close">close()</a></li></ul><li><a href="#读取操作">读取操作</a></li><ul class="lv3"><li><a href="#读取整个文件">读取整个文件</a></li><li><a href="#逐行读取">逐行读取</a></li><li><a href="#分块读取-大文件">分块读取（大文件）</a></li></ul><li><a href="#写入操作">写入操作</a></li><ul class="lv3"><li><a href="#覆盖写入">覆盖写入</a></li><li><a href="#字节保真-行尾-bom-批量改写务必看这一节">字节保真（行尾 / BOM）—— 批量改写务必看这一节</a></li><li><a href="#追加写入">追加写入</a></li><li><a href="#写入格式化数据">写入格式化数据</a></li></ul><li><a href="#文件定位">文件定位</a></li><ul class="lv3"><li><a href="#随机访问">随机访问</a></li><li><a href="#修改文件特定位置">修改文件特定位置</a></li></ul><li><a href="#文件属性">文件属性</a></li><ul class="lv3"><li><a href="#获取文件大小">获取文件大小</a></li><li><a href="#检查文件状态">检查文件状态</a></li></ul><li><a href="#快捷操作">快捷操作</a></li><ul class="lv3"><li><a href="#复制文件">复制文件</a></li><li><a href="#大文件复制-分块">大文件复制（分块）</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-配置文件读写">示例1：配置文件读写</a></li><li><a href="#示例2-日志记录器">示例2：日志记录器</a></li><li><a href="#示例3-csv-文件处理">示例3：CSV 文件处理</a></li><li><a href="#示例4-二进制文件处理">示例4：二进制文件处理</a></li><li><a href="#示例5-文件搜索和替换">示例5：文件搜索和替换</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-文件编码">1. 文件编码</a></li><li><a href="#2-路径分隔符">2. 路径分隔符</a></li><li><a href="#3-文件关闭">3. 文件关闭</a></li><li><a href="#4-大文件处理">4. 大文件处理</a></li><li><a href="#5-错误处理">5. 错误处理</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_ffi_api.html">← 上一篇</a><a href="module_io.html">下一篇 →</a></nav>

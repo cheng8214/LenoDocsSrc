@@ -30,7 +30,7 @@
 <h2 id="目录">目录</h2>
 <ul>
 <li><a href="#使用方式">使用方式</a></li>
-<li><a href="#方法列表">方法列表</a></li>
+<li><a href="#方法列表">方法列表</a><ul>
 <li><a href="#基础属性">基础属性</a></li>
 <li><a href="#大小写转换">大小写转换</a></li>
 <li><a href="#修剪空白">修剪空白</a></li>
@@ -43,6 +43,8 @@
 <li><a href="#单位与进制">单位与进制</a></li>
 <li><a href="#格式化">格式化</a></li>
 <li><a href="#字符编码">字符编码</a></li>
+</ul>
+</li>
 </ul>
 <hr>
 <h2 id="使用方式">使用方式</h2>
@@ -380,15 +382,14 @@ while pos &gt;= 0 {
 <blockquote>
 <p>⚠ 边界（2026-11-16 实测）：<code>rep(负数)</code> ⇒ <code>""</code>（当 0 处理，不报错）；<code>rep(n)</code> 的结果长度
 是 <code>len * n</code>，对大串 × 大 n 要自己估一下内存（没有上限保护）。</p>
-<p>★ <strong>写错了会告诉你正确名字</strong>（2026-11-23）：这三个方法<strong>没有别名</strong>（同一功能只留一个名字），
-但拼错/记错时会直接给建议，不用去翻 43 个方法名：
-</p>
 </blockquote>
+<blockquote>
+<p>★ <strong>写错了会告诉你正确名字</strong>（2026-11-23）：这三个方法<strong>没有别名</strong>（同一功能只留一个名字），
+但拼错/记错时会直接给建议，不用去翻 43 个方法名：</p>
 <pre><code>strings.repeat(...)  →  提示: 是否想用 'rep'？
 strings.upper(...)   →  提示: 是否想用 'to_upper'？
 strings.lower(...)   →  提示: 是否想用 'to_lower'？
 </code></pre>
-<blockquote>
 <p>规则是「同词根、前后缀相差 ≤3 个字符」，双向匹配（<code>upper</code>→<code>to_upper</code> 是加前缀，
 <code>repeat</code>→<code>rep</code> 是去后缀）；<strong>真的没有相近项时不硬凑建议</strong>（避免瞎猜）。</p>
 </blockquote>
@@ -666,7 +667,7 @@ strings.hex(-1, 8)            // &quot;FFFFFFFF&quot;   （负数按补码）
 <td><code>format("%+d", 42)</code> → <code>"+42"</code></td>
 </tr>
 <tr>
-<td><code></code></td>
+<td><code> </code></td>
 <td>正数前加空格</td>
 <td><code>format("% d", 42)</code> → <code>" 42"</code></td>
 </tr>
@@ -777,7 +778,7 @@ format(&quot;Char: %c&quot;, 65)                      // &quot;Char: A&quot;
 - 类型不匹配时（如 <code>%d</code> 传入字符串）显示 <code>&lt;type_error&gt;</code>
 - 参数不足时显示 <code>&lt;missing&gt;</code>
 - <strong><code>%s</code> 的宽度与精度都按「字符」计</strong>（2026-11-23 修；此前按<strong>字节</strong>，一个汉字 3 字节
-  ⇒ <code>%-10s</code> 对中文只补 1~2 个空格，表格列必然错位）。与 <code>strings.len</code> / <code>pad_end</code> 同一口径：</p>
+⇒ <code>%-10s</code> 对中文只补 1~2 个空格，表格列必然错位）。与 <code>strings.len</code> / <code>pad_end</code> 同一口径：</p>
 <pre><code class="language-leno">main() {
     // 中文按 10「列」对齐（不是 10 字节）
     print(&quot;[&quot; + format(&quot;%-10s|&quot;, &quot;中文&quot;) + &quot;]\n&quot;)   // [中文        |]
@@ -848,6 +849,8 @@ strings.from_hex(&quot;4869&quot;)  // &quot;Hi&quot;
 <p><strong>默认为什么是小写</strong>：收编时数出来的 19 处手写实现（crypto 示例 9 份 <code>to_hex</code> +
 <code>sha*/md5/hmac/pbkdf2</code> 里的 <code>byte_to_hex</code>）<strong>清一色小写</strong>，SHA/MD5 摘要的通行写法也是小写
 ⇒ 只有默认小写才能"换上去以后输出一字不变" ✓（本 API 最早只输出大写，那样会让这 19 处全部改样 ✗）。</p>
+</blockquote>
+<blockquote>
 <p>⚠ 别与 <code>hex(value, width)</code> 混：那个是<strong>数字 → hex 文本</strong>，这两个是<strong>字节串 ↔ hex 文本</strong>。
 ⚠ <code>from_hex</code> 对<strong>奇数长度</strong>或<strong>非 hex 字符</strong>抛错（并指出第几个字符），不静默跳过。</p>
 </blockquote>
@@ -918,11 +921,15 @@ strings.from_codepoint(20013)   // &quot;中&quot;  ← to_codepoints 的**逆�
 后者要从头走到第 i 个字符 ⇒ 循环是 <strong>O(n²)</strong>。基准实测（4000 字符 × 20 趟）：
 手写 <code>slice(i,i)</code> <strong>113,589µs</strong> ｜ 循环 <code>codepoint_at</code> <strong>56,307µs（2.0x）</strong>
 ｜ 一趟 <code>to_codepoints</code> <strong>863µs（131.6x）</strong> ✓</p>
+</blockquote>
+<blockquote>
 <p><strong><code>from_codepoint</code> 的非法值会抛错</strong>（不静默错值）：负数、大于 <code>0x10FFFF</code>、
 以及 UTF-16 代理区 <code>0xD800..0xDFFF</code> 都拒绝。
 ⚠ 一个已知边界：<code>to_codepoints</code> 对<strong>非法 UTF-8 字节</strong>（如 <code>0xFF</code>）是"原样给首字节值"，
 而 <code>from_codepoint(0xFF)</code> 会按码点正确编成 <code>C3 BF</code> 两字节 ⇒ 这条配对<strong>只对合法 UTF-8 严格互逆</strong>
 （实测：合法语料逐字符 0 分歧；含坏字节的串会有差异）。SDL/界面文本恒为合法 UTF-8 ⇒ 不受影响 ✓</p>
+</blockquote>
+<blockquote>
 <p>另一条实测（同一次基准）：逐字节拼串 手写 <strong>700,846µs</strong> vs <code>from_bytes</code> <strong>84µs（8343x）</strong>；
 hex 编码 手写 <strong>55,300µs</strong> vs <code>to_hex</code> <strong>26µs（2127x）</strong>；忽略大小写 <strong>2.0x</strong>。</p>
 </blockquote>
@@ -1100,7 +1107,8 @@ main() {
 </code></pre>
 <hr>
 <p><em>文档版本: 1.6</em><br>
-<em>最后更新: 2026-08-31</em></p></main>
+<em>最后更新: 2026-08-31</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><ul class="lv3"><li><a href="#模块调用">模块调用</a></li><li><a href="#实例调用">实例调用</a></li><li><a href="#全局函数">全局函数</a></li></ul><li><a href="#方法列表">方法列表</a></li><ul class="lv3"><li><a href="#基础属性">基础属性</a></li><li><a href="#大小写转换">大小写转换</a></li><li><a href="#修剪空白">修剪空白</a></li><li><a href="#包含检查">包含检查</a></li><li><a href="#查找替换">查找替换</a></li><li><a href="#子串提取">子串提取</a></li><li><a href="#字符串变换">字符串变换</a></li><li><a href="#分割与连接">分割与连接</a></li><li><a href="#单位与进制">单位与进制</a></li><li><a href="#格式化">格式化</a></li><li><a href="#字符编码">字符编码</a></li><li><a href="#字节-码点-忽略大小写-2026-10-02-新增">字节 / 码点 / 忽略大小写（2026-10-02 新增）</a></li></ul><li><a href="#索引说明">索引说明</a></li><ul class="lv3"><li><a href="#unicode-字符索引">Unicode 字符索引</a></li><li><a href="#0-based-索引">0-based 索引</a></li><li><a href="#负数索引">负数索引</a></li></ul><li><a href="#性能提示">性能提示</a></li><li><a href="#与-lua-的对比">与 Lua 的对比</a></li><li><a href="#示例代码">示例代码</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_sockets.html">← 上一篇</a><a href="module_sys.html">下一篇 →</a></nav>

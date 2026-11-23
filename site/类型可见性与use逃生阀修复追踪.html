@@ -295,11 +295,13 @@ m.Pt p = m.mk()         // ✗ 类型位置（parser_func.c:662 / parser.c:225 �
 <li><strong>预注册阶段早于 <code>import</code></strong> —— 语义分析开头会先把所有函数签名归一化一遍，那一遍<strong>跑在 <code>AST_IMPORT</code> / <code>AST_USE</code> 之前</strong> ⇒ 那时模块别名还没登记，动手只会得到假错误「模块 'm' 未导入」（实测一个探针里 3 个位置全报）。
    修法：加显式阶段标志 <code>in_type_prepass</code>，那一遍<strong>原样留着</strong>，主阶段再解析 ✓
    （<strong>不猜</strong>"是不是预注册"—— 猜错就是假报错或漏报 ✓）。</li>
-<li><strong>两个"静默错"</strong>（都靠套件才暴露，光看输出看不出来）：
-   - <strong>抽取时把 native 成功出口改成了失败</strong>：原 case 里那一句 <code>break;</code> 位于 <code>if (!semantic_import_native_type(…))</code> <strong>之外</strong>（= 成功出口 ✓），我按行号映射时当成失败分支 ⇒ <strong>所有 native 限定名（<code>d.DirEntry</code>）静默变成 <code>any</code></strong> ✗。
+<li><strong>两个"静默错"</strong>（都靠套件才暴露，光看输出看不出来）：<ul>
+<li><strong>抽取时把 native 成功出口改成了失败</strong>：原 case 里那一句 <code>break;</code> 位于 <code>if (!semantic_import_native_type(…))</code> <strong>之外</strong>（= 成功出口 ✓），我按行号映射时当成失败分支 ⇒ <strong>所有 native 限定名（<code>d.DirEntry</code>）静默变成 <code>any</code></strong> ✗。
      为什么难发现：局部变量 / 形参 / 顶层变量的 <code>any</code> 是<strong>合法</strong>的 ⇒ 那几格"看起来正常"，只有 <strong>struct 字段</strong>位置报「字段不能使用 any」才把它顶出来 ✓。
-     ⇒ 教训：<strong>搬代码必须按语法层级看，不能只按行号映射</strong> ✓。
-   - <strong><code>semantic_init</code> 不是整体 memset</strong>（本仓注释里专门警告过 ✓）：新加的 <code>in_type_prepass</code> 漏了显式清零 ⇒ <strong>模块模式</strong>下读到栈上垃圾（非零）⇒ 归一化整段被跳过 ⇒ 模块里写 <code>m.Pt</code> 报"未定义的类型" ✗（入口脚本模式恰好是 0，所以只有模块模式红 ✓）。</li>
+     ⇒ 教训：<strong>搬代码必须按语法层级看，不能只按行号映射</strong> ✓。</li>
+<li><strong><code>semantic_init</code> 不是整体 memset</strong>（本仓注释里专门警告过 ✓）：新加的 <code>in_type_prepass</code> 漏了显式清零 ⇒ <strong>模块模式</strong>下读到栈上垃圾（非零）⇒ 归一化整段被跳过 ⇒ 模块里写 <code>m.Pt</code> 报"未定义的类型" ✗（入口脚本模式恰好是 0，所以只有模块模式红 ✓）。</li>
+</ul>
+</li>
 </ol>
 <h3 id="症状">症状</h3>
 <pre><code class="language-leno">import &quot;./_mod.leno&quot; as m
@@ -332,17 +334,21 @@ var q = new m.Pt()       // ✓ 表达式位置一直合法
 </ol>
 <h3 id="方案-两步-都在-入口-上">方案（两步，都在"入口"上）</h3>
 <ol>
-<li><strong>解析侧</strong>（<code>parser_func.c</code> + <code>parser.c</code>）
-   - <code>parse_type_internal</code>：识别 <code>IDENT . IDENT</code> ⇒ 把模块前缀与类型名一起存进 <code>TypeInfo</code>
+<li><strong>解析侧</strong>（<code>parser_func.c</code> + <code>parser.c</code>）<ul>
+<li><code>parse_type_internal</code>：识别 <code>IDENT . IDENT</code> ⇒ 把模块前缀与类型名一起存进 <code>TypeInfo</code>
      （备选 A：新增 <code>char* module_name</code> 字段；备选 B：<code>struct_name</code> 存 <code>"m.Pt"</code>）。
-     推荐 <strong>A</strong>：语义清楚、<code>type_to_string</code> 好写、不会与真正的嵌套名混淆。
-   - 撤掉/改写 <code>parser_reject_module_qualified_type</code>：<strong>保留</strong>它作为"其余非法点号"的兜底
-     （如 <code>m.Pt.Sub</code>），但不再拦 <code>IDENT.IDENT</code>。
-   - <code>parser.c:225-231</code> 的声明路径：从"报错"改为"交给类型解析"。</li>
-<li><strong>语义侧</strong>（<code>resolve_alias_in_type</code>）
-   - 遇到带模块前缀的类型 ⇒ 在该模块<strong>已导入</strong>的前提下，去它的符号表查导出类型：<ul>
+     推荐 <strong>A</strong>：语义清楚、<code>type_to_string</code> 好写、不会与真正的嵌套名混淆。</li>
+<li>撤掉/改写 <code>parser_reject_module_qualified_type</code>：<strong>保留</strong>它作为"其余非法点号"的兜底
+     （如 <code>m.Pt.Sub</code>），但不再拦 <code>IDENT.IDENT</code>。</li>
+<li><code>parser.c:225-231</code> 的声明路径：从"报错"改为"交给类型解析"。</li>
+</ul>
+</li>
+<li><strong>语义侧</strong>（<code>resolve_alias_in_type</code>）<ul>
+<li>遇到带模块前缀的类型 ⇒ 在该模块<strong>已导入</strong>的前提下，去它的符号表查导出类型：<ul>
 <li>命中 ⇒ 就地替换成<strong>不带前缀</strong>的 <code>TypeInfo</code>（后续流程完全不知情 ✓）；</li>
 <li>未 import / 未导出 / 名字错 ⇒ 走 <code>semantic_undefined_type_hint</code> 同口径处方 ✓。</li>
+</ul>
+</li>
 <li>⚠ 替换后<strong>不要</strong>留着 <code>module_name</code>（否则 <code>type_equal</code> 会把 <code>m.Pt</code> 与 <code>Pt</code> 判成不同类型 ✗）。</li>
 </ul>
 </li>
@@ -584,7 +590,7 @@ var q = new m.Pt()       // ✓ 表达式位置一直合法
 </tbody>
 </table>
 <p>处方文案（三处共用，由 <code>semantic_undefined_type_hint</code> 生成 ✓）：
-<code>未定义的类型: C（它其实是模块 'm' 导出的 struct ⇒ 请补一句</code>use m.C<code>✓；源码里**出现它的每一处**
+<code>未定义的类型: C（它其实是模块 'm' 导出的 struct ⇒ 请补一句 </code>use m.C<code> ✓；源码里**出现它的每一处**
 都要在 use 列表里 —— 泛型参数里（如 Array[C]）也算 ✓）</code></p>
 <p><strong>⇒ 结论</strong>：§0.2 记的"报在 <code>use</code> 那一行"这条<strong>已经不复现</strong>（大概率是 2026-10-10 那轮"处方共享实现
 + 八处拷贝收敛"顺带治好的 ✓ —— 没去二分是哪一轮，本条的价值转为<strong>钉住位置</strong> ✓）。</p>
@@ -655,7 +661,8 @@ var q = new m.Pt()       // ✓ 表达式位置一直合法
 <td><strong>复核不复现 ⇒ 收口 + 补钉</strong>：五个声明位置（局部变量 / 形参 / 返回 / 字段 / 泛型实参）的漏列报错<strong>全在使用处</strong>并点名处方 ✓ ⇒ 新增 <code>assert/test_use_missing_diag.leno</code>（含<strong>行号</strong>断言 + 处方可用性）。⚠ 顺带查实：<code>is</code> / <code>as</code> 这类<strong>动态判据</strong>位置不要求 <code>use</code>（会跨已导入模块按名字找 ✓）—— 是否收紧留作待定</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-为什么开这张表-一次设计评估的落点">0. 为什么开这张表（一次设计评估的落点）</a></li><li><a href="#1-现状事实-全部核对过-不靠记忆">1. 现状事实（全部核对过，不靠记忆）</a></li><li><a href="#2-台账">2. 台账</a></li><li><a href="#3-us1-详述-p0-已修-2026-10-12-工作区未提交">3. US1 详述（P0）—— ✅ 已修（2026-10-12，工作区未提交）</a></li><ul class="lv3"><li><a href="#落地-改了哪-8-处">落地（改了哪 8 处）</a></li><li><a href="#实施中踩到的两个坑-都很隐蔽-值得记住">⚠ 实施中踩到的两个坑（都很隐蔽，值得记住）</a></li><li><a href="#症状">症状</a></li><li><a href="#根因">根因</a></li><li><a href="#可用的地基-为什么现在成本可控">可用的地基（为什么现在成本可控）</a></li><li><a href="#方案-两步-都在-入口-上">方案（两步，都在"入口"上）</a></li><li><a href="#实施前必须先回答-别猜">实施前必须先回答（别猜）</a></li><li><a href="#验收判据-按位置矩阵钉全-这是-us1-的核心风险">验收判据（按位置矩阵钉全，这是 US1 的核心风险）</a></li><li><a href="#验收-实测-2026-10-12">验收（实测，2026-10-12）</a></li><li><a href="#顺带收益">顺带收益</a></li></ul><li><a href="#3-us2-p2-复核-漏列-use-的报错定位-症状不复现-2026-10-12">3-US2（P2）复核：漏列 use 的报错定位 —— ✅ 症状不复现（2026-10-12）</a></li><li><a href="#4-明确不做-想清楚了-不再反复">4. 明确不做（想清楚了，不再反复）</a></li><li><a href="#5-变更记录">5. 变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="待修_编译与语义问题.html">← 上一篇</a><a href="线程并发能力修复追踪.html">下一篇 →</a></nav>

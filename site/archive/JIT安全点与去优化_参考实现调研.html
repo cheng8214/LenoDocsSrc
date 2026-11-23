@@ -32,6 +32,8 @@
 <code>jit</code> 命名文件：<code>git ls-files "*jit*"</code> 与 <code>git log --all --diff-filter=AD -- "*jit*"</code>
 均为空 ⇒ 文中 <code>src/jit/*</code>、<code>LENO_NO_JIT=1</code>、<code>JIT_HOT_THRESHOLD</code> 等<strong>别去当前源码里找</strong>。
 现行实现是寄存器式解释器（<code>src/vm/vminc/run/*.inc</code>）；现行性能结论与待办见 <code>docs/待办与路线图.md</code>。</p>
+</blockquote>
+<blockquote>
 <p>建立于 2026-09-13。目的：为「JIT 循环里怎么触发 GC」找行业答案。
 直接背景是 <code>docs/archive/JIT实现与调试记录.md</code> §8.36 / §8.37 —— 我们实测出的三件事：
 ① JIT 活值在机器栈里、GC 看不见；② 因此不能在机器码里就地回收；
@@ -251,7 +253,8 @@ OopMap / ScopeDesc 属补充知识，但与 HotSpot 的公认设计一致）：<
 <p>抓不到可用权威源的部分（本文件已明确标注为「推论」）：LuaJIT 2.x 的 snapshot /
 stack sync 具体实现、HotSpot C1/C2 插入 poll 的编译阶段、counted-loop 的 poll 消除。
 如果要引用这些，应直接读 <code>lj_snap.c</code> / <code>lj_record.c</code> 与 <code>graphKit.cpp</code> / <code>loopnode.cpp</code>。</p>
-</blockquote></main>
+</blockquote>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-hotspot-安全点怎么放-怎么停-gc-怎么看见活值">一、HotSpot：安全点怎么放、怎么停、GC 怎么看见活值</a></li><ul class="lv3"><li><a href="#1-1-poll-指令的插入位置-源">1.1 poll 指令的插入位置（源）</a></li><li><a href="#1-2-怎么-停-polling-page-源">1.2 怎么"停"：polling page（源）</a></li><li><a href="#1-3-gc-为什么能在-poll-处就地回收-oopmap-scopedesc-源-补充">1.3 GC 为什么能在 poll 处就地回收：OopMap + ScopeDesc（源 + 补充）</a></li><li><a href="#1-4-bailout-的正确形态-帧重构-而不是重跑-源-补充">1.4 "bailout" 的正确形态：帧重构，而不是重跑（源 + 补充）</a></li></ul><li><a href="#二-luajit-不扫机器码-靠-栈槽是权威副本-snapshot">二、LuaJIT：不扫机器码，靠"栈槽是权威副本 + snapshot"</a></li><ul class="lv3"><li><a href="#2-1-草案页明确写的-源">2.1 草案页明确写的（源）</a></li><li><a href="#2-2-luajit-2-x-的机制-推论">2.2 LuaJIT 2.x 的机制（推论）</a></li></ul><li><a href="#三-横向对照">三、横向对照</a></li><li><a href="#四-对本项目的结论-按性价比">四、对本项目的结论（按性价比）</a></li><ul class="lv3"><li><a href="#4-1-现在该做的-路线-3-回边让出-hotspot-的-poll-位置-但不做-oopmap">4.1 现在该做的：路线 3「回边让出」= HotSpot 的 poll 位置，但不做 OopMap</a></li><li><a href="#4-2-长期要做才能-就地回收-的-栈位图-我们的-oopmap">4.2 长期要做才能"就地回收"的：栈位图（我们的 OopMap）</a></li><li><a href="#4-3-值得顺手记下的设计判断">4.3 值得顺手记下的设计判断</a></li></ul><li><a href="#五-来源清单">五、来源清单</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/GC与分配优化.html">← 上一篇</a><a href="../archive/JIT实现与调试记录.html">下一篇 →</a></nav>

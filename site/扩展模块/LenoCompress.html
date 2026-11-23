@@ -62,8 +62,8 @@ int a = z.adler32(&quot;abc&quot;)           // 38600999
 </thead>
 <tbody>
 <tr>
-<td><code>deflateRaw(s)</code> / <code>deflateLevel(s, 1\|2)</code></td>
-<td>裸 DEFLATE <strong>压缩</strong>（level 1 快、level 2 更小）</td>
+<td><code>deflateRaw(s)</code> / `deflateLevel(s, 1\</td>
+<td>2)`</td>
 </tr>
 <tr>
 <td><code>gzip(s)</code></td>
@@ -93,9 +93,11 @@ int a = z.adler32(&quot;abc&quot;)           // 38600999
 </table>
 <h2 id="压缩实现-v0-2-0-新增">压缩实现（v0.2.0 新增）</h2>
 <ul>
-<li><strong>fixed Huffman（BTYPE=01）+ LZ77</strong>，单个 BFINAL 块</li>
+<li><strong>fixed Huffman（BTYPE=01）+ LZ77</strong>，单个 BFINAL 块<ul>
 <li>窗口 32KB、最小匹配 3、最大 258、哈希 8192 槽（3 字节）</li>
 <li><code>level 1</code>：只试最近一次出现；<code>level 2</code>（默认）：顺链最多 32 个候选</li>
+</ul>
+</li>
 <li>为什么先不做 dynamic Huffman：要多算码长、构树、把码表写进流里，复杂度约 3 倍；
   而 fixed 对 XML/CSV/JSON 这类重复度高的文本已能到 <strong>10–50 倍</strong>（实测见下）。
   解码端本来就支持 fixed/dynamic 两种 ⇒ 我们压的流、别人压的流走同一套解码路径。</li>
@@ -194,7 +196,8 @@ python build\leno_module\LenoCompress\test\dev_crosscheck_python.py
 <li>dynamic Huffman（码长 RLE + 码表），预计比 fixed 再省 20–40%</li>
 <li>惰性匹配 / 匹配长度上限调优</li>
 <li>解压侧补 CRC32 校验（现在为性能省略）</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#压缩实现-v0-2-0-新增">压缩实现（v0.2.0 新增）</a></li><li><a href="#解压实现-0-1-0">解压实现（0.1.0）</a></li><li><a href="#实测-windows-x64">实测（Windows x64）</a></li><li><a href="#验证">验证</a></li><li><a href="#来源与去重">来源与去重</a></li><li><a href="#下一步">下一步</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoCSV.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>

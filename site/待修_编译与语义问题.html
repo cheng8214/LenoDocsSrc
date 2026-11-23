@@ -58,21 +58,23 @@ if ucw != null { ... }
 <li>真正<strong>丢可空性</strong>的是 <strong>native 规格通道</strong>：<code>NativeTypeSpec</code> 原先只能表达"非可空 T"
    ⇒ 返回值明明可能是 null，调用点拿到的静态类型却不带 <code>?</code>。可直接复现：</li>
 </ol>
-<p><code>leno
-   var r = _exec("cmd /c echo hi", 5000)   // 静态类型曾是非可空 struct ExecResult
-   if r != null { ... }                    // ⇒ 误报「struct 值类型默认被立即分配（不为 null）」</code></p>
+<pre><code class="language-leno">   var r = _exec(&quot;cmd /c echo hi&quot;, 5000)   // 静态类型曾是非可空 struct ExecResult
+   if r != null { ... }                    // ⇒ 误报「struct 值类型默认被立即分配（不为 null）」
+</code></pre>
 <p>这正是 sdl_capture.leno / screenshot_hotkey.leno 里手写 <code>ExecResult? r = _exec(...)</code>
-   并留注释绕开的那条坑。</p>
+并留注释绕开的那条坑。</p>
 <p><strong>修法</strong>（<code>src/include/leno_types.h</code> + <code>src/native.c</code> + <code>src/module/sys/sys.c</code>）：</p>
 <ul>
 <li>规格层新增 <code>NTYPE_NULLABLE</code> 包装标签：<code>{ NTYPE_NULLABLE, NULL, &amp;S_EXECRESULT_SPEC, ... }</code>
-  表示"内层规格的类型是可空的"。</li>
+  表示"内层规格的类型是可空的"。<ul>
 <li>为什么用 tag 而不是给 <code>NativeTypeSpec</code> 加 <code>int nullable</code> 字段：全仓 40+ 处规格都是
     <strong>位置式</strong>初始化，加字段会让它们全部触发 <code>-Wmissing-field-initializers</code>（实测 40 条噪音），
     而"没写就是非可空"本就是需要的默认值 ⇒ 用包装 tag 表达，既有规格逐字不变。</li>
 <li><code>native_type_spec_to_info_impl()</code> 先剥壳解析内层再打 <code>nullable</code>（驻留实例先 <code>type_copy</code>
     再改，避免污染全局缓存）；<code>native_spec_kind()</code> 取内层 kind；
     <code>native_type_spec_to_string()</code> 渲染成 <code>内层?</code>（LSP hover / 诊断与实际类型同形）。</li>
+</ul>
+</li>
 <li><code>_exec</code> 的返回规格包成 <code>ExecResult?</code>（<code>native_exec</code> 在首参不是 string / 分配失败时
   确实 <code>return val_null()</code>）。其它 native <strong>不</strong>顺手标可空：<code>dirs.stat</code> 之类正常路径必返回
   结构体，误标可空只会让 <code>st.size</code> 这类访问凭空多出"可能空"的噪音。</li>
@@ -89,7 +91,7 @@ if ucw != null { ... }
 <p>批量把 <code>xxx(</code> 重命名成 <code>mod.xxx(</code> 时，用 <code>String.Replace</code> 会<strong>命中字符串字面量与
 其它上下文</strong>。本次出现过：
 - 替换 <code>"resizable",</code> 时误改到 <code>opts.get("resizable", true)</code> → 变成
-  <code>opts.get("radius", "resizable", true)</code>，报"参数过多 / 类型不匹配"。</p>
+<code>opts.get("radius", "resizable", true)</code>，报"参数过多 / 类型不匹配"。</p>
 <p><strong>规避</strong>：批量替换带引号的片段时，必须加更长的上下文（含 <code>opts.get(</code> 前缀），
 或者先 <code>--check</code> 再逐条看错误行号。</p>
 <hr>
@@ -128,12 +130,14 @@ hk.onTrack = hk.track_row_like
 <li><code>visit_field_access.inc</code> + <code>semantic_type.c</code>：字段查不到时用<strong>统一判据</strong>
   <code>semantic_struct_has_method()</code>（func_table 的 <code>"Struct::method"</code> 键 + struct 定义的方法表）
   放行，并在推断侧用 <code>infer_method_value_type()</code> 给出<strong>不含 self</strong> 的函数签名
-  （bound method 已绑接收者 ⇒ 调用点只传业务实参）。</li>
+  （bound method 已绑接收者 ⇒ 调用点只传业务实参）。<ul>
 <li>跨模块占位符的形参名不叫 <code>self</code>（符号表只存类型）⇒ 判"第 0 个形参类型就是这个 struct"
     来识别 self，否则签名会多一个参数。</li>
 <li>无返回值注解的方法 ⇒ 签名返回类型是 <code>void</code>（<code>TYPE_NULL</code>）而不是 <code>any</code>，
     否则 <code>func(Song):void</code> 会<strong>签名不等</strong>而误报类型不匹配。</li>
 <li>⚠ <code>type_function()</code> 的所有权<strong>不对称</strong>：返回类型直接接管、参数表深拷贝 ⇒ 只能释放参数表。</li>
+</ul>
+</li>
 <li><code>codegen_expr.c</code>：<code>AST_FIELD_ACCESS</code> 的通用 <code>OP_INDEX</code> 路径补记 <code>dce_note_method_ref</code>
   —— 否则"只被取值、从不直接调用"的方法会被 DCE 当死代码剪掉（取到 null，静默错值）。</li>
 </ul>
@@ -163,7 +167,8 @@ hk.onTrack = hk.track_row_like
 只能把事件<strong>广播</strong>给子控件，同时自己也处理行选择 ⇒ 点按钮会连带触发行双击。</p>
 <p><strong>建议</strong>：<code>face Widget</code> 增加 <code>func hit_test(float x, float y): bool</code>
 （默认实现 = 点在 <code>[x, y, x+w, y+h]</code> 内），宿主的转发逻辑变成：
-"命中才转发、命中则吞掉事件"。</p></main>
+"命中才转发、命中则吞掉事件"。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-var-接收可空返回值时-被推断成非可空">1. var 接收可空返回值时，被推断成非可空</a></li><li><a href="#2-全局文本替换类重构没有编译期保护-工程问题-非语言-bug">2. 全局文本替换类重构没有编译期保护（工程问题，非语言 bug）</a></li><li><a href="#3-成员方法不能直接当函数值用">3. 成员方法不能直接当函数值用</a></li><li><a href="#4-截图探针-_shot-有时让-ui-卡住-退出码异常">4. 截图探针（_SHOT）有时让 UI 卡住 / 退出码异常</a></li><li><a href="#5-widget-接口没有命中测试">5. Widget 接口没有命中测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="待修_2026-11-17_实测发现.html">← 上一篇</a><a href="类型可见性与use逃生阀修复追踪.html">下一篇 →</a></nav>

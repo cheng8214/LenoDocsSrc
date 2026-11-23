@@ -32,6 +32,8 @@
 <code>jit</code> 命名文件 ⇒ 文中"默认模式 = JIT"、<code>LENO_NO_JIT=1</code> 纯解释器基线、bailout 降级
 等<strong>都已不适用</strong>；文中的毫秒数据另有 <code>times.ms()</code> 当时为 15.625ms 刻度计数器的已知缺陷
 （文内第七节自述）。现行基线是寄存器式解释器，现行性能数据见 <code>docs/待办与路线图.md</code>。</p>
+</blockquote>
+<blockquote>
 <p>测试时间：2026-09-15
 测试环境：Windows 10 / Leno 1.0.0（JIT 默认开启）/ CPython 3.13.2 / 同机串行执行（无并行任务干扰计时）
 本文档取代 2026-08-29 版《Leno vs Python 性能测试总结》。旧版测试时 JIT 尚未落地（2026-09-06 才合入），且 Python 基线存在明显环境噪声（详见第七节），数据已过时。</p>
@@ -676,7 +678,8 @@ VM/Python 列多为数百~数千毫秒，量化影响 ≤2.4%，不受此影响�
 <td>波纹寿命按 dt 推进，重测</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-测试方法">一、测试方法</a></li><li><a href="#二-总览结论">二、总览结论</a></li><li><a href="#三-微基准">三、微基准</a></li><ul class="lv3"><li><a href="#3-1-函数调用与递归-单位-ms">3.1 函数调用与递归（单位 ms）</a></li><li><a href="#3-2-算术运算与赋值-1-亿次-全部测试-单位-ms">3.2 算术运算与赋值（1 亿次，全部测试，单位 ms）</a></li><li><a href="#3-3-数学函数调用-5000-万次-sin-cos-sqrt-log">3.3 数学函数调用（5000 万次 sin·cos + sqrt + log）</a></li></ul><li><a href="#四-真实负载-光线追踪">四、真实负载：光线追踪</a></li><ul class="lv3"><li><a href="#4-1-标量版-单位-ms">4.1 标量版（单位 ms）</a></li><li><a href="#4-2-对象版-单位-ms">4.2 对象版（单位 ms）</a></li></ul><li><a href="#五-jit-覆盖面基准">五、JIT 覆盖面基准</a></li><li><a href="#六-sdl3-特效动画-渲染主导负载">六、SDL3 特效动画（渲染主导负载）</a></li><li><a href="#七-与-2026-08-29-旧数据的对照">七、与 2026-08-29 旧数据的对照</a></li><ul class="lv3"><li><a href="#7-1-vm-自身的进步-光线追踪-同参数">7.1 VM 自身的进步（光线追踪，同参数）</a></li><li><a href="#7-2-旧文档-python-基线的噪声问题">7.2 旧文档 Python 基线的噪声问题</a></li></ul><li><a href="#八-当前短板与下一步方向">八、当前短板与下一步方向</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/性能优化记录.html">← 上一篇</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">下一篇 →</a></nav>

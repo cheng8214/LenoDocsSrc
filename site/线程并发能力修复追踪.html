@@ -318,22 +318,22 @@
 <h3 id="th18-p0-spawn-时并发克隆-globals-会崩-已修-2026-11-14-压测">TH18（P0）spawn 时并发克隆 globals 会崩 —— ✅ 已修（2026-11-14 压测）</h3>
 <p><strong>症状</strong>
 - 脚本里有个<strong>较大</strong>的模块级全局数组（实测 4000 元素即可），<code>threads.start()</code> 起线程时
-  偶发 <code>0xC0000005</code>，约 1/4 概率；崩的位置在<strong>主线程</strong>：<code>vm_ffi_end</code> / <code>thread_reap</code>。
-  看着像"native 调用 / join 的锅"，与 clone 毫无关联。</p>
+偶发 <code>0xC0000005</code>，约 1/4 概率；崩的位置在<strong>主线程</strong>：<code>vm_ffi_end</code> / <code>thread_reap</code>。
+看着像"native 调用 / join 的锅"，与 clone 毫无关联。</p>
 <p><strong>根因（gdb 实测）</strong>
 - 崩时全局 <code>vm</code> 结构体的字段被写成了<strong>文本</strong>（<code>vm.ffi_args = 0x5b5d31345b5d3034</code> = <code>"40]["</code>）。
 - 来源：<code>object_thread.c</code> 的 <code>g_channel_clone_ctx</code>（192 字节诊断上下文，形如 <code>数组[3]</code>）
-  原来是<strong>进程级 static</strong>，而克隆路径本来就跑在<strong>多个线程</strong>上（每个子线程启动时克隆 globals、
-  收消息时克隆值）⇒ 并发 <code>snprintf</code> / <code>strlen</code> 同一个缓冲。
-  <code>strlen</code> 读到"还没写 NUL"的中间态 ⇒ 返回 &gt; 192 ⇒ <code>sizeof - cl</code> 下溢成巨大值 ⇒
-  <code>snprintf</code> <strong>无界写</strong>，把后面的 <code>.bss</code>（正是全局 <code>vm</code>）整段刷成 ctx 文本。
+原来是<strong>进程级 static</strong>，而克隆路径本来就跑在<strong>多个线程</strong>上（每个子线程启动时克隆 globals、
+收消息时克隆值）⇒ 并发 <code>snprintf</code> / <code>strlen</code> 同一个缓冲。
+<code>strlen</code> 读到"还没写 NUL"的中间态 ⇒ 返回 &gt; 192 ⇒ <code>sizeof - cl</code> 下溢成巨大值 ⇒
+<code>snprintf</code> <strong>无界写</strong>，把后面的 <code>.bss</code>（正是全局 <code>vm</code>）整段刷成 ctx 文本。
 - 为什么和"数组大小"相关：元素越多 ⇒ 克隆循环里 <code>snprintf</code> 调用越密 ⇒ 撞上并发窗口的概率越高。</p>
 <p><strong>修复</strong>
 1. <code>static THREAD_LOCAL char g_channel_clone_ctx[192]</code>（一行）。
 2. <code>cl</code> 上界钳位（防御性，杜绝再次下溢）。
 3. 顺带去掉一个纯浪费：原来<strong>每个数组元素</strong>都要 <code>2×192B memcpy + strlen + snprintf</code>，
-   而标量 / <code>string</code> 元素根本不可能被拒（永远克隆成功）⇒ 只对
-   <code>Array/Dict/struct/闭包</code> 这几类<strong>可能被拒</strong>的元素构造上下文，报错文案一字不变。</p>
+而标量 / <code>string</code> 元素根本不可能被拒（永远克隆成功）⇒ 只对
+<code>Array/Dict/struct/闭包</code> 这几类<strong>可能被拒</strong>的元素构造上下文，报错文案一字不变。</p>
 <p><strong>效果（实测，同一台机器）</strong></p>
 <table>
 <thead>
@@ -402,122 +402,160 @@
 </tbody>
 </table>
 <p>合计 ≈165 µs 都是<strong>同一批只读方法表</strong>在每个新线程里重注册（~200 个方法 ×
-   <code>make_native</code>（堆分配 + strdup）+ 哈希插入 + 编译期元信息插入）。
-   ⇒ <code>threads.map(200 元素)</code> 的 35 ms 几乎全是这个。
-   <strong>方案（下一轮单独做）</strong>：把方法表改成<strong>进程级共享只读</strong>（去掉各表上的 THREAD_LOCAL，
-   主线程启动时注册一次；子线程按"已初始化"标志整体跳过这批 init，线程退出时<strong>不释放</strong>共享表）。
-   - 前置确认：子线程是否存在<strong>懒注册</strong>路径（某个模块只在子线程里首次用到 ⇒ 会并发写共享表）。
-     有的话要么在启动时把模块表全量预注册，要么给注册加锁。
-   - 判据：① spawm 固定成本降到 ≤40 µs；② 套件 617/0；③ 子线程里 <code>arrays</code>/<code>strings</code>/<code>maths</code>/
-     <code>jsons</code>/<code>regexs</code>/<code>threads</code> 的方法全部可调（各写一条冒烟断言）；④ <code>map</code> 200 元素 ≤10 ms。
-   - 风险：中（涉及全部模块方法表，错误表现是"子线程某方法找不到/调错"，属最难查的一类）。
+<code>make_native</code>（堆分配 + strdup）+ 哈希插入 + 编译期元信息插入）。
+⇒ <code>threads.map(200 元素)</code> 的 35 ms 几乎全是这个。
+<strong>方案（下一轮单独做）</strong>：把方法表改成<strong>进程级共享只读</strong>（去掉各表上的 THREAD_LOCAL，
+主线程启动时注册一次；子线程按"已初始化"标志整体跳过这批 init，线程退出时<strong>不释放</strong>共享表）。
+- 前置确认：子线程是否存在<strong>懒注册</strong>路径（某个模块只在子线程里首次用到 ⇒ 会并发写共享表）。
+  有的话要么在启动时把模块表全量预注册，要么给注册加锁。
+- 判据：① spawm 固定成本降到 ≤40 µs；② 套件 617/0；③ 子线程里 <code>arrays</code>/<code>strings</code>/<code>maths</code>/
+  <code>jsons</code>/<code>regexs</code>/<code>threads</code> 的方法全部可调（各写一条冒烟断言）；④ <code>map</code> 200 元素 ≤10 ms。
+- 风险：中（涉及全部模块方法表，错误表现是"子线程某方法找不到/调错"，属最难查的一类）。
 2. <code>threads.map</code> / <code>parallel_for</code> 是"一份一个线程"、没有池化：200 元素 map 约 35 ms，
-   几乎全是 spawn 成本 ⇒ 重活应自己分块，或后续给 <code>map</code> 加并发上限。
+几乎全是 spawn 成本 ⇒ 重活应自己分块，或后续给 <code>map</code> 加并发上限。
 3. <strong>channel 的 string 消息：短串不用改、长串已改（2026-11-14 两轮实测）</strong>
-   - <strong>短串（≤40，内化表范围内）</strong>：<code>"msg-" + _str(i) + "-payload"</code> 那 1.4 µs 里约
-     <strong>1.1 µs 是生产方构造字符串</strong>，channel 本身只占 <strong>~0.36 µs/条</strong>（同轮对照：int 0.35、
-     struct 0.83 µs）。重复串还走内化命中（几乎零分配）⇒ 不动。
-     ⚠ 试过"不内化克隆"：纯 channel 357 → 456 ns（丢了免分配快路径），已回退。
-   - <strong>长串（&gt;40，HTTP body 都属这类）</strong>：<code>str_copy</code> = <code>str_new</code> 会把内容过 <strong>3 遍</strong>
-     （memcpy + <code>utf8_char_len</code> + <code>hash_string</code>），而一条消息克隆两次 ⇒ 每字节 6 遍。
-     实测 string body 过 channel 只有 <strong>208~247 MB/s</strong>（同数据 <code>ffi.memcpy</code> 22 GB/s），
-     128KB 一条要 <strong>514 µs</strong>，拷贝本身占不到 10%。
-     ⇒ 长串克隆改为<strong>沿用源串的 <code>char_len</code>/<code>hash</code></strong>（它们本来就不在表里，没有快路径可丢）：</p>
-<pre><code> | body | 改前 | 改后 | 倍数 |
- |---|---|---|---|
- | 1 KB | 208 MB/s | **784 MB/s** | 3.8× |
- | 16 KB | 247 | **1534** | 6.2× |
- | 128 KB | 243（514 µs/条） | **1842（68 µs/条）** | 7.6× |
- | 1 MB | 237 | **2410** | 10.2× |
- | 4 MB | 175 | **1798** | 10.3× |
- | `struct{body}` 128KB | 243 | **1639** | 6.7× |
-
- 回归：`assert\test_channel_long_string.leno`（长 ASCII / 长中文多字节 / 40 与 41 阈值 /
- Array 嵌套），套件 618/0。
-</code></pre>
+- <strong>短串（≤40，内化表范围内）</strong>：<code>"msg-" + _str(i) + "-payload"</code> 那 1.4 µs 里约
+  <strong>1.1 µs 是生产方构造字符串</strong>，channel 本身只占 <strong>~0.36 µs/条</strong>（同轮对照：int 0.35、
+  struct 0.83 µs）。重复串还走内化命中（几乎零分配）⇒ 不动。
+  ⚠ 试过"不内化克隆"：纯 channel 357 → 456 ns（丢了免分配快路径），已回退。
+- <strong>长串（&gt;40，HTTP body 都属这类）</strong>：<code>str_copy</code> = <code>str_new</code> 会把内容过 <strong>3 遍</strong>
+  （memcpy + <code>utf8_char_len</code> + <code>hash_string</code>），而一条消息克隆两次 ⇒ 每字节 6 遍。
+  实测 string body 过 channel 只有 <strong>208~247 MB/s</strong>（同数据 <code>ffi.memcpy</code> 22 GB/s），
+  128KB 一条要 <strong>514 µs</strong>，拷贝本身占不到 10%。
+  ⇒ 长串克隆改为<strong>沿用源串的 <code>char_len</code>/<code>hash</code></strong>（它们本来就不在表里，没有快路径可丢）：</p>
+<table>
+<thead>
+<tr>
+<th>body</th>
+<th>改前</th>
+<th>改后</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 KB</td>
+<td>208 MB/s</td>
+<td><strong>784 MB/s</strong></td>
+<td>3.8×</td>
+</tr>
+<tr>
+<td>16 KB</td>
+<td>247</td>
+<td><strong>1534</strong></td>
+<td>6.2×</td>
+</tr>
+<tr>
+<td>128 KB</td>
+<td>243（514 µs/条）</td>
+<td><strong>1842（68 µs/条）</strong></td>
+<td>7.6×</td>
+</tr>
+<tr>
+<td>1 MB</td>
+<td>237</td>
+<td><strong>2410</strong></td>
+<td>10.2×</td>
+</tr>
+<tr>
+<td>4 MB</td>
+<td>175</td>
+<td><strong>1798</strong></td>
+<td>10.3×</td>
+</tr>
+<tr>
+<td><code>struct{body}</code> 128KB</td>
+<td>243</td>
+<td><strong>1639</strong></td>
+<td>6.7×</td>
+</tr>
+</tbody>
+</table>
+<p>  回归：<code>assert\test_channel_long_string.leno</code>（长 ASCII / 长中文多字节 / 40 与 41 阈值 /
+  Array 嵌套），套件 618/0。</p>
 <h3 id="th1-p0-struct-实例跨-channel-传值-已修-2026-10-12-工作区未提交">TH1（P0）struct 实例跨 Channel 传值 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
 - <code>ch.send(point)</code> 报「不能跨线程传递此类型」（<code>object_thread.c</code> 的 default 分支）。
 - 连带症状：想让并发库跑起来，只能把 struct <strong>拍平成 <code>Array[string]</code></strong> 在接收方手工重建
-  ⇒ 写得越"Leno 风格"（struct 化），越难并发。</p>
+⇒ 写得越"Leno 风格"（struct 化），越难并发。</p>
 <p><strong>根因（证据）</strong>
 - <code>value_clone_for_channel()</code> 白名单只有 <code>null/int/float/bool/string/Array/Dict/Channel</code>，
-  没有 <code>OBJ_STRUCT</code> ⇒ 走 default 报错。
+没有 <code>OBJ_STRUCT</code> ⇒ 走 default 报错。
 - 另有<strong>一道编译期拦截</strong>（<code>src/semantic/semantic_type_utils.c</code> 的
-  <code>semantic_check_cross_thread_args</code>）：静态类型确定为 struct 的实参<strong>直接报错</strong> ✗
-  —— 只改运行期不够，这道一并撤（否则"改了运行期也过不去"）。</p>
+<code>semantic_check_cross_thread_args</code>）：静态类型确定为 struct 的实参<strong>直接报错</strong> ✗
+—— 只改运行期不够，这道一并撤（否则"改了运行期也过不去"）。</p>
 <p><strong>实施前查清的关键事实（原计划里列成"必须回答"的，答案如下）</strong>
 1. <strong>克隆发生在两侧</strong>：<code>channel_send</code> 先把值克隆进 buffer（发送方堆 ✓），<code>channel_receive</code>
-   取走前<strong>再克隆一次</strong>（接收方堆 ✓）。⇒ struct 只要走同一个 <code>value_clone_for_channel</code>，
-   <strong>两个调用点一行都不用改</strong> ✓（与 <code>Array</code>/<code>Dict</code> 完全同口径）。
+取走前<strong>再克隆一次</strong>（接收方堆 ✓）。⇒ struct 只要走同一个 <code>value_clone_for_channel</code>，
+<strong>两个调用点一行都不用改</strong> ✓（与 <code>Array</code>/<code>Dict</code> 完全同口径）。
 2. <strong>写屏障</strong>：struct 字段写入的唯一入口是 <code>struct_set_field()</code>（<code>leno_value.h</code>，内含
-   <code>gc_write_barrier</code>）⇒ 克隆时走它，<strong>不要直写</strong> <code>field_values[i]</code>。
+<code>gc_write_barrier</code>）⇒ 克隆时走它，<strong>不要直写</strong> <code>field_values[i]</code>。
 3. <strong>分配方式</strong>：<code>struct_instance_new(def)</code> 一次分配"对象头 + 内联字段数组"（<code>fields_inline=1</code>）
-   ⇒ 克隆必须走这个构造函数，不能自己 <code>gc_alloc</code>。
+⇒ 克隆必须走这个构造函数，不能自己 <code>gc_alloc</code>。
 4. GC 会 mark struct 的 <code>def</code> / 全部字段 / <code>declared_face</code>（<code>src/gc.c</code> 的 <code>case OBJ_STRUCT</code>）
-   ⇒ 带上 face 声明与泛型实参是安全的。</p>
+⇒ 带上 face 声明与泛型实参是安全的。</p>
 <p><strong>落地（工作区改动）</strong>
 - <code>src/object/object_thread.c</code>：克隆闸门拆成<strong>深度感知</strong>的 <code>channel_clone_value(val, depth)</code>
-  （对外 <code>value_clone_for_channel</code> 符号不变 ✓），新增 <code>channel_clone_struct</code>：
-  递归同一套克隆规则、<code>CHANNEL_CLONE_MAX_DEPTH 64</code> 防环、face 声明与泛型实参一并带上、
-  不可克隆类型统一走 <code>channel_clone_reject</code>（带 <code>g_channel_clone_ctx</code> 指认"结构体.字段"）。
+（对外 <code>value_clone_for_channel</code> 符号不变 ✓），新增 <code>channel_clone_struct</code>：
+递归同一套克隆规则、<code>CHANNEL_CLONE_MAX_DEPTH 64</code> 防环、face 声明与泛型实参一并带上、
+不可克隆类型统一走 <code>channel_clone_reject</code>（带 <code>g_channel_clone_ctx</code> 指认"结构体.字段"）。
 - <code>src/semantic/semantic_type_utils.c</code>：拦截名单<strong>只留 <code>TYPE_CSTRUCT</code></strong>（struct / face 放行 ✓）。
 - <code>assert/test_channel_struct.leno</code>（新增）：①深拷贝语义 ②struct 过 Channel 往返（3 条输入 / 3 条回包）
-  ③嵌套 struct ④拒绝面（cstruct 字段 ⇒ 报错指认字段，两条通道各一条判据）
-  ⑤自引用（环）⇒ 报「嵌套层数超过 64」而不是挂死。
+③嵌套 struct ④拒绝面（cstruct 字段 ⇒ 报错指认字段，两条通道各一条判据）
+⑤自引用（环）⇒ 报「嵌套层数超过 64」而不是挂死。
 - <code>assert/test_diag_static_errors.leno</code>：原来钉"struct 必须编译期报错"的两条<strong>翻了案</strong>
-  （改 <code>expect_ok</code>），另加一条 cstruct 仍编译期拦 ✓。
+（改 <code>expect_ok</code>），另加一条 cstruct 仍编译期拦 ✓。
 - 文档：<code>语言陷阱速查.md</code>（§一 ② / §三 ②）、<code>module_threads_api.md</code>、<code>threads使用指南.md</code>。</p>
 <p><strong>验收（实测）</strong>
 - 套件：<code>443 passed / 0 failed</code>（新增 1 条用例 ⇒ 442 → 443）。
 - 端到端：<code>threads.start(worker, p)</code> 与 Channel 往返都能拿到字段值；子线程改字段主线程<strong>看不见</strong>
-  （深拷贝语义 ✓）。</p>
+（深拷贝语义 ✓）。</p>
 <p><strong>顺带查实的三件事（都写进文档了）</strong>
 - ⚠ <strong><code>for A : B</code> 是闭区间</strong>：<code>for 0 : 3</code> 跑 <strong>4</strong> 轮（实测）。循环次数若与消息条数对不上，
-  <code>receive()</code> 永久阻塞 ⇒ 表现是"卡死且无输出"（stdout 被块缓冲，中间 print 看不到 ✓）。
+<code>receive()</code> 永久阻塞 ⇒ 表现是"卡死且无输出"（stdout 被块缓冲，中间 print 看不到 ✓）。
 - ⚠ <strong>同一条通道"边收边发"会把自己发出去的消息收回来</strong>（通道不区分发送者）⇒ 收发要分两条通道。
 - ✅ <strong><code>assert/fixture_thread_cstruct_crash.leno</code> 的崩溃已不复现</strong>（2026-10-12 复核 3/3 exit 0）
-  —— 历史记录见该文件头部（不进套件的原因也写在那儿）。</p>
+—— 历史记录见该文件头部（不进套件的原因也写在那儿）。</p>
 <p><strong>端到端（可选，未做）</strong>：LenoWeb 的 <code>test_thread_parse.leno</code> 可改为<strong>直接传 <code>HtmlNode</code></strong>。</p>
 <hr>
 <h3 id="th2-p1-线程入口允许模块函数-已修-2026-10-12-工作区未提交">TH2（P1）线程入口允许模块函数 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
 - <code>threads.start(模块里的函数)</code> 被前置拦截报错（原 <code>src/module/threads/threads.c</code> 的守卫）。
 - 绕法只能把函数<strong>当值</strong>从宿主传进模块 ⇒ <strong>库自己无法封装并发</strong>
-  （LenoWeb 想自开线程池、LenoMusic 想自管后台解码，都做不到）。</p>
+（LenoWeb 想自开线程池、LenoMusic 想自管后台解码，都做不到）。</p>
 <p><strong>根因（比原计划写的窄得多 —— 这轮勘察的最大收获）</strong>
 - 原判据 <code>closure-&gt;function-&gt;module != NULL</code> 直接拦，理由写的是"子 VM 只继承调用方 globals +
-  <code>current_module_frame = NULL</code> ⇒ 模块函数找不到本模块的 globals"。
+<code>current_module_frame = NULL</code> ⇒ 模块函数找不到本模块的 globals"。
 - <strong>实际</strong>：模块字节码（<code>OP_GET_MODULE_VAR</code> / <code>OP_SET_MODULE_VAR</code> / <code>OP_GET_MODULE_FUNC</code> /
-  <code>OP_DEFINE_MODULE_FUNC</code>）寻址用的是 <strong><code>frame-&gt;module</code></strong>，<strong>不读</strong> <code>current_module_frame</code>
-  （见 <code>src/vm/vminc/run/10_vars_module.inc</code> 四处 <code>ObjModule* module = (ObjModule*)frame-&gt;module</code>）。
-  而三条 call 路径（<code>vm_call.inc</code> 的 <code>call</code> / <code>call_no_type_check</code> / <code>call_reg</code>）都设了
-  <code>frame-&gt;module = func-&gt;module</code>，<strong>唯独协程首帧漏了这一行</strong>
-  （<code>src/vm/vm.c</code> 的 <code>vm_run_coroutine_with_vm</code>）⇒ 进函数体后第一条模块符号指令报
-  「不在模块上下文中」。
+<code>OP_DEFINE_MODULE_FUNC</code>）寻址用的是 <strong><code>frame-&gt;module</code></strong>，<strong>不读</strong> <code>current_module_frame</code>
+（见 <code>src/vm/vminc/run/10_vars_module.inc</code> 四处 <code>ObjModule* module = (ObjModule*)frame-&gt;module</code>）。
+而三条 call 路径（<code>vm_call.inc</code> 的 <code>call</code> / <code>call_no_type_check</code> / <code>call_reg</code>）都设了
+<code>frame-&gt;module = func-&gt;module</code>，<strong>唯独协程首帧漏了这一行</strong>
+（<code>src/vm/vm.c</code> 的 <code>vm_run_coroutine_with_vm</code>）⇒ 进函数体后第一条模块符号指令报
+「不在模块上下文中」。
 - ⇒ <strong>不需要"子 VM 按需加载模块"</strong>（原计划的高风险方案）：模块对象由<strong>进程级</strong> <code>loaded_modules</code>
-  缓存共享（<code>src/module_loader.c</code> 的 <code>static LoadedModules</code>，非 THREAD_LOCAL），
-  init_chunk 主线程已跑过 ⇒ 子线程直接用共享的 <code>ObjModule</code> 就对 ✓。
-  <code>child_vm.globals</code>（入口脚本 globals）的继承与模块函数无关，不必动 ✓。</p>
+缓存共享（<code>src/module_loader.c</code> 的 <code>static LoadedModules</code>，非 THREAD_LOCAL），
+init_chunk 主线程已跑过 ⇒ 子线程直接用共享的 <code>ObjModule</code> 就对 ✓。
+<code>child_vm.globals</code>（入口脚本 globals）的继承与模块函数无关，不必动 ✓。</p>
 <p><strong>落地（两行改动 + 用例）</strong>
 - <code>src/vm/vm.c</code>：协程首帧补 <code>frame-&gt;module = func-&gt;module;</code>（入口脚本函数 <code>module == NULL</code>
-  ⇒ no-op ✓）。<strong>顺带修好主线程 async 协程里调模块函数</strong>的同一处缺口 ✓。
+⇒ no-op ✓）。<strong>顺带修好主线程 async 协程里调模块函数</strong>的同一处缺口 ✓。
 - <code>src/module/threads/threads.c</code>：撤掉那条硬拦，改为<strong>只拦一种情况</strong> —— 入口函数所属模块
-  <strong>尚未初始化</strong>（不在入口脚本 import 链上 ⇒ globals 全空）时明确报错。
+<strong>尚未初始化</strong>（不在入口脚本 import 链上 ⇒ globals 全空）时明确报错。
 - <code>assert/test_threads_module_entry.leno</code> + <code>assert/helpers/th2_mod.leno</code>（新增）：①入口脚本直接
-  <code>threads.start(模块函数)</code> ②多参数 + 循环 ③模块函数里再调同模块函数 ④<strong>模块自己开线程跑自己的
-  函数</strong>（TH2 的真正价值）⑤模块级可变状态<strong>跨线程共享</strong>（把已知口径钉成显式契约）。
+<code>threads.start(模块函数)</code> ②多参数 + 循环 ③模块函数里再调同模块函数 ④<strong>模块自己开线程跑自己的
+函数</strong>（TH2 的真正价值）⑤模块级可变状态<strong>跨线程共享</strong>（把已知口径钉成显式契约）。
 - <code>assert/test_diag_warnings.leno</code>：E6/M1 那条"必须抛错"翻成 <code>expect_ok</code> ✓。
 - 文档：<code>threads使用指南.md</code>（该节从"限制"改写为"模块函数也能用 + 两个注意点"）、
-  <code>module_threads_api.md</code>（入口形态矩阵第③条翻案）、<code>语言摩擦与隐式契约清单.md</code>（M1 标已修）。</p>
+<code>module_threads_api.md</code>（入口形态矩阵第③条翻案）、<code>语言摩擦与隐式契约清单.md</code>（M1 标已修）。</p>
 <p><strong>验收（实测）</strong>
 - <code>assert/test_threads_module_entry.leno</code> 全过；<code>test_diag_warnings.leno</code> 全过；套件全绿。
 - 端到端：模块内 <code>threads.start(_sum_worker, …)</code> ×2 + <code>join()</code> ⇒ 正确（<code>parallel_sum(0,1,3) == 6</code>）。</p>
 <p><strong>遗留（不影响功能，只是注释过期）</strong>
 - <code>build/leno_module/LenoWeb/</code>（README / <code>web_net.leno</code> 的 curl_multi 理由 / 4 个测试注释）与
-  <code>leno_gui/应用/电脑清理大师/test/test_clean_pipeline.leno</code>（已就地改 ✓）里还写着
-  "库函数自己起不了线程" —— <strong>设计结论不变</strong>（curl_multi 仍是对的选择），但理由那句已经不准，
-  下次动那些文件时顺手改。</p>
+<code>leno_gui/应用/电脑清理大师/test/test_clean_pipeline.leno</code>（已就地改 ✓）里还写着
+"库函数自己起不了线程" —— <strong>设计结论不变</strong>（curl_multi 仍是对的选择），但理由那句已经不准，
+下次动那些文件时顺手改。</p>
 <hr>
 <h3 id="th3-p1-并行原语-已修-2026-10-12-工作区未提交">TH3（P1）并行原语 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
@@ -525,103 +563,130 @@
 - 没有 <code>WaitGroup</code> / <code>parallelFor</code> / <code>map</code> ⇒ 每个用户都在重复写同一套样板。</p>
 <p><strong>设计取向（与原计划的差异，值得记住）</strong>
 - 原计划写的是 <code>threads.WaitGroup</code>（<code>add/done/wait</code>）—— 那需要<strong>新的对象类型</strong>（<code>ObjWaitGroup</code> +
-  方法表 + 可能还要新关键字/TypeKind），与语言"够用就行、不再追加特性"的一贯取向相悖。
-- 改成<strong>三个普通模块函数</strong>，零类型系统改动：
-  | 原语 | 语义 | 回调形态 | 返回 |
-  |---|---|---|---|
-  | <code>threads.join_all(Array[Thread])</code> | "等一组线程"（WaitGroup 的等价物） | — | <code>int</code> |
-  | <code>threads.parallel_for(n, f)</code> | 分 n 份并行（<code>f(index)</code>，index = 0..n-1），等全部结束 | <code>f(int)</code> | <code>int</code> |
-  | <code>threads.map(arr, f)</code> | 并行 map，结果按输入顺序收回 | <code>f(item, index)</code> | <code>Array[回调返回]</code> |
-- <code>map</code> 的返回类型<strong>直接复用</strong> <code>arrays.map</code> 那份原生规格 <code>NATIVE_T_ARR_CB_RET1</code>
-  （<code>Array[第 1 实参回调的返回]</code>）⇒ 静态类型精确（<code>Array[int] doubled = threads.map(...)</code> ✓）。
-- <code>map</code> 的回调形态与 <code>arrays.map</code> <strong>同口径</strong>（<code>f(item, index)</code> 两个形参）—— 用户已有的认知可迁移 ✓。
-- ⚠ <strong>实现取舍</strong>：<code>map</code> 是"<strong>每元素一个线程</strong>"（线程数 = 元素数）—— 因为<strong>闭包不能作为参数跨线程传</strong>
+方法表 + 可能还要新关键字/TypeKind），与语言"够用就行、不再追加特性"的一贯取向相悖。
+- 改成<strong>三个普通模块函数</strong>，零类型系统改动：</p>
+<table>
+<thead>
+<tr>
+<th>原语</th>
+<th>语义</th>
+<th>回调形态</th>
+<th>返回</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>threads.join_all(Array[Thread])</code></td>
+<td>"等一组线程"（WaitGroup 的等价物）</td>
+<td>—</td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>threads.parallel_for(n, f)</code></td>
+<td>分 n 份并行（<code>f(index)</code>，index = 0..n-1），等全部结束</td>
+<td><code>f(int)</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>threads.map(arr, f)</code></td>
+<td>并行 map，结果按输入顺序收回</td>
+<td><code>f(item, index)</code></td>
+<td><code>Array[回调返回]</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>map</code> 的返回类型<strong>直接复用</strong> <code>arrays.map</code> 那份原生规格 <code>NATIVE_T_ARR_CB_RET1</code>
+  （<code>Array[第 1 实参回调的返回]</code>）⇒ 静态类型精确（<code>Array[int] doubled = threads.map(...)</code> ✓）。</li>
+<li><code>map</code> 的回调形态与 <code>arrays.map</code> <strong>同口径</strong>（<code>f(item, index)</code> 两个形参）—— 用户已有的认知可迁移 ✓。</li>
+<li>⚠ <strong>实现取舍</strong>：<code>map</code> 是"<strong>每元素一个线程</strong>"（线程数 = 元素数）—— 因为<strong>闭包不能作为参数跨线程传</strong>
   （<code>value_clone_for_channel</code> 不认函数值），所以"分块 + 子线程循环调 f"这条路走不通；
-  要分块只能用 <code>parallel_for</code>。代价已写进 API 文档 ✓。
-- 原计划里那条"模块内调用时回调能不能跑"的顾虑，<strong>已被 TH2 顺带解决</strong> ✓（模块函数现在能作入口）。</p>
+  要分块只能用 <code>parallel_for</code>。代价已写进 API 文档 ✓。</li>
+<li>原计划里那条"模块内调用时回调能不能跑"的顾虑，<strong>已被 TH2 顺带解决</strong> ✓（模块函数现在能作入口）。</li>
+</ul>
 <p><strong>落地（工作区改动）</strong>
 - <code>src/module/threads/threads.c</code>：
-  - 入口校验收成<strong>一处</strong> <code>threads_check_entry(closure, got_args, who)</code>（<code>start</code> / <code>parallel_for</code> /
-    <code>map</code> 共用，避免三份拷贝各自漂移 ✓）；
-  - 新增 <code>threads_join_all</code> / <code>threads_parallel_for</code> / <code>threads_map</code> 与三条模块方法注册。
+- 入口校验收成<strong>一处</strong> <code>threads_check_entry(closure, got_args, who)</code>（<code>start</code> / <code>parallel_for</code> /
+ <code>map</code> 共用，避免三份拷贝各自漂移 ✓）；
+- 新增 <code>threads_join_all</code> / <code>threads_parallel_for</code> / <code>threads_map</code> 与三条模块方法注册。
 - <code>assert/test_threads_parallel.leno</code>（新增）：①<code>parallel_for</code> 起够 n 个 + 每个下标都跑到
-  ②<strong>并发性用"栅栏"证明</strong>（n 个线程都报到才发令 —— 串行执行会收不齐而挂住，比"比单线程快"
-  这种计时断言稳得多 ✓）③<code>join_all</code> ④<code>map</code> 顺序对齐 + 静态类型直接是 <code>Array[int]</code>
-  ⑤<code>map</code> 的元素可以是 struct（TH1 + TH3 联用 ✓）。
+②<strong>并发性用"栅栏"证明</strong>（n 个线程都报到才发令 —— 串行执行会收不齐而挂住，比"比单线程快"
+这种计时断言稳得多 ✓）③<code>join_all</code> ④<code>map</code> 顺序对齐 + 静态类型直接是 <code>Array[int]</code>
+⑤<code>map</code> 的元素可以是 struct（TH1 + TH3 联用 ✓）。
 - 文档：<code>threads使用指南.md</code>（新增「并行原语」一节 + API 表三行）、<code>module_threads_api.md</code>
-  （三个 API 各一节）。</p>
+（三个 API 各一节）。</p>
 <p><strong>验收（实测）</strong>
 - <code>assert/test_threads_parallel.leno</code> 一次全过（含栅栏那条）；套件全绿。</p>
 <hr>
 <h3 id="th4-p2-channel-t-泛型-已修-2026-10-12-工作区未提交">TH4（P2）<code>Channel[T]</code> 泛型 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
 - <code>ch.receive()</code> 静态类型恒为 <code>any</code> ⇒ <code>var x: int = ch.receive()</code> 要显式转换、
-  <code>Point p = pc.receive()</code> 直接报「类型不匹配」（实际类型: any）、多返回值解构被拒。
+<code>Point p = pc.receive()</code> 直接报「类型不匹配」（实际类型: any）、多返回值解构被拒。
 - 代码里自己承认过一句「语言里没有 <code>Channel[T]</code> 标注…要精确得先给 Channel 加类型参数」
-  （<code>src/module/threads/threads.c</code>，本轮已作废 ✓）。</p>
+（<code>src/module/threads/threads.c</code>，本轮已作废 ✓）。</p>
 <p><strong>根因（证据）</strong>
 - 解析器里<strong>只有 <code>Ptr[T]</code> 有泛型解析</strong>（<code>src/parser/parser_func.c</code> 的 <code>TOK_PTR_TYPE</code> 分支）；
-  <code>Channel</code>/<code>Thread</code> 都 <code>type_new(...)</code> 直接返回 ⇒ 连 <code>[T]</code> 都吃不下（<code>Channel[int]</code> 会被外层语法误解析）。
+<code>Channel</code>/<code>Thread</code> 都 <code>type_new(...)</code> 直接返回 ⇒ 连 <code>[T]</code> 都吃不下（<code>Channel[int]</code> 会被外层语法误解析）。
 - <code>Thread[T]</code> 已存在但<strong>只由 native 规格内部构造</strong>（<code>NATIVE_T_THREAD_CB_RET0</code>；
-  <code>type.c</code> 的 <code>type_copy</code> / <code>build_generic_type_string</code> 早已支持 <code>element_type</code> 槽）
-  ⇒ <strong>先例已有</strong>，<code>TYPE_CHANNEL</code> 照此加槽即可，<strong>不需要新 kind</strong> ✓。</p>
+<code>type.c</code> 的 <code>type_copy</code> / <code>build_generic_type_string</code> 早已支持 <code>element_type</code> 槽）
+⇒ <strong>先例已有</strong>，<code>TYPE_CHANNEL</code> 照此加槽即可，<strong>不需要新 kind</strong> ✓。</p>
 <p><strong>落地（8 处，全在"槽位已存在、只是没人用"的地方）</strong>
 1. <code>src/type.c</code>：新增 <code>type_channel_generic</code> / <code>type_thread_generic</code>（照 <code>type_ptr_generic</code>）；
-   <code>type_equals</code> / <code>type_copy</code> / <code>build_generic_type_string</code> 各补 <code>TYPE_CHANNEL</code> 分支
-   （<strong>渲染分支是必须的</strong> —— 否则报错里 <code>Channel[int]</code> 会显示成 <code>Channel</code> ✗）；
-   <code>type_is_compatible</code> 加一段 Channel 规则，口径照抄 Ptr[T]：<strong>元素未知的一侧一律放行</strong> ✓
-   （① 目标裸 <code>Channel</code> 收任何 <code>Channel[…]</code>；② 源裸 <code>Channel</code> 可赋给 <code>Channel[T]</code>；
-   ③ 两侧都有元素才逐元素比 ✓）。
+<code>type_equals</code> / <code>type_copy</code> / <code>build_generic_type_string</code> 各补 <code>TYPE_CHANNEL</code> 分支
+（<strong>渲染分支是必须的</strong> —— 否则报错里 <code>Channel[int]</code> 会显示成 <code>Channel</code> ✗）；
+<code>type_is_compatible</code> 加一段 Channel 规则，口径照抄 Ptr[T]：<strong>元素未知的一侧一律放行</strong> ✓
+（① 目标裸 <code>Channel</code> 收任何 <code>Channel[…]</code>；② 源裸 <code>Channel</code> 可赋给 <code>Channel[T]</code>；
+③ 两侧都有元素才逐元素比 ✓）。
 2. <code>src/parser/parser_func.c</code>：<code>Channel</code> / <code>Thread</code> 分支照 <code>Ptr[T]</code> 补 <code>[T]</code>（含 <code>]</code> 缺失的错误恢复）。
 3. <code>src/native.c</code>：<code>native_arg0_part_to_info</code> 的 <code>ARG0_ELEM</code> 放开 <code>TYPE_CHANNEL</code>
-   ⇒ "接收者的元素类型"这条规格对通道也生效 ✓。
+⇒ "接收者的元素类型"这条规格对通道也生效 ✓。
 4. <code>src/module/threads/threads.c</code>：<code>Channel.receive</code> 的返回规格改 <code>NATIVE_T_ARG0_ELEM</code>。
 5. <code>src/module_symbol_table/inc/sym_table_type_parse.inc</code>：<strong>必须补</strong> Channel/Thread 两个分支 ✗
-   —— 否则跨模块签名里的 <code>Channel[int]</code> 会落到"泛型 struct"兜底、被当成名叫 <code>Channel</code> 的 struct ✗。</p>
+—— 否则跨模块签名里的 <code>Channel[int]</code> 会落到"泛型 struct"兜底、被当成名叫 <code>Channel</code> 的 struct ✗。</p>
 <p><strong>有意</strong>没做的<strong>（宁漏勿误报 ✓）</strong>：
 - <code>try_receive()</code> <strong>仍是 <code>any</code></strong>：空通道它给 <code>null</code> ⇒ 说它是 <code>T</code> 就是<strong>说谎</strong>
-  （要精确得先给类型系统一个"可空元素"的表达，属独立需求）；
+（要精确得先给类型系统一个"可空元素"的表达，属独立需求）；
 - <code>send(v)</code> 的<strong>形参</strong>仍是 <code>any</code>（要按 T 校验实参得给参数侧也上元素规格 —— 另一件事）；
 - <code>threads.channel(n)</code> 的返回仍是<strong>裸 <code>Channel</code></strong>（工厂静态推不出 T）⇒ 用标注写法拿到精确类型：
-  <code>Channel[int] ch = threads.channel(4)</code> ✓（这正是 <code>Ptr[T]</code> / <code>Thread[T]</code> 的既有用法 ✓）。</p>
+<code>Channel[int] ch = threads.channel(4)</code> ✓（这正是 <code>Ptr[T]</code> / <code>Thread[T]</code> 的既有用法 ✓）。</p>
 <p><strong>验收（实测）</strong>
 - <code>assert/test_channel_generic.leno</code>（新增）：①<code>Channel[int]</code> + <code>int v = ch.receive()</code> 无需转换
-  ②<code>Channel[int]</code> 作形参 ③<code>Channel[Pt]</code> ⇒ <code>Pt got = pc.receive()</code>（TH1 + TH4 联用）
-  ④裸 <code>Channel</code> 仍可用（receive 是 any）⑤<code>Thread[int]</code> 标注 ⑥<strong>三条反例</strong>证明元素类型真在约束：
-  <code>string</code> 元素给 <code>int</code> 变量 ⇒「实际类型: string」、<code>Channel[int]</code> 赋给 <code>Channel[string]</code> ⇒
-  「实际类型: Channel[int]」（<strong>报错里带元素</strong> ✓）、裸 <code>Channel</code> 的 receive 赋给 <code>int</code> ⇒「实际类型: any」。
+②<code>Channel[int]</code> 作形参 ③<code>Channel[Pt]</code> ⇒ <code>Pt got = pc.receive()</code>（TH1 + TH4 联用）
+④裸 <code>Channel</code> 仍可用（receive 是 any）⑤<code>Thread[int]</code> 标注 ⑥<strong>三条反例</strong>证明元素类型真在约束：
+<code>string</code> 元素给 <code>int</code> 变量 ⇒「实际类型: string」、<code>Channel[int]</code> 赋给 <code>Channel[string]</code> ⇒
+「实际类型: Channel[int]」（<strong>报错里带元素</strong> ✓）、裸 <code>Channel</code> 的 receive 赋给 <code>int</code> ⇒「实际类型: any」。
 - <code>assert/test_threads.leno</code> 的旧契约注释（"语言里没有 Channel[T]"）已同步更正 ✓；套件全绿。</p>
 <hr>
 <h3 id="th5-p2-线程局部存储-模块级可变状态诊断-已修-能力半边-2026-10-12-工作区未提交">TH5（P2）线程局部存储 + 模块级可变状态诊断 —— ✅ 已修（能力半边，2026-10-12，工作区未提交）</h3>
 <p><strong>症状</strong>
 - 模块级 <code>var</code> 在子线程与主线程<strong>共享同一份</strong>（<code>ObjModule.globals</code> 挂 <code>loaded_modules</code> 进程级缓存）
-  ⇒ 并发读写必然竞态，而<strong>编译器一声不吭</strong>（LenoWeb 实测：标题串台、<code>h1</code> 为 null）。
+⇒ 并发读写必然竞态，而<strong>编译器一声不吭</strong>（LenoWeb 实测：标题串台、<code>h1</code> 为 null）。
 - 库想"每个线程一份状态"时<strong>没有现成手段</strong>：只能把状态收进实例、由调用方传进来 ✓
-  （LenoWeb 的 <code>_ParseCtx</code> 就是这么改的 ✓）—— 但有些场景（重入的辅助函数、缓存）传不进去。</p>
+（LenoWeb 的 <code>_ParseCtx</code> 就是这么改的 ✓）—— 但有些场景（重入的辅助函数、缓存）传不进去。</p>
 <p><strong>落地（能力半边）</strong>
 - <code>src/include/leno_vm.h</code>：VM 加一个字段 <code>Value thread_local_store;</code> —— <strong>放这里就天然线程局部</strong> ✓
-  （子线程用的是自己的 VM 结构体 <code>child_vm</code> ⇒ 同一个槽在主/子线程各一份 ✓ <strong>不需要任何 TLS 机制</strong> ✓）。
+（子线程用的是自己的 VM 结构体 <code>child_vm</code> ⇒ 同一个槽在主/子线程各一份 ✓ <strong>不需要任何 TLS 机制</strong> ✓）。
 - <code>src/vm/vminc/vm_init.inc</code> + <code>src/object/object_thread.c</code>：各自置 <code>val_null()</code>（懒创建）。
 - <code>src/gc.c</code>：<code>mark_roots</code> 里标记它 ✓ —— <strong>这步漏了就是 use-after-free</strong> ✗（字段与标记必须成对改 ✓）。
 - <code>src/module/threads/threads.c</code>：<code>threads.local_get(key, default)</code> / <code>local_has(key)</code> /
-  <code>local_set(key, value)</code>（key 必须 string；值不克隆 —— 只在同一个线程里存取 ✓）。
+<code>local_set(key, value)</code>（key 必须 string；值不克隆 —— 只在同一个线程里存取 ✓）。
 - <code>assert/test_threads_local.leno</code>（新增）：①主线程自洽 + 没存过给默认值 ②两个子线程各一份、
-  且<strong>动不到主线程</strong>的值 ③值可以是 struct（同线程取值，无需跨线程克隆）。</p>
+且<strong>动不到主线程</strong>的值 ③值可以是 struct（同线程取值，无需跨线程克隆）。</p>
 <p><strong>「模块级可变 <code>var</code> 诊断」—— 建议不做（有意留白，不是漏做）</strong></p>
 <p>原计划是"语义阶段对'被 <code>threads.start</code> 入口可达的模块级可变 <code>var</code>'给警告"。评估后<strong>不做</strong>：
 - 便宜的版本（"该模块存在模块级可变 <code>var</code> 就警告"）<strong>误报率高</strong> ✓：初始化后只读的缓存、
-  只在主线程用的状态、<code>export const</code> 全都会被误报 ⇒ 与全仓"少报不误报"的口径相悖 ✗
-  （本仓有明确教训：漏 return 那条初版在 SDL3 上刷出 254 条<strong>全误报</strong> ✗）；
+只在主线程用的状态、<code>export const</code> 全都会被误报 ⇒ 与全仓"少报不误报"的口径相悖 ✗
+（本仓有明确教训：漏 return 那条初版在 SDL3 上刷出 254 条<strong>全误报</strong> ✗）；
 - 精确的版本（做<strong>可达性分析</strong>：入口函数 → 它调用的函数 → 触碰到的模块 <code>var</code>）<strong>成本高</strong>，
-  且要新增"枚举模块顶层变量"的符号表 API + 新警告码；
+且要新增"枚举模块顶层变量"的符号表 API + 新警告码；
 - 而<strong>用户已经有显式手段</strong>：<code>threads.local_*</code>（想隔离就隔离 ✓）、把状态收进实例（推荐 ✓）、
-  <code>export const</code>（只读不受影响 ✓）。
+<code>export const</code>（只读不受影响 ✓）。
 ⇒ 改为<strong>把口径讲清楚</strong>：<code>threads使用指南.md</code> 新增"线程局部存储"一节，里面用一张表并列
 四种状态的可见性/并发安全性（模块级 <code>var</code> / 顶层标量 / 顶层对象 / <code>threads.local_*</code>）✓。
 若将来真要做诊断，建议门槛是"能确定该 <code>var</code> 在别处被写过"（宁漏勿误报 ✓）。</p>
 <p><strong>验收（实测）</strong>
 - <code>assert/test_threads_local.leno</code> 全过：两个子线程各写各的（<code>100/101</code> 与 <code>200/201</code>），
-  主线程的 <code>hits</code> 仍是 7 ✓、<code>local_has</code> 对没存过的键给 false ✓。
+主线程的 <code>hits</code> 仍是 7 ✓、<code>local_has</code> 对没存过的键给 false ✓。
 - ⚠ <strong>没有</strong>往 <code>test_diag_warnings.leno</code> 加诊断用例 —— 因为诊断本身<strong>不做</strong>（理由见上 ✓）。</p>
 <hr>
 <h3 id="th6-p3-文档订正-已修-2026-10-12-工作区未提交">TH6（P3）文档订正 —— ✅ 已修（2026-10-12，工作区未提交）</h3>
@@ -662,8 +727,8 @@
 <h3 id="th7-p3-ffi-回调与多外部线程-调研完成-2026-10-12-工作区未提交">TH7（P3）FFI 回调与多外部线程 —— ✅ 调研完成（2026-10-12，工作区未提交）</h3>
 <p><strong>原担心（写这条时的认知）</strong>
 - <code>ffi.callback</code> 的回调在<strong>外部线程</strong>（Windows 线程池 / C 库工作线程）上跑，而它们与主 VM
-  <strong>共享同一个执行环境</strong>（同一套 stack / <code>sp</code> / <code>frame_cnt</code>）⇒ 多外部线程<strong>并发</strong>回调
-  会互相覆盖 VM 栈 ✗。</p>
+<strong>共享同一个执行环境</strong>（同一套 stack / <code>sp</code> / <code>frame_cnt</code>）⇒ 多外部线程<strong>并发</strong>回调
+会互相覆盖 VM 栈 ✗。</p>
 <p><strong>调研结论：这个担心已经被解决（比这条立项时更早 —— 编组机制早就落地了）</strong></p>
 <p><code>src/module/ffi/ffi.c</code> 的 <code>callback_dispatch()</code> 按<strong>调用方是谁</strong>分两条路：</p>
 <table>
@@ -692,23 +757,23 @@
 和<strong>栈安全</strong> ✓。</p>
 <p><strong>本轮实际做的两件事</strong>
 1. <strong>订正文档</strong>（<code>threads使用指南.md</code> 的「FFI 回调与原生线程的关系」一节）：
-   旧版写"多外部线程并发调用 ⇒ 全局变量竞态 / GC 冲突 / <code>sp</code>·<code>frame_cnt</code> 相互覆盖" ✗
-   —— 那是<strong>编组机制落地之前</strong>的描述 ⇒ 已改写为上面这张两条路的表，并把<strong>仍然成立</strong>的三条约束
-   写清楚（① 主线程不泵就死锁 ⇒ 别在主线程阻塞等外部线程；② 编组解决"栈不共享"、
-   不解决"数据不共享"（模块级 <code>var</code> 依旧共享 ✓）；③ 别在回调里起线程/做重活 ✓）。
+旧版写"多外部线程并发调用 ⇒ 全局变量竞态 / GC 冲突 / <code>sp</code>·<code>frame_cnt</code> 相互覆盖" ✗
+—— 那是<strong>编组机制落地之前</strong>的描述 ⇒ 已改写为上面这张两条路的表，并把<strong>仍然成立</strong>的三条约束
+写清楚（① 主线程不泵就死锁 ⇒ 别在主线程阻塞等外部线程；② 编组解决"栈不共享"、
+不解决"数据不共享"（模块级 <code>var</code> 依旧共享 ✓）；③ 别在回调里起线程/做重活 ✓）。
 2. <strong>修掉一条静默错值</strong>（<code>ffi.c</code> 的 <code>callback_dispatch_marshal</code>）：
-   队列满（<code>MAX_PENDING_CALLBACKS = 64</code> 个外部线程<strong>同时</strong>在回调里等主线程）时，
-   原代码是"直接 <code>return result</code>"—— 而 <code>result = {0}</code> ⇒ <strong>静默返回全 0</strong> ✗。
-   对比较函数来说 0 = "相等" ⇒ <code>qsort</code> 之类会<strong>静默给出错序</strong> ✗（正是本仓最想消灭的那类错）。
-   改成<strong>等一个空位</strong>（<code>platform_cond_wait(&amp;g_pending_cond, …)</code>，空位由回调完成后 signal ✓）。
-   ⚠ 这不会引入新失败模式：本路径本来就要求"主线程会泵"（否则下面等 <code>completed</code> 同样永久阻塞 ✓）。
-   ⚠ <strong>未覆盖自动化测试</strong>：造 64 个无 VM 的外部线程需要 C 侧线程池
-   （路子见 <code>examples/ffi/test_callback_threadpool.leno</code>）⇒ 本轮只做代码收口 + 注释留档 ✓。</p>
+队列满（<code>MAX_PENDING_CALLBACKS = 64</code> 个外部线程<strong>同时</strong>在回调里等主线程）时，
+原代码是"直接 <code>return result</code>"—— 而 <code>result = {0}</code> ⇒ <strong>静默返回全 0</strong> ✗。
+对比较函数来说 0 = "相等" ⇒ <code>qsort</code> 之类会<strong>静默给出错序</strong> ✗（正是本仓最想消灭的那类错）。
+改成<strong>等一个空位</strong>（<code>platform_cond_wait(&amp;g_pending_cond, …)</code>，空位由回调完成后 signal ✓）。
+⚠ 这不会引入新失败模式：本路径本来就要求"主线程会泵"（否则下面等 <code>completed</code> 同样永久阻塞 ✓）。
+⚠ <strong>未覆盖自动化测试</strong>：造 64 个无 VM 的外部线程需要 C 侧线程池
+（路子见 <code>examples/ffi/test_callback_threadpool.leno</code>）⇒ 本轮只做代码收口 + 注释留档 ✓。</p>
 <p><strong>仍开放的一条（未拍板，暂不动）</strong>
 - 回调闭包<strong>跨 VM</strong> 执行的风险：若 VM A 注册的回调被 <strong>VM B（另一个 Leno 线程）</strong> 触发，
-  走的是"直接执行"路 ⇒ 在 B 的 VM 上跑 A 堆上的闭包（跨堆访问 ✗）。
-  实测能否触发未验证（常见用法是"谁注册谁触发"✓）。要收口得给回调登记"所属 VM"并在
-  不一致时改走编组 —— 属独立议题 ✓。</p>
+走的是"直接执行"路 ⇒ 在 B 的 VM 上跑 A 堆上的闭包（跨堆访问 ✗）。
+实测能否触发未验证（常见用法是"谁注册谁触发"✓）。要收口得给回调登记"所属 VM"并在
+不一致时改走编组 —— 属独立议题 ✓。</p>
 <hr>
 <h3 id="th8-p0-入口脚本的全局对象是跨线程共享的-已修-2026-10-20">TH8（P0）入口脚本的全局<strong>对象</strong>是跨线程共享的 —— ✅ 已修（2026-10-20）</h3>
 <p><strong>症状（2026-10-20 实测）</strong></p>
@@ -765,11 +830,11 @@ main() {
 </table>
 <p><strong>实现要点（踩过的坑）</strong>：
 1. <strong>克隆位置必须挪到 <code>gc_init()</code> 之后</strong> —— 原代码在 395 行附近拷 globals，而 GC 在 440 行才初始化，
-   克隆要 <code>gc_alloc</code> ⇒ 提前做会用到未初始化的 GC。现在：原处只 malloc 槽位 + 填 null，
-   克隆放到 struct 定义导入之后（<code>object_thread.c</code> 的 TH8 段）。
+克隆要 <code>gc_alloc</code> ⇒ 提前做会用到未初始化的 GC。现在：原处只 malloc 槽位 + 填 null，
+克隆放到 struct 定义导入之后（<code>object_thread.c</code> 的 TH8 段）。
 2. <strong><code>current_exec_vm</code> 要在克隆期间指向子线程 VM</strong> —— 否则克隆失败时 <code>native_throw_error</code>
-   会把异常写进<strong>主 VM</strong>（<code>native.c:2231</code> 取 <code>current_exec_vm</code>，子线程此时还没设），
-   主线程随后莫名其妙抛错。
+会把异常写进<strong>主 VM</strong>（<code>native.c:2231</code> 取 <code>current_exec_vm</code>，子线程此时还没设），
+主线程随后莫名其妙抛错。
 3. 克隆失败（容器里藏 <code>Ptr</code> / <code>cstruct</code>）⇒ <strong>回退成共享旧值 + 清异常</strong>，不让一个全局变量把线程搞挂。
 4. <code>gc_set_enabled(0)</code> 包住克隆：<code>saved_globals</code> 是 malloc 数组、不在 GC 根里。</p>
 <ul>
@@ -789,7 +854,7 @@ main() {
 - <code>true</code> = 线程已结束（收尾逻辑与 <code>join()</code> 完全一致：克隆 result、释放子线程堆、抛线程异常）
 - <code>false</code> = 超时，<strong>状态不变</strong>（线程继续跑，之后还能再 <code>join()</code> 取结果）
 - 实现：把 <code>thread_join</code> 拆成 <code>thread_wait(t, timeout_ms)</code> + <code>thread_reap(t)</code>；
-  <code>platform_cond_timedwait</code> 已存在（Windows / Linux 都有），零平台改动
+<code>platform_cond_timedwait</code> 已存在（Windows / Linux 都有），零平台改动
 - 成本：约 40 行 C + 1 处方法注册 + 文档；风险低（纯加法，不改 <code>join</code> 语义）</p>
 <p><strong>验收</strong>：<code>assert/test_threads_join_for.leno</code>（新）：300ms 的线程 → <code>join_for(50)</code> 得 <code>false</code>、
 <code>state()=="running"</code>；再 <code>join_for(2000)</code> 得 <code>true</code>，<code>join()</code> 仍能拿到返回值。</p>
@@ -805,7 +870,7 @@ main() {
 防循环。<code>OBJ_FUNCTION</code>（无 upvalue）同理包一层 closure。
 - 成本：约 60-100 行；风险中等（upvalue 链、闭包互相捕获的环）⇒ 单独一轮 + 专门用例
 - 验收：<code>threads.start(f, 42)</code> 传一个捕获了外部变量的闭包；Channel 里传闭包后子线程能调用；
-  递归捕获环不挂死（报"嵌套层数超过 64"）</p>
+递归捕获环不挂死（报"嵌套层数超过 64"）</p>
 <p><strong>实测（2026-10-20）</strong>：<code>assert\test_channel_closure.leno</code> 全过 ——
 ① 闭包捕获 main 的局部变量 <code>base=100</code>，经 Channel 传子线程调用 ⇒ <code>103</code>；
 ② <code>Dict</code> 里装闭包作 <code>threads.start</code> 实参 ⇒ 子线程调用 <code>207</code>（回环走的是同一 clone 分支）；
@@ -820,19 +885,19 @@ main() {
 <p><strong>症状</strong>
 1. 没有线程 id ⇒ 多 worker 的日志分不清是谁打的（LenoHTTP 的 <code>[http]</code> 日志只能靠内容猜）。
 2. fire-and-forget 的线程抛异常 ⇒ 错误只写进 <code>thread_obj-&gt;error_msg</code>，<strong>没人 join 就永远看不到</strong>
-   （表现是"任务静默没结果"）。
+（表现是"任务静默没结果"）。
 3. <strong>顺带发现的真 bug</strong>：<code>throw "xxx"</code> 会被 <code>wrap_string_exception()</code> 包成
-   <code>{msg, line, file, stack}</code>（<code>vm_exception.inc:295</code>）⇒ 异常值是 <strong>Dict</strong>；
-   而 <code>thread_entry_point</code> 的错误提取只认 <code>OBJ_STRING</code> ⇒ <strong>所有</strong>用户 <code>throw "..."</code> 都被写成
-   「非字符串异常（对象类型 2）—— 常见于进入函数体之前就失败（如入口函数所属模块未加载）」✗
-   —— 把人往"模块没加载"上引，和 B13 那条是同一种坑。</p>
+<code>{msg, line, file, stack}</code>（<code>vm_exception.inc:295</code>）⇒ 异常值是 <strong>Dict</strong>；
+而 <code>thread_entry_point</code> 的错误提取只认 <code>OBJ_STRING</code> ⇒ <strong>所有</strong>用户 <code>throw "..."</code> 都被写成
+「非字符串异常（对象类型 2）—— 常见于进入函数体之前就失败（如入口函数所属模块未加载）」✗
+—— 把人往"模块没加载"上引，和 B13 那条是同一种坑。</p>
 <p><strong>落地</strong>
 - <code>src/module/threads/threads.c</code>：<code>threads.current_id() -&gt; int</code>（<code>platform_thread_self()</code>）、
-  <code>Thread.error() -&gt; string</code>（mutex 内取 <code>error_msg</code>，没有错误给空串）
+<code>Thread.error() -&gt; string</code>（mutex 内取 <code>error_msg</code>，没有错误给空串）
 - <code>src/object/object_thread.c</code>：错误提取加 <code>OBJ_DICT</code> 分支，读 <code>msg</code> 字段（与
-  <code>exception_msg_dup()</code> 同口径）
+<code>exception_msg_dup()</code> 同口径）
 - 用例 <code>assert\test_threads_diag.leno</code>：主/子线程 id 不同；正常线程 <code>error()==""</code>；
-  出错线程 <code>error()</code> 含 <code>boom-in-thread</code>，且 <code>join()</code> 抛的文案也带原文</p>
+出错线程 <code>error()</code> 含 <code>boom-in-thread</code>，且 <code>join()</code> 抛的文案也带原文</p>
 <blockquote>
 <p>⚠ <code>current_id()</code> 只用于诊断：OS 会复用线程 id，别拿它做业务判断。</p>
 </blockquote>
@@ -846,32 +911,32 @@ worker 取出 → 在本线程执行 → 回传 → 循环；停机发 N 个 <co
 1. <strong>背压</strong>：两个 Channel 都有容量，满了 <code>send</code> 阻塞 ⇒ 自然限流，不会无限堆任务；
 2. <strong>异常不丢</strong>：worker 里 <code>try/catch</code>，把错误作为结果回传（线程池最怕静默失败）；
 3. <strong>循环变量要先拷到局部</strong>：<code>for N to i { int x = i; tasks.send(func(){ return x*x }) }</code>
-   —— 直接捕获 <code>i</code> 会让所有闭包看到同一个槽。</p>
+—— 直接捕获 <code>i</code> 会让所有闭包看到同一个槽。</p>
 <p><strong>实测</strong>：4 worker / 20 个任务 ⇒ 平方和 <strong>2470</strong>（期望 2470），各 worker 处理数合计 20，失败 0。</p>
 <hr>
 <h3 id="th13-p1-多路等待-发送超时-已修-2026-10-20">TH13（P1）多路等待 + 发送超时 —— ✅ 已修（2026-10-20）</h3>
 <p><strong>症状</strong>
 1. 同时等多个 Channel（actor/reactor、worker 池同时等"任务"和"停机信号"）只能
-   <code>try_receive</code> + <code>sleep</code> 手搓轮询，每个库各写一份。
+<code>try_receive</code> + <code>sleep</code> 手搓轮询，每个库各写一份。
 2. <code>send</code> 在缓冲满时<strong>无限阻塞</strong> ⇒ 一个忘记取值的消费者就能把生产者永久卡死
-   （服务端停机、UI 上报进度这类场景最怕）。</p>
+（服务端停机、UI 上报进度这类场景最怕）。</p>
 <p><strong>落地</strong>
 - <code>threads.select(Array[Channel], timeout_ms = 0) -&gt; Dict|null</code>
-  返回第一个有数据的通道 <code>{index, value}</code>；<code>0</code> = 只查一次、<code>&lt;0</code> = 无限等、<code>&gt;0</code> = 最多等。
+返回第一个有数据的通道 <code>{index, value}</code>；<code>0</code> = 只查一次、<code>&lt;0</code> = 无限等、<code>&gt;0</code> = 最多等。
 - <code>ch.send_for(value, timeout_ms) -&gt; bool</code>：<code>true</code> = 已发送，<code>false</code> = 超时/已关闭（<strong>不写入</strong>）。
 - <code>src/object/object_thread.c</code> 新增两个内部接口：
-  - <code>channel_send_for()</code>（<code>platform_cond_timedwait</code> 等空位）
-  - <code>channel_try_take()</code>（非阻塞取，<strong>能区分"空"与"值就是 null"</strong> —— <code>channel_try_receive</code>
-    用 null 表示空，而 Channel 可以发 null，比如线程池拿 null 当停机信号）</p>
+- <code>channel_send_for()</code>（<code>platform_cond_timedwait</code> 等空位）
+- <code>channel_try_take()</code>（非阻塞取，<strong>能区分"空"与"值就是 null"</strong> —— <code>channel_try_receive</code>
+ 用 null 表示空，而 Channel 可以发 null，比如线程池拿 null 当停机信号）</p>
 <p><strong>为什么 select 用轮询而不是"等待多个条件变量"</strong>：要真正阻塞在多个 channel 上，得给每个
 channel 登记等待者、<code>send</code> 时逐个唤醒，并处理"已消费但还没 wake"的竞态 ⇒ 改动面大。
 现在用 1ms 粒度轮询：<strong>零结构改动、零风险</strong>，延迟上限 1ms，对服务端/UI 足够。
 真需要微秒级多路复用（高频交易那种）再上事件机制。</p>
 <p><strong>验收</strong>
 - <code>assert/test_threads_select.leno</code>：空通道超时给 null；命中第 1/2 条返回正确 index；
-  子线程延迟 100ms 发送能等到；<strong>值为 null 也能选中</strong>（与"空"区分）
+子线程延迟 100ms 发送能等到；<strong>值为 null 也能选中</strong>（与"空"区分）
 - <code>assert/test_channel_send_for.leno</code>：满了 50ms 超时给 false 且值没写进去；
-  取走后能再发；负数等价 send
+取走后能再发；负数等价 send
 - 全量断言 <strong>468/0</strong></p>
 <hr>
 <h3 id="th14-p0-async-超过-64-个并发就卡死-已修-2026-10-20">TH14（P0）async 超过 64 个并发就卡死 —— ✅ 已修（2026-10-20）</h3>
@@ -880,11 +945,11 @@ N=65 起还会报「注册异步 I/O 失败（可能已达上限）」。</p>
 <p><strong>两个根因，第二个更隐蔽</strong>：
 1. <code>sockets.c</code> 的异步 I/O 表是<strong>固定 64 项静态数组</strong>（<code>g_async_requests[64]</code>）⇒ 第 65 个挂起直接失败。
 2. <strong>Windows 的 <code>fd_set</code> 是固定 64 项数组</strong>（<code>FD_SETSIZE = 64</code>），而 <code>FD_SET</code> <strong>只写不检查上限</strong>
-   ⇒ 挂起 socket 超过 64 个时<strong>越界写栈</strong>，症状是"跑到 65 个就卡死/崩"，且没有报错可看。</p>
+⇒ 挂起 socket 超过 64 个时<strong>越界写栈</strong>，症状是"跑到 65 个就卡死/崩"，且没有报错可看。</p>
 <p><strong>落地</strong>
 - <code>MAX_ASYNC_IO</code> 静态数组 → 动态扩容（初始 64，按需翻倍）
 - 在 <code>winsock2.h</code> <strong>之前</strong> <code>#define FD_SETSIZE 1024</code>（必须提前，头文件里是 <code>#ifndef</code> 保护）；
-  <code>sockets_poll_async_io</code> / <code>sockets_select</code> 入集前都加 <code>nset &lt; FD_SETSIZE</code> 截断（超出的留到下一轮）
+<code>sockets_poll_async_io</code> / <code>sockets_select</code> 入集前都加 <code>nset &lt; FD_SETSIZE</code> 截断（超出的留到下一轮）
 - 验收：<code>assert\test_async_io_limit.leno</code> —— 70 个客户端同时 <code>arecv</code>，<strong>70/70 成功</strong></p>
 <hr>
 <h3 id="th15-p0-asyncs-timeout-超时后不取消底层-io-已修-2026-10-20">TH15（P0）<code>asyncs.timeout</code> 超时后不取消底层 IO —— ✅ 已修（2026-10-20）</h3>
@@ -892,9 +957,9 @@ N=65 起还会报「注册异步 I/O 失败（可能已达上限）」。</p>
 超时确实拿到 <code>null</code>，但 <code>asyncs.run()</code> <strong>永远不返回</strong> ⇒ 整个程序卡死（只能 kill）。</p>
 <p><strong>根因</strong>（三处叠加）
 1. 定时器到期时只把 Future 标成完成（<code>coroutine.c</code> 的 <code>event_loop_check_timers</code>），
-   <strong>没有取消</strong> <code>arecv</code> 在 <code>g_async_requests</code> 里的请求 ⇒ 它仍 active。
+<strong>没有取消</strong> <code>arecv</code> 在 <code>g_async_requests</code> 里的请求 ⇒ 它仍 active。
 2. <code>sockets_has_async_io()</code> 返回的是 <code>g_async_count</code>（<strong>含已取消但未压缩的槽位</strong>）
-   ⇒ 事件循环永远以为"还有活要干"。
+⇒ 事件循环永远以为"还有活要干"。
 3. <code>sockets_cancel_async()</code> 只置 <code>active=0</code>，不释放 recv 的 buffer，也不减少 count。</p>
 <p><strong>落地</strong>
 - <code>event_loop_check_timers</code>：标记超时后调 <code>sockets_cancel_async(co)</code>
@@ -902,8 +967,8 @@ N=65 起还会报「注册异步 I/O 失败（可能已达上限）」。</p>
 - <code>sockets_cancel_async()</code>：顺手 <code>free(buffer)</code> 并置 NULL
 - <code>sockets_poll_async_io()</code>：开头先 <code>async_compact()</code>（否则"全是 inactive"时永远走不到末尾的压缩）
 - 验收：<code>assert\test_async_timeout.leno</code> —— 服务端<strong>保持连接不关</strong>、协程已退出，
-  <code>run()</code> 仍在 <strong>306ms</strong> 返回（修复前：永久卡死）。这个构造是关键：若连接被关，
-  <code>arecv</code> 会因对端关闭而正常完成，就测不出"取消"是否生效。</p>
+<code>run()</code> 仍在 <strong>306ms</strong> 返回（修复前：永久卡死）。这个构造是关键：若连接被关，
+<code>arecv</code> 会因对端关闭而正常完成，就测不出"取消"是否生效。</p>
 <hr>
 <h3 id="th16-p2-fd_set-截断的饥饿-g_event_loop-疑点-已修-已排查-2026-10-20">TH16（P2）fd_set 截断的饥饿 + <code>g_event_loop</code> 疑点 —— ✅ 已修 / 已排查（2026-10-20）</h3>
 <p><strong>A. 截断饥饿（真问题，已修）</strong>
@@ -922,9 +987,9 @@ TH14 把 <code>FD_SETSIZE</code> 提到 1024 并在入集前截断，但<strong>
 "先起线程并 join，再跑 async sleep 必须正常完成"。</p>
 <p><strong>仍开放（能力缺口，非 bug）</strong>
 - <strong>没有 <code>aconnect</code></strong>：<code>sockets.connect</code> 是阻塞调用，在协程里会卡住整个事件循环
-  （第一版探针就是被这个卡住的）。高并发客户端只能放线程池，或等服务端化。
+（第一版探针就是被这个卡住的）。高并发客户端只能放线程池，或等服务端化。
 - <strong><code>asyncs.run()</code> 没有全局超时</strong>：它会等所有协程结束；只要有一个协程永远挂在
-  一个永不完成的 Future 上，run 就不返回。当前只能对<strong>单个</strong> Future 用 <code>asyncs.timeout</code>。</p>
+一个永不完成的 Future 上，run 就不返回。当前只能对<strong>单个</strong> Future 用 <code>asyncs.timeout</code>。</p>
 <hr>
 <h3 id="th17-p1-异步-connect-事件循环全局超时-已修-2026-10-20">TH17（P1）异步 connect + 事件循环全局超时 —— ✅ 已修（2026-10-20）</h3>
 <p><strong>A. <code>sockets.aconnect(host, port) -&gt; Future</code>（async 函数里 <code>await</code>）</strong>
@@ -945,11 +1010,11 @@ backlog 满时甚至死锁 —— 第一版探针就栽在这里）。</p>
 协程失败时与 run 一样抛异常（错误比超时更需要看见）。</p>
 <p><strong>验收</strong>
 - <code>assert\test_sockets_aconnect.leno</code>：4 个并发 <code>aconnect</code> + echo 全成功；连<strong>没人监听的端口</strong>拿到 <code>null</code>
-  （约 2s，Windows 拒绝有点慢，但不卡）
+（约 2s，Windows 拒绝有点慢，但不卡）
 - <code>assert\test_async_run_for.leno</code>：有协程永久挂起时 <code>run_for(300)</code> 返回 <code>false</code>（实测 311ms），
-  再 <code>run_for(200)</code> 仍 <code>false</code>（204ms），且程序能继续执行到末尾
+再 <code>run_for(200)</code> 仍 <code>false</code>（204ms），且程序能继续执行到末尾
 - ⚠ 用法注意：<code>aconnect</code> 的 Future <strong>没有标注元素类型</strong> ⇒ <code>await</code> 出来是 <code>any</code>，
-  必须 <code>var c = raw as Socket</code> 收窄（与 <code>arecv</code> 不同，后者标了 string）</p>
+必须 <code>var c = raw as Socket</code> 收窄（与 <code>arecv</code> 不同，后者标了 string）</p>
 <hr>
 <h2 id="五-附-本轮订正过的过期口径-全仓扫一遍的结果">五、附：本轮<strong>订正过的过期口径</strong>（全仓扫一遍的结果）</h2>
 <p>TH1/TH2/TH3 落地后，下面这些地方还写着<strong>已经不成立</strong>的事实，已逐处更正
@@ -1149,8 +1214,9 @@ backlog 满时甚至死锁 —— 第一版探针就栽在这里）。</p>
 <td><strong>已完成（工作区未提交）</strong>：三个并行原语（<code>join_all</code> / <code>parallel_for</code> / <code>map</code>，<strong>未引入新对象类型</strong>）+ 入口校验收成一处 + 新用例 <code>test_threads_parallel.leno</code>（并发性用栅栏证明）+ 2 处文档同步</td>
 </tr>
 </tbody>
-</table></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现状快照-模型是什么-别改什么">一、现状快照（模型是什么，别改什么）</a></li><li><a href="#二-修复总表">二、修复总表</a></li><li><a href="#三-明确不做-避免反复讨论">三、明确不做（避免反复讨论）</a></li><li><a href="#四-逐条详述">四、逐条详述</a></li><ul class="lv3"><li><a href="#th18-p0-spawn-时并发克隆-globals-会崩-已修-2026-11-14-压测">TH18（P0）spawn 时并发克隆 globals 会崩 —— ✅ 已修（2026-11-14 压测）</a></li><li><a href="#th1-p0-struct-实例跨-channel-传值-已修-2026-10-12-工作区未提交">TH1（P0）struct 实例跨 Channel 传值 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th2-p1-线程入口允许模块函数-已修-2026-10-12-工作区未提交">TH2（P1）线程入口允许模块函数 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th3-p1-并行原语-已修-2026-10-12-工作区未提交">TH3（P1）并行原语 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th4-p2-channel-t-泛型-已修-2026-10-12-工作区未提交">TH4（P2）Channel[T] 泛型 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th5-p2-线程局部存储-模块级可变状态诊断-已修-能力半边-2026-10-12-工作区未提交">TH5（P2）线程局部存储 + 模块级可变状态诊断 —— ✅ 已修（能力半边，2026-10-12，工作区未提交）</a></li><li><a href="#th6-p3-文档订正-已修-2026-10-12-工作区未提交">TH6（P3）文档订正 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th7-p3-ffi-回调与多外部线程-调研完成-2026-10-12-工作区未提交">TH7（P3）FFI 回调与多外部线程 —— ✅ 调研完成（2026-10-12，工作区未提交）</a></li><li><a href="#th8-p0-入口脚本的全局对象是跨线程共享的-已修-2026-10-20">TH8（P0）入口脚本的全局对象是跨线程共享的 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th9-p1-join-没有超时-已修-2026-10-20">TH9（P1）join() 没有超时 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th10-p1-闭包-函数不能跨线程-已修-2026-10-20">TH10（P1）闭包 / 函数不能跨线程 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th11-p1-线程诊断-current_id-error-已修-2026-10-20">TH11（P1）线程诊断：current_id() + error() —— ✅ 已修（2026-10-20）</a></li><li><a href="#th12-p2-线程池配方-任务-闭包-已落地为示例-2026-10-20">TH12（P2）线程池配方（任务 = 闭包）—— ✅ 已落地为示例（2026-10-20）</a></li><li><a href="#th13-p1-多路等待-发送超时-已修-2026-10-20">TH13（P1）多路等待 + 发送超时 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th14-p0-async-超过-64-个并发就卡死-已修-2026-10-20">TH14（P0）async 超过 64 个并发就卡死 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th15-p0-asyncs-timeout-超时后不取消底层-io-已修-2026-10-20">TH15（P0）asyncs.timeout 超时后不取消底层 IO —— ✅ 已修（2026-10-20）</a></li><li><a href="#th16-p2-fd_set-截断的饥饿-g_event_loop-疑点-已修-已排查-2026-10-20">TH16（P2）fd_set 截断的饥饿 + g_event_loop 疑点 —— ✅ 已修 / 已排查（2026-10-20）</a></li><li><a href="#th17-p1-异步-connect-事件循环全局超时-已修-2026-10-20">TH17（P1）异步 connect + 事件循环全局超时 —— ✅ 已修（2026-10-20）</a></li></ul><li><a href="#五-附-本轮订正过的过期口径-全仓扫一遍的结果">五、附：本轮订正过的过期口径（全仓扫一遍的结果）</a></li><li><a href="#六-进度日志">六、进度日志</a></li></ul></aside>
+</table>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-现状快照-模型是什么-别改什么">一、现状快照（模型是什么，别改什么）</a></li><li><a href="#二-修复总表">二、修复总表</a></li><li><a href="#三-明确不做-避免反复讨论">三、明确不做（避免反复讨论）</a></li><li><a href="#四-逐条详述">四、逐条详述</a></li><ul class="lv3"><li><a href="#th18-p0-spawn-时并发克隆-globals-会崩-已修-2026-11-14-压测">TH18（P0）spawn 时并发克隆 globals 会崩 —— ✅ 已修（2026-11-14 压测）</a></li><li><a href="#th1-p0-struct-实例跨-channel-传值-已修-2026-10-12-工作区未提交">TH1（P0）struct 实例跨 Channel 传值 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th2-p1-线程入口允许模块函数-已修-2026-10-12-工作区未提交">TH2（P1）线程入口允许模块函数 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th3-p1-并行原语-已修-2026-10-12-工作区未提交">TH3（P1）并行原语 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th4-p2-channel-t-泛型-已修-2026-10-12-工作区未提交">TH4（P2）Channel[T 泛型 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th5-p2-线程局部存储-模块级可变状态诊断-已修-能力半边-2026-10-12-工作区未提交">TH5（P2）线程局部存储 + 模块级可变状态诊断 —— ✅ 已修（能力半边，2026-10-12，工作区未提交）</a></li><li><a href="#th6-p3-文档订正-已修-2026-10-12-工作区未提交">TH6（P3）文档订正 —— ✅ 已修（2026-10-12，工作区未提交）</a></li><li><a href="#th7-p3-ffi-回调与多外部线程-调研完成-2026-10-12-工作区未提交">TH7（P3）FFI 回调与多外部线程 —— ✅ 调研完成（2026-10-12，工作区未提交）</a></li><li><a href="#th8-p0-入口脚本的全局对象是跨线程共享的-已修-2026-10-20">TH8（P0）入口脚本的全局对象是跨线程共享的 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th9-p1-join-没有超时-已修-2026-10-20">TH9（P1）join() 没有超时 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th10-p1-闭包-函数不能跨线程-已修-2026-10-20">TH10（P1）闭包 / 函数不能跨线程 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th11-p1-线程诊断-current_id-error-已修-2026-10-20">TH11（P1）线程诊断：current_id() + error() —— ✅ 已修（2026-10-20）</a></li><li><a href="#th12-p2-线程池配方-任务-闭包-已落地为示例-2026-10-20">TH12（P2）线程池配方（任务 = 闭包）—— ✅ 已落地为示例（2026-10-20）</a></li><li><a href="#th13-p1-多路等待-发送超时-已修-2026-10-20">TH13（P1）多路等待 + 发送超时 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th14-p0-async-超过-64-个并发就卡死-已修-2026-10-20">TH14（P0）async 超过 64 个并发就卡死 —— ✅ 已修（2026-10-20）</a></li><li><a href="#th15-p0-asyncs-timeout-超时后不取消底层-io-已修-2026-10-20">TH15（P0）asyncs.timeout 超时后不取消底层 IO —— ✅ 已修（2026-10-20）</a></li><li><a href="#th16-p2-fd_set-截断的饥饿-g_event_loop-疑点-已修-已排查-2026-10-20">TH16（P2）fd_set 截断的饥饿 + g_event_loop 疑点 —— ✅ 已修 / 已排查（2026-10-20）</a></li><li><a href="#th17-p1-异步-connect-事件循环全局超时-已修-2026-10-20">TH17（P1）异步 connect + 事件循环全局超时 —— ✅ 已修（2026-10-20）</a></li></ul><li><a href="#五-附-本轮订正过的过期口径-全仓扫一遍的结果">五、附：本轮订正过的过期口径（全仓扫一遍的结果）</a></li><li><a href="#六-进度日志">六、进度日志</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="类型可见性与use逃生阀修复追踪.html">← 上一篇</a><a href="Leno语言改进建议.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

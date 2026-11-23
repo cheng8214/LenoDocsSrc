@@ -344,12 +344,14 @@ print(t.state())  // 输出: done
 子线程退出后该堆被遗弃，主线程 GC 若扫到它就会访问已释放内存。要跨线程就传<strong>纯数据</strong>
 （标量 / <code>string</code> / <code>Array</code> / <code>Dict</code> / <strong>struct</strong> / <strong>闭包</strong>），在接收方重建 cstruct ——
 这也是很多框架约定"对外一律传字符串数组行"的原因 ✓</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>多返回值（tuple）跨线程的两个坑</strong>（实测）：
 ① <code>ch.send(多返回值函数())</code> <strong>能发出去</strong>（不报错），但接收端拿到的静态类型是 <code>any</code>
-  ⇒ <code>var[int,int](a,b) = ch.try_receive()</code> 被编译器拒绝：
-  「解构声明槽位 0 类型 int 与数组元素类型 any 不兼容」；
+⇒ <code>var[int,int](a,b) = ch.try_receive()</code> 被编译器拒绝：
+「解构声明槽位 0 类型 int 与数组元素类型 any 不兼容」；
 ② 想 <code>as Array[int]</code> 再解构也不行 —— <strong>tuple 的运行期表示不是 Array</strong>，
-  <code>as</code> 之后索引会抛「下标访问: 对象不支持索引」。
+<code>as</code> 之后索引会抛「下标访问: 对象不支持索引」。
 ⇒ <strong>跨线程要传结构化数据，用 <code>Array[T]</code>（元素类型一致的那种）</strong> ✓</p>
 </blockquote>
 <p><strong>示例:</strong></p>
@@ -570,59 +572,74 @@ main() {
 </code></pre>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>闭包捕获变量是深拷贝</strong>
-   - 捕获的变量值会深拷贝到子线程，各线程拥有独立副本
-   - 修改捕获变量不会影响主线程或其他线程
-   <code>leno
-   var x = 10
+<li><strong>闭包捕获变量是深拷贝</strong><ul>
+<li>捕获的变量值会深拷贝到子线程，各线程拥有独立副本</li>
+<li>修改捕获变量不会影响主线程或其他线程</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-leno">   var x = 10
    var t = threads.start(func(){
        print(x)  // ✅ 输出: 10（深拷贝）
-   })</code></p>
+   })
+</code></pre>
+<ol>
+<li><strong>线程安全</strong><ul>
+<li>多个线程不能同时访问同一个可变对象</li>
+<li>使用 Channel 进行线程间通信</li>
+</ul>
 </li>
-<li>
-<p><strong>线程安全</strong>
-   - 多个线程不能同时访问同一个可变对象
-   - 使用 Channel 进行线程间通信</p>
+</ol>
+<ol>
+<li><strong>错误处理</strong><ul>
+<li>线程中的异常不会传播到主线程</li>
+<li>使用 <code>thread.state()</code> 检查线程是否出错</li>
+</ul>
 </li>
-<li>
-<p><strong>错误处理</strong>
-   - 线程中的异常不会传播到主线程
-   - 使用 <code>thread.state()</code> 检查线程是否出错</p>
+</ol>
+<ol>
+<li><strong>print 是线程安全的</strong><ul>
+<li>单次 <code>print()</code> 调用是原子的，不会与其他线程的输出交错</li>
+<li>但多次 <code>print()</code> 调用之间可能被其他线程插入</li>
+</ul>
 </li>
-<li>
-<p><strong>print 是线程安全的</strong>
-   - 单次 <code>print()</code> 调用是原子的，不会与其他线程的输出交错
-   - 但多次 <code>print()</code> 调用之间可能被其他线程插入</p>
+</ol>
+<ol>
+<li><strong>避免忙等待</strong><ul>
+<li>使用 <code>ch.receive()</code>（阻塞）而非 <code>ch.try_receive()</code> + 循环轮询</li>
+<li><code>is_closed()</code> + <code>len()</code> + <code>try_receive()</code> 的组合会产生忙等待，浪费 CPU</li>
+<li>推荐模式：<code>while true { var val = ch.receive(); if val == null { break } }</code></li>
+</ul>
 </li>
-<li>
-<p><strong>避免忙等待</strong>
-   - 使用 <code>ch.receive()</code>（阻塞）而非 <code>ch.try_receive()</code> + 循环轮询
-   - <code>is_closed()</code> + <code>len()</code> + <code>try_receive()</code> 的组合会产生忙等待，浪费 CPU
-   - 推荐模式：<code>while true { var val = ch.receive(); if val == null { break } }</code></p>
+</ol>
+<ol>
+<li><strong>子线程异常与 join() 行为</strong><ul>
+<li>子线程抛出异常时，<code>t.state()</code> 返回 <code>"error"</code></li>
+<li>调用 <code>t.join()</code> 会在主线程抛出异常，格式为 <code>"Thread error: &lt;子线程错误信息&gt;"</code></li>
+<li>可用 <code>try-catch</code> 包裹 <code>join()</code>，或先检查 <code>t.state()</code> 再 join</li>
+<li><strong>不想无限等</strong>就用 <code>t.join_for(ms)</code>（<code>false</code> = 超时，线程继续跑）</li>
+</ul>
 </li>
-<li>
-<p><strong>子线程异常与 join() 行为</strong>
-   - 子线程抛出异常时，<code>t.state()</code> 返回 <code>"error"</code>
-   - 调用 <code>t.join()</code> 会在主线程抛出异常，格式为 <code>"Thread error: &lt;子线程错误信息&gt;"</code>
-   - 可用 <code>try-catch</code> 包裹 <code>join()</code>，或先检查 <code>t.state()</code> 再 join
-   - <strong>不想无限等</strong>就用 <code>t.join_for(ms)</code>（<code>false</code> = 超时，线程继续跑）</p>
+</ol>
+<ol>
+<li><strong>threads 与 async 不应混用</strong><ul>
+<li><code>threads.start()</code> 是 OS 线程 + 隔离 VM，真正并行</li>
+<li><code>async func</code> 是协程 + 事件循环，协作式调度</li>
+<li>不要在子线程中使用 <code>async</code>/<code>await</code>，也不要在 <code>async</code> 函数中调用 <code>threads.start()</code></li>
+<li>CPU 并行用 threads，I/O 并发用 async</li>
+</ul>
 </li>
-<li>
-<p><strong>threads 与 async 不应混用</strong>
-   - <code>threads.start()</code> 是 OS 线程 + 隔离 VM，真正并行
-   - <code>async func</code> 是协程 + 事件循环，协作式调度
-   - 不要在子线程中使用 <code>async</code>/<code>await</code>，也不要在 <code>async</code> 函数中调用 <code>threads.start()</code>
-   - CPU 并行用 threads，I/O 并发用 async</p>
+</ol>
+<ol>
+<li><strong>type() 返回运行时值的类型</strong><ul>
+<li><code>type()</code> 反映运行时实际值的类型，而非变量声明类型</li>
+<li><code>int? a = null</code> 时 <code>type(a)</code> 返回 <code>"null"</code>，不是 <code>"int?"</code></li>
+<li>BigInt 和普通 int 的 <code>type()</code> 都返回 <code>"int"</code></li>
+</ul>
 </li>
-<li>
-<p><strong>type() 返回运行时值的类型</strong>
-   - <code>type()</code> 反映运行时实际值的类型，而非变量声明类型
-   - <code>int? a = null</code> 时 <code>type(a)</code> 返回 <code>"null"</code>，不是 <code>"int?"</code>
-   - BigInt 和普通 int 的 <code>type()</code> 都返回 <code>"int"</code></p>
-</li>
-</ol></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块函数">模块函数</a></li><ul class="lv3"><li><a href="#threads-start-func-args">threads.start(func, ...args)</a></li><li><a href="#threads-channel-capacity">threads.channel(capacity)</a></li><li><a href="#threads-sleep-ms">threads.sleep(ms)</a></li><li><a href="#threads-current_id">threads.current_id()</a></li><li><a href="#threads-join_all-array-thread">threads.join_all(Array[Thread])</a></li><li><a href="#threads-parallel_for-n-f">threads.parallel_for(n, f)</a></li><li><a href="#threads-map-arr-f">threads.map(arr, f)</a></li><li><a href="#threads-local_get-key-default-threads-local_has-key-threads-local_set-key-value">threads.local_get(key, default) / threads.local_has(key) / threads.local_set(key, value)</a></li></ul><li><a href="#thread-对象方法">Thread 对象方法</a></li><ul class="lv3"><li><a href="#thread-join">thread.join()</a></li><li><a href="#thread-join_for-timeout_ms">thread.join_for(timeout_ms)</a></li><li><a href="#thread-error">thread.error()</a></li><li><a href="#thread-state">thread.state()</a></li></ul><li><a href="#channel-对象方法">Channel 对象方法</a></li><ul class="lv3"><li><a href="#channel-send-value">channel.send(value)</a></li><li><a href="#跨线程传值的硬约束-2026-10-09-实测-2026-10-12-更新">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</a></li><li><a href="#channel-send_for-value-timeout_ms">channel.send_for(value, timeout_ms)</a></li><li><a href="#threads-select-array-channel-timeout_ms-0">threads.select(Array[Channel], timeout_ms = 0)</a></li><li><a href="#channel-receive">channel.receive()</a></li><li><a href="#channel-t-通道的元素类型-2026-10-12-起">Channel[T] —— 通道的元素类型（★ 2026-10-12 起）</a></li><li><a href="#channel-try_send-value">channel.try_send(value)</a></li><li><a href="#channel-try_receive">channel.try_receive()</a></li><li><a href="#channel-close">channel.close()</a></li><li><a href="#channel-is_closed">channel.is_closed()</a></li><li><a href="#channel-len">channel.len()</a></li></ul><li><a href="#完整示例">完整示例</a></li><ul class="lv3"><li><a href="#闭包捕获-channel-通信">闭包捕获 + Channel 通信</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
+</ol>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块函数">模块函数</a></li><ul class="lv3"><li><a href="#threads-start-func-args">threads.start(func, ...args)</a></li><li><a href="#threads-channel-capacity">threads.channel(capacity)</a></li><li><a href="#threads-sleep-ms">threads.sleep(ms)</a></li><li><a href="#threads-current_id">threads.current_id()</a></li><li><a href="#threads-join_all-array-thread">threads.join_all(Array[Thread)</a></li><li><a href="#threads-parallel_for-n-f">threads.parallel_for(n, f)</a></li><li><a href="#threads-map-arr-f">threads.map(arr, f)</a></li><li><a href="#threads-local_get-key-default-threads-local_has-key-threads-local_set-key-value">threads.local_get(key, default) / threads.local_has(key) / threads.local_set(key, value)</a></li></ul><li><a href="#thread-对象方法">Thread 对象方法</a></li><ul class="lv3"><li><a href="#thread-join">thread.join()</a></li><li><a href="#thread-join_for-timeout_ms">thread.join_for(timeout_ms)</a></li><li><a href="#thread-error">thread.error()</a></li><li><a href="#thread-state">thread.state()</a></li></ul><li><a href="#channel-对象方法">Channel 对象方法</a></li><ul class="lv3"><li><a href="#channel-send-value">channel.send(value)</a></li><li><a href="#跨线程传值的硬约束-2026-10-09-实测-2026-10-12-更新">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</a></li><li><a href="#channel-send_for-value-timeout_ms">channel.send_for(value, timeout_ms)</a></li><li><a href="#threads-select-array-channel-timeout_ms-0">threads.select(Array[Channel, timeout_ms = 0)</a></li><li><a href="#channel-receive">channel.receive()</a></li><li><a href="#channel-t-通道的元素类型-2026-10-12-起">Channel[T —— 通道的元素类型（★ 2026-10-12 起）</a></li><li><a href="#channel-try_send-value">channel.try_send(value)</a></li><li><a href="#channel-try_receive">channel.try_receive()</a></li><li><a href="#channel-close">channel.close()</a></li><li><a href="#channel-is_closed">channel.is_closed()</a></li><li><a href="#channel-len">channel.len()</a></li></ul><li><a href="#完整示例">完整示例</a></li><ul class="lv3"><li><a href="#闭包捕获-channel-通信">闭包捕获 + Channel 通信</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_sys.html">← 上一篇</a><a href="module_times.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

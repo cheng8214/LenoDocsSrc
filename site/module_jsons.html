@@ -93,26 +93,22 @@ main() {
 <p>雪花 ID / 大时间戳这类值可以放心走 JSON 往返（<code>encode(decode(x)) == x</code>）；
 ⚠ 但 <code>decode</code> 的<strong>静态类型是 <code>any</code></strong>，要参与大小比较得先给出具体类型，
 否则编译期直接拦「any 类型不能参与大小比较」。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>类型提示（2026-09-18 补，实测踩过）</strong>：<code>decode</code> 的<strong>静态返回类型是 <code>any</code></strong> ⇒ 直接写
 <code>obj.field</code> / <code>arr[0]</code> 会被类型检查拒绝（「不能在 any 类型上直接访问字段 / 进行索引访问」）。</p>
 <p><strong>最省事的写法（推荐）</strong>：用 <code>as</code> —— <strong>安全类型转换</strong>：一步给出目标静态类型，
-<strong>不匹配返回 <code>null</code></strong>（不抛错）；嵌套结构逐层 <code>as</code> 即可：
-</p>
-</blockquote>
+<strong>不匹配返回 <code>null</code></strong>（不抛错）；嵌套结构逐层 <code>as</code> 即可：</p>
 <pre><code class="language-leno">var obj = jsons.decode(text) as Dict[string, any]
 var name = _str(obj[&quot;name&quot;])                  // 元素本身仍是 any ⇒ 需 _str 或再 as
 var inner = obj[&quot;nested&quot;] as Dict[string, any]  // 嵌套：逐层 as
 </code></pre>
-<blockquote>
-<p>也可以<strong>收窄到带泛型参数的容器</strong>（效果等同，写法稍长）：
-</p>
-</blockquote>
+<p>也可以<strong>收窄到带泛型参数的容器</strong>（效果等同，写法稍长）：</p>
 <pre><code class="language-leno">var obj = jsons.decode(text)
 if obj is Dict[string, any] {
     var name = obj[&quot;name&quot;]        // 取出来仍是 any ⇒ 嵌套结构要逐层收窄
 }
 </code></pre>
-<blockquote>
 <p>注意：<strong>收窄到裸 <code>Dict</code> 是没有用的</strong> —— 取出的元素仍是 <code>any</code>（见
 <code>docs/类型收窄与绑定语法改进.md</code>）。多层自由取值建议包一层小工具
 （如 <code>json_get</code> / <code>json_obj</code>，实物见 <code>leno_gui/应用/Trae签到/trae_core.leno</code>）。
@@ -215,6 +211,8 @@ assert_eq(jsons.dig(data, &quot;&quot;), null)      // 空路径也返回 null
 <blockquote>
 <p>每层按<strong>当前值</strong>的类型分派：字典查字符串键、数组查下标（<code>int</code>，或点分段里的整串数字）。
 在标量上继续下钻、非数字段用在数组上 ⇒ 一律 <code>null</code>（不抛异常）。</p>
+</blockquote>
+<blockquote>
 <p><strong>为什么需要它</strong>：<code>decode</code> 返回 <code>any</code>，而 Leno <strong>不允许</strong>在 <code>any</code> 上直接下标/取字段
 （编译期就拦，这是有意的安全设计）⇒ 取 <code>data["user"]["name"]</code> 得先
 <code>var u = data["user"] as Dict[string, any]</code>，每层来一遍。
@@ -265,10 +263,14 @@ jsons.encode([s])        // [{&quot;name&quot;:&quot;晴天&quot;,&quot;dur&quot
 分支），调用方以为成功、数据其实全丢了。嵌套 struct、<code>Array[struct]</code> 同样受影响。
 现在按字段名写成 JSON 对象；转义走的是同一条 <code>json_encode_string</code>，
 所以字段里含 <code>"</code> / 换行也是合法 JSON。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>不支持的运行期类型会抛错（2026-11-14 起）</strong>：<code>Socket</code> / <code>File</code> / <code>Thread</code> /
 <code>Channel</code> / <code>Future</code> / 函数 / native 等<strong>没有 JSON 表示</strong>。此前落到 default 分支⇒
 <code>encode(socket)</code> 静默返回字符串 <code>"null"</code>（与"值就是 null"分不开）✗；现在明确报错。
 要序列化就自己挑字段拼成 <code>Dict</code> / <code>struct</code> 再 encode。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>NaN / ±Infinity 会抛错（2026-11-11 起）</strong>：JSON 没有这三个字面量。此前直接走
 <code>val_format_float</code> ⇒ 输出裸 <code>nan</code> / <code>inf</code> / <code>-inf</code>（<strong>非法 JSON</strong>，本库 <code>decode</code> 也读不回来）。
 现在 <code>encode</code> 明确抛「编码失败：浮点值是 NaN 或 Infinity…」——编码前先把非有限值
@@ -436,6 +438,8 @@ K/V 逐项转换（口径与数组元素完全相同，运行时字段元数据�
 <p>⚠ <strong>泛型 struct 的容器字段是例外</strong>：<code>struct Gen[T] { Array[T] items }</code> 里 <code>items</code> 的声明类型
 在运行时仍是类型参数 <code>T</code>（没有具体类型）⇒ fill 对 <code>items</code> <strong>原样</strong>（<code>["1"]</code> 的 <code>"1"</code> 不会转）。
 需要转换时改用具体类型的 struct，或填完自己 <code>_int</code>（<code>assert/test_jsons_fill_nested.leno</code> ⑫ 钉住了这条）。</p>
+</blockquote>
+<blockquote>
 <p><strong>为什么字符串能转数字、但数字不能转字符串</strong>：JSON 本身能区分类型，而
 <strong>SQLite 的 <code>column_text</code> / CSV 的每一列都是字符串</strong> —— 不让字符串转数字，
 <code>fill</code> 在 DB 场景就完全失效（而 DB 行恰恰是"行数组"最大的来源）。
@@ -870,62 +874,76 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>编码问题</strong>
-   - JSON 文件应使用 UTF-8 编码
-   - 支持中文、emoji 等 Unicode 字符</p>
+<li><strong>编码问题</strong><ul>
+<li>JSON 文件应使用 UTF-8 编码</li>
+<li>支持中文、emoji 等 Unicode 字符</li>
+</ul>
 </li>
-<li>
-<p><strong>数字精度</strong>
-   - <strong>整数按精确的 int64 解析</strong> ✓（<strong>2026-10-10 起</strong>；超出 int48 会自动升 bigint ✓）
+</ol>
+<ol>
+<li><strong>数字精度</strong><ul>
+<li><strong>整数按精确的 int64 解析</strong> ✓（<strong>2026-10-10 起</strong>；超出 int48 会自动升 bigint ✓）
      ⇒ <strong>雪花 ID / 大时间戳</strong>（&gt; 2^53 但在 int64 内）现在<strong>不再失真</strong> ✓：
      <code>jsons.get_int(jsons.decode("{\"id\":153282510146394112}"), "id", -1)</code> ⇒ <code>153282510146394112</code> ✓
-     （原来一律过 <code>strtod</code> ✗ ⇒ 精度丢失 ✓ 实测过 ✓）
-   - ⚠ 超过 int64 的整数文本（&gt;19 位左右）<strong>仍退回 double</strong> ✗（这一档尚未接大整数串入口 ✓）
-   - 浮点数（含 <code>42.0</code> / <code>1e3</code> 这种写法）按 double ✓，可能有精度损失 ✓
-   - ⚠ 回写（<code>encode</code>）会<strong>按十进制原样写出</strong>大整数 ✓（不写科学计数法 ✓ 也不写 <code>null</code> ✓）</p>
+     （原来一律过 <code>strtod</code> ✗ ⇒ 精度丢失 ✓ 实测过 ✓）</li>
+<li>⚠ 超过 int64 的整数文本（&gt;19 位左右）<strong>仍退回 double</strong> ✗（这一档尚未接大整数串入口 ✓）</li>
+<li>浮点数（含 <code>42.0</code> / <code>1e3</code> 这种写法）按 double ✓，可能有精度损失 ✓</li>
+<li>⚠ 回写（<code>encode</code>）会<strong>按十进制原样写出</strong>大整数 ✓（不写科学计数法 ✓ 也不写 <code>null</code> ✓）</li>
+</ul>
 </li>
-<li>
-<p><strong>对象键名</strong>
-   - JSON 对象键必须是字符串
-   - 使用点号或方括号访问: <code>obj.key</code> 或 <code>obj["key"]</code></p>
+</ol>
+<ol>
+<li><strong>对象键名</strong><ul>
+<li>JSON 对象键必须是字符串</li>
+<li>使用点号或方括号访问: <code>obj.key</code> 或 <code>obj["key"]</code></li>
+</ul>
 </li>
-<li>
-<p><strong>数组越界</strong>
-   - 访问不存在的索引返回 <code>null</code>，不会报错
-   - 建议先检查数组长度</p>
+</ol>
+<ol>
+<li><strong>数组越界</strong><ul>
+<li>访问不存在的索引返回 <code>null</code>，不会报错</li>
+<li>建议先检查数组长度</li>
+</ul>
 </li>
-<li>
-<p><strong>循环引用</strong>（2026-11-16 复核更正 —— 下面两条旧说法已过期 ✗）
-   - ~~"当前版本不支持处理循环引用 / 编码可能导致无限递归"~~ ⇒ <strong>不会无限递归</strong>：
+</ol>
+<ol>
+<li><strong>循环引用</strong>（2026-11-16 复核更正 —— 下面两条旧说法已过期 ✗）<ul>
+<li>~~"当前版本不支持处理循环引用 / 编码可能导致无限递归"~~ ⇒ <strong>不会无限递归</strong>：
      编解码都有 <strong>512 层</strong>深度上限，超限<strong>明确报错</strong>
-     （<code>编码失败：嵌套超过 512 层（结构可能存在循环引用）</code>），不崩、不静默截断
-   - <strong>语义</strong>上仍然不支持：环本身无法表示为 JSON ⇒ 要"还原成树"必须先断开环
-     （<code>node.parent = parent</code> 这类反向指针在编码前要置 <code>null</code>）
-   - 同一族保护现在都在（2026-11-16）：<code>.copy()</code> 深拷贝（512 层）、<code>type()</code>（512 层）、
-     <code>print()</code> / <code>_str()</code>（<strong>地址栈</strong>环检测，命中同一个对象在自己的路径上 ⇒ 立即报错）</p>
+     （<code>编码失败：嵌套超过 512 层（结构可能存在循环引用）</code>），不崩、不静默截断</li>
+<li><strong>语义</strong>上仍然不支持：环本身无法表示为 JSON ⇒ 要"还原成树"必须先断开环
+     （<code>node.parent = parent</code> 这类反向指针在编码前要置 <code>null</code>）</li>
+<li>同一族保护现在都在（2026-11-16）：<code>.copy()</code> 深拷贝（512 层）、<code>type()</code>（512 层）、
+     <code>print()</code> / <code>_str()</code>（<strong>地址栈</strong>环检测，命中同一个对象在自己的路径上 ⇒ 立即报错）</li>
+</ul>
 </li>
-<li>
-<p><strong>文件权限</strong>
-   - <code>read_file</code> 需要读权限
-   - <code>write_file</code> 需要写权限，会自动创建父目录</p>
+</ol>
+<ol>
+<li><strong>文件权限</strong><ul>
+<li><code>read_file</code> 需要读权限</li>
+<li><code>write_file</code> 需要写权限，会自动创建父目录</li>
+</ul>
 </li>
-<li>
-<p><strong>错误处理</strong>
-   - 解析错误返回 <code>null</code>，不会抛出异常
-   - 建议始终检查返回值</p>
+</ol>
+<ol>
+<li><strong>错误处理</strong><ul>
+<li>解析错误返回 <code>null</code>，不会抛出异常</li>
+<li>建议始终检查返回值</li>
+</ul>
 </li>
-<li>
-<p><strong>数组可以直接存、也可以直接收窄</strong>（2026-10-08 实测更正 ✓）
-   - 字面量字段里直接放数组：<code>jsons.write_file(p, {version: 1, arr: ["x","y"]})</code> ✓ 落盘就是 JSON 数组
-   - <code>Dict[string, any] d = {}</code> 再 <code>d["arr"] = ["x","y"]</code> ✓ <strong>内存与落盘都正常，不会被丢掉</strong>
-   - <code>jsons.decode(...)</code> 解出来的数组，<code>is Array[string]</code> <strong>成立</strong> ✓（库返回的数组如 <code>jsons.keys</code> 同样成立）
-   - ⇒ 「几个字符串」这类配置项<strong>直接存数组</strong>即可 ✓，不必为了"绕开收窄"把结构拍扁成裸串 ✗
-     （本仓例：音乐下载器 <code>dl_settings.sources</code> 直接存 <code>Array[string]</code> ✓）
-   - ⚠ 仍然要在意的一条：<code>write_file</code> 会把参数<strong>再编码一次</strong> ⇒ 要写"已编码好的 JSON 文本"用
-     <code>write_text</code> ✓（见上文 <code>write_text</code> ✓）
-   - ⚠ 空数组字面量 <code>var a = []</code> 的元素类型是 <code>any</code> ⇒ 想当 <code>Array[string]</code> 用要<strong>显式标注</strong>
-     <code>Array[string] a = []</code> ✓</p>
+</ol>
+<ol>
+<li><strong>数组可以直接存、也可以直接收窄</strong>（2026-10-08 实测更正 ✓）<ul>
+<li>字面量字段里直接放数组：<code>jsons.write_file(p, {version: 1, arr: ["x","y"]})</code> ✓ 落盘就是 JSON 数组</li>
+<li><code>Dict[string, any] d = {}</code> 再 <code>d["arr"] = ["x","y"]</code> ✓ <strong>内存与落盘都正常，不会被丢掉</strong></li>
+<li><code>jsons.decode(...)</code> 解出来的数组，<code>is Array[string]</code> <strong>成立</strong> ✓（库返回的数组如 <code>jsons.keys</code> 同样成立）</li>
+<li>⇒ 「几个字符串」这类配置项<strong>直接存数组</strong>即可 ✓，不必为了"绕开收窄"把结构拍扁成裸串 ✗
+     （本仓例：音乐下载器 <code>dl_settings.sources</code> 直接存 <code>Array[string]</code> ✓）</li>
+<li>⚠ 仍然要在意的一条：<code>write_file</code> 会把参数<strong>再编码一次</strong> ⇒ 要写"已编码好的 JSON 文本"用
+     <code>write_text</code> ✓（见上文 <code>write_text</code> ✓）</li>
+<li>⚠ 空数组字面量 <code>var a = []</code> 的元素类型是 <code>any</code> ⇒ 想当 <code>Array[string]</code> 用要<strong>显式标注</strong>
+     <code>Array[string] a = []</code> ✓</li>
+</ul>
 </li>
 </ol>
 <hr>
@@ -1044,7 +1062,8 @@ main() {
 </table>
 <hr>
 <p><em>文档版本: 1.1</em><br>
-<em>最后更新: 2026-09-26（新增 T21 取值助手 + write_text）</em></p></main>
+<em>最后更新: 2026-09-26（新增 T21 取值助手 + write_text）</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#json-解码">JSON 解码</a></li><ul class="lv3"><li><a href="#decode-json_string">decode(json_string)</a></li></ul><li><a href="#取值助手-t21">取值助手（T21）</a></li><ul class="lv3"><li><a href="#get_str-obj-key-default-get_int-get_float-get_bool">get_str(obj, key, default) / get_int / get_float / get_bool</a></li><li><a href="#get_obj-obj-key">get_obj(obj, key)</a></li><li><a href="#dig-obj-path-2026-11-03-新增">dig(obj, path)（2026-11-03 新增）</a></li><li><a href="#keys-obj">keys(obj)</a></li></ul><li><a href="#json-编码">JSON 编码</a></li><ul class="lv3"><li><a href="#encode-value">encode(value)</a></li><li><a href="#fill-target-json-2026-11-09-新增-p1-记录类型">fill(target, json)（2026-11-09 新增，P1 记录类型）</a></li><li><a href="#encode_pretty-value">encode_pretty(value)</a></li></ul><li><a href="#文件操作">文件操作</a></li><ul class="lv3"><li><a href="#read_file-path">read_file(path)</a></li><li><a href="#write_file-path-value">write_file(path, value)</a></li><li><a href="#write_text-path-text">write_text(path, text)</a></li></ul><li><a href="#数据类型映射">数据类型映射</a></li><ul class="lv3"><li><a href="#json-leno">JSON → Leno</a></li><li><a href="#leno-json">Leno → JSON</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-配置文件读写">1. 配置文件读写</a></li><li><a href="#2-处理-json-api-响应">2. 处理 JSON API 响应</a></li><li><a href="#3-数据导出工具">3. 数据导出工具</a></li><li><a href="#4-json-数据转换">4. JSON 数据转换</a></li><li><a href="#5-读取唐诗-json-文件">5. 读取唐诗 JSON 文件</a></li><li><a href="#6-验证-json-格式">6. 验证 JSON 格式</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#性能提示">性能提示</a></li><li><a href="#完整-api-速查表">完整 API 速查表</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_io.html">← 上一篇</a><a href="module_maths.html">下一篇 →</a></nav>

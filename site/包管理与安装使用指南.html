@@ -656,71 +656,70 @@ main() {
 <h2 id="9-最佳实践">9. 最佳实践</h2>
 <h3 id="推荐做法">✅ 推荐做法</h3>
 <ol>
-<li>
-<p><strong>始终使用 <code>export</code> 显式导出</strong>
-   <code>leno
-   export func public_api() { }
-   func _internal_helper() { }    // 不导出</code></p>
-</li>
-<li>
-<p><strong>包名使用小写 + 连字符</strong>
-   <code>my-awesome-lib    ✅
+<li><strong>始终使用 <code>export</code> 显式导出</strong></li>
+</ol>
+<pre><code class="language-leno">   export func public_api() { }
+   func _internal_helper() { }    // 不导出
+</code></pre>
+<ol>
+<li><strong>包名使用小写 + 连字符</strong></li>
+</ol>
+<pre><code>   my-awesome-lib    ✅
    MyAwesomeLib      ❌ (不符合约定)
-   my_awesome_lib    ❌ (风格不统一)</code></p>
-</li>
-<li>
-<p><strong>一个包一个核心功能</strong>
-   <code>bash
-   leno --init http-client    # HTTP 客户端
+   my_awesome_lib    ❌ (风格不统一)
+</code></pre>
+<ol>
+<li><strong>一个包一个核心功能</strong></li>
+</ol>
+<pre><code class="language-bash">   leno --init http-client    # HTTP 客户端
    leno --init json-parser    # JSON 解析器
-   leno --init logger-lib     # 日志库</code></p>
-</li>
-<li>
-<p><strong>遵循语义化版本</strong>
-   <code>0.1.0  → 初始开发
+   leno --init logger-lib     # 日志库
+</code></pre>
+<ol>
+<li><strong>遵循语义化版本</strong></li>
+</ol>
+<pre><code>   0.1.0  → 初始开发
    1.0.0  → 首个稳定版
    1.1.0  → 新增功能（向后兼容）
    1.1.1  → Bug 修复
-   2.0.0  → 重大变更（不兼容）</code></p>
-</li>
-<li>
-<p><strong>在 <code>lib/</code> 中组织模块</strong>
-   <code>my-lib/
+   2.0.0  → 重大变更（不兼容）
+</code></pre>
+<ol>
+<li><strong>在 <code>lib/</code> 中组织模块</strong></li>
+</ol>
+<pre><code>   my-lib/
    └── lib/
        ├── my-lib.leno       # 包入口
        ├── utils.leno        # 工具函数
        ├── types.leno        # 类型定义
        └── internal/
-           └── core.leno     # 内部实现</code></p>
-</li>
-</ol>
+           └── core.leno     # 内部实现
+</code></pre>
 <h3 id="避免的做法">❌ 避免的做法</h3>
 <ol>
-<li>
-<p><strong>在模块初始化时执行副作用</strong>
-   <code>leno
-   // ❌ 不好 - 导入时就有副作用
-   print("模块已加载")
-   var conn = open_database()  // 导入时就连接数据库</code></p>
-</li>
-<li>
-<p><strong>导出过多内部细节</strong>
-   <code>leno
-   // ❌ 不好
-   export var _internal_counter  // 暴露内部状态
-   export func _parse_internal() // 暴露内部实现</code></p>
-</li>
-<li>
-<p><strong>忘记安装依赖包</strong>
-   ```bash
-   # ❌ 直接运行带依赖的项目但还没安装依赖
-   leno main.leno               # 可能找不到依赖</p>
-</li>
+<li><strong>在模块初始化时执行副作用</strong></li>
 </ol>
-<p># ✅ 先安装依赖
+<pre><code class="language-leno">   // ❌ 不好 - 导入时就有副作用
+   print(&quot;模块已加载&quot;)
+   var conn = open_database()  // 导入时就连接数据库
+</code></pre>
+<ol>
+<li><strong>导出过多内部细节</strong></li>
+</ol>
+<pre><code class="language-leno">   // ❌ 不好
+   export var _internal_counter  // 暴露内部状态
+   export func _parse_internal() // 暴露内部实现
+</code></pre>
+<ol>
+<li><strong>忘记安装依赖包</strong></li>
+</ol>
+<pre><code class="language-bash">   # ❌ 直接运行带依赖的项目但还没安装依赖
+   leno main.leno               # 可能找不到依赖
+
+   # ✅ 先安装依赖
    leno --install dependency-pkg
    leno main.leno
-   ```</p>
+</code></pre>
 <hr>
 <h2 id="10-常见问题">10. 常见问题</h2>
 <h3 id="q-安装的包存在哪里">Q: 安装的包存在哪里？</h3>
@@ -764,8 +763,9 @@ leno --install gitee:user/my-leno-libs/pkg-json
 <hr>
 <blockquote>
 <p><strong>核心原则</strong>：<code>leno --init</code> 创建包 → <code>leno --install</code> 安装到全局缓存 → <code>import "包名"</code> 随处使用。三步即可实现代码复用。</p>
-</blockquote></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#快速入门">快速入门</a></li><ul class="lv3"><li><a href="#三步上手">三步上手</a></li></ul><li><a href="#1-包的概念">1. 包的概念</a></li><ul class="lv3"><li><a href="#1-1-什么是-leno-包">1.1 什么是 Leno 包？</a></li><li><a href="#1-2-包-vs-文件模块">1.2 包 vs 文件模块</a></li></ul><li><a href="#2-创建包">2. 创建包</a></li><ul class="lv3"><li><a href="#2-1-使用-leno-init">2.1 使用 leno --init</a></li><li><a href="#2-2-自动生成的项目结构">2.2 自动生成的项目结构</a></li><li><a href="#2-3-自动生成的示例代码">2.3 自动生成的示例代码</a></li></ul><li><a href="#3-leno-toml-配置详解">3. leno.toml 配置详解</a></li><ul class="lv3"><li><a href="#3-1-package-包基本信息">3.1 [package] - 包基本信息</a></li><li><a href="#3-2-dependencies-依赖管理">3.2 [dependencies] - 依赖管理</a></li><li><a href="#3-2-1-requires-运行时模块版本要求">3.2.1 [requires] - 运行时模块版本要求</a></li><li><a href="#3-3-dev-dependencies-开发依赖">3.3 [dev-dependencies] - 开发依赖</a></li><li><a href="#3-4-dependency-sources-依赖源配置">3.4 [dependency-sources] - 依赖源配置</a></li><li><a href="#3-5-modules-模块配置">3.5 [modules] - 模块配置</a></li><li><a href="#3-6-native-libs-原生库映射">3.6 [native-libs.] - 原生库映射</a></li><li><a href="#3-7-完整配置示例">3.7 完整配置示例</a></li></ul><li><a href="#4-包的模块编写">4. 包的模块编写</a></li><ul class="lv3"><li><a href="#4-1-export-导出控制">4.1 export 导出控制</a></li><li><a href="#4-2-包模块命名约定">4.2 包模块命名约定</a></li></ul><li><a href="#5-安装与缓存">5. 安装与缓存</a></li><ul class="lv3"><li><a href="#5-1-全局缓存目录">5.1 全局缓存目录</a></li><li><a href="#5-2-安装一个包">5.2 安装一个包</a></li><li><a href="#5-3-安装所有依赖">5.3 安装所有依赖</a></li><li><a href="#5-4-覆盖已安装的包">5.4 覆盖已安装的包</a></li></ul><li><a href="#6-使用包-导入">6. 使用包（导入）</a></li><ul class="lv3"><li><a href="#6-1-基本导入">6.1 基本导入</a></li><li><a href="#6-2-带别名导入">6.2 带别名导入</a></li><li><a href="#6-3-搜索路径优先级">6.3 搜索路径优先级</a></li><li><a href="#6-4-文件模块-vs-包导入对比">6.4 文件模块 vs 包导入对比</a></li></ul><li><a href="#7-完整工作流示例">7. 完整工作流示例</a></li><ul class="lv3"><li><a href="#7-1-场景-创建一个数学库并在另一个项目中使用">7.1 场景：创建一个数学库并在另一个项目中使用</a></li><li><a href="#7-2-场景-带依赖的包">7.2 场景：带依赖的包</a></li></ul><li><a href="#8-命令参考">8. 命令参考</a></li><li><a href="#9-最佳实践">9. 最佳实践</a></li><ul class="lv3"><li><a href="#推荐做法">✅ 推荐做法</a></li><li><a href="#避免的做法">❌ 避免的做法</a></li></ul><li><a href="#10-常见问题">10. 常见问题</a></li><ul class="lv3"><li><a href="#q-安装的包存在哪里">Q: 安装的包存在哪里？</a></li><li><a href="#q-如何更新已安装的包">Q: 如何更新已安装的包？</a></li><li><a href="#q-包名和目录名必须一致吗">Q: 包名和目录名必须一致吗？</a></li><li><a href="#q-同一个包的不同版本怎么共存">Q: 同一个包的不同版本怎么共存？</a></li><li><a href="#q-如何发布-共享我的包">Q: 如何发布/共享我的包？</a></li><li><a href="#q-import-xxx-找不到包怎么办">Q: import "xxx" 找不到包怎么办？</a></li></ul></ul></aside>
+</blockquote>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#快速入门">快速入门</a></li><ul class="lv3"><li><a href="#三步上手">三步上手</a></li></ul><li><a href="#1-包的概念">1. 包的概念</a></li><ul class="lv3"><li><a href="#1-1-什么是-leno-包">1.1 什么是 Leno 包？</a></li><li><a href="#1-2-包-vs-文件模块">1.2 包 vs 文件模块</a></li></ul><li><a href="#2-创建包">2. 创建包</a></li><ul class="lv3"><li><a href="#2-1-使用-leno-init">2.1 使用 leno --init</a></li><li><a href="#2-2-自动生成的项目结构">2.2 自动生成的项目结构</a></li><li><a href="#2-3-自动生成的示例代码">2.3 自动生成的示例代码</a></li></ul><li><a href="#3-leno-toml-配置详解">3. leno.toml 配置详解</a></li><ul class="lv3"><li><a href="#3-1-package-包基本信息">3.1 [package - 包基本信息</a></li><li><a href="#3-2-dependencies-依赖管理">3.2 [dependencies - 依赖管理</a></li><li><a href="#3-2-1-requires-运行时模块版本要求">3.2.1 [requires - 运行时模块版本要求</a></li><li><a href="#3-3-dev-dependencies-开发依赖">3.3 [dev-dependencies - 开发依赖</a></li><li><a href="#3-4-dependency-sources-依赖源配置">3.4 [dependency-sources - 依赖源配置</a></li><li><a href="#3-5-modules-模块配置">3.5 [modules - 模块配置</a></li><li><a href="#3-6-native-libs-原生库映射">3.6 [native-libs. - 原生库映射</a></li><li><a href="#3-7-完整配置示例">3.7 完整配置示例</a></li></ul><li><a href="#4-包的模块编写">4. 包的模块编写</a></li><ul class="lv3"><li><a href="#4-1-export-导出控制">4.1 export 导出控制</a></li><li><a href="#4-2-包模块命名约定">4.2 包模块命名约定</a></li></ul><li><a href="#5-安装与缓存">5. 安装与缓存</a></li><ul class="lv3"><li><a href="#5-1-全局缓存目录">5.1 全局缓存目录</a></li><li><a href="#5-2-安装一个包">5.2 安装一个包</a></li><li><a href="#5-3-安装所有依赖">5.3 安装所有依赖</a></li><li><a href="#5-4-覆盖已安装的包">5.4 覆盖已安装的包</a></li></ul><li><a href="#6-使用包-导入">6. 使用包（导入）</a></li><ul class="lv3"><li><a href="#6-1-基本导入">6.1 基本导入</a></li><li><a href="#6-2-带别名导入">6.2 带别名导入</a></li><li><a href="#6-3-搜索路径优先级">6.3 搜索路径优先级</a></li><li><a href="#6-4-文件模块-vs-包导入对比">6.4 文件模块 vs 包导入对比</a></li></ul><li><a href="#7-完整工作流示例">7. 完整工作流示例</a></li><ul class="lv3"><li><a href="#7-1-场景-创建一个数学库并在另一个项目中使用">7.1 场景：创建一个数学库并在另一个项目中使用</a></li><li><a href="#7-2-场景-带依赖的包">7.2 场景：带依赖的包</a></li></ul><li><a href="#8-命令参考">8. 命令参考</a></li><li><a href="#9-最佳实践">9. 最佳实践</a></li><ul class="lv3"><li><a href="#推荐做法">✅ 推荐做法</a></li><li><a href="#避免的做法">❌ 避免的做法</a></li></ul><li><a href="#10-常见问题">10. 常见问题</a></li><ul class="lv3"><li><a href="#q-安装的包存在哪里">Q: 安装的包存在哪里？</a></li><li><a href="#q-如何更新已安装的包">Q: 如何更新已安装的包？</a></li><li><a href="#q-包名和目录名必须一致吗">Q: 包名和目录名必须一致吗？</a></li><li><a href="#q-同一个包的不同版本怎么共存">Q: 同一个包的不同版本怎么共存？</a></li><li><a href="#q-如何发布-共享我的包">Q: 如何发布/共享我的包？</a></li><li><a href="#q-import-xxx-找不到包怎么办">Q: import "xxx" 找不到包怎么办？</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="threads使用指南.html">← 上一篇</a><a href="单文件打包使用指南.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

@@ -218,19 +218,21 @@
 <h3 id="3-1-socket-跨线程-p0-的根因-已落地-路线-1">3.1 <code>Socket</code> 跨线程（P0 的根因）— ✅ 已落地（路线 1）</h3>
 <p><code>threads.start</code> 实参白名单不含 Socket ⇒ 写不出"每连接一线程"。三条路线：</p>
 <ol>
-<li><strong><code>fd()</code> + <code>from_fd()</code></strong>（✅ 2026-10-20 落地）：Socket → int → 线程内重建。
-   - <code>sockets.c</code> 新增 <code>sock.fd()</code> / <code>sock.detach()</code>（交出所有权，原对象 fd 置 INVALID ⇒ 不 double close）
-     与 <code>sockets.from_fd(fd)</code>（新对象负责 close）。
-   - LenoHTTP 侧：<code>serve_workers/worker_loop</code>（<code>lib/http_server.leno</code>）+ <code>HTTP.serveWorkers/workerLoop</code>。
-   - ⚠ <strong>app 不能传进线程</strong>：路由表里是 handler 闭包，<code>value_clone_for_channel</code> 拒绝闭包
-     ⇒ worker 入口必须自己 <code>buildApp()</code>（每线程一份路由表）。
-   - ⚠ 模块级 <code>var</code> 跨线程共享且无锁 ⇒ 可变状态走 Channel 单点化。
-   - 验收：3 个 slowloris 慢连接（各挂 3s）+ 5 个正常请求，8 workers 时正常请求 <strong>2.3ms</strong>；
+<li><strong><code>fd()</code> + <code>from_fd()</code></strong>（✅ 2026-10-20 落地）：Socket → int → 线程内重建。<ul>
+<li><code>sockets.c</code> 新增 <code>sock.fd()</code> / <code>sock.detach()</code>（交出所有权，原对象 fd 置 INVALID ⇒ 不 double close）
+     与 <code>sockets.from_fd(fd)</code>（新对象负责 close）。</li>
+<li>LenoHTTP 侧：<code>serve_workers/worker_loop</code>（<code>lib/http_server.leno</code>）+ <code>HTTP.serveWorkers/workerLoop</code>。</li>
+<li>⚠ <strong>app 不能传进线程</strong>：路由表里是 handler 闭包，<code>value_clone_for_channel</code> 拒绝闭包
+     ⇒ worker 入口必须自己 <code>buildApp()</code>（每线程一份路由表）。</li>
+<li>⚠ 模块级 <code>var</code> 跨线程共享且无锁 ⇒ 可变状态走 Channel 单点化。</li>
+<li>验收：3 个 slowloris 慢连接（各挂 3s）+ 5 个正常请求，8 workers 时正常请求 <strong>2.3ms</strong>；
      1 worker 对照 <strong>3009ms</strong>（<code>test/test_thread_server.leno</code>）。</li>
+</ul>
+</li>
 <li>把 Socket 加入跨线程白名单：要处理引用计数、双端关闭竞争 —— <strong>不做</strong>（路线 1 已够）。</li>
 <li>单线程事件循环：非阻塞 + <code>select</code> + <strong>HTTP 增量解析</strong> —— 暂不做；连接数远超核数时再考虑。</li>
 </ol>
-<h3 id="3-2-字符串累加是-o-n²">3.2 字符串累加是 O(n²)</h3>
+<h3 id="3-2-字符串累加是-o-n">3.2 字符串累加是 O(n²)</h3>
 <p>实测：XLSX 1 万格逐格 <code>s = s + x</code> <strong>1.8 秒</strong>，<code>Array[int]</code> 累积后 <strong>80ms</strong>。
 建议：<code>StringBuilder</code> 类型，或编译器把<strong>循环内</strong>的 <code>s = s + x</code> 自动降级为 builder。</p>
 <h3 id="3-3-模板字符串缺-上下文转义">3.3 模板字符串缺"上下文转义"</h3>
@@ -252,8 +254,9 @@ dispatcher 统一 <code>try/catch</code> → 500 页面（本轮未做，列为 
 <li>2.6 Range/缓存头 + 2.7 分块发送 —— 静态资源是每个站都有的</li>
 <li>2.5 multipart —— 有上传需求时立刻做</li>
 <li>~~3.1 并发~~ ✅ 已完成（2026-10-20，线程池 <code>serveWorkers</code>，见 §3.1）</li>
-</ol></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-已验证的现状-基线">0. 已验证的现状（基线）</a></li><li><a href="#1-功能缺口-按-能不能上线-排序">1. 功能缺口（按"能不能上线"排序）</a></li><ul class="lv3"><li><a href="#p0-决定-能不能对外">P0 —— 决定"能不能对外"</a></li><li><a href="#p1-决定-好不好用">P1 —— 决定"好不好用"</a></li><li><a href="#p2-锦上添花">P2 —— 锦上添花</a></li></ul><li><a href="#2-本轮已修-2026-10-18">2. 本轮已修（2026-10-18）</a></li><ul class="lv3"><li><a href="#2-1-gzip-响应">2.1 gzip 响应</a></li><li><a href="#2-2-模板自动转义">2.2 模板自动转义</a></li></ul><li><a href="#3-语言-运行时层-比补库更值钱">3. 语言 / 运行时层（比补库更值钱）</a></li><ul class="lv3"><li><a href="#3-1-socket-跨线程-p0-的根因-已落地-路线-1">3.1 Socket 跨线程（P0 的根因）— ✅ 已落地（路线 1）</a></li><li><a href="#3-2-字符串累加是-o-n²">3.2 字符串累加是 O(n²)</a></li><li><a href="#3-3-模板字符串缺-上下文转义">3.3 模板字符串缺"上下文转义"</a></li><li><a href="#3-4-错误模型不统一">3.4 错误模型不统一</a></li><li><a href="#3-5-默认参数求值时机">3.5 默认参数求值时机</a></li></ul><li><a href="#4-明确不做-有意的取舍">4. 明确不做（有意的取舍）</a></li><li><a href="#5-下一步顺序">5. 下一步顺序</a></li></ul></aside>
+</ol>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-已验证的现状-基线">0. 已验证的现状（基线）</a></li><li><a href="#1-功能缺口-按-能不能上线-排序">1. 功能缺口（按"能不能上线"排序）</a></li><ul class="lv3"><li><a href="#p0-决定-能不能对外">P0 —— 决定"能不能对外"</a></li><li><a href="#p1-决定-好不好用">P1 —— 决定"好不好用"</a></li><li><a href="#p2-锦上添花">P2 —— 锦上添花</a></li></ul><li><a href="#2-本轮已修-2026-10-18">2. 本轮已修（2026-10-18）</a></li><ul class="lv3"><li><a href="#2-1-gzip-响应">2.1 gzip 响应</a></li><li><a href="#2-2-模板自动转义">2.2 模板自动转义</a></li></ul><li><a href="#3-语言-运行时层-比补库更值钱">3. 语言 / 运行时层（比补库更值钱）</a></li><ul class="lv3"><li><a href="#3-1-socket-跨线程-p0-的根因-已落地-路线-1">3.1 Socket 跨线程（P0 的根因）— ✅ 已落地（路线 1）</a></li><li><a href="#3-2-字符串累加是-o-n">3.2 字符串累加是 O(n²)</a></li><li><a href="#3-3-模板字符串缺-上下文转义">3.3 模板字符串缺"上下文转义"</a></li><li><a href="#3-4-错误模型不统一">3.4 错误模型不统一</a></li><li><a href="#3-5-默认参数求值时机">3.5 默认参数求值时机</a></li></ul><li><a href="#4-明确不做-有意的取舍">4. 明确不做（有意的取舍）</a></li><li><a href="#5-下一步顺序">5. 下一步顺序</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/Android能力实测_2026-11-18.html">← 上一篇</a><a href="扩展模块/LenoWeb.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

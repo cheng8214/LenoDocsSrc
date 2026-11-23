@@ -179,7 +179,7 @@ dirs.join(&quot;a/&quot;, &quot;/b&quot;)                 // &quot;a\\b&quot; �
 ⚠ <strong>两条边界</strong>照旧、别记错 ✗：
 - <strong>第一段的根不会被吞</strong> ✓：<code>join("/home", "user", "file")</code> ⇒ <code>/home\user\file</code> ✓（不是 <code>home\…</code> ✓）；
 - <strong>分隔符风格仍不统一</strong> ✗：拼接用的始终是<strong>平台分隔符</strong>（Windows 上是 <code>\</code> ✓）⇒
-  <code>/home\user\file</code> 这种「<code>/</code> 里混 <code>\</code>」是<strong>预期</strong>的 ✓；想要统一样式请自己再归一 ✓。
+<code>/home\user\file</code> 这种「<code>/</code> 里混 <code>\</code>」是<strong>预期</strong>的 ✓；想要统一样式请自己再归一 ✓。
 ⚠ 也<strong>不做</strong> Python 那种"后段是绝对路径 ⇒ 丢掉前面" ✗：<code>join("a", "/b")</code> ⇒ <code>a\b</code> ✓
 而<strong>不是</strong> <code>/b</code> ✓ ⇒ 别按 Python 的直觉用 ✗。</p>
 </blockquote>
@@ -413,11 +413,9 @@ dirs.rename(&quot;not_exist.txt&quot;, &quot;new.txt&quot;)     // false
 </tbody>
 </table>
 <p>同一份代码在两边行为不同 ⇒ 要覆盖请<strong>显式</strong>先删：</p>
-</blockquote>
 <pre><code class="language-leno">if dirs.exists(dst) { dirs.delete(dst) }
 dirs.rename(src, dst)
 </code></pre>
-<blockquote>
 <p>反过来，"先写临时文件再 rename 覆盖"这种 POSIX 原子替换惯用法在 Windows 上<strong>不成立</strong>
 （会拿到 false）⇒ 跨平台代码别用它。<code>assert/test_dirs.leno</code> 的测试 19 按 <code>_os()</code>
 分别钉住了两边行为。</p>
@@ -432,14 +430,11 @@ dirs.rename(src, dst)
 <blockquote>
 <p>⚠ <strong>目录不存在 / 打不开时返回 <code>null</code>，不是空数组</strong>（<code>dirs.c</code> 的
 <code>FindFirstFileW == INVALID_HANDLE_VALUE</code> 分支）。而 2026-11-08 起
-<code>for null to x</code> 是<strong>运行时错误</strong>（不再静默 0 次）⇒ 列一个"可能还没有"的目录时要先判：
-</p>
-</blockquote>
+<code>for null to x</code> 是<strong>运行时错误</strong>（不再静默 0 次）⇒ 列一个"可能还没有"的目录时要先判：</p>
 <pre><code class="language-leno">if not dirs.exists(d) { return [] }
 var files = dirs.listdir(d)
 for files to f { ... }
 </code></pre>
-<blockquote>
 <p>或者直接判返回值：<code>var files = dirs.listdir(d)</code> 之后 <code>if files != null { ... }</code>。</p>
 </blockquote>
 <pre><code class="language-leno">var files = dirs.listdir(&quot;src&quot;)
@@ -506,6 +501,8 @@ for es to e {
 <code>root=path</code>、<code>dirs/files</code> 全空的 <code>DirEntry</code> ⇒ 拼错的路径看起来像"空目录"，是典型的
 静默错值 ✗。现在直接报 <code>dirs.walk: 目录不存在或不是目录：'…'</code>。
 递归中某个<strong>子目录</strong>打不开（权限）仍按空条目处理 —— 那是真实存在的目录，只是读不了。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>不跟随链接</strong>：junction / symlink <strong>会出现在 <code>e.dirs</code> 里</strong>（看得见），但<strong>不会递归进去</strong> ——
 口径同 <code>find</code>（默认不跟随）。指回祖先的链接会让跟随式遍历走出原目录树（实测 66 条垃圾条目）；
 要跟随请先 <code>dirs.is_symlink()</code> 判一下，见 <code>is_symlink</code> 的口径表。</p>
@@ -739,31 +736,39 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>路径分隔符</strong>
-   - Windows 使用 <code>\</code>，Linux/macOS 使用 <code>/</code>
-   - 使用 <code>dirs.sep()</code> 获取当前平台的分隔符
-   - <code>dirs.join()</code> 会自动处理分隔符</p>
+<li><strong>路径分隔符</strong><ul>
+<li>Windows 使用 <code>\</code>，Linux/macOS 使用 <code>/</code></li>
+<li>使用 <code>dirs.sep()</code> 获取当前平台的分隔符</li>
+<li><code>dirs.join()</code> 会自动处理分隔符</li>
+</ul>
 </li>
-<li>
-<p><strong>权限问题</strong>
-   - 某些操作（如创建目录、删除文件）可能需要相应权限
-   - 操作失败时返回 <code>false</code>，不会抛出异常</p>
+</ol>
+<ol>
+<li><strong>权限问题</strong><ul>
+<li>某些操作（如创建目录、删除文件）可能需要相应权限</li>
+<li>操作失败时返回 <code>false</code>，不会抛出异常</li>
+</ul>
 </li>
-<li>
-<p><strong>符号链接</strong>
-   - 当前版本对符号链接的处理取决于操作系统
-   - <code>is_dir()</code> 和 <code>is_file()</code> 会跟随符号链接</p>
+</ol>
+<ol>
+<li><strong>符号链接</strong><ul>
+<li>当前版本对符号链接的处理取决于操作系统</li>
+<li><code>is_dir()</code> 和 <code>is_file()</code> 会跟随符号链接</li>
+</ul>
 </li>
-<li>
-<p><strong>路径长度限制</strong>
-   - Windows 传统路径限制为 260 字符
-   - 使用绝对路径时注意长度限制</p>
+</ol>
+<ol>
+<li><strong>路径长度限制</strong><ul>
+<li>Windows 传统路径限制为 260 字符</li>
+<li>使用绝对路径时注意长度限制</li>
+</ul>
 </li>
-<li>
-<p><strong>线程安全</strong>
-   - 目录遍历操作不是原子性的
-   - 遍历过程中目录内容变化可能导致不一致</p>
+</ol>
+<ol>
+<li><strong>线程安全</strong><ul>
+<li>目录遍历操作不是原子性的</li>
+<li>遍历过程中目录内容变化可能导致不一致</li>
+</ul>
 </li>
 </ol>
 <hr>
@@ -801,7 +806,8 @@ main() {
 </table>
 <hr>
 <p><em>文档版本: 1.2</em><br>
-<em>最后更新: 2026-07-22</em></p></main>
+<em>最后更新: 2026-07-22</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><ul class="lv3"><li><a href="#类型-direntry-dirinfo">类型：DirEntry / DirInfo</a></li></ul><li><a href="#路径操作">路径操作</a></li><ul class="lv3"><li><a href="#cwd">cwd()</a></li><li><a href="#abspath-path">abspath(path)</a></li><li><a href="#basename-path">basename(path)</a></li><li><a href="#dirname-path">dirname(path)</a></li><li><a href="#extname-path">extname(path)</a></li><li><a href="#stem-path-2026-11-10-新增">stem(path) ★ 2026-11-10 新增</a></li><li><a href="#join-part1-part2">join(part1, part2, ...)</a></li><li><a href="#sep">sep()</a></li><li><a href="#relpath-path-base">relpath(path, base)</a></li></ul><li><a href="#路径检查">路径检查</a></li><ul class="lv3"><li><a href="#exists-path">exists(path)</a></li><li><a href="#is_file-path">is_file(path)</a></li><li><a href="#is_dir-path">is_dir(path)</a></li><li><a href="#is_symlink-path">is_symlink(path)</a></li></ul><li><a href="#目录操作">目录操作</a></li><ul class="lv3"><li><a href="#mkdir-path">mkdir(path)</a></li><li><a href="#mkdir_p-path">mkdir_p(path)</a></li><li><a href="#rmdir-path">rmdir(path)</a></li></ul><li><a href="#文件操作">文件操作</a></li><ul class="lv3"><li><a href="#delete-path">delete(path)</a></li><li><a href="#rename-old_path-new_path">rename(old_path, new_path)</a></li></ul><li><a href="#目录遍历">目录遍历</a></li><ul class="lv3"><li><a href="#listdir-path">listdir(path)</a></li><li><a href="#list_drives">list_drives()</a></li><li><a href="#walk-path">walk(path)</a></li></ul><li><a href="#文件信息">文件信息</a></li><ul class="lv3"><li><a href="#stat-path">stat(path)</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-批量重命名文件">1. 批量重命名文件</a></li><li><a href="#2-递归查找文件">2. 递归查找文件</a></li><li><a href="#3-文件备份工具">3. 文件备份工具</a></li><li><a href="#4-目录大小统计">4. 目录大小统计</a></li><li><a href="#5-清理临时文件">5. 清理临时文件</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#跨平台注意事项">跨平台注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_dicts.html">← 上一篇</a><a href="module_ffi_api.html">下一篇 →</a></nav>

@@ -36,6 +36,8 @@
 <p><strong>base64 与"文本 ⇄ 字节"不在这里</strong>：它们是标量编解码、不是密码学原语（无密钥、无安全性质），
 已归<strong>核心标准库</strong> <code>strings.to_base64</code> / <code>strings.from_base64</code> / <code>strings.to_bytes</code> /
 <code>strings.from_bytes</code>（2026-10-07，与 <code>to_hex</code> / <code>from_hex</code> 同族）✓</p>
+</blockquote>
+<blockquote>
 <p>缘起：用 Leno 移植 TraeSign 时，为了"派生密钥 + AES-128-CBC 解密登录态"，
 不得不在应用里<strong>搬 800 行纯 Leno 的 AES/SHA-512</strong> ✗（对照 C# 只写 33 行，因为它自带
 <code>SHA512.Create()</code> / <code>Aes.Create()</code>）。与其每个项目都搬一遍，不如做成标准库 ✓。</p>
@@ -88,6 +90,8 @@ var tag    = crypto.gcm_tag_bytes(k32, nonce, aad, ct_bytes)           // 只算
 <p><strong>GCM 的 nonce 长度</strong>：12 字节走 <code>nonce || 0x00000001</code> 这条推荐路径；
 其它长度按 NIST SP 800-38D 用 GHASH 构造 J0（兼容老实现，但性能与安全性都不如 12 字节）。
 两条路径都已用权威向量锁住 —— 它们的差别不只是"少几个字节"，<strong>分块边界完全不同</strong>。</p>
+</blockquote>
+<blockquote>
 <p><code>strings.from_base64</code> 比手工实现<strong>更宽容</strong>：两种字母表都认（<code>+/</code> 与 <code>-_</code>）、缺 <code>=</code>
 padding 也收、空白字符忽略；非法字符则<strong>报错并指出第几位</strong>（不静默截断 ✓）。</p>
 </blockquote>
@@ -162,7 +166,7 @@ padding 也收、空白字符忽略；非法字符则<strong>报错并指出第�
 </tr>
 <tr>
 <td>GCM 应用形态</td>
-<td>key=sha256(密钥串)、12 字节 nonce、AAD=<code>WB-AAD\0\|0x01\|lp('WBEV1')\|lp('sym-v1')\|0,0,0,1\|lp(keyId)\|2,0,0</code>、275 字节明文 ⇒ 密文/标签/往返</td>
+<td>key=sha256(密钥串)、12 字节 nonce、AAD=`WB-AAD0\</td>
 </tr>
 <tr>
 <td>GCM 拒绝篡改</td>
@@ -186,7 +190,8 @@ padding 也收、空白字符忽略；非法字符则<strong>报错并指出第�
   这种用量完全够用；真要提速，方向是<strong>表驱动 + 就地改 state</strong>（现在每轮 <code>sub_bytes</code>/<code>shift_rows</code>
   都分配新数组），但那属于重写核，得先有基准再动 —— 与 J1 同一条思路：别为"看起来快"改算法 ✓</li>
 <li>⏳ 可用性：GCM 目前只输出 16 字节标签（规范允许 4~16 字节截断），需要短标签时再补参数 ✓</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#设计约定">设计约定</a></li><li><a href="#验证">验证</a></li><li><a href="#现状-待做">现状 / 待做</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoCompress.html">← 上一篇</a><a href="../扩展模块/LenoFS.html">下一篇 →</a></nav>

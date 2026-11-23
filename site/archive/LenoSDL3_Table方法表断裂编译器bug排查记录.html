@@ -40,35 +40,39 @@ file_manager.leno(1154,22): error: [语义错误] 类型 'struct Table' 没有�
 <li>基线 <code>a1ff6efb</code> 有 143 个方法，<code>contains</code>@125、<code>on_dbl_click</code>@123，均在 128 以内 → 编译通过</li>
 <li><code>2c86ea7b</code> 在两者之前插入 6 个新方法，索引变为 131/129，<strong>被 128 上限截断</strong> → 编译失败</li>
 <li>把新方法挪到 struct <strong>末尾</strong>：<code>contains</code>/<code>on_dbl_click</code> 索引不变（仍 &lt;128），被丢弃的变成末尾的新方法（file_manager 未直接调用它们）→ 编译通过</li>
-<li>
-<p>这解释了所有"与内容无关、与位置强相关"的实验现象：本质是<strong>方法在 struct 内的序号</strong>是否 ≥128</p>
-</li>
-<li>
-<p>与新增方法的<strong>内容无关</strong>：极简方法体、改名、改返回类型、删注释、去掉双引号全部无效</p>
-</li>
+<li>这解释了所有"与内容无关、与位置强相关"的实验现象：本质是<strong>方法在 struct 内的序号</strong>是否 ≥128</li>
+</ul>
+<ul>
+<li>与新增方法的<strong>内容无关</strong>：极简方法体、改名、改返回类型、删注释、去掉双引号全部无效</li>
 <li>与<strong>插入位置</strong>强相关：方法放在 <code>_to_float</code> 之后 → 失败；同一批方法放到 struct <strong>末尾</strong> → 编译通过</li>
 <li><code>2c86ea7b</code> 完整版因此同时丢了 <code>on_dbl_click</code> 与 <code>contains</code>；仅复现前部新增时先丢 <code>contains</code>（定义更靠后）</li>
 </ul>
 <h2 id="排查过程-排除法">排查过程（排除法）</h2>
 <ol>
 <li><strong>基线验证</strong>：把 <code>sdl_table.leno</code> 恢复成上一个版本 <code>a1ff6efb</code>（即删掉 <code>2c86ea7b</code> 全部新增）→ 编译通过</li>
-<li><strong>按新增块二分</strong>（<code>2c86ea7b</code> 仅改动 <code>sdl_table.leno</code> 一个文件）：
-   - 字段 <code>_sortDisabledCols</code> + 配置读取 + <code>_is_col_sort_disabled</code>（A/B/C）→ 通过
-   - 加入 <code>_is_number_str</code> / <code>_should_numeric_sort</code> / <code>sort_by</code> 改动（D）→ <strong>失败</strong>（<code>contains</code> 缺失）</li>
-<li><strong>细分 D 块</strong>，逐一排除：
-   - 只留 <code>_is_number_str</code> → 通过
-   - <code>_is_number_str</code> + <code>_should_numeric_sort</code>（任意简单体）→ 失败
-   - 删除可疑注释（含半角引号 <code>"9" &gt; "89"</code>）→ 仍失败
-   - <code>if s == ""</code> 改为 <code>if s.len() == 0</code> → 仍失败
-   - 去掉 <code>try/catch</code>、去掉 <code>_float(s)</code> 调用、方法改名为 <code>_xyz_test</code>、返回类型改 void → 全部仍失败</li>
-<li><strong>关键实验</strong>：在干净 <code>a1ff6efb</code> 上：
-   - 只加 D 块 → <strong>通过</strong>（说明 D 不独立触发）
-   - 加 A + D → 通过
-   - 加 A + C + D → 失败（<strong>定位到 C 与 D 组合</strong>）
-   - 加 A + C + <code>_is_number_str</code> → 通过
-   - 加 A + C + <code>_xyz_test</code> → 通过
-   - 加 A + C + <code>_xyz_test</code> + <code>_is_number_str</code> → 失败
-   - <strong>把 <code>_xyz_test</code> + <code>_is_number_str</code> 移到 struct 末尾 → 通过</strong> ✅（决定性证据）</li>
+<li><strong>按新增块二分</strong>（<code>2c86ea7b</code> 仅改动 <code>sdl_table.leno</code> 一个文件）：<ul>
+<li>字段 <code>_sortDisabledCols</code> + 配置读取 + <code>_is_col_sort_disabled</code>（A/B/C）→ 通过</li>
+<li>加入 <code>_is_number_str</code> / <code>_should_numeric_sort</code> / <code>sort_by</code> 改动（D）→ <strong>失败</strong>（<code>contains</code> 缺失）</li>
+</ul>
+</li>
+<li><strong>细分 D 块</strong>，逐一排除：<ul>
+<li>只留 <code>_is_number_str</code> → 通过</li>
+<li><code>_is_number_str</code> + <code>_should_numeric_sort</code>（任意简单体）→ 失败</li>
+<li>删除可疑注释（含半角引号 <code>"9" &gt; "89"</code>）→ 仍失败</li>
+<li><code>if s == ""</code> 改为 <code>if s.len() == 0</code> → 仍失败</li>
+<li>去掉 <code>try/catch</code>、去掉 <code>_float(s)</code> 调用、方法改名为 <code>_xyz_test</code>、返回类型改 void → 全部仍失败</li>
+</ul>
+</li>
+<li><strong>关键实验</strong>：在干净 <code>a1ff6efb</code> 上：<ul>
+<li>只加 D 块 → <strong>通过</strong>（说明 D 不独立触发）</li>
+<li>加 A + D → 通过</li>
+<li>加 A + C + D → 失败（<strong>定位到 C 与 D 组合</strong>）</li>
+<li>加 A + C + <code>_is_number_str</code> → 通过</li>
+<li>加 A + C + <code>_xyz_test</code> → 通过</li>
+<li>加 A + C + <code>_xyz_test</code> + <code>_is_number_str</code> → 失败</li>
+<li><strong>把 <code>_xyz_test</code> + <code>_is_number_str</code> 移到 struct 末尾 → 通过</strong> ✅（决定性证据）</li>
+</ul>
+</li>
 </ol>
 <h2 id="绕过方案">绕过方案</h2>
 <p>新增的 struct 方法<strong>统一放在 struct 定义的最末尾</strong>（最后一个方法之后、闭合 <code>}</code> 之前），避免在 <code>_to_float</code>（以及可能的其他 try/catch 方法）之后插入。</p>
@@ -185,7 +189,7 @@ file_manager.leno(1154,22): error: [语义错误] 类型 'struct Table' 没有�
 <p>其中 <code>MOD_MAX_PARAMS</code>（clib/cfunc 参数数）原本也是静默截断：超限时调用 <code>error_add(ERR_SEMANTIC, 行号, ...)</code> 报真正的编译错误（带位置，行号由新增的 <code>mod_source_line</code> 辅助函数计算），替换所有静默截断与 <code>fprintf(stderr)</code> 死代码（<code>scan_pass1.inc</code> 共 6 处，含 4 处 cfunc 参数循环条件中的上限）。</p>
 <p><strong>第 3 层：扫描后自校验断言</strong>（防未来复发，最关键）</p>
 <p><code>sym_table_scan.inc</code> 在扫描完成后，对每个 struct/face 符号重新在源码中定位其定义体，
-统计体内第一层的 <code>func</code> 关键字出现次数（跳过注释/字符串、排除方法体内的局部函数），与符号表 <code>method_count</code> 交叉验证。
+统计体内第一层的 <code>func </code> 关键字出现次数（跳过注释/字符串、排除方法体内的局部函数），与符号表 <code>method_count</code> 交叉验证。
 不一致立即报编译错误并定位到定义处——即使将来再次出现截断类 bug，错误也会在<strong>定义处</strong>当次暴露，而不是在远处的调用点报"没有方法 X"。</p>
 <p><strong>自校验的实战首秀</strong>：上线当次编译即报告 <code>HBox</code>（定义于 <code>sdl_layout.leno:53</code>）"源码 16 个 func，符号表 15 个"。
 排查确认是<strong>误报</strong>：<code>sdl_layout.leno:169</code> 存在方法体内的<strong>局部函数</strong> <code>func childMain</code>（Leno 支持 func 局部定义），
@@ -249,7 +253,8 @@ file_manager.leno(1154,22): error: [语义错误] 类型 'struct Table' 没有�
 <td><code>LENOSYMC_VERSION</code> v16→v17</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#背景">背景</a></li><li><a href="#结论-根因">结论（根因）</a></li><li><a href="#排查过程-排除法">排查过程（排除法）</a></li><li><a href="#绕过方案">绕过方案</a></li><li><a href="#相关提交">相关提交</a></li><li><a href="#建议">建议</a></li><li><a href="#修复记录-2026-09-01">修复记录（2026-09-01）</a></li><li><a href="#后续加固-2026-09-01-三层防御">后续加固（2026-09-01，三层防御）</a></li><li><a href="#验证结果-2026-09-01-三层加固后">验证结果（2026-09-01，三层加固后）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../LenoSDL3_Card卡片控件设计文档.html">← 上一篇</a><a href="../LenoSDL3_三个疑难排查复盘.html">下一篇 →</a></nav>

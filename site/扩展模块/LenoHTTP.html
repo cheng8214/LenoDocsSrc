@@ -250,11 +250,11 @@ producer 每调一次发一段（<code>data: {...}\n\n</code>），返回 <code>
 （<code>http.routes([{method:"POST", path:"/api/avatar", handler: h, auth: true, maxBody: 614400}])</code>）。</p>
 <p><strong>协议细节（★ 0.2.8，2026-11-06）</strong>：
 - <strong>chunked 请求体</strong>：<code>Transfer-Encoding: chunked</code> 现在会真正解码（含扩展/末块 trailer），
-  超过 8MB 或长度行非法 ⇒ 400；以前是当"没有正文"静默放过 ✗
+超过 8MB 或长度行非法 ⇒ 400；以前是当"没有正文"静默放过 ✗
 - <strong>请求走私防护</strong>：同时出现 <code>Content-Length</code> 与 <code>Transfer-Encoding</code> ⇒ 直接 400（RFC 9112 §6.1）
 - <strong><code>Expect: 100-continue</code></strong>：会先回 <code>HTTP/1.1 100 Continue</code> 再读正文（否则 curl 要白等 1 秒）
 - <strong><code>Date</code> 头</strong>：所有响应自动带 IMF-fixdate（<code>Fri, 06 Nov 2026 00:42:44 GMT</code>，自己算 GMT，
-  不跟本地时区/区域走）
+不跟本地时区/区域走）
 - <strong><code>HEAD</code></strong>：按 GET 找路由，只发头（<code>Content-Length</code> 与 GET 一致）
 - <strong><code>OPTIONS</code></strong>：路径存在但方法不匹配时回 <strong>204 + <code>Allow</code></strong>（不再是 405）</p>
 <p><strong>慢连接保护（2026-10-20）</strong>：单个请求的读入总时长上限 <code>MAX_REQUEST_SECONDS = 10</code>（秒），
@@ -559,7 +559,7 @@ http.before(app, func(Dict req): Dict {
   按扩展名给 Content-Type；文件整读进内存</li>
 <li><strong>并发模型</strong>：两条路 —— <code>run/serve</code> 单线程顺序处理；<code>serveWorkers</code> 是<strong>线程池</strong>：
   主线程只 <code>accept</code>，<code>sock.detach()</code> 拿到 fd（整数）经 <code>Channel</code> 交给 worker，
-  worker 用 <code>sockets.from_fd(fd)</code> 在自己堆上重建 Socket 再处理（<code>Socket</code> 对象本身仍不能跨线程）。</li>
+  worker 用 <code>sockets.from_fd(fd)</code> 在自己堆上重建 Socket 再处理（<code>Socket</code> 对象本身仍不能跨线程）。<ul>
 <li>⚠ <strong>app 必须在 worker 线程内构建</strong>：路由表里存的是 handler 闭包，闭包不能跨线程传，
     所以入口要自己 <code>buildApp()</code>（每个线程一份路由表）。</li>
 <li>worker 入口建议写成<strong>同模块的具名函数</strong>（<code>func(int, Channel)</code>）：<code>threads.start</code> 只认真实闭包，
@@ -570,6 +570,8 @@ http.before(app, func(Dict req): Dict {
     "多久没有下一个请求就关连接"；<code>worker_loop</code> 发现队列有积压时传 0（立刻让位去接新活）。
     调大它 = 少重连、但空闲连接会多占 worker；调小 = 更快让位、但客户端更常重连。</li>
 <li>队列满（默认 <code>workers*4</code>）时直接回 503 关连接，不阻塞 accept。</li>
+</ul>
+</li>
 <li><strong>debug 日志</strong>：<code>app.set("debug", true)</code> 会为每个请求打印一行
   （方法 / target / 状态 / keep / carry 字节数），排查"请求收不到"很快。</li>
 </ul>
@@ -713,7 +715,8 @@ python build\leno_module\LenoHTTP\test\dev_stress_python.py
 <li>响应 gzip（接 <code>LenoCompress.deflateRaw</code>）+ 静态文件 ETag/Last-Modified</li>
 <li>~~连接处理下沉到线程~~ ✅ 0.2 已用 <code>fd</code> 交接 + 线程池落地（见 <code>serveWorkers</code>）</li>
 <li>简单中间件（日志/超时/鉴权）与 <code>:param</code> 路由</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#html-怎么写才不啰嗦-0-2-1">HTML 怎么写才不啰嗦（0.2.1）</a></li><li><a href="#文件上传-multipart-form-data-0-2-6">文件上传：multipart/form-data（0.2.6）</a></li><li><a href="#range-与大文件分块-0-2-5">Range 与大文件分块（0.2.5）</a></li><ul class="lv3"><li><a href="#断点续传-视频拖动-range">断点续传 / 视频拖动（Range）</a></li><li><a href="#大文件不再整读内存">大文件不再整读内存</a></li></ul><li><a href="#静态文件缓存-etag-304-0-2-4">静态文件缓存：ETag / 304（0.2.4）</a></li><li><a href="#路径参数-0-2-3">路径参数（0.2.3）</a></li><li><a href="#鉴权与中间件-0-2-2">鉴权与中间件（0.2.2）</a></li><li><a href="#行为与设计">行为与设计</a></li><li><a href="#顺带修掉的四个问题-本模块的副产品">顺带修掉的四个问题（本模块的副产品）</a></li><li><a href="#验证">验证</a></li><li><a href="#边界-v0-1-明确不做">边界（v0.1 明确不做）</a></li><li><a href="#能力缺口与路线">能力缺口与路线</a></li><li><a href="#下一步">下一步</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoGlob.html">← 上一篇</a><a href="../扩展模块/LenoMarkdown.html">下一篇 →</a></nav>

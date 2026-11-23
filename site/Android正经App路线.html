@@ -568,7 +568,8 @@ ADB=/c/android-toolchain/sdk/platform-tools/adb.exe bash android/run_probes.sh
 <li>加 <code>onPause/onResume/onDestroy</code> → 写一个 <code>state</code> 文件，脚本轮询——解决缺口 3</li>
 <li>清单加 <code>INTERNET + POST_NOTIFICATIONS</code>，配一个 <code>leno_ui_toast()</code> 胶水——解决缺口 5、6（部分）</li>
 <li>release keystore + <code>versionName/versionCode</code> + 图标——解决缺口 8</li>
-</ol></main>
+</ol>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-一句话结论">0. 一句话结论</a></li><li><a href="#1-零改动直接复用">1. 零改动直接复用</a></li><ul class="lv3"><li><a href="#1-1-leno-侧模块-都能直接-import">1.1 Leno 侧模块（都能直接 import）</a></li></ul><li><a href="#2-改一点就能变成-app-基础设施">2. 改一点就能变成 app 基础设施</a></li><li><a href="#3-缺口清单-按-上来就会踩-排序">3. 缺口清单（按"上来就会踩"排序）</a></li><li><a href="#4-界面层三条路线">4. 界面层三条路线</a></li><li><a href="#5-本次实测证据">5. 本次实测证据</a></li><ul class="lv3"><li><a href="#5-1-新探针-c17_realapp-设备-13-13">5.1 新探针 c17_realapp（设备 13/13）</a></li><li><a href="#5-2-webview-形态端到端">5.2 WebView 形态端到端</a></li><li><a href="#5-3-一个已知小问题">5.3 一个已知小问题</a></li><li><a href="#5-4-sdl3-开窗-路线-d-已落地">5.4 SDL3 开窗（路线 D 已落地）</a></li><li><a href="#5-5-实战-lenomusic-16-6k-行真-app-原样打成安卓包">5.5 实战：LenoMusic（16.6k 行真 app）原样打成安卓包</a></li><li><a href="#5-6-一次误诊记录-跨模块-struct-跨线程是好的-错的是调用点">5.6 一次误诊记录：跨模块 struct 跨线程是好的，错的是调用点</a></li></ul><li><a href="#6-跑法">6. 跑法</a></li><li><a href="#7-下一步的最小闭环-若要正式起一个-app-项目">7. 下一步的最小闭环（若要正式起一个 app 项目）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="LenoSDL3像素直写渲染优化.html">← 上一篇</a><a href="archive/Android能力实测_2026-11-18.html">下一篇 →</a></nav>

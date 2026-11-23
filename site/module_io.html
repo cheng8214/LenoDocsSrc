@@ -96,12 +96,12 @@ var name = io.input(&quot;Your name: &quot;)
 <p><strong>返回</strong>: <code>null</code></p>
 <p><strong>嵌套 / 环（2026-11-16）</strong>:
 - 容器按<strong>插入序</strong>完整展开：<code>print({"123": 1, "a": 2})</code> ⇒ <code>{123: 1, a: 2}</code>。
-  ⚠ 2026-11-16 前这里会<strong>静默丢掉"纯数字字符串"键和空串键</strong>（<code>{"123":1}</code> ⇒ <code>{}</code>），
-  而 <code>len()</code> / <code>keys()</code> / <code>_str()</code> 都完整 —— 只有 print 一条路丢数据；现已修
+⚠ 2026-11-16 前这里会<strong>静默丢掉"纯数字字符串"键和空串键</strong>（<code>{"123":1}</code> ⇒ <code>{}</code>），
+而 <code>len()</code> / <code>keys()</code> / <code>_str()</code> 都完整 —— 只有 print 一条路丢数据；现已修
 - 深度上限 <strong>512 层</strong>（与 <code>jsons.encode</code> / 深拷贝 / <code>type()</code> 同口径）
 - <strong>环检测</strong>：同一个对象出现在自己的打印路径上 ⇒ 立刻停止并抛错
-  （<code>打印失败：检测到循环引用…</code>），输出里该位置是 <code>&lt;循环&gt;</code>：
-  <code>struct Node { int v = 0; Node? next = null }</code> 且 <code>a.next = a</code> ⇒ <code>Node{v=1, next=&lt;循环&gt;}</code>
+（<code>打印失败：检测到循环引用…</code>），输出里该位置是 <code>&lt;循环&gt;</code>：
+<code>struct Node { int v = 0; Node? next = null }</code> 且 <code>a.next = a</code> ⇒ <code>Node{v=1, next=&lt;循环&gt;}</code>
 - <strong>共享子对象不算环</strong>（同一对象出现在两条<strong>不相交</strong>路径上是正常的，会各打印一次）</p>
 <pre><code class="language-leno">// 打印字符串
 print(&quot;Hello World&quot;)
@@ -497,54 +497,53 @@ print(&quot;前5个元素:&quot;, big_arr[0:4])
 </code></pre>
 <h2 id="最佳实践">最佳实践</h2>
 <ol>
-<li>
-<p><strong>使用 print 进行调试</strong>
-   <code>leno
-   // 在关键位置打印变量值
-   print("DEBUG: x =", x, "y =", y)</code></p>
-</li>
-<li>
-<p><strong>格式化输出信息</strong>
-   <code>leno
-   // 使用前缀区分信息类型
-   print("[INFO] 操作成功")
-   print("[WARN] 参数可能不正确")
-   print("[ERROR] 发生错误:", error_msg)</code></p>
-</li>
-<li>
-<p><strong>处理用户输入</strong>
-   <code>leno
-   // 始终验证输入
-   var input_str = input("请输入: ")
-   if input_str == "" {
-       print("输入不能为空")
-   }</code></p>
-</li>
-<li>
-<p><strong>避免频繁输出</strong>
-   <code>leno
-   // 批量收集输出
+<li><strong>使用 print 进行调试</strong></li>
+</ol>
+<pre><code class="language-leno">   // 在关键位置打印变量值
+   print(&quot;DEBUG: x =&quot;, x, &quot;y =&quot;, y)
+</code></pre>
+<ol>
+<li><strong>格式化输出信息</strong></li>
+</ol>
+<pre><code class="language-leno">   // 使用前缀区分信息类型
+   print(&quot;[INFO] 操作成功&quot;)
+   print(&quot;[WARN] 参数可能不正确&quot;)
+   print(&quot;[ERROR] 发生错误:&quot;, error_msg)
+</code></pre>
+<ol>
+<li><strong>处理用户输入</strong></li>
+</ol>
+<pre><code class="language-leno">   // 始终验证输入
+   var input_str = input(&quot;请输入: &quot;)
+   if input_str == &quot;&quot; {
+       print(&quot;输入不能为空&quot;)
+   }
+</code></pre>
+<ol>
+<li><strong>避免频繁输出</strong></li>
+</ol>
+<pre><code class="language-leno">   // 批量收集输出
    var logs = []
    for data to item {
-       logs.add("处理: " + item)
+       logs.add(&quot;处理: &quot; + item)
    }
    // 一次性输出
    for logs to log {
        print(log)
-   }</code></p>
-</li>
-<li>
-<p><strong>使用 printf 制作动态效果</strong>
-   <code>leno
-   // 进度显示
-   printf("\r进度: %d%%", percent)
-   // 注意：最后要换行
-   print()  // 结束进度显示</code></p>
-</li>
+   }
+</code></pre>
+<ol>
+<li><strong>使用 printf 制作动态效果</strong></li>
 </ol>
+<pre><code class="language-leno">   // 进度显示
+   printf(&quot;\r进度: %d%%&quot;, percent)
+   // 注意：最后要换行
+   print()  // 结束进度显示
+</code></pre>
 <hr>
 <p><em>文档版本: 1.0</em><br>
-<em>最后更新: 2026-05-17</em></p></main>
+<em>最后更新: 2026-05-17</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#全局函数">全局函数</a></li><li><a href="#模块方法">模块方法</a></li><li><a href="#输出函数">输出函数</a></li><ul class="lv3"><li><a href="#print">print(...)</a></li><li><a href="#printf">printf(...)</a></li></ul><li><a href="#输入函数">输入函数</a></li><ul class="lv3"><li><a href="#input-prompt">input(prompt)</a></li></ul><li><a href="#输出格式">输出格式</a></li><ul class="lv3"><li><a href="#基本类型输出格式">基本类型输出格式</a></li><li><a href="#复合类型输出格式">复合类型输出格式</a></li><li><a href="#特殊对象输出">特殊对象输出</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-简单的交互式程序">示例1：简单的交互式程序</a></li><li><a href="#示例2-简单的计算器">示例2：简单的计算器</a></li><li><a href="#示例3-进度显示">示例3：进度显示</a></li><li><a href="#示例4-调试信息输出">示例4：调试信息输出</a></li><li><a href="#示例5-跨平台路径处理">示例5：跨平台路径处理</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-print-vs-printf">1. print vs printf</a></li><li><a href="#2-输入处理">2. 输入处理</a></li><li><a href="#3-输出大对象">3. 输出大对象</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_files.html">← 上一篇</a><a href="module_jsons.html">下一篇 →</a></nav>

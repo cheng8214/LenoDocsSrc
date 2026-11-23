@@ -32,6 +32,8 @@
 <strong>但两类东西仍然有效</strong>：① 排查方法论（"只在特定路径才崩"如何二分、如何用 <code>0xbaadf00dbaadf00d</code>
 认出未初始化指针）；② 具体教训（<code>patch_ast_indices</code> 遍历 <code>interp_string.exprs</code> 越界）。
 将来把内联器移植回寄存器式 codegen 时，这是必读的踩坑记录。</p>
+</blockquote>
+<blockquote>
 <p>本文档记录了一次 Leno 编译器内联优化导致的间歇性 segfault (0xC0000005) 的完整排查过程，作为今后排查类似内存类崩溃问题的方法论参考。</p>
 </blockquote>
 <h2 id="一-问题现象">一、问题现象</h2>
@@ -198,7 +200,8 @@ for (int i = old_cap; i &lt; capacity; i++) {
 <li><code>interp_string</code> 的 <code>parts</code> 有 <code>count</code> 个元素，<code>exprs</code> 只有 <code>count-1</code> 个 — 遍历 exprs 必须用 <code>count-1</code></li>
 <li><code>patch_ast_indices</code> 只在内联展开时被调用，所以这个 bug 只在内联时触发</li>
 <li><code>TypeKind</code> 枚举值会随新增类型而变化，debug.c 中不能硬编码数字，必须用枚举常量</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-问题现象">一、问题现象</a></li><li><a href="#二-排查过程中走过的弯路">二、排查过程中走过的弯路</a></li><ul class="lv3"><li><a href="#弯路-1-假设崩溃在-vm-运行期">弯路 1：假设崩溃在 VM 运行期</a></li><li><a href="#弯路-2-假设是-debug-模式专属问题">弯路 2：假设是 --debug 模式专属问题</a></li><li><a href="#弯路-3-怀疑-debug-c-反汇编器偏移计算">弯路 3：怀疑 debug.c 反汇编器偏移计算</a></li></ul><li><a href="#三-正确路径-gdb-一步定位">三、正确路径：GDB 一步定位</a></li><ul class="lv3"><li><a href="#关键转折-加-g-编译-用-gdb-附加">关键转折：加 -g 编译 + 用 GDB 附加</a></li><li><a href="#gdb-输出的关键信息">GDB 输出的关键信息</a></li><li><a href="#为什么不用-gdb-之前定位不了">为什么不用 GDB 之前定位不了</a></li></ul><li><a href="#四-根因分析">四、根因分析</a></li><ul class="lv3"><li><a href="#interp_string-的数据布局">interp_string 的数据布局</a></li><li><a href="#bug-所在">bug 所在</a></li><li><a href="#为什么是间歇性">为什么是间歇性</a></li><li><a href="#为什么只有内联时触发">为什么只有内联时触发</a></li></ul><li><a href="#五-修复内容">五、修复内容</a></li><ul class="lv3"><li><a href="#修复-1-循环边界-根本修复">修复 1：循环边界（根本修复）</a></li><li><a href="#修复-2-parser-初始化-exprs-数组-防御性修复">修复 2：parser 初始化 exprs 数组（防御性修复）</a></li><li><a href="#修复-3-debug-c-op_struct_def-反汇编偏移-独立-bug">修复 3：debug.c OP_STRUCT_DEF 反汇编偏移（独立 bug）</a></li></ul><li><a href="#六-方法论总结">六、方法论总结</a></li><ul class="lv3"><li><a href="#排查间歇性-segfault-的步骤">排查间歇性 segfault 的步骤</a></li><li><a href="#防御性编程原则">防御性编程原则</a></li><li><a href="#leno-编译器特定经验">Leno 编译器特定经验</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/优化方案_内存态序列化运行.html">← 上一篇</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">下一篇 →</a></nav>

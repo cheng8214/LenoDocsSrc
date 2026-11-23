@@ -179,6 +179,8 @@ if arr != null {
 </table>
 <blockquote>
 <p>⚠ 诚实标注：修复前的"0 条"是从 <code>as</code> 探针结果（返回 <code>null</code>）推出来的，没有单独回滚代码再跑一遍界面。</p>
+</blockquote>
+<blockquote>
 <p>框架层仍建议改成"逐元素宽松转换"，但那是 <code>as</code> 的全局语义变更，风险和收益要单独评估。
 本文档记录的应用侧写法<strong>无需框架改动</strong>即可彻底规避 ✓</p>
 </blockquote>
@@ -198,14 +200,14 @@ var back = jsons.decode(jsons.encode(d))  // 往返第 6 项 = '' 长度 0   ✓
 或其它我未覆盖的装箱路径）。这条只作线索留档，别照着它去改 <code>jsons.c</code> 的 string 分支。</p>
 <hr>
 <h2 id="l2-p1-单槽回调重复注册会静默覆盖">L2【P1】单槽回调重复注册会静默覆盖</h2>
-<h3 id="现象_1">现象</h3>
+<h3 id="现象">现象</h3>
 <p>设置窗的「蒙版透明度」滑块，注册了<strong>两处</strong> <code>on_change</code>：</p>
 <pre><code class="language-leno">veilS.on_change(func(float v) { … onVeil(v) … })    // ① 带实时预览
 veilS.on_change(func(float v) { … note.set_text(…) }) // ② 旧的那份，写在后头
 </code></pre>
 <p>后注册的整段顶掉前一个 ⇒ 拖动时主窗口<strong>完全没反应</strong>，只有点「保存」才生效。
 用户侧表现是"我拖动看不到窗口变化"，排查成本很高（两处代码隔了 40 行，肉眼看不出冲突）。</p>
-<h3 id="根因落点_1">根因落点</h3>
+<h3 id="根因落点">根因落点</h3>
 <pre><code class="language-leno">// build/leno_module/LenoSDL3/lib/sdl_slider.leno:113
 func on_change(func(float):void cb) { onChange = cb }
 </code></pre>
@@ -292,7 +294,7 @@ func on_change(func(float):void cb) { onChange = cb }
 加了只会给 <code>sdl_*.leno</code> 里那几十个控件各添三行噪音。真踩到了再按同一模式补 ✓</p>
 <hr>
 <h2 id="l3-p1-threads-start-不校验参数个数-默认参数也不补齐">L3【P1】<code>threads.start</code> 不校验参数个数（默认参数也不补齐）</h2>
-<h3 id="现象_2">现象</h3>
+<h3 id="现象">现象</h3>
 <pre><code class="language-leno">// 工作线程入口：后加了一个可空控制通道，给了默认值
 export func fetch_url(string url, string path, Channel ch, Channel? ctl = null) { … }
 
@@ -305,9 +307,9 @@ threads.start(workers.fetch_url, sg.url, f, urlCh)        // ← 3 个参数
 </code></pre>
 <p>错误信息本身写得非常好（直接给了根因），问题是<strong>发现得太晚</strong>——只有真实播放/下载到那条
 分支才炸，而它藏在 5000 行代码的一个播放回调里。</p>
-<h3 id="根因落点_2">根因落点</h3>
+<h3 id="根因落点">根因落点</h3>
 <p><code>src/module/threads/threads.c</code>：<code>threads.start</code> 在运行期才按函数签名比对实参个数。</p>
-<h3 id="建议修法_1">建议修法</h3>
+<h3 id="建议修法">建议修法</h3>
 <p><code>threads.start</code> 的第一个参数在<strong>编译期</strong>就能解析到具体函数（<code>workers.fetch_url</code> 是模块
 符号）⇒ 参数个数不符在编译期报错，成本远低于运行期。</p>
 <p>如果编译期做不到（比如目标可能是函数变量），退一步：</p>
@@ -443,7 +445,7 @@ string t = s.slice(0, s.len() - 1)
 </blockquote>
 <hr>
 <h2 id="l5-p2-控件-set-的未知选项只-print">L5【P2】控件 <code>set()</code> 的未知选项只 print</h2>
-<h3 id="现象_3">现象</h3>
+<h3 id="现象">现象</h3>
 <pre><code class="language-leno">HBox box = SDL3.createHBox({w: 30, h: 14, tip: &quot;来自小易&quot;})   // HBox 没有 tip
 </code></pre>
 <p>运行日志：</p>
@@ -498,8 +500,9 @@ func set_cell(int r, int c, string v) { _rows[r][c] = v; invalidate_fitted() }
 <li><strong>表格宽度别自己猜</strong>：布局会按容器宽 <code>set_size</code> 重算，<code>col_ratios</code> 合计留 2% 余量最稳。</li>
 <li><strong>字符串切分默认用 <code>slice</code> / <code>take</code>（字符语义）</strong>；只有处理<strong>二进制</strong>（编码、协议、压缩）
    才用 <code>byte_slice</code>，而且长度必须来自 <code>byte_len()</code> —— 两套混用不报错、只是结果悄悄变短 ✗</li>
-</ol></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#l1-p1-as-array-array-string-遇到混合类型-整块静默返回-null">L1【P1】as Array[Array[string]] 遇到混合类型，整块静默返回 null</a></li><ul class="lv3"><li><a href="#现象">现象</a></li><li><a href="#最小复现-已实测">最小复现（已实测）</a></li><li><a href="#根因落点">根因落点</a></li><li><a href="#建议修法">建议修法</a></li><li><a href="#已修-2026-10-31-应用侧改用-两段式宽松解析">★ 已修（2026-10-31）：应用侧改用"两段式宽松解析"</a></li><li><a href="#附-一条存疑记录-未能复现-供参考">附：一条存疑记录（未能复现，供参考）</a></li></ul><li><a href="#l2-p1-单槽回调重复注册会静默覆盖">L2【P1】单槽回调重复注册会静默覆盖</a></li><ul class="lv3"><li><a href="#现象_1">现象</a></li><li><a href="#根因落点_1">根因落点</a></li><li><a href="#建议修法-二选一-按代价排">建议修法（二选一，按代价排）</a></li><li><a href="#已修-2026-10-31-4-处单槽注册补上-重复即警告">★ 已修（2026-10-31）：4 处单槽注册补上"重复即警告"</a></li></ul><li><a href="#l3-p1-threads-start-不校验参数个数-默认参数也不补齐">L3【P1】threads.start 不校验参数个数（默认参数也不补齐）</a></li><ul class="lv3"><li><a href="#现象_2">现象</a></li><li><a href="#根因落点_2">根因落点</a></li><li><a href="#建议修法_1">建议修法</a></li><li><a href="#结论-2026-10-31-不做编译期检查">⏸ 结论（2026-10-31）：不做编译期检查</a></li></ul><li><a href="#l4-判断有误-并不存在-两套下标并存-api-是自洽的">L4 ❌ 判断有误 —— 并不存在"两套下标并存"，API 是自洽的</a></li><ul class="lv3"><li><a href="#实现-src-module-strings-strings-c-22">实现（src/module/strings/strings.c:22）</a></li><li><a href="#实测-周杰伦abc-3-中文-3-ascii-12-字节">实测（"周杰伦abc"，3 中文 + 3 ASCII = 12 字节）</a></li><li><a href="#结论-不需要统一">结论：不需要统一</a></li><li><a href="#唯一真实风险-跨套误用">唯一真实风险：跨套误用</a></li></ul><li><a href="#l5-p2-控件-set-的未知选项只-print">L5【P2】控件 set() 的未知选项只 print</a></li><ul class="lv3"><li><a href="#现象_3">现象</a></li><li><a href="#建议">建议</a></li><li><a href="#结论-2026-10-31-维持现状">⏸ 结论（2026-10-31）：维持现状</a></li></ul><li><a href="#已修复-本轮-供对照提交">已修复（本轮，供对照提交）</a></li><ul class="lv3"><li><a href="#f1-table-set_cell-改数据不请求重绘">F1 Table.set_cell 改数据不请求重绘</a></li><li><a href="#f2-table-recompute_cols-与-compute_sb-扣减口径不一致">F2 Table.recompute_cols 与 compute_sb 扣减口径不一致</a></li><li><a href="#f3-通用-toast-sdl_toast-leno">F3 通用 Toast（sdl_toast.leno）</a></li></ul><li><a href="#给应用的-防身规则-不是语言-bug-但会被反复踩">给应用的「防身规则」（不是语言 bug，但会被反复踩）</a></li></ul></aside>
+</ol>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#l1-p1-as-array-array-string-遇到混合类型-整块静默返回-null">L1【P1】as Array[Array[string 遇到混合类型，整块静默返回 null</a></li><ul class="lv3"><li><a href="#现象">现象</a></li><li><a href="#最小复现-已实测">最小复现（已实测）</a></li><li><a href="#根因落点">根因落点</a></li><li><a href="#建议修法">建议修法</a></li><li><a href="#已修-2026-10-31-应用侧改用-两段式宽松解析">★ 已修（2026-10-31）：应用侧改用"两段式宽松解析"</a></li><li><a href="#附-一条存疑记录-未能复现-供参考">附：一条存疑记录（未能复现，供参考）</a></li></ul><li><a href="#l2-p1-单槽回调重复注册会静默覆盖">L2【P1】单槽回调重复注册会静默覆盖</a></li><ul class="lv3"><li><a href="#现象_1">现象</a></li><li><a href="#根因落点_1">根因落点</a></li><li><a href="#建议修法-二选一-按代价排">建议修法（二选一，按代价排）</a></li><li><a href="#已修-2026-10-31-4-处单槽注册补上-重复即警告">★ 已修（2026-10-31）：4 处单槽注册补上"重复即警告"</a></li></ul><li><a href="#l3-p1-threads-start-不校验参数个数-默认参数也不补齐">L3【P1】threads.start 不校验参数个数（默认参数也不补齐）</a></li><ul class="lv3"><li><a href="#现象_2">现象</a></li><li><a href="#根因落点_2">根因落点</a></li><li><a href="#建议修法_1">建议修法</a></li><li><a href="#结论-2026-10-31-不做编译期检查">⏸ 结论（2026-10-31）：不做编译期检查</a></li></ul><li><a href="#l4-判断有误-并不存在-两套下标并存-api-是自洽的">L4 ❌ 判断有误 —— 并不存在"两套下标并存"，API 是自洽的</a></li><ul class="lv3"><li><a href="#实现-src-module-strings-strings-c-22">实现（src/module/strings/strings.c:22）</a></li><li><a href="#实测-周杰伦abc-3-中文-3-ascii-12-字节">实测（"周杰伦abc"，3 中文 + 3 ASCII = 12 字节）</a></li><li><a href="#结论-不需要统一">结论：不需要统一</a></li><li><a href="#唯一真实风险-跨套误用">唯一真实风险：跨套误用</a></li></ul><li><a href="#l5-p2-控件-set-的未知选项只-print">L5【P2】控件 set() 的未知选项只 print</a></li><ul class="lv3"><li><a href="#现象_3">现象</a></li><li><a href="#建议">建议</a></li><li><a href="#结论-2026-10-31-维持现状">⏸ 结论（2026-10-31）：维持现状</a></li></ul><li><a href="#已修复-本轮-供对照提交">已修复（本轮，供对照提交）</a></li><ul class="lv3"><li><a href="#f1-table-set_cell-改数据不请求重绘">F1 Table.set_cell 改数据不请求重绘</a></li><li><a href="#f2-table-recompute_cols-与-compute_sb-扣减口径不一致">F2 Table.recompute_cols 与 compute_sb 扣减口径不一致</a></li><li><a href="#f3-通用-toast-sdl_toast-leno">F3 通用 Toast（sdl_toast.leno）</a></li></ul><li><a href="#给应用的-防身规则-不是语言-bug-但会被反复踩">给应用的「防身规则」（不是语言 bug，但会被反复踩）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../语法改进建议_2026-11-02.html">← 上一篇</a><span></span></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

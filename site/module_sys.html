@@ -213,6 +213,8 @@
 </code></pre>
 <blockquote>
 <p>⚠️ <code>_args()</code> 只返回脚本参数。如需解释器路径用 <code>_executable()</code>，脚本路径用 <code>_script()</code>。</p>
+</blockquote>
+<blockquote>
 <p><strong>边界规则（2026-09-18 起；修的是"解释器把脚本的 <code>--xxx</code> 当自己的旗标"这个坑）</strong>：
 <strong>脚本路径之后的一切参数都算脚本参数</strong>（<strong>含 <code>-</code> 开头的</strong>）；也可以用 <code>--</code> 显式终止解释器
 自己的选项解析。未知旗标写在<strong>脚本路径之前</strong>仍会报「未知选项」并打印帮助（提示保持有效）。</p>
@@ -333,9 +335,9 @@
 <p>控制垃圾回收器（GC）的开关状态。</p>
 <p><strong>参数</strong>:
 - <code>enabled</code> (bool/int, 可选):
-  - <code>true</code> 或 <code>1</code> - 启用 GC
-  - <code>false</code> 或 <code>0</code> - 禁用 GC
-  - 不传参数则只查询状态</p>
+- <code>true</code> 或 <code>1</code> - 启用 GC
+- <code>false</code> 或 <code>0</code> - 禁用 GC
+- 不传参数则只查询状态</p>
 <p><strong>返回</strong>: <code>bool</code> - 当前 GC 状态</p>
 <pre><code class="language-leno">// 查询 GC 状态
 var gc_enabled = _gc()
@@ -462,9 +464,9 @@ for 0 : 100 to i {
 <p>显示/隐藏控制台窗口（仅 Windows 有效）。</p>
 <p><strong>参数</strong>:
 - <code>show</code> (bool/int, 可选):
-  - <code>true</code> 或 <code>1</code> - 显示控制台
-  - <code>false</code> 或 <code>0</code> - 隐藏控制台
-  - 不传参数则只查询状态</p>
+- <code>true</code> 或 <code>1</code> - 显示控制台
+- <code>false</code> 或 <code>0</code> - 隐藏控制台
+- 不传参数则只查询状态</p>
 <p><strong>返回</strong>: <code>bool</code> - 当前控制台窗口是否可见</p>
 <pre><code class="language-leno">// 隐藏控制台窗口（GUI 程序）
 _console(false)
@@ -519,6 +521,8 @@ _env(&quot;MY_VAR&quot;, &quot;&quot;)
 实测修前的欺骗：<code>_env("LENO=A", "v")</code> 返回 <strong>true</strong>、本进程 <code>_env("LENO=A")</code> 还能读回 <code>"v"</code>，
 但子进程 <code>cmd /c set LENO</code> 里是 <code>LENO=A=v</code> ⇒ 变量<strong>名</strong>其实是 <code>LENO</code>、值成了 <code>A=v</code>
 （系统按第一个 <code>=</code> 分隔名与值）。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>非 ASCII 值（2026-10-14 修）</strong>：此前 <code>_env("X", "中文")</code> 在 Windows 上会<strong>写失败</strong>（返回
 <code>false</code>），且<strong>子进程看不到</strong>这个变量；而纯 ASCII 值、含换行的值、8000 字节的长值全都正常 ——
 很容易被误判成"多行截断"。
@@ -595,7 +599,7 @@ var path = &quot;folder&quot; + _sep() + &quot;subfolder&quot; + _sep() + &quot;
 <p><strong>参数</strong>:
 - <code>cmd</code> (String): 要执行的命令
 - <code>timeout_ms</code> (Int, 可选): <strong>超时毫秒数</strong>。&gt; 0 时超时即<strong>杀掉</strong>子进程（整棵树），退出码返回 <strong><code>124</code></strong>
-  （GNU <code>timeout</code> 的惯例）；不传 / 传 <code>0</code> = 不限制（旧行为）
+（GNU <code>timeout</code> 的惯例）；不传 / 传 <code>0</code> = 不限制（旧行为）
 - <code>stdin_text</code> (String, 可选): 喂给子进程 <strong>stdin</strong> 的内容（按 UTF-8<strong>字节</strong>原样写入，二进制安全）</p>
 <blockquote>
 <p>第 2 个实参<strong>按类型分流</strong>：<code>Int</code> ⇒ 超时、<code>String</code> ⇒ stdin ⇒ 以下四种写法都合法：
@@ -637,20 +641,21 @@ var path = &quot;folder&quot; + _sep() + &quot;subfolder&quot; + _sep() + &quot;
 <p>⚠ <strong>合并文本的行序不是"真实交错"</strong>：<code>out</code> / <code>err</code> 各自重定向到独立的临时文件；
 "哪一行属于哪个流"是<strong>确定</strong>信息，行序不是（共享一个文件时行序由 OS 写入时机决定、跨平台还不一样）
 ⇒ 要分流的场合请直接用 <code>out</code> / <code>err</code>，别拿 <code>output</code> 猜。<code>output</code> 保留只为兼容既有调用点 ✓。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>v3.2.8 起返回结构体、不再是 <code>[output, code]</code> 数组</strong>：旧写法 <code>r[0]</code> / <code>r[1]</code> 要改成
 <code>r.output</code> / <code>r.code</code>（数组下标会落到"struct 字段名必须是字符串"的运行期错误）。
 为什么要改：两个元素<strong>类型不齐</strong>（string + int）⇒ 同质的 <code>Array[T]</code> 表达不了，只能注册成
 <code>Array[any]</code>，调用点位置取值拿到的是 any（与 <code>dirs.stat</code> 改 <code>DirInfo</code> 同一判断）。</p>
-<p>⚠ <strong>建议总是给个 <code>timeout_ms</code></strong>（工具 / 测试尤其）：不限制时子进程一挂住，会把父进程一起拖死 ✗
-（写 GUI 测试时只能从外部 <code>Start-Process</code> + <code>WaitForExit</code> 兜）。超时判定就是 <code>r.code == 124</code>：
-</p>
 </blockquote>
+<blockquote>
+<p>⚠ <strong>建议总是给个 <code>timeout_ms</code></strong>（工具 / 测试尤其）：不限制时子进程一挂住，会把父进程一起拖死 ✗
+（写 GUI 测试时只能从外部 <code>Start-Process</code> + <code>WaitForExit</code> 兜）。超时判定就是 <code>r.code == 124</code>：</p>
 <pre><code class="language-leno">var r = _exec(&quot;some_maybe_hanging_tool&quot;, 30000)   // 30 s
 if r.code == 124 {
     print(&quot;超时了（子进程已被杀掉）&quot;)
 }
 </code></pre>
-<blockquote>
 <p>✅ <strong>命令自己拉起的后台进程会活下来</strong>（只有"超时"才收整棵树）：<code>_exec("cmd /c start \"\" \"a.txt\"")</code>
 这种<strong>异步</strong>打开是正当用法 —— <code>cmd</code> 立刻退出、被拉起的应用继续跑 ✓。
 超时给得及时，则连同孙子一起收（<code>TerminateJobObject</code>），不会留下握着临时文件的孤儿。</p>
@@ -687,15 +692,15 @@ if result.code == 0 {
 - 返回值是 <code>ExecResult{ output, out, err, code }</code> 结构体（v3.2.8 起；此前是 <code>[output, code]</code> 数组）
 - <strong>不再需要 <code>2&gt;&amp;1</code></strong>：两个流本来就分开采集；老代码里写的 <code>2&gt;&amp;1</code> 照旧可用，只是多余
 - ⚠ <strong>命令里的 <code>&amp;</code> / <code>|</code> 也整组受重定向约束</strong>（2026-10-14 修）：实现把整条命令行包进 <code>( )</code> 再重定向
-  （<code>cmd /c ( &lt;cmd&gt; ) &gt; out 2&gt; err</code>）。此前 <code>_exec("echo A &amp; echo B")</code> 里 <code>A</code> 的输出会<strong>漏到父进程
-  控制台</strong> ✗（重定向只绑在 <code>&amp;</code> 的后半句上），现在不会了 ✓
+（<code>cmd /c ( &lt;cmd&gt; ) &gt; out 2&gt; err</code>）。此前 <code>_exec("echo A &amp; echo B")</code> 里 <code>A</code> 的输出会<strong>漏到父进程
+控制台</strong> ✗（重定向只绑在 <code>&amp;</code> 的后半句上），现在不会了 ✓
 - ⚠ <strong>Windows 引号坑</strong>：<code>_exec</code> 走 <code>cmd /c</code>，把带空格的路径用引号包起来再拼进命令时，引号可能被
-  <code>cmd</code> 吞掉 ⇒ 更稳的是 <code>_spawn(exe, args)</code>（CreateProcessW，<strong>不经 <code>cmd</code></strong>），
-  或先把命令写进 <code>.bat</code> 再 <code>_exec(那个文件)</code>
+<code>cmd</code> 吞掉 ⇒ 更稳的是 <code>_spawn(exe, args)</code>（CreateProcessW，<strong>不经 <code>cmd</code></strong>），
+或先把命令写进 <code>.bat</code> 再 <code>_exec(那个文件)</code>
 - ℹ <strong><code>%TEMP%</code> 里可能出现 <code>leno_exec_&lt;pid&gt;_&lt;序号&gt;.out/.err/.in</code></strong>：这是本次执行的重定向文件。
-  它在命令跑完后<strong>总是尝试删除</strong>，但若<strong>子进程自己拉起的后台进程</strong>（<code>cmd /c start …</code> 那类）继承了
-  重定向句柄并还活着，删除会失败 ⇒ 留下文件。文件名每次唯一 ⇒ 不影响后续调用（这是"临时文件"方案的
-  固有取舍）；<strong>别去手工清理正在跑的</strong>，跑完再删无妨</p>
+它在命令跑完后<strong>总是尝试删除</strong>，但若<strong>子进程自己拉起的后台进程</strong>（<code>cmd /c start …</code> 那类）继承了
+重定向句柄并还活着，删除会失败 ⇒ 留下文件。文件名每次唯一 ⇒ 不影响后续调用（这是"临时文件"方案的
+固有取舍）；<strong>别去手工清理正在跑的</strong>，跑完再删无妨</p>
 <hr>
 <h3 id="_spawn-exe-args-_kill-handle"><code>_spawn(exe, args)</code> / <code>_kill(handle)</code></h3>
 <p><strong>异步</strong>拉起一个长驻进程并<strong>保留句柄</strong>，之后用句柄收尾（2026-10-07 新增）。</p>
@@ -738,11 +743,15 @@ if h &gt; 0 {
 Windows 侧子进程被放进带 <code>JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE</code> 的 Job Object ⇒ Leno 进程
 <strong>正常退出 / 崩溃 / 被 <code>taskkill</code></strong>，内核都会把 job 内的进程收掉；Linux 侧用 <code>PR_SET_PDEATHSIG</code>。
 实测（<code>assert/test_spawn.leno</code> 的 ③ 与一次 /F 强杀实验）：父进程被强杀后，"被拉起的进程"计数 1 → 0。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong><code>_spawn</code> 还是 <code>_exec</code>？</strong>
 - 要<strong>等结果</strong>（跑条命令拿输出）⇒ <code>_exec</code>；
 - 拉起<strong>长驻进程</strong>（浏览器 / 后台服务）⇒ <code>_spawn</code> + <code>_kill</code>。
 两者的 Job Object 语义<strong>故意相反</strong>：<code>_exec</code> <strong>不</strong>设那个标志（<code>cmd /c start</code> 拉起的应用必须活下来，
 见 <code>assert/test_exec_timeout.leno</code> ④），<code>_spawn</code> <strong>必须</strong>设 —— 否则"孤儿进程"就是这么来的。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>POSIX 说明</strong>：<code>_spawn</code> 经 <code>/bin/sh -c</code> 拉起（参数仍按 shell 规则解析）；"父死子死"是 Linux 的
 <code>PR_SET_PDEATHSIG</code>，macOS 没有对应机制 ⇒ 那边要<strong>显式 <code>_kill</code></strong>（与 Playwright 改用 CDP 管道
 解决同一问题的原因相同：管道一断，浏览器自己退）。</p>
@@ -1029,9 +1038,10 @@ _gc(true)
 <hr>
 <p><em>文档版本: 1.3</em><br>
 <em>最后更新: 2026-06-19</em>
-<em>变更: <strong>v3.2.8 起 <code>_exec()</code> 返回 <code>ExecResult{ output, code }</code> 结构体</strong>（此前是 <code>[stdout, exit_code]</code> 数组；
-<code>r[0]</code>/<code>r[1]</code> ⇒ <code>r.output</code>/<code>r.code</code>）；<code>_args()</code> 只返回脚本参数</em></p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#全局函数">全局函数</a></li><li><a href="#命令行参数">命令行参数</a></li><ul class="lv3"><li><a href="#_args">_args()</a></li><li><a href="#_script">_script()</a></li><li><a href="#_executable">_executable()</a></li></ul><li><a href="#运行时控制">运行时控制</a></li><ul class="lv3"><li><a href="#_gc-enabled">_gc(enabled)</a></li><li><a href="#_exit-code">_exit(code)</a></li></ul><li><a href="#系统信息">系统信息</a></li><ul class="lv3"><li><a href="#_os">_os()</a></li><li><a href="#_arch">_arch()</a></li><li><a href="#_pid">_pid()</a></li><li><a href="#_username">_username()</a></li><li><a href="#_clear">_clear()</a></li><li><a href="#_console-show">_console(show)</a></li></ul><li><a href="#环境变量">环境变量</a></li><ul class="lv3"><li><a href="#_env-name">_env(name)</a></li><li><a href="#_env-name-value">_env(name, value)</a></li><li><a href="#_env_or-name-default">_env_or(name, default)</a></li></ul><li><a href="#路径工具">路径工具</a></li><ul class="lv3"><li><a href="#_homedir">_homedir()</a></li><li><a href="#_tmpdir">_tmpdir()</a></li><li><a href="#_sep">_sep()</a></li></ul><li><a href="#命令执行">命令执行</a></li><ul class="lv3"><li><a href="#_exec-cmd-timeout_ms-stdin_text">_exec(cmd[, timeout_ms][, stdin_text])</a></li><li><a href="#_spawn-exe-args-_kill-handle">_spawn(exe, args) / _kill(handle)</a></li><li><a href="#_single_instance-name">_single_instance([name])</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-简单的-cli-参数解析">示例1：简单的 CLI 参数解析</a></li><li><a href="#示例2-跨平台路径处理">示例2：跨平台路径处理</a></li><li><a href="#示例3-gc-性能测试">示例3：GC 性能测试</a></li><li><a href="#示例4-清屏动画效果">示例4：清屏动画效果</a></li><li><a href="#示例5-显示运行时信息">示例5：显示运行时信息</a></li><li><a href="#示例6-环境变量操作">示例6：环境变量操作</a></li><li><a href="#示例7-执行系统命令">示例7：执行系统命令</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-参数顺序">1. 参数顺序</a></li><li><a href="#2-repl-模式">2. REPL 模式</a></li><li><a href="#3-gc-控制">3. GC 控制</a></li><li><a href="#4-脚本路径解析">4. 脚本路径解析</a></li><li><a href="#5-环境变量作用域">5. 环境变量作用域</a></li><li><a href="#6-命令执行安全">6. 命令执行安全</a></li><li><a href="#7-进程退出">7. 进程退出</a></li></ul></ul></aside>
+<em>变更: </em>*v3.2.8 起 <code>_exec()</code> 返回 <code>ExecResult{ output, code }</code> 结构体**（此前是 <code>[stdout, exit_code]</code> 数组；
+<code>r[0]</code>/<code>r[1]</code> ⇒ <code>r.output</code>/<code>r.code</code>）；<code>_args()</code> 只返回脚本参数*</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#全局函数">全局函数</a></li><li><a href="#命令行参数">命令行参数</a></li><ul class="lv3"><li><a href="#_args">_args()</a></li><li><a href="#_script">_script()</a></li><li><a href="#_executable">_executable()</a></li></ul><li><a href="#运行时控制">运行时控制</a></li><ul class="lv3"><li><a href="#_gc-enabled">_gc(enabled)</a></li><li><a href="#_exit-code">_exit(code)</a></li></ul><li><a href="#系统信息">系统信息</a></li><ul class="lv3"><li><a href="#_os">_os()</a></li><li><a href="#_arch">_arch()</a></li><li><a href="#_pid">_pid()</a></li><li><a href="#_username">_username()</a></li><li><a href="#_clear">_clear()</a></li><li><a href="#_console-show">_console(show)</a></li></ul><li><a href="#环境变量">环境变量</a></li><ul class="lv3"><li><a href="#_env-name">_env(name)</a></li><li><a href="#_env-name-value">_env(name, value)</a></li><li><a href="#_env_or-name-default">_env_or(name, default)</a></li></ul><li><a href="#路径工具">路径工具</a></li><ul class="lv3"><li><a href="#_homedir">_homedir()</a></li><li><a href="#_tmpdir">_tmpdir()</a></li><li><a href="#_sep">_sep()</a></li></ul><li><a href="#命令执行">命令执行</a></li><ul class="lv3"><li><a href="#_exec-cmd-timeout_ms-stdin_text">_exec(cmd[, timeout_ms[, stdin_text)</a></li><li><a href="#_spawn-exe-args-_kill-handle">_spawn(exe, args) / _kill(handle)</a></li><li><a href="#_single_instance-name">_single_instance([name)</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-简单的-cli-参数解析">示例1：简单的 CLI 参数解析</a></li><li><a href="#示例2-跨平台路径处理">示例2：跨平台路径处理</a></li><li><a href="#示例3-gc-性能测试">示例3：GC 性能测试</a></li><li><a href="#示例4-清屏动画效果">示例4：清屏动画效果</a></li><li><a href="#示例5-显示运行时信息">示例5：显示运行时信息</a></li><li><a href="#示例6-环境变量操作">示例6：环境变量操作</a></li><li><a href="#示例7-执行系统命令">示例7：执行系统命令</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-参数顺序">1. 参数顺序</a></li><li><a href="#2-repl-模式">2. REPL 模式</a></li><li><a href="#3-gc-控制">3. GC 控制</a></li><li><a href="#4-脚本路径解析">4. 脚本路径解析</a></li><li><a href="#5-环境变量作用域">5. 环境变量作用域</a></li><li><a href="#6-命令执行安全">6. 命令执行安全</a></li><li><a href="#7-进程退出">7. 进程退出</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="module_strings.html">← 上一篇</a><a href="module_threads_api.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

@@ -33,6 +33,8 @@
 <strong>JIT 已不在代码中</strong>（本仓库历史里从未有过 <code>jit</code> 命名文件，<code>git ls-files "*jit*"</code> 为空）
 ⇒ 这类判据要么按"没有 JIT"重读，要么只当历史依据。
 <strong>GC / 对象分配本身的部分仍然有效</strong>，是现行待办。</p>
+</blockquote>
+<blockquote>
 <p>建立于 2026-09-13。背景是 §8.30（struct 字段读/方法调用内联，提交 <code>c4b6bbd1</code>）之后，
 结论是「<strong>调用机制已经不是瓶颈，对象分配/回收才是</strong>」。</p>
 <p>相关章节：<code>docs/archive/JIT实现与调试记录.md</code> 的 §8.31 / §8.31-a / §8.31-b / §8.32。
@@ -76,10 +78,10 @@
 <code>不分配 11.9 ns / new Pair 110 ns / new Big 170 ns / 数组字面量 149 ns</code>。
 更重要的两点修正：
 1. <strong>「每字段 +~15ns」与「~79ns 未归因」主要不是"字段写入"本身</strong>，而是<strong>冷内存</strong>代价
-   （从不复用的内存要 memset + page fault + cache miss）。池能复用之后，
-   边际每字段成本从 ~14.9 ns 掉到 <strong>~4.7 ns</strong>（Pair→Big 的差 ÷ 4）。
+（从不复用的内存要 memset + page fault + cache miss）。池能复用之后，
+边际每字段成本从 ~14.9 ns 掉到 <strong>~4.7 ns</strong>（Pair→Big 的差 ÷ 4）。
 2. 因此<strong>分配路径的第一优先级已变成"让池吃饱"</strong>（已做：默认 32MB）——
-   这一项就拿回 −38%/~−47%，比任何字段级微优化都大。
+这一项就拿回 −38%/~−47%，比任何字段级微优化都大。
 下一步的分配侧优化空间只剩：cold path 的 <code>memset(0)</code> 是否可省（需先证安全）、
 <code>OBJ_ARRAY</code> 的复用、以及 callout 包装那 ~14 ns。</p>
 </blockquote>
@@ -185,10 +187,10 @@ Executed 867300 / Bailouts 0）。</p>
 </tbody>
 </table>
 <p>⇒ <strong>−38% / −47%</strong>，<strong>32MB 即饱和</strong>（16MB 略欠）。默认值已改为 32MB；
-   上限只是<strong>天花板</strong>（池按需增长），小程序的常驻内存不受影响。
-   （<code>数组字面量[1.0,2.0]</code> 不受影响：<code>OBJ_ARRAY</code> 有意排除在池外 —— 它有自己的
-   header 回收链，<code>arr_new</code> 复用时会清 <code>flags</code>，双重持有会破坏池链，
-   见 <code>gc.c</code> 的池设计注释。）</p>
+上限只是<strong>天花板</strong>（池按需增长），小程序的常驻内存不受影响。
+（<code>数组字面量[1.0,2.0]</code> 不受影响：<code>OBJ_ARRAY</code> 有意排除在池外 —— 它有自己的
+header 回收链，<code>arr_new</code> 复用时会清 <code>flags</code>，双重持有会破坏池链，
+见 <code>gc.c</code> 的池设计注释。）</p>
 <hr>
 <h2 id="四-待办-按优先级">四、待办（按优先级）</h2>
 <h3 id="p0-加-确定性触发-gc-的测试钩子-测试基建-已完成-2026-09-13-8-35">✅ P0 — 加「确定性触发 GC」的测试钩子（测试基建）—— 已完成（2026-09-13，§8.35）</h3>
@@ -202,8 +204,8 @@ Executed 867300 / Bailouts 0）。</p>
 </thead>
 <tbody>
 <tr>
-<td><code>LENO_GC_YOUNG_THRESHOLD=&lt;bytes\|KB\|MB&gt;</code></td>
-<td>覆盖并<strong>钉住</strong>年轻代阈值（本来每次回收后会被抬回 <code>max(young_allocated*2, 8MB)</code>，不钉住覆盖值立刻失效）。</td>
+<td>`LENO_GC_YOUNG_THRESHOLD=&lt;bytes\</td>
+<td>KB\</td>
 </tr>
 <tr>
 <td><code>LENO_GC_FORCE_EVERY=&lt;n&gt;</code></td>
@@ -402,12 +404,12 @@ del /q build\leno_base.exe build\leno_broken.exe
 - 必须有<strong>未被改动的对照路径</strong>（<code>probe_alloc2</code> 里的「不分配」行；噪声底通常 ±1.5 ns）；
 - 只做<strong>同机同轮</strong>对照，不要跟文档里的历史绝对值比；
 - 改动 <code>src/</code> 后先删 <code>.lenocache</code> 再测：~~缓存不记录编译器二进制身份~~ ⇒
-  <strong>⚠ 已过时（2026-10-09 实测更正）</strong>：<code>entry_*.lenb.deps</code> 第 2 行 <code>BIN &lt;指纹&gt;</code> <strong>就是</strong>编译器二进制身份
-  （2026-09-17 / <code>src/main.c</code> 的 <code>§8.112</code> + <code>ENTRY_DEPS_MAGIC</code>）⇒ <strong>重建 exe 后缓存会自动失效</strong>，
-  不必再手删（实测：重建/改 lib 后不删缓存，结果跟着变 ✓ 见 <code>语言陷阱速查.md</code> §一 ①）。
-  手工 bump <code>LENO_BIN_VERSION</code>/<code>LENO_MODCACHE_VERSION</code> 依旧有效 —— 那是"<strong>强制整体失效</strong>"的开关，
-  留作兜底 ✓（改被引用的 <code>leno_module/**/lib/**</code> 本来就不必清：2026-09-16 起入口缓存带
-  <code>entry_*.lenb.deps</code> 依赖清单，改模块源会让引用方失效，见 <code>jit_probes/README.md</code>。）</p>
+<strong>⚠ 已过时（2026-10-09 实测更正）</strong>：<code>entry_*.lenb.deps</code> 第 2 行 <code>BIN &lt;指纹&gt;</code> <strong>就是</strong>编译器二进制身份
+（2026-09-17 / <code>src/main.c</code> 的 <code>§8.112</code> + <code>ENTRY_DEPS_MAGIC</code>）⇒ <strong>重建 exe 后缓存会自动失效</strong>，
+不必再手删（实测：重建/改 lib 后不删缓存，结果跟着变 ✓ 见 <code>语言陷阱速查.md</code> §一 ①）。
+手工 bump <code>LENO_BIN_VERSION</code>/<code>LENO_MODCACHE_VERSION</code> 依旧有效 —— 那是"<strong>强制整体失效</strong>"的开关，
+留作兜底 ✓（改被引用的 <code>leno_module/**/lib/**</code> 本来就不必清：2026-09-16 起入口缓存带
+<code>entry_*.lenb.deps</code> 依赖清单，改模块源会让引用方失效，见 <code>jit_probes/README.md</code>。）</p>
 <hr>
 <h2 id="七-jit-bailout-后续项-2026-09-13-追加">七、JIT bailout 后续项（2026-09-13 追加）</h2>
 <blockquote>
@@ -495,29 +497,46 @@ string / array / <code>ffi.nullptr()==null</code> 仍走解释器）；<code>ass
 （<code>gc_heap_detach_allowed() == 0</code>）在<strong>线程退出时跳过整堆 detach</strong>：buffer 里可能还压着
 这个堆的对象，提前释放会 UAF。代价是<strong>整堆被 TLS 遗弃</strong>，进程内再没有任何入口能释放它
 （<code>gc_free_all</code> 只处理主堆）。所有"发个结果就退出"的 worker 都命中这条路。</p>
-<p>实测（<code>Aria/tools/probe_thread_heap*.leno</code>，修前）：
-| 负载 | 每线程泄漏 |
-|---|---|
-| 只 send 一个 int | 75KB |
-| send 一个 30KB 字符串 | 2.2MB |
-| 模拟搜索回信（500 行） | 7.5MB |</p>
+<p>实测（<code>Aria/tools/probe_thread_heap*.leno</code>，修前）：</p>
+<table>
+<thead>
+<tr>
+<th>负载</th>
+<th>每线程泄漏</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>只 send 一个 int</td>
+<td>75KB</td>
+</tr>
+<tr>
+<td>send 一个 30KB 字符串</td>
+<td>2.2MB</td>
+</tr>
+<tr>
+<td>模拟搜索回信（500 行）</td>
+<td>7.5MB</td>
+</tr>
+</tbody>
+</table>
 <p>Aria 切歌一次起 3 条 worker（<code>prepare</code> / <code>lyric</code> / <code>cover_shard</code>）⇒ 每首几 MB。</p>
 <h3 id="做法">做法</h3>
 <p><code>GCDeadHeap</code> 改成<strong>引用计数</strong>：
 - 线程<strong>首次 send</strong> 时建一条发送记录（<code>refs = 1</code>，代表"本线程还活着"）；
 - 每成功 send 一次：该 channel 槽的 <code>owner</code> 指向记录，<code>refs++</code>（槽位数组与 buffer 平行，
-  见 <code>ObjChannel.buffer_owner</code>）；
+见 <code>ObjChannel.buffer_owner</code>）；
 - 线程退出时<strong>总是</strong> detach（<code>active_thread_count == 0</code> 仍保留：子线程的 ObjThread 在本堆上），
-  把 young/old/pool 头填进同一条记录，然后 <code>gc_detach_heap_finish()</code> 放掉"线程自己"那份；
+把 young/old/pool 头填进同一条记录，然后 <code>gc_detach_heap_finish()</code> 放掉"线程自己"那份；
 - <code>receive</code> / <code>try_receive</code> / <code>try_take</code> 取走槽位时 <code>refs--</code>，<code>unref</code> 到 0 的人负责整堆释放；
 - result 是对象时先 <code>+1</code> 转给 <code>ObjThread</code>（join 还要从堆里克隆它），join / GC 收 Thread 时再 <code>--</code>。</p>
 <p><strong>安全性两条</strong>（缺一条就会偶发 UAF，实测踩过）：
 1. <strong>只能有一个计数</strong>。"线程退出"和"槽位取走"不能各自判断"我是最后一个" ——
-   第一版用 <code>pinned</code> + <code>refs</code> 两个字段，两边都可能判定该释放 ⇒ 一次 free 后另一侧再用 ⇒
-   非确定性崩溃（探针第 1~30 轮随机崩）。
+第一版用 <code>pinned</code> + <code>refs</code> 两个字段，两边都可能判定该释放 ⇒ 一次 free 后另一侧再用 ⇒
+非确定性崩溃（探针第 1~30 轮随机崩）。
 2. <strong>释放要等所有在跑的 GC 结束</strong>：别的线程的 GC 可能刚从槽里标记了这些对象、还压在它的
-   <code>mark_stack</code> 上（排空在 GC 收尾）。用 <code>g_gc_inflight</code> 计数，非 0 时把死堆挂到待释放链，
-   最后一轮 GC 的 <code>gc_gc_exit()</code> 统一 free。</p>
+<code>mark_stack</code> 上（排空在 GC 收尾）。用 <code>g_gc_inflight</code> 计数，非 0 时把死堆挂到待释放链，
+最后一轮 GC 的 <code>gc_gc_exit()</code> 统一 free。</p>
 <h3 id="验证">验证</h3>
 <ul>
 <li><code>assert/test_thread_heap_reclaim.leno</code>（新增回归）：200 条"发完就退"的线程，堆 &lt; 8MB 且
@@ -533,7 +552,8 @@ string / array / <code>ffi.nullptr()==null</code> 仍走解释器）；<code>ass
 <li><strong>没人 join 的 Thread 对象</strong>仍被 <code>vm-&gt;active_threads</code> 当根钉着（每条约 0.5KB）。
   fire-and-forget 每首歌 3 条 ⇒ ~1.5KB/首，量级可忽略；要彻底解决得在"线程退出时把自己
   从创建者的 active_threads 摘掉"，动的是 join 生命周期，另开一轮再动。</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-当前性能结论-i5-3450-windows-负载波动大">一、当前性能结论（i5-3450 + Windows，负载波动大）</a></li><li><a href="#二-已完成-本次改动">二、已完成（本次改动）</a></li><ul class="lv3"><li><a href="#写屏障-struct_set_field-内联-提交信息见-8-31-b">✅ 写屏障 + struct_set_field 内联（提交信息见 §8.31-b）</a></li></ul><li><a href="#三-已排除的死路-不要再试">三、已排除的死路（不要再试）</a></li><li><a href="#四-待办-按优先级">四、待办（按优先级）</a></li><ul class="lv3"><li><a href="#p0-加-确定性触发-gc-的测试钩子-测试基建-已完成-2026-09-13-8-35">✅ P0 — 加「确定性触发 GC」的测试钩子（测试基建）—— 已完成（2026-09-13，§8.35）</a></li><li><a href="#p1-jit-循环的-gc-安全点-真正的天花板">P1 — JIT 循环的 GC 安全点（真正的天花板）</a></li><li><a href="#p2-实参写入路径的剩余成本">P2 — 实参写入路径的剩余成本</a></li></ul><li><a href="#五-已知覆盖缺口-已解除-2026-09-13-8-35">五、已知覆盖缺口 —— 已解除（2026-09-13，§8.35）</a></li><li><a href="#六-测量方法-必须照做-否则结论不可信">六、测量方法（必须照做，否则结论不可信）</a></li><li><a href="#七-jit-bailout-后续项-2026-09-13-追加">七、JIT bailout 后续项（2026-09-13 追加）</a></li><ul class="lv3"><li><a href="#已修-op_index-慢路径无条件-bailout">✅ 已修：OP_INDEX 慢路径无条件 bailout</a></li><li><a href="#已解除-2026-09-15-复测-op_add_float-把-dict-读取结果判成-nan-boxed">✅ 已解除（2026-09-15 复测）：OP_ADD_FLOAT 把 dict 读取结果判成 NaN-boxed</a></li><li><a href="#已修-op_eq-对指针-对象身份比较会-bailout">✅ 已修：OP_EQ 对指针 / 对象身份比较会 bailout</a></li></ul><li><a href="#八-当前工作区状态-2026-09-13-收工">八、当前工作区状态（2026-09-13 收工）</a></li><li><a href="#九-子线程堆的引用计数回收-2026-11-20-修-切歌内存只涨不降">九、子线程堆的引用计数回收（2026-11-20，修"切歌内存只涨不降"）</a></li><ul class="lv3"><li><a href="#症状">症状</a></li><li><a href="#根因-不是主堆-gc-不工作">根因（不是主堆 GC 不工作）</a></li><li><a href="#做法">做法</a></li><li><a href="#验证">验证</a></li><li><a href="#遗留-已知-未在本次处理">遗留（已知，未在本次处理）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/FFI优化方案.html">← 上一篇</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">下一篇 →</a></nav>

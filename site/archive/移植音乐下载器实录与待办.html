@@ -42,7 +42,7 @@
 <strong>约束本身都已撤掉</strong>（分别是 TH2 与 TH1，见 <code>docs/线程并发能力修复追踪.md</code>）：
 - 模块函数现在<strong>可以</strong>直接作线程入口 ⇒ 那层"具名包装"写法变成<strong>可选</strong>（仍然正确、无害）；
 - struct 现在<strong>可以</strong>跨线程（深克隆 + 接收侧按定义重建）⇒ "对外一律传纯字符串数组"从
-  <strong>硬约束</strong>降级为<strong>一种仍然好用的风格选择</strong>（字符串数组免收窄、跨版本最稳）。
+<strong>硬约束</strong>降级为<strong>一种仍然好用的风格选择</strong>（字符串数组免收窄、跨版本最稳）。
 下面各段的<strong>现象/复现记录保持原样不动</strong>（那是当时的实测 ✓），只在相应位置加 ⚠ 指回来。</p>
 </blockquote>
 <hr>
@@ -159,7 +159,7 @@
 <tr>
 <td>3</td>
 <td><code>&amp;lrcx=1</code>（逐字时间轴）与不加<strong>是两种打包</strong></td>
-<td>不加：<code>gb18030( 标准 LRC )</code>（带 <code>[ti:]/[ar:]</code> 头、<strong>译文行已是独立的 <code>[时间]行</code></strong>）；加了：<code>base64+xor(gb18030( 带</code><mm,dd><code>逐字标签的 LRC ))</code>，且译文行要自己并</td>
+<td>不加：<code>gb18030( 标准 LRC )</code>（带 <code>[ti:]/[ar:]</code> 头、<strong>译文行已是独立的 <code>[时间]行</code></strong>）；加了：<code>base64+xor(gb18030( 带 </code>&lt;mm,dd&gt;<code> 逐字标签的 LRC ))</code>，且译文行要自己并</td>
 <td><strong>本实现选"不加"</strong> ⇒ 少一层解密、省掉上游那条 <code>convertrawlrc</code> 正则转换链；两种都实测过，内容质量对播放器等价</td>
 </tr>
 </tbody>
@@ -734,7 +734,7 @@
 <tbody>
 <tr>
 <td>现象</td>
-<td><code>threads.start(eng.search_entry, ...)</code> 当场抛错：<code>线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'dl_engine' 里的 'search_entry'（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code> <br>⚠ <strong>2026-10-12：这条硬拦已撤（TH2）</strong> ⇒ 模块函数现在可以直接作入口 ✓（下面的绕法仍可用、已非必需）</td>
+<td><code>threads.start(eng.search_entry, ...)</code> 当场抛错：<code>线程入口必须是**当前文件**的函数 ✗ 收到的是模块 'dl_engine' 里的 'search_entry'（子线程不会加载别的模块的全局变量 ⇒ 模块函数在子线程里跑不起来）</code> &lt;br&gt;⚠ <strong>2026-10-12：这条硬拦已撤（TH2）</strong> ⇒ 模块函数现在可以直接作入口 ✓（下面的绕法仍可用、已非必需）</td>
 </tr>
 <tr>
 <td>后果</td>
@@ -974,7 +974,7 @@
 </tr>
 <tr>
 <td>但文档<strong>没写</strong>的</td>
-<td>"<strong>入口必须是当前文件的函数</strong>——别的模块的函数不行"。这条只存在于编译器的报错文案里；<code>cleaner_master</code> 的源码注释里也记着同一个坑（"worker 必须具名全局函数"） <br>⚠ <strong>2026-10-12：该限制已撤（TH2）</strong>，<code>threads使用指南.md</code> 相应小节也已改写为"模块函数也能用" ✓</td>
+<td>"<strong>入口必须是当前文件的函数</strong>——别的模块的函数不行"。这条只存在于编译器的报错文案里；<code>cleaner_master</code> 的源码注释里也记着同一个坑（"worker 必须具名全局函数"） &lt;br&gt;⚠ <strong>2026-10-12：该限制已撤（TH2）</strong>，<code>threads使用指南.md</code> 相应小节也已改写为"模块函数也能用" ✓</td>
 </tr>
 <tr>
 <td>代价</td>
@@ -1269,7 +1269,7 @@
 </tr>
 <tr>
 <td>约束</td>
-<td>线程入口必须是<strong>主脚本文件</strong>的具名全局函数（语言硬约束，见 <code>threads.c</code> 的前置校验）⇒ 起线程全在 <code>musicdl_gui.leno</code>，引擎只出"能被线程调的纯函数" ✓ <br>⚠ <strong>2026-10-12：约束已撤（TH2）</strong> ⇒ 引擎以后可以直接自己起线程 ✓（现有分层仍然成立、不必改）</td>
+<td>线程入口必须是<strong>主脚本文件</strong>的具名全局函数（语言硬约束，见 <code>threads.c</code> 的前置校验）⇒ 起线程全在 <code>musicdl_gui.leno</code>，引擎只出"能被线程调的纯函数" ✓ &lt;br&gt;⚠ <strong>2026-10-12：约束已撤（TH2）</strong> ⇒ 引擎以后可以直接自己起线程 ✓（现有分层仍然成立、不必改）</td>
 </tr>
 </tbody>
 </table>
@@ -1397,8 +1397,9 @@
 <li><strong>歌词再往前一步</strong>（可选）：① 把 <code>.lrc</code> 写进音频标签（FLAC <code>VORBIS_COMMENT</code> / MP3 <code>USLT</code>+<code>SYLT</code>），
    播放器就不必找同名文件；② 用 <code>lrcx=1</code> 的<strong>逐字时间轴</strong>做卡拉OK式高亮（那就得把 A4-③ 的
    base64+异或第二层与 <code>convertrawlrc</code> 补齐，本次有意跳过了）。</li>
-</ol></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#〇-本次范围与跑法">〇、本次范围与跑法</a></li><li><a href="#一-a-类-不是-leno-的问题-记录即可">一、A 类：不是 Leno 的问题（记录即可）</a></li><ul class="lv3"><li><a href="#a1-mobi-kuwo-cn-按-user-agent-风控-桌面-chrome-ua-会拿到-http-200-空-body">A1 ★ mobi.kuwo.cn 按 User-Agent 风控 —— 桌面 Chrome UA 会拿到「HTTP 200 + 空 body」</a></li><li><a href="#a2-第三方取链-api-会给-降档-结果">A2 第三方取链 API 会给"降档"结果</a></li><li><a href="#a3-酷我-minfo-n_minfo-的档位顺序不固定">A3 酷我 MINFO / N_MINFO 的档位顺序不固定</a></li><li><a href="#a4-酷我歌词接口-newlyric-kuwo-cn-的三个服务端事实">A4 酷我歌词接口（newlyric.kuwo.cn）的三个服务端事实</a></li><li><a href="#a5-酷我-minfo-的-size-有四种形态-粗糙解析会让整个搜索失败-青衣-事故">A5 ★ 酷我 MINFO 的 size 有四种形态 —— 粗糙解析会让整个搜索失败（"青衣"事故）</a></li><li><a href="#a6-网易-weapi-的六个服务端事实-2026-10-08-加网易源时逐条实测">A6 ★ 网易 weapi 的六个服务端事实（2026-10-08 加网易源时逐条实测）</a></li><li><a href="#a7-酷狗的六个服务端事实-2026-10-08-加酷狗源时实测">A7 ★ 酷狗的六个服务端事实（2026-10-08 加酷狗源时实测）</a></li><li><a href="#a8-第三方聚合接口的八个事实-2026-10-08-修-拿不到-flac-时逐条实测">A8 ★ 第三方聚合接口的八个事实（2026-10-08 修"拿不到 flac"时逐条实测）</a></li></ul><li><a href="#二-b-类-值得改-按建议优先级排序">二、B 类：值得改（按建议优先级排序）</a></li><ul class="lv3"><li><a href="#状态总表-2026-10-07-收尾更新">状态总表（2026-10-07 收尾更新）</a></li><li><a href="#b1-高-lenocache-的-entry_-lenb-缓存键只含入口文件哈希-不含依赖模块">B1【高】.lenocache 的 entry_.lenb 缓存键只含入口文件哈希，不含依赖模块</a></li><li><a href="#b2-中-lenoweb-downloadresume-的实现与文档口径不一致">B2【中】LenoWeb.downloadResume 的实现与文档口径不一致</a></li><li><a href="#b3-低-new-x-与数组字面量不允许尾随逗号-且报错指不到逗号">B3【低】new X(...) 与数组字面量不允许尾随逗号，且报错指不到逗号</a></li><li><a href="#b4-中-_str-异常-容器-给-object-而-e-print-e-正常-两个-转字符串-口径不一致">B4【中】_str(异常/容器) 给 &lt;object&gt;，而 $"{e}" / print(e) 正常 —— 两个"转字符串"口径不一致</a></li><li><a href="#b5-中-lenocrypto-readme-里的导入路径在-应用目录-下解析不到">B5【中】LenoCrypto README 里的导入路径在「应用目录」下解析不到</a></li><li><a href="#b6-中-标准库缺口-本次实际卡到的">B6【中】标准库缺口（本次实际卡到的）</a></li><li><a href="#b7-中-threads-start-的入口只能是本文件的函数-gui-版踩到-报错很清楚">B7【中】threads.start 的入口只能是本文件的函数（GUI 版踩到，报错很清楚）</a></li><li><a href="#b8-低-lenoweb-的-web_gzip-有-gunzip-inflateraw-没有-zlib-入口">B8【低】LenoWeb 的 web_gzip 有 gunzip / inflateRaw，没有 zlib 入口</a></li><li><a href="#b9-高-_float-_int-遇到脏串抛异常-而标准库自己在绕开它">B9【高】_float() / _int() 遇到脏串抛异常，而标准库自己在绕开它</a></li><li><a href="#b10-中-类型收窄不穿过局部别名-var-c-x-之后-c-还是-any">B10【中】类型收窄不穿过局部别名（var c = x 之后 c 还是 any）</a></li><li><a href="#b11-中-模块级-pri-是语法错误-而-文件私有-只能靠-没写-export-隐式表达">B11【中】模块级 pri 是语法错误，而"文件私有"只能靠"没写 export"隐式表达</a></li><li><a href="#b12-低-没有-check-只做语法-语义检查-不产出">B12【低】没有 --check（只做语法 + 语义检查、不产出）</a></li><li><a href="#b13-中-threads-start-的入口规则-文档口径与运行时不一致-且两种失败给的信息量天差地别">B13【中】threads.start 的入口规则：文档口径与运行时不一致，且两种失败给的信息量天差地别</a></li><li><a href="#b14-低-数值转换的报错不带坏值-与同运行时的文件报错风格不一致-诊断的一致性">B14【低】数值转换的报错不带坏值，与同运行时的文件报错风格不一致（诊断的一致性）</a></li><li><a href="#b15-低-十六进制-大整数没有直接入口-写-weapi-时卡到">B15【低】十六进制 ↔ 大整数没有直接入口（写 weapi 时卡到）</a></li><li><a href="#b16-b17-高-中-2026-10-11-新登记-嵌套字段赋值的误导报错-check-的检查范围">B16 / B17【高 / 中】2026-10-11 新登记：嵌套字段赋值的误导报错 + --check 的检查范围</a></li></ul><li><a href="#三-交付物-当前状态">三、交付物（当前状态）</a></li><li><a href="#四-下一步-未做">四、下一步（未做）</a></li></ul></aside>
+</ol>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#〇-本次范围与跑法">〇、本次范围与跑法</a></li><li><a href="#一-a-类-不是-leno-的问题-记录即可">一、A 类：不是 Leno 的问题（记录即可）</a></li><ul class="lv3"><li><a href="#a1-mobi-kuwo-cn-按-user-agent-风控-桌面-chrome-ua-会拿到-http-200-空-body">A1 ★ mobi.kuwo.cn 按 User-Agent 风控 —— 桌面 Chrome UA 会拿到「HTTP 200 + 空 body」</a></li><li><a href="#a2-第三方取链-api-会给-降档-结果">A2 第三方取链 API 会给"降档"结果</a></li><li><a href="#a3-酷我-minfo-n_minfo-的档位顺序不固定">A3 酷我 MINFO / N_MINFO 的档位顺序不固定</a></li><li><a href="#a4-酷我歌词接口-newlyric-kuwo-cn-的三个服务端事实">A4 酷我歌词接口（newlyric.kuwo.cn）的三个服务端事实</a></li><li><a href="#a5-酷我-minfo-的-size-有四种形态-粗糙解析会让整个搜索失败-青衣-事故">A5 ★ 酷我 MINFO 的 size 有四种形态 —— 粗糙解析会让整个搜索失败（"青衣"事故）</a></li><li><a href="#a6-网易-weapi-的六个服务端事实-2026-10-08-加网易源时逐条实测">A6 ★ 网易 weapi 的六个服务端事实（2026-10-08 加网易源时逐条实测）</a></li><li><a href="#a7-酷狗的六个服务端事实-2026-10-08-加酷狗源时实测">A7 ★ 酷狗的六个服务端事实（2026-10-08 加酷狗源时实测）</a></li><li><a href="#a8-第三方聚合接口的八个事实-2026-10-08-修-拿不到-flac-时逐条实测">A8 ★ 第三方聚合接口的八个事实（2026-10-08 修"拿不到 flac"时逐条实测）</a></li></ul><li><a href="#二-b-类-值得改-按建议优先级排序">二、B 类：值得改（按建议优先级排序）</a></li><ul class="lv3"><li><a href="#状态总表-2026-10-07-收尾更新">状态总表（2026-10-07 收尾更新）</a></li><li><a href="#b1-高-lenocache-的-entry_-lenb-缓存键只含入口文件哈希-不含依赖模块">B1【高】.lenocache 的 entry_.lenb 缓存键只含入口文件哈希，不含依赖模块</a></li><li><a href="#b2-中-lenoweb-downloadresume-的实现与文档口径不一致">B2【中】LenoWeb.downloadResume 的实现与文档口径不一致</a></li><li><a href="#b3-低-new-x-与数组字面量不允许尾随逗号-且报错指不到逗号">B3【低】new X(...) 与数组字面量不允许尾随逗号，且报错指不到逗号</a></li><li><a href="#b4-中-_str-异常-容器-给-object-而-e-print-e-正常-两个-转字符串-口径不一致">B4【中】_str(异常/容器) 给 <object>，而 $"{e}" / print(e) 正常 —— 两个"转字符串"口径不一致</a></li><li><a href="#b5-中-lenocrypto-readme-里的导入路径在-应用目录-下解析不到">B5【中】LenoCrypto README 里的导入路径在「应用目录」下解析不到</a></li><li><a href="#b6-中-标准库缺口-本次实际卡到的">B6【中】标准库缺口（本次实际卡到的）</a></li><li><a href="#b7-中-threads-start-的入口只能是本文件的函数-gui-版踩到-报错很清楚">B7【中】threads.start 的入口只能是本文件的函数（GUI 版踩到，报错很清楚）</a></li><li><a href="#b8-低-lenoweb-的-web_gzip-有-gunzip-inflateraw-没有-zlib-入口">B8【低】LenoWeb 的 web_gzip 有 gunzip / inflateRaw，没有 zlib 入口</a></li><li><a href="#b9-高-_float-_int-遇到脏串抛异常-而标准库自己在绕开它">B9【高】_float() / _int() 遇到脏串抛异常，而标准库自己在绕开它</a></li><li><a href="#b10-中-类型收窄不穿过局部别名-var-c-x-之后-c-还是-any">B10【中】类型收窄不穿过局部别名（var c = x 之后 c 还是 any）</a></li><li><a href="#b11-中-模块级-pri-是语法错误-而-文件私有-只能靠-没写-export-隐式表达">B11【中】模块级 pri 是语法错误，而"文件私有"只能靠"没写 export"隐式表达</a></li><li><a href="#b12-低-没有-check-只做语法-语义检查-不产出">B12【低】没有 --check（只做语法 + 语义检查、不产出）</a></li><li><a href="#b13-中-threads-start-的入口规则-文档口径与运行时不一致-且两种失败给的信息量天差地别">B13【中】threads.start 的入口规则：文档口径与运行时不一致，且两种失败给的信息量天差地别</a></li><li><a href="#b14-低-数值转换的报错不带坏值-与同运行时的文件报错风格不一致-诊断的一致性">B14【低】数值转换的报错不带坏值，与同运行时的文件报错风格不一致（诊断的一致性）</a></li><li><a href="#b15-低-十六进制-大整数没有直接入口-写-weapi-时卡到">B15【低】十六进制 ↔ 大整数没有直接入口（写 weapi 时卡到）</a></li><li><a href="#b16-b17-高-中-2026-10-11-新登记-嵌套字段赋值的误导报错-check-的检查范围">B16 / B17【高 / 中】2026-10-11 新登记：嵌套字段赋值的误导报错 + --check 的检查范围</a></li></ul><li><a href="#三-交付物-当前状态">三、交付物（当前状态）</a></li><li><a href="#四-下一步-未做">四、下一步（未做）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/枚举求值与模块符号表问题.html">← 上一篇</a><a href="../窥孔优化复盘.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

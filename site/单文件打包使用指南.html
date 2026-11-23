@@ -340,23 +340,21 @@ icon = &quot;ico5.ico&quot;     # 相对本文件所在目录（写绝对路径�
 <p>打包产物的<strong>应用图标</strong>就换成这个文件。<strong>两种模式都生效</strong>（目录模式 / <code>--onefile</code>）；
 不写 ⇒ 用 VM 自带的默认图标（也就是 <code>leno.exe</code> 那个）。</p>
 <ul>
-<li>
-<p><strong>只认 <code>.ico</code></strong>：Windows 的图标是 PE 资源（<code>RT_GROUP_ICON</code> + <code>RT_ICON</code>），PNG/JPG
-  必须先转成 ICO 容器。ICO 里的图像数据<strong>原样搬运</strong>，所以 DIB 编码与 PNG 编码的条目都支持。</p>
-</li>
-<li>
-<p><strong>仓库自带的转换工具</strong>（不用装 ImageMagick ✓）：ICO 里的数据既然是原样搬运，
-  那就<strong>不需要解码/重新编码</strong> —— <code>tools\png_to_ico.leno</code> 只写 22 字节 ICO 头 + 原 PNG 数据：</p>
-</li>
+<li><strong>只认 <code>.ico</code></strong>：Windows 的图标是 PE 资源（<code>RT_GROUP_ICON</code> + <code>RT_ICON</code>），PNG/JPG
+  必须先转成 ICO 容器。ICO 里的图像数据<strong>原样搬运</strong>，所以 DIB 编码与 PNG 编码的条目都支持。</li>
 </ul>
-<p><code>bash
-  build\leno.exe tools\png_to_ico.leno leno_gui\应用\音乐下载器\images\index.png leno_gui\应用\音乐下载器\app.ico</code></p>
+<ul>
+<li><strong>仓库自带的转换工具</strong>（不用装 ImageMagick ✓）：ICO 里的数据既然是原样搬运，
+  那就<strong>不需要解码/重新编码</strong> —— <code>tools\png_to_ico.leno</code> 只写 22 字节 ICO 头 + 原 PNG 数据：</li>
+</ul>
+<pre><code class="language-bash">  build\leno.exe tools\png_to_ico.leno leno_gui\应用\音乐下载器\images\index.png leno_gui\应用\音乐下载器\app.ico
+</code></pre>
 <p>然后 <code>resource.toml</code>：<code>icon = "app.ico"</code>（放<strong>应用根目录</strong>，别放 <code>images/</code> 里 —— 否则会被
-  <code>resources</code> 当资源再嵌一遍 ✗）。边界：输入必须是 PNG；<strong>单条上限 256×256 且不缩放</strong>（超了直接报错 ✓）。
-  想要资源管理器"大图标"清晰，源图请给 <strong>256×256</strong>（48×48 会被系统放大 ⇒ 发虚 ✗）。
+<code>resources</code> 当资源再嵌一遍 ✗）。边界：输入必须是 PNG；<strong>单条上限 256×256 且不缩放</strong>（超了直接报错 ✓）。
+想要资源管理器"大图标"清晰，源图请给 <strong>256×256</strong>（48×48 会被系统放大 ⇒ 发虚 ✗）。
 - 一个 <code>.ico</code> 里可以放多张，<strong>建议放 16 / 24 / 32 / 48 / 256</strong>：
-  系统会按显示场景取用（列表 16、任务栏 32、中图标 48、超大图标 256）；
-  <strong>只放一张会被系统缩放</strong>，小尺寸发虚。
+系统会按显示场景取用（列表 16、任务栏 32、中图标 48、超大图标 256）；
+<strong>只放一张会被系统缩放</strong>，小尺寸发虚。
 - 惯例上 ≥256 才用 PNG 压缩条目（Vista+ 才认）；48 这种小尺寸用 DIB 编码兼容性最好。
 - <strong>指定的图标打不进去 ⇒ 响亮报错并中止打包</strong>（宁可打不出来，也不要静默给一个没图标的产物）。
 - 非 Windows 平台：提示一句并忽略（图标不是 PE 资源：macOS 用 <code>.icns</code>、Linux 靠 <code>.desktop</code>）。</p>
@@ -733,7 +731,8 @@ exe（<code>--console</code> 会覆盖 <code>_console(false)</code> 自动检测
 <li>取不到时返回 0 并置空串，各调用点按 <strong>fail-closed</strong> 兜底（不假装知道自己在哪）。</li>
 <li>Windows：该函数<strong>不提供实现</strong>，调用点继续用 <code>GetModuleFileNameW</code>
   —— 那是已验证工作的代码，不因"新增 macOS 支持"而改动（项目约定）。</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-两种打包模式的区别">1. 两种打包模式的区别</a></li><li><a href="#2-快速上手-三步">2. 快速上手（三步）</a></li><ul class="lv3"><li><a href="#第-1-步-写-resource-toml-放在应用目录-包根">第 1 步：写 resource.toml（放在应用目录 / 包根）</a></li><li><a href="#第-2-步-打包">第 2 步：打包</a></li><li><a href="#第-3-步-分发">第 3 步：分发</a></li></ul><li><a href="#3-命令与选项">3. 命令与选项</a></li><ul class="lv3"><li><a href="#控制台-vs-无控制台-windows">控制台 vs 无控制台（Windows）</a></li><li><a href="#无控制台产物出错时-错误去哪了-2026-10-11-起">无控制台产物出错时，错误去哪了（★ 2026-10-11 起）</a></li></ul><li><a href="#4-resource-toml-配置">4. resource.toml 配置</a></li><ul class="lv3"><li><a href="#4-1-resources-通配语法">4.1 resources 通配语法</a></li><li><a href="#4-2-icon-每个应用自己的图标">4.2 icon —— 每个应用自己的图标</a></li></ul><li><a href="#5-原生库-dll-从哪来">5. 原生库（DLL）从哪来</a></li><ul class="lv3"><li><a href="#5-1-可选原生库-optional-true-2026-10-21">5.1 可选原生库：optional = true（2026-10-21）</a></li></ul><li><a href="#6-运行期-解包到哪里">6. 运行期：解包到哪里</a></li><ul class="lv3"><li><a href="#6-1-释放目录">6.1 释放目录</a></li><li><a href="#6-2-为什么按-hash-分目录">6.2 为什么按 hash 分目录</a></li><li><a href="#6-3-原子性与清理">6.3 原子性与清理</a></li></ul><li><a href="#7-代码里怎么读资源-dirs-res_dir-vs-dirs-script_dir">7. 代码里怎么读资源：dirs.res_dir() vs dirs.script_dir()</a></li><li><a href="#8-打包后-dll-怎么被找到">8. 打包后 DLL 怎么被找到</a></li><li><a href="#9-内嵌格式-维护者视角">9. 内嵌格式（维护者视角）</a></li><li><a href="#10-常见问题-faq">10. 常见问题（FAQ）</a></li><li><a href="#11-验证方法">11. 验证方法</a></li><ul class="lv3"><li><a href="#实测记录-2026-09-24">实测记录（2026-09-24）</a></li></ul><li><a href="#12-已知边界">12. 已知边界</a></li><ul class="lv3"><li><a href="#自身-exe-路径已收敛-5-处-1-处">自身 exe 路径已收敛（5 处 → 1 处）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="包管理与安装使用指南.html">← 上一篇</a><a href="并发选择指引.html">下一篇 →</a></nav>

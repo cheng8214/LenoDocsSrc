@@ -44,9 +44,9 @@ M7 按"既然 enum 能算，就全面支持"落地（含<strong>输出可回读<
 <strong>M10 已修（2026-10-13）</strong>：跨模块读<strong>没 export 的变量</strong>以前<strong>编译不报错、运行期静默 <code>null</code>
 （LenoTrae 的 PVZ 实测：138 个常量别名全 null，<code>ANIM_N - 1</code> 才崩）⇒ 现在</strong>编译期<strong>就报 ✓
 （<code>语言陷阱速查</code> ㉞ 是它的实操版 ✓）。
-<strong>M11 ✅ 已修（2026-10-13）</strong>：struct <strong>方法</strong>里 <code>new B(键 = 隐式自字段)</code> 以前报「未定义的变量」✗。
-真因是</strong>方法体改写器的 switch 白名单漏了 <code>AST_STRUCT_INIT</code>** ⇒ <code>new B(键 = 值)</code> 的<strong>值</strong>整段
-被静默跳过（<strong>不是</strong>"self 上下文"问题 ✗）⇒ 补一个 case、<strong>只递归 <code>field_values[]</code></strong> ✓。
+</strong>M11 ✅ 已修（2026-10-13）<strong>：struct </strong>方法<strong>里 <code>new B(键 = 隐式自字段)</code> 以前报「未定义的变量」✗。
+真因是</strong>方法体改写器的 switch 白名单漏了 <code>AST_STRUCT_INIT</code><strong> ⇒ <code>new B(键 = 值)</code> 的</strong>值<strong>整段
+被静默跳过（</strong>不是<strong>"self 上下文"问题 ✗）⇒ 补一个 case、</strong>只递归 <code>field_values[]</code>** ✓。
 6 条边界全绿 + 全量套件 452/0 ✓（<code>语言陷阱速查</code> ㉟ 是它的实操版 ✓）。
 序号 M1…M11（M = 摩擦）。</p>
 </blockquote>
@@ -64,7 +64,7 @@ M7 按"既然 enum 能算，就全面支持"落地（含<strong>输出可回读<
 </code></pre>
 <p>两层问题：
 - 文案说"<strong>当前文件</strong>"，实现判的是"<strong>入口脚本</strong>"——同一次运行里"当前文件"有好几个
-  （每个被 import 的模块都是当前文件之一）⇒ 照着文案改不出对的结果；
+（每个被 import 的模块都是当前文件之一）⇒ 照着文案改不出对的结果；
 - <code>threads使用指南.md</code> <strong>查不到这条契约</strong> ⇒ 模块化重构第一次起线程必撞，撞完还看不懂。</p>
 <p><strong>当时的可行解（已实测 ✓，现在仍然能用 ✓）</strong>：宿主把 worker <strong>当函数值</strong>传进模块，模块里存成
 <code>func(...):...</code> 字段再 <code>threads.start(字段, …)</code>——此时 <code>f</code> 仍是入口脚本的函数
@@ -72,8 +72,8 @@ M7 按"既然 enum 能算，就全面支持"落地（含<strong>输出可回读<
 LenoMusic 三个页面模块全部按此落地 ✓。</p>
 <p><strong>实际修法（2026-10-12 落地，比当年的三条建议更彻底）</strong>：
 1. <strong>治本</strong>：协程首帧漏设 <code>frame-&gt;module</code>（<code>src/vm/vm.c</code> 的 <code>vm_run_coroutine_with_vm</code>），
-   而模块字节码全走 <code>frame-&gt;module</code> 寻址 ⇒ 补上那一行，模块函数直接可用 ✓
-   （连带修好了<strong>主线程 async 协程里调模块函数</strong>的同一处缺口 ✓）；
+而模块字节码全走 <code>frame-&gt;module</code> 寻址 ⇒ 补上那一行，模块函数直接可用 ✓
+（连带修好了<strong>主线程 async 协程里调模块函数</strong>的同一处缺口 ✓）；
 2. 文案/拦截：<code>threads.start</code> 撤掉那条硬拦，只保留"模块尚未初始化"这一种情况的明确报错 ✓；
 3. 文档：<code>threads使用指南.md</code> 的该节从"限制"改写成"模块函数也能用 + 两个仍然成立的注意点" ✓。</p>
 <hr>
@@ -97,7 +97,7 @@ pri func outdir(): string {
 <p><strong>实测</strong>（2026-10-11 ✓，两支探针）：
 - 方法里写 <code>return this</code> ⇒ <code>error: [未定义变量] 未定义的变量: this</code>（无任何提示）✗；
 - 方法里写 <code>return self</code> ⇒ <strong>完全可用</strong> ✓：经返回的引用写字段，原对象同步变
-  （引用语义，探针 <code>m.v = 42 ⇒ h.v == 42</code> ✓）——"返回自己"这件事<strong>做得到</strong> ✓。</p>
+（引用语义，探针 <code>m.v = 42 ⇒ h.v == 42</code> ✓）——"返回自己"这件事<strong>做得到</strong> ✓。</p>
 <p>所以这条的本质是<strong>报错质量</strong>小项：<code>this</code> 是最常见的顺手词，报"未定义变量"却不带
 "是否想用 'self'？"（仓里已有同款先例：<code>contains()</code> 写错提示 <code>has()</code> ✓）。</p>
 <p><strong>修法建议</strong>：未定义变量报错对 <code>this</code> / <code>self</code> / <code>This</code> 这几个高频误拼给纠错提示；
@@ -406,7 +406,7 @@ lParam 转交回 SDL 后崩在 <code>SDL3.dll</code>（10-03~10-11 共 5 次，�
 <hr>
 <h2 id="m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（<code>模块.类型</code>）不能做类型标注 —— 但<strong>只有 5 个位置</strong>会这么报，其余位置喷一串看不懂的语法错误</h2>
 <blockquote>
-<p>★ <strong>2026-10-12（US1）翻案：这条限制本身</strong>撤掉了** ✓** —— 类型位置<strong>支持</strong>写 <code>m.Pt</code>（等价于隐式
+<p>★ <strong>2026-10-12（US1）翻案：这条限制本身</strong>撤掉了<strong> ✓</strong> —— 类型位置<strong>支持</strong>写 <code>m.Pt</code>（等价于隐式
 <code>use m.Pt</code>），见 <code>docs/类型可见性与use逃生阀修复追踪.md</code> 的 US1 ✓。
 于是本节的诊断<strong>不再会出现</strong>（原来的三条判据已改成正向："三处都必须能跑" ✓）；
 下面的原文保留，用来记住<strong>两次</strong>教训：① 限制只在 5 个位置报 ⇒ 其余位置喷一串看不懂的语法错
@@ -665,7 +665,8 @@ b0.text = badge          // 这里读本结构体的字段完全正常 ✓
 <td>不冲突：本清单都是"修契约/修报错"，<strong>不新增特性</strong>（M5c 的字面初始化除外，需另行评估）</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="扩展模块/LenoCLI.html">下一篇 →</a></nav>

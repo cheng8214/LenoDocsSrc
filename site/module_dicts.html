@@ -800,55 +800,53 @@ print(dict.get(&quot;b&quot;))      // null（键不存在）
 <hr>
 <h2 id="最佳实践">最佳实践</h2>
 <ol>
-<li><strong>使用 [] 语法访问</strong>：代码更简洁
-   ```leno
-   // 推荐
-   dict["key"] = value
-   var val = dict["key"]</li>
+<li><strong>使用 [] 语法访问</strong>：代码更简洁</li>
 </ol>
-<p>// 不推荐（除非需要动态键名）
-   dict.set("key", value)
-   var val = dict.get("key")
-   ```</p>
-<ol start="2">
-<li>
-<p><strong>检查键存在性后再操作</strong>：
-   <code>leno
-   if dict.has("key") {
-       var value = dict["key"]
+<pre><code class="language-leno">   // 推荐
+   dict[&quot;key&quot;] = value
+   var val = dict[&quot;key&quot;]
+
+   // 不推荐（除非需要动态键名）
+   dict.set(&quot;key&quot;, value)
+   var val = dict.get(&quot;key&quot;)
+</code></pre>
+<ol>
+<li><strong>检查键存在性后再操作</strong>：</li>
+</ol>
+<pre><code class="language-leno">   if dict.has(&quot;key&quot;) {
+       var value = dict[&quot;key&quot;]
        // 处理 value
-   }</code></p>
-</li>
-<li>
-<p><strong>使用 <code>keys()</code> 和 <code>values()</code> 遍历</strong>：
-   <code>leno
-   // 遍历键值对
+   }
+</code></pre>
+<ol>
+<li><strong>使用 <code>keys()</code> 和 <code>values()</code> 遍历</strong>：</li>
+</ol>
+<pre><code class="language-leno">   // 遍历键值对
    for dict.keys() to key {
        var value = dict[key]
-       print(key + ": " + value)
-   }</code></p>
-</li>
-<li>
-<p><strong>嵌套字典安全访问</strong>：
-   <code>leno
-   // 检查每一层
-   if dict.has("user") {
-       var user = dict["user"]
-       if user.has("name") {
-           print(user["name"])
+       print(key + &quot;: &quot; + value)
+   }
+</code></pre>
+<ol>
+<li><strong>嵌套字典安全访问</strong>：</li>
+</ol>
+<pre><code class="language-leno">   // 检查每一层
+   if dict.has(&quot;user&quot;) {
+       var user = dict[&quot;user&quot;]
+       if user.has(&quot;name&quot;) {
+           print(user[&quot;name&quot;])
        }
-   }</code></p>
-</li>
-<li>
-<p><strong>避免在遍历时修改字典</strong>：
-   ```leno
-   // 错误：遍历时修改可能导致问题
+   }
+</code></pre>
+<ol>
+<li><strong>避免在遍历时修改字典</strong>：</li>
+</ol>
+<pre><code class="language-leno">   // 错误：遍历时修改可能导致问题
    for dict.keys() to key {
        dict.remove(key)  // 危险！
-   }</p>
-</li>
-</ol>
-<p>// 正确：先收集要删除的键
+   }
+
+   // 正确：先收集要删除的键
    var to_remove = []
    for dict.keys() to key {
        if should_remove(key) {
@@ -858,10 +856,11 @@ print(dict.get(&quot;b&quot;))      // null（键不存在）
    for to_remove to key {
        dict.remove(key)
    }
-   ```</p>
+</code></pre>
 <hr>
 <p><em>文档版本: 1.0</em><br>
-<em>最后更新: 2026-05-17</em></p></main>
+<em>最后更新: 2026-05-17</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#返回类型-跟接收者一致">返回类型（跟接收者一致）</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#字典创建">字典创建</a></li><ul class="lv3"><li><a href="#字面量创建">字面量创建</a></li><li><a href="#动态创建">动态创建</a></li></ul><li><a href="#核心方法">核心方法</a></li><ul class="lv3"><li><a href="#len">len()</a></li><li><a href="#has-key">has(key)</a></li><li><a href="#get-key-get-key-default">get(key) / get(key, default)</a></li><li><a href="#set-key-value">set(key, value)</a></li><li><a href="#remove-key">remove(key)</a></li><li><a href="#setdefault-key-default">setdefault(key, default)</a></li></ul><li><a href="#遍历方法">遍历方法</a></li><ul class="lv3"><li><a href="#keys">keys()</a></li><li><a href="#values">values()</a></li><li><a href="#items">items()</a></li><li><a href="#clear">clear()</a></li><li><a href="#copy">copy()</a></li><li><a href="#遍历键值对">遍历键值对</a></li></ul><li><a href="#实例方法-vs-模块方法">实例方法 vs 模块方法</a></li><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-用户信息管理">示例1：用户信息管理</a></li><li><a href="#示例2-计数器">示例2：计数器</a></li><li><a href="#示例3-配置管理">示例3：配置管理</a></li><li><a href="#示例4-缓存实现">示例4：缓存实现</a></li><li><a href="#示例5-与数组结合使用">示例5：与数组结合使用</a></li><li><a href="#示例6-json-数据处理">示例6：JSON 数据处理</a></li></ul><li><a href="#性能说明">性能说明</a></li><ul class="lv3"><li><a href="#时间复杂度">时间复杂度</a></li><li><a href="#空间复杂度">空间复杂度</a></li><li><a href="#哈希冲突">哈希冲突</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-键类型限制">1. 键类型限制</a></li><li><a href="#2-键的唯一性">2. 键的唯一性</a></li><li><a href="#3-值类型无限制">3. 值类型无限制</a></li><li><a href="#4-遍历顺序">4. 遍历顺序</a></li><li><a href="#5-空值处理">5. 空值处理</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_cstructs.html">← 上一篇</a><a href="module_dirs.html">下一篇 →</a></nav>

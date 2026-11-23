@@ -378,7 +378,8 @@ cstruct Outer {   // 非 packed
 <td>新字段追加在末尾，旧文件读取时默认 0/false</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-动机">1. 动机</a></li><ul class="lv3"><li><a href="#当前状态">当前状态</a></li><li><a href="#问题">问题</a></li></ul><li><a href="#2-语法设计">2. 语法设计</a></li><ul class="lv3"><li><a href="#2-1-packed-取消所有-padding">2.1 packed — 取消所有 padding</a></li><li><a href="#2-2-align-n-指定结构体对齐">2.2 align(N) — 指定结构体对齐</a></li><li><a href="#2-3-组合使用">2.3 组合使用</a></li><li><a href="#2-4-语法规则">2.4 语法规则</a></li></ul><li><a href="#3-语义分析变更">3. 语义分析变更</a></li><ul class="lv3"><li><a href="#3-1-ast-扩展">3.1 AST 扩展</a></li><li><a href="#3-2-布局计算逻辑变更">3.2 布局计算逻辑变更</a></li><li><a href="#3-3-验证规则">3.3 验证规则</a></li></ul><li><a href="#4-全链路改动清单">4. 全链路改动清单</a></li><ul class="lv3"><li><a href="#4-1-词法层-lexer">4.1 词法层（Lexer）</a></li><li><a href="#4-2-语法层-parser">4.2 语法层（Parser）</a></li><li><a href="#4-3-ast-层">4.3 AST 层</a></li><li><a href="#4-4-语义分析">4.4 语义分析</a></li><li><a href="#4-5-符号表">4.5 符号表</a></li><li><a href="#4-6-代码生成">4.6 代码生成</a></li><li><a href="#4-7-虚拟机">4.7 虚拟机</a></li><li><a href="#4-8-对象层">4.8 对象层</a></li><li><a href="#4-9-序列化">4.9 序列化</a></li><li><a href="#4-10-运行时方法">4.10 运行时方法</a></li><li><a href="#4-11-文档">4.11 文档</a></li></ul><li><a href="#5-实现优先级">5. 实现优先级</a></li><li><a href="#6-测试计划">6. 测试计划</a></li><ul class="lv3"><li><a href="#6-1-基本功能测试">6.1 基本功能测试</a></li><li><a href="#6-2-嵌套测试">6.2 嵌套测试</a></li><li><a href="#6-3-ffi-互操作测试">6.3 FFI 互操作测试</a></li><li><a href="#6-4-回归测试">6.4 回归测试</a></li></ul><li><a href="#7-向后兼容性">7. 向后兼容性</a></li><li><a href="#8-风险评估">8. 风险评估</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="struct_extend_设计草案.html">← 上一篇</a><a href="错误与空值契约.html">下一篇 →</a></nav>

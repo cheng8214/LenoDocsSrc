@@ -526,16 +526,13 @@ main() {
 <blockquote>
 <p>★ <strong>2026-11-09 更正</strong>：<code>struct 实例</code> 这一行原来写的是「需要序列化，暂不支持」，
 那是 <strong>2026-10-12 之前</strong>的状态。现在 struct 实例（含 <code>Array[struct]</code>）可以过 Channel，
-走<strong>深拷贝</strong>，收到后 <code>type()</code> 仍是原类型、字段可读。实测：
-</p>
-</blockquote>
+走<strong>深拷贝</strong>，收到后 <code>type()</code> 仍是原类型、字段可读。实测：</p>
 <pre><code class="language-leno">// 子线程
 P p = new P(n = &quot;原&quot;, v = 1)
 ch.send(p)
 p.n = &quot;子改过&quot;          // 发送后再改原对象
 // 主线程收到 n=&quot;原&quot; ⇒ 是深拷贝，不受影响
 </code></pre>
-<blockquote>
 <p>⚠ 但<strong>闭包捕获</strong>仍然一律是副本：子线程里改 <code>self.cnt</code> / 局部变量，
 父线程看不到改动（不报错）。要回传结果请用 Channel。</p>
 </blockquote>
@@ -745,15 +742,12 @@ main() {
 <p>⚠ <strong>模块级 <code>var</code>（<code>ObjModule.globals</code>）仍然是所有线程同一份、且无锁</strong> —— 那是另一件事
 （<code>loaded_modules</code> 是进程级缓存，见 TH5 的「明确不做」）。并发写模块级可变状态依旧不安全，
 要么只读，要么走 Channel 单点化。</p>
-<p>★ <strong>2026-11-15 起：往模块级 <code>var</code> 里写"本线程堆上的对象"会打一条警告</strong>（只提示一次）：
-</p>
-</blockquote>
+<p>★ <strong>2026-11-15 起：往模块级 <code>var</code> 里写"本线程堆上的对象"会打一条警告</strong>（只提示一次）：</p>
 <pre><code>[警告] 子线程把**本线程堆上的对象**写进了模块级变量（模块 'm' 槽 1，线程序号 1 / 模块属于 0）——
        模块级 var 是所有线程**共享的同一份槽**，而对象属于写它的那个线程堆：
        该线程退出/GC 之后这个槽会指向已回收内存（读到 185 / -1 / 0 这类残值）。
        建议：① 每线程状态改用 threads.local_set/get；② 或由主线程构建后**只读**。
 </code></pre>
-<blockquote>
 <p>为什么这条非有不可：那种错<strong>不报错、也不崩</strong>，只是"跑一阵值就没了"。实测（Aria 服务端）
 CRC 表的 <code>table_entry(1)</code> 返回 185 / -1 / 0 —— 看起来像算法错，实际是跨堆对象被回收后的残值。
 根治写法见下面的 <strong><code>thread_local var</code></strong>。</p>
@@ -771,8 +765,8 @@ CRC 表的 <code>table_entry(1)</code> 返回 185 / -1 / 0 —— 看起来像�
 <li>✅ 入口脚本的<strong>全局对象</strong>是每线程一份（TH8，2026-10-20）⇒ 并发写它不会互相影响</li>
 <li>⚠ 但<strong>模块级 <code>var</code>（<code>ObjModule.globals</code>）仍是所有线程同一份、且无锁</strong> ⇒ 并发写它就是数据竞争，
   只读或改走 Channel 单点化（见第 2 条末尾）</li>
-<li>⚠ 目前<strong>没有 <code>Mutex</code> / 原子变量</strong>（<code>threads</code> 只提供 start/channel/sleep/join_all/parallel_for/map/local_*），
-  共享可变状态的正确写法是 <code>Channel</code> 汇到单点线程，或 <code>threads.local_*</code> 每线程一份</li>
+<li>⚠ 目前<strong>没有 <code>Mutex</code> / 原子变量</strong>（<code>threads</code> 只提供 start/channel/sleep/join_all/parallel_for/map/local_<em>），
+  共享可变状态的正确写法是 <code>Channel</code> 汇到单点线程，或 `threads.local_</em>` 每线程一份</li>
 </ul>
 <h3 id="5-跨线程能传什么-传值即深拷贝">5. 跨线程能传什么（<strong>传值即深拷贝</strong>）</h3>
 <table>
@@ -990,7 +984,7 @@ try {
 1. <strong>背压</strong>：<code>tasks</code> / <code>results</code> 都设容量，满了 <code>send</code> 阻塞（自然限流，不会无限堆任务）
 2. <strong>异常别静默</strong>：worker 里 <code>try/catch</code> 把错误当结果回传 —— 线程池最怕"任务没结果也没报错"
 3. <strong>循环变量先拷局部</strong>：<code>for N to i { int x = i; tasks.send(func(){ return x*x }) }</code>
-   （直接捕获 <code>i</code> 会让所有闭包看到同一个槽）</p>
+（直接捕获 <code>i</code> 会让所有闭包看到同一个槽）</p>
 <h3 id="12-threads-与-async-的交互规则">12. threads 与 async 的交互规则</h3>
 <p>Leno 提供两种并发机制，<strong>不应混用</strong>：</p>
 <table>
@@ -1151,9 +1145,9 @@ print(threads.join_all(ts))   // 2
 <p>⚠ 三条注意：
 1. <strong><code>n</code> 要自己控</strong>（<code>parallel_for</code> 不会自动按核数分）—— 说几份就几份。
 2. <strong><code>map</code> 的线程数 = 元素数</strong>（每个元素一个线程）⇒ 元素多时线程开销会盖过收益；
-   重活请用 <code>parallel_for</code> 自己分块 ✓
+重活请用 <code>parallel_for</code> 自己分块 ✓
 3. <strong>回调的形参个数是硬校验</strong>（线程入口由 VM 直接调用，默认参数不会被补齐 ✓）：
-   <code>parallel_for</code> 要 <code>f(int)</code>，<code>map</code> 要 <code>f(item, index)</code>（与 <code>arrays.map</code> 同口径 ✓）。</p>
+<code>parallel_for</code> 要 <code>f(int)</code>，<code>map</code> 要 <code>f(item, index)</code>（与 <code>arrays.map</code> 同口径 ✓）。</p>
 <h2 id="通道元素类型-channel-t-2026-10-12-起">通道元素类型（<code>Channel[T]</code>，★ 2026-10-12 起）</h2>
 <p>给通道写上元素类型，<code>receive()</code> 就<strong>直接是那个类型</strong>，不用再 <code>_int(...)</code> / <code>is</code> 收窄：</p>
 <pre><code class="language-leno">import threads
@@ -1201,9 +1195,9 @@ main() {
 </table>
 <p>⚠ 两条口径：
 1. <strong>元素未知的一侧一律放行</strong> —— 裸 <code>Channel</code> 能赋给 <code>Channel[int]</code>，<code>Channel[int]</code> 也能传给
-   形参写成 <code>Channel</code> 的函数（运行期本来就不携带元素类型 ⇒ 写窄了只会误报）；
+形参写成 <code>Channel</code> 的函数（运行期本来就不携带元素类型 ⇒ 写窄了只会误报）；
 2. <code>threads.channel(n)</code> <strong>推不出</strong> T（工厂没有元素信息）⇒ 想看精确类型就<strong>写标注</strong>。
-   顺带：<code>Thread[T]</code> 标注现在也能写了（<code>Thread[int] t = threads.start(f, 1)</code> ✓）。</p>
+顺带：<code>Thread[T]</code> 标注现在也能写了（<code>Thread[int] t = threads.start(f, 1)</code> ✓）。</p>
 <h2 id="线程局部存储-threads-local_-2026-10-12-起">线程局部存储（<code>threads.local_*</code>，★ 2026-10-12 起）</h2>
 <p><strong>模块级可变 <code>var</code> 是所有线程同一份</strong>（故意不隔离 ⇒ 并发写就是数据竞争）。库想"每个线程一份
 状态"时，用这三个函数 —— 它们按<strong>线程</strong>隔离，不需要锁：</p>
@@ -1307,13 +1301,15 @@ export func hits(): int {
 <li><strong>初值只能是字面量或空容器</strong>（<code>0</code> / <code>""</code> / <code>true</code> / <code>null</code> / <code>[]</code> / <code>{}</code>）。
   为什么：声明处的代码只在<strong>主线程</strong>执行一次，别的线程没机会跑它 ⇒ 它们按"声明的初值"
   <strong>惰性新建</strong>一份（<code>Array</code>/<code>Dict</code> 每线程新建空容器，不会共享同一个对象）。
-  要在别的线程跑一段初始化代码，写成可空 + 首次访问赋值：
-  <code>leno
-  thread_local var tbl = null
+  要在别的线程跑一段初始化代码，写成可空 + 首次访问赋值：</li>
+</ul>
+<pre><code class="language-leno">  thread_local var tbl = null
   func table(): Array[int] {
       if tbl == null { tbl = _build() }      // 每个线程各建一次
       return tbl
-  }</code></li>
+  }
+</code></pre>
+<ul>
 <li>只能在<strong>模块顶层</strong>（脚本顶层本来就每线程一份；函数内的局部变量天然线程私有 ⇒ 都不需要它）。</li>
 <li><strong>不能 <code>export</code></strong>（每个线程各一份 ⇒ 别的模块读到哪个值取决于"哪个线程在读"）。
   要跨模块用，导出访问函数。</li>
@@ -1477,8 +1473,9 @@ export func hits(): int {
 <td>❌ 不阻塞</td>
 </tr>
 </tbody>
-</table></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#简介">简介</a></li><li><a href="#共享数据模型-先看这一节">共享数据模型（先看这一节）</a></li><ul class="lv3"><li><a href="#什么共享-什么隔离">什么共享、什么隔离</a></li><li><a href="#模块顶层语句什么时候执行">模块顶层语句什么时候执行？</a></li><li><a href="#只读跨堆访问安全吗">只读跨堆访问安全吗？</a></li></ul><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#1-创建线程">1. 创建线程</a></li><li><a href="#2-线程返回值">2. 线程返回值</a></li><li><a href="#3-多线程并行">3. 多线程并行</a></li></ul><li><a href="#线程传参">线程传参</a></li><li><a href="#channel-通讯">Channel 通讯</a></li><ul class="lv3"><li><a href="#创建-channel">创建 Channel</a></li><li><a href="#基本发送与接收">基本发送与接收</a></li><li><a href="#非阻塞操作">非阻塞操作</a></li><li><a href="#channel-关闭">Channel 关闭</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li><li><a href="#双线程通讯">双线程通讯</a></li></ul><li><a href="#可传递的类型">可传递的类型</a></li><ul class="lv3"><li><a href="#channel-支持的类型">Channel 支持的类型</a></li><li><a href="#不支持传递的类型">不支持传递的类型</a></li><li><a href="#cstruct-在线程中的使用">cstruct 在线程中的使用</a></li></ul><li><a href="#线程中的功能支持">线程中的功能支持</a></li><ul class="lv3"><li><a href="#闭包">闭包</a></li><li><a href="#异常处理">异常处理</a></li><li><a href="#嵌套函数调用">嵌套函数调用</a></li><li><a href="#递归">递归</a></li><li><a href="#字典与数组">字典与数组</a></li></ul><li><a href="#完整示例-并行排序">完整示例：并行排序</a></li><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-闭包捕获变量-深拷贝">1. 闭包捕获变量（深拷贝）</a></li><li><a href="#2-全局变量-每线程一份-对象也深拷贝-2026-10-20-起">2. 全局变量：每线程一份（对象也深拷贝，2026-10-20 起）</a></li><li><a href="#3-channel-的缓冲大小">3. Channel 的缓冲大小</a></li><li><a href="#4-线程安全">4. 线程安全</a></li><li><a href="#5-跨线程能传什么-传值即深拷贝">5. 跨线程能传什么（传值即深拷贝）</a></li><li><a href="#6-同一条通道上-边收边发-会把自己发出去的消息收回来">6. ⚠ 同一条通道上"边收边发"会把自己发出去的消息收回来</a></li><li><a href="#7-ffi-回调与原生线程的关系">7. FFI 回调与原生线程的关系</a></li><li><a href="#8-print-是线程安全的">8. print 是线程安全的</a></li><li><a href="#9-避免忙等待">9. 避免忙等待</a></li><li><a href="#10-线程生命周期">10. 线程生命周期</a></li><li><a href="#11-子线程异常与-join-行为">11. 子线程异常与 join() 行为</a></li><li><a href="#11-5-线程池-任务-闭包">11.5 线程池（任务 = 闭包）</a></li><li><a href="#12-threads-与-async-的交互规则">12. threads 与 async 的交互规则</a></li><li><a href="#13-type-的语义约定">13. type() 的语义约定</a></li></ul><li><a href="#线程入口-模块函数也能用-2026-10-12-起">线程入口：模块函数也能用（★ 2026-10-12 起）</a></li><li><a href="#并行原语-2026-10-12-起">并行原语（★ 2026-10-12 起）</a></li><li><a href="#通道元素类型-channel-t-2026-10-12-起">通道元素类型（Channel[T]，★ 2026-10-12 起）</a></li><li><a href="#线程局部存储-threads-local_-2026-10-12-起">线程局部存储（threads.local_，★ 2026-10-12 起）</a></li><li><a href="#每线程状态-thread_local-var-2026-11-15-起">每线程状态：thread_local var（★ 2026-11-15 起）</a></li><li><a href="#api-参考">API 参考</a></li><ul class="lv3"><li><a href="#threads-模块">threads 模块</a></li><li><a href="#channel-方法-返回类型与元素挂钩">Channel 方法（返回类型与元素挂钩）</a></li><li><a href="#thread-方法">Thread 方法</a></li><li><a href="#channel-方法">Channel 方法</a></li></ul></ul></aside>
+</table>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#简介">简介</a></li><li><a href="#共享数据模型-先看这一节">共享数据模型（先看这一节）</a></li><ul class="lv3"><li><a href="#什么共享-什么隔离">什么共享、什么隔离</a></li><li><a href="#模块顶层语句什么时候执行">模块顶层语句什么时候执行？</a></li><li><a href="#只读跨堆访问安全吗">只读跨堆访问安全吗？</a></li></ul><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#1-创建线程">1. 创建线程</a></li><li><a href="#2-线程返回值">2. 线程返回值</a></li><li><a href="#3-多线程并行">3. 多线程并行</a></li></ul><li><a href="#线程传参">线程传参</a></li><li><a href="#channel-通讯">Channel 通讯</a></li><ul class="lv3"><li><a href="#创建-channel">创建 Channel</a></li><li><a href="#基本发送与接收">基本发送与接收</a></li><li><a href="#非阻塞操作">非阻塞操作</a></li><li><a href="#channel-关闭">Channel 关闭</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li><li><a href="#双线程通讯">双线程通讯</a></li></ul><li><a href="#可传递的类型">可传递的类型</a></li><ul class="lv3"><li><a href="#channel-支持的类型">Channel 支持的类型</a></li><li><a href="#不支持传递的类型">不支持传递的类型</a></li><li><a href="#cstruct-在线程中的使用">cstruct 在线程中的使用</a></li></ul><li><a href="#线程中的功能支持">线程中的功能支持</a></li><ul class="lv3"><li><a href="#闭包">闭包</a></li><li><a href="#异常处理">异常处理</a></li><li><a href="#嵌套函数调用">嵌套函数调用</a></li><li><a href="#递归">递归</a></li><li><a href="#字典与数组">字典与数组</a></li></ul><li><a href="#完整示例-并行排序">完整示例：并行排序</a></li><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-闭包捕获变量-深拷贝">1. 闭包捕获变量（深拷贝）</a></li><li><a href="#2-全局变量-每线程一份-对象也深拷贝-2026-10-20-起">2. 全局变量：每线程一份（对象也深拷贝，2026-10-20 起）</a></li><li><a href="#3-channel-的缓冲大小">3. Channel 的缓冲大小</a></li><li><a href="#4-线程安全">4. 线程安全</a></li><li><a href="#5-跨线程能传什么-传值即深拷贝">5. 跨线程能传什么（传值即深拷贝）</a></li><li><a href="#6-同一条通道上-边收边发-会把自己发出去的消息收回来">6. ⚠ 同一条通道上"边收边发"会把自己发出去的消息收回来</a></li><li><a href="#7-ffi-回调与原生线程的关系">7. FFI 回调与原生线程的关系</a></li><li><a href="#8-print-是线程安全的">8. print 是线程安全的</a></li><li><a href="#9-避免忙等待">9. 避免忙等待</a></li><li><a href="#10-线程生命周期">10. 线程生命周期</a></li><li><a href="#11-子线程异常与-join-行为">11. 子线程异常与 join() 行为</a></li><li><a href="#11-5-线程池-任务-闭包">11.5 线程池（任务 = 闭包）</a></li><li><a href="#12-threads-与-async-的交互规则">12. threads 与 async 的交互规则</a></li><li><a href="#13-type-的语义约定">13. type() 的语义约定</a></li></ul><li><a href="#线程入口-模块函数也能用-2026-10-12-起">线程入口：模块函数也能用（★ 2026-10-12 起）</a></li><li><a href="#并行原语-2026-10-12-起">并行原语（★ 2026-10-12 起）</a></li><li><a href="#通道元素类型-channel-t-2026-10-12-起">通道元素类型（Channel[T，★ 2026-10-12 起）</a></li><li><a href="#线程局部存储-threads-local_-2026-10-12-起">线程局部存储（threads.local_，★ 2026-10-12 起）</a></li><li><a href="#每线程状态-thread_local-var-2026-11-15-起">每线程状态：thread_local var（★ 2026-11-15 起）</a></li><li><a href="#api-参考">API 参考</a></li><ul class="lv3"><li><a href="#threads-模块">threads 模块</a></li><li><a href="#channel-方法-返回类型与元素挂钩">Channel 方法（返回类型与元素挂钩）</a></li><li><a href="#thread-方法">Thread 方法</a></li><li><a href="#channel-方法">Channel 方法</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="import使用指南.html">← 上一篇</a><a href="包管理与安装使用指南.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

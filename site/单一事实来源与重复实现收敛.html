@@ -29,11 +29,13 @@
 <blockquote>
 <p>⚠ <strong>含 JIT 时代结论 + 旧版本号（2026-10-02 注）</strong>：
 ① 文中的 <code>LENO_BIN_VERSION</code> <strong>v2.7.3 / v3.2.10</strong>、<code>LENO_MODCACHE_VERSION</code> v9 / v26 都是当时值
-   —— <strong>现以源码为准，本文不再回填具体版本号</strong>（<code>src/include/leno_serialize.h</code> 里那两个宏的
-   注释块本身就是"逐版本变更 + 为什么升"的登记表 ⇒ 别再抄一份，抄了必漂）；
+—— <strong>现以源码为准，本文不再回填具体版本号</strong>（<code>src/include/leno_serialize.h</code> 里那两个宏的
+注释块本身就是"逐版本变更 + 为什么升"的登记表 ⇒ 别再抄一份，抄了必漂）；
 ② 多处"重复实现"的收敛对象是 <code>src/jit/*</code> 与 JIT-cstruct —— <strong>JIT 已不在代码中</strong>
-   （<code>git ls-files "*jit*"</code> 为空），这些条目已无对象；
+（<code>git ls-files "*jit*"</code> 为空），这些条目已无对象；
 ③ 收敛方法学（"先定位单一事实来源，再删副本 + 加判据"）<strong>仍然适用</strong>，是本文的主要价值。</p>
+</blockquote>
+<blockquote>
 <p>建立于 2026-09-16。背景是这一天里同一类病根连着咬人<strong>三次</strong>：上游 <code>69d5eb32</code>
 （枚举成员值三处求值不一致 + 符号表扫描 9 项）、本地 <code>8642a0e8</code>（词法器不支持 <code>0b</code>）、
 以及 <code>fccd1534</code>（入口缓存没有任何依赖失效判定 ⇒ 改 <code>leno_module/**/lib/**</code> 后静默跑旧字节码）。
@@ -177,13 +179,15 @@
 <li>需要值时调用<strong>真解析器</strong>（临时构造 <code>Lexer/Parser</code> 指向那段短表达式 → 表达式解析入口
    （<code>parse_expression</code> 或同层入口）→ <code>eval_const_expr</code>，并按现有机制设置成员引用上下文
    <code>g_enum_member_names/values</code>）。</li>
-<li>删掉 <code>sym_table_enum_expr.inc</code>。<strong>这一步做完，"求值对齐"这件事永久消失。</strong>
-   - 备选路线：值一律取自模块<strong>编译产物</strong>（<code>.lenomc</code>/symc），扫描器只负责名字与形状。
+<li>删掉 <code>sym_table_enum_expr.inc</code>。<strong>这一步做完，"求值对齐"这件事永久消失。</strong><ul>
+<li>备选路线：值一律取自模块<strong>编译产物</strong>（<code>.lenomc</code>/symc），扫描器只负责名字与形状。
      注意此路线有<strong>鸡生蛋问题</strong>：首次编译时被引用模块还没有产物 ⇒ 若为此保留"没产物就回落扫描求值"，
      等于<strong>又变成两套</strong>，与本节目标自相矛盾。要么彻底走第 2 步（真解析器），要么明确改成
-     "扫描阶段不求值、跨模块 enum 值延迟到语义阶段从产物回填"，二者必须二选一。
-   - 词汇表纪律：<strong>字面量/运算符集合以词法器为唯一来源</strong>，扫描器不得"多支持"
+     "扫描阶段不求值、跨模块 enum 值延迟到语义阶段从产物回填"，二者必须二选一。</li>
+<li>词汇表纪律：<strong>字面量/运算符集合以词法器为唯一来源</strong>，扫描器不得"多支持"
      （<code>0b</code> 那次正是扫描器比解析器更全，立刻就不一致）。</li>
+</ul>
+</li>
 </ol>
 <p><strong>实施前先定（不先定就会返工）</strong>：</p>
 <ul>
@@ -216,12 +220,12 @@
 <p><strong>验证</strong>（都做了，结论是不变量守恒）：
 - 26 项形态矩阵（冷缓存 + 热缓存两跑）+ 全量 <code>assert</code> 309/0 全过 → 三路径取值逐项未变；
 - 另有<strong>边界形态探针</strong>（专门找"旧扫描器失败/解析器成功"）：<code>F = 1.5</code> → 三路径都是 <strong>1</strong>（浮点截断，
-  旧实现下 use 路径是自动值 8）、<code>HUGE = 99999999999999999999</code> → 三路径都是 <strong>INT64_MAX</strong>
-  （旧实现自己十进制累乘、有符号溢出）、<code>-0</code> → 0、<code>10 % 3</code> → 1、<code>1 &lt;&lt; 40</code> → 1099511627776。
-  其中 <code>1.5</code> / <code>HUGE</code> 已固化进矩阵（它们是"手工对齐一定会漏"的形态）；两者当前都<strong>不报错</strong>，
-  是否该收紧为编译期错误列为开放问题（与除零同族）。
+旧实现下 use 路径是自动值 8）、<code>HUGE = 99999999999999999999</code> → 三路径都是 <strong>INT64_MAX</strong>
+（旧实现自己十进制累乘、有符号溢出）、<code>-0</code> → 0、<code>10 % 3</code> → 1、<code>1 &lt;&lt; 40</code> → 1099511627776。
+其中 <code>1.5</code> / <code>HUGE</code> 已固化进矩阵（它们是"手工对齐一定会漏"的形态）；两者当前都<strong>不报错</strong>，
+是否该收紧为编译期错误列为开放问题（与除零同族）。
 - <strong>静默段实测</strong>：模块里写 <code>BAD = 1 +</code>，编译器只报模块自身解析级联的 3 条（坐标都落在模块文件），
-  扫描器那次临时解析的诊断一条没漏出来。
+扫描器那次临时解析的诊断一条没漏出来。
 - LSP 照旧构建成功（<code>leno_lsp/build_lsp.bat</code>）——它同时链接扫描器与解析器，方向没问题。</p>
 <h3 id="phase-2-把-类型-收敛到一处-对应-s2">Phase 2：把「类型」收敛到一处（对应 S2）</h3>
 <p>四张类型表加<strong>模块维度</strong>（key = 模块 + 名字），跨模块查找必须带模块名；
@@ -234,38 +238,38 @@
 <li><strong>★ 关键发现（2026-09-16 侦察）：模块前缀是在 codegen 里被</strong>主动剥掉<strong>的</strong>。
   <code>codegen_expr.c</code> 的 <code>AST_STRUCT_INIT</code> 分支：</li>
 </ul>
-<p><code>c
-  // 处理模块限定的 struct 名称（如 "math.Point"），提取实际的 struct 名称
+<pre><code class="language-c">  // 处理模块限定的 struct 名称（如 &quot;math.Point&quot;），提取实际的 struct 名称
   const char* dot_pos = strchr(ast-&gt;u.struct_init.struct_name, '.');
   const char* actual_struct_name = dot_pos ? dot_pos + 1 : ast-&gt;u.struct_init.struct_name;
-  ObjString* struct_name = str_copy(actual_struct_name, strlen(actual_struct_name));  // ← 只把 "Point" 写进常量池</code></p>
+  ObjString* struct_name = str_copy(actual_struct_name, strlen(actual_struct_name));  // ← 只把 &quot;Point&quot; 写进常量池
+</code></pre>
 <p>也就是说：<strong>编译期完整知道 "A.Point"</strong>（<code>struct_init.struct_name</code> 带前缀，字段索引也是照 A 的符号表算的），
-  但发出去的字节码里只剩裸名 <code>"Point"</code> ⇒ 运行期只能按裸名查那张全局表 ⇒ 撞名即错值。
-  这条把 2b 的规模从"改造 168 处"缩小到<strong>改一处发射 + 一处注册键</strong>：
-  - <strong>2b-1</strong>：定义表增加"限定键"（<code>owner</code> 模块 + 名字）。2a 已经把 <code>owner</code> 落在 def 上了 ⇒ 注册时
-    顺带按限定键登记；裸名查找<strong>保留为回退</strong>（旧的 <code>.lenb</code>、原生桥接、反射类调用点因此不受影响）。
-  - <strong>2b-2</strong>：codegen 不再剥前缀（<code>new X()</code>、<code>as</code> 转换、face 检查、enum 访问这些"带类型名"的发射点
-    统一发限定名）；VM 侧按"限定名 → 裸名"两级查找。<strong>这需要 bump <code>LENO_BIN_VERSION</code></strong>
-    （字节码里携带的常量语义变了；旧产物因有裸名回退仍可用）。
-  - <strong>2b-3</strong>：把仍然只按裸名查找的调用点逐个过一遍，确认是"天生与模块无关"（如按指针/按 API 名）还是漏改。
+但发出去的字节码里只剩裸名 <code>"Point"</code> ⇒ 运行期只能按裸名查那张全局表 ⇒ 撞名即错值。
+这条把 2b 的规模从"改造 168 处"缩小到<strong>改一处发射 + 一处注册键</strong>：
+- <strong>2b-1</strong>：定义表增加"限定键"（<code>owner</code> 模块 + 名字）。2a 已经把 <code>owner</code> 落在 def 上了 ⇒ 注册时
+ 顺带按限定键登记；裸名查找<strong>保留为回退</strong>（旧的 <code>.lenb</code>、原生桥接、反射类调用点因此不受影响）。
+- <strong>2b-2</strong>：codegen 不再剥前缀（<code>new X()</code>、<code>as</code> 转换、face 检查、enum 访问这些"带类型名"的发射点
+ 统一发限定名）；VM 侧按"限定名 → 裸名"两级查找。<strong>这需要 bump <code>LENO_BIN_VERSION</code></strong>
+ （字节码里携带的常量语义变了；旧产物因有裸名回退仍可用）。
+- <strong>2b-3</strong>：把仍然只按裸名查找的调用点逐个过一遍，确认是"天生与模块无关"（如按指针/按 API 名）还是漏改。
 - <strong>爆炸半径</strong>：<code>*_def_register</code> / <code>*_def_find</code> 全仓 <strong>168+ 处调用点</strong>，横跨
-  <code>vm/vminc/*</code>（op_struct/op_enum/op_cstruct/op_as_cast/op_property/op_utils/op_init_lenomodule）、
-  <code>jit/</code>（jit_scan / jit_callout / backend）、<code>codegen/</code>、<code>semantic/</code>、<code>type.c</code>。
-  加模块维度意味着<strong>每个 find 调用点都要能说出"我想要哪个模块的定义"</strong>。
+<code>vm/vminc/*</code>（op_struct/op_enum/op_cstruct/op_as_cast/op_property/op_utils/op_init_lenomodule）、
+<code>jit/</code>（jit_scan / jit_callout / backend）、<code>codegen/</code>、<code>semantic/</code>、<code>type.c</code>。
+加模块维度意味着<strong>每个 find 调用点都要能说出"我想要哪个模块的定义"</strong>。
 - <strong>"当前模块上下文"其实有现成落点</strong>（初判"不存在"是错的，2026-09-16 复核）：
-  ① <strong>编译 / 缓存载入路径</strong>：<code>fix_single_module(mod)</code> → <code>register_defs_from_chunk(mod-&gt;init_chunk)</code>
-     （<code>module.c:331-333</code>）手里就有 <code>mod</code>；
-  ② <strong>运行路径</strong>：<code>OP_INIT_LENOMODULE</code> 用 <code>module_frame_new(module)</code> / <code>module_frame_enter</code>
-     （<code>op_init_lenomodule.inc:42-45</code>）执行模块的 <code>init_chunk</code> —— 也就是说 <code>OP_DEFINE_*</code> 执行时
-      "当前模块"就在 module frame 里。
-  所以 2a 不必新造"当前模块怎么取"，只需确认 module frame 在 <strong>JIT callout</strong> 路径下同样可取
-  （jit_callout 里也有 <code>struct_def_find</code>/<code>cstruct_def_find</code> 的调用点，注册则由解释器侧完成）。
+① <strong>编译 / 缓存载入路径</strong>：<code>fix_single_module(mod)</code> → <code>register_defs_from_chunk(mod-&gt;init_chunk)</code>
+  （<code>module.c:331-333</code>）手里就有 <code>mod</code>；
+② <strong>运行路径</strong>：<code>OP_INIT_LENOMODULE</code> 用 <code>module_frame_new(module)</code> / <code>module_frame_enter</code>
+  （<code>op_init_lenomodule.inc:42-45</code>）执行模块的 <code>init_chunk</code> —— 也就是说 <code>OP_DEFINE_*</code> 执行时
+   "当前模块"就在 module frame 里。
+所以 2a 不必新造"当前模块怎么取"，只需确认 module frame 在 <strong>JIT callout</strong> 路径下同样可取
+（jit_callout 里也有 <code>struct_def_find</code>/<code>cstruct_def_find</code> 的调用点，注册则由解释器侧完成）。
 - <strong>内联缓存要跟着改</strong>：<code>ObjStructDef</code> 表有 <code>struct_def_gen</code>（代数计数器）供 VM 内联缓存校验
-  "def 是否被重定义"，<code>leno_vm.h</code> 里还有缓存的 <code>ObjStructDef* def</code>。key 一旦带上模块，
-  这些缓存的<strong>键与失效判定</strong>必须同步加维度 —— 否则就是又一个"缓存没跟着失效"的 S8 式静默错值。
+"def 是否被重定义"，<code>leno_vm.h</code> 里还有缓存的 <code>ObjStructDef* def</code>。key 一旦带上模块，
+这些缓存的<strong>键与失效判定</strong>必须同步加维度 —— 否则就是又一个"缓存没跟着失效"的 S8 式静默错值。
 - <strong>重注册是正常路径，别误判成冲突</strong>：<code>struct_def_import_from_thread</code>（子线程按指针重注册同一批 def）、
-  <code>use</code>/再导出的注册、<code>.lenomc</code>/<code>.lenb</code> 反序列化后 <code>fix_single_module</code> 的注册 —— 都是"同一声明
-  再次注册"。冲突判定必须基于<strong>声明来源</strong>（同一来源 ⇒ 放行），不能基于"同名即冲突"。</p>
+<code>use</code>/再导出的注册、<code>.lenomc</code>/<code>.lenb</code> 反序列化后 <code>fix_single_module</code> 的注册 —— 都是"同一声明
+再次注册"。冲突判定必须基于<strong>声明来源</strong>（同一来源 ⇒ 放行），不能基于"同名即冲突"。</p>
 <p><strong>因此 Phase 2 拆两步</strong>：</p>
 <ul>
 <li><strong>2a（先做，不改查找语义）</strong>：给四类 def 加"声明所属模块"标识，在注册处检测"同名异源"并给出
@@ -282,21 +286,25 @@
 <li><strong>实现</strong>：四类 def 各加 <code>ObjModule* owner</code>（<code>leno_value.h</code>），由 <code>OP_DEFINE_STRUCT/ENUM/FACE/CSTRUCT</code>
   经新增的 <code>module_frame_current_module()</code>（<code>module.c</code>）在模块 init 时填上；四张表的注册函数是<strong>唯一
   收口点</strong>，同名分支先调 <code>def_owner_conflict(kind, name, old_owner, new_owner, same_shape)</code>
-  （<code>object_struct.c</code>，四类共用）：</li>
+  （<code>object_struct.c</code>，四类共用）：<ul>
 <li>来源相同 / 来源未知（编译期早期注册、反序列化产生的定义、入口程序自身的类型）⇒ 放行；</li>
 <li>来源不同但<strong>形状一致</strong> ⇒ 放行（形状比对：struct 比字段名/类型/element/nullable/默认值有无 +
     关联常量名与<strong>值</strong>；enum 比成员名与值；face 比方法名与参数个数；cstruct 比字段名/类型/偏移 +
     总大小/对齐/packed）。<strong>struct 另有一条"行为承载成员一律不算一致"，见下方 2a+ 修正</strong>；</li>
 <li>来源不同且形状不一致 ⇒ <strong>报错</strong>（<code>ERR_RUNTIME</code>，点名两个模块，保留先注册的那份、不再覆盖）。</li>
+</ul>
+</li>
 <li><strong>口径是被实测逼出来的</strong>：最初按"同名异源即冲突"实现，套件立刻 <code>308 passed, 1 failed</code>
   —— <code>test_use_batch_mixed</code> 的闭包里 <code>use_mod_a.leno</code> 与 <code>use_mod_c.leno</code> <strong>各自独立声明了
   同形的 <code>Point{x,y}</code></strong>。那不是误报（确实是两个声明来源），但形状一致时覆盖在行为上是空操作，
   报错纯属误伤 ⇒ 加"形状一致放行"。<strong>这就是"先做防线、拿语料当裁判"的价值。</strong></li>
-<li><strong>验证</strong>：</li>
+<li><strong>验证</strong>：<ul>
 <li>四类同名异形探针（struct/enum/cstruct/face 各一对，形状不同）⇒ <strong>4 条错误</strong>、点名两个模块、exit=-1；
     同一探针在改动前是"静默跑出混合字段"（<code>pa.x</code> 读出 B 的 111）。</li>
 <li>同名同形（<code>test_use_batch_mixed</code>）放行；全量 <code>assert</code> <strong>309/0</strong>（无误报）。</li>
 <li>真实应用（47 模块）冷跑 + 热跑 <code>sum=720</code> 一致；LSP 照旧构建成功。</li>
+</ul>
+</li>
 <li><strong>已知行为</strong>：报错是"运行时错误"（模块 init 阶段），程序会<strong>先跑完再带着错误退出</strong> ——
   与"定义数量超过上限"同一机制（错误收集、不即时中止）；要做到"立刻中止"需 VM 层配合，未做。</li>
 <li><strong>未 bump 版本号</strong>：只给运行时对象加了字段、没动任何落盘格式（<code>owner</code> 不参与序列化）。</li>
@@ -333,7 +341,7 @@
 </ul>
 <p>✅ <strong>2b-1 已完成（2026-09-16）：定义表共存 + 按模块前缀精查（只做了 struct 这一条链）</strong></p>
 <ul>
-<li><strong>做了什么</strong>：</li>
+<li><strong>做了什么</strong>：<ul>
 <li><code>struct_def_register</code>：<strong>跨模块同名不再丢弃新定义</strong> —— 冲突照旧响亮报错，但两份都留在表里
     （裸名查找返回"先注册者"；同来源重注册仍是覆盖语义，抽成 <code>struct_def_replace</code>）；</li>
 <li>新增 <code>struct_def_find_qualified()</code>（<code>object_struct.c</code> + <code>leno_value.h</code> 声明）：名字带前缀时按
@@ -341,6 +349,8 @@
 <li>codegen（<code>codegen_expr.c</code> 的 <code>AST_STRUCT_INIT</code>）<strong>不再剥模块前缀</strong>，原样写进常量池；
     VM 的 <code>OP_STRUCT_INIT</code>（内联缓存 miss 与 <code>VM_USE_THREAD_LOCAL</code> 两条路径）与 JIT 的
     <code>jit_callout</code> 结构体构造，统一改走 <code>struct_def_find_qualified</code>（同一口径）。</li>
+</ul>
+</li>
 <li><strong>实测证据</strong>（探针：A/B 两模块各定义 <code>Point{int x  func tag()-&gt;1|2}</code>，入口 <code>new a.Point()</code> /
   <code>new b.Point()</code>）：修复前静默 <code>2 / 2</code>；现在 <strong><code>1 / 2</code>（正确）且仍然响亮报错</strong>——两件事同时成立，
   说明精查真的取回了各自那份，而冲突判定没有放松（cast / face / JIT-cstruct 等调用点尚未迁移，
@@ -375,28 +385,29 @@
 <li><strong>已试过、被实测否掉的捷径（别重走）</strong>：想在 <strong>codegen</strong> 里把别名直接换算成"运行期模块名"
   （<code>module_runtime_name_for_import()</code>：同一进程里 <code>find_loaded_module</code> 拿 <code>ObjModule.name</code>）。
   <strong>两次假设都被直接观测否掉</strong>：① 先猜"编译期 loaded_modules 是空的"——换成 <code>chunk-&gt;filename</code>
-  后判别用例仍 <code>A=3</code>（期望 1）；② 于是打点观测，得到确定答案：
-  <code>[DBG-IMP] not-loaded import='lib/p.leno' cur='...\alias_not_name\main.leno'
-            full='...\lib\p.leno' loaded=0</code>
-  即<strong>入口里 <code>new p2.Point()</code> 这条指令的生成早于模块被加载</strong>（那一刻 loaded_modules 计数为 0），
-  不是"偶尔拿不到"而是关键路径上必然拿不到。③ 更彻底的一条：<strong>缓存路径反序列化依赖时是
-  <code>load_module_file(path, NULL, NULL)</code></strong>（<code>serialize.c</code> 的递归 pre-load），别名根本不存在 ——
-  所以任何依赖"别名"的编译期方案在冷/热两条路径上都不可能一致。
-  ⇒ 结论：别名→模块<strong>只能由运行期解决</strong>，且必须用<strong>不依赖名字</strong>的载体（即 globals 槽位号）。</li>
-<li><strong>落地前必确认的一点（<code>module_slot16</code> 的前置）</strong>：<code>a.f()</code> 走的是
-  <code>frame-&gt;module-&gt;globals[index]</code>（模块自己的 globals），但<strong>入口程序</strong>（非模块文件）里
-  <code>import ... as a</code> 定义的是 <code>SYM_GLOBAL</code>（<code>visit_module.inc</code>：<code>s-&gt;is_module ? SYM_MODULE : SYM_GLOBAL</code>）
-  ⇒ 槽位落在<strong>另一套 globals</strong> 里。所以操作数要么带上"空间"位（模块 globals / 入口 globals 两值），
-  要么先统一到一处。另外要顺便钉住：<strong>缓存路径</strong>下（<code>entry_*.lenb</code> 反序列化）入口 globals 里那个
-  槽位确实被填成了模块对象 —— 要用一条<strong>冷跑 + 热跑都跑</strong>的用例验证，否则又是一条只在冷路径成立的修法。</li>
-<li><strong>2b-2 的验收用例（形态已定，落地时加进 <code>assert/test_cross_module_type_conflict.leno</code>）</strong>：
-  <code>lib/p.leno</code> 与 <code>lib/r.leno</code> 各声明 <code>Point{int x  func tag(): int { return 1 / 3 }}</code>；
-  <code>lib/m.leno</code>：<code>import "p.leno" as first</code> + 导出函数里 <code>new first.Point()</code>；
-  <code>lib/m2.leno</code>：同理包一层 <code>r.leno</code>；入口按 <code>m2 → m → p2</code> 顺序 import（<code>p2</code> = <code>import "lib/p.leno" as p2</code>），
-  main 里打印 <code>A=</code> <code>new p2.Point().tag()</code>、<code>M=</code> <code>m.f()</code>、<code>G=</code> <code>m2.g()</code>。
-  <strong>期望 <code>A=1 / M=1 / G=3</code></strong>，且仍报同名冲突错误。其中 <strong><code>A=1</code> 有判别力</strong>：不在运行期把别名解析成
-  模块，就会退回裸名、拿到先注册的 <code>r.Point</code>（<code>A=3</code>）——本轮已实测到 <code>A=3</code> 这个反例。</li>
+  后判别用例仍 <code>A=3</code>（期望 1）；② 于是打点观测，得到确定答案：</li>
 </ul>
+<pre><code>  [DBG-IMP] not-loaded import='lib/p.leno' cur='...\alias_not_name\main.leno'
+            full='...\lib\p.leno' loaded=0
+</code></pre>
+<p>即<strong>入口里 <code>new p2.Point()</code> 这条指令的生成早于模块被加载</strong>（那一刻 loaded_modules 计数为 0），
+不是"偶尔拿不到"而是关键路径上必然拿不到。③ 更彻底的一条：<strong>缓存路径反序列化依赖时是
+<code>load_module_file(path, NULL, NULL)</code></strong>（<code>serialize.c</code> 的递归 pre-load），别名根本不存在 ——
+所以任何依赖"别名"的编译期方案在冷/热两条路径上都不可能一致。
+⇒ 结论：别名→模块<strong>只能由运行期解决</strong>，且必须用<strong>不依赖名字</strong>的载体（即 globals 槽位号）。
+- <strong>落地前必确认的一点（<code>module_slot16</code> 的前置）</strong>：<code>a.f()</code> 走的是
+<code>frame-&gt;module-&gt;globals[index]</code>（模块自己的 globals），但<strong>入口程序</strong>（非模块文件）里
+<code>import ... as a</code> 定义的是 <code>SYM_GLOBAL</code>（<code>visit_module.inc</code>：<code>s-&gt;is_module ? SYM_MODULE : SYM_GLOBAL</code>）
+⇒ 槽位落在<strong>另一套 globals</strong> 里。所以操作数要么带上"空间"位（模块 globals / 入口 globals 两值），
+要么先统一到一处。另外要顺便钉住：<strong>缓存路径</strong>下（<code>entry_*.lenb</code> 反序列化）入口 globals 里那个
+槽位确实被填成了模块对象 —— 要用一条<strong>冷跑 + 热跑都跑</strong>的用例验证，否则又是一条只在冷路径成立的修法。
+- <strong>2b-2 的验收用例（形态已定，落地时加进 <code>assert/test_cross_module_type_conflict.leno</code>）</strong>：
+<code>lib/p.leno</code> 与 <code>lib/r.leno</code> 各声明 <code>Point{int x  func tag(): int { return 1 / 3 }}</code>；
+<code>lib/m.leno</code>：<code>import "p.leno" as first</code> + 导出函数里 <code>new first.Point()</code>；
+<code>lib/m2.leno</code>：同理包一层 <code>r.leno</code>；入口按 <code>m2 → m → p2</code> 顺序 import（<code>p2</code> = <code>import "lib/p.leno" as p2</code>），
+main 里打印 <code>A=</code> <code>new p2.Point().tag()</code>、<code>M=</code> <code>m.f()</code>、<code>G=</code> <code>m2.g()</code>。
+<strong>期望 <code>A=1 / M=1 / G=3</code></strong>，且仍报同名冲突错误。其中 <strong><code>A=1</code> 有判别力</strong>：不在运行期把别名解析成
+模块，就会退回裸名、拿到先注册的 <code>r.Point</code>（<code>A=3</code>）——本轮已实测到 <code>A=3</code> 这个反例。</p>
 <p>✅ <strong>2b-2 核心已完成（2026-09-16）：<code>module_slot16</code> 落地，别名≠模块名的情形也精确解析</strong></p>
 <ul>
 <li><strong>两个前置都确认了（各带证据）</strong>：
@@ -405,7 +416,7 @@
      模块文件用 <code>OP_SET_MODULE_VAR</code>（<code>frame-&gt;module-&gt;globals[i]</code>）⇒ 操作数必须带"空间"位。
   ② <strong>缓存路径也填</strong>：<code>import ... as m</code> + <code>m.tag()</code> 冷跑/热跑各一次 —— 热跑时 <code>entry_*.lenb</code>
      mtime <strong>未变</strong>（证明走的缓存）而输出不变 ⇒ 槽位在反序列化路径下同样被填成可用的模块对象。</li>
-<li><strong>实现</strong>（操作数追加在<strong>字段索引之后</strong>，+3 字节，尽量不动既有偏移）：</li>
+<li><strong>实现</strong>（操作数追加在<strong>字段索引之后</strong>，+3 字节，尽量不动既有偏移）：<ul>
 <li>codegen 发射 <code>mod_space8 + mod_slot16</code>；别名符号与 <code>codegen_import.c</code> 用的是<strong>同一个</strong>
     （入口 <code>SYM_GLOBAL</code> / 模块 <code>SYM_MODULE</code>）⇒ 槽位必然对得上；</li>
 <li>VM：<strong>窥探</strong>这 3 字节（不改原有读取顺序：<code>frame-&gt;ip + 2*generic + arg</code>）→ 解析出 <code>mod_owner</code>
@@ -416,18 +427,24 @@
     <code>debug.c</code> 反汇编同步跳过 3 字节；</li>
 <li>版本号：<code>LENO_BIN_VERSION</code> → <strong>v2.7.3</strong>、<code>LENO_MODCACHE_VERSION</code> → <strong>v9</strong>（操作数布局变了，
     两侧都会错位；登记表已写"为什么这次升"）。</li>
-<li><strong>验证</strong>：</li>
+</ul>
+</li>
+<li><strong>验证</strong>：<ul>
 <li><strong>判别用例 D 通过</strong>（<code>A=1 / M=1 / G=3</code>；修复前实测 <code>A=3</code>），且<strong>冷跑与热跑都成立</strong>
     （手工双跑：热跑 <code>entry_*.lenb</code> mtime 未变、输出一致）；</li>
 <li>套件 <strong>310/0</strong>；真实应用（47 模块）冷/热 <code>sum=720</code>；JIT 确实在跑（Compiled 35 / FuncCompiled 94）。</li>
+</ul>
+</li>
 <li><strong>顺带又逮到一个静默错值（2a++，已修 + 已加用例 E）</strong>：形状比对只比"<strong>有没有</strong>默认值"、不比
   默认值<strong>本身</strong> ⇒ <code>{int x = 1}</code> 与 <code>{int x = 3}</code> 被判同形 ⇒ 覆盖 ⇒ 两份定义的实例都拿到同一个
   默认值（实测 <code>A=3 / B=3</code>，期望 <code>1 / 3</code>，<strong>零诊断</strong>）。现在连默认值一起比（原始位，保守）⇒ 报冲突；
   又因两份共存 + owner 级精查，各自仍取回自己的默认值（<code>A=1 / B=3</code>）。</li>
-<li><strong>仍未做（下一步）</strong>：迁移其余调用点（cast / face / JIT-cstruct / <code>op_init_lenomodule</code> 导出表）</li>
-<li>enum / cstruct / face 三张表照 struct 同法办理，<strong>然后</strong>才放松 2a 系列的冲突报错
-  （那时各调用点都能取回自己那份，不再需要那条兜底）。</li>
+<li><strong>仍未做（下一步）</strong>：迁移其余调用点（cast / face / JIT-cstruct / <code>op_init_lenomodule</code> 导出表）<ul>
+<li>enum / cstruct / face 三张表照 struct 同法办理，<strong>然后</strong>才放松 2a 系列的冲突报错</li>
 </ul>
+</li>
+</ul>
+<p>（那时各调用点都能取回自己那份，不再需要那条兜底）。</p>
 <p>⚡ <strong>顺带做掉的性能修复（2026-09-16）：定义表查找 O(定义数) → 小表线性 / 大表名字桶</strong></p>
 <ul>
 <li><strong>实测问题（探针：200 个 struct 声明，循环 300 万次 <code>new T199()</code>）</strong>：215ms → <strong>6252ms（29×）</strong>。
@@ -465,11 +482,11 @@
 </table>
 <p>⇒ 定稿：<strong>小表分支就地写在各查找函数里（内容 = 改动前那几行原样）</strong>，大表才走桶。
 - <strong>顺带</strong>：<code>op_struct.inc</code> 里 <code>bare_name</code> 的 <code>strchr</code> 原先在 IC 命中路径上也白算一次，
-  已挪进未命中分支（实测中性，但没道理留着）。
+已挪进未命中分支（实测中性，但没道理留着）。
 - <strong>结果（交错 A/B，同机同探针）</strong>：1 个定义与基线<strong>持平</strong>（211/216/213 vs 213/212/216 ms）；
-  200 个定义 <strong>6205ms → 330ms（18.8×）</strong>；真实应用（47 模块）<code>sum=720</code> 一致、帧耗时在噪声内。
+200 个定义 <strong>6205ms → 330ms（18.8×）</strong>；真实应用（47 模块）<code>sum=720</code> 一致、帧耗时在噪声内。
 - <strong>回归覆盖</strong>：判别用例 D 原本只有 3 个定义（走小表线性那条路），已补 5 个无关 <code>PadN</code> 声明把
-  条目数顶过阈值 ⇒ <strong>哈希那条路同样有用例守着</strong>（两条路都必须有覆盖，否则改动只测到一条）。
+条目数顶过阈值 ⇒ <strong>哈希那条路同样有用例守着</strong>（两条路都必须有覆盖，否则改动只测到一条）。
 - <strong>不 bump 版本号</strong>：只改运行期查找实现，字节码与缓存格式未动 ⇒ 旧 <code>.lenb</code> / <code>.lenomc</code> 继续可用。</p>
 <p>🔎 <strong>四种类型的"受支持写法"逐个实测（2026-09-16）：都没有坏 —— 先前那条"cstruct 缺口"是我误判</strong></p>
 <table>
@@ -529,6 +546,8 @@
 <li><strong>操作数长度表</strong>：<code>jit_scan.c</code> 的按 opcode 长度表（<code>OP_STRUCT_INIT</code> 现在是 3 字节）、<code>debug.c</code> 的
     反汇编分支、codegen 发射处 —— 三处必须同步，漏一个就是静默错位；</li>
 <li><strong>缓存</strong>：<code>.lenomc</code> / <code>entry_*.lenb</code> 按字节码原样走，无需改失效判定，但会整体重编一次。</li>
+</ul>
+<ul>
 <li><strong>顺序</strong>：先 <code>OP_STRUCT_INIT</code>（有探针 + <code>assert/test_cross_module_type_conflict.leno</code> 守着）→
   enum / cstruct / face 三张表与其操作码 → 迁移 cast（<code>op_as_cast.inc</code>）、face 检查（<code>op_property.inc</code>、
   <code>op_utils.inc</code>）、<code>op_init_lenomodule.inc</code> 的导出表写入 → <strong>最后</strong>放松 2a/2a+ 的冲突报错
@@ -670,63 +689,63 @@
 </tbody>
 </table>
 <p><strong>修法</strong>：import 处理改调 <code>module_symbol_table_get_shared(file_path, current_file)</code>
-  （解析 → 记忆化 → 必要时扫描；失败返回 NULL ⇒ 原"找不到模块文件"错误分支保留；shared 表的
-  destroy 本就是 no-op，调用方只读 ✓）。
-  <strong>踩坑（与文档里既有的那条教训同型）</strong>：改完少了一个花括号（<code>if (sym_table) { if (scan) {A}
-  else {B} }</code> 改成 <code>if (!sym_table) {A} else {B}</code> 后，原来关闭外层 <code>if</code> 的 <code>}</code> 变多余）⇒
-  <strong>构建失败、旧二进制还在</strong>，我第一轮量到的"380 次 / 1798ms"其实是<strong>旧二进制的</strong>假数据；
-  补好括号重建后才得到上表数字。⇒ 每次"改完就量"之前必须确认 <code>build.bat</code> 真的成功了。
-  <strong>验证</strong>：套件 <strong>319/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）。
-  不 bump 版本号（只改"怎么取表"）。
+（解析 → 记忆化 → 必要时扫描；失败返回 NULL ⇒ 原"找不到模块文件"错误分支保留；shared 表的
+destroy 本就是 no-op，调用方只读 ✓）。
+<strong>踩坑（与文档里既有的那条教训同型）</strong>：改完少了一个花括号（<code>if (sym_table) { if (scan) {A}
+else {B} }</code> 改成 <code>if (!sym_table) {A} else {B}</code> 后，原来关闭外层 <code>if</code> 的 <code>}</code> 变多余）⇒
+<strong>构建失败、旧二进制还在</strong>，我第一轮量到的"380 次 / 1798ms"其实是<strong>旧二进制的</strong>假数据；
+补好括号重建后才得到上表数字。⇒ 每次"改完就量"之前必须确认 <code>build.bat</code> 真的成功了。
+<strong>验证</strong>：套件 <strong>319/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）。
+不 bump 版本号（只改"怎么取表"）。
 - <strong>⑥ S9 收口：解析器那两份副本删除 + "包名写法"规则收成唯一实现 + 护栏用例</strong>。
-  <code>parser_module.c</code> 里同一规则原本抄了两份：<strong>字符串形式</strong>在读到字符串时先解析一次（旧 <code>:59-67</code>），
-  <strong>AST 构造后</strong>又解析一次（旧 <code>:132-142</code>）。后者对字符串形式其实是<strong>空操作</strong>、只对<strong>标识符形式</strong>
-  （<code>import m</code>）有效，所以删掉前一份是<strong>行为等价</strong>的（唯一的差别是"隐式别名从文件名提取"发生在解析
-  之前还是之后 —— 两种写法提取到的都是同一个名字，已用用例覆盖）。
-  同时把"<strong>什么算包名写法</strong>"这条规则收成唯一实现：
-  <code>package_resolve_import_spec(spec, out, len)</code>（<code>package_resolve.c</code> + <code>leno_package.h</code>）——
-  规则：<strong>不含 <code>.leno</code></strong> 才按包名在各搜索路径下找 <code>&lt;写法&gt;.leno</code>；含 <code>.leno</code> 一律返回 -1（交调用方
-  按相对/绝对解析）。解析器与扫描器<strong>都只调它</strong>（此前两边各写一遍 <code>strstr(x, ".leno") == NULL</code>
-  + <code>package_resolve_module_file</code>）。加载器 <code>load_module_file</code> 仍只做"相对路径拼当前目录 +
-  normalize"（它拿到的是已解析的路径，不做包搜索）—— 这条分工写进了头文件注释。
-  <strong>护栏用例</strong>：<code>assert/test_import_path_forms.leno</code> —— 同一个模块的<strong>三种写法</strong>各跑一遍，
-  要求结果完全一致（都编译、都读出 <code>T=42</code>）：<code>import "m"</code>（裸包名，走搜索路径）、
-  <code>import "m.leno"</code>（文件路径，不该被再拼一次 <code>.leno</code>）、<code>import m</code>（标识符形式，与第一种同一条解析）。
-  <strong>验证</strong>：套件 <strong>320/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-  S9 的两个最小复现探针（裸名/相对）仍一通过一通过；<strong>VM-only 构建成功</strong>（<code>build_vm.bat</code>
-  不编 <code>src/package/*</code>，扫描器侧仍由 <code>#ifndef LENO_VM_ONLY</code> 挡住）。不 bump 版本号。
-- <strong>⑦ S2 族收口：把"模块里的 struct <strong>注册</strong>进当前编译"也收成唯一实现（并修掉一处静默跳过检查）</strong>。
-  这份代码此前同样是两份（<code>visit_module.inc</code> 的 AST_USE 与 <code>semantic_visit_ast.c</code> 的
-  <code>import_type_deps</code>），且<strong>深度不同</strong>：后者给方法占位符只填 <code>name</code> / <code>pcnt</code> / 返回类型，
-  <strong>不填 <code>param_types</code> 与 <code>type_params</code>、也不带返回类型的泛型实参</strong> ⇒ 泛型方法经 alias 那条路进来时
-  <code>resolve_generic_in_type</code> 拿不到类型参数表 ⇒ 返回类型停在<strong>未替换的 <code>T</code></strong>，而
-  <strong>未约束的泛型参数与任何类型都兼容</strong> ⇒ 类型检查被<strong>静默跳过</strong>。
-  实测（<code>assert/test_generic_type_param_paths.leno</code> 判据 3）：
-  <code>func probe(Box[int] b): string { return b.get() }</code> —— 直接 <code>use m.Box</code> 正确报
-  「返回类型不匹配：期望 string，实际 int」；经 <code>use m.F</code>（alias）<strong>什么都不报、exit 0</strong>。
-  <strong>修法</strong>：抽出 <code>semantic_register_struct_from_module(s, ssym)</code>（<code>semantic_type_utils.c</code>：
-  全局 struct_def + 方法占位符含 <code>param_types</code> / <code>type_params</code> / 返回泛型实参），两个调用点都改调它
-  （与上一条 <code>semantic_attach_struct_fields</code> 分工：那个管"符号自己的类型与字段"，这个管"注册"）。
-  <strong>顺带修掉我上一轮引入的一处误报（同族：又是三处口径不一致）</strong>：扫描器的<strong>字段</strong>解析此前没有
-  "泛型类型参数"这一类检查（"函数参数"<code>:339-346</code>、"方法返回"<code>:487-497</code> 都有）⇒ 泛型字段 <code>T v</code> 被记成
-  <code>TYPE_ANY</code>：既丢类型参数、又触发我那条降级警告<strong>误报</strong>
-  （<code>struct 'Box' 的字段 'v' 声明类型 'T' 无法解析</code>）。已补该检查、参数名写进 <code>type_info</code>
-  ⇒ 泛型字段现在能按实参替换（实测 <code>Box[int].v</code> → <code>int</code>）。
-  <strong>验证</strong>：新用例 4 条判据全过（含端到端 <code>V=5</code>）；套件 <strong>321/0</strong>；真实应用冷扫 警告 0、错误 0、
-  FuncExecuted 425（冷/热一致）。
+<code>parser_module.c</code> 里同一规则原本抄了两份：<strong>字符串形式</strong>在读到字符串时先解析一次（旧 <code>:59-67</code>），
+<strong>AST 构造后</strong>又解析一次（旧 <code>:132-142</code>）。后者对字符串形式其实是<strong>空操作</strong>、只对<strong>标识符形式</strong>
+（<code>import m</code>）有效，所以删掉前一份是<strong>行为等价</strong>的（唯一的差别是"隐式别名从文件名提取"发生在解析
+之前还是之后 —— 两种写法提取到的都是同一个名字，已用用例覆盖）。
+同时把"<strong>什么算包名写法</strong>"这条规则收成唯一实现：
+<code>package_resolve_import_spec(spec, out, len)</code>（<code>package_resolve.c</code> + <code>leno_package.h</code>）——
+规则：<strong>不含 <code>.leno</code></strong> 才按包名在各搜索路径下找 <code>&lt;写法&gt;.leno</code>；含 <code>.leno</code> 一律返回 -1（交调用方
+按相对/绝对解析）。解析器与扫描器<strong>都只调它</strong>（此前两边各写一遍 <code>strstr(x, ".leno") == NULL</code>
++ <code>package_resolve_module_file</code>）。加载器 <code>load_module_file</code> 仍只做"相对路径拼当前目录 +
+normalize"（它拿到的是已解析的路径，不做包搜索）—— 这条分工写进了头文件注释。
+<strong>护栏用例</strong>：<code>assert/test_import_path_forms.leno</code> —— 同一个模块的<strong>三种写法</strong>各跑一遍，
+要求结果完全一致（都编译、都读出 <code>T=42</code>）：<code>import "m"</code>（裸包名，走搜索路径）、
+<code>import "m.leno"</code>（文件路径，不该被再拼一次 <code>.leno</code>）、<code>import m</code>（标识符形式，与第一种同一条解析）。
+<strong>验证</strong>：套件 <strong>320/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+S9 的两个最小复现探针（裸名/相对）仍一通过一通过；<strong>VM-only 构建成功</strong>（<code>build_vm.bat</code>
+不编 <code>src/package/*</code>，扫描器侧仍由 <code>#ifndef LENO_VM_ONLY</code> 挡住）。不 bump 版本号。
+- <strong>⑦ S2 族收口：把"模块里的 struct </strong>注册<strong>进当前编译"也收成唯一实现（并修掉一处静默跳过检查）</strong>。
+这份代码此前同样是两份（<code>visit_module.inc</code> 的 AST_USE 与 <code>semantic_visit_ast.c</code> 的
+<code>import_type_deps</code>），且<strong>深度不同</strong>：后者给方法占位符只填 <code>name</code> / <code>pcnt</code> / 返回类型，
+<strong>不填 <code>param_types</code> 与 <code>type_params</code>、也不带返回类型的泛型实参</strong> ⇒ 泛型方法经 alias 那条路进来时
+<code>resolve_generic_in_type</code> 拿不到类型参数表 ⇒ 返回类型停在<strong>未替换的 <code>T</code></strong>，而
+<strong>未约束的泛型参数与任何类型都兼容</strong> ⇒ 类型检查被<strong>静默跳过</strong>。
+实测（<code>assert/test_generic_type_param_paths.leno</code> 判据 3）：
+<code>func probe(Box[int] b): string { return b.get() }</code> —— 直接 <code>use m.Box</code> 正确报
+「返回类型不匹配：期望 string，实际 int」；经 <code>use m.F</code>（alias）<strong>什么都不报、exit 0</strong>。
+<strong>修法</strong>：抽出 <code>semantic_register_struct_from_module(s, ssym)</code>（<code>semantic_type_utils.c</code>：
+全局 struct_def + 方法占位符含 <code>param_types</code> / <code>type_params</code> / 返回泛型实参），两个调用点都改调它
+（与上一条 <code>semantic_attach_struct_fields</code> 分工：那个管"符号自己的类型与字段"，这个管"注册"）。
+<strong>顺带修掉我上一轮引入的一处误报（同族：又是三处口径不一致）</strong>：扫描器的<strong>字段</strong>解析此前没有
+"泛型类型参数"这一类检查（"函数参数"<code>:339-346</code>、"方法返回"<code>:487-497</code> 都有）⇒ 泛型字段 <code>T v</code> 被记成
+<code>TYPE_ANY</code>：既丢类型参数、又触发我那条降级警告<strong>误报</strong>
+（<code>struct 'Box' 的字段 'v' 声明类型 'T' 无法解析</code>）。已补该检查、参数名写进 <code>type_info</code>
+⇒ 泛型字段现在能按实参替换（实测 <code>Box[int].v</code> → <code>int</code>）。
+<strong>验证</strong>：新用例 4 条判据全过（含端到端 <code>V=5</code>）；套件 <strong>321/0</strong>；真实应用冷扫 警告 0、错误 0、
+FuncExecuted 425（冷/热一致）。
 - <strong>⑧ 同族第 4 例：嵌套 cstruct 字段跨模块降级（已修）+ 借机把"类型名识别点"全表审计</strong>。
-  文档明确支持嵌套 cstruct（<code>cstruct Rect { Point top_left }</code>，<code>docs/module_cstructs.md</code> §嵌套 cstruct），
-  语料里也在用（<code>examples/import/win_process/win_process_str16.leno</code> 的
-  <code>cstruct LUID_AND_ATTRIBUTES { LUID Luid ... }</code>）。但扫描器解析 <strong>cstruct 字段</strong>时只查
-  clib / struct 两张表（<code>scan_cstruct.inc</code>）——<strong>漏了 cstruct 与 face</strong>；而 cstruct 名与 struct 名是
-  <strong>两个独立数组</strong>（<code>scan_pass1.inc:121</code> 收 struct、<code>:139</code> 收 cstruct）⇒ <code>is_known_struct("Point")</code>
-  对 cstruct 名<strong>匹配不到</strong> ⇒ 嵌套字段落成 <code>TYPE_ANY</code> + <code>struct_name = NULL</code>，<strong>而且这条路连降级警告
-  都没有</strong>（上一轮那条警告只加在 struct 字段那条路）。
-  实测：消费方 <code>r.top_left.x</code> 报「不能在 any 类型上直接访问字段 'x'」——<strong>硬编译错</strong>，不是"能跑但降级"。
-  <strong>修法</strong>：补 <code>cstruct</code> / <code>face</code> 两个分支；并把降级警告也补到这条路上（与 struct 字段那条对齐）。
-  <strong>用例</strong>：<code>assert/test_nested_cstruct_field_type.leno</code>（端到端：malloc + 写嵌套字段 + 读回打印；
-  修前 <code>exit=-1</code>，修后 <code>X=1 Y=2 W=3</code>）。
-  <strong>借机把"类型名识别点"全表审计一遍</strong>（这类"各处认的名字集合不一致"至今已产出 4 个 bug）：</p>
+文档明确支持嵌套 cstruct（<code>cstruct Rect { Point top_left }</code>，<code>docs/module_cstructs.md</code> §嵌套 cstruct），
+语料里也在用（<code>examples/import/win_process/win_process_str16.leno</code> 的
+<code>cstruct LUID_AND_ATTRIBUTES { LUID Luid ... }</code>）。但扫描器解析 <strong>cstruct 字段</strong>时只查
+clib / struct 两张表（<code>scan_cstruct.inc</code>）——<strong>漏了 cstruct 与 face</strong>；而 cstruct 名与 struct 名是
+<strong>两个独立数组</strong>（<code>scan_pass1.inc:121</code> 收 struct、<code>:139</code> 收 cstruct）⇒ <code>is_known_struct("Point")</code>
+对 cstruct 名<strong>匹配不到</strong> ⇒ 嵌套字段落成 <code>TYPE_ANY</code> + <code>struct_name = NULL</code>，<strong>而且这条路连降级警告
+都没有</strong>（上一轮那条警告只加在 struct 字段那条路）。
+实测：消费方 <code>r.top_left.x</code> 报「不能在 any 类型上直接访问字段 'x'」——<strong>硬编译错</strong>，不是"能跑但降级"。
+<strong>修法</strong>：补 <code>cstruct</code> / <code>face</code> 两个分支；并把降级警告也补到这条路上（与 struct 字段那条对齐）。
+<strong>用例</strong>：<code>assert/test_nested_cstruct_field_type.leno</code>（端到端：malloc + 写嵌套字段 + 读回打印；
+修前 <code>exit=-1</code>，修后 <code>X=1 Y=2 W=3</code>）。
+<strong>借机把"类型名识别点"全表审计一遍</strong>（这类"各处认的名字集合不一致"至今已产出 4 个 bug）：</p>
 <table>
 <thead>
 <tr>
@@ -783,71 +802,71 @@
 <p><strong>本线已收口（2026-09-19，见第六节 ㉔）</strong>：上表 8 点现已<strong>全部有结论，不再复查</strong> —— 6 点走唯一政策点
 <code>mod_resolve_param_type()</code>（字段 ㉒；方法/函数参数 ⑳㉑；方法/函数返回与 <code>use</code> 传导 ㉓），2 点
 （元素类型、alias 底层）为 ⑨ 实测判定<strong>故意保留</strong>。若将来要碰元素类型段，先读 ⑨ 的三条功能判别
-与 ㉓ 里那份"诊断文案逐字一致"的验证记录。
-  <strong>验证</strong>：新用例 passed；套件 <strong>322/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
-  （新警告在 SDL3 上<strong>零误报</strong> —— cstruct 字段里的基类型与嵌套 cstruct 现在都能认出来了）；lint 干净。
-- <strong>⑨ 审计表里剩的两处：实测判定"无需改"（2026-09-18 —— 都是实测结论，不是"看着不一致就统一"）</strong>。
-  <strong>① 元素类型段缺 cstruct</strong>（<code>scan_struct.inc</code> / <code>scan_cstruct.inc</code> 各一处）：显形是<strong>诊断文字</strong>把
-  cstruct 元素写成 <code>struct</code> —— 跨模块 <code>Array[Vec]</code>（Vec 是 cstruct）时 <code>return h.items[0]</code> 报
-  「实际 <strong>struct</strong> Vec」，而同文件同写法报「实际 Array[<strong>cstruct</strong> Vec]」。
-  三条判别<strong>都没发现功能后果</strong>：
-  · <code>take(h.items[0])</code>（元素传给期待 <code>Vec</code> 的参数）→ <strong>通过</strong>（<code>type_is_compatible</code> 容忍种类差异）；
-  · <code>ruler(h.items)</code>（跨模块 <code>Array[...]</code> 传给本地 <code>Array[Vec]</code> 参数）→ <strong>通过</strong> ⇒ <strong>无假报错</strong>；
-  · <code>h.items[0].x</code>（访问元素字段）→ <strong>通过</strong>（名字 <code>Vec</code> 是好的，字段按名字解析）。
-  ⇒ 影响面 = <strong>报文里少一个字</strong>。<strong>为什么不顺手改</strong>：补分支会把扁平 <code>element_type</code> 的 kind 由
-  STRUCT 变 CSTRUCT，而 kind 可能被 <strong>codegen 的数组元素读写路径</strong>用来决定"值拷贝 vs 引用"
-  （cstruct 是值类型）—— 为"少一个字"去动可能影响生成代码的字段不划算（套件 + 真实应用只能验当下，
-  语料外还有用户代码）。<strong>附注</strong>：<code>Array[cstruct]</code> 连 <code>push</code> 都不支持，且<strong>同文件也一样</strong>
-  （<code>类型 'Array[cstruct Vec]' 没有方法 'push'</code>）⇒ 那条失败与种类错位<strong>无关</strong>，属既有支持面，
-  不是本轮问题（已在此登记，供将来有人做 <code>Array[cstruct]</code> 时参考）。
-  <strong>② alias 底层段缺 clib</strong>（<code>scan_alias.inc</code>）：<code>alias X = SomeClib</code> 这种写法<strong>语料里没有</strong>，
-  语义上也<strong>无实义</strong>（clib 是"函数集合"，不是数据类型）；那段代码自身的兜底注释已写"不是本模块的
-  struct/face/cstruct，保留为 TYPE_STRUCT（可能来自 use）"⇒ 不可达，<strong>不改</strong>。
-  <strong>方法教训</strong>：<strong>"集合不一致" ≠ "都有 bug"</strong> —— 8 处里 <strong>4 处真出过 bug</strong>（本轮修掉 2 处、上轮 2 处），
-  另 <strong>2 处实测无害</strong>。先量再改比"看着不一致就统一"更省事，后者会为无害差异引入真风险。
-- <strong>⑩ 同族第 5 例（2026-09-18 已修）：模块限定 <code>new</code> 之后字段"写不进去"（字段索引两份实现、深度不同）</strong>。
-  症状：<code>var pa = new a.Pair()</code>（只 <code>import "lib/a.leno" as a</code>、<strong>不</strong> <code>use</code> 类型名）之后写
-  <code>pa.x = 1</code> 报「无法确定字段索引，struct 类型可能未定义」（codegen 兜底报的）—— 而<strong>同一字段读
-  <code>pa.x</code> 正常</strong>，非常反直觉。
-  <strong>根因</strong>（读码钉死，不靠猜）：字段索引有<strong>两份取法、深度不同</strong> —— <code>infer_field_type</code>
-  （<code>semantic_type.c</code>）是<strong>三级</strong>（作用域 → 全局定义表 → 导入模块符号表），而
-  <code>visit_field_access.inc</code> 自己那套是<strong>一级</strong>（<code>scope_resolve(类型名)</code>），并且<strong>同一个文件里 cstruct
-  那一支反而是三级</strong> ⇒ 对称性破裂。表达式上下文（读）会由 <code>infer_expr_type</code> 调一次三级推断把
-  <code>field_index</code> 补上 ✓；<strong>赋值目标没有任何人调推断</strong> ⇒ 索引停在 -1 ✗。
-  <strong>修法</strong>：那一处复用 <code>infer_field_type</code>（唯一实现）；且<strong>只在"一级解析拿不到字段"时才补</strong>
-  （拿得到就走原路径 ⇒ 零风险）。
-  <strong>用例</strong>（先写、修前 <code>exit=-1</code>）：<code>assert/test_module_qualified_new_field.leno</code> —— 判据 ① 不 <code>use</code>
-  类型名：<code>new a.Pair()</code> 后写字段 + 打印 ⇒ <code>X=1 Y=2</code>；判据 ② <code>use a.Pair</code> + 裸名 <code>new Pair()</code>
-  （既有可用写法，防改坏）⇒ <code>X=3 Y=4</code>。
-  <strong>验证</strong>：新用例 passed；套件 <strong>323/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-  lint 干净。
-  <strong>顺带更正一处文档归因</strong>：这条此前被记作"推断出来的类型名与模块限定名的关系没打通、是 2b-2 的
-  前哨"——<strong>不成立</strong>：<code>AST_STRUCT_INIT</code> 的类型推断本来就剥前缀（<code>semantic_type.c:2590-2593</code>）。
-  真正原因就是上面的"两级深度"。⇒ 结论：<strong>"前哨"这个判断也要先量再写</strong>（与 ⑨ 的教训同源）。
-- <strong>⑪ 同族第 6 例（2026-09-18 已修）：字段赋值的类型检查在"模块限定但没 use"时被静默跳过</strong>
-  —— 属最高级别的"静默"（不报错、程序照跑）。
-  实测：只 <code>import "lib/a.leno" as a</code>、不 <code>use</code> 类型名时，<code>var pa = new a.Pair()</code> +
-  <code>pa.x = "oops"</code>（int 字段赋 string）⇒ <strong>零诊断、<code>exit=0</code></strong>，<strong>而且真的跑起来打印 <code>X=oops</code></strong>
-  （字符串装进了 int 字段）；<strong>同一份代码加一句 <code>use a.Pair</code></strong> ⇒ 正确报
-  「类型错误：字段赋值类型不匹配 'x'」。
-  <strong>根因</strong>（与 ⑩ 同形）：<code>visit_var.inc</code> 的 AST_ASSIGN→AST_FIELD_ACCESS 分支解析目标 struct
-  只有<strong>两级</strong>（<code>scope_resolve</code> + <code>scope_resolve_tree_bfs</code>），<strong>没有</strong>"导入模块符号表"那一级，
-  查不到就<strong>什么都不做</strong> ⇒ 检查静默不执行；而唯一实现 <code>infer_field_type</code> 是三级。
-  <strong>修法</strong>：查不到时走 <code>infer_field_type</code> 取期望类型，再做同一条兼容性判定（不改判定口径）。
-  <strong>用例</strong>（先写、修前失败）：<code>assert/test_field_assign_type_check.leno</code> —— ① 不 use 的错赋值
-  <strong>必须报错</strong>（修前 <code>exit=0</code>）；② use 的错赋值同样报错（对照）；③ 不 use 的<strong>正确</strong>赋值仍须通过
-  （防"改完变误报"）。
-  <strong>顺带修一处用例机器的过度约束</strong>：<code>assert/helpers/compiler.leno</code> 的 <code>expect_error</code> 把"报错落点"
-  写死成 <code>(&lt;行&gt;,1): error:</code>（<strong>列号必须是 1</strong>）⇒ 只有报在第 1 列的错误才通过；字段赋值那条报在
-  <code>(5,8)</code>，用例因此<strong>假失败</strong>。已改成只校验<strong>行</strong>（<code>(&lt;行&gt;,</code>）—— 列号本就不该当承诺（同 S6 精神）。
-  <strong>验证</strong>：新用例 passed（3 判据）；套件 <strong>324/0</strong>。⚠ 这条检查以前是<strong>静默跳过</strong>、现在<strong>真跑</strong>
-  ⇒ 特意验证了误伤面：真实应用（47 模块）冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-  lint 干净。
-- <strong>⑫ 同族第 7 例（2026-09-18 已修）：字段赋值还有两条路径没走唯一实现</strong> —— 一条把<strong>合法代码判死</strong>，
-  另一条<strong>完全不检查</strong>。
-  顺着 ⑪ 往下查时撞出来的（先复现：不 use 时 <code>pa.x += 2</code> 被拒，而 use 时 <code>X=3</code> ✓）。
-  <code>pa.x += 2</code> 与 <code>pa["x"] = v</code> 看着只是写法不同，实际落到<strong>三条</strong>不同的语义路径上、深度各不相同：</p>
+与 ㉓ 里那份"诊断文案逐字一致"的验证记录。</p>
 </blockquote>
+<p><strong>验证</strong>：新用例 passed；套件 <strong>322/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
+（新警告在 SDL3 上<strong>零误报</strong> —— cstruct 字段里的基类型与嵌套 cstruct 现在都能认出来了）；lint 干净。
+- <strong>⑨ 审计表里剩的两处：实测判定"无需改"（2026-09-18 —— 都是实测结论，不是"看着不一致就统一"）</strong>。
+<strong>① 元素类型段缺 cstruct</strong>（<code>scan_struct.inc</code> / <code>scan_cstruct.inc</code> 各一处）：显形是<strong>诊断文字</strong>把
+cstruct 元素写成 <code>struct</code> —— 跨模块 <code>Array[Vec]</code>（Vec 是 cstruct）时 <code>return h.items[0]</code> 报
+「实际 <strong>struct</strong> Vec」，而同文件同写法报「实际 Array[<strong>cstruct</strong> Vec]」。
+三条判别<strong>都没发现功能后果</strong>：
+· <code>take(h.items[0])</code>（元素传给期待 <code>Vec</code> 的参数）→ <strong>通过</strong>（<code>type_is_compatible</code> 容忍种类差异）；
+· <code>ruler(h.items)</code>（跨模块 <code>Array[...]</code> 传给本地 <code>Array[Vec]</code> 参数）→ <strong>通过</strong> ⇒ <strong>无假报错</strong>；
+· <code>h.items[0].x</code>（访问元素字段）→ <strong>通过</strong>（名字 <code>Vec</code> 是好的，字段按名字解析）。
+⇒ 影响面 = <strong>报文里少一个字</strong>。<strong>为什么不顺手改</strong>：补分支会把扁平 <code>element_type</code> 的 kind 由
+STRUCT 变 CSTRUCT，而 kind 可能被 <strong>codegen 的数组元素读写路径</strong>用来决定"值拷贝 vs 引用"
+（cstruct 是值类型）—— 为"少一个字"去动可能影响生成代码的字段不划算（套件 + 真实应用只能验当下，
+语料外还有用户代码）。<strong>附注</strong>：<code>Array[cstruct]</code> 连 <code>push</code> 都不支持，且<strong>同文件也一样</strong>
+（<code>类型 'Array[cstruct Vec]' 没有方法 'push'</code>）⇒ 那条失败与种类错位<strong>无关</strong>，属既有支持面，
+不是本轮问题（已在此登记，供将来有人做 <code>Array[cstruct]</code> 时参考）。
+<strong>② alias 底层段缺 clib</strong>（<code>scan_alias.inc</code>）：<code>alias X = SomeClib</code> 这种写法<strong>语料里没有</strong>，
+语义上也<strong>无实义</strong>（clib 是"函数集合"，不是数据类型）；那段代码自身的兜底注释已写"不是本模块的
+struct/face/cstruct，保留为 TYPE_STRUCT（可能来自 use）"⇒ 不可达，<strong>不改</strong>。
+<strong>方法教训</strong>：<strong>"集合不一致" ≠ "都有 bug"</strong> —— 8 处里 <strong>4 处真出过 bug</strong>（本轮修掉 2 处、上轮 2 处），
+另 <strong>2 处实测无害</strong>。先量再改比"看着不一致就统一"更省事，后者会为无害差异引入真风险。
+- <strong>⑩ 同族第 5 例（2026-09-18 已修）：模块限定 <code>new</code> 之后字段"写不进去"（字段索引两份实现、深度不同）</strong>。
+症状：<code>var pa = new a.Pair()</code>（只 <code>import "lib/a.leno" as a</code>、<strong>不</strong> <code>use</code> 类型名）之后写
+<code>pa.x = 1</code> 报「无法确定字段索引，struct 类型可能未定义」（codegen 兜底报的）—— 而<strong>同一字段读
+<code>pa.x</code> 正常</strong>，非常反直觉。
+<strong>根因</strong>（读码钉死，不靠猜）：字段索引有<strong>两份取法、深度不同</strong> —— <code>infer_field_type</code>
+（<code>semantic_type.c</code>）是<strong>三级</strong>（作用域 → 全局定义表 → 导入模块符号表），而
+<code>visit_field_access.inc</code> 自己那套是<strong>一级</strong>（<code>scope_resolve(类型名)</code>），并且<strong>同一个文件里 cstruct
+那一支反而是三级</strong> ⇒ 对称性破裂。表达式上下文（读）会由 <code>infer_expr_type</code> 调一次三级推断把
+<code>field_index</code> 补上 ✓；<strong>赋值目标没有任何人调推断</strong> ⇒ 索引停在 -1 ✗。
+<strong>修法</strong>：那一处复用 <code>infer_field_type</code>（唯一实现）；且<strong>只在"一级解析拿不到字段"时才补</strong>
+（拿得到就走原路径 ⇒ 零风险）。
+<strong>用例</strong>（先写、修前 <code>exit=-1</code>）：<code>assert/test_module_qualified_new_field.leno</code> —— 判据 ① 不 <code>use</code>
+类型名：<code>new a.Pair()</code> 后写字段 + 打印 ⇒ <code>X=1 Y=2</code>；判据 ② <code>use a.Pair</code> + 裸名 <code>new Pair()</code>
+（既有可用写法，防改坏）⇒ <code>X=3 Y=4</code>。
+<strong>验证</strong>：新用例 passed；套件 <strong>323/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+lint 干净。
+<strong>顺带更正一处文档归因</strong>：这条此前被记作"推断出来的类型名与模块限定名的关系没打通、是 2b-2 的
+前哨"——<strong>不成立</strong>：<code>AST_STRUCT_INIT</code> 的类型推断本来就剥前缀（<code>semantic_type.c:2590-2593</code>）。
+真正原因就是上面的"两级深度"。⇒ 结论：<strong>"前哨"这个判断也要先量再写</strong>（与 ⑨ 的教训同源）。
+- <strong>⑪ 同族第 6 例（2026-09-18 已修）：字段赋值的类型检查在"模块限定但没 use"时被静默跳过</strong>
+—— 属最高级别的"静默"（不报错、程序照跑）。
+实测：只 <code>import "lib/a.leno" as a</code>、不 <code>use</code> 类型名时，<code>var pa = new a.Pair()</code> +
+<code>pa.x = "oops"</code>（int 字段赋 string）⇒ <strong>零诊断、<code>exit=0</code></strong>，<strong>而且真的跑起来打印 <code>X=oops</code></strong>
+（字符串装进了 int 字段）；<strong>同一份代码加一句 <code>use a.Pair</code></strong> ⇒ 正确报
+「类型错误：字段赋值类型不匹配 'x'」。
+<strong>根因</strong>（与 ⑩ 同形）：<code>visit_var.inc</code> 的 AST_ASSIGN→AST_FIELD_ACCESS 分支解析目标 struct
+只有<strong>两级</strong>（<code>scope_resolve</code> + <code>scope_resolve_tree_bfs</code>），<strong>没有</strong>"导入模块符号表"那一级，
+查不到就<strong>什么都不做</strong> ⇒ 检查静默不执行；而唯一实现 <code>infer_field_type</code> 是三级。
+<strong>修法</strong>：查不到时走 <code>infer_field_type</code> 取期望类型，再做同一条兼容性判定（不改判定口径）。
+<strong>用例</strong>（先写、修前失败）：<code>assert/test_field_assign_type_check.leno</code> —— ① 不 use 的错赋值
+<strong>必须报错</strong>（修前 <code>exit=0</code>）；② use 的错赋值同样报错（对照）；③ 不 use 的<strong>正确</strong>赋值仍须通过
+（防"改完变误报"）。
+<strong>顺带修一处用例机器的过度约束</strong>：<code>assert/helpers/compiler.leno</code> 的 <code>expect_error</code> 把"报错落点"
+写死成 <code>(&lt;行&gt;,1): error:</code>（<strong>列号必须是 1</strong>）⇒ 只有报在第 1 列的错误才通过；字段赋值那条报在
+<code>(5,8)</code>，用例因此<strong>假失败</strong>。已改成只校验<strong>行</strong>（<code>(&lt;行&gt;,</code>）—— 列号本就不该当承诺（同 S6 精神）。
+<strong>验证</strong>：新用例 passed（3 判据）；套件 <strong>324/0</strong>。⚠ 这条检查以前是<strong>静默跳过</strong>、现在<strong>真跑</strong>
+⇒ 特意验证了误伤面：真实应用（47 模块）冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+lint 干净。
+- <strong>⑫ 同族第 7 例（2026-09-18 已修）：字段赋值还有两条路径没走唯一实现</strong> —— 一条把<strong>合法代码判死</strong>，
+另一条<strong>完全不检查</strong>。
+顺着 ⑪ 往下查时撞出来的（先复现：不 use 时 <code>pa.x += 2</code> 被拒，而 use 时 <code>X=3</code> ✓）。
+<code>pa.x += 2</code> 与 <code>pa["x"] = v</code> 看着只是写法不同，实际落到<strong>三条</strong>不同的语义路径上、深度各不相同：</p>
 <table>
 <thead>
 <tr>
@@ -879,19 +898,19 @@
 </tbody>
 </table>
 <p><strong>修法</strong>：三处一律改为向唯一实现 <code>infer_field_type</code>（三级）要类型（顺带要索引），
-  不再各写一份"几级查找"。
-  <strong>用例</strong>：<code>test_module_qualified_new_field</code> 补判据 ⑤（<code>pa.x += 2</code> ⇒ <code>X=3</code>，修前 <code>exit=-1</code>）；
-  <code>test_field_assign_type_check</code> 补判据 ④（<code>pa["x"] = "oops"</code> 必须报错，修前 <code>exit=0</code>，而且照跑打印
-  <code>X=oops</code>）与 ⑤（索引形式的<strong>正确</strong>赋值仍须通过，防误报）。
-  <strong>验证</strong>：两用例 passed；套件 <strong>324/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-  lint 干净。
-  <strong>教训（本族最贵的一条）</strong>：<strong>"同一件语义"在源码写法上会分叉成多条 AST 路径</strong> ——
-  只按"我见过的那种写法"去修，必然漏掉同义的其它写法。要么把这件事的<strong>所有写法</strong>先列全再逐个对深度，
-  要么（更好）让它们都调同一份实现，从根上不再有"几级"之说。
+不再各写一份"几级查找"。
+<strong>用例</strong>：<code>test_module_qualified_new_field</code> 补判据 ⑤（<code>pa.x += 2</code> ⇒ <code>X=3</code>，修前 <code>exit=-1</code>）；
+<code>test_field_assign_type_check</code> 补判据 ④（<code>pa["x"] = "oops"</code> 必须报错，修前 <code>exit=0</code>，而且照跑打印
+<code>X=oops</code>）与 ⑤（索引形式的<strong>正确</strong>赋值仍须通过，防误报）。
+<strong>验证</strong>：两用例 passed；套件 <strong>324/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+lint 干净。
+<strong>教训（本族最贵的一条）</strong>：<strong>"同一件语义"在源码写法上会分叉成多条 AST 路径</strong> ——
+只按"我见过的那种写法"去修，必然漏掉同义的其它写法。要么把这件事的<strong>所有写法</strong>先列全再逐个对深度，
+要么（更好）让它们都调同一份实现，从根上不再有"几级"之说。
 - <strong>⑬ 同族第 8 例（2026-09-18 已修）：cstruct 侧的两条错赋值同样"静默通过"</strong> ——
-  修 ⑫ 时我只按 struct 给 <code>visit_var.inc</code> 的 INDEX 分支补了检查、<strong>漏了 cstruct</strong>：
-  同义写法要逐个对，这正是 ⑫ 刚写下的教训，结果<strong>立刻又踩了一次</strong>（记录在此以示代价）。
-  实测（cstruct <code>Vec { i32 x  i32 y }</code>，<code>a.Vec.malloc()</code> 创建）：</p>
+修 ⑫ 时我只按 struct 给 <code>visit_var.inc</code> 的 INDEX 分支补了检查、<strong>漏了 cstruct</strong>：
+同义写法要逐个对，这正是 ⑫ 刚写下的教训，结果<strong>立刻又踩了一次</strong>（记录在此以示代价）。
+实测（cstruct <code>Vec { i32 x  i32 y }</code>，<code>a.Vec.malloc()</code> 创建）：</p>
 <table>
 <thead>
 <tr>
@@ -919,15 +938,15 @@
 </tbody>
 </table>
 <p><strong>修法</strong>：① <code>visit_var.inc</code> 的 INDEX 分支把检查由 <code>TYPE_STRUCT</code> 扩到 <code>TYPE_CSTRUCT</code>；
-  ② <code>visit_expr.inc</code> 的 cstruct 分支（<code>AST_INDEX_ASSIGN</code>）此前<strong>只设索引、完全没有类型检查</strong>，
-  补上（走唯一实现 <code>infer_field_type</code> 取期望类型 —— 它会把 C 布局映射成 Leno 类型，<code>i32 → int</code>）。
-  <strong>用例</strong>：<code>test_field_assign_type_check.leno</code> 补判据 ⑥⑦⑧（cstruct 索引写 / 复合写必须报错；
-  三种<strong>正确</strong>写法必须通过）⇒ 该用例现共 <strong>8 条判据</strong>。
-  <strong>验证</strong>：用例 passed；套件 <strong>324/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
-  lint 干净。
+② <code>visit_expr.inc</code> 的 cstruct 分支（<code>AST_INDEX_ASSIGN</code>）此前<strong>只设索引、完全没有类型检查</strong>，
+补上（走唯一实现 <code>infer_field_type</code> 取期望类型 —— 它会把 C 布局映射成 Leno 类型，<code>i32 → int</code>）。
+<strong>用例</strong>：<code>test_field_assign_type_check.leno</code> 补判据 ⑥⑦⑧（cstruct 索引写 / 复合写必须报错；
+三种<strong>正确</strong>写法必须通过）⇒ 该用例现共 <strong>8 条判据</strong>。
+<strong>验证</strong>：用例 passed；套件 <strong>324/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）；
+lint 干净。
 - <strong>⑭ 收割（2026-09-18）：把"字段读写"的写法矩阵做成用例</strong> —— ⑩~⑬ 连着四例都是"同一件语义因
-  <strong>写法</strong>分叉成多条 AST 路径"，⑬ 更是 ⑫ 教训的<strong>即时重演</strong>（修 struct 时漏了 cstruct）。
-  故新增 <code>assert/test_field_access_matrix.leno</code>（<strong>7 判据</strong>）把下列格子一次钉住：</p>
+<strong>写法</strong>分叉成多条 AST 路径"，⑬ 更是 ⑫ 教训的<strong>即时重演</strong>（修 struct 时漏了 cstruct）。
+故新增 <code>assert/test_field_access_matrix.leno</code>（<strong>7 判据</strong>）把下列格子一次钉住：</p>
 <table>
 <thead>
 <tr>
@@ -984,196 +1003,196 @@
 </tbody>
 </table>
 <p><strong>本轮新测的格子</strong>：cstruct 的 <code>["x"]</code> <strong>读</strong>（正例 ✓）与 <code>x.f++</code>（两 kind 报同一条错 ✓）；
-  <strong>face 类型字段跨模块</strong>（⑧ 修过的那条链）也一并进矩阵 ✓。
-  <strong>与 <code>test_field_assign_type_check.leno</code>（8 判据）的分工</strong>：矩阵管"该过的过、值要对"，
-  那边管"该报的报"。
-  <strong>验证</strong>：矩阵用例 passed；套件 <strong>325/0</strong>（本轮只加用例、无源码改动，故未再跑真实应用）。
+<strong>face 类型字段跨模块</strong>（⑧ 修过的那条链）也一并进矩阵 ✓。
+<strong>与 <code>test_field_assign_type_check.leno</code>（8 判据）的分工</strong>：矩阵管"该过的过、值要对"，
+那边管"该报的报"。
+<strong>验证</strong>：矩阵用例 passed；套件 <strong>325/0</strong>（本轮只加用例、无源码改动，故未再跑真实应用）。
 - <strong>⑮ 同族第 9 例（2026-09-18 已修）：跨模块 struct 方法的实参检查"整块被跳过"</strong> —— 而且这次
-  <strong>与 use 无关</strong>（比 ⑩~⑬ 更实）。
-  症状：<code>pa.set("oops")</code>（<code>func set(int v)</code>）零诊断、exit=0，程序照跑打印 <code>R=oops</code>；
-  而<strong>同文件</strong>同写法<strong>会</strong>报「set 第 1 个参数类型不匹配: 期望 int, 实际 string」。
-  <strong>根因</strong>：方法调用的实参检查在仓库里有<strong>两份拷贝</strong>，而且<strong>两份犯同一个错</strong> —— 都去<strong>本编译单元的
-  root AST</strong> 里找 struct 声明（<code>for (si &lt; s-&gt;root-&gt;u.block.count) if (AST_STRUCT_DEF &amp;&amp; 名字相等)</code>）：
-  · <code>visit_expr.inc</code>（AST_CALL 形态）
-  · <code>visit_module.inc</code>（MODULE_CALL 形态 —— 实测 <code>pa.set(...)</code> 走的是<strong>这条</strong>；这就是为什么先按
-    <code>visit_expr.inc</code> 改了一版<strong>没生效</strong>、白改一轮）
-  跨模块 struct 不在本文件里 ⇒ <code>struct_def_ast</code> 恒为 NULL ⇒ <strong>个数与类型全不检查</strong>。
-  <strong>修法（收敛，不是再修一份）</strong>：抽唯一实现 <code>semantic_check_method_args_from_placeholder()</code>
-  （<code>semantic_type_utils.c</code>，声明在 <code>semantic_internal.h</code>），两处调用它。数据来源按可用性两条：
-  ① <strong>方法占位符</strong>（<code>semantic_register_struct_from_module</code> 注册，key <code>"Struct::method"</code>）—— 覆盖 <code>use</code> 过的类型；
-  ② <strong>导入模块符号表</strong>（<code>module_symbol_table_find_struct</code> → <code>methods[].param_types</code>）——
-     覆盖"只 import、没 use"的形态（此前无人注册占位符，所以只做①会漏掉这条）。
-  <strong>保守闸门（关键，不是保险起见）</strong>：占位符的参数类型来自扫描器，<strong>聚合类型
-  （struct/face/cstruct/clib）的名字常常缺失</strong> ⇒ 直接比会造<strong>成批假报错</strong> ——
-  实测第一版立刻把套件打成 <strong>7 个失败</strong>（「期望 struct, 实际 struct TreeNode」、
-  「期望 face, 实际 struct WidgetA」）。故：聚合类型只在"kind 相同 + 两边名字都齐"时判，
-  其余（跨 kind / 名字缺）跳过；<code>any</code> 与泛型参数跳过 ⇒ <strong>宁漏不误报</strong>。
-  <strong>用例</strong>（先写、修前 <code>exit=0</code>）：<code>assert/test_cross_module_method_args.leno</code>（4 判据：不 use 错实参
-  必须报错 / use 错实参必须报错 / 参数过多必须报错 / <strong>正确实参必须仍通过</strong>（防误报））。
-  <strong>验证</strong>：用例 passed；套件 <strong>326/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）
-  ⇒ 新启用的检查在 47 模块语料上<strong>零误报</strong>；lint 干净。
-  <strong>过程里的两条教训</strong>：① "同一件事有两份拷贝"时<strong>先找齐全部拷贝再动手</strong>（只改见过的那份＝白改）；
-  ② 新启用一条检查<strong>必须先按"会不会误报"来设计</strong>（否则"堵静默"反而会破坏合法代码 —— 这次靠保守
-  闸门救回来，代价是一轮套件红）。
+<strong>与 use 无关</strong>（比 ⑩~⑬ 更实）。
+症状：<code>pa.set("oops")</code>（<code>func set(int v)</code>）零诊断、exit=0，程序照跑打印 <code>R=oops</code>；
+而<strong>同文件</strong>同写法<strong>会</strong>报「set 第 1 个参数类型不匹配: 期望 int, 实际 string」。
+<strong>根因</strong>：方法调用的实参检查在仓库里有<strong>两份拷贝</strong>，而且<strong>两份犯同一个错</strong> —— 都去<strong>本编译单元的
+root AST</strong> 里找 struct 声明（<code>for (si &lt; s-&gt;root-&gt;u.block.count) if (AST_STRUCT_DEF &amp;&amp; 名字相等)</code>）：
+· <code>visit_expr.inc</code>（AST_CALL 形态）
+· <code>visit_module.inc</code>（MODULE_CALL 形态 —— 实测 <code>pa.set(...)</code> 走的是<strong>这条</strong>；这就是为什么先按
+ <code>visit_expr.inc</code> 改了一版<strong>没生效</strong>、白改一轮）
+跨模块 struct 不在本文件里 ⇒ <code>struct_def_ast</code> 恒为 NULL ⇒ <strong>个数与类型全不检查</strong>。
+<strong>修法（收敛，不是再修一份）</strong>：抽唯一实现 <code>semantic_check_method_args_from_placeholder()</code>
+（<code>semantic_type_utils.c</code>，声明在 <code>semantic_internal.h</code>），两处调用它。数据来源按可用性两条：
+① <strong>方法占位符</strong>（<code>semantic_register_struct_from_module</code> 注册，key <code>"Struct::method"</code>）—— 覆盖 <code>use</code> 过的类型；
+② <strong>导入模块符号表</strong>（<code>module_symbol_table_find_struct</code> → <code>methods[].param_types</code>）——
+  覆盖"只 import、没 use"的形态（此前无人注册占位符，所以只做①会漏掉这条）。
+<strong>保守闸门（关键，不是保险起见）</strong>：占位符的参数类型来自扫描器，<strong>聚合类型
+（struct/face/cstruct/clib）的名字常常缺失</strong> ⇒ 直接比会造<strong>成批假报错</strong> ——
+实测第一版立刻把套件打成 <strong>7 个失败</strong>（「期望 struct, 实际 struct TreeNode」、
+「期望 face, 实际 struct WidgetA」）。故：聚合类型只在"kind 相同 + 两边名字都齐"时判，
+其余（跨 kind / 名字缺）跳过；<code>any</code> 与泛型参数跳过 ⇒ <strong>宁漏不误报</strong>。
+<strong>用例</strong>（先写、修前 <code>exit=0</code>）：<code>assert/test_cross_module_method_args.leno</code>（4 判据：不 use 错实参
+必须报错 / use 错实参必须报错 / 参数过多必须报错 / <strong>正确实参必须仍通过</strong>（防误报））。
+<strong>验证</strong>：用例 passed；套件 <strong>326/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（冷/热一致）
+⇒ 新启用的检查在 47 模块语料上<strong>零误报</strong>；lint 干净。
+<strong>过程里的两条教训</strong>：① "同一件事有两份拷贝"时<strong>先找齐全部拷贝再动手</strong>（只改见过的那份＝白改）；
+② 新启用一条检查<strong>必须先按"会不会误报"来设计</strong>（否则"堵静默"反而会破坏合法代码 —— 这次靠保守
+闸门救回来，代价是一轮套件红）。
 - <strong>⑯ 已修（2026-09-18）：<code>ModuleStructMethod</code> 补 <code>param_struct_names</code> ⇒ 跨模块方法的聚合参数可判</strong>。
-  背景：clib 的 <code>ModuleClibFuncSymbol</code> <strong>有</strong> <code>param_struct_names</code>，struct 方法的<strong>没有</strong> ——
-  而扫描器其实<strong>已经算出了</strong>每个参数的名字（<code>scan_struct.inc</code> 里的 <code>param_struct_name[64]</code>），
-  只是<strong>没地方存</strong> ⇒ 跨模块方法的聚合类型参数不可判（⑮ 只能用保守闸门跳过），
-  且占位符里那些参数类型打印成裸 <code>struct</code>（这正是 ⑮ 那批假报错的来源）。
-  <strong>改动清单（6 处）</strong>：
-  ① <code>include/module_symbol_table.h</code>：<code>ModuleStructMethod</code> 加 <code>char** param_struct_names</code>；
-  ② 扫描器构造点（<code>scan_struct.inc</code>）：把已有的 <code>param_struct_name[64]</code> 存进去（<code>calloc</code> + 按需 <code>strdup</code>，
-     无名的槽位留 NULL）；
-  ③ 扫描器释放点：跟着 <code>param_types</code> 一起释放（不漏内存）；
-  ④ 深拷贝（<code>sym_table_add.inc</code>）：与 <code>param_types</code> / <code>param_generic_names</code> 同样深拷贝；
-  ⑤ <code>.lenosymc</code> 序列化/反序列化（<code>sym_table_cache.inc</code>）：新增一段
-     "has_psn + 每参数名"，并按登记表规矩 <strong>bump <code>LENOSYMC_VERSION</code> v26 → v27</strong>（格式变了，
-     旧缓存读到这段会错位 ⇒ 必须整体失效重扫）；
-  ⑥ 语义侧（<code>semantic_type_utils.c</code>）：占位符注册时把名字挂到 <code>param_types[1+pi]-&gt;struct_name</code>；
-     "只 import 没 use"那条回落也据此构造带名字的期望类型。
-  <strong>闸门随之修正（这一条同样是修出来的，不是顺手）</strong>：第一版闸门是"期望是聚合类型就整段跳过" ✗，
-  结果"把 <code>1</code> 传给 <code>Pair</code> 参数"也被跳过（判据 ⑦ 实测静默）。已改为：
-  <strong>只在"两边都是聚合"时保守</strong>（kind 不同 / 任一侧无名 / 名字含模块限定名 <code>.</code> ⇒ 跳过），
-  "一边聚合、一边基本类型"照常判定。
-  <strong>用例</strong>：<code>test_cross_module_method_args.leno</code> 补判据 ⑤⑥⑦（不 use 聚合参数不符必须报错 /
-  正确的聚合参数必须通过 / use 同样必须报错）⇒ 该用例 <strong>7 判据</strong>。
-  <strong>验证</strong>：用例 passed；套件 <strong>326/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（<strong>零误报</strong>）；
-  <strong>符号表缓存写-读往返</strong>两跑都 425、0 错误（v27 新格式可用）；lint 干净。
+背景：clib 的 <code>ModuleClibFuncSymbol</code> <strong>有</strong> <code>param_struct_names</code>，struct 方法的<strong>没有</strong> ——
+而扫描器其实<strong>已经算出了</strong>每个参数的名字（<code>scan_struct.inc</code> 里的 <code>param_struct_name[64]</code>），
+只是<strong>没地方存</strong> ⇒ 跨模块方法的聚合类型参数不可判（⑮ 只能用保守闸门跳过），
+且占位符里那些参数类型打印成裸 <code>struct</code>（这正是 ⑮ 那批假报错的来源）。
+<strong>改动清单（6 处）</strong>：
+① <code>include/module_symbol_table.h</code>：<code>ModuleStructMethod</code> 加 <code>char** param_struct_names</code>；
+② 扫描器构造点（<code>scan_struct.inc</code>）：把已有的 <code>param_struct_name[64]</code> 存进去（<code>calloc</code> + 按需 <code>strdup</code>，
+  无名的槽位留 NULL）；
+③ 扫描器释放点：跟着 <code>param_types</code> 一起释放（不漏内存）；
+④ 深拷贝（<code>sym_table_add.inc</code>）：与 <code>param_types</code> / <code>param_generic_names</code> 同样深拷贝；
+⑤ <code>.lenosymc</code> 序列化/反序列化（<code>sym_table_cache.inc</code>）：新增一段
+  "has_psn + 每参数名"，并按登记表规矩 <strong>bump <code>LENOSYMC_VERSION</code> v26 → v27</strong>（格式变了，
+  旧缓存读到这段会错位 ⇒ 必须整体失效重扫）；
+⑥ 语义侧（<code>semantic_type_utils.c</code>）：占位符注册时把名字挂到 <code>param_types[1+pi]-&gt;struct_name</code>；
+  "只 import 没 use"那条回落也据此构造带名字的期望类型。
+<strong>闸门随之修正（这一条同样是修出来的，不是顺手）</strong>：第一版闸门是"期望是聚合类型就整段跳过" ✗，
+结果"把 <code>1</code> 传给 <code>Pair</code> 参数"也被跳过（判据 ⑦ 实测静默）。已改为：
+<strong>只在"两边都是聚合"时保守</strong>（kind 不同 / 任一侧无名 / 名字含模块限定名 <code>.</code> ⇒ 跳过），
+"一边聚合、一边基本类型"照常判定。
+<strong>用例</strong>：<code>test_cross_module_method_args.leno</code> 补判据 ⑤⑥⑦（不 use 聚合参数不符必须报错 /
+正确的聚合参数必须通过 / use 同样必须报错）⇒ 该用例 <strong>7 判据</strong>。
+<strong>验证</strong>：用例 passed；套件 <strong>326/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425（<strong>零误报</strong>）；
+<strong>符号表缓存写-读往返</strong>两跑都 425、0 错误（v27 新格式可用）；lint 干净。
 - <strong>⑰ 已修（2026-09-18）：face 方法的实参检查（此前</strong>整片缺失<strong>，连同文件都静默）</strong>。
-  <strong>怎么定位的（打点，不靠猜）</strong>：先在语义侧我以为是的那条路（<code>visit_expr.inc</code> 的 AST_CALL +
-  INDEX callee 分支）打点 ⇒ <strong>一条日志都没打出来</strong> ✗ ⇒ 说明根本不是那条路。挪到
-  <code>visit_module.inc</code> 的 MODULE_CALL 那条后打出决定性一行：
-  <code>mod=an m=feed is_struct_method=1 obj_kind=14 obj_name=Animal</code>
-  （<code>TYPE_STRUCT=13 / TYPE_FACE=14</code> ⇒ 接收者<strong>确实是 face</strong>，却被算作 "struct 方法"）⇒ 它被带进
-  struct 那套逻辑（按 <code>"Animal::feed"</code> 找占位符 ⇒ 找不到 ⇒ <strong>整块跳过</strong>）⇒ 个数与类型全不检查。
-  <strong>修法</strong>：在该处<strong>先按接收者类型分流</strong> —— face 接收者走新增的唯一实现
-  <code>semantic_check_face_method_args()</code>：
-  · <strong>同文件</strong>：解析器的 face AST <strong>有 <code>method_param_types</code></strong> ⇒ 判逐参类型（聚合类型同规矩保守）；
-  · <strong>跨模块</strong>：<code>ModuleFaceMethodSymbol</code> 只有 <code>param_count</code> ⇒ 只判"参数过多"。
-  <strong>用例</strong>：<code>assert/test_face_method_args.leno</code>（3 判据：同文件错实参必须报错〈修前静默〉/
-  同文件参数过多必须报错 / 跨模块参数过多必须报错）；<strong>未断言</strong>跨模块"错类型"（仍缺数据，
-  免得把缺口固化成期望行为）。⇒ 该用例 passed；套件 <strong>327/0</strong>。
-  <strong>验证</strong>：真实应用（47 模块，face 密集）冷扫 警告 0、错误 0、FuncExecuted 425（<strong>零误报</strong>）；
-  lint 干净。
-  <strong>教训（比这一处修复更值）</strong>：<strong>先打点确认"实际走哪条路"，再动手</strong> —— 我先前三次直接在
-  猜的路上修，全部落空；打点一次就拿到答案（<code>is_struct_method=1</code> 但 <code>obj_kind=14</code>）。
-  <strong>⑰-2 收尾（2026-09-18 同日）</strong>：⑰ 当时只做到"同文件判类型、跨模块判个数" —— 本轮把跨模块那半
-  补齐（<strong>签名数据入库</strong>，与 ⑯ 同形，只是对象换成 face）：
-  · <code>ModuleFaceMethodSymbol</code> 加 <code>param_types</code> / <code>param_struct_names</code>；
-  · 扫描器 <code>scan_face.inc</code>：参数扫描时<strong>同时抓参数原文</strong>，再用与 struct 方法段<strong>同源</strong>的规则解析类型
-    （每个参数的第一个标识符 token 是类型；认 clib/face/cstruct/struct 四张表 + 基本类型；
-    认不出记 <code>any</code> ⇒ 消费方跳过 = 宁漏不误报）；顺带补了临时数组的释放；
-  · <code>add_face</code> 深拷贝 + <code>sym_table_create</code> 释放 + <code>.lenosymc</code> 写/读两段 + <strong>bump v28</strong>（第七节实例七）；
-  · 语义侧 <code>semantic_check_face_method_args</code> 的跨模块分支：由"只判个数"升级为<strong>判类型</strong>
-    （同样带保守闸门：C 布局类型跳过；聚合类型名字缺/含模块限定名跳过）。
-  <strong>用例</strong>：<code>test_face_method_args.leno</code> 补判据 ④（跨模块错类型<strong>必须报错</strong> —— 修前静默）与
-  ⑤（跨模块<strong>正确</strong>调用必须能编译并跑出 <code>A=8</code> —— 借 <code>struct Cat impl Animal</code> 建了个<strong>真能跑</strong>的守卫）
-  ⇒ 该用例 <strong>5 判据</strong>。
-  <strong>验证</strong>：用例 passed；套件 <strong>328/0</strong>；真实应用三跑（<code>--no-cache</code> 冷扫 / 写 v28 缓存 / 读 v28 缓存）
-  都 警告 0、错误 0、FuncExecuted 425（跨模块 face 类型检查新启用，<strong>零误报</strong>）；lint 干净。
+<strong>怎么定位的（打点，不靠猜）</strong>：先在语义侧我以为是的那条路（<code>visit_expr.inc</code> 的 AST_CALL +
+INDEX callee 分支）打点 ⇒ <strong>一条日志都没打出来</strong> ✗ ⇒ 说明根本不是那条路。挪到
+<code>visit_module.inc</code> 的 MODULE_CALL 那条后打出决定性一行：
+<code>mod=an m=feed is_struct_method=1 obj_kind=14 obj_name=Animal</code>
+（<code>TYPE_STRUCT=13 / TYPE_FACE=14</code> ⇒ 接收者<strong>确实是 face</strong>，却被算作 "struct 方法"）⇒ 它被带进
+struct 那套逻辑（按 <code>"Animal::feed"</code> 找占位符 ⇒ 找不到 ⇒ <strong>整块跳过</strong>）⇒ 个数与类型全不检查。
+<strong>修法</strong>：在该处<strong>先按接收者类型分流</strong> —— face 接收者走新增的唯一实现
+<code>semantic_check_face_method_args()</code>：
+· <strong>同文件</strong>：解析器的 face AST <strong>有 <code>method_param_types</code></strong> ⇒ 判逐参类型（聚合类型同规矩保守）；
+· <strong>跨模块</strong>：<code>ModuleFaceMethodSymbol</code> 只有 <code>param_count</code> ⇒ 只判"参数过多"。
+<strong>用例</strong>：<code>assert/test_face_method_args.leno</code>（3 判据：同文件错实参必须报错〈修前静默〉/
+同文件参数过多必须报错 / 跨模块参数过多必须报错）；<strong>未断言</strong>跨模块"错类型"（仍缺数据，
+免得把缺口固化成期望行为）。⇒ 该用例 passed；套件 <strong>327/0</strong>。
+<strong>验证</strong>：真实应用（47 模块，face 密集）冷扫 警告 0、错误 0、FuncExecuted 425（<strong>零误报</strong>）；
+lint 干净。
+<strong>教训（比这一处修复更值）</strong>：<strong>先打点确认"实际走哪条路"，再动手</strong> —— 我先前三次直接在
+猜的路上修，全部落空；打点一次就拿到答案（<code>is_struct_method=1</code> 但 <code>obj_kind=14</code>）。
+<strong>⑰-2 收尾（2026-09-18 同日）</strong>：⑰ 当时只做到"同文件判类型、跨模块判个数" —— 本轮把跨模块那半
+补齐（<strong>签名数据入库</strong>，与 ⑯ 同形，只是对象换成 face）：
+· <code>ModuleFaceMethodSymbol</code> 加 <code>param_types</code> / <code>param_struct_names</code>；
+· 扫描器 <code>scan_face.inc</code>：参数扫描时<strong>同时抓参数原文</strong>，再用与 struct 方法段<strong>同源</strong>的规则解析类型
+ （每个参数的第一个标识符 token 是类型；认 clib/face/cstruct/struct 四张表 + 基本类型；
+ 认不出记 <code>any</code> ⇒ 消费方跳过 = 宁漏不误报）；顺带补了临时数组的释放；
+· <code>add_face</code> 深拷贝 + <code>sym_table_create</code> 释放 + <code>.lenosymc</code> 写/读两段 + <strong>bump v28</strong>（第七节实例七）；
+· 语义侧 <code>semantic_check_face_method_args</code> 的跨模块分支：由"只判个数"升级为<strong>判类型</strong>
+ （同样带保守闸门：C 布局类型跳过；聚合类型名字缺/含模块限定名跳过）。
+<strong>用例</strong>：<code>test_face_method_args.leno</code> 补判据 ④（跨模块错类型<strong>必须报错</strong> —— 修前静默）与
+⑤（跨模块<strong>正确</strong>调用必须能编译并跑出 <code>A=8</code> —— 借 <code>struct Cat impl Animal</code> 建了个<strong>真能跑</strong>的守卫）
+⇒ 该用例 <strong>5 判据</strong>。
+<strong>验证</strong>：用例 passed；套件 <strong>328/0</strong>；真实应用三跑（<code>--no-cache</code> 冷扫 / 写 v28 缓存 / 读 v28 缓存）
+都 警告 0、错误 0、FuncExecuted 425（跨模块 face 类型检查新启用，<strong>零误报</strong>）；lint 干净。
 - <strong>⑳「参数表 → 类型」解析收敛（第一步，2026-09-18）</strong>：同一件事在扫描器里<strong>曾有三份</strong> ——
-  ① <code>scan_struct.inc</code> 的方法参数段（内联、最完整：还收集泛型参数名）；
-  ② <code>scan_face.inc</code>（⑰-2 时新写的内联版）；
-  ③ 语义侧 ⑱ 的就地文本解析（把 <code>param_text</code> 逐段 <code>malloc</code> 出类型名）。
-  本轮把 ② 收进<strong>唯一实现</strong> <code>src/module_symbol_table/inc/sym_table_params.inc</code> 的 <code>mod_scan_params()</code>
-  （规则：每参数<strong>首个标识符 token 是类型</strong>；类型名查 基本类型 → clib → face → cstruct → struct
-  —— <strong>四张表都查</strong>；认不出记 <code>any</code> ⇒ 消费方跳过 = 宁漏不误报；默认值里的括号/花括号/字符串不参与
-  分段）。<strong>行为逐条不变</strong>（5 判据用例 + 跨模块探针 + 套件 + 真实应用守）。①③ 留待后续
-  （① 多承担泛型参数名；③ 等 ⑱ 转正时一并收）。
-  <strong>⚠ 踩坑（值得记）</strong>：<code>scan/*.inc</code> 那批是在扫描<strong>函数体内</strong>被包含的<strong>代码片段</strong>（所以它们能直接
-  用 <code>table</code> / <code>source</code> 等局部名）⇒ 在里面写 <strong>static 函数</strong>会报
-  <code>error: invalid storage class for function</code>（我第一版就把新文件放进 <code>scan/</code> 下，构建直接失败）。
-  必须放在<strong>文件作用域</strong>（<code>module_symbol_table.c</code> 的"类型字符串解析器"之后）；该文件开头的注释里
-  已写明这条约束，免得下一个人重踩。
+① <code>scan_struct.inc</code> 的方法参数段（内联、最完整：还收集泛型参数名）；
+② <code>scan_face.inc</code>（⑰-2 时新写的内联版）；
+③ 语义侧 ⑱ 的就地文本解析（把 <code>param_text</code> 逐段 <code>malloc</code> 出类型名）。
+本轮把 ② 收进<strong>唯一实现</strong> <code>src/module_symbol_table/inc/sym_table_params.inc</code> 的 <code>mod_scan_params()</code>
+（规则：每参数<strong>首个标识符 token 是类型</strong>；类型名查 基本类型 → clib → face → cstruct → struct
+—— <strong>四张表都查</strong>；认不出记 <code>any</code> ⇒ 消费方跳过 = 宁漏不误报；默认值里的括号/花括号/字符串不参与
+分段）。<strong>行为逐条不变</strong>（5 判据用例 + 跨模块探针 + 套件 + 真实应用守）。①③ 留待后续
+（① 多承担泛型参数名；③ 等 ⑱ 转正时一并收）。
+<strong>⚠ 踩坑（值得记）</strong>：<code>scan/*.inc</code> 那批是在扫描<strong>函数体内</strong>被包含的<strong>代码片段</strong>（所以它们能直接
+用 <code>table</code> / <code>source</code> 等局部名）⇒ 在里面写 <strong>static 函数</strong>会报
+<code>error: invalid storage class for function</code>（我第一版就把新文件放进 <code>scan/</code> 下，构建直接失败）。
+必须放在<strong>文件作用域</strong>（<code>module_symbol_table.c</code> 的"类型字符串解析器"之后）；该文件开头的注释里
+已写明这条约束，免得下一个人重踩。
 - <strong>⑳ 第二步 + ⑱ 转正（2026-09-18 同日）</strong>：接着把<strong>第三份</strong>（语义侧 ⑱ 的就地文本解析）收掉 ——
-  给 <code>ModuleFuncSymbol</code> 补 <code>param_types</code> / <code>param_struct_names</code>（<code>.lenosymc</code> <strong>v28 → v29</strong>，
-  见第七节实例八）：
-  · <code>scan_func.inc</code> 在 <code>add_func</code> 之后用<strong>唯一实现</strong> <code>mod_scan_params</code> 填（<code>param_text</code> 早已现成，
-    那正是 ⑱ 当初"只能就地解析"的原因）；数组长度<strong>必须</strong> = <code>param_count</code>（消费方按该下标访问）；
-  · <code>add_func</code> 里<strong>必须显式把两个新字段置 NULL</strong>：<code>table-&gt;funcs</code> 是 <strong>realloc</strong> 扩容的，
-    新槽位是垃圾值 —— 不初始化会读到野指针（写这段时特意核过扩容方式）；
-  · 释放点（<code>sym_table_clear_symbols</code>）、缓存写/读都跟上；
-  · 语义侧 <code>visit_module.inc</code> 的跨模块实参检查改读 <code>param_types</code>，<strong>删掉那 55 行就地解析</strong>
-    （仍只对 4 个内置基本类型判 ⇒ 与转正前<strong>逐条等价</strong>，本轮只换数据来源；扩到聚合/C 布局留给后续）。
-  ⇒ "参数表 → 类型"现在只剩 <strong>一份实现 + 一份内联</strong>（<code>scan_struct.inc</code> 的方法参数段 —— 它多承担
-  泛型参数名的收集，属"更全"的一份，留待单独收）。
+给 <code>ModuleFuncSymbol</code> 补 <code>param_types</code> / <code>param_struct_names</code>（<code>.lenosymc</code> <strong>v28 → v29</strong>，
+见第七节实例八）：
+· <code>scan_func.inc</code> 在 <code>add_func</code> 之后用<strong>唯一实现</strong> <code>mod_scan_params</code> 填（<code>param_text</code> 早已现成，
+ 那正是 ⑱ 当初"只能就地解析"的原因）；数组长度<strong>必须</strong> = <code>param_count</code>（消费方按该下标访问）；
+· <code>add_func</code> 里<strong>必须显式把两个新字段置 NULL</strong>：<code>table-&gt;funcs</code> 是 <strong>realloc</strong> 扩容的，
+ 新槽位是垃圾值 —— 不初始化会读到野指针（写这段时特意核过扩容方式）；
+· 释放点（<code>sym_table_clear_symbols</code>）、缓存写/读都跟上；
+· 语义侧 <code>visit_module.inc</code> 的跨模块实参检查改读 <code>param_types</code>，<strong>删掉那 55 行就地解析</strong>
+ （仍只对 4 个内置基本类型判 ⇒ 与转正前<strong>逐条等价</strong>，本轮只换数据来源；扩到聚合/C 布局留给后续）。
+⇒ "参数表 → 类型"现在只剩 <strong>一份实现 + 一份内联</strong>（<code>scan_struct.inc</code> 的方法参数段 —— 它多承担
+泛型参数名的收集，属"更全"的一份，留待单独收）。
 - <strong>㉑ 名字政策唯一化 + 判定覆盖面扩展（2026-09-18 同日，承 ⑳）</strong>：
-  <strong>① 名字政策唯一化</strong>：把"<strong>认哪些名字算类型</strong>"抽成<strong>唯一政策点</strong> <code>mod_resolve_param_type()</code>
-  （在 <code>inc/sym_table_params.inc</code>）：基本类型 → clib → face → cstruct → struct → <strong>泛型参数名覆盖</strong>
-  （命中所在 struct/方法的 <code>T/K/V</code> 即记 <code>TYPE_GENERIC_PARAM</code> —— 这是 <code>scan_struct</code> 那份内联实现原有
-  的能力，丢了会坏泛型方法，收敛时必须保留）。<code>scan_struct.inc</code> 里那 <strong>40 行内联四表检查 + 泛型循环
-  已删除</strong>，改为调它。⇒ 扫描器里两条参数走法（<code>mod_scan_params</code> 的<strong>逐段</strong>走法、<code>scan_struct</code> 的
-  <strong>逐 token</strong> 走法）<strong>共用一份名字政策</strong> —— ⑧ 那一族 bug（各处认的名字集合不一致，已产出 4 个 bug）
-  的根源被一次性钉死。
-  <strong>仍未收的（明确登记"不动"）</strong>：两条<strong>走法</strong>本身仍是两份 —— <code>scan_struct</code> 那份还承担"复杂默认值
-  现场跳过 / 字符串字面量 / 括号深度"等细节，把它也换成逐段走法<strong>收益递减而风险实打实</strong>
-  （struct 方法是最常用路径，写错会伤一大片）⇒ 本轮止步于"政策唯一"，走法差异<strong>登记不动</strong>。
-  <strong>② 判定覆盖面扩展</strong>：跨模块"模块函数"实参检查从"4 个基本类型"扩到<strong>聚合类型</strong>
-  （struct/face/cstruct/clib，名字取自 <code>param_struct_names</code>），闸门与 ⑯/⑰-2 同款（C 布局跳过；
-  聚合名缺/含 <code>.</code> 跳过；两侧都是聚合时 kind 或名字不齐也跳过 ⇒ 宁漏不误报）。
-  用例 <code>test_cross_module_func_args</code> 由 5 判据增至 <strong>7 判据</strong>：新增 ⑥ 聚合参数传 string <strong>必须报错</strong>
-  （转正前只判 4 个基本类型 ⇒ 静默）与 ⑦ 跨模块<strong>正确</strong>聚合实参必须能编译并跑出 <code>R=4</code>（真跑守卫）。
-  <strong>验证（两步一起）</strong>：构建 successful；套件 <strong>328/0</strong>；真实应用冷扫与热跑 警告 0、错误 0、
-  FuncExecuted 425（新启用的聚合检查在 SDL3 上<strong>零误报</strong>）；lint 干净。
+<strong>① 名字政策唯一化</strong>：把"<strong>认哪些名字算类型</strong>"抽成<strong>唯一政策点</strong> <code>mod_resolve_param_type()</code>
+（在 <code>inc/sym_table_params.inc</code>）：基本类型 → clib → face → cstruct → struct → <strong>泛型参数名覆盖</strong>
+（命中所在 struct/方法的 <code>T/K/V</code> 即记 <code>TYPE_GENERIC_PARAM</code> —— 这是 <code>scan_struct</code> 那份内联实现原有
+的能力，丢了会坏泛型方法，收敛时必须保留）。<code>scan_struct.inc</code> 里那 <strong>40 行内联四表检查 + 泛型循环
+已删除</strong>，改为调它。⇒ 扫描器里两条参数走法（<code>mod_scan_params</code> 的<strong>逐段</strong>走法、<code>scan_struct</code> 的
+<strong>逐 token</strong> 走法）<strong>共用一份名字政策</strong> —— ⑧ 那一族 bug（各处认的名字集合不一致，已产出 4 个 bug）
+的根源被一次性钉死。
+<strong>仍未收的（明确登记"不动"）</strong>：两条<strong>走法</strong>本身仍是两份 —— <code>scan_struct</code> 那份还承担"复杂默认值
+现场跳过 / 字符串字面量 / 括号深度"等细节，把它也换成逐段走法<strong>收益递减而风险实打实</strong>
+（struct 方法是最常用路径，写错会伤一大片）⇒ 本轮止步于"政策唯一"，走法差异<strong>登记不动</strong>。
+<strong>② 判定覆盖面扩展</strong>：跨模块"模块函数"实参检查从"4 个基本类型"扩到<strong>聚合类型</strong>
+（struct/face/cstruct/clib，名字取自 <code>param_struct_names</code>），闸门与 ⑯/⑰-2 同款（C 布局跳过；
+聚合名缺/含 <code>.</code> 跳过；两侧都是聚合时 kind 或名字不齐也跳过 ⇒ 宁漏不误报）。
+用例 <code>test_cross_module_func_args</code> 由 5 判据增至 <strong>7 判据</strong>：新增 ⑥ 聚合参数传 string <strong>必须报错</strong>
+（转正前只判 4 个基本类型 ⇒ 静默）与 ⑦ 跨模块<strong>正确</strong>聚合实参必须能编译并跑出 <code>R=4</code>（真跑守卫）。
+<strong>验证（两步一起）</strong>：构建 successful；套件 <strong>328/0</strong>；真实应用冷扫与热跑 警告 0、错误 0、
+FuncExecuted 425（新启用的聚合检查在 SDL3 上<strong>零误报</strong>）；lint 干净。
 - <strong>㉒ 字段类型名解析也走唯一政策点（2026-09-18，承 ㉑①）</strong>：⑦/⑧ 那两个 bug（struct 字段漏
-  cstruct/face；cstruct 字段只查 clib/struct ⇒ <strong>嵌套 cstruct 跨模块静默降级成 any</strong>，消费方是硬
-  编译错）的根源就是"各处认的名字集合不一致"。本轮把这两处<strong>出过 bug 的字段解析</strong>换成唯一政策点
-  <code>mod_resolve_param_type()</code>：
-  · <code>scan_struct.inc</code> 字段：四个 <code>else if</code> 分支（clib/struct/cstruct/face）→ 一次政策调用；
-    原有"泛型类型参数（T/K/V）"兜底逻辑<strong>保持原样</strong>（政策点只在 kind 层记名，泛型字段还要把名字
-    写进 <code>type_info</code> —— 那段仍留在原地，且只可能在名字确实认不出时命中）；
-  · <code>scan_cstruct.inc</code> 字段：同上（该处正是 ⑧ 补出来的四分支）。
-  ⇒ "<strong>字段</strong>类型名 → kind + 聚合名"与"<strong>参数</strong>类型名"共用同一份名字政策；将来新增一类类型名
-  只需改 <code>mod_resolve_param_type</code> <strong>一处</strong>。
-  <strong>仍登记不动的其余识别点（各有明确理由）</strong>：
-  · <strong>方法返回</strong>（<code>scan_struct</code> / <code>scan_face</code>）、<strong>函数返回</strong>（<code>scan_func</code>）、<strong>use 传导</strong>
-    （<code>scan_pass2_init</code>）：这几处除名字解析外还要各自更新 <code>type_info-&gt;kind</code> / 走各自的泛型覆盖机制
-    （如 <code>is_type_param</code> ⇒ <code>type_param_name</code>）—— 属"逐个改"的活，本轮只登记；
-  · <strong>元素类型</strong>（<code>scan_struct</code> / <code>scan_cstruct</code> 各一处）：<strong>故意保留分歧</strong> —— ⑨ 实测判定：补
-    cstruct 会把扁平 <code>element_type</code> 的 kind 由 STRUCT 变 CSTRUCT，而该 kind 可能被 codegen 的
-    数组元素读写路径（值拷贝 vs 引用）用到 ⇒ 为"诊断文字少一个字"动它不划算；
-  · <strong>alias 底层</strong>（<code>scan_alias</code>）：⑨ 实测不可达、语义上无实义（clib 是函数集合不是数据类型），保留。
-  <strong>验证</strong>：构建 successful；专项用例（嵌套 cstruct 字段 / 泛型类型参数路径 / 模块限定 new 字段）
-  全 passed；套件 <strong>328/0</strong>；真实应用冷扫 警告 <strong>0</strong>（含降级警告）、错误 0、FuncExecuted 425
-  ⇒ 政策点的识别面与原来的内联四表<strong>一致</strong>（没有多认、也没有少认）。
+cstruct/face；cstruct 字段只查 clib/struct ⇒ <strong>嵌套 cstruct 跨模块静默降级成 any</strong>，消费方是硬
+编译错）的根源就是"各处认的名字集合不一致"。本轮把这两处<strong>出过 bug 的字段解析</strong>换成唯一政策点
+<code>mod_resolve_param_type()</code>：
+· <code>scan_struct.inc</code> 字段：四个 <code>else if</code> 分支（clib/struct/cstruct/face）→ 一次政策调用；
+ 原有"泛型类型参数（T/K/V）"兜底逻辑<strong>保持原样</strong>（政策点只在 kind 层记名，泛型字段还要把名字
+ 写进 <code>type_info</code> —— 那段仍留在原地，且只可能在名字确实认不出时命中）；
+· <code>scan_cstruct.inc</code> 字段：同上（该处正是 ⑧ 补出来的四分支）。
+⇒ "<strong>字段</strong>类型名 → kind + 聚合名"与"<strong>参数</strong>类型名"共用同一份名字政策；将来新增一类类型名
+只需改 <code>mod_resolve_param_type</code> <strong>一处</strong>。
+<strong>仍登记不动的其余识别点（各有明确理由）</strong>：
+· <strong>方法返回</strong>（<code>scan_struct</code> / <code>scan_face</code>）、<strong>函数返回</strong>（<code>scan_func</code>）、<strong>use 传导</strong>
+ （<code>scan_pass2_init</code>）：这几处除名字解析外还要各自更新 <code>type_info-&gt;kind</code> / 走各自的泛型覆盖机制
+ （如 <code>is_type_param</code> ⇒ <code>type_param_name</code>）—— 属"逐个改"的活，本轮只登记；
+· <strong>元素类型</strong>（<code>scan_struct</code> / <code>scan_cstruct</code> 各一处）：<strong>故意保留分歧</strong> —— ⑨ 实测判定：补
+ cstruct 会把扁平 <code>element_type</code> 的 kind 由 STRUCT 变 CSTRUCT，而该 kind 可能被 codegen 的
+ 数组元素读写路径（值拷贝 vs 引用）用到 ⇒ 为"诊断文字少一个字"动它不划算；
+· <strong>alias 底层</strong>（<code>scan_alias</code>）：⑨ 实测不可达、语义上无实义（clib 是函数集合不是数据类型），保留。
+<strong>验证</strong>：构建 successful；专项用例（嵌套 cstruct 字段 / 泛型类型参数路径 / 模块限定 new 字段）
+全 passed；套件 <strong>328/0</strong>；真实应用冷扫 警告 <strong>0</strong>（含降级警告）、错误 0、FuncExecuted 425
+⇒ 政策点的识别面与原来的内联四表<strong>一致</strong>（没有多认、也没有少认）。
 - <strong>㉓ 返回类型 / use 传导也走唯一政策点（2026-09-18，承 ㉑①/㉒）</strong>：把<strong>最后四处</strong>内联四表检查
-  （<code>scan_struct</code> 方法返回、<code>scan_face</code> 方法返回、<code>scan_func</code> 函数返回、<code>scan_pass2_init</code> 的 use 传导）
-  也换成 <code>mod_resolve_param_type()</code>：
-  · 四处形状一致（设 kind + 修 <code>type_info-&gt;kind</code> + 拷名字）⇒ 统一成"政策调用 + 赋值"；
-  · <strong>保真细节</strong>：原 <code>struct</code> 分支<strong>不更新</strong> <code>type_info-&gt;kind</code>（默认就是 TYPE_STRUCT）⇒ 新写法只对
-    非 struct 更新，逐条等价；<code>scan_pass2_init</code> 那处"用 <code>memcpy</code> 代替 <code>strncpy</code>（避免
-    <code>-Wstringop-truncation</code>）"的写法也原样保留；
-  · <code>scan_struct</code> 方法返回处的<strong>泛型覆盖</strong>（<code>is_type_param</code> ⇒ <code>type_param_name</code>）仍走原机制
-    （政策点只管四表）。
-  ⇒ "<strong>认哪些名字算类型</strong>"在扫描器里现在<strong>只有一处</strong>（<code>mod_resolve_param_type</code>）；将来新增一类
-  类型名只改一处。<strong>仅剩两处故意分歧</strong>（⑨ 实测判定，理由见 ㉒）：元素类型段、alias 底层段。
-  <strong>验证</strong>：构建 successful；专项用例 4 个（嵌套 cstruct 字段 / 跨模块函数实参 / face 方法实参 /
-  模块限定 new 字段）全 passed；跨模块返回类型探针 <code>X=1 Y=2</code> ✓；元素类型"诊断尺子"的报错文案与
-  ⑨ 记录<strong>逐字一致</strong>（<code>实际 Array[cstruct Vec]</code> / <code>实际 struct Vec</code>）⇒ 证明<strong>没有误动</strong>那一处；
-  套件 <strong>328/0</strong>；真实应用冷扫与热跑 警告 0、错误 0、FuncExecuted 425。
+（<code>scan_struct</code> 方法返回、<code>scan_face</code> 方法返回、<code>scan_func</code> 函数返回、<code>scan_pass2_init</code> 的 use 传导）
+也换成 <code>mod_resolve_param_type()</code>：
+· 四处形状一致（设 kind + 修 <code>type_info-&gt;kind</code> + 拷名字）⇒ 统一成"政策调用 + 赋值"；
+· <strong>保真细节</strong>：原 <code>struct</code> 分支<strong>不更新</strong> <code>type_info-&gt;kind</code>（默认就是 TYPE_STRUCT）⇒ 新写法只对
+ 非 struct 更新，逐条等价；<code>scan_pass2_init</code> 那处"用 <code>memcpy</code> 代替 <code>strncpy</code>（避免
+ <code>-Wstringop-truncation</code>）"的写法也原样保留；
+· <code>scan_struct</code> 方法返回处的<strong>泛型覆盖</strong>（<code>is_type_param</code> ⇒ <code>type_param_name</code>）仍走原机制
+ （政策点只管四表）。
+⇒ "<strong>认哪些名字算类型</strong>"在扫描器里现在<strong>只有一处</strong>（<code>mod_resolve_param_type</code>）；将来新增一类
+类型名只改一处。<strong>仅剩两处故意分歧</strong>（⑨ 实测判定，理由见 ㉒）：元素类型段、alias 底层段。
+<strong>验证</strong>：构建 successful；专项用例 4 个（嵌套 cstruct 字段 / 跨模块函数实参 / face 方法实参 /
+模块限定 new 字段）全 passed；跨模块返回类型探针 <code>X=1 Y=2</code> ✓；元素类型"诊断尺子"的报错文案与
+⑨ 记录<strong>逐字一致</strong>（<code>实际 Array[cstruct Vec]</code> / <code>实际 struct Vec</code>）⇒ 证明<strong>没有误动</strong>那一处；
+套件 <strong>328/0</strong>；真实应用冷扫与热跑 警告 0、错误 0、FuncExecuted 425。
 - <strong>⑱ 已修（2026-09-18）：模块函数（<code>a.take(...)</code>）的实参类型检查（"只 import"时此前静默）</strong>。
-  症状：跨模块 <code>a.take("oops")</code>（<code>export func take(int v): int</code>）<strong>零诊断</strong>；同文件 <code>take("oops")</code>
-  会报（那条走 AST 里的 func_def）。
-  根因：<code>ModuleFuncSymbol</code> <strong>只有 <code>param_text</code>（原始文本，如 <code>"int v"</code> / <code>"string name, int age"</code>）
-  与 <code>param_count</code>，没有参数类型数组</strong>；而 <code>param_text</code> 在语义侧<strong>没有任何消费者</strong>（死数据）。
-  <strong>修法（刻意不动缓存格式）</strong>：该文本的<strong>唯一消费者</strong>就是模块函数调用处的参数检查 ⇒ 就地解析：
-  按顶层逗号切分（跳过默认值里的括号与字符串）→ 取每个参数的类型 token → <strong>只认
-  <code>int</code>/<code>float</code>/<code>string</code>/<code>bool</code> 四个内置基本类型名</strong>，其余（<code>i32</code>/<code>f64</code>/<code>str8</code>/泛型/聚合/复杂写法）
-  一律跳过（宁漏不误报）。<strong>为什么不在这一轮补 <code>param_types</code> 字段</strong>：那要动
-  <code>module_symbol_table_add_func</code> 的签名（调用点更多）+ <code>.lenosymc</code> 往返 + 一次版本 bump；
-  而就地解析是<strong>保守</strong>的（认不出就跳过 ⇒ 不会误报）。<strong>若将来补了字段，应改用它并删掉这段
-  文本解析</strong>（此处登记为"临时实现"）。
-  <strong>实现中踩到并记下的一点</strong>：<code>parse_base_type</code> 在扫描器那边是 <strong>static / 每 TU 一份</strong> ⇒ 语义侧
-  写 <code>extern</code> 声明会<strong>链接失败</strong>（实测 <code>ld</code> 报错）⇒ 故用就地小映射（4 个名字），不依赖它。
-  用例：<code>assert/test_cross_module_func_args.leno</code>（5 判据：跨模块错实参必须报错〈修前静默〉 /
-  第二个参数错也要报 / 正确实参必须通过 / <strong>int→float 隐式转换不得误判</strong> / 同文件对照）。
-  <strong>验证</strong>：用例 passed；套件 <strong>328/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
-  （模块函数调用满地都是，<strong>零误报</strong>）；lint 干净。
+症状：跨模块 <code>a.take("oops")</code>（<code>export func take(int v): int</code>）<strong>零诊断</strong>；同文件 <code>take("oops")</code>
+会报（那条走 AST 里的 func_def）。
+根因：<code>ModuleFuncSymbol</code> <strong>只有 <code>param_text</code>（原始文本，如 <code>"int v"</code> / <code>"string name, int age"</code>）
+与 <code>param_count</code>，没有参数类型数组</strong>；而 <code>param_text</code> 在语义侧<strong>没有任何消费者</strong>（死数据）。
+<strong>修法（刻意不动缓存格式）</strong>：该文本的<strong>唯一消费者</strong>就是模块函数调用处的参数检查 ⇒ 就地解析：
+按顶层逗号切分（跳过默认值里的括号与字符串）→ 取每个参数的类型 token → <strong>只认
+<code>int</code>/<code>float</code>/<code>string</code>/<code>bool</code> 四个内置基本类型名</strong>，其余（<code>i32</code>/<code>f64</code>/<code>str8</code>/泛型/聚合/复杂写法）
+一律跳过（宁漏不误报）。<strong>为什么不在这一轮补 <code>param_types</code> 字段</strong>：那要动
+<code>module_symbol_table_add_func</code> 的签名（调用点更多）+ <code>.lenosymc</code> 往返 + 一次版本 bump；
+而就地解析是<strong>保守</strong>的（认不出就跳过 ⇒ 不会误报）。<strong>若将来补了字段，应改用它并删掉这段
+文本解析</strong>（此处登记为"临时实现"）。
+<strong>实现中踩到并记下的一点</strong>：<code>parse_base_type</code> 在扫描器那边是 <strong>static / 每 TU 一份</strong> ⇒ 语义侧
+写 <code>extern</code> 声明会<strong>链接失败</strong>（实测 <code>ld</code> 报错）⇒ 故用就地小映射（4 个名字），不依赖它。
+用例：<code>assert/test_cross_module_func_args.leno</code>（5 判据：跨模块错实参必须报错〈修前静默〉 /
+第二个参数错也要报 / 正确实参必须通过 / <strong>int→float 隐式转换不得误判</strong> / 同文件对照）。
+<strong>验证</strong>：用例 passed；套件 <strong>328/0</strong>；真实应用冷扫 警告 0、错误 0、FuncExecuted 425
+（模块函数调用满地都是，<strong>零误报</strong>）；lint 干净。
 - <strong>旧登记（保留上下文）</strong>：模块函数（<code>a.take(...)</code>）的实参在"只 import"时不检查 ——
-  同文件 <code>take("oops")</code> 会报 ✓，跨模块静默 ✗；卡在 <code>ModuleFuncSymbol</code> <strong>只有 <code>param_text</code> 文本、
-  没有参数类型数组</strong>（该字段在语义侧<strong>无人消费</strong>，是死数据）。修法与 ⑯ 同形（补类型数组 +
-  扫描器填 + <code>.lenosymc</code> 往返 + 一次 bump），但 <code>module_symbol_table_add_func</code> 的调用点更多 ⇒ 单独一轮。
-  顺着 ⑮/⑯ 往下扫时实测（探针都放在 <code>.probe_path/faceargs/</code>）：</p>
+同文件 <code>take("oops")</code> 会报 ✓，跨模块静默 ✗；卡在 <code>ModuleFuncSymbol</code> <strong>只有 <code>param_text</code> 文本、
+没有参数类型数组</strong>（该字段在语义侧<strong>无人消费</strong>，是死数据）。修法与 ⑯ 同形（补类型数组 +
+扫描器填 + <code>.lenosymc</code> 往返 + 一次 bump），但 <code>module_symbol_table_add_func</code> 的调用点更多 ⇒ 单独一轮。
+顺着 ⑮/⑯ 往下扫时实测（探针都放在 <code>.probe_path/faceargs/</code>）：</p>
 <table>
 <thead>
 <tr>
@@ -1199,11 +1218,11 @@
 </tbody>
 </table>
 <p><strong>系统性结论（这才是本轮最有用的部分）</strong>：<strong>扫描器记录签名的数据不完整</strong>，而"跨模块检查"全靠它 ——
-  ⑯（struct 方法参数<strong>名</strong>没存，已补）、⑱（模块函数参数<strong>类型</strong>没存）、⑰（face 方法参数<strong>类型</strong>没存）
-  三者<strong>同源</strong>。⇒ 后续要么把这三类签名数据一次补齐（各自都牵动 <code>.lenosymc</code> 格式 ⇒ 一次 bump 一次重扫
-  更划算），要么在补齐前<strong>不要</strong>指望这些路径能报错（现状是"静默"，属 ⑮/⑯ 那类风险）。
-  <strong>建议做法</strong>：把"③类签名数据（struct 方法参数名 ✓ 已做 / 模块函数参数类型 / face 方法参数类型）"
-  合成<strong>一次</strong>改动（同一轮 bump <code>LENOSYMC_VERSION</code> v27 → v28），并把 ⑰⑱ 的用例一次加齐。
+⑯（struct 方法参数<strong>名</strong>没存，已补）、⑱（模块函数参数<strong>类型</strong>没存）、⑰（face 方法参数<strong>类型</strong>没存）
+三者<strong>同源</strong>。⇒ 后续要么把这三类签名数据一次补齐（各自都牵动 <code>.lenosymc</code> 格式 ⇒ 一次 bump 一次重扫
+更划算），要么在补齐前<strong>不要</strong>指望这些路径能报错（现状是"静默"，属 ⑮/⑯ 那类风险）。
+<strong>建议做法</strong>：把"③类签名数据（struct 方法参数名 ✓ 已做 / 模块函数参数类型 / face 方法参数类型）"
+合成<strong>一次</strong>改动（同一轮 bump <code>LENOSYMC_VERSION</code> v27 → v28），并把 ⑰⑱ 的用例一次加齐。
 - <strong>⑲ clib 接收者：实测</strong>没有<strong>静默洞（2026-09-18，无需修复）</strong> —— 探针在 <code>.probe_path/clibargs/</code>：</p>
 <table>
 <thead>
@@ -1228,9 +1247,9 @@
 </tbody>
 </table>
 <p>⇒ 结论：clib 这一路<strong>不是静默</strong>（第三个探针的文案还给出了动作）⇒ 不在"堵静默"范围内。
-  <strong>附带登记一条"可用性"观察（可选精化，非缺陷）</strong>：跨模块 clib 接收者（值来自模块函数）<strong>必须</strong>
-  再写一句 <code>use module.clib名</code>，否则连<strong>正确</strong>调用也会被拒 ✗（文案已明确告知要加什么 ✓）——
-  与 §2a 那类"支持写法需要 use / 限定名不支持"同风格（响亮、可操作），是否放宽属产品选择，本轮不动。
+<strong>附带登记一条"可用性"观察（可选精化，非缺陷）</strong>：跨模块 clib 接收者（值来自模块函数）<strong>必须</strong>
+再写一句 <code>use module.clib名</code>，否则连<strong>正确</strong>调用也会被拒 ✗（文案已明确告知要加什么 ✓）——
+与 §2a 那类"支持写法需要 use / 限定名不支持"同风格（响亮、可操作），是否放宽属产品选择，本轮不动。
 - <strong>⑲b 本轮产出的"实参检查覆盖表"</strong>（⑮~⑲ 的落点汇总，下次直接查这张表，别再逐个试）：</p>
 <table>
 <thead>
@@ -1276,58 +1295,20 @@
 <td><code>visit_var.inc</code> / <code>visit_expr.inc</code></td>
 <td>类型 ✓（⑪~⑬）</td>
 </tr>
-<tr>
-<td>- <strong>仍未收的（S2 族，已登记）</strong>：两个调用点的 <strong>dup / 错误分支</strong>仍有差异（AST_USE 那份在</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><code>scope_define</code> 失败时会做"同名重复导入静默跳过 / 否则报错"的处理，<code>import_type_deps</code> 那份没有）——</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>这部分依赖各自的 AST 形态，暂未合并。另外 <code>semantic_visit_ast.c</code> 顶部还有一份 <code>import_type_deps</code></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>才有的<strong>递归类型依赖导入</strong>逻辑（AST_USE 没有），那一份是<strong>功能</strong>而非重复。</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><strong>✅ 结论修正（2026-09-18 复核）：dup / 错误分支的差异不是"待收敛的分叉"，而是有意为之。</strong></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><code>use m.Holder</code> 是<strong>显式</strong>导入 ⇒ 撞名是用户的错，值得报</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>（"已在当前作用域中定义（来自其他模块的 use），请使用模块名限定访问"）；</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><code>import_type_deps</code> 是<strong>隐式</strong>导入（<code>use m.Alias</code> 的副产物）⇒ 撞名必须静默，</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>否则本地定义会被一个用户没写的导入顶掉/报错。两者语义不同，共享部分（字段 + 注册）已收敛，</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>这里<strong>不合并</strong>。</td>
-<td></td>
-<td></td>
-</tr>
 </tbody>
 </table>
+<ul>
+<li><strong>仍未收的（S2 族，已登记）</strong>：两个调用点的 <strong>dup / 错误分支</strong>仍有差异（AST_USE 那份在
+  <code>scope_define</code> 失败时会做"同名重复导入静默跳过 / 否则报错"的处理，<code>import_type_deps</code> 那份没有）——
+  这部分依赖各自的 AST 形态，暂未合并。另外 <code>semantic_visit_ast.c</code> 顶部还有一份 <code>import_type_deps</code>
+  才有的<strong>递归类型依赖导入</strong>逻辑（AST_USE 没有），那一份是<strong>功能</strong>而非重复。
+  <strong>✅ 结论修正（2026-09-18 复核）：dup / 错误分支的差异不是"待收敛的分叉"，而是有意为之。</strong>
+  <code>use m.Holder</code> 是<strong>显式</strong>导入 ⇒ 撞名是用户的错，值得报
+  （"已在当前作用域中定义（来自其他模块的 use），请使用模块名限定访问"）；
+  <code>import_type_deps</code> 是<strong>隐式</strong>导入（<code>use m.Alias</code> 的副产物）⇒ 撞名必须静默，
+  否则本地定义会被一个用户没写的导入顶掉/报错。两者语义不同，共享部分（字段 + 注册）已收敛，
+  这里<strong>不合并</strong>。</li>
+</ul>
 <h3 id="phase-3-把-失效判定-收敛到一处-对应-s8">Phase 3：把「失效判定」收敛到一处（对应 S8）</h3>
 <p><code>fccd1534</code> 只补了"第三处缺的校验"，判定逻辑仍是<strong>两份</strong>（<code>serialize.c</code> 的模块缓存那一份、
 <code>main.c</code> 的入口缓存这一份 —— 后者还自己解析 <code>.lenomc</code> 大端 header）。目标终态：</p>
@@ -1821,48 +1802,48 @@ Kind 槽，表达不了 <code>Array[DirEntry]</code> / <code>Dict[string,string]
 <p><strong>实例五十三（2026-09-28）</strong>：<strong>不升</strong>版本号 —— examples 清账<strong>收尾</strong>：<strong>16 → 0</strong>
 （<code>examples</code> 下 <strong>810</strong> 个 <code>.leno</code> <strong>全部编译通过</strong> ✓）。
 ① <strong><code>any</code> 严格化的 4 处修复</strong>（同一根因：<code>any</code> 参与 <code>&lt;=</code> / <code>&gt;</code> 比较或取字段）：
-   <code>lspcs/import/array/cs_array.leno</code>（dict 取值 ⇒ <code>_int(...)</code>）、<code>测试/执行参数/cs_test.leno</code>
-   （<code>any n</code> ⇒ <code>int n</code>）、<code>import/win_reg/win_reg_enum_v4.leno</code> 与 <code>win_reg_cs/win_reg_enum_v5.leno</code>
-   （<code>ffi.call</code> 返回 any ⇒ <code>_int(...)</code>）⇒ 两个导入方 <code>test_win_reg_v4/v5.leno</code> 随之也通过 ✓。
+<code>lspcs/import/array/cs_array.leno</code>（dict 取值 ⇒ <code>_int(...)</code>）、<code>测试/执行参数/cs_test.leno</code>
+（<code>any n</code> ⇒ <code>int n</code>）、<code>import/win_reg/win_reg_enum_v4.leno</code> 与 <code>win_reg_cs/win_reg_enum_v5.leno</code>
+（<code>ffi.call</code> 返回 any ⇒ <code>_int(...)</code>）⇒ 两个导入方 <code>test_win_reg_v4/v5.leno</code> 随之也通过 ✓。
 ② <strong><code>测试/杂项/cs minilang.leno</code> 删除</strong>（<strong>545 行</strong>的玩具）：实测它有 <strong>29 个错误</strong>
-   （⚠ 我先前只看<strong>首条</strong> ⇒ 误判成"1 个"），类型整体很松 ⇒ 修它等于重写 ✗；两版试改反而更差（24 / 27）
-   ⇒ <strong>回退后删除</strong> ✓（git 历史里可查，需要时 <code>git show &lt;commit&gt;:&lt;path&gt;</code> 取回 ✓）。
-   <strong>教训</strong>：决定"修 vs 删"之前先数<strong>总错误数</strong> —— 扫描只看首条会误判规模。
+（⚠ 我先前只看<strong>首条</strong> ⇒ 误判成"1 个"），类型整体很松 ⇒ 修它等于重写 ✗；两版试改反而更差（24 / 27）
+⇒ <strong>回退后删除</strong> ✓（git 历史里可查，需要时 <code>git show &lt;commit&gt;:&lt;path&gt;</code> 取回 ✓）。
+<strong>教训</strong>：决定"修 vs 删"之前先数<strong>总错误数</strong> —— 扫描只看首条会误判规模。
 ③ <strong>收编最后 1 条零覆盖诊断</strong>：带<strong>模块前缀的类型声明</strong>（<code>m.Helper h = ...</code>）⇒ 编译器给"先
-   <code>use m.Helper</code>、再直接写 <code>Helper h = ...</code>"的指引 ✓（收编自 <code>func/func类型/bug_repro_alias_use.leno</code>
-   —— 它想演示的"场景 3"根本走不到，<strong>首条错误</strong>就是这句）⇒ batteries → <strong>27 例</strong> ✓。
+<code>use m.Helper</code>、再直接写 <code>Helper h = ...</code>"的指引 ✓（收编自 <code>func/func类型/bug_repro_alias_use.leno</code>
+—— 它想演示的"场景 3"根本走不到，<strong>首条错误</strong>就是这句）⇒ batteries → <strong>27 例</strong> ✓。
 ④ <strong>删除最后 9 个</strong>（依赖缺失 / 已被覆盖）：<code>对话框dialog</code> 2（依赖不在仓库）、<code>test_sdl3_utils</code>
-   （SDL3 路径失效）、<code>repro_global_var/test_all_bugs</code>（原生模块名不存在）、<code>audio/audio.leno</code>
-   （原生模块 <code>guis</code> <strong>已不在</strong>可用列表里）、<code>func类型/bug_repro_alias_use</code>、<code>import/测试/1.leno</code>
-   （同 <code>guis</code>）、<code>import/clib_cache_bug/test_chain</code>、<code>module_export_struct/test_use_func</code>
-   （报的就是通用的"未定义的变量"）；它们的诊断（<code>找不到模块文件</code> / <code>未知的原生模块</code>）<strong>实例四十五 / 五十
-   已覆盖</strong> ✓。
+（SDL3 路径失效）、<code>repro_global_var/test_all_bugs</code>（原生模块名不存在）、<code>audio/audio.leno</code>
+（原生模块 <code>guis</code> <strong>已不在</strong>可用列表里）、<code>func类型/bug_repro_alias_use</code>、<code>import/测试/1.leno</code>
+（同 <code>guis</code>）、<code>import/clib_cache_bug/test_chain</code>、<code>module_export_struct/test_use_func</code>
+（报的就是通用的"未定义的变量"）；它们的诊断（<code>找不到模块文件</code> / <code>未知的原生模块</code>）<strong>实例四十五 / 五十
+已覆盖</strong> ✓。
 <strong>验证</strong>：套件 <strong>392 passed / 0 failed</strong>；冒烟 PASS；<strong>examples 810 个 <code>.leno</code> 编译失败 0</strong> ✓。
 <strong>为什么不升版本号</strong>：<strong>一行编译器源码都没改</strong> ✓。</p>
 <p><strong>实例五十二（2026-09-28）</strong>：<strong>不升</strong>版本号 —— examples 清账第九批（<strong>19 → 16</strong>）：
 <strong>两个真示例修好 + 一个"没写完的草稿"收编后删</strong>。
 ① <strong><code>crypto/rsa.leno</code> 修好</strong>：报「不能在 any 类型上进行索引访问」✗，根因是 <code>extended_gcd</code> / <code>mod_inverse</code>
-   <strong>没标返回类型</strong> ⇒ 返回值是 <code>any</code>（实例五十钉的那条契约）⇒ 补 <code>: Array[int]</code> / <code>: int</code> 即可 ✓
-   （现在 exit 0，只剩既有的"字段未初始化"警告 ✓）；
+<strong>没标返回类型</strong> ⇒ 返回值是 <code>any</code>（实例五十钉的那条契约）⇒ 补 <code>: Array[int]</code> / <code>: int</code> 即可 ✓
+（现在 exit 0，只剩既有的"字段未初始化"警告 ✓）；
 ② <strong><code>中文标识符/test_chinese_complex.leno</code> 修好</strong>：两处 <code>点(...)</code> / <code>银行账户(...)</code> 缺 <code>new</code> ✗
-   ⇒ 补上（编译器给的指引就是这句）✓；
+⇒ 补上（编译器给的指引就是这句）✓；
 ③ <strong><code>ffi/test_ffi_final.leno</code></strong>：全文<strong>只有 18 行</strong>，最后一行断在 <code>print("   x = " + p.x +</code> 的 <code>+</code> 上 ✗
-   —— 它是<strong>没写完的草稿</strong>（不是"待修代码"）⇒ 把它的<strong>主体</strong>（<code>cstruct</code> + <code>Point.malloc()</code> + 标量字段
-   读写）收编成新用例 <code>assert/test_cstruct_malloc_field.leno</code>（<strong>正向</strong>：写→读→改→再读 ✓），草稿删除 ✓。
-   顺带查清一条语法事实（写进用例注释）：<strong>表达式不能跨行</strong>（行尾 <code>+</code> 不会续行）—— 草稿正是断在这里 ✓。
+—— 它是<strong>没写完的草稿</strong>（不是"待修代码"）⇒ 把它的<strong>主体</strong>（<code>cstruct</code> + <code>Point.malloc()</code> + 标量字段
+读写）收编成新用例 <code>assert/test_cstruct_malloc_field.leno</code>（<strong>正向</strong>：写→读→改→再读 ✓），草稿删除 ✓。
+顺带查清一条语法事实（写进用例注释）：<strong>表达式不能跨行</strong>（行尾 <code>+</code> 不会续行）—— 草稿正是断在这里 ✓。
 <strong>验证</strong>：套件 <strong>392 passed / 0 failed</strong>（391 → 392）；冒烟 PASS；examples <strong>19 → 16</strong>。
 <strong>为什么不升版本号</strong>：<strong>一行编译器源码都没改</strong> ✓。</p>
 <p><strong>实例五十一（2026-09-28）</strong>：<strong>不升</strong>版本号 —— examples 清账第八批（<strong>24 → 19</strong>）：
 5 个脚本<strong>先收编断言再删</strong>，其中 <strong>5 条断言里有 3 条此前零覆盖</strong>。
 <strong>新增断言</strong>：
 ① <strong>同一列上的两类错误</strong>（收编 <code>测试\错误散bug\test_error_col.leno</code>）—— 两处错都落在第 <strong>11</strong> 列
-   （函数名 / 变量名起点）⇒ 用 <code>ce.expect_error_at</code> 钉列 ✓（<code>test_error_columns</code> → <strong>20 例</strong>）；
+（函数名 / 变量名起点）⇒ 用 <code>ce.expect_error_at</code> 钉列 ✓（<code>test_error_columns</code> → <strong>20 例</strong>）；
 ② <strong>解构槽位类型不兼容</strong>（<code>测试\cs_design.leno</code>）：<code>var[string,string](a,b) = test()</code> 而 <code>test()</code> 返回
-   <code>[int,string]</code> ⇒ 报「解构槽位 0 ('a') 类型 string 与返回值类型 int 不兼容」✓；
+<code>[int,string]</code> ⇒ 报「解构槽位 0 ('a') 类型 string 与返回值类型 int 不兼容」✓；
 ③ <strong><code>Array[int].add(string)</code></strong>（<code>多变量声明\multi_var_array.leno</code> ⇒ 报「参数 1 期望 'int'，但传入 'string'」）
-   —— 这两条此前<strong>零覆盖</strong> ✓；
+—— 这两条此前<strong>零覆盖</strong> ✓；
 ④ <strong><code>any</code> 形参赋给具体类型变量</strong>（<code>func\func 默认参数\default_param_type_check.leno</code>）
-   ⇒ 报「变量 'n' 声明类型与初始化值类型不匹配」✓（<code>test_diag_error_batteries</code> → <strong>26 例</strong>）。
+⇒ 报「变量 'n' 声明类型与初始化值类型不匹配」✓（<code>test_diag_error_batteries</code> → <strong>26 例</strong>）。
 <strong>另外 1 个只删不钉</strong>：<code>测试\别名alias\test_auto_alias.leno</code>（"import 后 alias <strong>不</strong>自动注册"）——
 它报的就是「未定义的类型」⇒ 该诊断实例四十五已覆盖 ✓；它的 fixture <code>alias_core.leno</code> <strong>保留</strong>
 （同目录 <code>alias_renderer.leno</code> 还在用 ✓，只删这一个文件 ✓）。
@@ -1879,12 +1860,12 @@ grep <strong>0 命中</strong>）⇒ 它是<strong>既有行为</strong>、我<s
 （像 <code>map</code>/<code>reduce</code> 回调那样），这里会先红</strong>"，而不是把现状封成规范。
 <strong>删掉两个"已被钉住"的脚本</strong>：
 ① <code>测试\数组字典边界\嵌套数组类型问题.leno</code> —— 它自己的"结论"就是上面那条（嵌套数组推断没问题，
-   真正的问题是<strong>未声明返回类型</strong>）⇒ 收编后删 ✓；
+真正的问题是<strong>未声明返回类型</strong>）⇒ 收编后删 ✓；
 ② <code>测试\链式chain\repro_chain3_c.leno</code> —— 它问"<strong>链式</strong>模块成员（<code>b.a.Mode</code>）C 能不能拿到类型"，
-   实测<strong>拿不到</strong>（<code>b.a</code> 是 any ⇒ 报 any 字段访问）⇒ 该诊断已钉 ✓ ⇒ 收编后删 ✓。
-   <strong>顺带登记一条已知限制</strong>：同目录另外 5 个（<code>repro_chain_struct</code> / <code>repro_chain_type</code> /
-   <code>repro_chain3_b</code> / <code>repro_chain3_def</code> / <code>test_link_chain</code>）<strong>都通过</strong> ⇒ 边界在"<strong>两层</strong>链式成员"：
-   一层 <code>b.a</code> 有静态类型 ✓、再往下一层就退化成 <code>any</code> ✗（跨模块链式成员的类型不传播）。
+实测<strong>拿不到</strong>（<code>b.a</code> 是 any ⇒ 报 any 字段访问）⇒ 该诊断已钉 ✓ ⇒ 收编后删 ✓。
+<strong>顺带登记一条已知限制</strong>：同目录另外 5 个（<code>repro_chain_struct</code> / <code>repro_chain_type</code> /
+<code>repro_chain3_b</code> / <code>repro_chain3_def</code> / <code>test_link_chain</code>）<strong>都通过</strong> ⇒ 边界在"<strong>两层</strong>链式成员"：
+一层 <code>b.a</code> 有静态类型 ✓、再往下一层就退化成 <code>any</code> ✗（跨模块链式成员的类型不传播）。
 <strong>验证</strong>：套件 <strong>391 passed / 0 failed</strong>；冒烟 PASS；examples <strong>26 → 24</strong>。
 <strong>为什么不升版本号</strong>：<strong>一行编译器源码都没改</strong> ✓。</p>
 <p><strong>实例四十九（2026-09-28）</strong>：<strong>不升</strong>版本号 —— examples 清账第六批（<strong>32 → 26</strong>）：
@@ -1914,12 +1895,12 @@ grep <strong>0 命中</strong>）⇒ 它是<strong>既有行为</strong>、我<s
 <code>examples/import/compiler_bug_repro</code>（4 个）<strong>三个"bug"现在都不再复现了</strong> ⇒ 把它们<strong>应有的行为</strong>收编成断言
 再删目录。这批是当年提的三条<strong>报错质量</strong>问题：
 ① <code>bug1_error_guidance.leno</code>：any 上访问字段时，报错后面被挂了「错误名: unknown_tool_error」✗
-   （让用户以为编译器坏了）⇒ <strong>现在</strong>报的是清晰的 <code>[语义错误] 不能在 any 类型 'data' 上直接访问字段 'field'</code>
-   + 两条收窄提示（<code>if data is Type</code> / <code>as</code>），<strong>没有</strong> unknown 标签 ✓；
+（让用户以为编译器坏了）⇒ <strong>现在</strong>报的是清晰的 <code>[语义错误] 不能在 any 类型 'data' 上直接访问字段 'field'</code>
++ 两条收窄提示（<code>if data is Type</code> / <code>as</code>），<strong>没有</strong> unknown 标签 ✓；
 ② <code>bug2_cascade_errors.leno</code> + <code>upstream_bad.leno</code>：上游模块有类型错误时，依赖方会刷一堆 any 级联错误 ✗
-   ⇒ <strong>现在只报上游那一条</strong>（且带上游<strong>文件 + 行号</strong>：<code>upstream_bad.leno(8,5): 返回类型不匹配</code>）✓；
+⇒ <strong>现在只报上游那一条</strong>（且带上游<strong>文件 + 行号</strong>：<code>upstream_bad.leno(8,5): 返回类型不匹配</code>）✓；
 ③ <code>bug3_root_cause_masked.leno</code>：导入了不存在的模块，报的第一个错却是下游的 any 访问 ✗
-   ⇒ <strong>现在第一个错就是</strong>「找不到模块文件: nonexistent_module.leno」✓（这条已在实例四十五的 im1 钉住 ✓）。
+⇒ <strong>现在第一个错就是</strong>「找不到模块文件: nonexistent_module.leno」✓（这条已在实例四十五的 im1 钉住 ✓）。
 <strong>收编</strong>：<code>test_diag_static_errors</code> 新增 2 条 —— any 字段访问（动态脚本 ✓）、"导入有<strong>类型错误</strong>的模块
 只报上游那一条"（静态 fixture <code>assert/import_type_error{,_module}.leno</code> ✓，实测<strong>错误条数 = 1</strong> ✓）；
 ①③ 由既有断言覆盖 ✓。4 个示例文件全删 ✓。
@@ -1948,13 +1929,13 @@ dict 里塞 <code>students: []</code>）的静态类型就是 <strong>any</stron
 <strong>批一：<code>examples/验证/error_column_tests</code>（18 个）→ 收编 + 删目录</strong>。这批是"<strong>错误落点（行+列）</strong>"用例：
 每例故意写错、看编译器把错误报在哪一行哪一列 ⇒ 天生"编译不过"✓。三个处理：
 ① <strong>给 helper 加一条能钉列的入口</strong> <code>ce.expect_error_at(path, tag, text, line, col)</code>：
-   既有 <code>expect_error</code> <strong>故意不看列</strong>（列号会随文案调整漂移，把列当承诺会假失败）；而这批用例的<strong>价值本身</strong>
-   就是"错误指在正确的列上"⇒ 另开入口，既有判据原样保留；
+既有 <code>expect_error</code> <strong>故意不看列</strong>（列号会随文案调整漂移，把列当承诺会假失败）；而这批用例的<strong>价值本身</strong>
+就是"错误指在正确的列上"⇒ 另开入口，既有判据原样保留；
 ② 17 个负例<strong>原样搬运</strong>到 <code>assert/error_col/</code>（改名 <code>testNN_</code> → <code>colNN_</code>，<strong>不以 <code>test_</code> 开头</strong> ⇒
-   不会被 run_tests 当用例跑 —— 正是 <code>helpers/compiler.leno</code> 顶部那条规矩），断言写进新文件
-   <code>assert/test_error_columns.leno</code>（<strong>一条一行</strong>：fixture / 文案特征 / 行 / 列）。
-   ⚠ 那 17 个 fixture 顶部自己写的"期望错误: 第 N 行第 M 列"注释<strong>早已过时</strong>（当年文件更短 ⇒ 落点整体后移）
-   ⇒ 新用例的注释里写明"<strong>以断言为准</strong>"；
+不会被 run_tests 当用例跑 —— 正是 <code>helpers/compiler.leno</code> 顶部那条规矩），断言写进新文件
+<code>assert/test_error_columns.leno</code>（<strong>一条一行</strong>：fixture / 文案特征 / 行 / 列）。
+⚠ 那 17 个 fixture 顶部自己写的"期望错误: 第 N 行第 M 列"注释<strong>早已过时</strong>（当年文件更短 ⇒ 落点整体后移）
+⇒ 新用例的注释里写明"<strong>以断言为准</strong>"；
 ③ <code>test16_dict_key.leno</code> 是这批里<strong>唯一没能直接收编</strong>的（详见下）⇒ 它也变成一条断言（共 18 条）。
 <strong>顺手修掉的真缺口（浮点字典键静默通过）</strong>：<code>test16</code> 期望「字典键必须是字符串、标识符或整数」，但它
 <strong>现在编译通过</strong> ✗ —— 查下来是解析器把 <code>TOK_NUM</code> <strong>整份</strong>交给 <code>parse_number</code>（注释写"整数键"、
@@ -1977,9 +1958,9 @@ examples <strong>74 → 57</strong>；全仓扫描"浮点数不能作键"命中 
 <strong>自相矛盾</strong>（<strong>示例错、编译器对</strong>），收编成断言后删除（examples <strong>88 → 87</strong>）。
 <strong>结论</strong>：这<strong>不是</strong>编译器 bug —— 逐句对照教程（<code>docs/Leno入门教程.md</code> 的 511-553 行）就清楚了：
 · 示例标题"var 声明 null 后可以赋任何值"，而正文第 7 行 <code>a = "hello"</code> ⇒ 教程<strong>明确规定</strong>该报错：
-  <code>var x = null</code>（未锁定）→ <code>x = 42</code>（<strong>锁定为 int</strong>）→ <code>x = "hello"</code> ❌「已锁定为 int」✓；
+<code>var x = null</code>（未锁定）→ <code>x = 42</code>（<strong>锁定为 int</strong>）→ <code>x = "hello"</code> ❌「已锁定为 int」✓；
 · 第 11 行 <code>int b = null</code> 配注释"具体类型可以接收 null" ✗ —— 教程明确：<strong>值类型</strong>（int/float/bool/bigint）
-  <strong>不能</strong>赋 null，要可空得写 <code>int?</code> ✓；
+<strong>不能</strong>赋 null，要可空得写 <code>int?</code> ✓；
 · 第 12 行把"确定为 null"的 <code>b</code> 拿去算术 ✗ —— T11 已定"null 不参与算术"✓。
 ⇒ 三处都是<strong>示例陈旧 / 自相矛盾</strong>，编译器行为与文档一致 ✓。
 <strong>踩坑记录（值得记）</strong>：我一开始按"行号直觉"把 <code>(7,5)</code> 读成 <code>a = 42</code> 那条，于是怀疑"<code>print(type(a))</code>
@@ -1995,14 +1976,14 @@ examples <strong>74 → 57</strong>；全仓扫描"浮点数不能作键"命中 
 <strong>5 个"演示报错"脚本</strong>收编成断言后删掉（该目录 <strong>5 → 0</strong>，examples 全量 <strong>93 → 88</strong>）。
 <strong>这批的性质</strong>：<strong>不是 bug</strong>，而是"<strong>示例写成了编译器本就拒绝的写法</strong>"（所以每跑必失败 ✗）：
 ① <strong>const 容器的元素不可改</strong>（4 个：<code>test_const_mutate</code> / <code>test_const_syntax</code> / <code>test_dict_const</code> /
-   <code>test_dict_const2</code>）。检查自<strong>栈式 VM 基线</strong>（<code>c07a9f6</code>）就在（<code>visit_expr.inc</code> 与 <code>visit_var.inc</code>
-   各两处：同文件形态 + 跨模块形态），语义是"const <strong>深不可变</strong>"（教程原话：const 是<strong>不可变</strong>常量）✓。
-   收编成 <strong>3 条</strong>断言：负例（数组）/ 负例（字典）/ <strong>正向对照</strong>（<strong>非 const</strong> 的导出数组、字典照常可改
-   ⇒ 证明那条检查<strong>没有过宽</strong>）。
+<code>test_dict_const2</code>）。检查自<strong>栈式 VM 基线</strong>（<code>c07a9f6</code>）就在（<code>visit_expr.inc</code> 与 <code>visit_var.inc</code>
+各两处：同文件形态 + 跨模块形态），语义是"const <strong>深不可变</strong>"（教程原话：const 是<strong>不可变</strong>常量）✓。
+收编成 <strong>3 条</strong>断言：负例（数组）/ 负例（字典）/ <strong>正向对照</strong>（<strong>非 const</strong> 的导出数组、字典照常可改
+⇒ 证明那条检查<strong>没有过宽</strong>）。
 ② <strong>模块级导出变量的类型不匹配</strong>（1 个：<code>mod_errors</code>）—— 它自己就写着
-   "=== 类型不匹配测试（应该报错）==="，7 条（int←string / float←string / string←int / bool←int /
-   <strong>int←float 收窄</strong> / Array 元素 / Dict 值）✓ 一次编译报全 7 条 ⇒ 收编成 <strong>7 条</strong>逐条断言
-   （钉"变量名 + 落点行"）。
+"=== 类型不匹配测试（应该报错）==="，7 条（int←string / float←string / string←int / bool←int /
+<strong>int←float 收窄</strong> / Array 元素 / Dict 值）✓ 一次编译报全 7 条 ⇒ 收编成 <strong>7 条</strong>逐条断言
+（钉"变量名 + 落点行"）。
 <strong>⚠ 一处工程细节（值得记）</strong>：这 10 条新断言用的是<strong>静态 fixture</strong>（<code>assert/const_elem_*.leno</code>、
 <code>assert/type_mismatch_battery.leno</code>），不是既有的"动态写进 <code>_tmpdir()</code>"形态 —— 因为被收编的形态是
 <strong>跨模块</strong>访问（必须有模块可 import），而动态脚本落在临时目录里，<strong>相对 import 解析不到 assert/ 下的
@@ -2051,10 +2032,10 @@ examples 全量 <strong>98 → 93</strong>。
 <strong>改法</strong>：两处各补一句"代入后带上占位符的可空标记"（<code>if (replaced &amp;&amp; type-&gt;nullable) replaced-&gt;nullable = 1;</code>）。
 <strong>为什么不升版本号</strong>（按登记表逐条判，不是省事）：
 · <code>LENO_BIN_VERSION</code> 那条"<strong>编译期推断变化导致同源码发射不同指令</strong>"<strong>不成立</strong> —— 字节码里唯一读
-  <code>nullable</code> 的地方是 <code>codegen_stmt.c:1756</code> 的<strong>字段</strong>标记，而它取的是
-  <code>ast-&gt;u.struct_def.field_types[i]</code>（<strong>声明</strong>类型）⇒ 与替换结果无关 ✓（已读上下文核对）；
+<code>nullable</code> 的地方是 <code>codegen_stmt.c:1756</code> 的<strong>字段</strong>标记，而它取的是
+<code>ast-&gt;u.struct_def.field_types[i]</code>（<strong>声明</strong>类型）⇒ 与替换结果无关 ✓（已读上下文核对）；
 · 新增的可空标记只落在"<strong>以前根本编不过</strong>"的程序上（<code>f[int](null)</code> 之前直接被拒）⇒
-  不存在"同一个能编过的源码发射出不同字节码"✓；
+不存在"同一个能编过的源码发射出不同字节码"✓；
 · <code>.lenosymc</code> 不动：函数符号的 <code>param_types</code> 只存 <code>TypeKind</code>、不含 <code>nullable</code> ✓。
 <strong>验证</strong>：套件 <strong>386 passed / 0 failed</strong>；新增 <code>assert/test_generic_nullable_param.leno</code> 钉<strong>两条路</strong>：
 ① 同文件 <code>coalesce[T](T? a, T b)</code>（走 <code>type_substitute</code>）；② <strong>跨模块</strong> <code>gm.orElse[T](T? a, T b)</code>
@@ -2123,17 +2104,17 @@ capabilities 显示诊断是 <code>diagnosticProvider</code> ⇒ <strong>拉取�
 <code>string k = p.getKey()</code> 报「期望 string，实际 <code>struct K</code>」；<code>int i = gm.identity[int](42)</code> 同理。
 <strong>两处根因</strong>（缺一不可，第二处是靠调试打印才定位到的）：
 ① <code>ModuleFuncSymbol</code> 只存了 <code>type_param_count</code>（<strong>数量</strong>），<strong>没存类型形参名</strong> ⇒ 调用点无法把返回类型
-   <code>Pair[K, V]</code> 里的占位符<strong>按名</strong>换成 <code>[string, int]</code>（struct <strong>方法</strong>侧早就有
-   <code>return_generic_param_names</code> 这套字段，模块<strong>函数</strong>侧一直缺）；
+<code>Pair[K, V]</code> 里的占位符<strong>按名</strong>换成 <code>[string, int]</code>（struct <strong>方法</strong>侧早就有
+<code>return_generic_param_names</code> 这套字段，模块<strong>函数</strong>侧一直缺）；
 ② <code>semantic_substitute_generic_param()</code> <strong>不递归 <code>generic_args</code></strong> —— 而 <code>Pair[K, V]</code> 的 K/V 恰好
-   <strong>藏在 <code>generic_args</code> 里</strong> ⇒ 即便拿到名字去替换，函数也是原样返回（实测：调试打印显示
-   <code>tpc=2 names=非空 gta=非空 gtc=2</code> 数据全到位、结果却没变 ⇒ 才定位到它）。
+<strong>藏在 <code>generic_args</code> 里</strong> ⇒ 即便拿到名字去替换，函数也是原样返回（实测：调试打印显示
+<code>tpc=2 names=非空 gta=非空 gtc=2</code> 数据全到位、结果却没变 ⇒ 才定位到它）。
 <strong>改法</strong>：
 ① <code>ModuleFuncSymbol</code> += <code>type_param_names</code>（扫描器在 <code>export func f[K, V]</code> 处原地记名，上限 8、超出留
-   NULL 降级；<code>add_func</code> 显式置空防 realloc 垃圾；销毁时释放；<code>.lenosymc</code> 写读各一段）+ <strong>调用点按名
-   代入</strong>（<code>visit_module.inc</code> 的模块函数分支，用与实例方法<strong>同一套</strong>助手）；
+NULL 降级；<code>add_func</code> 显式置空防 realloc 垃圾；销毁时释放；<code>.lenosymc</code> 写读各一段）+ <strong>调用点按名
+代入</strong>（<code>visit_module.inc</code> 的模块函数分支，用与实例方法<strong>同一套</strong>助手）；
 ② <code>semantic_substitute_generic_param()</code> 补 <code>generic_args</code> 递归（先 <code>type_free</code> 掉 <code>type_copy</code>
-   造出来的那份，防泄漏）。
+造出来的那份，防泄漏）。
 <strong>版本</strong>：<code>.lenosymc</code> <strong>v30 → v31</strong>（<strong>格式变了</strong>：<code>type_param_count</code> 之后多一段"是否有形参名 +
 逐个名字串"）—— 登记表<strong>实例十三</strong>。
 <strong>验证</strong>：套件 <strong>384 passed / 0 failed</strong>；<code>assert/test_generic_pair_import.leno</code> 新增 4 条<strong>强类型</strong>
@@ -2158,7 +2139,7 @@ struct def 的类型名（泛型函数体内 <code>new Pair[K, V]</code> 是<str
 （<code>CORE PASSED</code> / <code>ALL PASSED</code>）；新增 <code>assert/test_generic_pair_import.leno</code>（+ fixture
 <code>assert/generic_pair_mod.leno</code>）钉三条：双参泛型函数返回值可调方法/取字段、单参对照、
 <strong>真 <code>Dict[K,V]</code> 仍是字典</strong>（反向对照）；套件 <strong>384 passed / 0 failed</strong>；examples 全量扫描
-<strong>0</strong> 处残留 <code>Dict[struct</code>。
+<strong>0</strong> 处残留 <code>Dict[struct </code>。
 <strong>⚠ 已知边界（未修，写进用例注释）</strong>：返回值的<strong>静态</strong>类型没代入调用点的类型实参 ⇒
 <code>string k = p.getKey()</code> 仍编不过（实际类型 <code>struct K</code>）。根因：<code>ModuleFuncSymbol</code> 只存了
 <code>type_param_count</code>（<strong>数量</strong>），没存<strong>类型形参名</strong>（struct 方法侧早有
@@ -2174,16 +2155,16 @@ struct def 的类型名（泛型函数体内 <code>new Pair[K, V]</code> 是<str
 <strong>改法</strong>（<code>visit_expr.inc</code> 的实例方法调用路径）：receiver 是 <strong>dict</strong> 且方法名查不到时 ——
 ① 值类型<strong>就是函数</strong> ⇒ 无条件当"调用值"；
 ② 值类型是 any / 未知 ⇒ 只有<strong>不像</strong>内置方法名（<code>semantic_method_hint</code> 为空）才当"调用值"；
-   与真·Dict 方法相似（如 <code>d.leng()</code>）<strong>仍报错并给相似名提示</strong> ⇒ 拼错诊断保住。
+与真·Dict 方法相似（如 <code>d.leng()</code>）<strong>仍报错并给相似名提示</strong> ⇒ 拼错诊断保住。
 <strong>踩到的两个坑（都写进用例注释）</strong>：
 ① 判据不能"hint 非空就报错"一把抓：<code>greetings["en"]()</code> 的键名 <code>en</code> 与内置 <code>len</code> 编辑距离 1
-   ⇒ 会被判成拼错 ✗ ⇒ 所以第一层先看"值类型是不是函数"；
+⇒ 会被判成拼错 ✗ ⇒ 所以第一层先看"值类型是不是函数"；
 ② 键名<strong>撞内置方法名</strong>时（如 <code>m["get"]()</code>，<code>get</code> 是 Dict 的真方法）会按方法查、走 arity 检查
-   ⇒ 那不是 bug（语义正确），但用户会觉得意外 ⇒ 用例里注明"别把键起成内置方法名"。
+⇒ 那不是 bug（语义正确），但用户会觉得意外 ⇒ 用例里注明"别把键起成内置方法名"。
 <strong>验证</strong>：<code>build.bat</code> ✓；套件 <strong>383 passed / 0 failed</strong>；
 · examples 那 5 个用例（<code>func/匿名func/test_anonymous_func</code>、<code>func/匿名func/测试匿名函数</code>、
-  <code>func/test_first_class_func</code>、<code>struct/struct闭包/test_struct_nested_closure</code>、
-  <code>import/boundary_tests/11_closure_cross_module/test_closure</code>）⇒ 全部编译通过、<code>test_closure</code> 实跑通过；
+<code>func/test_first_class_func</code>、<code>struct/struct闭包/test_struct_nested_closure</code>、
+<code>import/boundary_tests/11_closure_cross_module/test_closure</code>）⇒ 全部编译通过、<code>test_closure</code> 实跑通过；
 · <code>assert/test_function_closure.leno</code> 新增<strong>正向</strong>用例（dict 存函数 ⇒ 取值调用 ✓）；
 · <code>assert/test_diag_static_errors.leno</code> 新增<strong>负例</strong>（<code>d.leng()</code> 仍报"没有方法 'leng'" ✓）。
 <strong>顺带修的示例侧</strong>（同簇）：<code>closure_factory.leno</code> 的 <code>make_bank_account</code> / <code>withdraw_func</code> /
@@ -2191,19 +2172,19 @@ struct def 的类型名（泛型函数体内 <code>new Pair[K, V]</code> 是<str
 <p><strong>实例三十五（2026-09-28）</strong>：<strong>不升</strong>版本号 —— <strong>修掉实例三十四那个跨线程堆损坏（0xC0000374）</strong>。
 <strong>三个根因，都在 <code>value_clone_for_channel()</code> 的 dict 分支</strong>（<code>object_thread.c</code>）：
 ① <strong>数组部分越界直写</strong>：<code>dict_new()</code> 只给数组部分 <strong>4</strong> 个槽（<code>dict_array_resize(dict, 4)</code>），而克隆
-   循环的上界是 <code>i &lt; dict-&gt;asize &amp;&amp; i &lt; copy-&gt;capacity</code> —— <code>copy-&gt;capacity</code> 是<strong>哈希槽数</strong>（≥8）
-   ⇒ 源 <code>asize</code> 一旦 &gt; 4（整数键加到 4 个以上就涨到 8）就<strong>写穿 <code>copy-&gt;array</code></strong> ⇒ 堆溢出（0xC0000374）；
+循环的上界是 <code>i &lt; dict-&gt;asize &amp;&amp; i &lt; copy-&gt;capacity</code> —— <code>copy-&gt;capacity</code> 是<strong>哈希槽数</strong>（≥8）
+⇒ 源 <code>asize</code> 一旦 &gt; 4（整数键加到 4 个以上就涨到 8）就<strong>写穿 <code>copy-&gt;array</code></strong> ⇒ 堆溢出（0xC0000374）；
 ② <strong>把 <code>acount</code> 当槽数累加</strong>：<code>acount</code> 本是<strong>非空</strong>元素数，直写时却 <code>copy-&gt;asize++; copy-&gt;acount++;</code>
-   ⇒ 字典状态错乱（<strong>确定性</strong>症状：传 <code>{k,a,b}</code> 过去，收下侧 <code>len()</code> = <strong>11</strong> 而不是 3）；
+⇒ 字典状态错乱（<strong>确定性</strong>症状：传 <code>{k,a,b}</code> 过去，收下侧 <code>len()</code> = <strong>11</strong> 而不是 3）；
 ③ <strong>键没克隆</strong>：把发送线程堆上的 key 直接塞进接收线程的 dict ⇒ 跨堆引用（<code>type()</code> 也因此退化成
-   <code>Dict[any, any]</code>，修好后恢复 <code>Dict[string, any]</code>）。
+<code>Dict[any, any]</code>，修好后恢复 <code>Dict[string, any]</code>）。
 <strong>怎么定位的（这轮方法值得记）</strong>：
 ① 先按注释读代码（<code>channel_send/receive</code> 的 clone、子线程退出时的 <code>gc_collect</code>），确认那条
-   "退出 GC 已禁用"的旧修复<strong>是生效的</strong>（<code>gc_collect()</code> 开头 <code>if (gc.running || !gc.enabled) return;</code>）⇒ 排除；
+"退出 GC 已禁用"的旧修复<strong>是生效的</strong>（<code>gc_collect()</code> 开头 <code>if (gc.running || !gc.enabled) return;</code>）⇒ 排除；
 ② 加<strong>三个 env 开关</strong>做对照实验（一次编译、反复跑）：
-   · 跳过 <code>channel_send</code> 的跨线程 write barrier ⇒ <strong>8/8 更糟</strong>（说明它反而在保住对象）⇒ 排除；
-   · 跳过 <code>channel_receive</code> 的<strong>二次克隆</strong> ⇒ <strong>0/8</strong> ⇒ 锁定"接收侧克隆"这条路；
-   · 跳过 dict 克隆里的<strong>数组部分拷贝</strong> ⇒ <strong>0/8</strong> ⇒ 锁定具体那一行；
+· 跳过 <code>channel_send</code> 的跨线程 write barrier ⇒ <strong>8/8 更糟</strong>（说明它反而在保住对象）⇒ 排除；
+· 跳过 <code>channel_receive</code> 的<strong>二次克隆</strong> ⇒ <strong>0/8</strong> ⇒ 锁定"接收侧克隆"这条路；
+· 跳过 dict 克隆里的<strong>数组部分拷贝</strong> ⇒ <strong>0/8</strong> ⇒ 锁定具体那一行；
 ③ 再找<strong>确定性症状</strong>当判据（<code>len()</code> = 11 vs 3）—— 偶发崩溃不好当回归判据，确定性错值好使。
 <strong>改法</strong>：数组部分改走 <code>dict_set(copy, val_int(i), clone(elem))</code>（让字典自己管扩容/计数/写屏障，
 不再直接碰内部数组）；key 补上 <code>value_clone_for_channel</code>；三处临时 env 开关<strong>全部删除</strong>（不留开关）。
@@ -2227,7 +2208,7 @@ struct def 的类型名（泛型函数体内 <code>new Pair[K, V]</code> 是<str
 · 把 <code>ffi.load/malloc/free</code> 换成纯 cstruct ⇒ 仍崩（6/6）⇒ <strong>不是</strong> ffi 句柄/内存；
 · 去掉子线程里的 <code>s.free()</code> ⇒ 仍崩（4/6）⇒ <strong>不是</strong> 显式 free；
 · 跨线程只传 int（0/12）、只传 dict（0/8）、线程内 cstruct 只传 int（0/12）、
-  大分配触发 GC + dict（0/10）⇒ <strong>都需要 cstruct 与 dict 同时出现</strong>（组合依赖 ⇒ 像时序/GC 时机）。
+大分配触发 GC + dict（0/10）⇒ <strong>都需要 cstruct 与 dict 同时出现</strong>（组合依赖 ⇒ 像时序/GC 时机）。
 <strong>怀疑方向（下一步从这里下手）</strong>：<strong>跨线程对象所有权</strong>。<code>object_thread.c</code> 的注释说明：子线程退出前会
 <strong>主动跑一次 GC</strong>（Leno 是 per-thread GC heap），channel buffer 靠
 <code>child_vm.globals → channel → buffer</code> 标记存活；<code>value_clone_for_channel</code> 对 string/array/dict
@@ -2300,18 +2281,18 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 <strong>只有"函数内 struct 的方法读外层局部"崩</strong> ⇒ 根因是 <strong>struct 方法不是闭包、没有捕获能力</strong>，
 而编译器<strong>照常按 upvalue 发射</strong>⇒ 运行期读到野指针。<strong>正确处理有两条路</strong>（都留给后续）：
 ① 真正实现捕获（方法闭包化，工程量大）；② <strong>编译期拒绝</strong>（"struct 方法不能捕获外层局部变量"）——
-   与本仓"响亮报错 &gt; 静默崩溃"的一贯取舍一致，且能把崩溃变成一行清晰的错误。
-   眼下把示例改成<strong>用字段承接外部值</strong>（<code>new L(data=5, base=local_var)</code>）⇒ 该示例已实跑全绿
-   （<code>测试2通过! 结果: 105</code>）。
+与本仓"响亮报错 &gt; 静默崩溃"的一贯取舍一致，且能把崩溃变成一行清晰的错误。
+眼下把示例改成<strong>用字段承接外部值</strong>（<code>new L(data=5, base=local_var)</code>）⇒ 该示例已实跑全绿
+（<code>测试2通过! 结果: 105</code>）。
 <strong>另外三条"语言行为/诊断"事实（都写进示例注释了）</strong>：
 ① <strong>函数名调用点不吃函数体推断</strong> —— 不写返回类型标注时调用方看到的是 <code>any</code>
-  （<code>result1.len()</code> 直接报"不能在 any 类型上调用方法 'len'"）⇒ 示例补齐了返回类型；
+（<code>result1.len()</code> 直接报"不能在 any 类型上调用方法 'len'"）⇒ 示例补齐了返回类型；
 ② <strong>裸名调用函数型字段推成 <code>any</code></strong> —— <code>op(x)</code> 报"期望 int，实际 any"，必须写 <strong><code>self.op(x)</code></strong>
-  （实测两种写法对照：<code>self.</code> ✓ / 裸名 ✗）⇒ 示例改用 <code>self.</code>，编译器这处缺口已登记；
+（实测两种写法对照：<code>self.</code> ✓ / 裸名 ✗）⇒ 示例改用 <code>self.</code>，编译器这处缺口已登记；
 ③ <strong>函数内定义的 struct 出不了函数作用域</strong> —— 把它 <code>return</code> 出去，调用点看到 any
-  （"不能在 any 类型上调用方法 'getLocal'"）⇒ 正确形态是<strong>在函数内用掉它</strong>并把具体类型的结果返回；
+（"不能在 any 类型上调用方法 'getLocal'"）⇒ 正确形态是<strong>在函数内用掉它</strong>并把具体类型的结果返回；
 ④ <strong>face 越界调用同一行报两条</strong> —— 先一条误导的"不能在 any 类型上调用方法 'getAge'"，再一条
-  准确的"类型 'face Speaker' 没有方法 'getAge'"⇒ 前者是噪点，已登记（断言只钉后者）。
+准确的"类型 'face Speaker' 没有方法 'getAge'"⇒ 前者是噪点，已登记（断言只钉后者）。
 <strong>新增 diag（先收编再删文件）</strong>：face 变量调用非 face 方法 / 访问非 face 字段（各一条，此前零覆盖）。
 <strong>为什么不升版本号</strong>：只动 examples 与断言。
 <strong>验证</strong>：<code>build.bat</code> ✓；套件 <strong>383 passed / 0 failed</strong>；本批 7 个文件全部编译通过，
@@ -2319,25 +2300,25 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 两个 func 类型示例打到 <code>=== PASS ===</code>、两个 struct 示例结果符合期望）。</p>
 <p><strong>实例三十（2026-09-28）</strong>：<strong>不升</strong>版本号 —— examples"编译不过"清账<strong>第二批</strong>：两个小簇（10 个文件）⇒ 0。
 <strong>① <code>examples/测试/C结构FFI</code>（6 个 ⇒ 0）</strong>：两个根因，<strong>都是编译器报得对</strong>、示例要改。
-   · <code>cs_def.leno</code>：<code>makeTT(u32 id, u32 value)</code> ⇒「C 布局类型 'u32' 不能用于函数参数，请使用
-     Leno 类型（如 int/float/string）」⇒ <strong>函数签名</strong>改 int（字段仍是 u32 ✓ —— 那是 C 布局的事）。
-     这一处拖着 <code>cs_test_func</code> / <code>cs_test_no_use</code> / <code>cs_test_use</code> 一起失败。
-   · <code>cs2.leno</code>：三处接收块对 <code>msg.type</code> / <code>msg.msg</code> / <code>msg.f1</code> / <code>msg.f2</code> 点字段 ⇒「不能在 any
-     类型 'msg1' 上直接访问字段 'type'」—— <code>ch.receive()</code> 的静态类型是 <strong>any</strong>（语言没有 <code>Channel[T]</code>），
-     而 any 上<strong>不许点字段</strong>。修法：<code>is Dict</code> 守卫 + 下标读，并<strong>收敛成一个助手</strong>
-     <code>msg_field(any m, string key)</code>（免得三段接收代码各写一遍守卫）。这一处拖着 <code>test_cs2_main</code> 一起失败。
-   <strong>顺手试出来两条经验（都写进示例注释）</strong>：裸 <code>as Dict[K,V]</code> <strong>编译得过、运行期崩</strong>
-   （"下标访问: 对象不支持索引"）；<strong>带参数的类型守卫在 dict 上恒假</strong> —— 实测运行期类型一律报
-   <code>Dict[any, any]</code>（<strong>运行期不保留</strong> dict 的键值类型）⇒ 只能写<strong>裸 <code>is Dict</code></strong> 再下标。
-   两条都是"看着合理、实测不成立"的写法，值得记。
+· <code>cs_def.leno</code>：<code>makeTT(u32 id, u32 value)</code> ⇒「C 布局类型 'u32' 不能用于函数参数，请使用
+  Leno 类型（如 int/float/string）」⇒ <strong>函数签名</strong>改 int（字段仍是 u32 ✓ —— 那是 C 布局的事）。
+  这一处拖着 <code>cs_test_func</code> / <code>cs_test_no_use</code> / <code>cs_test_use</code> 一起失败。
+· <code>cs2.leno</code>：三处接收块对 <code>msg.type</code> / <code>msg.msg</code> / <code>msg.f1</code> / <code>msg.f2</code> 点字段 ⇒「不能在 any
+  类型 'msg1' 上直接访问字段 'type'」—— <code>ch.receive()</code> 的静态类型是 <strong>any</strong>（语言没有 <code>Channel[T]</code>），
+  而 any 上<strong>不许点字段</strong>。修法：<code>is Dict</code> 守卫 + 下标读，并<strong>收敛成一个助手</strong>
+  <code>msg_field(any m, string key)</code>（免得三段接收代码各写一遍守卫）。这一处拖着 <code>test_cs2_main</code> 一起失败。
+<strong>顺手试出来两条经验（都写进示例注释）</strong>：裸 <code>as Dict[K,V]</code> <strong>编译得过、运行期崩</strong>
+（"下标访问: 对象不支持索引"）；<strong>带参数的类型守卫在 dict 上恒假</strong> —— 实测运行期类型一律报
+<code>Dict[any, any]</code>（<strong>运行期不保留</strong> dict 的键值类型）⇒ 只能写<strong>裸 <code>is Dict</code></strong> 再下标。
+两条都是"看着合理、实测不成立"的写法，值得记。
 <strong>② <code>examples/type类型</code>（4 个 ⇒ 0）</strong>：3 个是<strong>故意负例</strong>（文件里自己写着"这里要报错"/"这行会报错"）、
-   1 个<strong>前提失效</strong>：
-   · <code>添加推断.leno</code>（<code>arr.add("")</code>）、<code>插入推断.leno</code>（<code>arrays.insert(arr, len, "")</code>）、
-     <code>三维 int 数组.leno</code>（<code>Array[Array[Array[int]]] a = arr1.copy()</code>）—— 三条正是「数组元素类型
-     <strong>不变</strong>」这条规则的三个入口（实例方法 / 模块方法 / copy）⇒ 先收进 <code>test_diag_static_errors</code>
-     （新增 3 条负例）<strong>再删文件</strong>（否则"编译不过的示例"永远在那儿误导扫描与新人）；
-   · <code>编译时严格，运行时灵活.leno</code>：它假设"无类型形参 ⇒ any"，而<strong>现在无类型形参本身就是语法错误</strong>
-     （"期望参数名"）⇒ 演示已无立足点；该行为已由实例二十九新增的负例钉住 ⇒ 删除。
+1 个<strong>前提失效</strong>：
+· <code>添加推断.leno</code>（<code>arr.add("")</code>）、<code>插入推断.leno</code>（<code>arrays.insert(arr, len, "")</code>）、
+  <code>三维 int 数组.leno</code>（<code>Array[Array[Array[int]]] a = arr1.copy()</code>）—— 三条正是「数组元素类型
+  <strong>不变</strong>」这条规则的三个入口（实例方法 / 模块方法 / copy）⇒ 先收进 <code>test_diag_static_errors</code>
+  （新增 3 条负例）<strong>再删文件</strong>（否则"编译不过的示例"永远在那儿误导扫描与新人）；
+· <code>编译时严格，运行时灵活.leno</code>：它假设"无类型形参 ⇒ any"，而<strong>现在无类型形参本身就是语法错误</strong>
+  （"期望参数名"）⇒ 演示已无立足点；该行为已由实例二十九新增的负例钉住 ⇒ 删除。
 <strong>为什么不升版本号</strong>：只动 examples 与断言，不碰编译器 / VM / 产物格式。
 <strong>验证</strong>：<code>build.bat</code> ✓；套件 <strong>383 passed / 0 failed</strong>；<code>测试/C结构FFI</code> 24 个、<code>type类型</code> 18 个示例
 <strong>全部编译通过</strong>；其中 <code>cs2.leno</code> / <code>cs_test_use.leno</code> / <code>cs_test_func.leno</code> <strong>实跑通过</strong>。
@@ -2349,34 +2330,34 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 <strong>根因链</strong>，再把一批<strong>手搓草稿</strong>的独有覆盖点收进断言后删除。
 <strong>缘起</strong>：为别的事扫 examples 时发现 <strong>907 个 <code>.leno</code> 里有 151 个编译不过</strong>。逐一看过后分两类：
 ① <strong>故意负例</strong>（<code>验证/error_column_tests/*</code> 18 个、<code>泛型系统/边界与错误/*</code> 7 个、
-   <code>import/boundary_tests/15_import_error_handling/*</code> 8 个、<code>import/compiler_bug_repro/*</code> 4 个、
-   <code>struct/face/test_not_impl.leno</code>、<code>验证/test_null_arith*.leno</code> …）—— 这些<strong>编译不过才是预期</strong>，
-   是诊断用例的旧形态（其中一部分的价值已被 <code>assert/test_diag_static_errors.leno</code> 覆盖）；
+<code>import/boundary_tests/15_import_error_handling/*</code> 8 个、<code>import/compiler_bug_repro/*</code> 4 个、
+<code>struct/face/test_not_impl.leno</code>、<code>验证/test_null_arith*.leno</code> …）—— 这些<strong>编译不过才是预期</strong>，
+是诊断用例的旧形态（其中一部分的价值已被 <code>assert/test_diag_static_errors.leno</code> 覆盖）；
 ② <strong>陈旧示例 / 手搓草稿</strong> —— 真正要处理的是这一类。
 <strong>本步两件事</strong>：
 ① <strong><code>examples/import/module_chain</code>：21 个失败 ⇒ 0 个</strong>。根因是<strong>示例自身的类型设计</strong>（不是编译器 bug）：
-   <code>math_utils.leno</code> 的 <code>export var PI = 3.14159…</code> 是 <strong>float</strong>，而 <code>multiply</code>/<code>add</code> 只收 <code>int</code>
-   ⇒ <code>geometry.circle_area</code> 里 <code>multiply(PI, square(radius))</code> 报「期望 int, 实际 float」<strong>（报错是对的）</strong>。
-   修法：给 <code>math_utils</code> 补<strong>浮点版助手</strong>（<code>multiply_f</code>/<code>add_f</code>）而不是把 <code>PI</code> 改成 int
-   （那会丢掉"跨模块 float 变量"这个演示点）；<code>circle_area</code> 改回 float；<code>advanced_math</code> 的
-   any↔具体类型交界处加显式 <code>_int/_float</code>；<code>shape_math_v2</code> 的 <code>circle_area</code>/<code>mixed_shape_area</code> 由
-   int 改 float —— <strong>这一处是我前一步修改往外传播</strong>导致的（类型改了就得顺着调用链看一遍）。
+<code>math_utils.leno</code> 的 <code>export var PI = 3.14159…</code> 是 <strong>float</strong>，而 <code>multiply</code>/<code>add</code> 只收 <code>int</code>
+⇒ <code>geometry.circle_area</code> 里 <code>multiply(PI, square(radius))</code> 报「期望 int, 实际 float」<strong>（报错是对的）</strong>。
+修法：给 <code>math_utils</code> 补<strong>浮点版助手</strong>（<code>multiply_f</code>/<code>add_f</code>）而不是把 <code>PI</code> 改成 int
+（那会丢掉"跨模块 float 变量"这个演示点）；<code>circle_area</code> 改回 float；<code>advanced_math</code> 的
+any↔具体类型交界处加显式 <code>_int/_float</code>；<code>shape_math_v2</code> 的 <code>circle_area</code>/<code>mixed_shape_area</code> 由
+int 改 float —— <strong>这一处是我前一步修改往外传播</strong>导致的（类型改了就得顺着调用链看一遍）。
 ② <strong>删除 <code>examples/import/module_chain/混合测试/</code>（23 个文件）</strong>：它是"命名参数 / <code>new</code> 关键字"的
-   <strong>手搓草稿</strong>（文件名 main/main2/main4/…，<code>main.leno</code> 开头还写着"新建文件: Untitled.leno"），
-   其中 9 个"编译不过"<strong>恰恰因为语言正确拒绝了那些写法</strong>。删之前先把<strong>断言里零覆盖</strong>的
-   4 条诊断 + 1 条正向收进 <code>test_diag_static_errors</code>：
-   ① struct 实例当函数调用 ⇒「需要使用 new 关键字实例化」；② struct 初始化给位置参数 ⇒「期望字段名」；
-   ③ 命名参数写了不存在的字段 ⇒「没有字段 'z'」；④ 函数形参没写类型 ⇒「期望参数名」；
-   ⑤ 正向：命名参数<strong>无序</strong>照常通过。
-   <strong>顺带发现一处文案缺陷（✅ 2026-10-11 已修）</strong>：①那条的建议文本用的是<strong>变量名</strong>（<code>new i()</code>），
-   而正确类型名是 <code>Info</code> ⇒ 会把人引向更错的写法。
-   <strong>修法</strong>（<code>visit_expr.inc</code> 那条 AST_CALL 分支 ✓）：按<strong>符号种类</strong>分两句说 ——
-   变量装着实例 ⇒「<code>i</code> 是 struct <strong>实例</strong>（类型 'Info'）…想实例化请写 <code>new Info()</code> ✓；
-   想调它的方法请写 <code>i.方法名(...)</code> ✓」；<strong>类型名</strong>当函数调 ⇒「<code>Info</code> 是 struct <strong>类型名</strong>…」✓
-   （判据 <code>sym-&gt;kind == SYM_STRUCT</code> ✓ 与 A 组"类型名当接收者"那条<strong>同源</strong> ✓）。
-   ⚠ 过程里的一个坑（值得记）：第一版只看"类型是 struct"就一律说"<strong>实例</strong>"✗ ⇒ 实测当场把
-   <code>Info()</code>（<strong>类型名</strong>当函数调 ✓ 旧文案在那里本来是对的 ✓）也误标了 ✓ ⇒ 现在两条都钉进
-   <code>test_diag_static_errors.leno</code> ✓（一条钉"提到类型名"✓、一条钉"<strong>别说成实例</strong>"✓）。
+<strong>手搓草稿</strong>（文件名 main/main2/main4/…，<code>main.leno</code> 开头还写着"新建文件: Untitled.leno"），
+其中 9 个"编译不过"<strong>恰恰因为语言正确拒绝了那些写法</strong>。删之前先把<strong>断言里零覆盖</strong>的
+4 条诊断 + 1 条正向收进 <code>test_diag_static_errors</code>：
+① struct 实例当函数调用 ⇒「需要使用 new 关键字实例化」；② struct 初始化给位置参数 ⇒「期望字段名」；
+③ 命名参数写了不存在的字段 ⇒「没有字段 'z'」；④ 函数形参没写类型 ⇒「期望参数名」；
+⑤ 正向：命名参数<strong>无序</strong>照常通过。
+<strong>顺带发现一处文案缺陷（✅ 2026-10-11 已修）</strong>：①那条的建议文本用的是<strong>变量名</strong>（<code>new i()</code>），
+而正确类型名是 <code>Info</code> ⇒ 会把人引向更错的写法。
+<strong>修法</strong>（<code>visit_expr.inc</code> 那条 AST_CALL 分支 ✓）：按<strong>符号种类</strong>分两句说 ——
+变量装着实例 ⇒「<code>i</code> 是 struct <strong>实例</strong>（类型 'Info'）…想实例化请写 <code>new Info()</code> ✓；
+想调它的方法请写 <code>i.方法名(...)</code> ✓」；<strong>类型名</strong>当函数调 ⇒「<code>Info</code> 是 struct <strong>类型名</strong>…」✓
+（判据 <code>sym-&gt;kind == SYM_STRUCT</code> ✓ 与 A 组"类型名当接收者"那条<strong>同源</strong> ✓）。
+⚠ 过程里的一个坑（值得记）：第一版只看"类型是 struct"就一律说"<strong>实例</strong>"✗ ⇒ 实测当场把
+<code>Info()</code>（<strong>类型名</strong>当函数调 ✓ 旧文案在那里本来是对的 ✓）也误标了 ✓ ⇒ 现在两条都钉进
+<code>test_diag_static_errors.leno</code> ✓（一条钉"提到类型名"✓、一条钉"<strong>别说成实例</strong>"✓）。
 <strong>为什么不升版本号</strong>：只动 examples（示例源码）与断言，不碰编译器 / VM / 产物格式。
 <strong>验证</strong>：<code>build.bat</code> ✓；套件 <strong>383 passed / 0 failed</strong>；冒烟门禁 PASS（9 示例）；
 <code>module_chain</code> 29 个示例全部编译通过；<code>test_diag_static_errors</code> 新增 5 条。
@@ -2386,22 +2367,22 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 <p><strong>实例二十八（2026-09-28）</strong>：<strong>不升</strong>版本号 —— <strong>可变参数 native 方法</strong>的参数类型：三条通道全部补齐。
 <strong>缺口（两处，都在"可变参数"这条缝上）</strong>：
 ① <code>strings.char</code> / <code>io.input</code> 的 <code>param_types</code> 是 <code>NULL</code>（或声明了也无效）—— 因为<strong>注册时</strong>那排
-   <code>param_types</code> 实参对 <code>arity == -1</code> 是<strong>整份忽略</strong>的（模块通道 v3.2.7 已补上
-   <code>native_set_method_vararg_params()</code>；<strong>内置通道</strong>既没有 setter，<code>NativeFunctionMeta</code> 连
-   <code>param_type_count</code> 字段都没有 ⇒ 声明了也读不到）；
+<code>param_types</code> 实参对 <code>arity == -1</code> 是<strong>整份忽略</strong>的（模块通道 v3.2.7 已补上
+<code>native_set_method_vararg_params()</code>；<strong>内置通道</strong>既没有 setter，<code>NativeFunctionMeta</code> 连
+<code>param_type_count</code> 字段都没有 ⇒ 声明了也读不到）；
 ② 内置通道的参数类型检查<strong>只写在 <code>arity &gt;= 0</code> 的分支里</strong> ⇒ <code>arity == -1</code> 的内置函数
-   （<code>input</code>）<strong>整段不查</strong>（<code>input(123)</code> 编译通过）。
+（<code>input</code>）<strong>整段不查</strong>（<code>input(123)</code> 编译通过）。
 <strong>踩坑记录（值得记）</strong>：我先把 <code>strings.char</code> 的注册实参从 <code>NULL</code> 改成 <code>{TYPE_INT}</code>，
 <strong>以为改完了</strong> —— 实测 <code>strings.char("x")</code> 依旧编译通过、运行期才抛「ASCII码必须在0-255之间」✗。
 「测试通过」的假象就来自这里：<strong>注册时那排实参对 varargs 是废的</strong>，必须注册之后调 setter。
 <strong>改法</strong>：
 ① <code>NativeFunctionMeta</code> 加 <code>param_type_count</code>（与 <code>ModuleMethodMeta::param_type_count</code> 同口径），
-   <code>native_get_global_function_param_type()</code> 的判据由 <code>param_index &lt; arity</code> 改为 <code>&lt; param_type_count</code>；
+<code>native_get_global_function_param_type()</code> 的判据由 <code>param_index &lt; arity</code> 改为 <code>&lt; param_type_count</code>；
 ② 新增 <code>native_set_builtin_vararg_params()</code>（与模块通道的 setter 逐字一致：先整份填 tail、再盖前缀）；
 ③ 内置参数检查的条件由 <code>arity &gt;= 0 &amp;&amp; actual == arity</code> 放宽为 <code>actual_arity &gt; 0</code>，循环里按
-   <code>param_type_count</code> 截断（量已在上面的 min/max 分支校验过）；
+<code>param_type_count</code> 截断（量已在上面的 min/max 分支校验过）；
 ④ 三处声明参数类型：<code>strings.char</code>（前缀 1 个 <code>int</code>、尾巴也是 <code>int</code>）、<code>io.input</code>
-   （<strong>模块形态与全局内置各一处</strong>，提示文案 <code>string</code>）。
+（<strong>模块形态与全局内置各一处</strong>，提示文案 <code>string</code>）。
 <strong>验证</strong>：<code>build.bat</code> ✓；断言套件 <strong>383 passed / 0 failed</strong>；<code>test_diag_static_errors</code> 新增 <strong>3 条</strong>
 （模块 vararg 负例 <code>strings.char("x")</code> / 内置 vararg 负例 <code>input(123)</code> / 多码值正向对照）；
 全仓 <strong>1476</strong> 个 <code>.leno</code> 扫描<strong>无新误伤</strong>（另有 3 个命中是<strong>既有</strong>报错：<code>examples/多变量声明</code>、
@@ -2434,19 +2415,19 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 <code>struct 的字段请用 'x.field'（动态形态是 x["field"]），不能用 int 下标</code>。
 <strong>这一句改过两轮，两轮都是被实测纠正的</strong>：
 ① 初版写「struct 只能用字符串字段名索引（如 x["field"]）」—— <strong>把 <code>x["field"]</code> 当成了用户该写的
-   样子</strong>（用户当场指出）。其实<strong>首选写法是 <code>x.field</code></strong>，<code>x["field"]</code> 只是它的<strong>动态落地形态</strong>
-   （AST 层才长这样）⇒ 文案先给 <code>x.field</code>。教训与实例二十二的 <code>RegexMatch</code> 同一条：
-   <strong>内部表示不该泄露成用户要模仿的写法</strong>。
+样子</strong>（用户当场指出）。其实<strong>首选写法是 <code>x.field</code></strong>，<code>x["field"]</code> 只是它的<strong>动态落地形态</strong>
+（AST 层才长这样）⇒ 文案先给 <code>x.field</code>。教训与实例二十二的 <code>RegexMatch</code> 同一条：
+<strong>内部表示不该泄露成用户要模仿的写法</strong>。
 ② 第二版读分支写"…<strong>访问</strong>"、写分支写"…<strong>赋值</strong>请用 'x.field = v'"——<strong>普通赋值用例立刻红了</strong>：
-   实测三种写法各走哪条路是
-   · <code>print(r[0])</code> ⇒ <code>AST_INDEX</code>（读分支）
-   · <code>r[1] = 5</code> ⇒ <strong><code>AST_ASSIGN(target=AST_INDEX)</code></strong>（普通赋值<strong>不是</strong> <code>AST_INDEX_ASSIGN</code>！
-     那个是 parser 给复合赋值/<code>.field</code> 脱糖用的）⇒ 也被<strong>读</strong>分支拦下
-   · <code>r[1] += 5</code> ⇒ <strong>parser 直接拒</strong>：「复合赋值只支持简单变量，请用 arr[i] = arr[i] + val 替代」
-   ⇒ 文案里带"访问/赋值"这类<strong>语境词</strong>就总有一半场合对不上 ⇒ 改成不含语境词的中性句。
-   顺带结论：<code>AST_INDEX_ASSIGN</code> 分支那条检查<strong>当前从源码不可达</strong>（防御性保留，理由写在源码注释里，
-   并在 <code>test_diag_static_errors</code> 钉了一条"下标复合赋值在 parser 被拒"的边界用例 ——
-   哪天放开了它会先红，提醒回来确认兜底还在）。
+实测三种写法各走哪条路是
+· <code>print(r[0])</code> ⇒ <code>AST_INDEX</code>（读分支）
+· <code>r[1] = 5</code> ⇒ <strong><code>AST_ASSIGN(target=AST_INDEX)</code></strong>（普通赋值<strong>不是</strong> <code>AST_INDEX_ASSIGN</code>！
+  那个是 parser 给复合赋值/<code>.field</code> 脱糖用的）⇒ 也被<strong>读</strong>分支拦下
+· <code>r[1] += 5</code> ⇒ <strong>parser 直接拒</strong>：「复合赋值只支持简单变量，请用 arr[i] = arr[i] + val 替代」
+⇒ 文案里带"访问/赋值"这类<strong>语境词</strong>就总有一半场合对不上 ⇒ 改成不含语境词的中性句。
+顺带结论：<code>AST_INDEX_ASSIGN</code> 分支那条检查<strong>当前从源码不可达</strong>（防御性保留，理由写在源码注释里，
+并在 <code>test_diag_static_errors</code> 钉了一条"下标复合赋值在 parser 被拒"的边界用例 ——
+哪天放开了它会先红，提醒回来确认兜底还在）。
 ⚠ <strong>cstruct 有意豁免</strong>：<code>Cv.malloc_array(n)</code> 的静态类型仍是那个 cstruct，但它是"cstruct 数组"⇒
 <code>v[0].x = 1.0</code> <strong>合法</strong>（<code>assert/cstruct_export_b.leno</code> 的核心测试就是它）。<strong>加检查时它误报过</strong> ——
 套件立刻从 383/0 变 <strong>381 passed / 2 failed</strong>（另一条 <code>test_plane_war_headless</code> 是连带）⇒ 只查
@@ -2460,17 +2441,17 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 <p><strong>实例二十五（2026-09-28）</strong>：<strong>不升</strong>版本号 —— 补上"回调 / 默认值"两处<strong>推断缺口</strong>（只动编译期推断，
 运行期行为不变）。这两处正是<strong>第二档</strong>最后两项：
 ① <strong><code>Array.reduce()</code> 的结果类型 = 回调的返回类型</strong>。此前落到注册表的 <code>any</code> ⇒
-   <code>int s = arr.reduce(func(int a,int b) { return a+b }, 0)</code> <strong>编译不过</strong>（只能 <code>var s</code> 再手动收窄）。
-   做法与既有的 <code>Array.map</code> <strong>完全同一套</strong>（<code>semantic_type.c</code> 的"类型守卫"）：临时把回调的
-   <strong>(累加器, 元素)</strong> 两个参数<strong>符号</strong>设成 <strong>(第 2 个实参 init 的实参类型, 接收者元素类型)</strong>，
-   推完函数体返回类型后恢复。
+<code>int s = arr.reduce(func(int a,int b) { return a+b }, 0)</code> <strong>编译不过</strong>（只能 <code>var s</code> 再手动收窄）。
+做法与既有的 <code>Array.map</code> <strong>完全同一套</strong>（<code>semantic_type.c</code> 的"类型守卫"）：临时把回调的
+<strong>(累加器, 元素)</strong> 两个参数<strong>符号</strong>设成 <strong>(第 2 个实参 init 的实参类型, 接收者元素类型)</strong>，
+推完函数体返回类型后恢复。
 ② <strong><code>Dict.get()</code> 的 1 参形态结果类型 = 字典的值类型 V</strong>（此前是 <code>any</code>）。2 参形态（按默认值实参推）
-   在实例十八就有特例，<strong>1 参形态是漏的</strong> ⇒ <code>string s = d.get("k")</code> 编译不过。
-   ⚠ 诚实性说明：1 参形态在<strong>键不存在</strong>时运行期返回 null ⇒ 严格说该是 <code>V?</code>；这里与 2 参形态
-   （返回默认值类型）保持同一"乐观"口径取 V。
+在实例十八就有特例，<strong>1 参形态是漏的</strong> ⇒ <code>string s = d.get("k")</code> 编译不过。
+⚠ 诚实性说明：1 参形态在<strong>键不存在</strong>时运行期返回 null ⇒ 严格说该是 <code>V?</code>；这里与 2 参形态
+（返回默认值类型）保持同一"乐观"口径取 V。
 ⚠ <strong>已知边界（未修，已写进用例注释）</strong>：reduce/map 的回调若<strong>不标注形参类型</strong>（写成 <code>any a, any b</code>），
-   仍会退化成 any —— 守卫只改写<strong>符号类型</strong>，而函数体表达式的类型可能已被更早的遍历缓存
-   （<code>ast-&gt;cached_type</code>）⇒ 拿不到结果。实用建议：<strong>回调把形参类型写出来</strong>。
+仍会退化成 any —— 守卫只改写<strong>符号类型</strong>，而函数体表达式的类型可能已被更早的遍历缓存
+（<code>ast-&gt;cached_type</code>）⇒ 拿不到结果。实用建议：<strong>回调把形参类型写出来</strong>。
 <strong>为什么不升版本号</strong>：判据同实例十八/十九 —— 只改<strong>编译期推断</strong>，不动 opcode / 字节布局 /
 运行期求值；旧 <code>.lenb</code> 依旧有效（里面装的是旧的动态取值指令，照样能跑）。
 <strong>验证</strong>：<code>build.bat</code> ✓；断言套件 <strong>383 passed / 0 failed</strong>；新增断言：<code>test_array_map_infer</code>
@@ -2499,7 +2480,7 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 （<code>NativeFunctionMeta</code> 里根本没有能放规格的字段）⇒ 先补一条规格通道：
 ① <code>NativeFunctionMeta</code> 加 <code>const NativeTypeSpec* return_spec</code>；
 ② 新增 <code>native_register_meta_spec(name, spec)</code>（<strong>查找并更新</strong> —— <code>native_register_meta</code> 对同名是
-   直接 return 的，所以必须在 <code>vm_register_native()</code> <strong>之后</strong>调用）与 <code>native_get_return_spec(name)</code>；
+直接 return 的，所以必须在 <code>vm_register_native()</code> <strong>之后</strong>调用）与 <code>native_get_return_spec(name)</code>；
 ③ 语义侧 <code>semantic_type.c</code> 的内置调用返回类型解析处<strong>规格优先</strong>（与模块方法的 return_spec 同规则）。
 <strong>同步的消费点（12 个文件）</strong>：<code>assert/</code> 11 个（<code>run_tests</code>、<code>helpers/compiler</code>、<code>test_exec_timeout</code>、
 <code>test_cli_script_args</code>、<code>test_serialize</code>、<code>test_module_dep_memo</code>、<code>test_examples_smoke</code>、<code>test_dirs</code>、
@@ -2515,7 +2496,7 @@ main() { print(_str(makeLocal())) }      // 实测：exit = 0xC0000005（访问�
 运行期报错"的迁移提示）。</p>
 <p><strong>实例二十三（2026-09-28）</strong>：<strong>不升</strong>版本号 —— 两件"类型系统"的收口（都属于<strong>编译期严格化</strong>，
 不改字节码格式 / opcode / 布局 ⇒ 旧 <code>.lenb</code> 依旧有效）。</p>
-<h3 id="①-静态-any-不允许流进具体类型的-native-形参-两条通道都堵上">① 静态 <code>any</code> <strong>不允许</strong>流进具体类型的 native 形参（两条通道都堵上）</h3>
+<h3 id="静态-any-不允许流进具体类型的-native-形参-两条通道都堵上">① 静态 <code>any</code> <strong>不允许</strong>流进具体类型的 native 形参（两条通道都堵上）</h3>
 <p><strong>症状（实测崩溃）</strong>：</p>
 <pre><code class="language-leno">var a = _env(&quot;不存在的变量&quot;)      // 静态 any、运行期 null
 regexs.find_all(a, &quot;[0-9]+&quot;)     // 编译期放行 ⇒ 0xC0000005
@@ -2544,7 +2525,7 @@ regexs.find_all(a, &quot;[0-9]+&quot;)     // 编译期放行 ⇒ 0xC0000005
 （显式 <code>_str()</code> 之后必须照常通过，防误伤）。
 ⚠ <strong>注意</strong>：那三个模块库的改动落在 <code>build/leno_module/...</code>（<strong>安装位置</strong>，仓库里没有对应源码）
 ⇒ 若它们由外部包同步而来，需要<strong>在上游同样修</strong>，否则下次同步会覆盖回去。</p>
-<h3 id="②-可变参数方法的参数类型-此前整份被忽略">② 可变参数方法的参数类型（此前整份被忽略）</h3>
+<h3 id="可变参数方法的参数类型-此前整份被忽略">② 可变参数方法的参数类型（此前整份被忽略）</h3>
 <p><strong>症状</strong>：<code>dirs.join(1, 2)</code> / <code>maths.max("x")</code> / <code>strings.find(1, 2)</code> 编译期<strong>不报错</strong>，
 要用到运行期才炸。
 <strong>根因（两处，缺一不可）</strong>：① 注册时 <code>if (param_types &amp;&amp; arity &gt; 0)</code> ⇒ <code>arity == -1</code> 的分支把
@@ -2552,9 +2533,9 @@ regexs.find_all(a, &quot;[0-9]+&quot;)     // 编译期放行 ⇒ 0xC0000005
 <strong>修法（不猜、不改 238 个调用点）</strong>：
 · <code>ModuleMethodMeta</code> 新增 <code>param_type_count</code>（定长 = <code>arity</code>；可变参数默认 0），查询判据改用它；
 · 新增 <code>native_set_method_vararg_params(module, method, prefix_count, prefix[], tail_type)</code>
-  —— <strong>注册之后</strong>调用（与 <code>native_register_instance_method_return_spec</code> 同一套路），
-  显式声明"固定前缀 + 尾部类型"（尾部 <code>TYPE_ANY</code> = 不检查，因为可变部分本来就允许任意类型，
-  如 <code>strings.format("%s %d", s, n)</code>）。
+—— <strong>注册之后</strong>调用（与 <code>native_register_instance_method_return_spec</code> 同一套路），
+显式声明"固定前缀 + 尾部类型"（尾部 <code>TYPE_ANY</code> = 不检查，因为可变部分本来就允许任意类型，
+如 <code>strings.format("%s %d", s, n)</code>）。
 <strong>已声明</strong>：<code>dirs.join</code>（尾部 string）、<code>maths.max/min</code>（尾部 float —— int→float 是允许的隐式转换，
 实测 <code>maths.max(1,2,3)</code> 仍通过）、<code>strings.format/find/byte/byte_find/pad_start/pad_end/hex</code>
 （各自的前缀）、<code>regexs.split</code>（前缀 2）。<strong>故意不声明</strong>：<code>strings.char</code>（既收 ASCII 码也收字符串）、
@@ -2597,12 +2578,12 @@ regexs.find_all(a, &quot;[0-9]+&quot;)     // 编译期放行 ⇒ 0xC0000005
 （应为 3709551614）；② <code>rands.ints(1, 10000000000)</code> ⇒ <strong>0xC0000005</strong>。
 <strong>根因</strong>（<code>bigint_mod_internal</code> / <code>bigint_div_internal</code> 的移位减法主循环，两个函数同源）：
 ① 拿 <code>val_is_bigint(shifted)</code> 当"成功"判据 ✗ —— 而 <code>bigint_shl</code> / <code>bigint_sub</code> 的返回值会被
-   <code>bigint_compact_to_int()</code> <strong>压缩</strong>（结果落进 int48 就返回普通 int）⇒ 只要移位/相减结果一小，
-   函数就 <code>return val_null()</code>。上层 <code>rands_ints</code> 再 <code>val_as_bigint(null)</code> 解引用 ⇒ 崩。
+<code>bigint_compact_to_int()</code> <strong>压缩</strong>（结果落进 int48 就返回普通 int）⇒ 只要移位/相减结果一小，
+函数就 <code>return val_null()</code>。上层 <code>rands_ints</code> 再 <code>val_as_bigint(null)</code> 解引用 ⇒ 崩。
 ② 余数 <code>rem</code> 每轮都被替换，却<strong>没进 GC root 表</strong>（循环里每次 <code>bigint_shl</code>/<code>bigint_sub</code> 都会
-   <code>gc_alloc</code>）⇒ 有被回收的风险。
+<code>gc_alloc</code>）⇒ 有被回收的风险。
 ③ 附带：<code>bigint_div_internal</code> 的 <code>calloc</code> 失败分支写的是 <code>free(rem)</code> —— <strong>对 gc_alloc 出来的
-   对象调 free</strong> ✗。
+对象调 free</strong> ✗。
 <strong>修法</strong>（最小改动，不动算法）：加 <code>bigint_value_as_bigint(Value)</code> 助手（BigInt 直接用、<strong>int 现造</strong>、
 其它返回 NULL 交上层判失败）；把 <code>rem</code> 放进 root 表（<code>gc_push_root</code> 存的是<strong>槽位指针</strong> ⇒ 之后
 只更新同一槽位，root 自动跟随，不必反复 push/pop）；<code>shifted</code> 也上根（它是新造对象时）；
@@ -2650,20 +2631,20 @@ sockets 的<strong>真实 loopback I/O</strong>）；<strong>C 类</strong>（�
 <p><strong>实例十九（2026-09-27）</strong>：<strong>不升</strong>版本号 —— <code>src/module</code> 的 <strong>any 收敛第一批</strong>：把"返回类型其实已经确定、
 却注册成 <code>any</code> / 裸容器"的地方换成精确规格。盘点时发现两类成因：
 ① <strong>文档与注册表不一致</strong> —— <code>files.write/writeln/close</code>、<code>io.print/printf</code>、<code>Dict.set/remove/clear</code>
-   这 8 处 <code>docs/module_*.md</code> <strong>早就写着 <code>返回: null</code></strong>，是注册表写的 <code>any</code>（文档反而比代码诚实）；
+这 8 处 <code>docs/module_*.md</code> <strong>早就写着 <code>返回: null</code></strong>，是注册表写的 <code>any</code>（文档反而比代码诚实）；
 ② <strong>注册表只写到容器这一层</strong> —— <code>split/readlines</code> 写的是裸 <code>Array</code>（元素 any）、<code>rands.*</code>/<code>sockets.select</code>
-   写的是 <code>any</code> / 裸 <code>Array</code>。
+写的是 <code>any</code> / 裸 <code>Array</code>。
 <strong>改了什么（8 组，7 个模块 + 2 个头文件）</strong>：
 ① <code>strings.split()</code>（实例）→ <code>Array[string]</code>（实现两个分支装的都是 <code>str_copy</code> 出来的子串）；
 ② <code>files.readlines()</code>（实例）→ <code>Array[string]</code>（逐行 <code>str_copy</code>）；
 ③ <code>files.write()</code>（模块）、<code>File.writeln()</code>、<code>File.close()</code> → <code>null</code>
-   （⚠ 与 <code>File.write()</code> 区分：那个返回<strong>写入字节数 int</strong>，注册本来就是对的）；
+（⚠ 与 <code>File.write()</code> 区分：那个返回<strong>写入字节数 int</strong>，注册本来就是对的）；
 ④ <code>io.print()</code> / <code>io.printf()</code> → <code>null</code>（<strong>两条通道各一处</strong>：模块方法 + 全局内置）；注释里本来就写着
-   "返回 null/void"，注册却是 <code>TYPE_ANY</code> ⇒ 属于"注释与代码不一致"；
+"返回 null/void"，注册却是 <code>TYPE_ANY</code> ⇒ 属于"注释与代码不一致"；
 ⑤ <code>threads.sleep()</code>、<code>Channel.send()</code>、<code>Channel.close()</code> → <code>null</code>；
 ⑥ <code>Dict.set()</code> / <code>remove()</code> / <code>clear()</code>（实例）→ <code>null</code>；
 ⑦ <code>rands.choice()</code> → <code>ARG0_ELEM</code>、<code>rands.sample()</code> / <code>shuffle()</code> → <code>Array[ARG0_ELEM]</code>
-   （实现就是 <code>return arr-&gt;elements[i]</code> / memcpy 原件再取样打乱 ⇒ 元素类型跟入参走）；
+（实现就是 <code>return arr-&gt;elements[i]</code> / memcpy 原件再取样打乱 ⇒ 元素类型跟入参走）；
 ⑧ <code>sockets.select()</code> 从<strong>裸 <code>Array</code></strong> → <code>Array[ARG0_ELEM]</code>（返回"可读的那些 socket"，元素跟入参走）。
 <strong>顺带收敛（单一事实来源）</strong>：关系型规格上提为预制 <code>NATIVE_T_ARG0_ELEM</code> / <code>_KEY</code> / <code>_VALUE</code> /
 <code>NATIVE_T_ARR_ARG0_ELEM</code>（<code>native.c</code> + <code>native.h</code>）⇒ <code>arrays.c</code> / <code>dicts.c</code> 里各自的
@@ -2684,33 +2665,33 @@ sockets 的<strong>真实 loopback I/O</strong>）；<strong>C 类</strong>（�
 "spec 漏写 / 写错 / 被改回 any"这类回归只有编译期能挡住。
 <strong>这次审计的其余发现（未做，列为后续）</strong>：
 ① <strong>第三条注册通道没有规格通道</strong>：46 处全局内置函数走 <code>vm_register_native(...)</code>（只有 Kind 槽）
-   ⇒ <code>dirs.walk</code> 那种"带名字的返回类型"在这里表达不了（本批只把 <code>print</code>/<code>printf</code> 的 Kind 从
-   <code>TYPE_ANY</code> 改成 <code>TYPE_NULL</code>；要 <code>Array[DirEntry]</code> 级别的精度得再加一条 spec 通道）；
+⇒ <code>dirs.walk</code> 那种"带名字的返回类型"在这里表达不了（本批只把 <code>print</code>/<code>printf</code> 的 Kind 从
+<code>TYPE_ANY</code> 改成 <code>TYPE_NULL</code>；要 <code>Array[DirEntry]</code> 级别的精度得再加一条 spec 通道）；
 ② <code>regexs.find_all</code> 是<strong>全仓唯一</strong>还返回裸 <code>Dict</code> 的地方，而且键<strong>混合类型</strong>（<code>start</code>/<code>end</code> int +
-   文本 string）⇒ 与 <code>DirInfo</code> 当年同处境 ⇒ 结构体化候选；
+文本 string）⇒ 与 <code>DirInfo</code> 当年同处境 ⇒ 结构体化候选；
 ③ <code>sys._exec()</code> 返回 <code>[output, code]</code> <strong>异构数组</strong> ⇒ 结构体化候选（但它是全局内置、调用点遍布
-   断言与 GUI ⇒ 影响面比 dirs 大）；
+断言与 GUI ⇒ 影响面比 dirs 大）；
 ④ <code>arrays.map/reduce</code>、<code>asyncs.all</code> 的类型取决于<strong>回调返回类型</strong> ⇒ 另一族标签（暂保持 any）；
 ⑤ <code>dict.get</code> 取决于<strong>默认值实参</strong> ⇒ 另一族标签（ARG1 族，见实例十八的两个坑）；
 ⑥ <code>Channel.receive/try_receive</code>、<code>Future.get_result</code>、<code>Thread.join</code> 的 <code>any</code> 是<strong>正确的</strong> ——
-   语言里没有 <code>Channel[T]</code> / <code>Future[T]</code> 标注（实测 <code>.leno</code> 源码 <strong>0 处</strong>）⇒ 没有元素类型可推；
-   ★ 2026-10-12（TH4）后本条<strong>部分作废</strong>：<code>Channel[T]</code> 已做 ⇒ <code>Channel[int].receive()</code> 是 int、
-   <code>Thread[T]</code> 可标注；<strong>只剩 <code>try_receive</code>（有意 any）与 <code>Future[T]</code> 未做</strong> ✓；
+语言里没有 <code>Channel[T]</code> / <code>Future[T]</code> 标注（实测 <code>.leno</code> 源码 <strong>0 处</strong>）⇒ 没有元素类型可推；
+★ 2026-10-12（TH4）后本条<strong>部分作废</strong>：<code>Channel[T]</code> 已做 ⇒ <code>Channel[int].receive()</code> 是 int、
+<code>Thread[T]</code> 可标注；<strong>只剩 <code>try_receive</code>（有意 any）与 <code>Future[T]</code> 未做</strong> ✓；
 ⑦ <strong>参数侧</strong>：<code>arity == -1</code> 的 18 处 varargs 会<strong>整个忽略</strong> <code>param_types</code>（连 <code>strings.find(s, sub, 2)</code>
-   前两个参数都退化成 any）⇒ 要修得先定语义（建议：固定前缀按 <code>param_types</code>、超出部分按最后一个声明类型）。</p>
+前两个参数都退化成 any）⇒ 要修得先定语义（建议：固定前缀按 <code>param_types</code>、超出部分按最后一个声明类型）。</p>
 <p><strong>实例十八（2026-09-27）</strong>：<strong>不升</strong>版本号 —— 给 native 规格加<strong>关系型标签</strong> <code>NTYPE_ARG0_*</code>
 （"返回类型跟第 0 个实参走"），<code>arrays</code> 的 7 个方法 + <code>dicts</code> 的 <code>keys</code>/<code>values</code> 拿到精确元素类型。
 <strong>做了什么</strong>：
 ① <code>NativeTypeSpec</code> 追加 <code>NTYPE_ARG0_ELEM</code> / <code>NTYPE_ARG0_KEY</code> / <code>NTYPE_ARG0_VALUE</code>（枚举末尾追加）；
 ② <code>native_type_spec_to_info_with_args(spec, arg0_type)</code> 用实参解析这些标签，
-   <code>native_type_spec_to_info()</code> 退化成"不传实参"的特例（<strong>老调用点行为逐字不变</strong>）；
-   <code>native_type_spec_has_arg_ref()</code> 让调用方只在<strong>需要时</strong>才去推实参（另外 230+ 个方法不白推一遍）；
+<code>native_type_spec_to_info()</code> 退化成"不传实参"的特例（<strong>老调用点行为逐字不变</strong>）；
+<code>native_type_spec_has_arg_ref()</code> 让调用方只在<strong>需要时</strong>才去推实参（另外 230+ 个方法不白推一遍）；
 ③ <strong>两条通道共用一份表示</strong>：模块方法表照旧用 <code>return_spec</code>；<code>InstanceMethodMeta</code> 也加 <code>return_spec</code>
-   （<code>native_register_instance_method_return_spec()</code> 在同名注册<strong>之后</strong>补）⇒ 实例形式下
-   "第 0 个实参"就是<strong>接收者</strong>；
+（<code>native_register_instance_method_return_spec()</code> 在同名注册<strong>之后</strong>补）⇒ 实例形式下
+"第 0 个实参"就是<strong>接收者</strong>；
 ④ 语义两处接上：模块调用（<code>semantic_type.c</code> 的 native 模块调用分支）传首个实参；实例调用
-   （同文件实例方法分支）传接收者 —— 且<strong>实例分支排在</strong>原来那条"接收者是 Array 且 TypeKind 为
-   ARRAY ⇒ 直接复制接收者类型"的硬编码规则<strong>之前</strong>（那条保留作兜底）。
+（同文件实例方法分支）传接收者 —— 且<strong>实例分支排在</strong>原来那条"接收者是 Array 且 TypeKind 为
+ARRAY ⇒ 直接复制接收者类型"的硬编码规则<strong>之前</strong>（那条保留作兜底）。
 <strong>改到了什么</strong>：<code>arrays.copy/clear/reverse/sort/filter</code> → <code>Array[T]</code>、<code>arrays.pop/remove</code> → <code>T</code>、
 <code>d.keys()</code> → <code>Array[K]</code>、<code>d.values()</code> → <code>Array[V]</code> —— 模块形式此前是 <code>Array[any]</code> / <code>any</code>，
 实例形式的 <code>pop/remove</code> 与 dict 的 <code>keys/values</code> 同样丢类型 ⇒ 现在这些调用点<strong>零收窄</strong>。
@@ -2718,12 +2699,12 @@ sockets 的<strong>真实 loopback I/O</strong>）；<strong>C 类</strong>（�
 不改任何<strong>运行期</strong>行为；原本能编译的源码，编译结果逐字不变（同实例十四/十六的判据）。
 <strong>两个踩到的坑（都写进注释与文档了）</strong>：
 ① <code>dict.get</code> <strong>不能</strong>标 <code>ARG0_VALUE</code>：它的类型由<strong>默认值实参</strong>推出来（<code>get("y", 0.0)</code> → float，
-   见 <code>assert/test_dict_get_infer.leno</code>），标成"返回 V"反而<strong>盖掉</strong>那条更精确的规则 ⇒ 实测 4 个用例
-   （dict_get_infer / float_ops / method_args / plane_war_headless）退化成 any。
-   ⇒ 那是"按第 N 个实参推返回类型"的另一族，需要时再设计（YAGNI）。
+见 <code>assert/test_dict_get_infer.leno</code>），标成"返回 V"反而<strong>盖掉</strong>那条更精确的规则 ⇒ 实测 4 个用例
+（dict_get_infer / float_ops / method_args / plane_war_headless）退化成 any。
+⇒ 那是"按第 N 个实参推返回类型"的另一族，需要时再设计（YAGNI）。
 ② 关系型标签<strong>解析不出时必须保持"未指定"，不能硬塞 <code>any</code></strong>：<code>var empty = []</code> 的元素是"未指定"，
-   <code>empty.copy()</code> 必须仍是"未指定"（能匹配 <code>Array[int]</code>），而显式 <code>Array[any]</code> 会<strong>拒绝</strong>该赋值 ——
-   实测 3 个排序用例因此回归。⇒ "未指定"与 <code>any</code> 的兼容性不同；这条已写进 <code>native.h</code> 的说明。
+<code>empty.copy()</code> 必须仍是"未指定"（能匹配 <code>Array[int]</code>），而显式 <code>Array[any]</code> 会<strong>拒绝</strong>该赋值 ——
+实测 3 个排序用例因此回归。⇒ "未指定"与 <code>any</code> 的兼容性不同；这条已写进 <code>native.h</code> 的说明。
 <strong>验证</strong>：见提交信息（套件 <strong>380 passed / 0 failed</strong>；<code>test_arrays_module</code> / <code>test_dict_methods</code> 新增
 断言覆盖模块+实例两种语法、元素参与强类型运算、以及"元素未指定"的退化路径）。
 <strong>顺带清理（同一批）</strong>：删除 <code>examples/dict/</code>（6 个文件）与 <code>examples/array/</code>（16 个文件 + 8 个 <code>.lenb</code>
@@ -2744,17 +2725,17 @@ sockets 的<strong>真实 loopback I/O</strong>）；<strong>C 类</strong>（�
 ⇒ <code>LENO_BIN_VERSION</code> v3.2.5 → <strong>v3.2.6</strong>、<code>LENO_MODCACHE_VERSION</code> v22 → <strong>v23</strong>。
 <strong>做了什么（三处病根都是"跟着链接走出去"）</strong>：
 ① <code>dirs.walk</code>：<strong>列出但不再递归</strong>进 reparse point / 符号链接。此前会跟随 —— 实测一条指回祖先的
-   junction 让 <code>dirs.walk</code> 产出 <strong>66 条</strong>垃圾条目（<code>a\b\loop\b\loop\…</code> 一路拼到路径超长才停，
-   指向大目录的链接更会成倍放大）。口径与 <code>find</code>（默认不跟随）一致；要跟随请自己
-   <code>dirs.is_symlink(p)</code> 判一下再 walk 那个目标。
+junction 让 <code>dirs.walk</code> 产出 <strong>66 条</strong>垃圾条目（<code>a\b\loop\b\loop\…</code> 一路拼到路径超长才停，
+指向大目录的链接更会成倍放大）。口径与 <code>find</code>（默认不跟随）一致；要跟随请自己
+<code>dirs.is_symlink(p)</code> 判一下再 walk 那个目标。
 ② <code>dirs.delete(链接)</code>：<strong>只摘链接、绝不动 target</strong>。此前 <code>FindFirstFileW(L"link\\*")</code> 会<strong>透过</strong>
-   链接列出目标目录的内容并逐个删除、最后再摘链接 ⇒ <strong>删一个链接 = 删掉目标目录里的东西</strong>
-   （数据丢失）。POSIX 侧更糟：<code>stat</code> 跟随 → <code>opendir</code> 进 target 删光 → 最后 <code>rmdir(link)</code> 在
-   POSIX 上必然失败（ENOTDIR）⇒ <strong>内容没了却报失败</strong>。现在两侧都按链接属性判（Windows 看
-   <code>FILE_ATTRIBUTE_REPARSE_POINT</code>、POSIX 用 <code>lstat</code>），只删链接本身。
+链接列出目标目录的内容并逐个删除、最后再摘链接 ⇒ <strong>删一个链接 = 删掉目标目录里的东西</strong>
+（数据丢失）。POSIX 侧更糟：<code>stat</code> 跟随 → <code>opendir</code> 进 target 删光 → 最后 <code>rmdir(link)</code> 在
+POSIX 上必然失败（ENOTDIR）⇒ <strong>内容没了却报失败</strong>。现在两侧都按链接属性判（Windows 看
+<code>FILE_ATTRIBUTE_REPARSE_POINT</code>、POSIX 用 <code>lstat</code>），只删链接本身。
 ③ <code>dirs.stat().mtime</code> 在 Windows 由<strong>恒 0</strong>（"简化版"）改为真实 <strong>Unix 秒</strong>（FILETIME 换算，
-   UTC、不涉及时区；<code>ftLastWriteTime</code> 为 0 时保持默认 0）；POSIX 侧 <code>(int)st_mtime</code> 的 32 位截断
-   一并去掉。docs 里"mtime 在 Windows 恒为 0"那条已知限制随之作废。
+UTC、不涉及时区；<code>ftLastWriteTime</code> 为 0 时保持默认 0）；POSIX 侧 <code>(int)st_mtime</code> 的 32 位截断
+一并去掉。docs 里"mtime 在 Windows 恒为 0"那条已知限制随之作废。
 <strong>为什么升</strong>：① 同一份源码的<strong>求值结果变了</strong>（<code>walk</code> 的条目集合、<code>stat.mtime</code> 的值）；
 ② <code>delete</code> 的<strong>语义</strong>变了（从"穿透链接递归删"变成"只摘链接"）⇒ 旧 <code>.lenb</code> 跑在新 VM 上结果不同，
 正是判据里的"求值语义变化"（同实例十二/十三/十五）。
@@ -2769,21 +2750,21 @@ sockets 的<strong>真实 loopback I/O</strong>）；<strong>C 类</strong>（�
 且脚本 struct 与 native 类型<strong>同名</strong>时给编译期警告。
 <strong>做了什么</strong>：
 ① <code>NativeStructSpec</code> 新增 <code>module_name</code>（<strong>拥有 / 导出该类型</strong>的 native 模块）—— <code>use dirs.DirEntry</code>
-   的左侧就是它；<code>dirs</code> 的两个规格同步填上。
+的左侧就是它；<code>dirs</code> 的两个规格同步填上。
 ② <code>native.c</code> 新增按 <strong>(模块, 类型)</strong> 查的 <code>native_find_module_struct_spec()</code> 与"列出某模块导出的
-   类型"的 <code>native_list_module_struct_specs()</code>（后者专供诊断）。
+类型"的 <code>native_list_module_struct_specs()</code>（后者专供诊断）。
 ③ 语义侧新增 <code>semantic_import_native_type()</code>：与源码模块的 <code>semantic_attach_struct_fields</code> 并列成
-   <strong>第二条通道</strong>（native 没有 <code>sym_table</code>），把规格按 <code>SYM_STRUCT</code> 导进当前作用域、字段类型逐条
-   <code>native_type_spec_to_info()</code> 转出；<strong>不</strong>注册全局 struct_def / 方法占位符 —— native 结构体没有
-   脚本方法，运行期定义由 <code>native_struct_def_for()</code> 按<strong>同一份规格</strong>造（注册一份同名脚本 struct_def
-   反而会把"同形才复用"的检查搅乱）。
+<strong>第二条通道</strong>（native 没有 <code>sym_table</code>），把规格按 <code>SYM_STRUCT</code> 导进当前作用域、字段类型逐条
+<code>native_type_spec_to_info()</code> 转出；<strong>不</strong>注册全局 struct_def / 方法占位符 —— native 结构体没有
+脚本方法，运行期定义由 <code>native_struct_def_for()</code> 按<strong>同一份规格</strong>造（注册一份同名脚本 struct_def
+反而会把"同形才复用"的检查搅乱）。
 ④ <code>AST_USE</code> 里在"模块已导入"检查之后、"模块没有符号表"检查<strong>之前</strong>插入 native 分支 ——
-   位置一箭双雕：既与源码模块<strong>同一规矩</strong>（<code>use</code> 之前先 <code>import</code>），又绕开了那句废话般的
-   "模块 'dirs' 没有符号表"。查不到该类型 ⇒ 报错并<strong>列出可用类型</strong>（照 builtin 模块提示的风格）；
-   重名冲突 ⇒ 报错（与源码模块同口径）；重复 <code>use</code> 同一 native 类型 ⇒ 静默跳过。
+位置一箭双雕：既与源码模块<strong>同一规矩</strong>（<code>use</code> 之前先 <code>import</code>），又绕开了那句废话般的
+"模块 'dirs' 没有符号表"。查不到该类型 ⇒ 报错并<strong>列出可用类型</strong>（照 builtin 模块提示的风格）；
+重名冲突 ⇒ 报错（与源码模块同口径）；重复 <code>use</code> 同一 native 类型 ⇒ 静默跳过。
 ⑤ <code>visit_type_def.inc</code>：脚本 struct 与已注册的 native 类型同名 ⇒ <code>WARN_NATIVE_TYPE_NAME_CLASH</code>。
-   用<strong>警告</strong>而非错误 —— 形状完全一致时是合法用法（运行期会复用同一份 ObjStructDef），
-   只有"形状不一致"才必然在运行期炸。
+用<strong>警告</strong>而非错误 —— 形状完全一致时是合法用法（运行期会复用同一份 ObjStructDef），
+只有"形状不一致"才必然在运行期炸。
 <strong>为什么不升 <code>.lenb</code> / <code>.lenomc</code></strong>：与实例十四同类 —— <strong>放宽源码接收 + 新增编译期诊断</strong>，产物本身
 一字未改（<code>NativeStructSpec</code> 是编进 <code>leno.exe</code> 的 static 描述，<strong>不进</strong>任何缓存产物；<code>use</code> 导入的
 符号只活在本次编译的作用域里）；原本能编译的源码产物逐字节不变 ⇒ 双向兼容。
@@ -3026,19 +3007,19 @@ C=元素类型/名字常量标记）；加尾随字节会让它变成变长指�
 手写文本扫描器 <code>extract_exports()</code> 删掉，导出名改由模块符号表扫描链<strong>唯一</strong>产出。</p>
 <p><strong>改动</strong>：
 - <code>src/module_loader.c</code>：删 <code>extract_exports()</code>（238 行）+ 那套"导出项扫描缓存"
-  （<code>ExportScanCacheEntry</code> / <code>module_file_stamp</code> / <code>export_scan_cache_lookup</code>/<code>_store</code>，87 行），
-  共 <strong>−310 行</strong>；新增 <code>copy_module_export_names()</code> 作唯一取名字出口。
-  <code>extract_module_exports_from_file</code> 与 <code>module_has_method</code> 改为只读符号表
-  （后者从"拷进 <code>char[512][128]</code> 再逐个 <code>strcmp</code>"简化成 <code>module_symbol_table_has_export</code>）。
+（<code>ExportScanCacheEntry</code> / <code>module_file_stamp</code> / <code>export_scan_cache_lookup</code>/<code>_store</code>，87 行），
+共 <strong>−310 行</strong>；新增 <code>copy_module_export_names()</code> 作唯一取名字出口。
+<code>extract_module_exports_from_file</code> 与 <code>module_has_method</code> 改为只读符号表
+（后者从"拷进 <code>char[512][128]</code> 再逐个 <code>strcmp</code>"简化成 <code>module_symbol_table_has_export</code>）。
 - <code>src/module_symbol_table/inc/scan/*.inc</code>：<strong>12 处</strong> <code>module_symbol_table_add_export_name</code>
-  （func / struct / cstruct / enum / face / alias / var×2（含<strong>解构列表的每个名字</strong>）/ cfunc×4）。
-  位置天然安全：这些 <code>.inc</code> 是<strong>在 <code>sym_table_scan.inc</code> 的 <code>if (strncmp(p,"export",6)==0)</code> 块内</strong>
-  被 <code>#include</code> 的 ⇒ 走到那一行必然是顶层 <code>export</code> 声明。而 <code>scan_pass2_init.inc</code>（收<strong>非导出</strong>
-  本地函数）与 <code>sym_table_import_alias.inc</code>（搬<strong>依赖</strong>模块符号）都在那个块<strong>之外</strong>，不会误登记
-  —— 这正是"不能把钩子挂在 <code>add_*</code> 里"的原因。
+（func / struct / cstruct / enum / face / alias / var×2（含<strong>解构列表的每个名字</strong>）/ cfunc×4）。
+位置天然安全：这些 <code>.inc</code> 是<strong>在 <code>sym_table_scan.inc</code> 的 <code>if (strncmp(p,"export",6)==0)</code> 块内</strong>
+被 <code>#include</code> 的 ⇒ 走到那一行必然是顶层 <code>export</code> 声明。而 <code>scan_pass2_init.inc</code>（收<strong>非导出</strong>
+本地函数）与 <code>sym_table_import_alias.inc</code>（搬<strong>依赖</strong>模块符号）都在那个块<strong>之外</strong>，不会误登记
+—— 这正是"不能把钩子挂在 <code>add_*</code> 里"的原因。
 - 符号表新增 <code>export_names</code> / <code>export_count</code> / <code>export_capacity</code> + 3 个出口
-  （<code>module_symbol_table_export_names</code> / <code>_has_export</code> / <code>_add_export_name</code>）；
-  <code>.lenosymc</code> 在<strong>依赖块之后、funcs 之前</strong>多一段"导出名数 + 逐个名字串"。</p>
+（<code>module_symbol_table_export_names</code> / <code>_has_export</code> / <code>_add_export_name</code>）；
+<code>.lenosymc</code> 在<strong>依赖块之后、funcs 之前</strong>多一段"导出名数 + 逐个名字串"。</p>
 <p><strong>⚠ 收敛时最容易改坏的一步</strong>：不能拿 <code>ModuleSymbolTable</code> 里现成的 <code>funcs[]</code>/<code>structs[]</code> 当
 "导出集合"用 —— <code>funcs[]</code> 是「export <strong>∪ 本地非导出函数</strong>」的并集，<code>structs[]</code>/<code>enums[]</code>/… 里
 还混着<strong>导入别名</strong>。直接拿它们判，会让「模块 'm' 中没有方法 'x'」<strong>少报</strong> ✗（正是 S10 同一族
@@ -3123,9 +3104,9 @@ VM-only 实现走 <code>.lenb</code> 的 <code>exports</code> 字典 ⇒ 先解�
 混进来会把真差异淹没在口径差里 ✗</p>
 <p>升级过程本身的两个教训（都已就地修掉）：
 - 比对时<strong>不能原地 <code>qsort</code> 名字数组</strong> —— 那会打断 <code>names[i] ↔ sigs[i]</code> 的下标对齐，症状是
-  "名字互换"式假差异（<code>makeColor</code> 拿到 <code>makeSize</code> 的参数数）✗ ⇒ 改用副本排序 ✓
+"名字互换"式假差异（<code>makeColor</code> 拿到 <code>makeSize</code> 的参数数）✗ ⇒ 改用副本排序 ✓
 - <code>scan_side_sig</code> 里 <strong>cfunc 必须排在 var 之前</strong>查：<code>export cfunc X(...)</code> 的 X 在符号表里
-  <strong>同时</strong>进了 <code>cfuncs[]</code> 与 <code>vars[]</code>（既有行为），先查 var 会把 cfunc 误报成 var ⇒ 假差异 ✗</p>
+<strong>同时</strong>进了 <code>cfuncs[]</code> 与 <code>vars[]</code>（既有行为），先查 var 会把 cfunc 误报成 var ⇒ 假差异 ✗</p>
 <p><strong>现状</strong>：<code>examples/</code> 对拍 <strong>810 一致 / 0 不一致</strong>；<code>assert/</code> <strong>540 一致 / 1 不一致 / 9 无法比较</strong>；
 <code>run_tests</code> <strong>406 / 0</strong>。唯一遗留：</p>
 <ul>
@@ -3150,18 +3131,18 @@ AST 填充器承担。证据：<code>assert/run_tests</code> <strong>406 / 0</st
 <p><strong>教训二：AST 侧缺的不是语义信息，而是扫描链早就做对的那几件事</strong>（逐条都有实测症状）：
 - 方法键必须是 <code>Struct::方法名</code> 全名（<code>find_struct_method</code> 按 <code>"%s::%s"</code> 查）—— 否则「类型 'struct User' 没有方法 'fmt'」
 - struct 的 <strong>impl 列表</strong>与<strong>关联常量</strong>：<code>add_struct</code> 形参里根本没有这两项 ⇒ 新增
-  <code>module_symbol_table_set_struct_impls</code> / <code>_set_struct_consts</code>（常量值文本由 AST 字面量还原）
-  —— 否则「未实现 face 'Printable'」「struct 'Splitter' 没有字段 'HORIZONTAL'」
+<code>module_symbol_table_set_struct_impls</code> / <code>_set_struct_consts</code>（常量值文本由 AST 字面量还原）
+—— 否则「未实现 face 'Printable'」「struct 'Splitter' 没有字段 'HORIZONTAL'」
 - <strong>泛型形参</strong>：字段/参数归 <code>TYPE_GENERIC_PARAM</code>（字段名进 <code>type_info</code>，与 <code>scan_struct</code> 同口径）、
-  方法返回记 <code>return_type_param_name</code> —— 否则「push 第 1 个参数类型不匹配: 期望 struct T, 实际 int」
+方法返回记 <code>return_type_param_name</code> —— 否则「push 第 1 个参数类型不匹配: 期望 struct T, 实际 int」
 - <strong>别名必须整体展开</strong>（<code>ast_resolved_copy</code> / <code>ast_alias_unwrap</code>）：<code>alias Color = int</code>、
-  <code>alias SizeF = Dict[string, float]</code> 只换 kind 会丢键值类型 —— 否则「期望 struct Color, 实际 int」
+<code>alias SizeF = Dict[string, float]</code> 只换 kind 会丢键值类型 —— 否则「期望 struct Color, 实际 int」
 - <strong>默认值文本</strong>（<code>param_default_texts</code>）：调用点在<strong>别的模块</strong>里拿不到被调函数 AST，只能读符号表
-  —— 传 NULL 会让默认值变 null ⇒「加法运算: null 不能参与运算」
+—— 传 NULL 会让默认值变 null ⇒「加法运算: null 不能参与运算」
 - <strong>容器要带元素/键值类型</strong>：<code>var x = [1,2]</code> ⇒ <code>Array[int]</code>（递归得 <code>Array[Array[int]]</code>）；
-  裸 <code>Array</code> 会让跨模块 <code>x[0]</code> 退化成 any
+裸 <code>Array</code> 会让跨模块 <code>x[0]</code> 退化成 any
 - <strong><code>export clib X</code> 在 <code>scan_pass1.inc</code> 里只登记名字数组、从不建条目</strong>（推完就 <code>continue</code>），
-  use 传导的 clib 分支同样只推名字 ⇒ 依赖符号表的新路径找不到它（<code>use fnt.sdl3_ttf</code> 报"没有类型或函数"）</p>
+use 传导的 clib 分支同样只推名字 ⇒ 依赖符号表的新路径找不到它（<code>use fnt.sdl3_ttf</code> 报"没有类型或函数"）</p>
 <p><strong>教训三：AST 填充器必须同时挂在 <code>module_symbol_table_scan</code> 里，而不只是 <code>get_shared</code></strong> ——
 扫描链自己 <code>create + scan</code> 的<strong>私有依赖表</strong>不经过 <code>get_shared</code>，而那张表<strong>会被读</strong>（clib 靠依赖模块的
 funcs 识别、传递依赖），只在 <code>get_shared</code> 挂会让私有表缺符号。</p>
@@ -3173,7 +3154,7 @@ funcs 识别、传递依赖），只在 <code>get_shared</code> 挂会让私有�
 它的 <code>export_names</code> 已无实际作用（生产路径走 AST provider；VM 侧吃 <code>.lenb</code> 里序列化的导出名）⇒
 <code>--export-diff</code> 出现大量"仅 AST 有"（<strong>设计性结果</strong>：不再是等价性基线，而是"扫描链还缺哪些"的进度表）。
 真正删除骨架还需把 <code>use</code> / <code>import</code> 传导也搬到 AST 侧。</p>
-<p><strong>补五（2026-10-01，S10 <strong>终局</strong>：文本扫描链整条删除）</strong>：把 <code>use</code>/<code>import</code> 传导也搬到 AST 侧
+<p><strong>补五（2026-10-01，S10 </strong>终局<strong>：文本扫描链整条删除）</strong>：把 <code>use</code>/<code>import</code> 传导也搬到 AST 侧
 （<code>ast_fill_one_use</code> 把 dep 的符号引进本表 + <code>ast_transmit_type_deps</code> 递归传导 alias 底层类型 +
 <code>ast_dep_table</code> 取依赖表带<strong>环保护</strong>——填充器跑在 scan_stack 之外，<code>A use B</code>+<code>B use A</code> 会让
 <code>get_shared</code> 无限递归）之后，扫描链<strong>彻底不需要</strong>了：</p>
@@ -3231,8 +3212,9 @@ VM 二进制跑 <code>.lenb</code> 跨模块 clib 用例通过；构建<strong>�
 <li><strong>版本</strong>：<code>.lenosymc</code> <strong>v34 → v35</strong>（face 方法形参的<strong>内容</strong>变了；格式一字未改）——见第七节登记表。</li>
 <li><strong>验证</strong>：<code>build.bat</code> / <code>build_vm.bat</code>（VM-only）双双通过、构建<strong>零告警</strong>；
   <code>assert/run_tests.leno</code> <strong>406 / 0</strong>（清 <code>.lenocache</code> 冷跑）；<strong>examples 810 个全过</strong>（冷跑）。</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-问题定式">一、问题定式</a></li><li><a href="#二-清单-按-是否会静默错值-排序">二、清单（按「是否会静默错值」排序）</a></li><li><a href="#三-收敛顺序-建议-先立防线-再动结构">三、收敛顺序（建议，先立防线、再动结构）</a></li><ul class="lv3"><li><a href="#phase-0-立防线-不改结构-收益立竿见影">Phase 0：立防线（不改结构，收益立竿见影）</a></li><li><a href="#phase-1-把-值-收敛到一处-对应-s1-s3-s4">Phase 1：把「值」收敛到一处（对应 S1 / S3 / S4）</a></li><li><a href="#phase-2-把-类型-收敛到一处-对应-s2">Phase 2：把「类型」收敛到一处（对应 S2）</a></li><li><a href="#phase-3-把-失效判定-收敛到一处-对应-s8">Phase 3：把「失效判定」收敛到一处（对应 S8）</a></li></ul><li><a href="#四-今天踩过的坑-别重复">四、今天踩过的坑（别重复）</a></li><li><a href="#五-验证手段-照抄今天的做法">五、验证手段（照抄今天的做法）</a></li><li><a href="#六-当前状态-截至-2026-09-16">六、当前状态（截至 2026-09-16）</a></li><li><a href="#七-缓存格式与版本号登记表-phase-0-2">七、缓存格式与版本号登记表（Phase 0.2）</a></li><ul class="lv3"><li><a href="#①-静态-any-不允许流进具体类型的-native-形参-两条通道都堵上">① 静态 any 不允许流进具体类型的 native 形参（两条通道都堵上）</a></li><li><a href="#②-可变参数方法的参数类型-此前整份被忽略">② 可变参数方法的参数类型（此前整份被忽略）</a></li></ul></ul></aside>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-问题定式">一、问题定式</a></li><li><a href="#二-清单-按-是否会静默错值-排序">二、清单（按「是否会静默错值」排序）</a></li><li><a href="#三-收敛顺序-建议-先立防线-再动结构">三、收敛顺序（建议，先立防线、再动结构）</a></li><ul class="lv3"><li><a href="#phase-0-立防线-不改结构-收益立竿见影">Phase 0：立防线（不改结构，收益立竿见影）</a></li><li><a href="#phase-1-把-值-收敛到一处-对应-s1-s3-s4">Phase 1：把「值」收敛到一处（对应 S1 / S3 / S4）</a></li><li><a href="#phase-2-把-类型-收敛到一处-对应-s2">Phase 2：把「类型」收敛到一处（对应 S2）</a></li><li><a href="#phase-3-把-失效判定-收敛到一处-对应-s8">Phase 3：把「失效判定」收敛到一处（对应 S8）</a></li></ul><li><a href="#四-今天踩过的坑-别重复">四、今天踩过的坑（别重复）</a></li><li><a href="#五-验证手段-照抄今天的做法">五、验证手段（照抄今天的做法）</a></li><li><a href="#六-当前状态-截至-2026-09-16">六、当前状态（截至 2026-09-16）</a></li><li><a href="#七-缓存格式与版本号登记表-phase-0-2">七、缓存格式与版本号登记表（Phase 0.2）</a></li><ul class="lv3"><li><a href="#静态-any-不允许流进具体类型的-native-形参-两条通道都堵上">① 静态 any 不允许流进具体类型的 native 形参（两条通道都堵上）</a></li><li><a href="#可变参数方法的参数类型-此前整份被忽略">② 可变参数方法的参数类型（此前整份被忽略）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="错误与空值契约.html">← 上一篇</a><a href="寄存式与栈式的差异清单.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

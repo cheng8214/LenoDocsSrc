@@ -153,22 +153,17 @@
 <hr>
 <h2 id="四-v1-的局限-按-会不会真出事-分档">四、v1 的局限（按"会不会真出事"分档）</h2>
 <h3 id="a-级-真隐患-v2-必修">A 级：真隐患（v2 必修）</h3>
-<p><strong>A1. 每帧 <code>pushClipRect</code>，而且海报墙场景 <strong>100% 命中</strong> —— 闪烁隐患 + 白付 flush</strong></p>
-<p>```273:286:build/leno_module/LenoSDL3/lib/sdl_card.leno
-            bool needClip = dx &lt; ix - 0.5 or dy &lt; iy - 0.5 or dx + dw &gt; ix + iw + 0.5 or dy + dh &gt; iy + ih + 0.5
+<p><strong>A1. 每帧 <code>pushClipRect</code>，而且海报墙场景 </strong>100% 命中<strong> —— 闪烁隐患 + 白付 flush</strong></p>
+<pre><code class="language-273:286:build/leno_module/LenoSDL3/lib/sdl_card.leno">            bool needClip = dx &lt; ix - 0.5 or dy &lt; iy - 0.5 or dx + dw &gt; ix + iw + 0.5 or dy + dh &gt; iy + ih + 0.5
             ...
-                r.pushClipRect(c2.to_ptr())</p>
-<pre><code>而 `pushClipRect` / `popClipRect` **每次都先 `flushBatches()`**（`sdl_renderer.leno:562-563`、`595-596`）。
-
-算术：海报 300×450（0.667）填进图片区 172×249（0.690）⇒ 按高缩放后 `dh=258 &gt; 249` ⇒ **每张卡每帧都要裁**。
-22 张 = 每帧约 **44 次额外 flush** + 22 次 `SDL_SetRenderClipRect` 状态切换。仓里已有专门记录说&quot;裁剪过多 ⇒ D3D 闪烁&quot;（`docs/LenoSDL3_裁剪过多导致闪烁排查记录.md`）。
-
-**修法（零裁剪）**：改 `drawTextureRect(tex, srcrect, dstrect)`（`sdl_renderer.leno:636`）—— 把居中裁切**算进源矩形**，目标矩形就是图片区；两个 `SDL_Rect` **分配一次缓存在字段里** ⇒ 每帧 0 次分配、0 次 push/pop、还少画被丢弃的像素。
-
-**A2. 二次 `set()` 换图漏纹理**
-
-```128:128:build/leno_module/LenoSDL3/lib/sdl_card.leno
-        tex = null; loadedPath = &quot;&quot;     // 二次 set = 换卡 ⇒ 旧纹理交给 dispose/重载（不在这里 free：可能还没渲染器 ✓）
+                r.pushClipRect(c2.to_ptr())
+</code></pre>
+<p>而 <code>pushClipRect</code> / <code>popClipRect</code> <strong>每次都先 <code>flushBatches()</code></strong>（<code>sdl_renderer.leno:562-563</code>、<code>595-596</code>）。</p>
+<p>算术：海报 300×450（0.667）填进图片区 172×249（0.690）⇒ 按高缩放后 <code>dh=258 &gt; 249</code> ⇒ <strong>每张卡每帧都要裁</strong>。
+22 张 = 每帧约 <strong>44 次额外 flush</strong> + 22 次 <code>SDL_SetRenderClipRect</code> 状态切换。仓里已有专门记录说"裁剪过多 ⇒ D3D 闪烁"（<code>docs/LenoSDL3_裁剪过多导致闪烁排查记录.md</code>）。</p>
+<p><strong>修法（零裁剪）</strong>：改 <code>drawTextureRect(tex, srcrect, dstrect)</code>（<code>sdl_renderer.leno:636</code>）—— 把居中裁切<strong>算进源矩形</strong>，目标矩形就是图片区；两个 <code>SDL_Rect</code> <strong>分配一次缓存在字段里</strong> ⇒ 每帧 0 次分配、0 次 push/pop、还少画被丢弃的像素。</p>
+<p><strong>A2. 二次 <code>set()</code> 换图漏纹理</strong></p>
+<pre><code class="language-128:128:build/leno_module/LenoSDL3/lib/sdl_card.leno">        tex = null; loadedPath = &quot;&quot;     // 二次 set = 换卡 ⇒ 旧纹理交给 dispose/重载（不在这里 free：可能还没渲染器 ✓）
 </code></pre>
 <p><code>dispose()</code> 只释放<strong>当下</strong>那张；而 <code>SDL_DestroyTexture</code> <strong>不需要渲染器</strong>（原注释写错了）⇒ 反复换图 = 每次都漏一张。</p>
 <p><strong>A3. 省略号缓存只有单槽</strong>（<code>cKey/cMax/cOut</code>，<code>sdl_card.leno:87-89</code>）</p>
@@ -877,7 +872,8 @@ build\leno.exe leno_gui\应用\影视海报墙\movie_wall.leno
    现在<strong>直接写裸名就行</strong> ✓（<code>var b = new BadgeSpec(text = badge)</code> ✓）。
    （⚠ 旧说法"编译器把 <code>self</code> 切成 B"<strong>不准确</strong>：B 有同名字段时也照样响亮报错、不会静默取值 ✓；
    6 条边界与真因见 <code>docs/语言摩擦与隐式契约清单.md</code> 的 <strong>M11</strong> ✓）</li>
-</ol></main>
+</ol>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么要有这个控件-缺口与证据">一、为什么要有这个控件（缺口与证据）</a></li><li><a href="#二-设计目标-非目标">二、设计目标 / 非目标</a></li><ul class="lv3"><li><a href="#目标">目标</a></li><li><a href="#非目标-明确不做-避免范围膨胀">非目标（明确不做，避免范围膨胀）</a></li></ul><li><a href="#三-v1-已实现能力-现状">三、v1 已实现能力（现状）</a></li><li><a href="#四-v1-的局限-按-会不会真出事-分档">四、v1 的局限（按"会不会真出事"分档）</a></li><ul class="lv3"><li><a href="#a-级-真隐患-v2-必修">A 级：真隐患（v2 必修）</a></li><li><a href="#b-级-功能天花板-按需加">B 级：功能天花板（按需加）</a></li><li><a href="#c-级-值得表扬的地方-派生成本极低">C 级：值得表扬的地方（派生成本极低）</a></li></ul><li><a href="#五-v2-设计">五、v2 设计</a></li><ul class="lv3"><li><a href="#5-1-尺寸模型-唯一公式-实现与文档同源">5.1 尺寸模型（唯一公式，实现与文档同源）</a></li><li><a href="#5-2-容器化-g3-本次重点">5.2 容器化（G3，本次重点）</a></li><li><a href="#5-3-状态模型-颜色优先级单一来源">5.3 状态模型（颜色优先级单一来源）</a></li><li><a href="#5-4-图片-三种模式-零裁剪-共享纹理">5.4 图片：三种模式 + 零裁剪 + 共享纹理</a></li><li><a href="#5-5-角标-多角标已落地-v2-1">5.5 角标（多角标已落地 v2.1 ✓）</a></li><li><a href="#5-4b-图片圆角-v2-1-走渲染器合成">5.4b 图片圆角（v2.1 ✓，走渲染器合成）</a></li><li><a href="#5-6-文本">5.6 文本</a></li><li><a href="#5-7-渲染顺序与-裁剪预算">5.7 渲染顺序与"裁剪预算"</a></li><li><a href="#5-8-opts-全表-v2">5.8 opts 全表（v2）</a></li><li><a href="#5-9-方法表-v2">5.9 方法表（v2）</a></li><li><a href="#5-10-兼容性">5.10 兼容性</a></li></ul><li><a href="#六-与框架其它部分的关系">六、与框架其它部分的关系</a></li><li><a href="#七-验证计划">七、验证计划</a></li><li><a href="#八-实施顺序与验收">八、实施顺序与验收</a></li><li><a href="#九-已知取舍">九、已知取舍</a></li><li><a href="#十-遗留与后续-p1-p2-p3-待办">十、遗留与后续（P1/P2/P3 待办）</a></li><li><a href="#十一-v2-实施记录-2026-10-13">十一、v2 实施记录（2026-10-13）</a></li><ul class="lv3"><li><a href="#第二批-v2-1-同日">第二批（v2.1，同日）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="错误堆栈追踪改进方案.html">← 上一篇</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">下一篇 →</a></nav>

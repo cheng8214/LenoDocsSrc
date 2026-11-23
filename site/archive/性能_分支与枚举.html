@@ -230,7 +230,8 @@ else { … }
 <li><strong>热路径 + 几十上百分支</strong>：不用特殊写法了 —— 树已经自动接管（≥16 个整数字面量 case）。
   只有在"永远命中第一个"这种极端分布下，手写 <code>if</code> 才会快几毫秒。</li>
 <li><strong>带载荷 enum 的分派不要有心理负担</strong>：比普通 enum 只贵 1~2ms/300k 次，换来的是类型安全。</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-结论先说">1. 结论先说</a></li><li><a href="#2-优化前后对照-单位-ms-300k-次调用">2. 优化前后对照（单位 ms，300k 次调用）</a></li><li><a href="#3-改了什么-codegen_stmt-c-的-gen_switch">3. 改了什么（codegen_stmt.c 的 gen_switch）</a></li><li><a href="#4-已落地-大分支的二叉比较树-2026-11-10">4. 已落地：大分支的二叉比较树（2026-11-10）</a></li><ul class="lv3"><li><a href="#实测-300k-次调用-ms">实测（300k 次调用，ms）</a></li><li><a href="#判据-任何一条不满足就退回线性链-语义永远不变">判据（任何一条不满足就退回线性链，语义永远不变）</a></li></ul><li><a href="#5-还没做的">5. 还没做的</a></li><ul class="lv3"><li><a href="#稠密-跳转表-o-1-但要动字节码格式">稠密：跳转表（O(1)，但要动字节码格式）</a></li><li><a href="#用户侧-先粗分档再细判-现在仍然有用">用户侧：先粗分档再细判（现在仍然有用）</a></li></ul><li><a href="#6-一句话建议">6. 一句话建议</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">← 上一篇</a><a href="../archive/性能优化记录.html">下一篇 →</a></nav>

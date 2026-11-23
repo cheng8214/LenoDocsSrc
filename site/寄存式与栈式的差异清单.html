@@ -425,8 +425,8 @@ main() {
 <p><strong>修法</strong>（文档是规范，实现向文档对齐；运行时数据其实基本齐了）：
 - <code>ObjFuture</code> 早有 <code>completed</code> / <code>result</code> ⇒ <code>is_done</code> / <code>get_result</code> 直接读；
 - 只缺<strong>协程 ID</strong>：给 <code>ObjCoroutine</code> 加 <code>int id</code>，在 <code>coroutine_new</code> 里从 <strong>VM 的计数器</strong>
-  （<code>next_coroutine_id</code>）递增分配。放 VM 上而不是文件级 <code>static</code>，是因为各线程的 VM 都是
-  <code>memset(&amp;vm, 0, sizeof(VM))</code> 出来的 ⇒ 天然线程安全、每个 VM 独立编号；
+（<code>next_coroutine_id</code>）递增分配。放 VM 上而不是文件级 <code>static</code>，是因为各线程的 VM 都是
+<code>memset(&amp;vm, 0, sizeof(VM))</code> 出来的 ⇒ 天然线程安全、每个 VM 独立编号；
 - 三个 native + 注册，参数类型写 <code>TYPE_FUTURE</code> ⇒ 语义层会在<strong>编译期</strong>就拦住 <code>is_done(123)</code>。</p>
 <p><strong>行为</strong>（实测）：</p>
 <table>
@@ -800,16 +800,24 @@ build\leno.exe --no-cache assert\test_cross_module_types.leno     # 寄存器式
 <p>~~差分对照（<code>tools/diff_vs_stack.ps1</code>）~~ <strong>已删除</strong>：不再与栈式对比，本节原内容（归一化清单、
 <code>TIMEOUT</code> 标记、<code>gc .leno</code> 的 1785 vs 2000+ 之类）随之作废 —— 那条性能项本身还留在
 <code>docs/待办与路线图.md</code> 的现状快照里。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>差分对照有盲区</strong>：它只能发现"两侧不一样"，发现不了 <strong>C 类（两侧一致地错）</strong>。
 所以还要定期做一遍<strong>能力面审计</strong>：照官方文档（<code>docs/*.md</code>）的承诺、按 API 面逐条写最小用例，
 看输出<strong>对不对</strong>（而不是"两不两样"）。本轮的 C5–C10 就是这么挖出来的：
 17 个探针里 13 个两侧一致 —— 其中既有"正确"，也有"一起错"。</p>
+</blockquote>
+<blockquote>
 <p>⚠ <strong>非确定性样例</strong>：涉及协程异常 / GC / 计时的样例可能每次跑出来的结果都不同
 （E15 当时就是：同一份代码有时普通报错、有时访问违例）。这类样例<strong>至少要连跑几次</strong>再下结论，
 否则会把"这次恰好一样"当成 OK —— E15 之前就是这样被漏过的。
 建议：可疑样例连跑 5 次，看输出是否稳定。</p>
+</blockquote>
+<blockquote>
 <p>⚠ 归档提醒：当年那些"归一化/超时"注意点都是<strong>对照脚本专属</strong>的，随脚本删除一同作废；
 唯一值得留下的一条是——<strong>非确定性样例（协程异常 / GC / 计时）连跑几次再下结论</strong>。</p>
+</blockquote>
+<blockquote>
 <p><strong>归档：当年对照出来的"既存差异"（都是措辞 / 竞态类，非结果错）</strong>：</p>
 <p><code>examples/import</code>（211 个样例）剩 <strong>3 条</strong>，与 async 无关：
 除零错误消息措辞（<code>除零错误：除数为 0</code> / <code>[操作] 除法 (/)</code> vs 栈式的
@@ -847,18 +855,20 @@ vs「索引=0, 数组长度=0」+ 报错行号差 1）、<code>test_exec2.leno</
    <code>sym_table_add.inc</code> 的 <code>module_symbol_table_add_struct</code>（方法数组，已改 <code>calloc</code>）、
    <code>module_symbol_table_add_func</code>（扩容槽位）、<code>sym_table_cache.inc</code> 的读写往返。
    漏一处就是"未初始化垃圾值"——表现为<strong>随机</strong>行为（A3 修复时踩过：6 个测试挂掉、
-   失败点还随内存布局漂移）。</li>
-<li><strong>融合/特化指令上线前，先 dump 字节码看一遍</strong>：<code>leno --debug &lt;脚本&gt;</code> 能打印每个函数的
-   指令序列（<code>main.c</code> 的 <code>debugMode</code>）—— 比读 C 代码猜快得多。
-   另外，融合指令要替代某个原生函数时，必须逐条核对<strong>副作用</strong>（GC 写屏障、错误路径、
-   返回值），别只对返回值。</li>
+   失败点还随内存布局漂移）。<ol>
+<li><strong>融合/特化指令上线前，先 dump 字节码看一遍</strong>：<code>leno --debug &lt;脚本&gt;</code> 能打印每个函数的</li>
 </ol>
+</li>
+</ol>
+<p>指令序列（<code>main.c</code> 的 <code>debugMode</code>）—— 比读 C 代码猜快得多。
+另外，融合指令要替代某个原生函数时，必须逐条核对<strong>副作用</strong>（GC 写屏障、错误路径、
+返回值），别只对返回值。</p>
 <p>## 九、反向差异：栈式<strong>有、我们缺</strong>的优化（性能）</p>
 <p>前面几节都是"寄存器式对、栈式错/慢"。这里记<strong>反方向</strong>的 —— 栈式里已经做了、
-   寄存器式没做（或没做全）的优化。<strong>不要默认"寄存器式一定更优"</strong>。</p>
+寄存器式没做（或没做全）的优化。<strong>不要默认"寄存器式一定更优"</strong>。</p>
 <p>### F1. <code>arr.add(x)</code> 缺融合（已补）</p>
 <p><strong>现象</strong>（同一轮对照，30 万次 <code>.add()</code>）：寄存器式 4.91ms vs 栈式 3.99ms ⇒ <strong>慢 23%</strong> ✗；
-   连累"原始快速排序"（每元素一次 <code>.add()</code>）在小规模上偏慢。</p>
+连累"原始快速排序"（每元素一次 <code>.add()</code>）在小规模上偏慢。</p>
 <p><strong>根因</strong>（字节码 dump 对照）：</p>
 <table>
 <thead>
@@ -880,17 +890,18 @@ vs「索引=0, 数组长度=0」+ 报错行号差 1）、<code>test_exec2.leno</
 </table>
 <p>栈式 codegen 早就把 <code>arr.add(x)</code> <strong>融合成一条专用指令</strong>，寄存器式一直走通用方法调用。</p>
 <p><strong>修法</strong>：在 <code>gen_method_call</code> 入口加融合 —— 方法名 <code>add</code>、恰好 1 个实参、
-   接收者静态类型是 <code>TYPE_ARRAY</code> ⇒ 直接发 <code>OP_ARRAY_APPEND</code>（求值顺序安全：
-   接收者与实参各自取新临时寄存器，长度结果再 <code>MOV</code> 到目标）。</p>
+接收者静态类型是 <code>TYPE_ARRAY</code> ⇒ 直接发 <code>OP_ARRAY_APPEND</code>（求值顺序安全：
+接收者与实参各自取新临时寄存器，长度结果再 <code>MOV</code> 到目标）。</p>
 <p><strong>同轮 A/B（<code>git stash</code> 前后对照，机器漂移互相抵消）</strong>：<code>add</code> 5.32ms → <strong>4.70ms = 0.88x</strong> ✓；
-   排序样例 400k 优化 0.70x、100k 原地 0.80x，正确性 12/12 全 <code>true</code> ✓。</p>
+排序样例 400k 优化 0.70x、100k 原地 0.80x，正确性 12/12 全 <code>true</code> ✓。</p>
 <p><strong>⚠ 顺带补掉一个真隐患</strong>：<code>OP_ARRAY_APPEND</code> <strong>缺 GC 写屏障</strong>，而原生 <code>arr_add</code> 一直有。
-   本 GC 是<strong>分代 + 记住集</strong>（老年代引用年轻代必须入集，见 <code>leno_value.h</code> 的 REMEMBERED 位
-   与 <code>gc.c</code> 开头）。此前该指令<strong>只被大数组字面量</strong>用到（young→young，恰好不需要屏障）所以没暴露；
-   把 <code>arr.add(x)</code> 融合进来之后，"老数组追加年轻值"变成常规路径 ⇒ 必须补。
-   <strong>教训</strong>：融合指令必须与它替代的原生函数<strong>逐条对齐副作用</strong>（这里是写屏障），别只对返回值。</p>
+本 GC 是<strong>分代 + 记住集</strong>（老年代引用年轻代必须入集，见 <code>leno_value.h</code> 的 REMEMBERED 位
+与 <code>gc.c</code> 开头）。此前该指令<strong>只被大数组字面量</strong>用到（young→young，恰好不需要屏障）所以没暴露；
+把 <code>arr.add(x)</code> 融合进来之后，"老数组追加年轻值"变成常规路径 ⇒ 必须补。
+<strong>教训</strong>：融合指令必须与它替代的原生函数<strong>逐条对齐副作用</strong>（这里是写屏障），别只对返回值。</p>
 <p><strong>回归锁定</strong>：<code>assert/test_array_bounds.leno</code> 第 9 条（<code>add</code> 返回新长度、语句/表达式两种上下文、
-   追加对象元素读回）。</p></main>
+追加对象元素读回）。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-结论一览">一、结论一览</a></li><li><a href="#二-a-类-寄存器式对-栈式错-真实行为差异">二、A 类：寄存器式对、栈式错（真实行为差异）</a></li><ul class="lv3"><li><a href="#a1-导出-模块-变量的声明类型规范化-就是你问的-float-那条">A1. 导出（模块）变量的声明类型规范化（就是你问的 float 那条）</a></li><li><a href="#a2-async-函数经一等值调用必须返回-future-原-c-类-c4-已修">A2. async 函数经一等值调用必须返回 Future（原 C 类 C4，已修）</a></li><li><a href="#a3-跨模块-async-export-async-func-export-struct-的-async-方法-原-c-类-c2-已修">A3. 跨模块 async（export async func / export struct 的 async 方法）（原 C 类 C2，已修）</a></li><li><a href="#a4-函数返回值按声明类型规范化-原-c-类-c1-已修">A4. 函数返回值按声明类型规范化（原 C 类 C1，已修）</a></li><li><a href="#a5-多个协程同时失败时-run-汇总抛出-原-c-类-c7-已修">A5. 多个协程同时失败时 run() 汇总抛出（原 C 类 C7，已修）</a></li><li><a href="#a6-asyncs-的查询类-api-缺失-current-is_done-get_result-原-c-类-c9-已补">A6. asyncs 的查询类 API 缺失：current() / is_done() / get_result()（原 C 类 C9，已补）</a></li></ul><li><a href="#三-b-类-两边都错-现象还不一样">三、B 类：两边都错、现象还不一样</a></li><ul class="lv3"><li><a href="#b1-局部函数遮蔽同名全局-async-函数-且调用点在该局部函数之后才被语义分析">B1. 局部函数遮蔽同名全局 async 函数，且调用点在该局部函数之后才被语义分析</a></li></ul><li><a href="#四-c-类-两边都错-都还没修-登记备查">四、C 类：两边都错、都还没修（登记备查）</a></li><li><a href="#五-d-类-栈式侧潜伏缺陷-当前不崩-但别照抄">五、D 类：栈式侧潜伏缺陷（当前不崩，但别照抄）</a></li><ul class="lv3"><li><a href="#d1-插值串-parts-exprs-两个数组容量可能不平行">D1. 插值串 parts / exprs 两个数组容量可能不平行</a></li></ul><li><a href="#六-e-类-已追平-移植缺口账本">六、E 类：已追平（移植缺口账本）</a></li><li><a href="#七-怎么复核这份文档-归档-无对照步骤">七、怎么复核这份文档（归档：无对照步骤）</a></li><li><a href="#八-维护约定">八、维护约定</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="单一事实来源与重复实现收敛.html">← 上一篇</a><a href="错误堆栈追踪改进方案.html">下一篇 →</a></nav>

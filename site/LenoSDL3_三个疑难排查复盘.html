@@ -225,7 +225,8 @@ error: [语义错误] 类型 'struct Table' 没有方法 'contains'
 <td><code>archive/LenoSDL3_裁剪过多导致闪烁排查记录.html</code> · <code>archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html</code> · <code>archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html</code></td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-三条一句话结论">0. 三条一句话结论</a></li><li><a href="#1-裁剪-clip-过多导致闪烁">1. 裁剪（clip）过多导致闪烁</a></li><ul class="lv3"><li><a href="#1-1-机制-裁剪层数-每帧-flush-次数-分配次数">1.1 机制：裁剪层数 = 每帧 flush 次数 + 分配次数</a></li><li><a href="#1-2-规则-写新界面时照这个来">1.2 规则（写新界面时照这个来）</a></li><li><a href="#1-3-另外三条独立的闪烁源-都不是裁剪-别混在一起查">1.3 另外三条独立的闪烁源（都不是裁剪，别混在一起查）</a></li><li><a href="#1-4-现在的状态">1.4 现在的状态</a></li></ul><li><a href="#2-打包后-窗口句柄下发-整条静默失效">2. 打包后「窗口句柄下发」整条静默失效</a></li><ul class="lv3"><li><a href="#2-1-五分钟复现法-不必真打包">2.1 五分钟复现法（不必真打包）</a></li><li><a href="#2-2-根因-合并-case-is-a-b-c-的动态派发被-dce-剪成空桩">2.2 根因：合并 case is A, B, C 的动态派发被 DCE 剪成空桩</a></li><li><a href="#2-3-一次误诊-留档-因为它很典型">2.3 一次误诊（留档，因为它很典型）</a></li><li><a href="#2-4-治本-编译器侧-2026-10-10">2.4 治本（编译器侧，2026-10-10）</a></li><li><a href="#2-5-自查清单-再遇到-只有打包才犯-的怪事-照这个顺序走">2.5 自查清单（再遇到"只有打包才犯"的怪事，照这个顺序走）</a></li></ul><li><a href="#3-table-方法表断裂-符号表-128-上限">3. Table 方法表断裂（符号表 128 上限）</a></li><ul class="lv3"><li><a href="#3-1-现象与根因">3.1 现象与根因</a></li><li><a href="#3-2-为什么它看起来-与内容无关-与位置强相关">3.2 为什么它看起来"与内容无关、与位置强相关"</a></li><li><a href="#3-3-修复-三层防御">3.3 修复：三层防御</a></li></ul><li><a href="#4-共同教训-三条-都是-静默-惹的祸">4. 共同教训（三条，都是"静默"惹的祸）</a></li><li><a href="#5-相关文件与用例">5. 相关文件与用例</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">← 上一篇</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">下一篇 →</a></nav>

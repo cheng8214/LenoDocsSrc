@@ -31,6 +31,8 @@
 （例如把"真实热点被 <code>OP_CAST_INT</code> bail 拉黑"记成 <strong>JIT 性能</strong>问题）。
 <strong>JIT 已不在代码中</strong>（<code>git ls-files "*jit*"</code> 为空）⇒ 这类判据失去意义；
 痛点清单本身（易用性、报错措辞、类型收窄等）<strong>仍是现行待办</strong>。</p>
+</blockquote>
+<blockquote>
 <p><strong>来源</strong>：2026-09-18 用 Leno 从零移植 TraeSign（读 Trae <strong>加密</strong>登录态 → 派生解密拿 token → 真 HTTPS
 签到）的全过程逐步踩坑记录。素材现场：
 <code>leno_module/LenoSDL3/examples/应用示例/Trae签到/</code>（<code>trae_crypto.leno</code> / <code>trae_sign.leno</code> / <code>README.md</code>）。</p>
@@ -215,13 +217,13 @@
 <p><strong>本次绕法</strong>：改成位置子命令 <code>list/status/diag/json/app</code> ✓（已写进工具 README ✓）。</p>
 <p><strong>已修（分两步）</strong>：
 - <strong>2026-09-18（一半）</strong>：脚本路径之后<strong>不认识</strong>的 <code>--xxx</code> 一律原样传给脚本（<code>src/main.c</code> 的
-  "★ P2 修复"）；<code>_args()</code> 同步是"脚本路径之后整段原样切片" ✓。
+"★ P2 修复"）；<code>_args()</code> 同步是"脚本路径之后整段原样切片" ✓。
 - <strong>2026-09-26（彻底）</strong>：与<strong>内置名撞名</strong>的参数仍被吃掉 ⇒ <code>leno x.leno -v</code> 会打印版本、
-  <strong>脚本永不执行</strong> ✗；<code>x.leno --no-cache</code> 还会"双重生效"（脚本收到 + 解释器也照做）✗。
-  现在判定统一为「<strong>内置旗标写在脚本路径之前</strong>」—— 见到脚本路径（或 <code>--</code>）之后，解析循环
-  一律 <code>continue</code> 交给脚本。实测：<code>test_args.leno -v</code> ⇒ 脚本收到 <code>-v</code> ✓；
-  <code>test_args.leno --no-cache --nodash</code> ⇒ 两个都只进脚本 ✓；<code>-v</code>/<code>-c</code> 写在<strong>前面</strong>行为不变 ✓；
-  断言 376 passed / 0 failed ✓。帮助文案同步（说明行 + <code>-p -o release test.leno</code> 例子）。</p>
+<strong>脚本永不执行</strong> ✗；<code>x.leno --no-cache</code> 还会"双重生效"（脚本收到 + 解释器也照做）✗。
+现在判定统一为「<strong>内置旗标写在脚本路径之前</strong>」—— 见到脚本路径（或 <code>--</code>）之后，解析循环
+一律 <code>continue</code> 交给脚本。实测：<code>test_args.leno -v</code> ⇒ 脚本收到 <code>-v</code> ✓；
+<code>test_args.leno --no-cache --nodash</code> ⇒ 两个都只进脚本 ✓；<code>-v</code>/<code>-c</code> 写在<strong>前面</strong>行为不变 ✓；
+断言 376 passed / 0 failed ✓。帮助文案同步（说明行 + <code>-p -o release test.leno</code> 例子）。</p>
 <h2 id="p3-lenoweb-setheaders-是替换语义-静默覆盖-服务端误导性错误">P3 <code>LenoWeb.setHeaders</code> 是替换语义 —— 静默覆盖 ＋ 服务端误导性错误</h2>
 <p><strong>实测</strong>：分两次调用 <code>setHeaders</code>（第二次只补 <code>X-User-Region</code>）⇒ 前三个头（<code>Content-Type</code> /
 <code>Authorization: Cloud-IDE-JWT …</code> / <code>x-device-id</code>）<strong>被覆盖</strong>⇒ 服务端收到未鉴权请求，回
@@ -355,12 +357,12 @@ Bailout: fn='sha512_bytes' loop_bc=821 x3 — 非溢出类 @bc_off=886 | 触发�
 签到工具每次都要算 SHA-512（派生密钥要两次 SHA-512）⇒ 值得单独当一条 JIT 案例（补 <code>OP_CAST_INT</code> 覆盖）✓。</p>
 <p><strong>顺带：本轮验证有效的"修法范式"（建议固化成 JIT 规则）</strong>
 1. <strong>类型只能来自"产出者"</strong>：产出指令白名单 / 序言按 slot 建的位图 / callout 的 Value→raw 转换点标志 ✓；
-   <strong>不要用值域猜</strong> ✗ —— 任何 int48 raw 同时都是合法 double 位型（小=次正规、大=正规）⇒ 值域判据<strong>必错一半</strong>
-   （<code>§8.103 / §8.105 / §8.126 / §8.127</code> 四处同族缺陷的总根因 ✓）；
+<strong>不要用值域猜</strong> ✗ —— 任何 int48 raw 同时都是合法 double 位型（小=次正规、大=正规）⇒ 值域判据<strong>必错一半</strong>
+（<code>§8.103 / §8.105 / §8.126 / §8.127</code> 四处同族缺陷的总根因 ✓）；
 2. <strong>优先在"转换点"修、不要在"是否编译"上修</strong> ✗✗ —— 后者命中即 bail ⇒ 解释器重做整轮、JIT 半轮副作用
-   不回滚 ⇒ <strong>副作用执行两遍的数据污染</strong>（<code>§8.126</code> 实测 <code>G.len()=204</code> 应为 201 ✓）；
+不回滚 ⇒ <strong>副作用执行两遍的数据污染</strong>（<code>§8.126</code> 实测 <code>G.len()=204</code> 应为 201 ✓）；
 3. 写 JIT×VM 分叉探针时，<strong>RHS 必须依赖循环变量</strong> ✗ —— 否则 LICM 把循环不变量提升出循环，测试<strong>假绿</strong>
-   （<code>§8.128</code> 的教训：5 个形态全空结论 ✓）。</p>
+（<code>§8.128</code> 的教训：5 个形态全空结论 ✓）。</p>
 <h2 id="别改坏的东西-这次实测里明确-好用-的部分">别改坏的东西（这次实测里明确"好用"的部分）</h2>
 <ol>
 <li><strong>报错带行列 ＋ 原因 ＋ 修法提示</strong> ✓（<code>提示: 使用 if x is Type { … }</code> 这类是真的省时间 ✓ —— 只需按 P1 补一句）；</li>
@@ -445,8 +447,9 @@ Bailout: fn='sha512_bytes' loop_bc=821 x3 — 非溢出类 @bc_off=886 | 触发�
 <p><strong>可行修法方向</strong>（<strong>不是</strong>全量位图）：给 <code>OP_CAST_INT</code> 一条<strong>整数来源通道</strong> —— <code>&amp; | ^ &lt;&lt; &gt;&gt;</code> 这类
 在"两个操作数都已是 int"时结果必为 int（JIT 若走了 int 路径，就说明两个操作数已经是 int ✓）
 ⇒ 按<strong>逐 opcode 的来源规则</strong>扩展 provenance 格，<strong>不需要在每个写点付指令</strong> ✓。
-动手前要先确认这几条 opcode 在 JIT 里是否单路径（§8.116 的教训：只信单路径 ✓）。</p></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#清单-按-消掉卡顿-的性价比排序">清单（按"消掉卡顿"的性价比排序）</a></li><li><a href="#复核结论-2026-09-18-逐条实测-读码-含-哪些已过期">复核结论（2026-09-18 逐条实测/读码，含"哪些已过期"）</a></li><li><a href="#p1-any-收窄的报错提示缺了最关键的一句-机制已有-只是没引导到位">P1 any 收窄的报错提示缺了最关键的一句（机制已有，只是没引导到位）</a></li><li><a href="#p2-解释器吃掉脚本的-xxx-旗标">P2 解释器吃掉脚本的 --xxx 旗标</a></li><li><a href="#p3-lenoweb-setheaders-是替换语义-静默覆盖-服务端误导性错误">P3 LenoWeb.setHeaders 是替换语义 —— 静默覆盖 ＋ 服务端误导性错误</a></li><ul class="lv3"><li><a href="#2026-10-07-已落实-用户拍板">✅ 2026-10-07 已落实（用户拍板）</a></li></ul><li><a href="#p4-空数组-var-a-元素类型-any-报错点离现场很远">P4 空数组 var a = [] ⇒ 元素类型 any，报错点离现场很远</a></li><li><a href="#p5-只有-_env-读-没有-_setenv-写">P5 只有 _env（读），没有 _setenv（写）</a></li><li><a href="#p6-_exec-与测试运行器都没有超时">P6 _exec 与测试运行器都没有超时</a></li><li><a href="#p7-跨模块相对路径冗长-示例腐化">P7 跨模块相对路径冗长 ＋ 示例腐化</a></li><li><a href="#p8-files-read-失败语义没写清">P8 files.read 失败语义没写清</a></li><li><a href="#p9-构建-build_vm-bat-与-build-bat-是两套源码清单-且-build_vm-bat-是-gbk-文件">P9 构建：build_vm.bat 与 build.bat 是两套源码清单；且 build_vm.bat 是 GBK 文件</a></li><li><a href="#j1-jit-性能向-非正确性-真实热点-sha512_bytes-被-op_cast_int-bail-拉黑">J1 JIT（性能向，非正确性）：真实热点 sha512_bytes 被 OP_CAST_INT bail 拉黑</a></li><li><a href="#别改坏的东西-这次实测里明确-好用-的部分">别改坏的东西（这次实测里明确"好用"的部分）</a></li><li><a href="#落地顺序建议">落地顺序建议</a></li><li><a href="#附-两项-根治类-方案的性价比实测-2026-09-18">附：两项"根治类"方案的性价比实测（2026-09-18）</a></li><ul class="lv3"><li><a href="#a-全量运行期类型位图-覆盖所有-vstack-槽-所有局部量-结论-不做">A. 全量运行期类型位图（覆盖所有 vstack 槽 + 所有局部量）—— 结论：不做</a></li><li><a href="#b-j1-sha512_bytes-的-op_cast_int-bailout-已量化">B. J1（sha512_bytes 的 OP_CAST_INT bailout）—— 已量化</a></li></ul></ul></aside>
+动手前要先确认这几条 opcode 在 JIT 里是否单路径（§8.116 的教训：只信单路径 ✓）。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#清单-按-消掉卡顿-的性价比排序">清单（按"消掉卡顿"的性价比排序）</a></li><li><a href="#复核结论-2026-09-18-逐条实测-读码-含-哪些已过期">复核结论（2026-09-18 逐条实测/读码，含"哪些已过期"）</a></li><li><a href="#p1-any-收窄的报错提示缺了最关键的一句-机制已有-只是没引导到位">P1 any 收窄的报错提示缺了最关键的一句（机制已有，只是没引导到位）</a></li><li><a href="#p2-解释器吃掉脚本的-xxx-旗标">P2 解释器吃掉脚本的 --xxx 旗标</a></li><li><a href="#p3-lenoweb-setheaders-是替换语义-静默覆盖-服务端误导性错误">P3 LenoWeb.setHeaders 是替换语义 —— 静默覆盖 ＋ 服务端误导性错误</a></li><ul class="lv3"><li><a href="#2026-10-07-已落实-用户拍板">✅ 2026-10-07 已落实（用户拍板）</a></li></ul><li><a href="#p4-空数组-var-a-元素类型-any-报错点离现场很远">P4 空数组 var a = [ ⇒ 元素类型 any，报错点离现场很远</a></li><li><a href="#p5-只有-_env-读-没有-_setenv-写">P5 只有 _env（读），没有 _setenv（写）</a></li><li><a href="#p6-_exec-与测试运行器都没有超时">P6 _exec 与测试运行器都没有超时</a></li><li><a href="#p7-跨模块相对路径冗长-示例腐化">P7 跨模块相对路径冗长 ＋ 示例腐化</a></li><li><a href="#p8-files-read-失败语义没写清">P8 files.read 失败语义没写清</a></li><li><a href="#p9-构建-build_vm-bat-与-build-bat-是两套源码清单-且-build_vm-bat-是-gbk-文件">P9 构建：build_vm.bat 与 build.bat 是两套源码清单；且 build_vm.bat 是 GBK 文件</a></li><li><a href="#j1-jit-性能向-非正确性-真实热点-sha512_bytes-被-op_cast_int-bail-拉黑">J1 JIT（性能向，非正确性）：真实热点 sha512_bytes 被 OP_CAST_INT bail 拉黑</a></li><li><a href="#别改坏的东西-这次实测里明确-好用-的部分">别改坏的东西（这次实测里明确"好用"的部分）</a></li><li><a href="#落地顺序建议">落地顺序建议</a></li><li><a href="#附-两项-根治类-方案的性价比实测-2026-09-18">附：两项"根治类"方案的性价比实测（2026-09-18）</a></li><ul class="lv3"><li><a href="#a-全量运行期类型位图-覆盖所有-vstack-槽-所有局部量-结论-不做">A. 全量运行期类型位图（覆盖所有 vstack 槽 + 所有局部量）—— 结论：不做</a></li><li><a href="#b-j1-sha512_bytes-的-op_cast_int-bailout-已量化">B. J1（sha512_bytes 的 OP_CAST_INT bailout）—— 已量化</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/性能测试总结_Leno_vs_Python.html">← 上一篇</a><a href="../archive/枚举求值与模块符号表问题.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

@@ -31,15 +31,17 @@
 "回调 → <strong>JIT trampoline</strong> 汇编"与"P1-10 <strong>JIT 内联 ffi</strong> 定宽读写（334ms→221ms）"。
 <strong>JIT 已不在代码中</strong>（<code>git ls-files "*jit*"</code> 为空）⇒ "在 JIT 与 <code>LENO_NO_JIT=1</code> 两种模式均通过"
 这类验收口径已不适用；<strong>非 JIT 的 FFI 优化项仍有效</strong>。</p>
+</blockquote>
+<blockquote>
 <p>基于对 <code>src/module/ffi/ffi.c</code>、<code>leno_ffi.h</code>、<code>leno_ffi_win64.c</code>、<code>ffi_clib.h</code> 源码的全面审查</p>
 </blockquote>
 <h2 id="当前架构概览">当前架构概览</h2>
 <p>FFI 模块核心路径：
 1. <strong>库加载</strong> (<code>ffi.load</code>) → <code>LoadLibraryW</code>/<code>dlopen</code>，返回 <code>ObjFFILibrary</code>
 2. <strong>函数调用</strong> (<code>ffi.call_*</code> / <code>clib</code>) → <code>ffi_call_impl</code> → ~~每次执行 <code>GetProcAddress</code>/<code>dlsym</code>~~ 先查函数地址缓存 → <code>ffi_call</code> → 平台分派 (<code>ffi_call_win64</code>/<code>ffi_call_sysv</code>/<code>ffi_call_aapcs</code>)
-3. <strong>参数转换</strong> → int/bigint 窄化（已合并去重）、float 截断、string→char*、cstruct→ptr
-4. <strong>返回值展开</strong> → C 窄类型自动升级为 Leno 宽类型（零摩擦）
-5. <strong>回调</strong> → JIT trampoline 汇编 → <code>callback_dispatch</code> → 线程检测 → 直接执行 / 跨线程编组</p>
+3. <strong>参数转换</strong> → int/bigint 窄化（已合并去重）、float 截断、string→char<em>、cstruct→ptr
+4. </em>*返回值展开<strong> → C 窄类型自动升级为 Leno 宽类型（零摩擦）
+5. </strong>回调** → JIT trampoline 汇编 → <code>callback_dispatch</code> → 线程检测 → 直接执行 / 跨线程编组</p>
 <h2 id="优化项清单">优化项清单</h2>
 <table>
 <thead>
@@ -223,13 +225,13 @@ int64 位模式通过整数寄存器/栈传递，但被调函数期望
 <p>回归用例：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，<strong>跨平台</strong>，见该文件头 ✓）</p>
 <hr>
 <h2 id="p1-3-回调数量上限">P1-3：回调数量上限 ✅</h2>
-<h3 id="实现_1">实现</h3>
+<h3 id="实现">实现</h3>
 <p><code>MAX_FFI_CALLBACKS</code> 从 128 增大到 256。不引入动态分配，保持简单。</p>
 <hr>
 <h2 id="p1-4-write_bytes-read_bytes-批量读写">P1-4：write_bytes / read_bytes 批量读写 ✅</h2>
-<h3 id="问题_1">问题</h3>
+<h3 id="问题">问题</h3>
 <p>当前只有逐类型读写（<code>write_int</code>、<code>write_double</code> 等），处理二进制协议时用户只能循环 + <code>write_byte</code>，每次都有 VM→C 调用开销。</p>
-<h3 id="实现_2">实现</h3>
+<h3 id="实现">实现</h3>
 <ul>
 <li><code>ffi.write_bytes(ptr, offset, str)</code> — 一次 <code>memcpy</code> 写入字符串原始字节（不含 <code>'\0'</code>）</li>
 <li><code>ffi.read_bytes(ptr, offset, length)</code> — 一次 <code>memcpy</code> 读取并返回字符串</li>
@@ -237,20 +239,20 @@ int64 位模式通过整数寄存器/栈传递，但被调函数期望
 <p>均带 <code>CHECK_BOUNDS</code> 边界检查。</p>
 <hr>
 <h2 id="p1-5-ffi-dlsym-显式符号解析">P1-5：ffi.dlsym 显式符号解析 ✅</h2>
-<h3 id="问题_2">问题</h3>
+<h3 id="问题">问题</h3>
 <p>用户无法单独解析符号（检查函数是否存在），只能通过 <code>ffi.call_*</code> 间接调用。</p>
-<h3 id="实现_3">实现</h3>
+<h3 id="实现">实现</h3>
 <ul>
 <li><code>ffi.dlsym(lib, name)</code> → 返回 <code>Ptr</code>（函数地址）或 <code>null</code></li>
 <li>内部也使用函数地址缓存</li>
 </ul>
 <hr>
 <h2 id="p1-10-jit-内联-ffi-定宽读写">P1-10：JIT 内联 ffi 定宽读写 ✅</h2>
-<h3 id="问题_3">问题</h3>
+<h3 id="问题">问题</h3>
 <p><code>ffi.read_byte</code> / <code>ffi.write_byte</code> 这类「ptr + offset 定宽访存」在像素直写、缓冲区循环里
 每像素调用十几次，但在 JIT 里走的是 <code>OP_MODULE_CALL</code> 通用 callout（~20ns/次：逐个装箱成
 Value 数组 + native 调用 + 异常检查），而它们实际只做一次 1/2/4 字节 memcpy。</p>
-<h3 id="实现_4">实现</h3>
+<h3 id="实现">实现</h3>
 <p>JIT 后端（<code>src/jit/backend/x86_64.c</code> 的 <code>ffi_inline_specs[]</code> 表 + <code>x86_inc/ops_return.inc</code>
 的 <code>OP_MODULE_CALL</code> 分支）把定宽读写做成<strong>表驱动内联</strong>，详细设计见
 <code>docs/archive/JIT实现与调试记录.md</code> §2.6：命中后直接生成 load/store，前置检查
@@ -260,15 +262,15 @@ Value 数组 + native 调用 + 异常检查），而它们实际只做一次 1/2
 <code>write_byte</code>、<code>write_int8</code>、<code>write_int16</code>、<code>write_uint16</code>、<code>write_int</code>、<code>write_uint</code>。</p>
 <p>有意不内联：64 位系列（值域越 int48，需 bigint 堆分配）、<code>float</code>/<code>double</code>（NaN-box 构造）、
 返回对象/字符串/bool 的方法（<code>read_ptr</code>/<code>read_at</code>/<code>read_string</code>/<code>offset</code>/<code>read_bool</code>）、<code>copy4</code>。</p>
-<h3 id="效果_1">效果</h3>
+<h3 id="效果">效果</h3>
 <p>像素直写风格基准（3,000,000 次迭代 = 15,000,000 次 ffi 调用）：<strong>334ms → 221ms，约 -34%</strong>
 （每次调用省下 ~7.5ns）。测试 <code>assert/test_ffi_inline_widths.leno</code> 在 JIT 与 <code>LENO_NO_JIT=1</code>
 两种模式均通过；<code>read_int</code>/<code>write_int</code> 的机器码经 dump 差分确认未改动。</p>
 <hr>
 <h2 id="p2-6-显式字节序函数">P2-6：显式字节序函数 ✅</h2>
-<h3 id="问题_4">问题</h3>
+<h3 id="问题">问题</h3>
 <p><code>write_*</code>/<code>read_*</code> 都是主机字节序，跨平台二进制交换需要手动 <code>write_byte</code> 拼装。</p>
-<h3 id="实现_5">实现</h3>
+<h3 id="实现">实现</h3>
 <p>新增 8 个显式字节序函数：</p>
 <table>
 <thead>
@@ -314,9 +316,9 @@ Value 数组 + native 调用 + 异常检查），而它们实际只做一次 1/2
 </table>
 <hr>
 <h2 id="p2-7-cstruct-offset_of-方法">P2-7：cstruct offset_of 方法 ✅</h2>
-<h3 id="问题_5">问题</h3>
+<h3 id="问题">问题</h3>
 <p>用户无法编程式获取字段偏移，只能看 <code>debug()</code> 打印输出。</p>
-<h3 id="实现_6">实现</h3>
+<h3 id="实现">实现</h3>
 <p>在 <code>cstructs.c</code> 中新增 <code>offset_of(field_name)</code> 方法：
 - 接受字段名字符串参数
 - receiver 可以是 <code>cstruct</code> 定义或实例
@@ -324,9 +326,9 @@ Value 数组 + native 调用 + 异常检查），而它们实际只做一次 1/2
 - 字段不存在时抛出明确错误</p>
 <hr>
 <h2 id="p3-8-代码去重">P3-8：代码去重 ✅</h2>
-<h3 id="问题_6">问题</h3>
+<h3 id="问题">问题</h3>
 <p><code>ffi_call_impl</code> 中 int 和 bigint 的窄化逻辑（<code>ffi.c:573-704</code>）几乎完全重复，约 130 行。</p>
-<h3 id="实现_7">实现</h3>
+<h3 id="实现">实现</h3>
 <p>合并为统一分支：</p>
 <pre><code class="language-c">if (val_is_int(arg) || val_is_bigint(arg)) {
     int64_t ival = val_is_int(arg) ? (int64_t)val_as_int(arg) : bigint_to_int64(val_as_bigint(arg));
@@ -336,10 +338,11 @@ Value 数组 + native 调用 + 异常检查），而它们实际只做一次 1/2
 <p>减少了约 60 行重复代码，并统一了 bigint 的 <code>TYPE_U64</code> 负值检查（原来缺失）。</p>
 <hr>
 <h2 id="p3-9-ffi-call-标记-deprecated">P3-9：ffi.call 标记 deprecated ✅</h2>
-<h3 id="问题_7">问题</h3>
+<h3 id="问题">问题</h3>
 <p><code>ffi.call</code> 和 <code>ffi.call_int</code> 做的事情完全一样（都是 <code>TYPE_I32</code>），<code>ffi.call</code> 是多余的。</p>
-<h3 id="实现_8">实现</h3>
-<p>在 <code>ffi_call_func</code> 中添加 <code>fprintf(stderr)</code> deprecation 警告，引导用户使用 <code>ffi.call_int()</code> 等明确返回类型的函数。</p></main>
+<h3 id="实现">实现</h3>
+<p>在 <code>ffi_call_func</code> 中添加 <code>fprintf(stderr)</code> deprecation 警告，引导用户使用 <code>ffi.call_int()</code> 等明确返回类型的函数。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#当前架构概览">当前架构概览</a></li><li><a href="#优化项清单">优化项清单</a></li><li><a href="#p0-1-符号地址缓存">P0-1：符号地址缓存 ✅</a></li><ul class="lv3"><li><a href="#问题">问题</a></li><li><a href="#实现">实现</a></li><li><a href="#效果">效果</a></li></ul><li><a href="#p0-2-混合参数回退路径浮点-bug-2026-10-01-彻底根治">P0-2：混合参数回退路径浮点 bug ✅（2026-10-01 彻底根治）</a></li><ul class="lv3"><li><a href="#问题-历史">问题（历史）</a></li><li><a href="#当时的实现-已废弃">当时的实现（已废弃）</a></li><li><a href="#现在的实现-2026-10-01">现在的实现（2026-10-01）</a></li></ul><li><a href="#p1-3-回调数量上限">P1-3：回调数量上限 ✅</a></li><ul class="lv3"><li><a href="#实现_1">实现</a></li></ul><li><a href="#p1-4-write_bytes-read_bytes-批量读写">P1-4：write_bytes / read_bytes 批量读写 ✅</a></li><ul class="lv3"><li><a href="#问题_1">问题</a></li><li><a href="#实现_2">实现</a></li></ul><li><a href="#p1-5-ffi-dlsym-显式符号解析">P1-5：ffi.dlsym 显式符号解析 ✅</a></li><ul class="lv3"><li><a href="#问题_2">问题</a></li><li><a href="#实现_3">实现</a></li></ul><li><a href="#p1-10-jit-内联-ffi-定宽读写">P1-10：JIT 内联 ffi 定宽读写 ✅</a></li><ul class="lv3"><li><a href="#问题_3">问题</a></li><li><a href="#实现_4">实现</a></li><li><a href="#效果_1">效果</a></li></ul><li><a href="#p2-6-显式字节序函数">P2-6：显式字节序函数 ✅</a></li><ul class="lv3"><li><a href="#问题_4">问题</a></li><li><a href="#实现_5">实现</a></li></ul><li><a href="#p2-7-cstruct-offset_of-方法">P2-7：cstruct offset_of 方法 ✅</a></li><ul class="lv3"><li><a href="#问题_5">问题</a></li><li><a href="#实现_6">实现</a></li></ul><li><a href="#p3-8-代码去重">P3-8：代码去重 ✅</a></li><ul class="lv3"><li><a href="#问题_6">问题</a></li><li><a href="#实现_7">实现</a></li></ul><li><a href="#p3-9-ffi-call-标记-deprecated">P3-9：ffi.call 标记 deprecated ✅</a></li><ul class="lv3"><li><a href="#问题_7">问题</a></li><li><a href="#实现_8">实现</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/_总览.html">← 上一篇</a><a href="../archive/GC与分配优化.html">下一篇 →</a></nav>

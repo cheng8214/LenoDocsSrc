@@ -75,14 +75,11 @@ LenoSDL3 各控件用 <code>dochk.check(who, opts, _opts_keys())</code> 在<stro
 </tbody>
 </table>
 <blockquote>
-<p><strong>实现状态（2026-10-31）</strong>：G1~G4 已落地。同模块与<strong>跨模块</strong>检查均已验证：
-</p>
-</blockquote>
+<p><strong>实现状态（2026-10-31）</strong>：G1~G4 已落地。同模块与<strong>跨模块</strong>检查均已验证：</p>
 <pre><code>_tmp.leno:7: [警告] createHBox 的 opts 不认识键 'tip'
         提示: 你是不是想要 'clip'？
         提示: 接受的键见 …\LenoSDL3\lib\SDL3.leno 里该函数的 @optkeys
 </code></pre>
-<blockquote>
 <p>全量套件 533 passed / 0 failed、<strong>0 条误报</strong>；Aria（5000+ 行、大量控件调用）同样零误报。
 第 13 节记录了实现过程中踩到的三个坑（注解该加在哪一层、检查落点、缓存）。</p>
 </blockquote>
@@ -757,7 +754,8 @@ if (got) type_free(got);                                         // 返回值是
 <td><strong>不知道</strong>（只认注解名）</td>
 </tr>
 </tbody>
-</table></main>
+</table>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-目标与非目标">1. 目标与非目标</a></li><ul class="lv3"><li><a href="#目标">目标</a></li><li><a href="#非目标-一期不做">非目标（一期不做）</a></li></ul><li><a href="#2-语法设计">2. 语法设计</a></li><ul class="lv3"><li><a href="#2-1-注解的基本形态">2.1 注解的基本形态</a></li><li><a href="#2-2-多个注解可叠加">2.2 多个注解可叠加</a></li><li><a href="#2-3-optkeys-挂在函数上-不是类型">2.3 @optkeys 挂在函数上，不是类型</a></li><li><a href="#2-4-并集语义">2.4 并集语义</a></li><li><a href="#2-5-未知注解直接报错">2.5 未知注解直接报错</a></li></ul><li><a href="#3-词法与-ast">3. 词法与 AST</a></li><ul class="lv3"><li><a href="#3-1-词法">3.1 词法</a></li><li><a href="#3-2-ast">3.2 AST</a></li></ul><li><a href="#4-parser-落点">4. parser 落点</a></li><li><a href="#5-semantic-检查">5. semantic 检查</a></li><ul class="lv3"><li><a href="#5-1-收集">5.1 收集</a></li><li><a href="#5-2-检查">5.2 检查</a></li><li><a href="#5-3-为什么只查字面量">5.3 为什么只查字面量</a></li></ul><li><a href="#6-codegen">6. codegen</a></li><li><a href="#7-诊断文案">7. 诊断文案</a></li><li><a href="#8-迁移路径">8. 迁移路径</a></li><li><a href="#9-对账用例-必须做">9. 对账用例（必须做）</a></li><li><a href="#10-一期范围">10. 一期范围</a></li><ul class="lv3"><li><a href="#做">做</a></li><li><a href="#不做-留给后续">不做（留给后续）</a></li></ul><li><a href="#11-风险与取舍">11. 风险与取舍</a></li><li><a href="#12-实现踩坑记录-2026-10-31-都实测过">12. 实现踩坑记录（2026-10-31，都实测过）</a></li><ul class="lv3"><li><a href="#13-1-注解必须加在门面层-不是实现层">13.1 注解必须加在门面层，不是实现层</a></li><li><a href="#13-2-检查落点-挂在-参数个数检查-旁边">13.2 检查落点：挂在"参数个数检查"旁边</a></li><li><a href="#13-3-符号表缓存会丢键表">13.3 符号表缓存会丢键表</a></li><li><a href="#13-4-运行时白名单已整套删除-2026-10-31-收尾">13.4 ✅ 运行时白名单已整套删除（2026-10-31 收尾）</a></li><li><a href="#13-5-补注解时的两种来源">13.5 补注解时的两种来源</a></li><li><a href="#13-6-覆盖现状-全部-48-个-createxxx-都有注解-运行时检查清零">13.6 覆盖现状：全部 48 个 createXxx 都有注解，运行时检查清零</a></li></ul><li><a href="#13-验收清单">13. 验收清单</a></li><li><a href="#14-键值类型检查-2026-11-01">14. 键值类型检查（2026-11-01）</a></li><ul class="lv3"><li><a href="#14-1-目标">14.1 目标</a></li><li><a href="#14-2-语法">14.2 语法</a></li><li><a href="#14-3-类型词表">14.3 类型词表</a></li><li><a href="#14-4-检查口径-复用现有类型系统-不另立规则">14.4 检查口径：复用现有类型系统，不另立规则</a></li><li><a href="#14-5-落点与改动面">14.5 落点与改动面</a></li><li><a href="#14-6-已知限制-明确不做">14.6 已知限制（明确不做）</a></li><li><a href="#14-7-验收清单">14.7 验收清单</a></li><li><a href="#14-8-实现检查清单-防漏">14.8 实现检查清单（防漏）</a></li></ul><li><a href="#附-与现有方案的关系">附：与现有方案的关系</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="enum载荷_设计草案.html">← 上一篇</a><a href="struct 里const可行性.html">下一篇 →</a></nav>

@@ -93,8 +93,10 @@ SerializeResult chunk_deserialize_from_memory(uint8_t* data, size_t size,
 </code></pre>
 <p><strong>实现要点（复用现有代码，仅去掉文件层）：</strong></p>
 <ul>
-<li><code>chunk_serialize_to_memory</code>：把 <code>chunk_serialize</code> 中 <code>wb_init</code> … <code>wb_write_*</code> … 的部分保留，<strong>去掉</strong> <code>wb</code> 落盘那段（<code>serialize.c:1635-1657</code>），改为 <code>*out_data = wb.data; *out_size = wb.size;</code>（转移 <code>WriteBuffer</code> 所有权，不 <code>wb_free</code>）。</li>
+<li><code>chunk_serialize_to_memory</code>：把 <code>chunk_serialize</code> 中 <code>wb_init</code> … <code>wb_write_*</code> … 的部分保留，<strong>去掉</strong> <code>wb</code> 落盘那段（<code>serialize.c:1635-1657</code>），改为 <code>*out_data = wb.data; *out_size = wb.size;</code>（转移 <code>WriteBuffer</code> 所有权，不 <code>wb_free</code>）。<ul>
 <li>关于 <code>src_hash</code>（<code>serialize.c:1598-1623</code>）：当前回读 <code>chunk-&gt;filename</code> 源文件算 hash。内存路径建议 <strong>直接用调用方传入的源码字符串算 hash</strong>（或新增参数 <code>const char* source</code>），避免回读磁盘；若嫌麻烦也可先保留回读（它读的是输入 <code>.leno</code>，不是临时文件，不算污染本方案目标）。</li>
+</ul>
+</li>
 <li><code>chunk_deserialize_from_memory</code>：把 <code>chunk_deserialize</code> 中 <code>fread</code> 进 <code>data</code> 之后的全部逻辑（<code>serialize.c:1697-1738</code>）原样搬过来，<strong>去掉</strong> <code>fopen/fread</code> 前置与末尾 <code>free(data)</code>（调用方持有缓冲）。<code>DeserializeCtx</code> 直接指向 <code>data/size</code>。</li>
 </ul>
 <h3 id="3-2-重构-lenolang_run-leno-直跑路径">3.2 重构 <code>lenolang_run</code>（<code>.leno</code> 直跑路径）</h3>
@@ -201,9 +203,11 @@ run_direct:   // 序列化失败时的兜底：沿用原逻辑
 <h2 id="5-验证步骤">5. 验证步骤</h2>
 <ol>
 <li><code>build.bat</code> 重新编译，确认无 warning/error。</li>
-<li>性能对比（计时只包住 <code>fib(30)</code>）：
-   - <code>leno 经典斐波那契数列测试_int.lenb</code> → 基线 ~195ms
-   - <code>leno 经典斐波那契数列测试_int.leno</code> → <strong>预期从 236ms 降到 ~195ms</strong></li>
+<li>性能对比（计时只包住 <code>fib(30)</code>）：<ul>
+<li><code>leno 经典斐波那契数列测试_int.lenb</code> → 基线 ~195ms</li>
+<li><code>leno 经典斐波那契数列测试_int.leno</code> → <strong>预期从 236ms 降到 ~195ms</strong></li>
+</ul>
+</li>
 <li>正确性回归：跑若干依赖 native 模块的脚本（如 <code>import times</code>、<code>import SDL3</code> 示例），确认 <code>fix_module_function_ptrs</code> 后 native 调用正常、无崩溃。</li>
 <li>（若改了 <code>vm_main.c</code>）重新打包一个 exe 并运行，确认仍能正常启动。</li>
 </ol>
@@ -216,7 +220,8 @@ run_direct:   // 序列化失败时的兜底：沿用原逻辑
 <li><strong>大脚本内存峰值</strong>：序列化缓冲 + 反序列化副本会短暂占用约 2 倍字节码内存，但编译器 AST 已释放，净占用通常更低。</li>
 </ul>
 <hr>
-<p><em>方案提出背景：实测 <code>.lenb</code>(195ms) ≈ 打包 exe(190ms) &lt;&lt; <code>.leno</code>(236ms)，差距全来自编译器驻留导致的 CPU 缓存污染。本方案通过「编译后序列化→释放→反序列化」在内存中复刻 <code>.lenb</code> 路径，从而消除差距。</em></p></main>
+<p><em>方案提出背景：实测 <code>.lenb</code>(195ms) ≈ 打包 exe(190ms) &lt;&lt; <code>.leno</code>(236ms)，差距全来自编译器驻留导致的 CPU 缓存污染。本方案通过「编译后序列化→释放→反序列化」在内存中复刻 <code>.lenb</code> 路径，从而消除差距。</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-目标">1. 目标</a></li><li><a href="#2-现状分析">2. 现状分析</a></li><ul class="lv3"><li><a href="#2-1-当前两条执行路径">2.1 当前两条执行路径</a></li><li><a href="#2-2-序列化-api-现状-瓶颈不在逻辑-在文件-i-o">2.2 序列化 API 现状（瓶颈不在逻辑，在文件 I/O）</a></li><li><a href="#2-3-打包-exe-的临时文件问题">2.3 打包 exe 的临时文件问题</a></li></ul><li><a href="#3-方案设计">3. 方案设计</a></li><ul class="lv3"><li><a href="#3-1-新增两个内存态序列化函数">3.1 新增两个内存态序列化函数</a></li><li><a href="#3-2-重构-lenolang_run-leno-直跑路径">3.2 重构 lenolang_run（.leno 直跑路径）</a></li><li><a href="#3-3-可选-打包-exe-也走内存态-去临时文件">3.3 可选：打包 exe 也走内存态（去临时文件）</a></li></ul><li><a href="#4-涉及文件清单">4. 涉及文件清单</a></li><li><a href="#5-验证步骤">5. 验证步骤</a></li><li><a href="#6-风险与注意">6. 风险与注意</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/代码生成性能排查记录.html">← 上一篇</a><a href="../archive/内联器崩溃排查记录.html">下一篇 →</a></nav>

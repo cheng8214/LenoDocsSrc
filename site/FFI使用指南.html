@@ -33,40 +33,54 @@
 <p>FFI（Foreign Function Interface）是 Leno 语言调用 C 动态库和操作系统 API 的接口。本指南从简单到复杂，循序渐进地介绍 FFI 的使用方法。</p>
 <h2 id="目录">目录</h2>
 <ul>
-<li><a href="#第一章基础入门">第一章：基础入门</a></li>
+<li><a href="#第一章基础入门">第一章：基础入门</a><ul>
 <li><a href="#11-第一个-ffi-程序">1.1 第一个 FFI 程序</a></li>
 <li><a href="#12-内存分配与读写">1.2 内存分配与读写</a></li>
 <li><a href="#13-调用-c-标准库函数">1.3 调用 C 标准库函数</a></li>
 <li><a href="#14-使用-clib-声明式调用推荐">1.4 使用 clib 声明式调用</a></li>
-<li><a href="#第二章动态库操作">第二章：动态库操作</a></li>
+</ul>
+</li>
+<li><a href="#第二章动态库操作">第二章：动态库操作</a><ul>
 <li><a href="#21-加载和释放动态库">2.1 加载和释放动态库</a></li>
 <li><a href="#22-调用-windows-api">2.2 调用 Windows API</a></li>
 <li><a href="#23-不同类型返回值">2.3 不同类型返回值</a></li>
-<li><a href="#第三章内存操作进阶">第三章：内存操作进阶</a></li>
+</ul>
+</li>
+<li><a href="#第三章内存操作进阶">第三章：内存操作进阶</a><ul>
 <li><a href="#31-指针偏移与数组">3.1 指针偏移与数组</a></li>
 <li><a href="#32-多级指针">3.2 多级指针</a></li>
 <li><a href="#33-内存拷贝">3.3 内存拷贝</a></li>
 <li><a href="#34-内存填充">3.4 内存填充</a></li>
 <li><a href="#35-指针与整数互转">3.5 指针与整数互转</a></li>
-<li><a href="#第四章类型安全指针-ptrt">第四章：类型安全指针 Ptr[T]</a></li>
-<li><a href="#41-ptr-与-ptrt-的区别">4.1 Ptr 与 Ptr[T] 的区别</a></li>
-<li><a href="#42-ptru16-与-ptrstr16-的区别">4.2 Ptr[u16] 与 Ptr[str16] 的区别</a></li>
-<li><a href="#43-使用-ptrt">4.3 使用 Ptr[T]</a></li>
-<li><a href="#44-cstruct-中的-ptrt">4.4 cstruct 中的 Ptr[T]</a></li>
-<li><a href="#第五章字符串处理">第五章：字符串处理</a></li>
+</ul>
+</li>
+<li>[第四章：类型安全指针 Ptr[T]](#第四章类型安全指针-ptrt)<ul>
+<li>[4.1 Ptr 与 Ptr[T] 的区别](#41-ptr-与-ptrt-的区别)</li>
+<li>[4.2 Ptr[u16] 与 Ptr[str16] 的区别](#42-ptru16-与-ptrstr16-的区别)</li>
+<li>[4.3 使用 Ptr[T]](#43-使用-ptrt)</li>
+<li>[4.4 cstruct 中的 Ptr[T]](#44-cstruct-中的-ptrt)</li>
+</ul>
+</li>
+<li><a href="#第五章字符串处理">第五章：字符串处理</a><ul>
 <li><a href="#51-字符串读写">5.1 字符串读写</a></li>
 <li><a href="#52-utf-8-与-utf-16-转换">5.2 UTF-8 与 UTF-16 转换</a></li>
-<li><a href="#第六章实战案例">第六章：实战案例</a></li>
+</ul>
+</li>
+<li><a href="#第六章实战案例">第六章：实战案例</a><ul>
 <li><a href="#61-进程枚举">6.1 进程枚举</a></li>
 <li><a href="#62-注册表操作">6.2 注册表操作</a></li>
 <li><a href="#63-结合-cstruct-使用">6.3 结合 cstruct 使用</a></li>
-<li><a href="#第七章回调函数">第七章：回调函数</a></li>
+</ul>
+</li>
+<li><a href="#第七章回调函数">第七章：回调函数</a><ul>
 <li><a href="#71-cfunc-声明式回调">7.1 cfunc 声明式回调</a></li>
 <li><a href="#72-回调与-qsort">7.2 回调与 qsort</a></li>
 <li><a href="#73-释放回调">7.3 释放回调</a></li>
 <li><a href="#74-跨线程回调">7.4 跨线程回调</a></li>
 <li><a href="#75-平台支持">7.5 平台支持</a></li>
-<li><a href="#第八章最佳实践">第八章：最佳实践</a></li>
+</ul>
+</li>
+<li><a href="#第八章最佳实践">第八章：最佳实践</a><ul>
 <li><a href="#81-错误处理">8.1 错误处理</a></li>
 <li><a href="#82-内存管理">8.2 内存管理</a></li>
 <li><a href="#83-类型安全">8.3 类型安全</a></li>
@@ -74,6 +88,8 @@
 <li><a href="#85-cstruct-内存对齐与-padding">8.5 cstruct 内存对齐与 padding</a></li>
 <li><a href="#86-字节序endianness">8.6 字节序（Endianness）</a></li>
 <li><a href="#87-多线程-ffi-调用的安全性">8.7 多线程 FFI 调用的安全性</a></li>
+</ul>
+</li>
 </ul>
 <hr>
 <h2 id="第一章-基础入门">第一章：基础入门</h2>
@@ -454,15 +470,14 @@ string msg = lib.strerror(2)
 这是因为 FFI 层无法知道 C 函数用哪个分配器分配的内存（<code>free</code>? <code>curl_free</code>? <code>LocalFree</code>?）。</p>
 <p><strong>适用场景</strong>：
 - ✅ <strong>不需要释放</strong>的 C 字符串（如 <code>strerror</code>、<code>GetCommandLineA</code>、<code>SDL_GetError</code> 等返回静态缓冲区的函数）——直接用 <code>str8</code> 返回类型
-- ❌ <strong>需要释放</strong>的 C 字符串（如 <code>curl_easy_escape</code>、<code>curl_easy_unescape</code> 等返回动态分配内存的函数）——<strong>不要直接用 <code>str8</code></strong>，改用以下三步走：
-</p>
-</blockquote>
+- ❌ <strong>需要释放</strong>的 C 字符串（如 <code>curl_easy_escape</code>、<code>curl_easy_unescape</code> 等返回动态分配内存的函数）——<strong>不要直接用 <code>str8</code></strong>，改用以下三步走：</p>
 <pre><code class="language-leno">// 对于需要释放的 C 字符串，使用 call_ptr + read_string + 手动释放
 Ptr ptr = ffi.call_ptr(lib, &quot;curl_easy_escape&quot;, handle, url, 0)
 if ptr == null { return url }
 string result = ffi.read_string(ptr, 0)
 ffi.call_void(lib, &quot;curl_free&quot;, ptr)  // 手动释放 C 内存
 </code></pre>
+</blockquote>
 <h4 id="参数自动窄化-leno-c-安全转换">参数自动窄化（Leno→C 安全转换）</h4>
 <p>Leno <code>int</code> 可以直接传给任何 C 整数类型参数，编译器和运行时会自动处理：</p>
 <table>
@@ -677,6 +692,8 @@ int truncated = big as int32  // 显式截断，丢弃高位
 </table>
 <blockquote>
 <p><strong>性能说明</strong>：v4.0 起，<code>ObjFFILibrary</code> 内置函数地址缓存表（32 槽），首次调用执行 <code>GetProcAddress</code>/<code>dlsym</code> 后缓存，后续调用直接命中缓存跳过符号查找。<code>clib</code> 声明式调用与 <code>ffi.call_*</code> 底层走同一调用路径（<code>ffi_call_impl</code>），两者性能基本相同。<code>clib</code> 的优势主要在<strong>类型安全</strong>和<strong>开发体验</strong>（零摩擦类型转换、编译期检查）。</p>
+</blockquote>
+<blockquote>
 <p><strong>推荐</strong>：涉及 Windows Unicode API（<code>W</code> 后缀函数）时，优先使用 <code>clib</code> 声明式调用，<code>str16</code> 参数会自动完成 UTF-8→UTF-16 转换，无需手动处理。</p>
 </blockquote>
 <hr>
@@ -1426,7 +1443,7 @@ main() {
     ffi.free(lib)
 }
 </code></pre>
-<p><em><em>方式二：ffi.call_</em> 动态调用（手动转换）</em>*</p>
+<p><strong>方式二：ffi.call_* 动态调用（手动转换）</strong></p>
 <pre><code class="language-leno">import ffi
 
 main() {
@@ -2705,14 +2722,11 @@ main() {
 <p><strong>⚠️ 注意（★ 2026-10-12 更正）</strong>：原文说"用 <code>threads.Mutex</code> 或信号量加锁"—— <strong><code>threads.Mutex</code> 并不存在</strong> ✗
 （本语言有意不提供锁：每个线程是<strong>独立 GC 堆</strong>，普通 Leno 对象根本不可能被两个线程同时访问
 ⇒ 锁要保护的东西不存在；会真正共享的只有 <strong>FFI 句柄 / <code>ffi.malloc</code> 的裸内存 / 模块级可变 <code>var</code></strong>）。
-真要串行化对共享资源的访问，用<strong>互斥通道</strong>这条惯用法：
-</p>
-</blockquote>
+真要串行化对共享资源的访问，用<strong>互斥通道</strong>这条惯用法：</p>
 <pre><code class="language-leno">var token = threads.channel(1)
 token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 // 每个线程进临界区前：token.receive()；出来：token.send(1)
 </code></pre>
-<blockquote>
 <p>或者干脆别并发碰它（一个线程专用）；C 库自身不是线程安全时（如某些音频编解码库），
 只能<strong>由调用方保证不并发调</strong>或<strong>在 C 侧加锁</strong> —— Leno 侧给不了锁 ✓。</p>
 </blockquote>
@@ -2732,8 +2746,8 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <tr>
 <td><code>load(path)</code></td>
 <td>string</td>
-<td>lib|null</td>
-<td>加载动态库</td>
+<td>lib\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>free(x)</code></td>
@@ -3020,12 +3034,12 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <tr>
 <td><code>dlsym(lib, name)</code></td>
 <td>Lib, string</td>
-<td>Ptr|null</td>
-<td>显式解析符号地址（未找到返回 null）</td>
+<td>Ptr\</td>
+<td>null</td>
 </tr>
 </tbody>
 </table>
-<h3 id="函数调用_1">函数调用</h3>
+<h3 id="函数调用">函数调用</h3>
 <blockquote>
 <p><code>ffi.call</code> 已标记 deprecated，请使用 <code>ffi.call_int</code> 等明确返回类型的函数。</p>
 </blockquote>
@@ -3444,8 +3458,7 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <em>最后更新: 2026-10-01</em></p>
 <h3 id="更新记录">更新记录</h3>
 <ul>
-<li>
-<p><strong>(2026-10-12) 修回调实参的 64 位截断</strong>：<code>callback_dispatch_direct</code> 把回调实参转成 Leno 值时
+<li><strong>(2026-10-12) 修回调实参的 64 位截断</strong>：<code>callback_dispatch_direct</code> 把回调实参转成 Leno 值时
   写的是 <code>val_int((int)ffi_args[i].value.i)</code> —— <code>(int)</code> 是 32 位 ⇒ <strong>回调签名里的 i64/u64
   （含指针）只能拿到低 32 位</strong>（符号扩展）。改为 <code>val_int_safe(...)</code>（与返回类型路径同口径）。
   本站真实事故：LenoSDL3 托盘窗口过程（<code>sdl_tray.leno</code> 的子类化 ffi.callback）把<strong>截断后的
@@ -3453,26 +3466,25 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
   <code>0xC0000005</code> 崩在 <code>SDL3.dll+0x11AF30</code>（Trae签到 10-03~10-11 共 5 次同偏移；转储现场
   <code>RCX=0x3C1FA238</code> = 栈地址 <code>0x0000005C_3C1FA238</code> 的低 32 位）。<strong>只在高地址指针上偶发</strong>
   （低 4GB 地址被截断后值不变）⇒ 以前一直没被发现。新增 8.4 陷阱 9 说明 + 回归
-  <code>assert/test_ffi_callback_i64.leno</code> ✓</p>
-</li>
-<li>
-<p><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
+  <code>assert/test_ffi_callback_i64.leno</code> ✓</li>
+</ul>
+<ul>
+<li><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
   "按 ABI 精确分类 + 汇编调用桩"（<code>leno_win64_call</code> / <code>leno_sysv_call</code> / <code>leno_aapcs_call</code>）。
   旧做法覆盖不全：<code>(i32,f32,i32,f32)</code> 会<strong>静默空调用</strong>（返回 0、函数根本没进）、
   <code>(f32,f64,i32,i32)</code> 会传错值、5 参数含浮点则被上层拦截<strong>抛错</strong>（现已不再抛）。
   另修两个同源缺陷：<strong>f32 返回值恒为 0</strong>（前端读 <code>result.f</code>，后端却写 <code>result.d</code>）、
   <strong>"全浮点参数 + 整数返回"</strong>从浮点寄存器取返回值（真值在整数返回寄存器）。
-  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</p>
+  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</li>
+</ul>
+<ul>
+<li><strong>v4.1</strong> (2026-09-12):<ul>
+<li><strong>JIT 内联定宽内存读写</strong>：热循环中 <code>read_byte</code>/<code>read_int8</code>/<code>read_int16</code>/<code>read_uint16</code>/<code>read_int</code>/<code>read_uint</code> 及对应 <code>write_*</code>（共 12 个）由 JIT 直接生成机器码 load/store，免去 callout 开销。像素直写风格基准（15,000,000 次调用）334ms → 221ms（约 -34%）。语义与越界/空指针报错文本与解释器一致；详见 <code>docs/archive/JIT实现与调试记录.md</code> §2.6。</li>
+</ul>
 </li>
-<li>
-<p><strong>v4.1</strong> (2026-09-12):</p>
-</li>
-<li>
-<p><strong>JIT 内联定宽内存读写</strong>：热循环中 <code>read_byte</code>/<code>read_int8</code>/<code>read_int16</code>/<code>read_uint16</code>/<code>read_int</code>/<code>read_uint</code> 及对应 <code>write_*</code>（共 12 个）由 JIT 直接生成机器码 load/store，免去 callout 开销。像素直写风格基准（15,000,000 次调用）334ms → 221ms（约 -34%）。语义与越界/空指针报错文本与解释器一致；详见 <code>docs/archive/JIT实现与调试记录.md</code> §2.6。</p>
-</li>
-<li>
-<p><strong>v4.0</strong> (2026-08-19):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v4.0</strong> (2026-08-19):<ul>
 <li><strong>符号地址缓存</strong>：<code>ObjFFILibrary</code> 新增函数地址缓存表（32 槽），<code>ffi.call_*</code>/<code>clib</code>/<code>ffi.dlsym</code> 首次调用后缓存函数地址，后续调用跳过 <code>GetProcAddress</code>/<code>dlsym</code>。</li>
 <li><strong>混合参数回退路径浮点 bug 修复</strong>：<code>ffi_call_impl</code> 调用前检查参数组合，当 &gt;4 参数含浮点且超出 Win64 精确分发范围时，提前抛出明确错误，而非静默走 broken 回退路径。</li>
 <li><strong>回调数量上限提升</strong>：<code>MAX_FFI_CALLBACKS</code> 从 128 增至 256。</li>
@@ -3481,49 +3493,49 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <li><strong>新增显式字节序函数</strong>：<code>write_le_i16</code>/<code>write_be_i16</code>/<code>write_le_i32</code>/<code>write_be_i32</code> 及对应 <code>read_*</code>，8.6 节原"不提供 <code>_le</code>/<code>_be</code>"的说法已过时。</li>
 <li><strong>新增 <code>cstruct.offset_of(field_name)</code></strong>：编程式获取字段偏移量，返回 <code>int</code>。</li>
 <li><strong>代码去重</strong>：合并 <code>ffi_call_impl</code> 中 int 和 bigint 的窄化逻辑为统一分支，减少约 60 行重复代码，并修复 bigint 的 <code>u64</code> 负值检查缺失。</li>
-<li>
-<p><strong><code>ffi.call</code> 标记 deprecated</strong>：使用时输出 <code>stderr</code> 警告，引导使用 <code>ffi.call_int</code> 等明确返回类型的函数。</p>
+<li><strong><code>ffi.call</code> 标记 deprecated</strong>：使用时输出 <code>stderr</code> 警告，引导使用 <code>ffi.call_int</code> 等明确返回类型的函数。</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.5</strong> (2026-08-19):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.5</strong> (2026-08-19):<ul>
 <li><strong>修复 1.2 节内存布局示意图</strong>：修正 <code>write_int64</code> 偏移 7 与 <code>write_uint16</code> 重叠的错误，改为正确的偏移 9，并补充被遗漏的 <code>write_uint16</code> 和 <code>write_bool</code> 行。新增字段重叠警告说明。</li>
 <li><strong>新增 8.5 cstruct 内存对齐与 padding</strong>：详细说明 cstruct 默认自然对齐规则（对齐=类型大小）、字段顺序对 padding 的影响、如何用 <code>size()</code>/<code>alignment()</code>/<code>debug()</code> 验证布局、以及 packed 结构体的限制。</li>
 <li><strong>新增 8.6 字节序（Endianness）</strong>：明确 <code>ffi.write_*</code>/<code>read_*</code> 使用主机字节序（memcpy 直接拷贝）。现已提供 <code>write_le_i16</code>/<code>write_be_i32</code> 等显式字节序函数，可直接使用，无需手动拼装。</li>
 <li><strong>新增 8.7 多线程 FFI 调用的安全性</strong>：说明库句柄本身线程安全但 FFI 层不对 C 库函数做线程保护、<code>ffi.malloc</code> 底层 C <code>malloc</code> 的线程安全性、Leno Thread 间共享库句柄和内存的规则。</li>
-<li>
-<p><em><em>修正 ffi.call_</em> vs clib 性能差异</em>*：对比表新增符号解析和调用开销行，如实说明当前实现中两者底层走同一路径（<code>ffi_call_impl</code>），都每次调用执行 <code>GetProcAddress</code>/<code>dlsym</code>，没有在 <code>ffi.load</code> 时缓存函数地址。clib 优势在类型安全和开发体验，而非运行时性能。</p>
+<li><strong>修正 ffi.call_* vs clib 性能差异</strong>：对比表新增符号解析和调用开销行，如实说明当前实现中两者底层走同一路径（<code>ffi_call_impl</code>），都每次调用执行 <code>GetProcAddress</code>/<code>dlsym</code>，没有在 <code>ffi.load</code> 时缓存函数地址。clib 优势在类型安全和开发体验，而非运行时性能。</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.4</strong> (2026-08-14):</p>
+</ul>
+<ul>
+<li><strong>v3.4</strong> (2026-08-14):<ul>
+<li><strong>str8 返回值内存泄漏说明</strong>：明确标注 <code>str8</code> 返回类型会深拷贝 C <code>char*</code> 为 Leno <code>string</code>，但原始 C 内存不自动释放。对于需要释放的 C 字符串（如 <code>curl_easy_escape</code>），应使用 <code>call_ptr</code> + <code>read_string</code> + 手动释放三步走方案。</li>
+</ul>
 </li>
-<li>
-<p><strong>str8 返回值内存泄漏说明</strong>：明确标注 <code>str8</code> 返回类型会深拷贝 C <code>char*</code> 为 Leno <code>string</code>，但原始 C 内存不自动释放。对于需要释放的 C 字符串（如 <code>curl_easy_escape</code>），应使用 <code>call_ptr</code> + <code>read_string</code> + 手动释放三步走方案。</p>
+</ul>
+<ul>
+<li><strong>v3.3</strong> (2026-06-19):<ul>
+<li>新增 <strong>8.4 常见陷阱与注意事项</strong>：汇总 LenoMusic 开发中的 8 个实战踩坑：
+    <code>as int</code> 优先级、clib 链式调用、buffer 大小计算、f32/f64 精度、Ptr 大小写、files.exists/open 区别、clib 类型限制、ffi.free 统一释放</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.3</strong> (2026-06-19):</p>
-</li>
-<li>
-<p>新增 <strong>8.4 常见陷阱与注意事项</strong>：汇总 LenoMusic 开发中的 8 个实战踩坑：
-    <code>as int</code> 优先级、clib 链式调用、buffer 大小计算、f32/f64 精度、Ptr 大小写、files.exists/open 区别、clib 类型限制、ffi.free 统一释放</p>
-</li>
-<li>
-<p><strong>v3.2</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.2</strong> (2026-06-07):<ul>
 <li><strong>clib 支持 cstruct 参数</strong>：clib 声明中可直接使用 cstruct 名称作为参数类型，调用时 cstruct 实例自动转换为指针传递，无需手动 <code>to_ptr()</code></li>
-<li>
-<p>6.3 节更新：新增 clib + cstruct 声明式调用示例（推荐方式）</p>
+<li>6.3 节更新：新增 clib + cstruct 声明式调用示例（推荐方式）</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.1</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.1</strong> (2026-06-07):<ul>
 <li>新增 <code>ffi.last_error()</code> — 获取最近一次 FFI 调用后的系统错误码</li>
-<li>
-<p>新增 <code>ffi.write_bool()</code> / <code>ffi.write_uint16()</code> — 补全内存写入 API 对称性</p>
+<li>新增 <code>ffi.write_bool()</code> / <code>ffi.write_uint16()</code> — 补全内存写入 API 对称性</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.0</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.0</strong> (2026-06-07):<ul>
 <li><strong>零摩擦 FFI</strong>：clib 返回值自动展开，无需 <code>as</code> 转换（i32→int, f64→float, str8→string, str16→string）</li>
 <li><strong>参数自动窄化</strong>：Leno int 可直接传给 i8/u8/i16/u16/i32/u32/i64/u64 参数，运行时范围检查</li>
 <li><strong>新增 C 布局类型</strong>：<code>i8</code>、<code>u8</code>、<code>i16</code>、<code>u16</code></li>
@@ -3531,8 +3543,11 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 <li><strong>速查表新增</strong>：clib 返回值自动展开表、clib 参数自动窄化表</li>
 <li>移除示例中的 <code>_gc(false)</code> / <code>_gc(true)</code> 调用</li>
 <li>修正 MessageBoxW 示例：返回值无需 <code>_int()</code> 转换</li>
-</ul></main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#第一章-基础入门">第一章：基础入门</a></li><ul class="lv3"><li><a href="#1-1-第一个-ffi-程序">1.1 第一个 FFI 程序</a></li><li><a href="#1-2-内存分配与读写">1.2 内存分配与读写</a></li><li><a href="#1-3-调用-c-标准库函数">1.3 调用 C 标准库函数</a></li><li><a href="#1-4-使用-clib-声明式调用-推荐-零摩擦-ffi">1.4 使用 clib 声明式调用（推荐，零摩擦 FFI）</a></li></ul><li><a href="#第二章-动态库操作">第二章：动态库操作</a></li><ul class="lv3"><li><a href="#2-1-加载和释放动态库">2.1 加载和释放动态库</a></li><li><a href="#2-2-调用-windows-api">2.2 调用 Windows API</a></li><li><a href="#2-3-不同类型返回值">2.3 不同类型返回值</a></li></ul><li><a href="#第三章-内存操作进阶">第三章：内存操作进阶</a></li><ul class="lv3"><li><a href="#3-1-指针偏移与数组">3.1 指针偏移与数组</a></li><li><a href="#3-2-多级指针">3.2 多级指针</a></li><li><a href="#3-3-内存拷贝">3.3 内存拷贝</a></li><li><a href="#3-4-内存填充">3.4 内存填充</a></li><li><a href="#3-5-指针与整数互转">3.5 指针与整数互转</a></li></ul><li><a href="#第四章-类型安全指针-ptr-t">第四章：类型安全指针 Ptr[T]</a></li><ul class="lv3"><li><a href="#4-1-ptr-与-ptr-t-的区别">4.1 Ptr 与 Ptr[T] 的区别</a></li><li><a href="#4-2-ptr-u16-与-ptr-str16-的区别">4.2 Ptr[u16] 与 Ptr[str16] 的区别</a></li><li><a href="#4-3-使用-ptr-t">4.3 使用 Ptr[T]</a></li><li><a href="#4-4-cstruct-中的-ptr-t">4.4 cstruct 中的 Ptr[T]</a></li></ul><li><a href="#第五章-字符串处理">第五章：字符串处理</a></li><ul class="lv3"><li><a href="#5-1-字符串读写">5.1 字符串读写</a></li><li><a href="#5-2-utf-8-与-utf-16-转换">5.2 UTF-8 与 UTF-16 转换</a></li></ul><li><a href="#第六章-实战案例">第六章：实战案例</a></li><ul class="lv3"><li><a href="#6-1-进程枚举">6.1 进程枚举</a></li><li><a href="#6-2-注册表操作">6.2 注册表操作</a></li><li><a href="#6-3-结合-cstruct-使用">6.3 结合 cstruct 使用</a></li></ul><li><a href="#第七章-回调函数">第七章：回调函数</a></li><ul class="lv3"><li><a href="#7-1-cfunc-声明式回调">7.1 cfunc 声明式回调</a></li><li><a href="#7-2-回调与-qsort">7.2 回调与 qsort</a></li><li><a href="#7-3-释放回调">7.3 释放回调</a></li><li><a href="#7-4-跨线程回调">7.4 跨线程回调</a></li><li><a href="#7-5-平台支持">7.5 平台支持</a></li></ul><li><a href="#第八章-最佳实践">第八章：最佳实践</a></li><ul class="lv3"><li><a href="#8-1-错误处理">8.1 错误处理</a></li><li><a href="#8-2-内存管理">8.2 内存管理</a></li><li><a href="#8-3-类型安全">8.3 类型安全</a></li><li><a href="#8-4-常见陷阱与注意事项">8.4 常见陷阱与注意事项</a></li><li><a href="#8-5-cstruct-内存对齐与-padding">8.5 cstruct 内存对齐与 padding</a></li><li><a href="#8-6-字节序-endianness">8.6 字节序（Endianness）</a></li><li><a href="#8-7-多线程-ffi-调用的安全性">8.7 多线程 FFI 调用的安全性</a></li></ul><li><a href="#附录-完整-api-速查表">附录：完整 API 速查表</a></li><ul class="lv3"><li><a href="#动态库操作">动态库操作</a></li><li><a href="#函数调用">函数调用</a></li><li><a href="#内存管理">内存管理</a></li><li><a href="#内存读写">内存读写</a></li><li><a href="#显式字节序读写">显式字节序读写</a></li><li><a href="#符号解析">符号解析</a></li><li><a href="#函数调用_1">函数调用</a></li><li><a href="#回调函数">回调函数</a></li><li><a href="#字符串工具">字符串工具</a></li><li><a href="#类型信息">类型信息</a></li><li><a href="#cstruct-方法">cstruct 方法</a></li><li><a href="#clib-声明类型">clib 声明类型</a></li><li><a href="#clib-返回值自动展开">clib 返回值自动展开</a></li><li><a href="#clib-参数自动窄化">clib 参数自动窄化</a></li><li><a href="#更新记录">更新记录</a></li></ul></ul></aside>
+</ul>
+</li>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#第一章-基础入门">第一章：基础入门</a></li><ul class="lv3"><li><a href="#1-1-第一个-ffi-程序">1.1 第一个 FFI 程序</a></li><li><a href="#1-2-内存分配与读写">1.2 内存分配与读写</a></li><li><a href="#1-3-调用-c-标准库函数">1.3 调用 C 标准库函数</a></li><li><a href="#1-4-使用-clib-声明式调用-推荐-零摩擦-ffi">1.4 使用 clib 声明式调用（推荐，零摩擦 FFI）</a></li></ul><li><a href="#第二章-动态库操作">第二章：动态库操作</a></li><ul class="lv3"><li><a href="#2-1-加载和释放动态库">2.1 加载和释放动态库</a></li><li><a href="#2-2-调用-windows-api">2.2 调用 Windows API</a></li><li><a href="#2-3-不同类型返回值">2.3 不同类型返回值</a></li></ul><li><a href="#第三章-内存操作进阶">第三章：内存操作进阶</a></li><ul class="lv3"><li><a href="#3-1-指针偏移与数组">3.1 指针偏移与数组</a></li><li><a href="#3-2-多级指针">3.2 多级指针</a></li><li><a href="#3-3-内存拷贝">3.3 内存拷贝</a></li><li><a href="#3-4-内存填充">3.4 内存填充</a></li><li><a href="#3-5-指针与整数互转">3.5 指针与整数互转</a></li></ul><li><a href="#第四章-类型安全指针-ptr-t">第四章：类型安全指针 Ptr[T</a></li><ul class="lv3"><li><a href="#4-1-ptr-与-ptr-t-的区别">4.1 Ptr 与 Ptr[T 的区别</a></li><li><a href="#4-2-ptr-u16-与-ptr-str16-的区别">4.2 Ptr[u16 与 Ptr[str16 的区别</a></li><li><a href="#4-3-使用-ptr-t">4.3 使用 Ptr[T</a></li><li><a href="#4-4-cstruct-中的-ptr-t">4.4 cstruct 中的 Ptr[T</a></li></ul><li><a href="#第五章-字符串处理">第五章：字符串处理</a></li><ul class="lv3"><li><a href="#5-1-字符串读写">5.1 字符串读写</a></li><li><a href="#5-2-utf-8-与-utf-16-转换">5.2 UTF-8 与 UTF-16 转换</a></li></ul><li><a href="#第六章-实战案例">第六章：实战案例</a></li><ul class="lv3"><li><a href="#6-1-进程枚举">6.1 进程枚举</a></li><li><a href="#6-2-注册表操作">6.2 注册表操作</a></li><li><a href="#6-3-结合-cstruct-使用">6.3 结合 cstruct 使用</a></li></ul><li><a href="#第七章-回调函数">第七章：回调函数</a></li><ul class="lv3"><li><a href="#7-1-cfunc-声明式回调">7.1 cfunc 声明式回调</a></li><li><a href="#7-2-回调与-qsort">7.2 回调与 qsort</a></li><li><a href="#7-3-释放回调">7.3 释放回调</a></li><li><a href="#7-4-跨线程回调">7.4 跨线程回调</a></li><li><a href="#7-5-平台支持">7.5 平台支持</a></li></ul><li><a href="#第八章-最佳实践">第八章：最佳实践</a></li><ul class="lv3"><li><a href="#8-1-错误处理">8.1 错误处理</a></li><li><a href="#8-2-内存管理">8.2 内存管理</a></li><li><a href="#8-3-类型安全">8.3 类型安全</a></li><li><a href="#8-4-常见陷阱与注意事项">8.4 常见陷阱与注意事项</a></li><li><a href="#8-5-cstruct-内存对齐与-padding">8.5 cstruct 内存对齐与 padding</a></li><li><a href="#8-6-字节序-endianness">8.6 字节序（Endianness）</a></li><li><a href="#8-7-多线程-ffi-调用的安全性">8.7 多线程 FFI 调用的安全性</a></li></ul><li><a href="#附录-完整-api-速查表">附录：完整 API 速查表</a></li><ul class="lv3"><li><a href="#动态库操作">动态库操作</a></li><li><a href="#函数调用">函数调用</a></li><li><a href="#内存管理">内存管理</a></li><li><a href="#内存读写">内存读写</a></li><li><a href="#显式字节序读写">显式字节序读写</a></li><li><a href="#符号解析">符号解析</a></li><li><a href="#函数调用_1">函数调用</a></li><li><a href="#回调函数">回调函数</a></li><li><a href="#字符串工具">字符串工具</a></li><li><a href="#类型信息">类型信息</a></li><li><a href="#cstruct-方法">cstruct 方法</a></li><li><a href="#clib-声明类型">clib 声明类型</a></li><li><a href="#clib-返回值自动展开">clib 返回值自动展开</a></li><li><a href="#clib-参数自动窄化">clib 参数自动窄化</a></li><li><a href="#更新记录">更新记录</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="module_web.html">← 上一篇</a><a href="import使用指南.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

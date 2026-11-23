@@ -34,7 +34,7 @@
 <blockquote>
 <p><strong>当前进度</strong>
 - ✅ <strong>生成（encode）</strong>：<strong>纯 Leno</strong> —— 版本 1–40 自动选择、L/M/Q/H、数字/字母数字/字节(UTF-8)
-  三种模式、8 个掩码 + 4 条罚分、format/version 的 BCH、GF(256)/Reed-Solomon（0x11D）
+三种模式、8 个掩码 + 4 条罚分、format/version 的 BCH、GF(256)/Reed-Solomon（0x11D）
 - ✅ <strong>识别（decode）</strong>：quirc 后端（ISC），<code>gray</code> / <code>ARGB8888</code> / <code>RGB24</code> 三种像素入口
 - 两端<strong>不互相依赖</strong>：编码不需要原生库；解码不依赖编码器</p>
 </blockquote>
@@ -350,14 +350,14 @@ Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 dif
 </tbody>
 </table>
 <p>优化点：① 罚分<strong>单遍扫描</strong>（原 6 遍）；② 掩码<strong>就地切/撤</strong>（原每掩码复制整张矩阵）；
-  ③ 掩码条件表按 size 缓存（批量生成同版本时零重算）；④ RS 生成多项式按 n 缓存；
-  ⑤ 计数循环统一用 <code>for a:b to i</code>（实测 100 万次空转：for 4.2ms vs while 6.4ms）。</p>
+③ 掩码条件表按 size 缓存（批量生成同版本时零重算）；④ RS 生成多项式按 n 缓存；
+⑤ 计数循环统一用 <code>for a:b to i</code>（实测 100 万次空转：for 4.2ms vs while 6.4ms）。</p>
 <p>⚠ 用 <code>for</code> 时记两条（本库踩过）：
-  - <strong>闭区间</strong>：<code>for 0:n-1 to i</code> 走 <code>0..n-1</code> 共 n 轮；空区间（n=0）执行 0 次，不必为它退回 <code>while</code>；
-  - <strong>倒序要显式步长</strong>：<code>for 3:0</code> 是<strong>空区间</strong>（0 次），倒着扫要写 <code>for 3:0:-1 to i</code>。
-    本库的 <code>bits_push</code>（高位先写）与 zigzag 放置（右列→左列）都用这种写法 ✓
+- <strong>闭区间</strong>：<code>for 0:n-1 to i</code> 走 <code>0..n-1</code> 共 n 轮；空区间（n=0）执行 0 次，不必为它退回 <code>while</code>；
+- <strong>倒序要显式步长</strong>：<code>for 3:0</code> 是<strong>空区间</strong>（0 次），倒着扫要写 <code>for 3:0:-1 to i</code>。
+ 本库的 <code>bits_push</code>（高位先写）与 zigzag 放置（右列→左列）都用这种写法 ✓
 - 识别耗时：一张 328×328 PNG（v4/Q）从读盘到出文本 <strong>≈ 5 ms</strong>；多码检测与单码同量级
-  （检测只做一次，逐枚解码另算）
+（检测只做一次，逐枚解码另算）
 - 生成的 PNG 头/尺寸经独立解析核对（328×328 / 360×360，5–6 KB）</p>
 <h2 id="边界与已知限制">边界与已知限制</h2>
 <ul>
@@ -382,7 +382,7 @@ Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 dif
 <ul>
 <li>quirc（QR-code recognition library, © 2010-2012 Daniel Beer），<strong>ISC 许可</strong>，
   全文见 <code>LICENSE-quirc.txt</code>；与本体 Apache-2.0 兼容。</li>
-<li>来源：<a href="https://github.com/dlbeer/quirc">https://github.com/dlbeer/quirc</a>（2026-10-17 取 master tarball，
+<li>来源：&lt;https://github.com/dlbeer/quirc&gt;（2026-10-17 取 master tarball，
   SHA256 <code>FBEFCF8E04BE88F1FA43C68A39C9C6C42E5AB6FE91453B614AC58250821436AA</code>）；
   上游文件未做任何修改（<code>quirc_version()</code> 报 <code>1.0</code>）。</li>
 </ul>
@@ -394,7 +394,8 @@ Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 dif
   透传（<code>quirc_data.eci</code>）。</li>
 <li><strong>编码增强</strong>：ECI 分配号 ≥128（GB18030 等）、SVG 输出（不需要 SDL）。</li>
 <li><strong>POSIX</strong>：在 Linux/macOS 上跑 <code>build_so.sh</code> + 五个测试，再往 <code>leno.toml</code> 补 <code>linux</code>/<code>mac</code>。</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#生成-encode-纯-leno">生成（encode，纯 Leno）</a></li><li><a href="#识别-decode-quirc">识别（decode，quirc）</a></li><li><a href="#原生库怎么来的">原生库怎么来的</a></li><li><a href="#构建">构建</a></li><li><a href="#打包-p">打包（-p）</a></li><li><a href="#测试">测试</a></li><li><a href="#实测-windows-x64-gcc-15-2-0">实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#边界与已知限制">边界与已知限制</a></li><li><a href="#规格表从哪来">规格表从哪来</a></li><li><a href="#上游与许可">上游与许可</a></li><li><a href="#后续可选-都不阻塞现在">后续可选（都不阻塞现在）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoMusic.html">← 上一篇</a><a href="../扩展模块/LenoResult.html">下一篇 →</a></nav>

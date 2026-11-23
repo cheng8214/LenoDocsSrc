@@ -360,21 +360,19 @@ _float(&quot;12.34.56&quot;)      // ❌ 运行时错误：无法将字符串转
 - "想要 null 而不是默认值" ⇒ <code>x as int</code> / <code>x as float</code>（<strong>安全转换</strong>，失败给 null）</p>
 <p>⚠⚠ <strong><code>as</code> 不做"字符串 → 数值"的解析</strong>（2026-10-09 实测；<code>as</code> 与 <code>is</code> 共用 <code>type_spec_match</code>）：
 <code>as</code> 是<strong>类型规格匹配</strong>，不是解析器 ⇒ <strong>任何</strong>字符串 <code>as</code> 数值都得到 <code>null</code>（连 <code>"0"</code> / <code>"77"</code> 也是）：</p>
-</blockquote>
 <pre><code class="language-leno">var s = &quot;77&quot;
 print(s as int)       // null（不是 77 ✗）
 print(&quot;3.5&quot; as float) // null ✗
 </code></pre>
-<blockquote>
 <p>能转的是"<strong>已有表示的重新解释 + 语言已定义的规则</strong>"：<code>1 as string</code> → <code>"1"</code> ✓、
 <code>1.9 as int</code> → <code>1</code>（截断）✓、<code>true as int</code> → <code>1</code> ✓；
 不能转的是"需要<strong>新规则</strong>（解析或判定）的"：<code>1 as bool</code> → <code>null</code>（0 算不算 false 从未定义）、
 <code>"77" as int</code> → <code>null</code>（要语法分析）✗
-⇒ <strong>"<code>"77" 不能</code>as int<code>" 不是 bug**，是cast 与 parse 的职责分界
-  （与 Python</code>int(x)<code>是**函数**、Rust</code>str::parse<code>是**方法**同一道理——都不是 cast 语法）。
-  ⚠ 但它当前**放行得比较宽松**：左操作数静态类型就是</code>string<code>时编译器本可当场报
-  「as 不做字符串解析」，却让它编译通过、运行时静默</code>null` ⇒ 白丢一次诊断
-  （</strong>待改进**：在语义检查里加一条"类型对是否存在转换规则"，把恒失败的组合挡在编译期）。</p>
+⇒ <strong>"<code>"77" 不能 </code>as int`" 不是 bug</strong>，是cast 与 parse 的职责分界
+（与 Python <code>int(x)</code> 是<strong>函数</strong>、Rust <code>str::parse</code> 是<strong>方法</strong>同一道理——都不是 cast 语法）。
+⚠ 但它当前<strong>放行得比较宽松</strong>：左操作数静态类型就是 <code>string</code> 时编译器本可当场报
+「as 不做字符串解析」，却让它编译通过、运行时静默 <code>null</code> ⇒ 白丢一次诊断
+（<strong>待改进</strong>：在语义检查里加一条"类型对是否存在转换规则"，把恒失败的组合挡在编译期）。</p>
 <p>⚠ <strong><code>_int_or</code> 的两个实测边界</strong>（2026-10-09 初测；<strong>2026-11-16 复核并更正两行</strong>）：</p>
 <table>
 <thead>
@@ -413,10 +411,10 @@ print(&quot;3.5&quot; as float) // null ✗
 </tbody>
 </table>
 <p>⇒ <code>_int_or</code> 走的是 <strong>int64 快路径</strong>，与"int 是任意精度"这个前提不一致 ⚠
-  <strong>需要任意精度 / 需要严格非负 / 需要把 <code>null</code> 当 0 时</strong>：先自己判形状（<code>digits_only</code> 之类）
-  再 <code>_int</code> ⇒ 不抛、不溢出、语义完全可控 ✓（LenoMusic 的 <code>parsing.leno</code> 就是这么做的）。
-  <code>null</code> 这一行是<strong>两个函数口径不同</strong>的已知点：<code>_int(null)</code> = 0，而 <code>_int_or(null, d)</code> = <code>d</code>
-  （<code>_int_or</code> 把 null 当"类型不对"）—— <code>assert/test_types_module.leno</code> 已把两条都钉住。</p>
+<strong>需要任意精度 / 需要严格非负 / 需要把 <code>null</code> 当 0 时</strong>：先自己判形状（<code>digits_only</code> 之类）
+再 <code>_int</code> ⇒ 不抛、不溢出、语义完全可控 ✓（LenoMusic 的 <code>parsing.leno</code> 就是这么做的）。
+<code>null</code> 这一行是<strong>两个函数口径不同</strong>的已知点：<code>_int(null)</code> = 0，而 <code>_int_or(null, d)</code> = <code>d</code>
+（<code>_int_or</code> 把 null 当"类型不对"）—— <code>assert/test_types_module.leno</code> 已把两条都钉住。</p>
 </blockquote>
 <hr>
 <h3 id="_bool-value-转换为布尔值">_bool(value) - 转换为布尔值</h3>
@@ -955,17 +953,17 @@ print(&quot;您的年龄是: &quot; + age)
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>转换失败会报错</strong>：所有 <code>_xxx()</code> 函数在转换失败时会抛出运行时错误，建议使用类型守卫先做检查。</p>
+<li><strong>转换失败会报错</strong>：所有 <code>_xxx()</code> 函数在转换失败时会抛出运行时错误，建议使用类型守卫先做检查。</li>
+</ol>
+<ol>
+<li><strong>与类型守卫的关系</strong>：<ul>
+<li><code>is</code> 类型守卫用于编译时类型收窄（更安全）</li>
+<li><code>_xxx()</code> 转换函数用于运行时类型转换（更灵活）</li>
+</ul>
 </li>
-<li>
-<p><strong>与类型守卫的关系</strong>：
-   - <code>is</code> 类型守卫用于编译时类型收窄（更安全）
-   - <code>_xxx()</code> 转换函数用于运行时类型转换（更灵活）</p>
-</li>
-<li>
-<p><strong>优先使用类型守卫</strong>：</p>
-</li>
+</ol>
+<ol>
+<li><strong>优先使用类型守卫</strong>：</li>
 </ol>
 <pre><code class="language-leno">// 推荐：使用类型守卫（编译时检查）
 func good(var x) {
@@ -982,7 +980,8 @@ func bad(var x) {
 </code></pre>
 <hr>
 <p><em>文档版本: 1.2</em><br>
-<em>最后更新: 2026-06-14</em></p></main>
+<em>最后更新: 2026-06-14</em></p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#快速参考">快速参考</a></li><li><a href="#type-获取类型">type() - 获取类型</a></li><ul class="lv3"><li><a href="#基本用法">基本用法</a></li><li><a href="#嵌套类型推断">嵌套类型推断</a></li></ul><li><a href="#类型转换函数">类型转换函数</a></li><ul class="lv3"><li><a href="#_int-value-转换为整数">_int(value) - 转换为整数</a></li><li><a href="#_float-value-转换为浮点数">_float(value) - 转换为浮点数</a></li><li><a href="#_int_or-value-default-_float_or-value-default-容错转换-2026-10-07-新增">_int_or(value, default) / _float_or(value, default) - 容错转换（2026-10-07 新增）</a></li><li><a href="#_bool-value-转换为布尔值">_bool(value) - 转换为布尔值</a></li><li><a href="#_str-value-转换为字符串">_str(value) - 转换为字符串</a></li><li><a href="#_int64-value-截断为-64-位有符号整数">_int64(value) - 截断为 64 位有符号整数</a></li><li><a href="#_uint64-value-转为-64-位无符号整数">_uint64(value) - 转为 64 位无符号整数</a></li><li><a href="#_uint8-value-截断为-8-位无符号整数">_uint8(value) - 截断为 8 位无符号整数</a></li><li><a href="#_byte-value-_uint8-的别名">_byte(value) - _uint8 的别名</a></li><li><a href="#固定位宽函数对比">固定位宽函数对比</a></li></ul><li><a href="#类型推断详解">类型推断详解</a></li><ul class="lv3"><li><a href="#数组类型推断">数组类型推断</a></li><li><a href="#字典类型推断">字典类型推断</a></li></ul><li><a href="#与类型守卫配合使用">与类型守卫配合使用</a></li><ul class="lv3"><li><a href="#场景-1-安全的类型转换">场景 1：安全的类型转换</a></li><li><a href="#场景-2-处理-any-参数">场景 2：处理 any 参数</a></li></ul><li><a href="#常见使用场景">常见使用场景</a></li><ul class="lv3"><li><a href="#场景-1-调试和日志">场景 1：调试和日志</a></li><li><a href="#场景-2-类型检查辅助">场景 2：类型检查辅助</a></li><li><a href="#场景-3-配置解析">场景 3：配置解析</a></li><li><a href="#场景-4-用户输入处理">场景 4：用户输入处理</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_times.html">← 上一篇</a><a href="module_web.html">下一篇 →</a></nav>

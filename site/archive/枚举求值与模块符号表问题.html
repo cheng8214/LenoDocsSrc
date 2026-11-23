@@ -190,10 +190,12 @@ hover/signature 仍拿旧符号表；另外 memo 表 <code>shared=1</code>、<co
 <li>改动：<code>scan_enum.inc</code> 把「决定最终取值 + <code>member_count++</code>」整段移出 <code>if (*after_enum == '=')</code>
   （在第 299 行后补上该 <code>if</code> 的收尾括号，删掉原来错位到 <code>member_count++</code> 之后的那个）。
   同时 <code>.lenosymc</code> 版本 <code>v22 → v23</code>（<code>sym_table_cache.inc</code>）：扫描语义变了，旧缓存里缺隐式成员，必须失效。</li>
-<li>测试：</li>
+<li>测试：<ul>
 <li><code>build\enum_probe\mm.leno</code>：修复前 11 个错；修复后 <code>E1 use: 0 1 2</code>、<code>E2 use: 7 8 9 10</code>、
     <code>E1 qual: 0 1 2</code>、<code>E2 qual: 7 8 9 10</code>、<code>E3 qual: 14 15</code> —— 隐式成员全部可见且自动递增正确。</li>
 <li>定向用例：<code>test_enum_int64</code> / <code>test_enum_cross_module</code> / <code>test_module_dep_memo</code> / <code>test_module_cache</code> 全通过。</li>
+</ul>
+</li>
 </ul>
 <h3 id="enum-2-p1-扫描器求值器与解析器不一致">ENUM-2（P1）扫描器求值器与解析器不一致</h3>
 <ul>
@@ -203,20 +205,23 @@ hover/signature 仍拿旧符号表；另外 memo 表 <code>shared=1</code>、<co
   在 <code>module_symbol_table.c</code> 中 include；<code>scan_enum.inc</code> 删掉「先试简单数字 + 再退回从左到右」的 <strong>202 行</strong>旧实现，
   改为一次 <code>sym_enum_eval_expr</code> 调用。</li>
 <li>测试：<code>build\enum_probe\mm3.leno</code>（12 个成员覆盖优先级、括号、一元 <code>~</code>、位与、成员引用、<code>&gt;2^31</code> 大值、隐式成员），
-  修复后三条路径<strong>完全一致</strong>：
-  <code>mod_side : 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777
-  use_path : 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777
-  qual_path: 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777</code></li>
+  修复后三条路径<strong>完全一致</strong>：</li>
 </ul>
+<pre><code>  mod_side : 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777
+  use_path : 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777
+  qual_path: 14 14 17 5 10 -1 -1 21 15 15 1099511627776 1099511627777
+</code></pre>
 <h3 id="mod-1-p2-一个调用点三次遍历">MOD-1（P2）一个调用点三次遍历</h3>
 <ul>
 <li>状态：✅ 已修复</li>
-<li>改动：
-  1. <code>visit_module.inc</code>：删掉调用点上「为判断是不是 struct」而 <code>create</code> + <code>scan</code> + <code>destroy</code> 一整个模块的冗余扫描，
-     改为直接用 import 阶段已扫好的 <code>module_info-&gt;sym_table</code>（用 <code>load_failed</code> 保持「模块加载失败不级联报错」的语义）。
-  2. <code>module_loader.c</code>：抽出 <code>module_resolve_path()</code>（原 <code>read_module_file</code> 的内联路径解析，供缓存键/stat 复用）；
+<li>改动：<ol>
+<li><code>visit_module.inc</code>：删掉调用点上「为判断是不是 struct」而 <code>create</code> + <code>scan</code> + <code>destroy</code> 一整个模块的冗余扫描，
+     改为直接用 import 阶段已扫好的 <code>module_info-&gt;sym_table</code>（用 <code>load_failed</code> 保持「模块加载失败不级联报错」的语义）。</li>
+<li><code>module_loader.c</code>：抽出 <code>module_resolve_path()</code>（原 <code>read_module_file</code> 的内联路径解析，供缓存键/stat 复用）；
      <code>extract_module_exports_from_file()</code> 增加<strong>进程内导出项扫描缓存</strong>，键为「完整路径 + mtime + size」，
      文件改动即自动失效（LSP 常驻进程同样安全），于是 <code>module_has_method</code> 不再每个调用点重读整份源码。</li>
+</ol>
+</li>
 <li>测试：<code>build\enum_probe\es_main.leno</code>（正是我改动过的两条报错分支）仍正确报
   <code>struct 'm.S' 需要使用 new 关键字实例化</code> 与 <code>模块 'm' 中没有方法 'nope'</code>；全量套件通过。</li>
 </ul>
@@ -239,12 +244,14 @@ hover/signature 仍拿旧符号表；另外 memo 表 <code>shared=1</code>、<co
 <h3 id="mod-2-p3-记忆化无失效">MOD-2（P3）记忆化无失效</h3>
 <ul>
 <li>状态：✅ 已修复</li>
-<li>改动：<code>sym_table_entry.inc</code></li>
+<li>改动：<code>sym_table_entry.inc</code><ul>
 <li>memo 条目增加 <code>mtime/size</code>：命中前 stat 比对，文件改了就当未命中（调用方重扫），
     并把旧表挂到 retired 列表（<strong>不立即 free</strong> —— 同一次扫描链路里上游可能还持有它），
     <code>reset_memo</code> 时统一释放；</li>
 <li>新增 <code>module_symbol_table_reset_memo()</code>（<code>module_symbol_table.h</code> 声明），
     在 <code>main.c</code> 两处编译入口（<code>error_clear/reset_scan_stack</code> 旁）调用；LSP 这类常驻宿主应在每次请求前调用。</li>
+</ul>
+</li>
 <li>测试：全量套件通过；<code>test_module_dep_memo</code>（关缓存路径）通过；
   记忆化的正确性由 mtime 比对保证（同一进程内多次编译不再复用旧表）。</li>
 </ul>
@@ -360,7 +367,8 @@ M src/jit/jit_callout.c                  枚举迭代取值（JIT callout）同�
 </ol>
 <h3 id="7-3-设计取向-记下来-以后别再纠结">7.3 设计取向（记下来，以后别再纠结）</h3>
 <p>enum 有意保持简单：<strong>成员值 = int64 常量 + 自动递增 + 编译期常量表达式</strong>，
-不引入字符串值、不引入 ADT/带数据变体、暂不做穷尽性检查。</p></main>
+不引入字符串值、不引入 ADT/带数据变体、暂不做穷尽性检查。</p>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-问题清单-全部已修复">一、问题清单（全部已修复）</a></li><li><a href="#二-enum-组-三个计算点实测互不一致">二、ENUM 组：三个计算点实测互不一致</a></li><ul class="lv3"><li><a href="#2-1-复现-修复前的实测数据">2.1 复现（修复前的实测数据）</a></li><li><a href="#2-2-三个计算点分别在哪">2.2 三个计算点分别在哪</a></li><li><a href="#2-3-enum-1-根因-一个错位的括号">2.3 ENUM-1 根因：一个错位的括号</a></li><li><a href="#2-4-enum-2-根因-两套求值语义">2.4 ENUM-2 根因：两套求值语义</a></li></ul><li><a href="#三-mod-组-模块符号表扫描">三、MOD 组：模块符号表扫描</a></li><ul class="lv3"><li><a href="#3-1-mod-1-一个调用点遍历-3-次">3.1 MOD-1：一个调用点遍历 3 次</a></li><li><a href="#3-2-mod-2-记忆化永不失效">3.2 MOD-2：记忆化永不失效</a></li></ul><li><a href="#四-修复记录-逐条修复-逐条测试">四、修复记录（逐条修复 → 逐条测试）</a></li><ul class="lv3"><li><a href="#enum-1-p0-扫描器丢隐式成员">ENUM-1（P0）扫描器丢隐式成员</a></li><li><a href="#enum-2-p1-扫描器求值器与解析器不一致">ENUM-2（P1）扫描器求值器与解析器不一致</a></li><li><a href="#mod-1-p2-一个调用点三次遍历">MOD-1（P2）一个调用点三次遍历</a></li><li><a href="#enum-6-p2-枚举迭代变量类型丢失-推断为-any">ENUM-6（P2）枚举迭代变量类型丢失（推断为 any）</a></li><li><a href="#mod-2-p3-记忆化无失效">MOD-2（P3）记忆化无失效</a></li><li><a href="#enum-3-p4-编译期折叠丢精度">ENUM-3（P4）编译期折叠丢精度</a></li><li><a href="#enum-4-p4-枚举迭代取值-32-位截断">ENUM-4（P4）枚举迭代取值 32 位截断</a></li><li><a href="#mod-3-p5-get_shared-后的重复-scan">MOD-3（P5）get_shared 后的重复 scan</a></li><li><a href="#enum-5-p5-逗号分隔不一致">ENUM-5（P5）逗号分隔不一致</a></li><li><a href="#mod-4-p5-记忆化键未绝对化">MOD-4（P5）记忆化键未绝对化</a></li></ul><li><a href="#五-验证方法与最终结果">五、验证方法与最终结果</a></li><li><a href="#六-本次改动文件清单">六、本次改动文件清单</a></li><li><a href="#七-后续想法-已记录-暂不实施">七、后续想法（已记录，暂不实施）</a></li><ul class="lv3"><li><a href="#7-1-字符串值枚举-enum-e-a-a-决定-不做">7.1 字符串值枚举（enum E { A = "a" }）—— 决定：不做</a></li><li><a href="#7-2-更值得先做的两件-若将来真需要-更硬的-enum">7.2 更值得先做的两件（若将来真需要「更硬的 enum」）</a></li><li><a href="#7-3-设计取向-记下来-以后别再纠结">7.3 设计取向（记下来，以后别再纠结）</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/易用性痛点（TraeSign 移植实录）.html">← 上一篇</a><a href="../archive/移植音乐下载器实录与待办.html">下一篇 →</a></nav>

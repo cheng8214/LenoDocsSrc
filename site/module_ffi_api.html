@@ -32,18 +32,24 @@
 <li><a href="#使用方式">使用方式</a></li>
 <li><a href="#核心概念">核心概念</a></li>
 <li><a href="#clib-声明式调用">clib 声明式调用</a></li>
-<li><a href="#动态库操作">动态库操作</a></li>
+<li><a href="#动态库操作">动态库操作</a><ul>
 <li><a href="#loadpath">load</a></li>
 <li><a href="#dlsymlib-name">dlsym</a></li>
 <li><a href="#freex">free</a></li>
+</ul>
+</li>
 <li><a href="#函数调用">函数调用</a></li>
-<li><a href="#回调函数">回调函数</a></li>
+<li><a href="#回调函数">回调函数</a><ul>
 <li><a href="#callbackfunc-ret_type-arg_types">callback</a></li>
 <li><a href="#free_callbackcb">free_callback</a></li>
+</ul>
+</li>
 <li><a href="#类型守卫">类型守卫</a></li>
-<li><a href="#内存管理">内存管理</a></li>
+<li><a href="#内存管理">内存管理</a><ul>
 <li><a href="#alloctype_name-value">alloc</a></li>
 <li><a href="#mallocsize">malloc</a></li>
+</ul>
+</li>
 <li><a href="#内存拷贝">内存拷贝</a></li>
 <li><a href="#内存填充">内存填充</a></li>
 <li><a href="#指针操作">指针操作</a></li>
@@ -360,15 +366,14 @@ string msg = lib.strerror(2)
 这是因为 FFI 层无法知道 C 函数用哪个分配器分配的内存（<code>free</code>? <code>curl_free</code>? <code>LocalFree</code>?）。</p>
 <p><strong>适用场景</strong>：
 - ✅ <strong>不需要释放</strong>的 C 字符串（如 <code>strerror</code>、<code>GetCommandLineA</code>、<code>SDL_GetError</code> 等返回静态缓冲区的函数）——直接用 <code>str8</code> 返回类型
-- ❌ <strong>需要释放</strong>的 C 字符串（如 <code>curl_easy_escape</code>、<code>curl_easy_unescape</code> 等返回动态分配内存的函数）——<strong>不要直接用 <code>str8</code></strong>，改用以下三步走：
-</p>
-</blockquote>
+- ❌ <strong>需要释放</strong>的 C 字符串（如 <code>curl_easy_escape</code>、<code>curl_easy_unescape</code> 等返回动态分配内存的函数）——<strong>不要直接用 <code>str8</code></strong>，改用以下三步走：</p>
 <pre><code class="language-leno">// 对于需要释放的 C 字符串，使用 call_ptr + read_string + 手动释放
 Ptr ptr = ffi.call_ptr(lib, &quot;curl_easy_escape&quot;, handle, url, 0)
 if ptr == null { return url }
 string result = ffi.read_string(ptr, 0)
 ffi.call_void(lib, &quot;curl_free&quot;, ptr)  // 手动释放 C 内存
 </code></pre>
+</blockquote>
 <h4 id="参数自动窄化-leno-c-安全转换">参数自动窄化（Leno→C 安全转换）</h4>
 <p>Leno <code>int</code> 可以直接传给任何 C 整数类型参数，编译器和运行时会自动处理：</p>
 <table>
@@ -2142,64 +2147,82 @@ main() {
 <hr>
 <h2 id="注意事项">注意事项</h2>
 <ol>
-<li>
-<p><strong>安全性</strong>
-   - FFI 调用直接操作内存，没有沙箱保护
-   - 错误的参数类型或越界访问可能导致程序崩溃
-   - 建议对库对象进行 <code>null</code> 检查</p>
+<li><strong>安全性</strong><ul>
+<li>FFI 调用直接操作内存，没有沙箱保护</li>
+<li>错误的参数类型或越界访问可能导致程序崩溃</li>
+<li>建议对库对象进行 <code>null</code> 检查</li>
+</ul>
 </li>
-<li>
-<p><strong>内存管理</strong>
-   - <code>ffi.malloc()</code> 分配的内存可以通过 <code>ffi.free()</code> 手动释放
-   - 如果忘记释放，GC 最终会回收指针对象并自动释放内存
-   - <code>ffi.offset()</code> 返回的指针是原始内存的视图，不需要单独释放</p>
+</ol>
+<ol>
+<li><strong>内存管理</strong><ul>
+<li><code>ffi.malloc()</code> 分配的内存可以通过 <code>ffi.free()</code> 手动释放</li>
+<li>如果忘记释放，GC 最终会回收指针对象并自动释放内存</li>
+<li><code>ffi.offset()</code> 返回的指针是原始内存的视图，不需要单独释放</li>
+</ul>
 </li>
-<li>
-<p><strong>边界检查</strong>
-   - 对 <code>ffi.malloc/calloc/realloc</code> 分配的指针（owned 指针），读写操作会进行越界检查
-   - 对非 owned 指针（如 <code>ffi.call_ptr</code> 返回的），无法进行边界检查</p>
+</ol>
+<ol>
+<li><strong>边界检查</strong><ul>
+<li>对 <code>ffi.malloc/calloc/realloc</code> 分配的指针（owned 指针），读写操作会进行越界检查</li>
+<li>对非 owned 指针（如 <code>ffi.call_ptr</code> 返回的），无法进行边界检查</li>
+</ul>
 </li>
-<li>
-<p><strong>use-after-free 保护</strong>
-   - 已释放的库对象和指针对象带有 <code>freed</code> 标志
-   - 对已释放的对象进行操作会报错，而不是产生未定义行为</p>
+</ol>
+<ol>
+<li><strong>use-after-free 保护</strong><ul>
+<li>已释放的库对象和指针对象带有 <code>freed</code> 标志</li>
+<li>对已释放的对象进行操作会报错，而不是产生未定义行为</li>
+</ul>
 </li>
-<li>
-<p><strong>参数数量限制</strong>
-   - C 函数调用最多支持 12 个参数
-   - Windows x64: 4 寄存器 + 8 栈参数
-   - Linux/macOS x86_64: 6 寄存器 + 6 栈参数
-   - ARM64 (AAPCS64): 8 寄存器 + 4 栈参数</p>
+</ol>
+<ol>
+<li><strong>参数数量限制</strong><ul>
+<li>C 函数调用最多支持 12 个参数</li>
+<li>Windows x64: 4 寄存器 + 8 栈参数</li>
+<li>Linux/macOS x86_64: 6 寄存器 + 6 栈参数</li>
+<li>ARM64 (AAPCS64): 8 寄存器 + 4 栈参数</li>
+</ul>
 </li>
-<li>
-<p><strong>数字类型处理</strong>
-   - 十六进制数解析规则：</p>
-<ul>
+</ol>
+<ol>
+<li><strong>数字类型处理</strong><ul>
+<li>十六进制数解析规则：<ul>
 <li>小于等于 <code>2^53</code> 的十六进制数（如 <code>0xF003F</code>）解析为 <code>int</code></li>
 <li>大于 <code>2^53</code> 的十六进制数（如 <code>0x80000001</code>）解析为 <code>BigInt</code></li>
-<li>FFI 调用时数字类型映射：</li>
+</ul>
+</li>
+<li>FFI 调用时数字类型映射：<ul>
 <li><code>int</code> → <code>int64_t</code>（整数寄存器）</li>
 <li><code>BigInt</code> → <code>int64_t</code>（整数寄存器，自动转换）</li>
 <li><code>float</code> → <code>double</code>（浮点寄存器）</li>
+</ul>
+</li>
 <li>模块中的数字常量会保持原始类型（int/BigInt/float），不会被强制转为 float</li>
 </ul>
 </li>
-<li>
-<p><strong>平台差异</strong>
-   - Windows 使用 <code>LoadLibrary</code> / <code>GetProcAddress</code>
-   - Linux 使用 <code>dlopen</code> / <code>dlsym</code>
-   - 库文件名和路径格式因平台而异</p>
+</ol>
+<ol>
+<li><strong>平台差异</strong><ul>
+<li>Windows 使用 <code>LoadLibrary</code> / <code>GetProcAddress</code></li>
+<li>Linux 使用 <code>dlopen</code> / <code>dlsym</code></li>
+<li>库文件名和路径格式因平台而异</li>
+</ul>
 </li>
-<li>
-<p><strong>字符串生命周期</strong>
-   - 传给 C 函数的字符串参数是 Leno 内部字符串的指针
-   - C 函数不应保存该指针供后续使用（GC 可能回收原字符串）
-   - 如需持久化，请使用 <code>ffi.malloc</code> + <code>ffi.write_string</code> 分配独立内存</p>
+</ol>
+<ol>
+<li><strong>字符串生命周期</strong><ul>
+<li>传给 C 函数的字符串参数是 Leno 内部字符串的指针</li>
+<li>C 函数不应保存该指针供后续使用（GC 可能回收原字符串）</li>
+<li>如需持久化，请使用 <code>ffi.malloc</code> + <code>ffi.write_string</code> 分配独立内存</li>
+</ul>
 </li>
-<li>
-<p><strong>返回值类型选择</strong>
-   - <strong>推荐使用明确类型调用</strong>：<code>ffi.call_int</code>、<code>ffi.call_ptr</code> 等，直接获得正确类型
-   - <strong>通用调用适用场景</strong>：不确定返回值类型、需要动态处理、或用于演示类型守卫功能</p>
+</ol>
+<ol>
+<li><strong>返回值类型选择</strong><ul>
+<li><strong>推荐使用明确类型调用</strong>：<code>ffi.call_int</code>、<code>ffi.call_ptr</code> 等，直接获得正确类型</li>
+<li><strong>通用调用适用场景</strong>：不确定返回值类型、需要动态处理、或用于演示类型守卫功能</li>
+</ul>
 </li>
 </ol>
 <hr>
@@ -2218,14 +2241,14 @@ main() {
 <tr>
 <td><code>load(path)</code></td>
 <td>string</td>
-<td>lib|null</td>
-<td>加载动态库</td>
+<td>lib\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>dlsym(lib, name)</code></td>
 <td>lib, string</td>
-<td>ptr|null</td>
-<td>显式解析符号地址</td>
+<td>ptr\</td>
+<td>null</td>
 </tr>
 <tr>
 <td><code>free(x)</code></td>
@@ -2235,7 +2258,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="函数调用_1">函数调用</h3>
+<h3 id="函数调用">函数调用</h3>
 <table>
 <thead>
 <tr>
@@ -2290,7 +2313,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="内存管理_1">内存管理</h3>
+<h3 id="内存管理">内存管理</h3>
 <table>
 <thead>
 <tr>
@@ -2363,7 +2386,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="指针操作_1">指针操作</h3>
+<h3 id="指针操作">指针操作</h3>
 <table>
 <thead>
 <tr>
@@ -2400,7 +2423,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="回调函数_1">回调函数</h3>
+<h3 id="回调函数">回调函数</h3>
 <table>
 <thead>
 <tr>
@@ -2419,7 +2442,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="内存读取_1">内存读取</h3>
+<h3 id="内存读取">内存读取</h3>
 <table>
 <thead>
 <tr>
@@ -2516,7 +2539,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="内存写入_1">内存写入</h3>
+<h3 id="内存写入">内存写入</h3>
 <table>
 <thead>
 <tr>
@@ -2613,7 +2636,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="批量读写_1">批量读写</h3>
+<h3 id="批量读写">批量读写</h3>
 <table>
 <thead>
 <tr>
@@ -2638,7 +2661,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="显式字节序读写_1">显式字节序读写</h3>
+<h3 id="显式字节序读写">显式字节序读写</h3>
 <table>
 <thead>
 <tr>
@@ -2699,7 +2722,7 @@ main() {
 </tr>
 </tbody>
 </table>
-<h3 id="字符串工具_1">字符串工具</h3>
+<h3 id="字符串工具">字符串工具</h3>
 <table>
 <thead>
 <tr>
@@ -2820,8 +2843,7 @@ main() {
 <em>最后更新: 2026-10-01</em></p>
 <h3 id="更新记录">更新记录</h3>
 <ul>
-<li>
-<p><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
+<li><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
   "按 ABI 精确分类 + 汇编调用桩"（<code>leno_win64_call</code> / <code>leno_sysv_call</code> / <code>leno_aapcs_call</code>）。
   旧做法（按类型组合枚举函数指针、超出覆盖面就把 double 位模式当 int64 传）覆盖不全：
   <code>(i32,f32,i32,f32)</code> 会<strong>静默空调用</strong>（返回 0、函数根本没进）、<code>(f32,f64,i32,i32)</code> 会传错值、
@@ -2830,11 +2852,10 @@ main() {
   且没有平台条件、连 Linux 也一起拦了（SysV 本不该受限）✗
   另修两个同源缺陷：<strong>f32 返回值恒为 0</strong>（前端读 <code>result.f</code>，后端却写 <code>result.d</code>）、
   <strong>"全浮点参数 + 整数返回"</strong>从浮点寄存器取返回值（真值在整数返回寄存器）。
-  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</p>
-</li>
-<li>
-<p><strong>v4.1</strong> (2026-10-31):</p>
-</li>
+  回归：<code>assert/test_ffi_abi.leno</code>（38 例 ABI 边界 + 压力，跨平台）✓</li>
+</ul>
+<ul>
+<li><strong>v4.1</strong> (2026-10-31):<ul>
 <li><strong>修复 <code>ffi.free_callback</code> 完全无效</strong>（严重）：函数里判的是 <code>OBJ_FFI_POINTER</code>，
     而 <code>ffi.callback</code> 返回的是 <code>ObjFFICallback</code> ⇒ 类型对不上直接返回 <code>false</code>，
     <strong>槽位从来没被真正释放过</strong>。症状：反复建回调的程序跑到上限数时报
@@ -2842,13 +2863,13 @@ main() {
     实测：<code>createClient()</code>/<code>close()</code> 循环，修前第 128 轮必失败（256÷2），修后 200 轮全过。
     连带修正本文档长期教错的 <code>ffi.free(cb)</code> → <code>ffi.free_callback(cb)</code>。</li>
 <li><strong>回调上限 256 → 1024</strong>（仍为固定数组：槽位里存 GC 根，地址必须稳定，不能 realloc）。</li>
-<li>
-<p><strong>报错信息指向病因</strong>：不再是干巴巴一句「回调数量已达上限」，补上
-    「只统计仍然活着的」「<code>ffi.free</code> 对 trampoline 无效」两条提示。</p>
+<li><strong>报错信息指向病因</strong>：不再是干巴巴一句「回调数量已达上限」，补上
+    「只统计仍然活着的」「<code>ffi.free</code> 对 trampoline 无效」两条提示。</li>
+</ul>
 </li>
-<li>
-<p><strong>v4.0</strong> (2026-08-19):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v4.0</strong> (2026-08-19):<ul>
 <li><strong>符号地址缓存</strong>：<code>ObjFFILibrary</code> 新增函数地址缓存表（32 槽），<code>ffi.call_*</code>/<code>clib</code>/<code>ffi.dlsym</code> 首次调用后缓存函数地址，后续调用跳过 <code>GetProcAddress</code>/<code>dlsym</code>。</li>
 <li><strong>新增 <code>ffi.dlsym(lib, name)</code></strong>：显式解析符号地址，返回 <code>Ptr</code> 或 <code>null</code>，可用于检查函数是否存在。</li>
 <li><strong>混合参数回退路径浮点 bug 修复</strong>：当 &gt;4 参数含浮点且超出 Win64 精确分发范围时，提前抛出明确错误，而非静默走 broken 回退路径。</li>
@@ -2856,34 +2877,34 @@ main() {
 <li><strong>新增 <code>ffi.write_bytes</code> / <code>read_bytes</code></strong>：批量字节读写，一次 <code>memcpy</code>，替代循环 <code>write_byte</code>。</li>
 <li><strong>新增显式字节序函数</strong>：<code>write_le_i16</code>/<code>write_be_i16</code>/<code>write_le_i32</code>/<code>write_be_i32</code> 及对应 <code>read_*</code>，共 8 个函数。</li>
 <li><strong><code>ffi.call</code> 标记 deprecated</strong>：与 <code>ffi.call_int</code> 完全等价，使用时输出 <code>stderr</code> 弃用警告。</li>
-<li>
-<p><strong>代码去重</strong>：合并 <code>ffi_call_impl</code> 中 int 和 bigint 的窄化逻辑为统一分支，减少约 60 行重复代码。</p>
+<li><strong>代码去重</strong>：合并 <code>ffi_call_impl</code> 中 int 和 bigint 的窄化逻辑为统一分支，减少约 60 行重复代码。</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.3</strong> (2026-08-14):</p>
+</ul>
+<ul>
+<li><strong>v3.3</strong> (2026-08-14):<ul>
+<li><strong>str8 返回值内存泄漏说明</strong>：明确标注 <code>str8</code> 返回类型会深拷贝 C <code>char*</code> 为 Leno <code>string</code>，但原始 C 内存不自动释放。对于需要释放的 C 字符串（如 <code>curl_easy_escape</code>），应使用 <code>call_ptr</code> + <code>read_string</code> + 手动释放三步走方案。</li>
+</ul>
 </li>
-<li>
-<p><strong>str8 返回值内存泄漏说明</strong>：明确标注 <code>str8</code> 返回类型会深拷贝 C <code>char*</code> 为 Leno <code>string</code>，但原始 C 内存不自动释放。对于需要释放的 C 字符串（如 <code>curl_easy_escape</code>），应使用 <code>call_ptr</code> + <code>read_string</code> + 手动释放三步走方案。</p>
-</li>
-<li>
-<p><strong>v3.2</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.2</strong> (2026-06-07):<ul>
 <li><strong>clib 支持 cstruct 参数</strong>：clib 声明中可直接使用 cstruct 名称作为参数类型，调用时 cstruct 实例自动转换为指针传递，无需手动 <code>to_ptr()</code></li>
 <li>语义分析增强：<code>TYPE_STRUCT</code> + cstruct 名自动修正为 <code>TYPE_CSTRUCT</code>，参数兼容性检查支持 <code>TYPE_CSTRUCT ↔ TYPE_PTR</code> 双向转换</li>
-<li>
-<p>clib 参数窄化表新增 <code>cstruct名</code> 类型行</p>
+<li>clib 参数窄化表新增 <code>cstruct名</code> 类型行</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.1</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.1</strong> (2026-06-07):<ul>
 <li>新增 <code>ffi.last_error()</code> — 获取最近一次 FFI 调用后的系统错误码（Windows: GetLastError, Linux: errno）</li>
 <li>新增 <code>ffi.write_bool(ptr, off, val)</code> — 写入 1 字节布尔值，与 <code>read_bool</code> 对称</li>
-<li>
-<p>新增 <code>ffi.write_uint16(ptr, off, val)</code> — 写入 2 字节无符号 16 位整数，与 <code>read_uint16</code> 对称</p>
+<li>新增 <code>ffi.write_uint16(ptr, off, val)</code> — 写入 2 字节无符号 16 位整数，与 <code>read_uint16</code> 对称</li>
+</ul>
 </li>
-<li>
-<p><strong>v3.0</strong> (2026-06-07):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v3.0</strong> (2026-06-07):<ul>
 <li><strong>零摩擦 FFI</strong>：clib 返回值自动展开，无需 <code>as</code> 转换（i32→int, f64→float, str8→string, str16→string）</li>
 <li><strong>参数自动窄化</strong>：Leno int 可直接传给 i8/u8/i16/u16/i32/u32/i64/u64 参数，运行时范围检查，超范围抛异常</li>
 <li><strong>新增 C 布局类型</strong>：<code>i8</code>、<code>u8</code>、<code>i16</code>、<code>u16</code>（之前仅支持 i32/u32/i64/u64/f32/f64）</li>
@@ -2891,68 +2912,69 @@ main() {
 <li><strong>bigint 参数范围检查</strong>：BigInt 传给窄整数类型时做运行时范围检查</li>
 <li><strong>语义分析增强</strong>：clib 参数兼容性检查，int 可传给所有 C 整数类型，float 可传给 f32/f64</li>
 <li><strong>清理死代码</strong>：移除旧路径 FFIType 返回值处理（已统一走 TypeKind 路径）</li>
-<li>
-<p>更新对比表：clib 返回值从"需显式转换"改为"自动展开为 Leno 类型"</p>
+<li>更新对比表：clib 返回值从"需显式转换"改为"自动展开为 Leno 类型"</li>
+</ul>
 </li>
-<li>
-<p><strong>v2.4</strong> (2026-06-06):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v2.4</strong> (2026-06-06):<ul>
 <li>新增 <code>clib</code> 声明式调用语法文档</li>
 <li>新增 <code>str8</code>（C <code>char*</code>）和 <code>str16</code>（C <code>wchar_t*</code>）类型说明</li>
 <li>新增 clib 参数自动转换规则（<code>string</code> → <code>str8</code>/<code>str16</code>，<code>int</code> → <code>i32</code>/<code>i64</code>，<code>float</code> → <code>f64</code>）</li>
-<li>
-<p>修正 <code>ffi.free()</code> 返回值为 <code>null</code>（非 <code>true</code>）</p>
+<li>修正 <code>ffi.free()</code> 返回值为 <code>null</code>（非 <code>true</code>）</li>
+</ul>
 </li>
-<li>
-<p><strong>v2.3</strong> (2026-05-24):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v2.3</strong> (2026-05-24):<ul>
 <li>新增 <code>ffi.read_uint64(ptr, off)</code> — 读取 uint64，支持 <code>0x8000000000000000</code> ~ <code>0xFFFFFFFFFFFFFFFF</code> 范围值正确显示为正数</li>
 <li>新增 <code>ffi.write_uint64(ptr, off, val)</code> — 写入 uint64，支持 <code>int</code> 和 <code>BigInt</code> 输入</li>
-<li>
-<p>修复十六进制 bigint 字面量（如 <code>0xFFFFFFFFFFFFFFFF</code>）解析为 0 的问题</p>
+<li>修复十六进制 bigint 字面量（如 <code>0xFFFFFFFFFFFFFFFF</code>）解析为 0 的问题</li>
+</ul>
 </li>
-<li>
-<p><strong>v2.2</strong> (2026-05-23):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v2.2</strong> (2026-05-23):<ul>
 <li>新增 <code>ffi.ptr_to_int(ptr)</code> — 将指针地址值转换为整数（<code>ptr_from_int</code> 的逆操作）</li>
 <li>新增 <code>ffi.memset(ptr, value, size)</code> — 内存填充，替代低效的 <code>for</code> 循环 + <code>write_byte</code></li>
 <li>新增 <code>ffi.write_uint(ptr, off, val)</code> — 写入 uint32，支持 <code>int</code> 和 <code>BigInt</code> 输入</li>
-<li>
-<p>修复 <code>ffi.read_uint</code> 对 <code>0x80000000</code> ~ <code>0xFFFFFFFF</code> 范围值的溢出问题（返回正整数而非负数）</p>
+<li>修复 <code>ffi.read_uint</code> 对 <code>0x80000000</code> ~ <code>0xFFFFFFFF</code> 范围值的溢出问题（返回正整数而非负数）</li>
+</ul>
 </li>
-<li>
-<p><strong>v2.1</strong> (2026-05-23):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v2.1</strong> (2026-05-23):<ul>
 <li>统一 <code>ffi.free(x)</code> 释放所有 FFI 资源（指针/库/回调），删除 <code>ffi.free_lib()</code></li>
 <li><code>ffi.callback()</code> 返回 <code>ObjFFICallback</code> 类型，不再伪装为 <code>ObjFFIPointer</code></li>
 <li><code>ffi.is_ptr()</code> 对回调对象也返回 <code>true</code></li>
 <li>新增回调函数文档章节和速查表</li>
-<li>
-<p>参数类型自动推断表新增 FFI 回调对象 → <code>void*</code> 映射</p>
+<li>参数类型自动推断表新增 FFI 回调对象 → <code>void*</code> 映射</li>
+</ul>
 </li>
-<li>
-<p><strong>v2.0</strong> (2026-05-13):</p>
-</li>
+</ul>
+<ul>
+<li><strong>v2.0</strong> (2026-05-13):<ul>
 <li>重构函数调用 API 设计</li>
 <li><code>ffi.call</code> 改为返回 <code>any</code> 类型</li>
 <li>新增 <code>ffi.call_int</code> 明确返回 int 类型</li>
 <li>添加类型守卫使用文档和示例</li>
-<li>
-<p>更新返回值的类型映射表格</p>
+<li>更新返回值的类型映射表格</li>
+</ul>
 </li>
-<li>
-<p><strong>v1.4</strong> (2026-05-09): 添加 <code>ffi.memcpy</code> 函数文档，用于高效的内存块拷贝操作</p>
-</li>
-<li>
-<p><strong>v1.3</strong> (2026-05-08): 添加 <code>ffi.is_ptr</code> 函数文档，用于检查值是否是指针对象</p>
-</li>
-<li>
-<p><strong>v1.2</strong> (2026-05-08): 添加字符串工具函数文档（<code>string_bytes</code>、<code>utf8_to_utf16</code>、<code>utf16_to_utf8</code>）</p>
-</li>
-<li>
-<p><strong>v1.1</strong> (2026-05-08): 添加数字类型处理说明，包括十六进制数解析规则和 BigInt 类型在 FFI 调用中的行为</p>
-</li>
-</ul></main>
+</ul>
+<ul>
+<li><strong>v1.4</strong> (2026-05-09): 添加 <code>ffi.memcpy</code> 函数文档，用于高效的内存块拷贝操作</li>
+</ul>
+<ul>
+<li><strong>v1.3</strong> (2026-05-08): 添加 <code>ffi.is_ptr</code> 函数文档，用于检查值是否是指针对象</li>
+</ul>
+<ul>
+<li><strong>v1.2</strong> (2026-05-08): 添加字符串工具函数文档（<code>string_bytes</code>、<code>utf8_to_utf16</code>、<code>utf16_to_utf8</code>）</li>
+</ul>
+<ul>
+<li><strong>v1.1</strong> (2026-05-08): 添加数字类型处理说明，包括十六进制数解析规则和 BigInt 类型在 FFI 调用中的行为</li>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#ffi-库对象">FFI 库对象</a></li><li><a href="#ffi-指针对象">FFI 指针对象</a></li><li><a href="#参数类型自动推断">参数类型自动推断</a></li><li><a href="#clib-声明式调用-零摩擦-ffi">clib 声明式调用（零摩擦 FFI）</a></li></ul><li><a href="#动态库操作">动态库操作</a></li><ul class="lv3"><li><a href="#load-path">load(path)</a></li><li><a href="#dlsym-lib-name">dlsym(lib, name)</a></li><li><a href="#free-x">free(x)</a></li></ul><li><a href="#函数调用">函数调用</a></li><ul class="lv3"><li><a href="#设计理念">设计理念</a></li><li><a href="#明确类型调用-推荐">明确类型调用（推荐）</a></li><li><a href="#通用调用-类型守卫">通用调用 + 类型守卫</a></li><li><a href="#错误码缓存">错误码缓存</a></li></ul><li><a href="#回调函数">回调函数</a></li><ul class="lv3"><li><a href="#callback-func-ret_type-arg_types">callback(func, ret_type, arg_types)</a></li><li><a href="#free_callback-cb">free_callback(cb)</a></li></ul><li><a href="#类型守卫">类型守卫</a></li><ul class="lv3"><li><a href="#类型守卫语法">类型守卫语法</a></li><li><a href="#完整示例">完整示例</a></li><li><a href="#类型守卫应用场景">类型守卫应用场景</a></li></ul><li><a href="#内存管理">内存管理</a></li><ul class="lv3"><li><a href="#alloc-type_name-value">alloc(type_name, value)</a></li><li><a href="#malloc-size">malloc(size)</a></li><li><a href="#calloc-count-size">calloc(count, size)</a></li><li><a href="#realloc-ptr-size">realloc(ptr, size)</a></li><li><a href="#free-ptr">free(ptr)</a></li><li><a href="#sizeof-ptr">sizeof(ptr)</a></li><li><a href="#assert_size-ptr-min_bytes">assert_size(ptr, min_bytes)</a></li><li><a href="#nullptr">nullptr()</a></li><li><a href="#memcpy-dest-src-size">memcpy(dest, src, size)</a></li><li><a href="#memset-ptr-value-size">memset(ptr, value, size)</a></li><li><a href="#ptr_from_int-address">ptr_from_int(address)</a></li><li><a href="#ptr_to_int-ptr">ptr_to_int(ptr)</a></li><li><a href="#is_ptr-value">is_ptr(value)</a></li></ul><li><a href="#指针操作">指针操作</a></li><ul class="lv3"><li><a href="#offset-ptr-off">offset(ptr, off)</a></li></ul><li><a href="#内存读取">内存读取</a></li><ul class="lv3"><li><a href="#整数读取">整数读取</a></li><li><a href="#浮点读取">浮点读取</a></li><li><a href="#指针与布尔读取">指针与布尔读取</a></li><li><a href="#字符串读取">字符串读取</a></li></ul><li><a href="#内存写入">内存写入</a></li><ul class="lv3"><li><a href="#整数写入">整数写入</a></li><li><a href="#浮点写入">浮点写入</a></li><li><a href="#指针与字符串写入">指针与字符串写入</a></li></ul><li><a href="#批量读写">批量读写</a></li><ul class="lv3"><li><a href="#write_bytes-ptr-off-str">write_bytes(ptr, off, str)</a></li><li><a href="#read_bytes-ptr-off-len">read_bytes(ptr, off, len)</a></li></ul><li><a href="#显式字节序读写">显式字节序读写</a></li><ul class="lv3"><li><a href="#小端读写">小端读写</a></li><li><a href="#大端读写">大端读写</a></li><li><a href="#字符串工具">字符串工具</a></li><li><a href="#类型信息">类型信息</a></li><li><a href="#alignof-type_name">alignof(type_name)</a></li></ul><li><a href="#类型映射">类型映射</a></li><ul class="lv3"><li><a href="#leno-值到-c-类型的转换">Leno 值到 C 类型的转换</a></li><li><a href="#返回值的转换">返回值的转换</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-调用-c-标准库函数">1. 调用 C 标准库函数</a></li><li><a href="#2-调用-windows-api">2. 调用 Windows API</a></li><li><a href="#3-使用类型守卫处理返回值">3. 使用类型守卫处理返回值</a></li><li><a href="#4-内存操作">4. 内存操作</a></li><li><a href="#5-指针的指针">5. 指针的指针</a></li><li><a href="#6-使用-offset-遍历数组">6. 使用 offset 遍历数组</a></li><li><a href="#7-读取-windows-结构体">7. 读取 Windows 结构体</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#完整-api-速查表">完整 API 速查表</a></li><ul class="lv3"><li><a href="#动态库">动态库</a></li><li><a href="#函数调用_1">函数调用</a></li><li><a href="#内存管理_1">内存管理</a></li><li><a href="#指针操作_1">指针操作</a></li><li><a href="#回调函数_1">回调函数</a></li><li><a href="#内存读取_1">内存读取</a></li><li><a href="#内存写入_1">内存写入</a></li><li><a href="#批量读写_1">批量读写</a></li><li><a href="#显式字节序读写_1">显式字节序读写</a></li><li><a href="#字符串工具_1">字符串工具</a></li><li><a href="#clib-声明类型">clib 声明类型</a></li><li><a href="#更新记录">更新记录</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="module_dirs.html">← 上一篇</a><a href="module_files.html">下一篇 →</a></nav>

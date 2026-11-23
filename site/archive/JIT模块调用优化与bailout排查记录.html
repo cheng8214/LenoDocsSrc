@@ -445,9 +445,9 @@ JIT 与解释器输出<strong>逐位一致</strong>；<code>examples/</code> 下
   （或让 codegen 按需查 <code>native_get_module_method_return_type</code>）→ 直接发特化指令。</li>
 </ul>
 <p>收益需修正：<strong>A′ 并不会省掉 <code>OP_CAST_FLOAT</code></strong>。<code>assign_cast_needed()</code>
-  （<code>src/codegen/codegen_stmt.c:93-104</code>）只对字面量（<code>AST_NUM/STRING/BOOL/NULL</code>）消除 CAST，
-  其余一律保留 1，所以跨语句的规范化照旧。A′ 的收益仅限于<strong>同一表达式内的 opcode 特化</strong>
-  （少一层通用分派），比原估的小。</p>
+（<code>src/codegen/codegen_stmt.c:93-104</code>）只对字面量（<code>AST_NUM/STRING/BOOL/NULL</code>）消除 CAST，
+其余一律保留 1，所以跨语句的规范化照旧。A′ 的收益仅限于<strong>同一表达式内的 opcode 特化</strong>
+（少一层通用分派），比原估的小。</p>
 <p>风险描述也需修正三处：</p>
 <ol>
 <li><strong>失败形态是静默偏差，不是崩溃</strong>。特化浮点指令内部走 <code>val_as_num_ex()</code>
@@ -469,7 +469,7 @@ JIT 与解释器输出<strong>逐位一致</strong>；<code>examples/</code> 下
      从「JIT 薄调用」扩展到「解释器 + 特化 opcode」。</li>
 </ol>
 <p>若将来要动 A′，建议加一道门槛：仅当 <code>meta-&gt;return_type</code> 明确（非 <code>TYPE_ANY</code>）<strong>且</strong>该
-  调用点的参数类型已通过 <code>param_types</code> 校验时才写回 <code>cached_type</code>。</p>
+调用点的参数类型已通过 <code>param_types</code> 校验时才写回 <code>cached_type</code>。</p>
 <h3 id="7-3-ffi-read_int-ffi-write_int-是-2-次-callout-已内联-2026-09-12">7.3 <code>ffi.read_int</code> / <code>ffi.write_int</code> 是 2 次 callout —— <strong>✅ 已内联（2026-09-12）</strong></h3>
 <p><strong>为什么之前只能走 callout</strong>（两层原因，缺一不可）：</p>
 <ol>
@@ -540,14 +540,12 @@ assert 263/263（两模式）、<code>ripple_image.leno</code> <code>Bailouts: 0
 <code>write_float/double</code>）目前仍走 callout，可按同一模板扩展（宽度/符号不同）。</p>
 <h3 id="7-4-其它">7.4 其它</h3>
 <ul>
-<li>
-<p><code>cache_hash()</code> 只用地址的 8 位（<code>&gt;&gt;4 &amp; 255</code>），热循环多时会出现槽位冲突 → 反复重编译
-  （调试运行中曾观察到 305 次编译）—— <strong>✅ 已修复（2026-09-12）</strong>：</p>
-</li>
-<li>
-<p><code>jit_scan.c::cache_hash()</code>：先把低 4 位（16 字节对齐，无信息）移掉，再
-    <code>v ^= v &gt;&gt; 8; v ^= v &gt;&gt; 16;</code> 把高位折回低位，槽位不再只由地址的 8 位决定</p>
-</li>
+<li><code>cache_hash()</code> 只用地址的 8 位（<code>&gt;&gt;4 &amp; 255</code>），热循环多时会出现槽位冲突 → 反复重编译
+  （调试运行中曾观察到 305 次编译）—— <strong>✅ 已修复（2026-09-12）</strong>：</li>
+</ul>
+<ul>
+<li><code>jit_scan.c::cache_hash()</code>：先把低 4 位（16 字节对齐，无信息）移掉，再
+    <code>v ^= v &gt;&gt; 8; v ^= v &gt;&gt; 16;</code> 把高位折回低位，槽位不再只由地址的 8 位决定</li>
 <li><code>jit.c::jit_try_hot_loop()</code>：循环缓存从 <strong>direct-mapped 就地覆盖</strong>改为
     <strong>线性探测</strong>（窗口 <code>JIT_CACHE_PROBES = 8</code>）：窗口内先找同一循环、再找空槽，
     窗口满了才驱逐「价值」最低的条目（未编译成功的优先，其次命中次数少的）。
@@ -594,10 +592,10 @@ assert 263/263（两模式）、<code>ripple_image.leno</code> <code>Bailouts: 0
 </tbody>
 </table>
 <p>真实用例：<code>全部测试.leno</code> 的 <code>Compiled</code> 由 35 降到 <strong>31</strong>（消掉的 4 次正是冗余重编译）；
-  <code>ripple_image.leno</code>（9 个循环）<code>Cached: 9 / Tried: 14</code>、<code>Bailouts: 0</code> 不变；
-  assert 263/263（两模式）、72 个示例双模式 stdout 全一致。</p>
+<code>ripple_image.leno</code>（9 个循环）<code>Cached: 9 / Tried: 14</code>、<code>Bailouts: 0</code> 不变；
+assert 263/263（两模式）、72 个示例双模式 stdout 全一致。</p>
 <p>仍待做：<code>jit_func_lookup_or_compile()</code> 的函数级缓存（<code>JIT_FUNC_CACHE_SIZE</code>）也是
-  <code>(ptr &gt;&gt; 4) &amp; (size-1)</code> 的 direct-mapped，同样会互相覆盖，尚未改成探测。
+<code>(ptr &gt;&gt; 4) &amp; (size-1)</code> 的 direct-mapped，同样会互相覆盖，尚未改成探测。
 * 函数级 JIT 已覆盖部分热点，但 <code>maths</code> 这类「叶子函数」的极致优化仍受调用延迟限制。</p>
 <h3 id="7-5-a-验证中发现的两个既有-jit-缺口-与-a-无关-已用回退基线对比确认">7.5 A′ 验证中发现的两个既有 JIT 缺口（与 A′ 无关，已用回退基线对比确认）</h3>
 <ol>
@@ -622,21 +620,23 @@ assert 263/263（两模式）、<code>ripple_image.leno</code> <code>Bailouts: 0
      该循环 100 万次 <strong>59.5–60.9ms → 44.8ms（1.33x）</strong>（修复前 JIT 与解释器同速，因为压根没编）。
      回退路径验证：未赋值 string 字段（运行期 null）→ <code>Bailouts: 3</code>、site 指向该指令、
      输出与 <code>LENO_NO_JIT=1</code> 逐位一致。回归：assert 263/263（两模式）、
-     <code>ripple_image.leno</code> <code>Bailouts: 0</code>、72 个示例双模式 stdout 全一致。
-2. <strong><code>_int(&lt;bool&gt;)</code> / <code>_float(&lt;bool&gt;)</code> 每次进 JIT 都 bailout</strong>
+     <code>ripple_image.leno</code> <code>Bailouts: 0</code>、72 个示例双模式 stdout 全一致。</li>
+</ul>
+<ol>
+<li><strong><code>_int(&lt;bool&gt;)</code> / <code>_float(&lt;bool&gt;)</code> 每次进 JIT 都 bailout</strong>
    （原记录写作「<code>_int(&lt;返回 float 的模块调用&gt;)</code>、怀疑薄桥返回值没搬回 RAX」，
    <strong>结论已订正</strong> —— 与薄桥、与 A′ 都无关）：</li>
-</ul>
+</ol>
 <p>真正原因：<code>OP_CALL_NATIVE</code> 的 <code>_int/_float</code> 内联快路径（<code>ops_callout.inc</code>）在 int48
-   判定失败后，对<strong>任何 NaN-boxed 值</strong>（含 bool）一律 <code>cmp rax, 0xFFF8…; jae bailout</code>。
-   证据：<code>RAX=0xFFFA000000000000</code> 是 <code>TRUE_VAL</code>，不是 <code>maths.round(2.6)</code> 的裸 double；
-   触发点是 <code>_int(strings.has(...))</code>、<code>_int(flag)</code>、<code>_float(flag)</code>。
-   定位过程中还发现<strong>site 里的偏移是相对循环体起点</strong>的：最小组合 <code>g_min</code>（loop_bc=29）
-   报 <code>@bc_off=39</code>，而 39 = 68 − 29 正是第二个 <code>OP_CALL_NATIVE(_int)</code> 的位置。</p>
+判定失败后，对<strong>任何 NaN-boxed 值</strong>（含 bool）一律 <code>cmp rax, 0xFFF8…; jae bailout</code>。
+证据：<code>RAX=0xFFFA000000000000</code> 是 <code>TRUE_VAL</code>，不是 <code>maths.round(2.6)</code> 的裸 double；
+触发点是 <code>_int(strings.has(...))</code>、<code>_int(flag)</code>、<code>_float(flag)</code>。
+定位过程中还发现<strong>site 里的偏移是相对循环体起点</strong>的：最小组合 <code>g_min</code>（loop_bc=29）
+报 <code>@bc_off=39</code>，而 39 = 68 − 29 正是第二个 <code>OP_CALL_NATIVE(_int)</code> 的位置。</p>
 <p><strong>✅ 已修复（2026-09-12）</strong>：在 <code>_int</code>/<code>_float</code> 内联路径加 <strong>bool + null 快路径</strong> ——
-   用<strong>全值精确比较</strong>认出 <code>TRUE_VAL</code>/<code>FALSE_VAL</code>/<code>NULL_VAL</code>（与 VM 的 <code>val_is_bool</code>
-   <code>v == TRUE_VAL || v == FALSE_VAL</code>、<code>val_is_null</code> 的判据一致），按 <code>types.c</code> 的
-   <code>native_to_int</code>/<code>native_to_float</code> 语义产出：</p>
+用<strong>全值精确比较</strong>认出 <code>TRUE_VAL</code>/<code>FALSE_VAL</code>/<code>NULL_VAL</code>（与 VM 的 <code>val_is_bool</code>
+<code>v == TRUE_VAL || v == FALSE_VAL</code>、<code>val_is_null</code> 的判据一致），按 <code>types.c</code> 的
+<code>native_to_int</code>/<code>native_to_float</code> 语义产出：</p>
 <table>
 <thead>
 <tr>
@@ -664,16 +664,16 @@ assert 263/263（两模式）、<code>ripple_image.leno</code> <code>Bailouts: 0
 </tbody>
 </table>
 <p>实现上 <code>false</code> 与 <code>null</code> 复用同一个「产出 0 / 0.0」的分支（位模式全 0）；
-   其余 NaN-boxed（string/bigint/ptr）仍按设计 bailout 交解释器。</p>
+其余 NaN-boxed（string/bigint/ptr）仍按设计 bailout 交解释器。</p>
 <p>实测：<code>_int(strings.has(...))</code>、<code>_int(flag)</code>、<code>_float(flag)</code>、<code>_int(&lt;null&gt;)</code>、
-   <code>_float(&lt;null&gt;)</code> 五个循环全部 <code>Bailouts: 0</code>；此前 bailout 的 mct2 型组合
-   （<code>g_full</code>/<code>g_nolast</code>/<code>g_min</code>）从 <code>Bailouts: 3</code> 变 <code>0</code> 且结果逐位不变；
-   <code>_int(&lt;string&gt;)</code> 仍 bailout、输出与解释器逐位一致（<code>isum=84000</code>）；
-   assert 263/263（两模式，含 <code>_int(true)==1</code> / <code>_float(false)==0.0</code> 用例）、
-   <code>ripple_image.leno</code> <code>Bailouts: 0</code>、72 个示例双模式 stdout 全一致。</p>
+<code>_float(&lt;null&gt;)</code> 五个循环全部 <code>Bailouts: 0</code>；此前 bailout 的 mct2 型组合
+（<code>g_full</code>/<code>g_nolast</code>/<code>g_min</code>）从 <code>Bailouts: 3</code> 变 <code>0</code> 且结果逐位不变；
+<code>_int(&lt;string&gt;)</code> 仍 bailout、输出与解释器逐位一致（<code>isum=84000</code>）；
+assert 263/263（两模式，含 <code>_int(true)==1</code> / <code>_float(false)==0.0</code> 用例）、
+<code>ripple_image.leno</code> <code>Bailouts: 0</code>、72 个示例双模式 stdout 全一致。</p>
 <p>顺带修正诊断：<code>jit_print_stats</code> 现在同时打出<strong>绝对偏移与分解</strong>
-   （<code>非溢出类 @bc_off=40（= loop_bc 29 + 11）</code>）。此前只打相对偏移，排查时极易
-   把它当成别的指令 —— 这次的误判就是这么来的。</p>
+（<code>非溢出类 @bc_off=40（= loop_bc 29 + 11）</code>）。此前只打相对偏移，排查时极易
+把它当成别的指令 —— 这次的误判就是这么来的。</p>
 <h3 id="7-6-原生方法调用-callout-取实参反序-file_manager-界面错位-已修复-2026-09-12">7.6 原生方法调用 callout 取实参反序 —— file_manager 界面错位 —— ✅ 已修复（2026-09-12）</h3>
 <p><strong>现象</strong>：<code>LenoSDL3/examples/应用示例/文件管理器/file_manager.leno</code> 界面错位
 （工具栏被压窄、状态栏贴在工具栏下方、splitter 高度≈0、导航树与表格行消失），
@@ -858,7 +858,8 @@ JIT:    s1= grow        ← 复现
 <li><code>src/jit/backend/x86_inc/ops_loop.inc</code>（<code>OP_FOR_LOOP</code> / <code>OP_FOR_PREP</code> 负步长）</li>
 <li><code>src/jit/backend/x86_inc/ops_fcmp.inc</code>、<code>ops_icmp.inc</code>（浮点比较 NaN 的 IEEE 语义）</li>
 <li><code>src/jit/jit.c</code>、<code>src/jit/jit.h</code>（bailout 定位信息 + 统计输出）</li>
-</ul></main>
+</ul>
+</main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-起因-ripple_image-的残留-bailout">1. 起因：ripple_image 的残留 bailout</a></li><li><a href="#2-度量方法-可复现-必须关-vsync">2. 度量方法（可复现，必须关 vsync）</a></li><li><a href="#3-本轮三项优化">3. 本轮三项优化</a></li><ul class="lv3"><li><a href="#3-1-jit-统计新增-bailout-定位行">3.1 JIT 统计新增 bailout 定位行</a></li><li><a href="#3-2-模块方法解析提前到编译期-消掉每次调用的字符串查表">3.2 模块方法解析提前到编译期（消掉每次调用的字符串查表）</a></li><li><a href="#3-3-_int-_float-降级为内联转换">3.3 _int / _float 降级为内联转换</a></li><li><a href="#3-4-通用-数值薄调用-不含任何模块名-方法名特判">3.4 通用「数值薄调用」——不含任何模块名/方法名特判</a></li></ul><li><a href="#4-关键陷阱-务必记住">4. 关键陷阱（务必记住）</a></li><ul class="lv3"><li><a href="#4-1-win64-浮点参数按-位置-分配寄存器">4.1 Win64 浮点参数按「位置」分配寄存器</a></li><li><a href="#4-2-失败信号沿用-callout-约定">4.2 失败信号沿用 callout 约定</a></li><li><a href="#4-3-调试手段">4.3 调试手段</a></li></ul><li><a href="#5-性能数据">5. 性能数据</a></li><ul class="lv3"><li><a href="#5-1-自动点击-满-6-波纹-最重路径">5.1 自动点击 + 满 6 波纹（最重路径）</a></li><li><a href="#5-2-纵向对比-无点击-2-波纹的探针">5.2 纵向对比（无点击、2 波纹的探针）</a></li><li><a href="#5-3-微基准-ns-次-2000-万次">5.3 微基准（ns/次，2000 万次）</a></li></ul><li><a href="#6-回归验证清单">6. 回归验证清单</a></li><li><a href="#7-遗留问题-待办">7. 遗留问题 / 待办</a></li><ul class="lv3"><li><a href="#7-1-通用-op_mul-以及-op_mod-op_eq-op_neq-不被-jit-支持-已修复-2026-09-12">7.1 通用 OP_MUL（以及 OP_MOD / OP_EQ/OP_NEQ）不被 JIT 支持 —— ✅ 已修复（2026-09-12）</a></li><li><a href="#7-2-编译器侧-ast_module_call-没有写回-cached_type-a-已实现-2026-09-12">7.2 编译器侧：AST_MODULE_CALL 没有写回 cached_type —— ✅ A′ 已实现（2026-09-12）</a></li><li><a href="#7-3-ffi-read_int-ffi-write_int-是-2-次-callout-已内联-2026-09-12">7.3 ffi.read_int / ffi.write_int 是 2 次 callout —— ✅ 已内联（2026-09-12）</a></li><li><a href="#7-4-其它">7.4 其它</a></li><li><a href="#7-5-a-验证中发现的两个既有-jit-缺口-与-a-无关-已用回退基线对比确认">7.5 A′ 验证中发现的两个既有 JIT 缺口（与 A′ 无关，已用回退基线对比确认）</a></li><li><a href="#7-6-原生方法调用-callout-取实参反序-file_manager-界面错位-已修复-2026-09-12">7.6 原生方法调用 callout 取实参反序 —— file_manager 界面错位 —— ✅ 已修复（2026-09-12）</a></li><li><a href="#7-7-又一批-静默算错-型缺口-2026-09-12-晚-详见-docs-archive-jit实现与调试记录-md-8-20-8-22">7.7 又一批「静默算错」型缺口（2026-09-12 晚，详见 docs/archive/JIT实现与调试记录.md §8.20~8.22）</a></li></ul><li><a href="#8-排查手记-从-界面错位-到-callout-实参反序-2026-09-12">8. 排查手记：从「界面错位」到「callout 实参反序」（2026-09-12）</a></li><ul class="lv3"><li><a href="#8-1-第-0-步-先做-jit-还是解释器-的二分">8.1 第 0 步：先做「JIT 还是解释器」的二分</a></li><li><a href="#8-2-第-1-步-把-界面错位-翻译成数值判据">8.2 第 1 步：把「界面错位」翻译成数值判据</a></li><li><a href="#8-3-第-2-步-字节码定位到源码行">8.3 第 2 步：字节码定位到源码行</a></li><li><a href="#8-4-第-3-步-把-整个-gui-程序-缩成-单循环差分探针">8.4 第 3 步：把「整个 GUI 程序」缩成「单循环差分探针」</a></li><li><a href="#8-5-第-4-步-反汇编-jit-机器码">8.5 第 4 步：反汇编 JIT 机器码</a></li><li><a href="#8-6-第-5-步-是不是我这个提交引入的-对比两版编译日志">8.6 第 5 步：「是不是我这个提交引入的」——对比两版编译日志</a></li><li><a href="#8-7-第-6-步-修完做-双模式-计数-验证">8.7 第 6 步：修完做「双模式 + 计数」验证</a></li><li><a href="#8-8-可复用的-30-分钟路径">8.8 可复用的 30 分钟路径</a></li></ul><li><a href="#9-涉及文件">9. 涉及文件</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../archive/JIT实现与调试记录.html">← 上一篇</a><a href="../archive/JIT闭包与upvalue设计_R5.html">下一篇 →</a></nav>
