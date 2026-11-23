@@ -380,11 +380,17 @@ while pos &gt;= 0 {
 <blockquote>
 <p>⚠ 边界（2026-11-16 实测）：<code>rep(负数)</code> ⇒ <code>""</code>（当 0 处理，不报错）；<code>rep(n)</code> 的结果长度
 是 <code>len * n</code>，对大串 × 大 n 要自己估一下内存（没有上限保护）。</p>
-<p>★ <strong>别名（2026-11-23）</strong>：<code>strings.repeat(n)</code> 与 <code>rep(n)</code> <strong>完全等价</strong>（同一实现）。
-同理 <code>upper</code> / <code>lower</code> 是 <code>to_upper</code> / <code>to_lower</code> 的别名。
-只有这三个名字有别名，其余方法保持单一名字（仓库里仍反对"同一功能两个叫法"）——
-理由是实测 <code>rep</code> / <code>to_upper</code> 是<strong>最常写错的两个</strong>，而 <code>repeat</code> / <code>upper</code> / <code>lower</code>
-在各家 stdlib 里几乎就是唯一写法，写成它们却报错会让人以为语言不支持。</p>
+<p>★ <strong>写错了会告诉你正确名字</strong>（2026-11-23）：这三个方法<strong>没有别名</strong>（同一功能只留一个名字），
+但拼错/记错时会直接给建议，不用去翻 43 个方法名：
+</p>
+</blockquote>
+<pre><code>strings.repeat(...)  →  提示: 是否想用 'rep'？
+strings.upper(...)   →  提示: 是否想用 'to_upper'？
+strings.lower(...)   →  提示: 是否想用 'to_lower'？
+</code></pre>
+<blockquote>
+<p>规则是「同词根、前后缀相差 ≤3 个字符」，双向匹配（<code>upper</code>→<code>to_upper</code> 是加前缀，
+<code>repeat</code>→<code>rep</code> 是去后缀）；<strong>真的没有相近项时不硬凑建议</strong>（避免瞎猜）。</p>
 </blockquote>
 <h4 id="count-substr"><code>count(substr)</code></h4>
 <p>统计子串在字符串中出现的次数（不重叠计数）。</p>
