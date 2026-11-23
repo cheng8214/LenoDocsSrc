@@ -376,10 +376,10 @@ defer ffi.free(saved) 之后改 p              → 不报 ✓
 </tr>
 </tbody>
 </table>
-<p><strong><code>Ptr[Ptr[T]]</code>（C 的 `char</strong><code>）现状**：声明、写入、读回、传参、二级指针出参**全部支持**
-（类型树完整：</code>Ptr[Ptr[u8]]<code>是 40/40/18，见</code>type_copy<code> 对 PTR 的递归）；
-</code>assert/test_ptr_ptr_charpp.leno<code> 是 argv 风格的完整示例（造 char*[] → 遍历
-</code>ffi.read_string<code>→ 显式标注后按字节访问 →</code>func(char**)` 形态的出参 → 逐层 free）。</p>
+<p><strong><code>Ptr[Ptr[T]]</code>（C 的 <code>char**</code>）现状</strong>：声明、写入、读回、传参、二级指针出参<strong>全部支持</strong>
+（类型树完整：<code>Ptr[Ptr[u8]]</code> 是 40/40/18，见 <code>type_copy</code> 对 PTR 的递归）；
+<code>assert/test_ptr_ptr_charpp.leno</code> 是 argv 风格的完整示例（造 char*[] → 遍历
+<code>ffi.read_string</code> → 显式标注后按字节访问 → <code>func(char**)</code> 形态的出参 → 逐层 free）。</p>
 <p><strong>元素类型的"第二层"已经补上（§7）</strong>：原先 <code>ObjFFIPointer.element_type</code> 只有一个
 <code>TypeKind</code>（一层），<code>Ptr[Ptr[u8]]</code> 的第二层在运行期丢失 ⇒ 只能靠 codegen 在 5 个
 "值落点"补标注，<code>var x = pp[0]</code> 这种纯推断拿不到。现在元素是复合类型时改发

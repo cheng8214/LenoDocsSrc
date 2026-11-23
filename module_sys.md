@@ -957,5 +957,5 @@ _gc(true)
 
 *文档版本: 1.3*  
 *最后更新: 2026-06-19*
-*变更: **v3.2.8 起 `_exec()` 返回 `ExecResult{ output, code }` 结构体**（此前是 `[stdout, exit_code]` 数组；
+*变更: v3.2.8 起 `_exec()` 返回 `ExecResult{ output, code }` 结构体（此前是 `[stdout, exit_code]` 数组；
 `r[0]`/`r[1]` ⇒ `r.output`/`r.code`）；`_args()` 只返回脚本参数*

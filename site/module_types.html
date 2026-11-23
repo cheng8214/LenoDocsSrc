@@ -368,7 +368,7 @@ print(&quot;3.5&quot; as float) // null ✗
 <code>1.9 as int</code> → <code>1</code>（截断）✓、<code>true as int</code> → <code>1</code> ✓；
 不能转的是"需要<strong>新规则</strong>（解析或判定）的"：<code>1 as bool</code> → <code>null</code>（0 算不算 false 从未定义）、
 <code>"77" as int</code> → <code>null</code>（要语法分析）✗
-⇒ <strong>"<code>"77" 不能 </code>as int`" 不是 bug</strong>，是cast 与 parse 的职责分界
+⇒ <strong>「<code>"77" 不能 as int</code>」不是 bug</strong>，是 cast 与 parse 的职责分界
 （与 Python <code>int(x)</code> 是<strong>函数</strong>、Rust <code>str::parse</code> 是<strong>方法</strong>同一道理——都不是 cast 语法）。
 ⚠ 但它当前<strong>放行得比较宽松</strong>：左操作数静态类型就是 <code>string</code> 时编译器本可当场报
 「as 不做字符串解析」，却让它编译通过、运行时静默 <code>null</code> ⇒ 白丢一次诊断

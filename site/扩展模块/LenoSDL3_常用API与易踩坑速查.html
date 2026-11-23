@@ -1567,7 +1567,7 @@ ListBox / ComboBox / TabControl / Table / TreeView</code> ✓。
 <pre><code class="language-leno">Button b = win.addButton({x: 20, y: 40, w: 180, h: 64, text: &quot;50%&quot;, type: &quot;primary&quot;})
 win.set_widget_opacity(b, 0.5)      // 0.0~1.0，越界自动夹紧 ✓
 </code></pre>
-<p><strong>实现（要点：</strong>控件侧零改动** ✓，只在收口处动手 ✓）**
+<p><strong>实现（要点：控件侧零改动 ✓，只在收口处动手 ✓）</strong>
 - <code>sdl_renderer</code>：新增<strong>全局 alpha 缩放</strong> <code>setAlphaScale(s)</code>，在 3 个收口处统一乘 ——
 <code>setColor</code>（所有着色矩形/线/圆角矩形 ✓）、<code>setColorFloat</code> ✓、<code>pushTexBatch</code>（<strong>纹理批</strong>；文字也走
 这里 ✓ ⇒ <strong>别在 <code>drawText</code> 里再乘一次</strong>，否则"平方淡化" 0.5×0.5=0.25 ✗）；

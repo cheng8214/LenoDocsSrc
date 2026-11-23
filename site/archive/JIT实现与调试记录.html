@@ -7325,8 +7325,8 @@ codegen 侧（<code>codegen_expr.c</code> 的 <code>AST_DICT</code>）按 <code>
 </table>
 <p>⇒ <strong>两个独立缺陷</strong>（都在 JIT 侧）：
 1. 有 <strong>11 次</strong>错误<strong>没有作为可捕获异常抛出</strong>（<code>caught</code> 少 11）⇒ <code>try/catch</code> 语义分歧；
-2. 这些错误进了<strong>全局错误收集器</strong> ⇒ <strong>即使 Leno 层 catch 成功，进程仍以 <code>发现 N 个错误</code>
-+ **exit = -1</strong> 结束** —— 这一条比 ① 更严重：<strong>正常程序会"看起来失败"</strong>（CI/脚本会误判）。</p>
+2. 这些错误进了<strong>全局错误收集器</strong> ⇒ 即使 Leno 层 catch 成功，进程仍以 <code>发现 N 个错误</code>
++ <strong>exit = -1</strong> 结束 —— 这一条比 ① 更严重：<strong>正常程序会"看起来失败"</strong>（CI/脚本会误判）。</p>
 <p><strong>根因</strong>：<code>jit_callout_index</code> 的错误路径用 <code>error_add_at</code>（<strong>编译期/解释器的报错通道</strong>）+ 返回
 <code>NULL_VAL</code>，而 <code>OP_INDEX</code> 的慢路径（<code>ops_index.inc</code>）<strong>不检查任何失败标志</strong> ⇒ 两者叠加：
 错误既没被抛出（被 <code>NULL_VAL</code> 吞掉）又被永久记进收集器。</p>
@@ -9160,7 +9160,7 @@ Phase C 递归trace: 300000条射线(depth=5):  25997104854ms (hits=585500)
 </tr>
 </tbody>
 </table>
-<p><strong>真因：入口缓存 <code>entry_&lt;hash&gt;.lenb</code> 里存着</strong>陈旧的静态签名** ✗**</p>
+<p><strong>真因：入口缓存 <code>entry_&lt;hash&gt;.lenb</code> 里存着「陈旧的静态签名」✗</strong></p>
 <ul>
 <li><code>893a0045</code> 把 <code>times.ms</code> 的<strong>注册</strong>由 <code>TYPE_INT</code> 改成 <code>TYPE_FLOAT</code>（<code>src/module/times/times.c</code>）✓；</li>
 <li>但入口缓存的<strong>键</strong>只由【入口文件自身】的内容哈希决定（<code>main.c</code> 的 <code>entry_%llx.lenb</code>）✓，
@@ -13302,7 +13302,7 @@ JIT 机器码返回非 0（bailout / <code>jit_callout_failed</code>）时，把
 </tr>
 </tbody>
 </table>
-<p>⇒ <strong>F 只证明了"共存"这个事实 ✓，G/H 证明它</strong>≠因果** ✗** —— 两条尝试都无效 ✓，已全部回退 ✓（<code>jit.c</code> 与 HEAD 零差异 ✓，开关关时 <code>passed</code> ✓）。</p>
+<p>⇒ <strong>F 只证明了"共存"这个事实 ✓，G/H 证明它≠因果 ✗</strong> —— 两条尝试都无效 ✓，已全部回退 ✓（<code>jit.c</code> 与 HEAD 零差异 ✓，开关关时 <code>passed</code> ✓）。</p>
 <p><strong>当前首选机理假设（待验证 ✓）</strong>：<strong>同一段 body 被两套缓存各编了一份</strong> ✗ ——
 函数体被<strong>解释执行</strong>时，它内部的循环会进<strong>循环缓存</strong>（键 = <code>cache_hash(body_start)</code> ✓）；
 <code>LENO_JIT_FUNCLOOP=1</code> 之后，<strong>同一段 body</strong> 又能被当<strong>函数</strong>编进<strong>函数缓存</strong>（键 = <code>jit_func_cache_slot(func)</code> ✓）。

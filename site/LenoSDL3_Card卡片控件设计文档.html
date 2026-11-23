@@ -153,7 +153,7 @@
 <hr>
 <h2 id="四-v1-的局限-按-会不会真出事-分档">四、v1 的局限（按"会不会真出事"分档）</h2>
 <h3 id="a-级-真隐患-v2-必修">A 级：真隐患（v2 必修）</h3>
-<p><strong>A1. 每帧 <code>pushClipRect</code>，而且海报墙场景 **100% 命中</strong> —— 闪烁隐患 + 白付 flush**</p>
+<p><strong>A1. 每帧 <code>pushClipRect</code>，而且海报墙场景「100% 命中」—— 闪烁隐患 + 白付 flush</strong></p>
 <pre><code class="language-273:286:build/leno_module/LenoSDL3/lib/sdl_card.leno">            bool needClip = dx &lt; ix - 0.5 or dy &lt; iy - 0.5 or dx + dw &gt; ix + iw + 0.5 or dy + dh &gt; iy + ih + 0.5
             ...
                 r.pushClipRect(c2.to_ptr())

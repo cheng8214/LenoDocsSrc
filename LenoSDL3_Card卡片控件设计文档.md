@@ -65,7 +65,7 @@
 
 ### A 级：真隐患（v2 必修）
 
-**A1. 每帧 `pushClipRect`，而且海报墙场景 **100% 命中** —— 闪烁隐患 + 白付 flush**
+**A1. 每帧 `pushClipRect`，而且海报墙场景「100% 命中」—— 闪烁隐患 + 白付 flush**
 
 ```273:286:build/leno_module/LenoSDL3/lib/sdl_card.leno
             bool needClip = dx < ix - 0.5 or dy < iy - 0.5 or dx + dw > ix + iw + 0.5 or dy + dh > iy + ih + 0.5
