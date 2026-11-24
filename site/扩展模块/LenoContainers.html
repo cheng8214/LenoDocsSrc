@@ -572,13 +572,14 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 容器没有引用计数语义）、<code>sdl_renderer.leno</code> 的裁剪栈/图集（按下标池化、不是 KV）。</p>
 </blockquote>
 <blockquote>
-<p>⚠ <strong>LenoWeb 的 <code>web_generic.Stack</code> 已删除（2026-11-24，破坏性）</strong>：它和 <code>Containers.Stack</code>
-<strong>同名</strong>，而编译器的四张类型表全局按名字索引 —— 用户同时 <code>import "Web"</code> 与
-<code>import "Containers"</code> 会直接报
+<p>⚠ <strong>LenoWeb 的 <code>web_generic.Stack</code> 现在是本模块 <code>Stack</code> 的别名</strong>（2026-11-24 先删掉、
+2026-11-26 用别名补回）：手写那份与本模块<strong>同名</strong>，而编译器类型表全局按名字索引 ——
+同时 <code>import "Web"</code> 与 <code>import "Containers"</code> 会直接报
 「跨模块同名struct 'Stack' … 运行期只能保留一份 … 请给其中一个改名」。
-现在只有一份实现（本模块的），<code>use web.Stack</code> / 字段 <code>size</code> / <code>init()</code> 不再存在，
-迁移写法：<code>import "Containers" as ct; new ct.Stack[T]()</code>，长度用 <code>len()</code>、判空用 <code>is_empty()</code>。
-与 2026-11-09 <code>web_generic.Result</code> 的处理方式一致。</p>
+现在 <code>export alias Stack[T] = ct.Stack[T]</code>：<code>use web.Stack</code> 照旧可用、与 <code>ct.Stack</code> 是同一个类型，
+但实现只有一份 ⇒ 不再撞名字。
+⚠ 语义随本模块：长度是 <code>len()</code>（没有字段 <code>size</code>）、判空 <code>is_empty()</code>、空取<strong>抛错</strong>、没有 <code>init()</code>。
+（这条别名之所以写得出来，是同日补齐了"跨模块泛型别名"能力，见 LenoDocsSrc M6。）</p>
 </blockquote>
 <h2 id="跑测试">跑测试</h2>
 <pre><code>build\leno.exe build\leno_module\LenoContainers\test\test_containers.leno

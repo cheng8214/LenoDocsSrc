@@ -639,6 +639,83 @@ b0.text = badge          // 这里读本结构体的字段完全正常 ✓
 建议同时补一颗 <code>assert/</code> 用例（"方法里构造 + 参数用隐式自字段"），
 因为 walk 语料里这类写法<strong>本来就该是常态</strong>，只是大家一直在默默写 <code>self.</code> 绕它 ✓。</p>
 <hr>
+<h2 id="m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · <code>alias</code> 跨模块（2026-11-25 修完，原症状保留作记录）</h2>
+<p><strong>原症状</strong>（三个探针，全部实测）：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>修前</th>
+<th>修后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本文件 <code>export alias Stack[T] = ct.Stack[T]</code></td>
+<td>✅ 本文件里可用</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>另一个文件 <code>use gen.Stack</code> 后 <code>new Stack[int]()</code></td>
+<td>❌「struct 'Stack' 不是泛型类型，不能写类型参数」（<strong>类型参数丢了</strong>）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>另一个文件 <code>new gen.Stack[int]()</code></td>
+<td>❌「未定义的 struct 类型 'gen.Stack'」</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>另一个文件 <code>Stack[int] s = …</code>（类型注解）</td>
+<td>❌ 类型对不上</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：别名存在<strong>解析器每文件一张的 alias 表</strong>里（<code>add_alias_with_params</code>），
+而模块符号表里的别名条目（<code>ModuleAliasSymbol</code>）<strong>只存 body、不存形参名</strong> ⇒ 消费端
+拿到的别名"没有类型参数"；限定名更是直接在符号表里找不到 struct。</p>
+<p><strong>修法（2026-11-25，四处）</strong>：</p>
+<ol>
+<li><code>ModuleAliasSymbol</code> 增 <code>type_params / type_param_count</code>，<code>module_symbol_table_add_alias</code> 带参，
+   AST 填充（<code>ast_fill_one_alias</code>）与两处跨模块传导一起带上；
+   <strong><code>.lenosymc</code> 升到 v60</strong>（旧缓存里的别名条目少这段 ⇒ 必须重编）。</li>
+<li><code>Symbol</code> 增 <code>is_type_alias / alias_type_params / alias_type_param_count</code>；
+   本文件 <code>alias</code> 注册（<code>semantic.c</code>）与 <code>use m.X</code> 导入（<code>semantic_visit_ast.c</code>）都置上。</li>
+<li><code>visit_struct_init</code>：名字若指向别名 ⇒ 用<strong>调用点实参</strong>代入形参，把
+   <code>new Stack[int]()</code> 就地改写成 <code>new ct.Stack[int]()</code> 再重新解析（带 8 次跳数保险）。
+   模块限定写法（<code>new gen.Stack[int]()</code>）走同一实现的"裸类型信息"版。</li>
+<li><code>resolve_alias_in_type</code>：展开泛型别名时按使用处的实参替换形参
+   （否则声明类型停在 <code>Stack[T]</code>，与构造出来的类型对不上 ⇒ 误报类型不匹配）。</li>
+</ol>
+<p><strong>顺带修的解析器 bug</strong>（就是当初让人以为"alias 根本不能用"的那两个）：</p>
+<ol>
+<li>值别名探测（<code>parser_func.c</code> 的 <code>IDENT DOT IDENT</code>）把 <code>alias X[T] = m.Y[T]</code> 误判成
+   <code>alias X = Enum.member</code> ⇒ 后面的 <code>[T]</code> 被当作<strong>下标表达式</strong> ⇒ 报「未定义的变量: T」。
+   修法：<strong>带类型参数的一律不是值别名</strong>；成员名后面跟 <code>[</code> 也回退按类型解析。</li>
+<li><code>new</code> 处按别名替换 struct_name 时（<code>parser_expr.c</code>）只取 <code>struct_name</code>、<strong>丢了
+   <code>module_qualifier</code></strong> ⇒ <code>new StackAlias[int]()</code> 报「未定义的 struct 类型 'Stack'」。</li>
+</ol>
+<p><strong>回归用例</strong>：<code>assert/test_alias_generic_cross.leno</code>（本地泛型 / <code>Array[T]</code> / 跨模块限定名 /
+已实例化 / 值别名 / <code>use</code> 导入 / 再导出 共 8 条路径）+ <code>assert/helpers/alias_box_mod.leno</code>。</p>
+<p><strong>实际收益</strong>：<code>LenoWeb.web_generic.Stack</code> 从"只能删掉（破坏性）"变成
+<code>export alias Stack[T] = ct.Stack[T]</code> —— <code>use web.Stack</code> 保住，实现只剩容器那份。</p>
+<p><strong>顺带修掉的两个真 bug</strong>（2026-11-25，让"文件内 + 限定名"这条能跑；上游已改 + 用例已加）：</p>
+<ol>
+<li>值别名探测（<code>parser_func.c</code> 的 <code>IDENT DOT IDENT</code>）把 <code>alias X[T] = m.Y[T]</code> 误判成
+   <code>alias X = Enum.member</code> ⇒ 后面的 <code>[T]</code> 被当作<strong>下标表达式</strong> ⇒ 报「未定义的变量: T」
+   （完全指错靶子）。修法：<strong>带类型参数的一律不是值别名</strong>；成员名后面跟 <code>[</code> 也回退按类型解析。</li>
+<li><code>new</code> 处按别名替换 struct_name 时（<code>parser_expr.c</code>）只取 <code>struct_name</code>、<strong>丢了
+   <code>module_qualifier</code></strong> ⇒ <code>new StackAlias[int]()</code> 报「未定义的 struct 类型 'Stack'」。
+   修法：限定名拼成 <code>qual.name</code> 再往下传。</li>
+</ol>
+<p>回归用例：<code>assert/test_alias_generic_cross.leno</code>（本地泛型 alias / <code>Array[T]</code> / 跨模块限定名 /
+已实例化 / 值别名 五条路径）。</p>
+<blockquote>
+<p>注：原计划里写的"还差：模块符号表加别名表 + bump 缓存"，就是上面修法第 1 条 —— 已落地
+（<code>.lenosymc</code> v59 → <strong>v60</strong>）。</p>
+</blockquote>
+<hr>
 <h2 id="与现有文档的分工">与现有文档的分工</h2>
 <table>
 <thead>
@@ -667,7 +744,7 @@ b0.text = badge          // 这里读本结构体的字段完全正常 ✓
 </tbody>
 </table>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="扩展模块/LenoCLI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

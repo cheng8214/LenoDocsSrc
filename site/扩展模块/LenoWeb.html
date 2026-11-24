@@ -107,6 +107,14 @@ s.pop()                          // 空栈**抛错**（不再返回 null）
 </code></pre>
 <p>与 2026-11-09 删除 <code>web_generic.Result</code> 同一处理方式。爬虫的优先队列也已改用
 <code>LenoContainers.PriorityQueue</code>（<code>web_crawler.leno</code> 里那 60 行手写堆已删）。</p>
+<blockquote>
+<p><strong><code>Stack</code> 这个名字后来保住了</strong>（2026-11-26）：同一天先把它删掉了，随后补齐了
+"<strong>跨模块泛型别名</strong>" 这条语言能力 —— <code>web_generic.leno</code> 里现在是
+<code>export alias Stack[T] = ct.Stack[T]</code>，<code>use web.Stack</code> / <code>new gen.Stack[int]()</code> /
+类型注解 <code>Stack[int] s = …</code> 都能用，而且与 <code>ct.Stack</code> 是<strong>同一个类型</strong>（可互赋）。
+别名不是 struct ⇒ 也再不会撞"跨模块同名 struct"那条。
+⚠ 语义仍随容器：<code>len()</code> / <code>is_empty()</code> / 空取抛错 / 没有 <code>init()</code>。</p>
+</blockquote>
 <p>原生依赖：<code>lib/win/libcurl-x64.dll</code>（Windows）/ <code>lib/linux/libcurl.so</code>（Linux），已在 <code>leno.toml</code> 的 <code>[native-libs]</code> 声明。
 库文件自 2026-11-19 起<strong>按平台分目录</strong>存放（与 LenoSqlite / LenoMusic / LenoQR / LenoSDL3 统一）。</p>
 <h2 id="字符集-响应体自动转-utf-8-2026-10-06-新增">字符集：响应体自动转 UTF-8（2026-10-06 新增）</h2>
