@@ -40,7 +40,7 @@ if r.isErr() {
     print(&quot;配置有问题：&quot; + r.msg)
     _exit(1)
 }
-Config c = r.get()                          // ⚠ 显式标注类型（见下面的&quot;已知语言限制&quot;）
+var c = r.get()
 
 var port  = c.getInt(&quot;server.port&quot;, 8080)   // 缺 ⇒ 8080
 var host  = c.getStr(&quot;server.host&quot;, &quot;0.0.0.0&quot;)
@@ -127,17 +127,20 @@ var token = c.requireStr(&quot;auth.token&quot;)      // 缺 ⇒ 抛错
 <p>TOML/YAML 的规范长尾（多行串、数组表、锚点、缩进敏感）写不全，<strong>写不全的部分会变成新的静默错误源</strong> ——
 这与 Leno 一贯的"写错就要报出来"相反。JSON 已能表达全部配置结构，且 <code>jsons</code> 的严格解析已经修过一轮。</p>
 <p>真需要 TOML：用 <code>leno.toml</code> 那套工具链先转成 JSON，再交给本模块。</p>
-<h2 id="已知语言限制-写调用代码时会遇到">已知语言限制（写调用代码时会遇到）</h2>
-<p><code>Result[T].get()</code> 的返回值在<strong>跨模块</strong>处不会自动代入成具体类型（返回声明里是 <code>T</code>），所以：</p>
-<pre><code class="language-leno">Config c = r.get()      // ✓ 显式标注
-var c = r.get()         // ✗ 会被当成未约束的 T ⇒ 「类型 'T' 没有方法 getInt」
+<h2 id="一个容易踩的点">一个容易踩的点</h2>
+<p><code>Result[X]</code> 里的 <code>X</code> <strong>必须在当前文件 <code>use</code> 导入</strong>：</p>
+<pre><code class="language-leno">import &quot;Config&quot; as config
+use config.Config          // ← 少了这行，`Result[Config]` 的实参就解析不出来
+import &quot;Result&quot; as res
+use res.Result
 </code></pre>
-<p>这是编译器侧的问题（已记录），不是本模块的设计选择。</p>
+<p>少了它，<code>r.get()</code> 会退化成未约束的 <code>T</code>，后续 <code>c.getInt(...)</code> 报「类型 'T' 没有方法 getInt」。
+这是"类型名要导入"的通用规则（编译器会在报错里提示补哪一句 <code>use</code>），不是本模块特有的限制。</p>
 <h2 id="跑测试">跑测试</h2>
 <pre><code>build\leno.exe build\leno_module\LenoConfig\test\test_config.leno
 </code></pre>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><li><a href="#取值顺序">取值顺序</a></li><li><a href="#类型规则-不猜">类型规则（不猜）</a></li><li><a href="#为什么只做-json-不做-toml-yaml">为什么只做 JSON（不做 TOML/YAML）</a></li><li><a href="#已知语言限制-写调用代码时会遇到">已知语言限制（写调用代码时会遇到）</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><li><a href="#取值顺序">取值顺序</a></li><li><a href="#类型规则-不猜">类型规则（不猜）</a></li><li><a href="#为什么只做-json-不做-toml-yaml">为什么只做 JSON（不做 TOML/YAML）</a></li><li><a href="#一个容易踩的点">一个容易踩的点</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoCompress.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
