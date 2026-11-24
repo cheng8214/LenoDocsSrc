@@ -2186,6 +2186,8 @@ tb.set_rows(rows)
 </code></p>
 <p>口径：</p>
 <ul>
+<li><strong>不调 <code>set_struct_keys</code> 时</strong>（2026-11-24 起）按 struct 的<strong>声明顺序</strong>取全部字段 ——
+  列数与表头一致时可以直接 <code>add_struct(rec)</code>，不必先抄一份字段名清单</li>
 <li><strong>取不到的字段 ⇒ 空单元格</strong>，不是崩、也不是串到别的列（拼错的代价一眼能看见）</li>
 <li>值一律 _str()：单元格只有字符串一种类型，<strong>格式化仍由调用方决定</strong>
   （要补零/要 mm:ss 就先格式化好再塞进记录字段）</li>

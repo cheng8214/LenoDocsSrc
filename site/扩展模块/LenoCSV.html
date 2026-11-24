@@ -41,6 +41,12 @@ var text = csv.encode(rows)                  // &quot;a,b\r\n1,2&quot;（默认 
 CsvTable t = csv.parseTable(&quot;name,age\nAlice,30\n&quot;)
 var recs = csv.toDicts(t.header, t.rows)     // [{name:&quot;Alice&quot;, age:&quot;30&quot;}]
 
+// ②b 记录 → CSV（表头取字段名，列顺序 = 声明顺序）
+struct Song { string name = &quot;&quot;; int dur = 0 }
+Array[any] songs = [new Song(name = &quot;晴天&quot;, dur = 269)]
+var text2 = csv.encodeRecords(csv.headersOf(songs), csv.rowsOf(songs))
+// &quot;name,dur\r\n晴天,269&quot;
+
 // ③ 文件（会失败的两个返回 Result）
 Result[CsvTable] d = csv.load(&quot;data.csv&quot;, &quot;,&quot;, true)
 if d.isErr() { print(d.errText()) }
@@ -76,6 +82,14 @@ Result[int] w = csv.save(&quot;out.csv&quot;, d.val.rows, &quot;,&quot;, true)  
 <tr>
 <td><code>toDicts(header, rows)</code></td>
 <td>→ <code>Array[Dict]</code>（缺列补 <code>""</code>，多列忽略）</td>
+</tr>
+<tr>
+<td><code>headersOf(recs, keys=null)</code></td>
+<td>记录 → 表头（字段名，<strong>声明顺序</strong>）；给 <code>keys</code> 则按它（裁剪/换序）</td>
+</tr>
+<tr>
+<td><code>rowsOf(recs, keys=null)</code></td>
+<td>记录 → 行（不含表头）；单元格一律 <code>_str()</code>；<strong>字段名写错会抛错</strong></td>
 </tr>
 <tr>
 <td><code>load(path, delim=",", hasHeader=true)</code></td>
