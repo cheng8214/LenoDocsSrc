@@ -115,7 +115,7 @@ var matches = regexs.find_all("abc123def456", "[0-9]+")
 // [RegexMatch{start: 3, last: 5, text: "123"}, RegexMatch{start: 9, last: 11, text: "456"}]
 
 for matches to m {
-    io.print(m.text + " @" + m.start)     // 字段类型已知 ⇒ 不做收窄（m.text 是 string、m.start 是 int）
+    print(m.text + " @" + m.start)     // 字段类型已知 ⇒ 不做收窄（m.text 是 string、m.start 是 int）
     var seg = "abc123def456"[m.start : m.last]   // ⇒ "123"：直接切，不用 -1 ✓
 }
 ```
@@ -457,6 +457,7 @@ main() {
 
 ```leno
 import strings
+import regexs
 
 func extract_domain(string url):string {
     // 这条用字符串分段（更直观、也更快 ✓）。现在用正则也行：

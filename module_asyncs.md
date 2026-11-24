@@ -50,9 +50,9 @@ Leno 使用 `async` 和 `await` 关键字实现协程：
 
 ```leno
 async func my_task():int {
-    io.print("任务开始")
+    print("任务开始")
     await asyncs.sleep(100)  // 等待100ms，期间其他协程可以运行
-    io.print("任务结束")
+    print("任务结束")
     return 42
 }
 ```
@@ -73,6 +73,7 @@ var result = await future  // 阻塞直到任务完成，返回结果
 使用 `asyncs.run()` 启动事件循环，执行所有待处理的协程：
 
 ```leno
+import asyncs
 main() {
     // 创建多个异步任务
     task1()
@@ -99,9 +100,9 @@ main() {
 
 ```leno
 async func task() {
-    io.print("开始")
+    print("开始")
     await asyncs.sleep(500)  // 暂停500ms
-    io.print("500ms后继续")
+    print("500ms后继续")
 }
 ```
 
@@ -117,7 +118,7 @@ async func task() {
 ```leno
 async func cooperative_task() {
     for 0:5 to i {
-        io.print("步骤 " + i)
+        print("步骤 " + i)
         await asyncs.yield()  // 让出执行权
     }
 }
@@ -137,6 +138,7 @@ async func cooperative_task() {
 **返回**: `null`
 
 ```leno
+import asyncs
 main() {
     // 创建协程
     async_task1()
@@ -145,7 +147,7 @@ main() {
     // 启动事件循环
     asyncs.run()
     
-    io.print("所有协程完成")
+    print("所有协程完成")
 }
 ```
 
@@ -176,7 +178,7 @@ main() {
 ```leno
 async func show_id() {
     var id = asyncs.current()
-    io.print("当前协程 ID: " + id)
+    print("当前协程 ID: " + id)
 }
 ```
 
@@ -199,9 +201,9 @@ async func check_status() {
     await asyncs.yield()
     
     if (asyncs.is_done(task)) {
-        io.print("任务已完成")
+        print("任务已完成")
     } else {
-        io.print("任务仍在进行中")
+        print("任务仍在进行中")
     }
 }
 ```
@@ -226,7 +228,7 @@ async func get_result_demo() {
     
     // 获取结果
     var result = asyncs.get_result(task)
-    io.print("结果: " + result)
+    print("结果: " + result)
 }
 ```
 
@@ -263,7 +265,7 @@ async func get_result_demo() {
 > 要等齐请先 `await` 或让 `asyncs.run()` 跑完（这也是"未完成就抛错"那条存在的原因 ✓）。
 > 判据：`assert/test_asyncs_all_errors.leno` ✓
 ```leno
-async func fetch_user(id):dict {
+async func fetch_user(id):Dict {
     await asyncs.sleep(100)
     return {id: id, name: "用户" + id}
 }
@@ -283,7 +285,7 @@ async func fetch_all_users() {
     var users = asyncs.all([f1, f2, f3])
     
     for users to user {
-        io.print(user.name)
+        print(user.name)
     }
 }
 ```
@@ -327,9 +329,9 @@ async func with_timeout() {
     var result = await asyncs.timeout(task, 1000)
     
     if (result != null) {
-        io.print("任务成功: " + result)
+        print("任务成功: " + result)
     } else {
-        io.print("任务超时")
+        print("任务超时")
     }
 }
 ```
@@ -346,7 +348,7 @@ import io
 
 // 模拟网络请求
 async func fetch_url(string url):string {
-    io.print("请求: " + url)
+    print("请求: " + url)
     await asyncs.sleep(200)  // 模拟网络延迟
     return "响应: " + url
 }
@@ -356,8 +358,8 @@ main() {
     var result1 = fetch_url("api/users")
     var result2 = fetch_url("api/posts")
     
-    io.print(await result1)
-    io.print(await result2)
+    print(await result1)
+    print(await result2)
     
     asyncs.run()
 }
@@ -371,13 +373,13 @@ main() {
 import asyncs
 import io
 
-async func fetch_user(int id):dict {
+async func fetch_user(int id):Dict {
     await asyncs.sleep(100)
     return {id: id, name: "用户" + id}
 }
 
 async func fetch_concurrent() {
-    io.print("开始并发请求...")
+    print("开始并发请求...")
     
     // 同时启动多个请求
     var f1 = fetch_user(1)
@@ -392,9 +394,9 @@ async func fetch_concurrent() {
     // 收集结果
     var users = asyncs.all([f1, f2, f3])
     
-    io.print("获取到 " + users.len() + " 个用户")
+    print("获取到 " + users.len() + " 个用户")
     for users to user {
-        io.print("  - " + user.name)
+        print("  - " + user.name)
     }
 }
 
@@ -461,7 +463,7 @@ async func safe_task() {
     var result = await asyncs.timeout(task, 100)
     
     if (result == null) {
-        io.print("操作超时，使用默认值")
+        print("操作超时，使用默认值")
         result = "默认值"
     }
     
@@ -487,7 +489,7 @@ var shared_counter = 0
 async func increment(string name) {
     for 0:3 to i {
         shared_counter = shared_counter + 1
-        io.print(name + " 增加到: " + shared_counter)
+        print(name + " 增加到: " + shared_counter)
         await asyncs.yield()  // 让出执行权
     }
 }
@@ -499,7 +501,7 @@ main() {
     
     asyncs.run()
     
-    io.print("最终结果: " + shared_counter)
+    print("最终结果: " + shared_counter)
 }
 ```
 
@@ -512,10 +514,10 @@ import asyncs
 import io
 
 // 异步递归遍历
-async func async_walk(var items, int depth) {
+async func async_walk(any items, int depth) {
     for items to item {
         var indent = "  ".rep(depth)
-        io.print(indent + item.name)
+        print(indent + item.name)
         
         if (item.children.len() > 0) {
             await asyncs.yield()
@@ -550,17 +552,17 @@ main() {
 import asyncs
 import io
 
-async func process_item(var item, int index):string {
+async func process_item(any item, int index):string {
     // 模拟处理
     await asyncs.sleep(50)
     return "已处理: " + item
 }
 
-async func batch_process(var items) {
+async func batch_process(any items) {
     var total = items.len()
     var futures = []
     
-    io.print("开始批量处理 " + total + " 项...")
+    print("开始批量处理 " + total + " 项...")
     
     // 启动所有任务
     for items to item {
@@ -575,7 +577,7 @@ async func batch_process(var items) {
     // 收集结果
     var results = asyncs.all(futures)
     
-    io.print("完成! 处理了 " + results.len() + " 项")
+    print("完成! 处理了 " + results.len() + " 项")
     return results
 }
 
@@ -658,8 +660,9 @@ print(result)         // 42
 如果创建了 Future 但不 `await`，协程仍会在 `asyncs.run()` 时执行，但结果会被丢弃：
 
 ```leno
+import asyncs
 async func task() {
-    io.print("执行了")
+    print("执行了")
     return 42
 }
 
@@ -687,7 +690,7 @@ async func safe_task() {
         await asyncs.sleep(100)
         throw "错误"
     } catch e {
-        io.print("协程内捕获: " + e)
+        print("协程内捕获: " + e)
         return null  // 返回默认值
     }
 }
@@ -706,7 +709,7 @@ async func caller() {
     try {
         var result = await risky()  // await 检测到 Future 错误，抛出异常
     } catch e {
-        io.print("await 捕获: " + e)  // 输出: await 捕获: 子协程出错
+        print("await 捕获: " + e)  // 输出: await 捕获: 子协程出错
     }
 }
 ```
@@ -725,6 +728,7 @@ async func caller() {
 没有被任何 try-catch 或 await 捕获的异常，会被 `asyncs.run()` 收集并在主线程抛出：
 
 ```leno
+import asyncs
 async func risky() {
     throw "未捕获异常"
 }
@@ -734,7 +738,7 @@ main() {
     try {
         asyncs.run()  // 协程失败，run() 收集异常并抛出
     } catch e {
-        io.print("run() 捕获: " + e)  // 输出: run() 捕获: 未捕获异常
+        print("run() 捕获: " + e)  // 输出: run() 捕获: 未捕获异常
     }
 }
 ```
@@ -766,13 +770,14 @@ main() {
 - **阻塞主线程**：`run()` 返回前，主线程代码不会继续执行
 
 ```leno
+import asyncs
 main() {
     task1()   // 注册协程
     task2()   // 注册协程
     
     asyncs.run()  // 阻塞，直到 task1 和 task2 都完成
     
-    io.print("所有协程完成")  // run() 返回后才执行
+    print("所有协程完成")  // run() 返回后才执行
 }
 ```
 

@@ -48,7 +48,7 @@ IO 模块是 Leno 语言中用于基础输入输出的核心模块，提供了�
 ```leno
 import io
 
-io.print("Hello World")
+print("Hello World")
 var name = io.input("Your name: ")
 ```
 
@@ -353,7 +353,7 @@ main() {
         printf("] %d%%", percent)
         
         // 模拟处理时间
-        times.sleep(100)
+        threads.sleep(100)
     }
     
     print("\n处理完成!")

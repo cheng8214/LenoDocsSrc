@@ -1077,7 +1077,7 @@ ffi.free_callback(cb)      // ⚠ 回调用 free_callback：ffi.free 对 trampol
 **用途**: 在需要区分指针和其他类型的场景中使用，例如编写接受多种参数类型的通用函数：
 
 ```leno
-func process_handle(var h) {
+func process_handle(any h) {
     if ffi.is_ptr(h) {
         // 已经是指针，直接使用
         return h

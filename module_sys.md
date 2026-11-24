@@ -820,7 +820,7 @@ main() {
     for 0 : 10 to i {
         _clear()
         print("倒计时: " + (10 - i))
-        times.sleep(1000)
+        threads.sleep(1000)
     }
     _clear()
     print("完成!")

@@ -1731,7 +1731,7 @@ func processLargeData() {
 import ffi
 
 // ===== 使用类型守卫 =====
-func handleResult(var result) {
+func handleResult(any result) {
     if result is int {
         print("整数结果: " + result)
     } else if result is Ptr {
@@ -1757,7 +1757,7 @@ func processHandle(Ptr[u64] hProcess) {
 }
 
 // ===== 检查指针有效性 =====
-func isValidPtr(var value) {
+func isValidPtr(any value) {
     if value is Ptr {
         Ptr p = value
         return p != null

@@ -25,7 +25,7 @@ import io
 main() {
     // 获取当前目录
     var cwd = dirs.cwd()
-    io.print(cwd)
+    print(cwd)
     
     // 创建目录
     dirs.mkdir("new_folder")
@@ -52,7 +52,7 @@ use dirs.DirInfo
 main() {
     DirInfo info = dirs.stat("build.bat")     // 字段类型编译期已知
     Array[DirEntry] es = dirs.walk("src")     // 元素类型编译期已知
-    io.print(info.size)
+    print(info.size)
 }
 ```
 
@@ -487,7 +487,7 @@ var files = dirs.listdir("src")
 // files = ["error.c", "gc.c", "lexer.c", "main.c", ...]
 
 for files to f {
-    io.print(f)
+    print(f)
 }
 ```
 
@@ -521,8 +521,8 @@ for es to e {
     string root = e.root            // 编译期就知道是 string（无需 as / 收窄）
     Array[string] ds = e.dirs       // 子目录名
     Array[string] fs = e.files      // 文件名；元素类型是 string ⇒ 能直接进 Array[string] 的方法
-    io.print(root + " → " + _str(fs.len()) + " 个文件")
-    for fs to f { io.print("  " + f) }
+    print(root + " → " + _str(fs.len()) + " 个文件")
+    for fs to f { print("  " + f) }
 }
 ```
 
@@ -581,9 +581,9 @@ for es to e {
 DirInfo info = dirs.stat("build.bat")     // 类型可以直接标出来（v3.2.5 起；或先 `use dirs.DirInfo`）
 // info = DirInfo{ exists: true, size: 2917, is_file: true, is_dir: false, mtime: 0 }
 
-io.print("大小: " + info.size + " 字节")     // info.size 直接是 int ⇒ 能直接参与运算
-io.print("是文件: " + info.is_file)          // 直接是 bool ⇒ 能直接进 if
-io.print("是目录: " + info.is_dir)
+print("大小: " + info.size + " 字节")     // info.size 直接是 int ⇒ 能直接参与运算
+print("是文件: " + info.is_file)          // 直接是 bool ⇒ 能直接进 if
+print("是目录: " + info.is_dir)
 ```
 
 > ⚠ **v3.2.4 起返回结构体、不再是 `dict`**：旧形态的键名与现在的字段名**逐字相同** ⇒ `info.size` /
@@ -609,25 +609,48 @@ io.print("是目录: " + info.is_dir)
 
 ```leno
 import dirs
+import files
 import io
 
 main() {
-    var files = dirs.listdir(".")
+    // ⚠ 一定要在**指定的目录**里做批量改名，别用 "."：
+    //   这段逻辑会把它看到的每个 .txt 都改名，在仓库根跑就会把构建清单
+    //   （sources_core.txt 之类）改成 .bak，build.bat 直接找不到输入。
+    var sandbox = dirs.join(_tmpdir(), "leno_rename_demo")
+    if not dirs.exists(sandbox) {
+        dirs.mkdir(sandbox)
+    }
+
+    // 造点素材：两个 .txt + 一个不该动的文件
+    files.write(dirs.join(sandbox, "a.txt"), "A")
+    files.write(dirs.join(sandbox, "b.txt"), "B")
+    files.write(dirs.join(sandbox, "keep.leno"), "// 不动它")
+
+    var list = dirs.listdir(sandbox)
     var count = 0
-    
-    for files to f {
-        // 将所有 .txt 文件重命名为 .bak
+
+    for list to f {
+        // 把所有 .txt 文件重命名为 .bak
         if dirs.extname(f) == ".txt" {
-            var new_name = dirs.basename(f) + ".bak"
-            if dirs.rename(f, new_name) {
+            var old_path = dirs.join(sandbox, f)
+            var new_path = dirs.join(sandbox, dirs.basename(f) + ".bak")
+            if dirs.rename(old_path, new_path) {
                 count = count + 1
-                io.print("重命名: " + f + " -> " + new_name)
+                print("重命名: " + f + " -> " + dirs.basename(new_path))
             }
         }
     }
-    
-    io.print("共重命名 " + count + " 个文件")
+
+    print("共重命名 " + count + " 个文件")
 }
+```
+
+输出：
+
+```
+重命名: a.txt -> a.txt.bak
+重命名: b.txt -> b.txt.bak
+共重命名 2 个文件
 ```
 
 ---
@@ -639,7 +662,7 @@ import dirs
 import io
 
 // 递归查找所有 .leno 文件
-func find_leno_files(var path) -> array {
+func find_leno_files(any path) : array {
     var result = []
     var entries = dirs.walk(path)
     
@@ -659,10 +682,10 @@ func find_leno_files(var path) -> array {
 
 main() {
     var leno_files = find_leno_files("src")
-    io.print("找到 " + leno_files.count() + " 个 .leno 文件:")
+    print("找到 " + leno_files.count() + " 个 .leno 文件:")
     
     for leno_files to f {
-        io.print("  " + f)
+        print("  " + f)
     }
 }
 ```
@@ -681,8 +704,8 @@ main() {
     var backup_dir = "backup_" + times.now()
     
     // 创建备份目录
-    if !dirs.mkdir_p(backup_dir) {
-        io.print("创建备份目录失败")
+    if not dirs.mkdir_p(backup_dir) {
+        print("创建备份目录失败")
         return
     }
     
@@ -701,7 +724,7 @@ main() {
         }
     }
     
-    io.print("备份完成: " + count + " 个文件")
+    print("备份完成: " + count + " 个文件")
 }
 ```
 
@@ -714,7 +737,7 @@ import dirs
 import io
 
 // 计算目录总大小（简化版，只统计当前层）
-func calc_dir_size(var path) -> int {
+func calc_dir_size(any path) : int {
     var total = 0
     var entries = dirs.walk(path)
     
@@ -734,8 +757,8 @@ func calc_dir_size(var path) -> int {
 
 main() {
     var size = calc_dir_size("src")
-    io.print("src 目录总大小: " + size + " 字节")
-    io.print("约 " + (size / 1024) + " KB")
+    print("src 目录总大小: " + size + " 字节")
+    print("约 " + (size / 1024) + " KB")
 }
 ```
 
@@ -760,13 +783,13 @@ main() {
             if ext == pattern {
                 if dirs.delete(f) {
                     removed = removed + 1
-                    io.print("删除: " + f)
+                    print("删除: " + f)
                 }
             }
         }
     }
     
-    io.print("共清理 " + removed + " 个临时文件")
+    print("共清理 " + removed + " 个临时文件")
 }
 ```
 

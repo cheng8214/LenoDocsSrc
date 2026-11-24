@@ -167,7 +167,7 @@ main() {
 ```leno
 import threads
 
-func greet(var name, var count) {
+func greet(any name, any count) {
     for count to var i {
         print("Hello, " + name + "!")
     }
@@ -207,7 +207,7 @@ var ch = threads.channel(0)
 ```leno
 import threads
 
-func sender(var ch) {
+func sender(any ch) {
     ch.send("hello")
     ch.send(42)
     ch.send(3.14)
@@ -261,7 +261,7 @@ main() {
 ```leno
 import threads
 
-func producer(var ch) {
+func producer(any ch) {
     for 5 to var i {
         ch.send(i)
     }
@@ -300,7 +300,7 @@ main() {
 ```leno
 import threads
 
-func producer(var ch) {
+func producer(any ch) {
     for 10 to var i {
         ch.send(i)
         print("生产: " + i)
@@ -308,7 +308,7 @@ func producer(var ch) {
     ch.close()
 }
 
-func consumer(var ch) {
+func consumer(any ch) {
     while true {
         var msg = ch.receive()
         if msg == null {
@@ -333,7 +333,7 @@ main() {
 ```leno
 import threads
 
-func sender(var ch) {
+func sender(any ch) {
     for 3 to var i {
         ch.send("消息" + (i + 1))
     }
@@ -341,7 +341,7 @@ func sender(var ch) {
     ch.close()
 }
 
-func receiver(var ch) {
+func receiver(any ch) {
     while true {
         var msg = ch.receive()
         print("接收: " + msg)
@@ -415,7 +415,7 @@ cstruct MEMORYSTATUS {
     u64 dwTotalPhys
 }
 
-func get_memory_info(var ch) {
+func get_memory_info(any ch) {
     // 在子线程中使用 cstruct
     var kernel32 = ffi.load("kernel32.dll")
     var mem = MEMORYSTATUS.malloc()
@@ -479,8 +479,8 @@ func test_exception() {
 ### 嵌套函数调用
 
 ```leno
-func add(var a, var b) { return a + b }
-func multiply(var a, var b) { return a * b }
+func add(any a, any b) { return a + b }
+func multiply(any a, any b) { return a * b }
 
 func test() {
     var result = multiply(add(3, 4), 2)
@@ -491,7 +491,7 @@ func test() {
 ### 递归
 
 ```leno
-func fibonacci(var n) {
+func fibonacci(any n) {
     if n <= 1 { return n }
     return fibonacci(n - 1) + fibonacci(n - 2)
 }
@@ -523,7 +523,7 @@ import threads
 import times as ti
 import rands
 
-func bubble_sort(var arr) {
+func bubble_sort(any arr) {
     var n = arr.len()
     for n - 1 to var i {
         for n - i - 1 to var j {
@@ -537,7 +537,7 @@ func bubble_sort(var arr) {
     return arr
 }
 
-func sort_worker(var ch) {
+func sort_worker(any ch) {
     var arr = rands.int_array(1, 1000)
     var s = ti.ms()
     var result = bubble_sort(arr)
@@ -609,6 +609,7 @@ print(t.join())  // hello 42
 | `module` / 函数 / `socket` / 文件句柄 / `Channel` / `Thread` | 共享（只读元数据或引用语义） |
 
 ```leno
+import threads
 var count = 0
 var arr = [1, 2, 3]
 
@@ -680,6 +681,7 @@ main() {
 **因为是深拷贝，子线程改了字段主线程看不见** —— 结果要靠 `join()` 的返回值或 `Channel` 带回来：
 
 ```leno
+import threads
 struct P { int x = 0 }
 func work(P p): int {
     p.x = 100        // 改的是**副本**
@@ -887,7 +889,7 @@ async func bad() {
 
 // ✅ 正确：选择一种模型
 // 方案1：纯线程
-func worker(var ch) { ... }
+func worker(any ch) { ... }
 var t = threads.start(worker, ch)
 
 // 方案2：纯协程

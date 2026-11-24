@@ -26,9 +26,9 @@ import io
 import asyncs
 
 async func demo() {
-    io.print("开始")
+    print("开始")
     await asyncs.sleep(1000)    // 暂停 1 秒
-    io.print("1秒后")
+    print("1秒后")
 }
 
 main() {
@@ -49,6 +49,7 @@ main() {
 ### 2. async 函数返回值
 
 ```leno
+import asyncs
 async func fetch_data(string name):string {
     await asyncs.sleep(500)
     return $"数据: {name}"
@@ -56,7 +57,7 @@ async func fetch_data(string name):string {
 
 async func test() {
     var result = await fetch_data("测试")
-    io.print(result)    // 输出: 数据: 测试
+    print(result)    // 输出: 数据: 测试
 }
 
 main() {
@@ -72,9 +73,10 @@ main() {
 同时启动多个任务，总耗时 = 最慢的那个任务：
 
 ```leno
+import asyncs
 async func task(string name, int ms) {
     await asyncs.sleep(ms)
-    io.print($"任务 {name} 完成")
+    print($"任务 {name} 完成")
 }
 
 main() {
@@ -111,9 +113,9 @@ async func test() {
     
     // 然后用 all() 收集结果
     var results = asyncs.all([f1, f2, f3])
-    io.print(results[0])
-    io.print(results[1])
-    io.print(results[2])
+    print(results[0])
+    print(results[1])
+    print(results[2])
 }
 ```
 
@@ -132,9 +134,9 @@ async func test() {
     var result = await asyncs.timeout(slow_task(), 1000)
     
     if result is null {
-        io.print("超时了！")
+        print("超时了！")
     } else {
-        io.print(result)
+        print(result)
     }
 }
 ```
@@ -146,16 +148,17 @@ async func test() {
 使用 `yield()` 让其他协程先运行：
 
 ```leno
+import asyncs
 async func task_a() {
-    io.print("A: 步骤1")
+    print("A: 步骤1")
     await asyncs.yield()     // 让出执行权
-    io.print("A: 步骤2")
+    print("A: 步骤2")
 }
 
 async func task_b() {
-    io.print("B: 步骤1")
+    print("B: 步骤1")
     await asyncs.yield()
-    io.print("B: 步骤2")
+    print("B: 步骤2")
 }
 
 main() {
@@ -184,7 +187,7 @@ import io
 import asyncs
 
 async func download(string url, int delay):string {
-    io.print($"开始下载: {url}")
+    print($"开始下载: {url}")
     await asyncs.sleep(delay)
     return $"{url} 下载完成"
 }
@@ -202,17 +205,17 @@ async func main_task() {
     
     var results = asyncs.all([f1, f2, f3])
     
-    io.print("\n所有下载完成:")
-    io.print(results[0])
-    io.print(results[1])
-    io.print(results[2])
+    print("\n所有下载完成:")
+    print(results[0])
+    print(results[1])
+    print(results[2])
 }
 
 main() {
-    io.print("=== 并发下载测试 ===")
+    print("=== 并发下载测试 ===")
     main_task()
     asyncs.run()
-    io.print("=== 完成 ===")
+    print("=== 完成 ===")
 }
 ```
 
@@ -261,6 +264,7 @@ async func async_fn() {
 ### 2. 必须调用 asyncs.run()
 
 ```leno
+import asyncs
 main() {
     async_fn()         // 只创建协程，不会执行
     // 忘记调用 asyncs.run() → 协程不会运行
@@ -410,9 +414,9 @@ async func risky():string {
 async func safe_catch() {
     try {
         var result = await risky()
-        io.print($"成功: {result}")
+        print($"成功: {result}")
     } catch e {
-        io.print($"捕获异常: {e}")
+        print($"捕获异常: {e}")
     }
 }
 
@@ -442,7 +446,7 @@ async func outer() {
     try {
         await inner()    // 异常在这里重新抛出
     } catch e {
-        io.print($"捕获: {e}")
+        print($"捕获: {e}")
     }
 }
 ```
@@ -558,6 +562,7 @@ main() {
 在早期版本中，如果所有协程都阻塞在 `await arecv()`/`await aaccept()` 上，`asyncs.run()` 会过早退出。当时的解决方法是添加一个额外的"保活"协程：
 
 ```leno
+import asyncs
 // 旧写法（已不再需要）
 async func keeper(int ms) {
     await asyncs.sleep(ms)

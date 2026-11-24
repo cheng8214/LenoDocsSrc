@@ -477,7 +477,7 @@ print(type({}))                     // "Dict"
 ### 场景 1：安全的类型转换
 
 ```leno
-func process(var x) {
+func process(any x) {
     if x is int {
         // 类型守卫收窄后，可以直接使用
         int n = x
@@ -507,12 +507,12 @@ process([1, 2])     // 其他类型: [1, 2]     （容器会展开，不是 "<ob
 
 ```leno
 // 不推荐：直接使用 any
-func bad_add(var a, var b) {
+func bad_add(any a, any b) {
     return a + b    // 编译通过，但可能运行时错误
 }
 
 // 推荐：先检查再转换
-func safe_add(var a, var b) {
+func safe_add(any a, any b) {
     if a is int and b is int {
         return a + b                    // ✅ 直接使用（已收窄）
     }
@@ -542,7 +542,7 @@ print(safe_add("10", "20"))     // 30
 ### 场景 1：调试和日志
 
 ```leno
-func debug(var value) {
+func debug(any value) {
     print("[DEBUG] 类型: " + type(value) + ", 值: " + _str(value))
 }
 
@@ -554,7 +554,7 @@ debug({"a": 1})         // [DEBUG] 类型: Dict[string, int], 值: {a: 1}
 ### 场景 2：类型检查辅助
 
 ```leno
-func process_data(var data) {
+func process_data(any data) {
     var t = type(data)
     
     if t == "Array[int]" {
@@ -632,7 +632,7 @@ print("您的年龄是: " + age)
 
 ```leno
 // 推荐：使用类型守卫（编译时检查）
-func good(var x) {
+func good(any x) {
     if x is int {
         return x * 2        // ✅ 安全，编译器知道 x 是 int
     }
@@ -640,7 +640,7 @@ func good(var x) {
 }
 
 // 不推荐：直接转换（可能运行时错误）
-func bad(var x) {
+func bad(any x) {
     return _int(x) * 2      // ❌ 可能运行时错误
 }
 ```

@@ -935,6 +935,7 @@ main() {
 
 ```leno
 import ffi
+import files
 
 cstruct FileInfo {
     str16 path[260]
@@ -987,7 +988,7 @@ cstruct MEMORYSTATUS {
     u64 dwTotalPhys
 }
 
-func get_memory_info(var ch) {
+func get_memory_info(any ch) {
     // 在子线程中使用 cstruct
     var kernel32 = ffi.load("kernel32.dll")
     var mem = MEMORYSTATUS.malloc()
@@ -1026,7 +1027,7 @@ main() {
 
 ```leno
 // ✅ 正确：每个线程独立使用 cstruct
-func worker(var ch) {
+func worker(any ch) {
     var s = TEST_STRUCT.malloc()  // 子线程独立分配
     s.field1 = 123
     ch.send(s.field1)  // 发送数据，不是实例
@@ -1034,7 +1035,7 @@ func worker(var ch) {
 }
 
 // ❌ 错误：不要尝试共享实例
-func bad_worker(var s, var ch) {
+func bad_worker(any s, any ch) {
     s.field1 = 123  // 不要传递实例到线程
 }
 ```
