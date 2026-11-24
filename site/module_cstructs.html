@@ -375,6 +375,43 @@ Array[int]   ids = ps.column_i(&quot;id&quot;)
 <li>两个入口<strong>分开</strong>，不做"自动选类型"：混着 int/float 的 <code>Array[float]</code> 会让下游每次取值都要 <code>_int</code> / <code>_float</code> 收窄</li>
 <li>这是<strong>边界转换</strong>（每元素一个 GC 对象）：不要放进热循环 —— 热循环里直接 <code>ps[i].x</code></li>
 </ul>
+<h4 id="to_structs-target_name"><code>to_structs(target_name)</code></h4>
+<p>cstruct 数组 → <strong>GC struct 数组</strong>（按字段名一一搬运）。</p>
+<p><strong>参数</strong>:
+- <code>target_name</code> (string): 目标 struct 的名字，如 <code>"V3S"</code></p>
+<p><strong>返回</strong>: <code>Array</code>（元素是目标 struct 实例）</p>
+<pre><code class="language-leno">cstruct V3 { f32 x  f32 y  f32 z }
+struct V3S { float x = 0.0  float y = 0.0  float z = 0.0 }
+
+var ps = V3.malloc_array(1000)
+// …填充…
+var gs = ps.to_structs(&quot;V3S&quot;)     // Array[V3S]
+</code></pre>
+<blockquote>
+<p>⚠ <strong>为什么必须传名字</strong>：cstruct 与 struct <strong>不能同名</strong>（语言直接报「类型 'V3'
+已经定义为 cstruct」），而类型名<strong>不能当值传</strong>（「'V3S' 是类型名，不能当值用」）
+⇒ 目标类型只剩字符串这一条路。拼错会立刻报错，不会静默给空数组。</p>
+</blockquote>
+<p>口径：</p>
+<ul>
+<li>只搬<strong>标量</strong>字段（<code>i8</code> … <code>u64</code> / <code>f32</code> / <code>f64</code>）；位域、数组字段、嵌套 cstruct <strong>跳过</strong></li>
+<li>目标 struct 缺某个字段 ⇒ 跳过（允许只导出子集）</li>
+<li>目标字段不是 <code>int</code> / <code>float</code>（比如是 <code>string</code>）⇒ <strong>报错</strong>，不静默丢数据</li>
+<li>这是<strong>边界转换</strong>（每元素一次 GC 分配）：不要放进热循环</li>
+</ul>
+<h4 id="from_structs-recs"><code>from_structs(recs)</code></h4>
+<p>GC struct 数组 → cstruct 数组（<code>to_structs</code> 的反向）。</p>
+<p><strong>调用方式</strong>：对 <strong>cstruct 定义</strong>调用 —— <code>V3.from_structs(Array[V3S])</code></p>
+<pre><code class="language-leno">var back = V3.from_structs(gs)
+print(back[0].x)      // 9.5 —— 回到连续内存
+back.free_all()
+</code></pre>
+<p>口径：</p>
+<ul>
+<li>字段不是数值（<code>string</code> 等）⇒ <strong>报错</strong></li>
+<li>源 struct 缺该字段 ⇒ 该位置保留 <code>0</code></li>
+<li>元素不是 struct ⇒ <strong>报错</strong>（报第几个）</li>
+</ul>
 <h4 id="to_ptr"><code>to_ptr()</code></h4>
 <p>获取数组首地址指针（用于 FFI 调用）。</p>
 <p><strong>参数</strong>: 无<br>

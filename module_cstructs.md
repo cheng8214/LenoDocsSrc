@@ -327,6 +327,53 @@ Array[int]   ids = ps.column_i("id")
 - 两个入口**分开**，不做"自动选类型"：混着 int/float 的 `Array[float]` 会让下游每次取值都要 `_int` / `_float` 收窄
 - 这是**边界转换**（每元素一个 GC 对象）：不要放进热循环 —— 热循环里直接 `ps[i].x`
 
+#### `to_structs(target_name)`
+
+cstruct 数组 → **GC struct 数组**（按字段名一一搬运）。
+
+**参数**:
+- `target_name` (string): 目标 struct 的名字，如 `"V3S"`
+
+**返回**: `Array`（元素是目标 struct 实例）
+
+```leno
+cstruct V3 { f32 x  f32 y  f32 z }
+struct V3S { float x = 0.0  float y = 0.0  float z = 0.0 }
+
+var ps = V3.malloc_array(1000)
+// …填充…
+var gs = ps.to_structs("V3S")     // Array[V3S]
+```
+
+> ⚠ **为什么必须传名字**：cstruct 与 struct **不能同名**（语言直接报「类型 'V3'
+> 已经定义为 cstruct」），而类型名**不能当值传**（「'V3S' 是类型名，不能当值用」）
+> ⇒ 目标类型只剩字符串这一条路。拼错会立刻报错，不会静默给空数组。
+
+口径：
+
+- 只搬**标量**字段（`i8` … `u64` / `f32` / `f64`）；位域、数组字段、嵌套 cstruct **跳过**
+- 目标 struct 缺某个字段 ⇒ 跳过（允许只导出子集）
+- 目标字段不是 `int` / `float`（比如是 `string`）⇒ **报错**，不静默丢数据
+- 这是**边界转换**（每元素一次 GC 分配）：不要放进热循环
+
+#### `from_structs(recs)`
+
+GC struct 数组 → cstruct 数组（`to_structs` 的反向）。
+
+**调用方式**：对 **cstruct 定义**调用 —— `V3.from_structs(Array[V3S])`
+
+```leno
+var back = V3.from_structs(gs)
+print(back[0].x)      // 9.5 —— 回到连续内存
+back.free_all()
+```
+
+口径：
+
+- 字段不是数值（`string` 等）⇒ **报错**
+- 源 struct 缺该字段 ⇒ 该位置保留 `0`
+- 元素不是 struct ⇒ **报错**（报第几个）
+
 #### `to_ptr()`
 
 获取数组首地址指针（用于 FFI 调用）。
