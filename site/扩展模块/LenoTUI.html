@@ -40,8 +40,8 @@ termios / Win32 控制台 API，是另一个量级，也与"脚本在哪都能�
 tui.init()
 print(tui.fg(&quot;成功&quot;, &quot;green&quot;) + &quot; &quot; + tui.bold(&quot;42&quot;))
 
-// 进度条：返回一行字符串，自己决定 print 还是拼进日志
-print(tui.clear_line() + tui.progress(done, total, 30, &quot;下载&quot;))
+// 进度条：原地重绘用 render（**不换行**）；只要一行文本就 print(progress(...))
+tui.render(tui.progress(done, total, 30, &quot;下载&quot;))
 
 // 表格
 Array[string] headers = [&quot;名称&quot;, &quot;大小&quot;]
@@ -83,7 +83,11 @@ print(tui.table(headers, rows))
 </tr>
 <tr>
 <td><code>clear_line()</code></td>
-<td><code>\r</code> + 清行（进度条重绘用）</td>
+<td><code>\r</code> + 清行（返回字符串，一般不用直接拼）</td>
+</tr>
+<tr>
+<td><code>render(line)</code></td>
+<td><strong>原地重绘一行</strong>（内部 <code>printf</code>，不带换行）——进度条用这个</td>
 </tr>
 <tr>
 <td><code>move_up(n)</code> / <code>hide_cursor()</code> / <code>show_cursor()</code></td>
