@@ -82,33 +82,6 @@ dirs.cwd()  // "D:\\CLeno\\Leno" (Windows)
 
 ---
 
-### `temp_dir()`
-
-系统临时目录（**不含末尾分隔符**）。
-
-**参数**: 无
-**返回**: `string` - 临时目录绝对路径；取不到时返回 `"."`
-
-```leno
-dirs.temp_dir()   // "C:\\Users\\me\\AppData\\Local\\Temp"（Windows）
-                  // "/tmp"（Linux/macOS，尊重 $TMPDIR）
-```
-
-**为什么需要它**（2026-11-24）：写截图 / 中间文件的代码此前各自拼环境变量，已经拼出事故 ——
-SDL3 的 `test_virtual_window.leno` 直接写死 `D:/CLeno/Leno/tmp_vwin.png`：
-① 换机器就静默失败（`saveImagePNG` 只返回 `false`，不报错）；
-② 文件留在**仓库根**，让 `run_all_tests` 的"跑完不留垃圾"检查误报失败。
-
-固定写法：
-
-```leno
-var path = dirs.join(dirs.temp_dir(), "shot.png")
-```
-
-`GetTempPathW` 与 `$TMPDIR` 的差异由它吸收，调用方不用分平台判断。
-
----
-
 ### `abspath(path)`
 
 将相对路径转换为绝对路径。

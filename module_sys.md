@@ -51,7 +51,7 @@ Sys 模块提供与运行时环境、命令行参数和系统信息相关的全�
 | `_instance_activate([name])` | 把**持锁那个进程**的窗口顶到前台（`true` = 找到窗口并请求过；找不到 / 平台不支持 ⇒ `false`）| `Bool` |
 | `_username()` | 获取当前登录用户名 | `String` / `null` |
 | `_homedir()` | 获取用户主目录路径 | `String` / `null` |
-| `_tmpdir()` | 获取系统临时目录路径 | `String` / `null` |
+| `_tmpdir()` | 获取系统临时目录路径（Windows 走宽字符 API ⇒ 中文用户名/路径安全）。⚠ 末尾分隔符**平台不一致**（Windows 带 `\`、POSIX 不带）⇒ 拼路径一律 `dirs.join(_tmpdir(), name)`，**不要**写死绝对路径、也别用 `+` 直接拼 | `String` / `null` |
 | `_sep()` | 获取路径分隔符 | `String` |
 | `_clear()` | 清屏（跨平台） | `null` |
 | `_console(show)` | 显示/隐藏控制台窗口（Windows） | `Bool` |

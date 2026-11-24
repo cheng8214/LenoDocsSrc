@@ -172,7 +172,7 @@
 </tr>
 <tr>
 <td><code>_tmpdir()</code></td>
-<td>获取系统临时目录路径</td>
+<td>获取系统临时目录路径（Windows 走宽字符 API ⇒ 中文用户名/路径安全）。⚠ 末尾分隔符<strong>平台不一致</strong>（Windows 带 <code>\</code>、POSIX 不带）⇒ 拼路径一律 <code>dirs.join(_tmpdir(), name)</code>，<strong>不要</strong>写死绝对路径、也别用 <code>+</code> 直接拼</td>
 <td><code>String</code> / <code>null</code></td>
 </tr>
 <tr>
