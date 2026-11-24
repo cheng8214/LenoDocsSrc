@@ -84,6 +84,16 @@ var n = jobs[0].done               // ← 已经是 int，不用 _int
 <td>全部变 2</td>
 </tr>
 <tr>
+<td><code>for st to v { }</code>（<code>st</code> 是 LenoContainers 的 Stack/Queue/Deque/PriorityQueue）</td>
+<td>✅</td>
+<td>遍历<strong>元素</strong>；栈底→栈顶 / 队首→队尾 / 堆序</td>
+</tr>
+<tr>
+<td><code>for cache to k { }</code>（LRU / ClockLRU / LRUO1）</td>
+<td>✅</td>
+<td>遍历 <strong>key</strong>（LRU/LRUO1 最久→最近，ClockLRU 环序）</td>
+</tr>
+<tr>
 <td>传进函数 <code>bump(Job j) { j.status = 77 }</code></td>
 <td>✅</td>
 <td>原元素变 77（<strong>引用语义</strong>）</td>

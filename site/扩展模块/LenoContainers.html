@@ -78,6 +78,63 @@ var c = new ct.ClockLRU[int](cap = 4096)
 c.put(&quot;k&quot;, 1)
 print(c.get(&quot;k&quot;, -1))       // 1
 </code></pre>
+<h2 id="直接遍历-for-c-to-v-2026-11-25-起">直接遍历（<code>for c to v</code>，2026-11-25 起）</h2>
+<p>容器和缓存都能直接 <code>for</code> 遍历，<strong>顺序就是各自的逻辑顺序</strong>：</p>
+<pre><code class="language-leno">var st = new ct.Stack[int]()
+st.push(1); st.push(2); st.push(3)
+for st to v { print(v) }        // 1 2 3（栈底 → 栈顶）
+
+var q = new ct.Queue[string]()
+q.push(&quot;a&quot;); q.push(&quot;b&quot;)
+for q to s { print(s) }         // a b（队首 → 队尾；已出队的不算）
+
+var l = new ct.LRU[int](cap = 4)
+l.put(&quot;x&quot;, 1); l.put(&quot;y&quot;, 2)
+for l to k { print(k) }         // 缓存遍历的是 **key**
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>遍历到</th>
+<th>顺序</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Stack</code></td>
+<td>元素</td>
+<td>栈底 → 栈顶</td>
+</tr>
+<tr>
+<td><code>Queue</code> / <code>Deque</code></td>
+<td>元素</td>
+<td>队首 → 队尾（扣掉已出队的）</td>
+</tr>
+<tr>
+<td><code>PriorityQueue</code></td>
+<td>元素</td>
+<td><strong>堆序</strong>（只保证父优于子；要按优先级请用 <code>drain_sorted()</code>）</td>
+</tr>
+<tr>
+<td><code>LRU</code> / <code>LRUO1</code></td>
+<td><strong>key</strong></td>
+<td>最久未使用 → 最近使用</td>
+</tr>
+<tr>
+<td><code>ClockLRU</code></td>
+<td><strong>key</strong></td>
+<td>环序（不是访问序）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>第二个循环变量仍是<strong>下标</strong>（容器按数组语义）：<code>for st to v, i { }</code>；</li>
+<li>普通 struct（没有 <code>to_array</code> / <code>keys</code>）<strong>行为不变</strong>，仍是字段遍历；</li>
+<li>可空容器（<code>Queue? q</code>）不接管，保持原来的判空诊断（先判空再遍历）；</li>
+<li>底层实现：语义期把被遍历对象改写成 <code>c.to_array()</code> / <code>c.keys()</code> ⇒ <strong>每次遍历会分配一个快照数组</strong>。
+  热路径上想零分配，就自己 <code>peek</code> / <code>at</code> 按下标走。</li>
+</ul>
 <h2 id="api">API</h2>
 <h3 id="stack-t"><code>Stack[T]</code></h3>
 <table>
@@ -707,7 +764,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <li><strong>0.1.0</strong>：<code>Stack</code> / <code>Queue</code> / <code>LRU</code> 初版。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#直接遍历-for-c-to-v-2026-11-25-起">直接遍历（for c to v，2026-11-25 起）</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

@@ -1245,6 +1245,15 @@ var grade = if score &gt;= 90 then &quot;A&quot;
 · <code>else if</code> —— 本来就合法 ✓
 回归用例：<code>assert/test_diag_xlang_habits.leno</code>（三错误 + 两反向，并钉住"各只报 1 条"✓）</p>
 </blockquote>
+<blockquote>
+<p>★ <strong>2026-11-25 补</strong>：<code>for 容器 to x</code> 现在能直接遍历容器/缓存了 —— 老语义里
+<code>for 某个struct to k, v</code> 遍历的是<strong>字段</strong>，对 Stack/Queue/LRU 毫无意义。
+现在只要 struct 有 <code>to_array()</code>（容器）或 <code>keys()</code>（缓存），语义期就把被遍历对象
+改写成那个方法调用：<code>for st to v</code> ⇒ 元素（栈底→栈顶 / 队首→队尾 / 堆序），
+<code>for cache to k</code> ⇒ key。普通 struct 的字段遍历<strong>行为不变</strong>。
+细节（顺序、快照分配、可空容器不接管）见 <code>扩展模块/LenoContainers.html#直接遍历</code>。
+回归用例：<code>assert/test_for_container_iter.leno</code>。</p>
+</blockquote>
 <h3 id="裸-dict-的元素类型会被第一次-set-定死-2026-10-20-实测-报错很准但坑是真的">㊶ 裸 <code>Dict</code> 的<strong>元素类型会被第一次 <code>set</code> 定死</strong>（2026-10-20 实测，报错很准但坑是真的）</h3>
 <pre><code class="language-leno">func f(Dict req) {              // 裸 Dict ⇒ 元素类型&quot;未定&quot;
     req.set(&quot;params&quot;, {&quot;id&quot;: 1})   // ← 这一步把元素类型定成 Dict

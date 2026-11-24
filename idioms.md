@@ -46,6 +46,8 @@ var n = jobs[0].done               // ← 已经是 int，不用 _int
 | `jobs[0].status = 1` | ✅ | 读到 1 |
 | 再改一次 `jobs[0].progress = 0.9` | ✅ | 读到 0.9（不是副本）|
 | `for jobs to j { j.status = 2 }` | ✅ | 全部变 2 |
+| `for st to v { }`（`st` 是 LenoContainers 的 Stack/Queue/Deque/PriorityQueue） | ✅ | 遍历**元素**；栈底→栈顶 / 队首→队尾 / 堆序 |
+| `for cache to k { }`（LRU / ClockLRU / LRUO1） | ✅ | 遍历 **key**（LRU/LRUO1 最久→最近，ClockLRU 环序） |
 | 传进函数 `bump(Job j) { j.status = 77 }` | ✅ | 原元素变 77（**引用语义**）|
 | `Job j2 = jobs[1]; j2.status = 99` | ✅ | 原元素变 99 |
 | `type(jobs[0])` | ✅ | `Job` |
