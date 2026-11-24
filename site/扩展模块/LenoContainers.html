@@ -31,7 +31,7 @@
 </blockquote>
 <h1 id="lenocontainers">LenoContainers</h1>
 <p>栈 / 队列 / 优先队列 / 缓存淘汰，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
-<p>五个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>PriorityQueue[T]</code> /
+<p>六个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>Deque[T]</code>（双端队列）/ <code>PriorityQueue[T]</code> /
 <code>LRU[V]</code>（严格按最近访问淘汰）/ <code>ClockLRU[V]</code>（CLOCK 二次机会，<strong>O(1) 近似</strong> LRU）。</p>
 <h2 id="用法">用法</h2>
 <pre><code class="language-leno">import &quot;Containers&quot; as ct
@@ -46,6 +46,16 @@ var q = new ct.Queue[string]()
 q.push_all([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])
 print(q.pop())              // a
 print(q.pop_n(2))           // [b, c]（一次出队 2 个；不够抛错）
+
+// 双端队列：两端都能进出（撤销栈、日志窗、事件队列）
+var dq = new ct.Deque[string]()
+dq.push_back(&quot;b&quot;)
+dq.push_front(&quot;a&quot;)
+dq.push_back(&quot;c&quot;)
+print(dq.to_array())        // [a, b, c]
+print(dq.pop_front())       // a
+print(dq.pop_back())        // c
+print(dq.at(0))             // b（逻辑下标，0 = 队首）
 
 // 优先队列：比较器 &lt;0 ⇒ a 先出；返回 0 时**按入队序**先入先出（堆本身不稳定）
 var pq = new ct.PriorityQueue[int](cmp = func(int a, int b): int {
@@ -137,6 +147,45 @@ print(c.get(&quot;k&quot;, -1))       // 1
 </table>
 <p>队列是 <strong>head 指针 + 惰性压缩</strong>：<code>pop</code> 只挪指针，积压超过一半且超过 64 个时才整体搬一次，
 平摊 O(1) —— 不是 <code>Array.remove(0)</code> 那种每次 O(n) 整体搬移。</p>
+<h3 id="deque-t-双端队列"><code>Deque[T]</code>（双端队列）</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>push_front(v)</code> / <code>push_back(v)</code></td>
+<td>两端入队，均摊 O(1)</td>
+</tr>
+<tr>
+<td><code>pop_front(): T</code> / <code>pop_back(): T</code></td>
+<td>两端出队；<strong>空队列抛错</strong></td>
+</tr>
+<tr>
+<td><code>peek_front(): T</code> / <code>peek_back(): T</code></td>
+<td>两端看一眼；空队列抛错</td>
+</tr>
+<tr>
+<td><code>at(i): T</code> / <code>set(i, v)</code></td>
+<td>逻辑下标（0 = 队首）；越界抛错</td>
+</tr>
+<tr>
+<td><code>remove_at(i): T</code></td>
+<td>摘掉第 i 个（<strong>O(n)</strong>，给"按条件取走一条"的队列用）</td>
+</tr>
+<tr>
+<td><code>len()</code> / <code>is_empty()</code> / <code>clear()</code> / <code>to_array()</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>实现是<strong>两段式</strong>：<code>f</code> 反向存前半段、<code>b</code> 正向存后半段（<code>b</code> 的头偏移 <code>bh</code> 做惰性压缩）。
+两端 push 都是 O(1)；<code>pop_back</code> 遇到 <code>b</code> 空了就把 <code>f</code> 整体倒进 <code>b</code>（每个元素一辈子
+最多搬一次 ⇒ 平摊 O(1)）。为什么不用"单数组 + 头预留空隙"：Leno 的泛型没法造 <code>T</code> 的
+占位值来预留空隙。</p>
 <h3 id="priorityqueue-t"><code>PriorityQueue[T]</code></h3>
 <table>
 <thead>
@@ -294,7 +343,7 @@ tex.clear()                                                  // 逐条销毁剩�
 <th>容器</th>
 <th><code>push</code> / <code>put</code></th>
 <th><code>pop</code></th>
-<th><code>get</code></th>
+<th><code>get</code> / <code>at</code></th>
 <th><code>peek</code></th>
 </tr>
 </thead>
@@ -311,6 +360,13 @@ tex.clear()                                                  // 逐条销毁剩�
 <td>均摊 O(1)</td>
 <td>均摊 O(1)</td>
 <td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Deque</code></td>
+<td>两端均摊 O(1)</td>
+<td>两端均摊 O(1)</td>
+<td><code>at</code> O(1)（<code>remove_at</code> O(n)）</td>
 <td>—</td>
 </tr>
 <tr>
@@ -364,6 +420,18 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <tr>
 <td><code>Queue.pop</code> 缓存 <code>len</code> 前（A/B）</td>
 <td>101 → 94</td>
+</tr>
+<tr>
+<td><code>Deque.push_back</code> / <code>push_front</code></td>
+<td>39 / 47</td>
+</tr>
+<tr>
+<td><code>Deque.pop_front</code> / <code>pop_back</code>（含 sink）</td>
+<td>113 / 124</td>
+</tr>
+<tr>
+<td><code>Deque</code> push_front+pop_back 交替</td>
+<td>124</td>
 </tr>
 <tr>
 <td><code>Array.remove(0)</code> 出队（反面教材）</td>
@@ -458,8 +526,51 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <td><code>ClockLRU[Ptr[u8]]</code> + <code>on_evict</code></td>
 <td>菜单图标缓存原来两条平行数组 + 线性扫描、<strong>没有容量上限</strong>（长跑应用持续占显存）；现在 O(1) 命中、容量封顶、淘汰即 <code>SDL_DestroyTexture</code>。单槽 MRU 快路径保留（同一图标相邻行连续绘制时不碰字典）</td>
 </tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_popmenu.leno</code></td>
+<td>同上</td>
+<td>弹出菜单图标缓存，形态与 sdl_menu 逐行同构（双数组 + MRU + 线性扫 + 无上限）</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_treeview.leno</code></td>
+<td>同上</td>
+<td>树节点图标缓存：同样无上限 + 线性扫描。<code>dispose()</code> <strong>保持原语义</strong>（只丢引用、不销毁，交给渲染器），避免 double-free</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_table.leno</code></td>
+<td>同上</td>
+<td>表格图标缓存：原来是"环形覆盖 + 上限"，<strong>每个单元格要 O(imgCacheMax) 次字符串比较</strong> ⇒ 现在 O(1)；<code>image_cache_max == 0</code>（不限制）映射成一个大 cap</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_combobox.leno</code></td>
+<td>同上</td>
+<td>下拉项图标缓存原来是 <code>Dict</code>（O(1) 但<strong>只增不减</strong>）⇒ 换容器补上容量封顶与淘汰销毁</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_listbox.leno</code></td>
+<td>同上（+ 日志窗借范式）</td>
+<td>行图标缓存：无上限 + 线性扫描；<code>dispose()</code> 同样只丢引用。另外日志窗的 <code>append_item/append_bottom</code> 原来是<strong>每来一条就 <code>remove(0)</code> 搬一遍整表</strong>，改成本模块 <code>Queue</code> 同款"批量裁剪"思路（一次丢 1/4 上限，用一次切片完成）</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_edit.leno</code></td>
+<td><code>Deque[UndoFrame]</code></td>
+<td>撤销/重做原来是 <strong>4 条平行数组</strong>（行栈 + 光标栈 ×2），超 200 用 <code>remove(0)</code> 丢最旧（每次保存都搬一遍整表）。换成双端队列后：新快照尾进、撤销尾出、丢最旧头出，全部 O(1)，并把"行 + 光标"合成一帧（不再有两数组必须同步摘的隐患）</td>
+</tr>
+<tr>
+<td><code>LenoWeb/lib/web_cdp.leno</code></td>
+<td><code>Deque[string]</code></td>
+<td>未领取事件队列：原来"按 method 领走一条"要<strong>重建整个数组</strong>（O(n) 拷贝）、超上限也是 <code>remove(0)</code>；现在入队/丢最旧 O(1)，领取走 <code>remove_at(i)</code>（只搬这一条）</td>
+</tr>
 </tbody>
 </table>
+<blockquote>
+<p>六个 SDL3 控件的图标缓存现在共用一套实现（<code>ClockLRU[Ptr[u8]]</code> + <code>on_evict</code> 销毁），
+每处都保留各自的<strong>单槽 MRU 快路径</strong>（命中时不碰字典），所以热路径没变慢、只把
+"无上限"和"线性扫描"两件事一起消掉了。</p>
+<p>刻意<strong>没换</strong>的：<code>sdl_font.leno</code> 的 <code>texCache/measCache</code>（MRU 单槽 + 尺寸表 + <code>texCap</code> 是
+"装得下整屏文字就不淘汰"的刻意选择）、<code>sdl_texcache.leno</code>（带 refcount 与按渲染器失效，
+容器没有引用计数语义）、<code>sdl_renderer.leno</code> 的裁剪栈/图集（按下标池化、不是 KV）。</p>
+</blockquote>
 <blockquote>
 <p>⚠ <strong>LenoWeb 的 <code>web_generic.Stack</code> 已删除（2026-11-24，破坏性）</strong>：它和 <code>Containers.Stack</code>
 <strong>同名</strong>，而编译器的四张类型表全局按名字索引 —— 用户同时 <code>import "Web"</code> 与
@@ -477,6 +588,15 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </code></pre>
 <h2 id="变更记录">变更记录</h2>
 <ul>
+<li><strong>0.4.0</strong>（2026-11-24）：新增 <strong><code>Deque[T]</code></strong>（双端队列，两端均摊 O(1)，含 <code>at/set/remove_at</code>）。
+  三处"缺双端"的真实代码因此收编：<code>sdl_edit</code> 撤销/重做（4 条平行数组 → <code>Deque[UndoFrame]</code>）、
+  <code>web_cdp</code> 事件队列（按 method 领取不再重建数组）、<code>sdl_listbox</code> 日志窗（借"批量裁剪"范式）。
+  下游同步：<code>LenoCleaner.top_items</code> 的 top-K 换 <code>PriorityQueue</code>（N=200k 实测 limit=100
+  435 ms → 19 ms）。</li>
+<li><strong>0.3.1</strong>（2026-11-24）：把 SDL3 其余五处图标缓存（popmenu / treeview / table / combobox / listbox）
+  一并换成 <code>ClockLRU</code> + <code>on_evict</code>（原来有的无上限、有的每格 O(n) 线性扫）；顺带给
+  <code>LenoWeb</code> 的 CDP 未领取事件加了上限（<code>CDP_EVENTS_MAX = 256</code>，原来只增不减）。
+  组件行为不变，接口零改动。</li>
 <li><strong>0.3.0</strong>（2026-11-24）：<ul>
 <li>新增 <code>PriorityQueue[T]</code>（二叉堆；同优先级 FIFO；空堆抛错）。</li>
 <li>新增 <code>Stack/Queue.to_array()</code>、<code>Queue.pop_n()</code>、<code>Stack/Queue.push_all()</code>、<code>LRU/ClockLRU.keys()</code>。</li>
@@ -494,7 +614,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <li><strong>0.1.0</strong>：<code>Stack</code> / <code>Queue</code> / <code>LRU</code> 初版。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#on_evict-淘汰时交还资源-两个缓存容器都有">on_evict：淘汰时交还资源（两个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#on_evict-淘汰时交还资源-两个缓存容器都有">on_evict：淘汰时交还资源（两个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
