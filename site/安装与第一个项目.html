@@ -242,8 +242,10 @@ build_lsp.bat            :: 产出 leno_lsp\build\leno_lsp.exe
 <hr>
 <blockquote>
 <p>下一篇：<a href="常见任务cookbook.html"><code>常见任务cookbook.md</code></a>（"我要做 X 该怎么写"，每段都能直接跑）。</p>
-<p>本文的命令都在 Windows 上实测过；代码块可用仓库里的
-<code>verify_doc_code.ps1</code> 一键复验（它会真的调 <code>leno.exe</code> 跑一遍）。</p>
+<p>本文的命令都在 Windows 上实测过；代码块可用
+<code>bench/verify_doc_code.leno</code> 一键复验（真的调 <code>leno.exe</code> 跑，按 ok / stale / crash 分类）：</p>
+<pre><code class="language-bat">build\leno.exe bench\verify_doc_code.leno --docs ..\LenoDocsSrc --glob &quot;安装与第一个项目.md&quot;
+</code></pre>
 </blockquote>
 </main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-你需要的东西">1. 你需要的东西</a></li><li><a href="#2-让它能在任何目录被调用">2. 让它能在任何目录被调用</a></li><ul class="lv3"><li><a href="#验证装好了">验证装好了</a></li></ul><li><a href="#3-第一个程序">3. 第一个程序</a></li><li><a href="#4-三种-交付-方式-按需要选">4. 三种"交付"方式，按需要选</a></li><ul class="lv3"><li><a href="#4-1-直跑-开发时用">4.1 直跑（开发时用）</a></li><li><a href="#4-2-编译成-lenb-字节码-不想给对方源码">4.2 编译成 .lenb 字节码（不想给对方源码）</a></li><li><a href="#4-3-打包成独立-exe-给最终用户-双击就能跑">4.3 打包成独立 exe（给最终用户，双击就能跑）</a></li></ul><li><a href="#5-正经项目-用-init-起骨架">5. 正经项目：用 --init 起骨架</a></li><ul class="lv3"><li><a href="#leno-toml-长什么样-实测生成内容">leno.toml 长什么样（实测生成内容）</a></li></ul><li><a href="#6-保存前自检-check">6. 保存前自检：--check</a></li><li><a href="#7-编辑器与-lsp-可选">7. 编辑器与 LSP（可选）</a></li><li><a href="#8-环境坑速查-都是实测踩过的">8. 环境坑速查（都是实测踩过的）</a></li></ul></aside>

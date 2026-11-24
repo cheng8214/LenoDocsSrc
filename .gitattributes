@@ -1,0 +1,11 @@
+# site/ 是**生成物**，由 build_html.leno 写出（一律 LF）。
+# Windows 上 checkout 默认转成 CRLF ⇒ 每次重建后 git status 会列出上百个
+# "已修改" 的 html，而内容其实一字未变（git add 后差异为 0）。
+# 这里声明生成物不做换行转换，让"重建后工作区应该是干净的"成为可验证的事实。
+site/** -text
+
+# 源码/文档按 LF 存储（跨平台一致），checkout 时保持原样
+*.md   text eol=lf
+*.leno text eol=lf
+*.py   text eol=lf
+*.ps1  text eol=lf

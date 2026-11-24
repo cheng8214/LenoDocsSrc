@@ -513,11 +513,13 @@ func msg_text(Msg m): string {
 
 ---
 
-> **这篇的每段代码都被机器验过**：`verify_doc_code.ps1` 会把文档里每个含 `main()` 的代码块
-> 抽出来、用真编译器跑一遍，有任何一块不通过就报错。改了本文档请顺手跑：
+> **这篇的每段代码都被机器验过**：`bench/verify_doc_code.leno` 会把文档里每个含 `main()` 的
+> 代码块抽出来、用真编译器跑一遍，并按结果分类（`ok` / `stale` 过期 / `fragment` 只是片段 /
+> `crash` / `timeout`）。改了本文档请顺手跑（在 **Leno 仓库根**执行）：
 >
 > ```bat
-> powershell -NoProfile -ExecutionPolicy Bypass -File verify_doc_code.ps1
+> build\leno.exe bench\verify_doc_code.leno --docs ..\LenoDocsSrc --glob "常见任务cookbook.md"
 > ```
 >
-> 实测当前：`ran=86 fail=0`（三篇新手文档合计）。
+> 实测：`OK 常见任务cookbook.md  ran=15 fail=0 skip=0`。
+> 三篇新手文档合计 `ran=86 fail=0`（顺手也给零基础那篇跑了一份）。
