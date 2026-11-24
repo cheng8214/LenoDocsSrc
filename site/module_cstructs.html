@@ -349,6 +349,32 @@ arr.free_all()
 var result = arr.free_all()
 print(&quot;释放结果: &quot; + result)  // true
 </code></pre>
+<h4 id="sum-field-min-field-max-field"><code>sum(field)</code> / <code>min(field)</code> / <code>max(field)</code></h4>
+<p>对数组的某个数值字段做聚合 —— <strong>不分配结果数组</strong>，扫一遍就出结果。</p>
+<p><strong>参数</strong>:
+- <code>field</code> (string): 字段名</p>
+<p><strong>返回</strong>: <code>float</code></p>
+<pre><code class="language-leno">var ps = V3.malloc_array(1000)
+// … 填充 …
+var total = ps.sum(&quot;x&quot;)
+var lo = ps.min(&quot;x&quot;)
+var hi = ps.max(&quot;x&quot;)
+ps.free_all()
+</code></pre>
+<ul>
+<li>空数组：<code>sum</code> 给 <code>0.0</code>；<code>min</code> / <code>max</code> <strong>报错</strong>（"空数组没有最小值"没有定义）</li>
+<li>只支持<strong>非位域标量</strong>字段（<code>i8</code> … <code>u64</code> / <code>f32</code> / <code>f64</code>）</li>
+<li>位域（<code>u32 x : 3</code>）、数组字段（<code>u8 data[4]</code>）、非数值字段都会<strong>明确报错</strong> —— 位域跨字节，批量读的语义最容易写错</li>
+</ul>
+<h4 id="column_f-field-column_i-field"><code>column_f(field)</code> / <code>column_i(field)</code></h4>
+<p>按字段取一列，生成普通的 GC 数组。</p>
+<pre><code class="language-leno">Array[float] xs  = ps.column_f(&quot;x&quot;)     // 喂给统计算 / 图表 / 序列化
+Array[int]   ids = ps.column_i(&quot;id&quot;)
+</code></pre>
+<ul>
+<li>两个入口<strong>分开</strong>，不做"自动选类型"：混着 int/float 的 <code>Array[float]</code> 会让下游每次取值都要 <code>_int</code> / <code>_float</code> 收窄</li>
+<li>这是<strong>边界转换</strong>（每元素一个 GC 对象）：不要放进热循环 —— 热循环里直接 <code>ps[i].x</code></li>
+</ul>
 <h4 id="to_ptr"><code>to_ptr()</code></h4>
 <p>获取数组首地址指针（用于 FFI 调用）。</p>
 <p><strong>参数</strong>: 无<br>

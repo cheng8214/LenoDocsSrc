@@ -293,6 +293,40 @@ var result = arr.free_all()
 print("释放结果: " + result)  // true
 ```
 
+#### `sum(field)` / `min(field)` / `max(field)`
+
+对数组的某个数值字段做聚合 —— **不分配结果数组**，扫一遍就出结果。
+
+**参数**:
+- `field` (string): 字段名
+
+**返回**: `float`
+
+```leno
+var ps = V3.malloc_array(1000)
+// … 填充 …
+var total = ps.sum("x")
+var lo = ps.min("x")
+var hi = ps.max("x")
+ps.free_all()
+```
+
+- 空数组：`sum` 给 `0.0`；`min` / `max` **报错**（"空数组没有最小值"没有定义）
+- 只支持**非位域标量**字段（`i8` … `u64` / `f32` / `f64`）
+- 位域（`u32 x : 3`）、数组字段（`u8 data[4]`）、非数值字段都会**明确报错** —— 位域跨字节，批量读的语义最容易写错
+
+#### `column_f(field)` / `column_i(field)`
+
+按字段取一列，生成普通的 GC 数组。
+
+```leno
+Array[float] xs  = ps.column_f("x")     // 喂给统计算 / 图表 / 序列化
+Array[int]   ids = ps.column_i("id")
+```
+
+- 两个入口**分开**，不做"自动选类型"：混着 int/float 的 `Array[float]` 会让下游每次取值都要 `_int` / `_float` 收窄
+- 这是**边界转换**（每元素一个 GC 对象）：不要放进热循环 —— 热循环里直接 `ps[i].x`
+
 #### `to_ptr()`
 
 获取数组首地址指针（用于 FFI 调用）。
