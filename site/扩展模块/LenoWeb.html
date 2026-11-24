@@ -86,10 +86,27 @@ main() {
 </tr>
 <tr>
 <td><code>web_generic.leno</code></td>
-<td><code>Result[T]</code> 等泛型小工具</td>
+<td>泛型小工具：<code>map/filter/reduce/forEach</code> + <code>LinkedList</code>（<strong><code>Result</code> 2026-11-09 已删、<code>Stack</code> 2026-11-24 已删</strong>，改用 <code>Result</code> / <code>Containers</code> 模块）</td>
 </tr>
 </tbody>
 </table>
+<h3 id="破坏性变更-2026-11-24-stack-已从这里移除">⚠ 破坏性变更（2026-11-24）：<code>Stack</code> 已从这里移除</h3>
+<p><code>web_generic.Stack</code>（手写、空取返回 null、字段 <code>size</code>）与 <code>LenoContainers.Stack</code>
+<strong>同名</strong>，而编译器的类型表<strong>全局按名字索引</strong> —— 用户同时 <code>import "Web"</code> 与
+<code>import "Containers"</code>（或任何间接引入容器的模块，如 <code>LenoSDL3</code>）会在运行期直接报：</p>
+<pre><code>跨模块同名struct 'Stack'：… 各定义了一份且无法证明等价 … 四张类型表全局只按名字索引、
+运行期只能保留一份 … 请给其中一个改名
+</code></pre>
+<p>2026-11-24 实测：本模块自己的 <code>test/</code> 有 8/13 因为这一条挂掉。所以<strong>只留一份实现</strong>：</p>
+<pre><code class="language-leno">import &quot;Containers&quot; as ct
+var s = new ct.Stack[int]()      // 取代 new web.Stack[int]() / gen.Stack[int]()
+s.push(1)
+s.len()                          // 取代字段 size
+s.is_empty()                     // 取代 isEmpty()
+s.pop()                          // 空栈**抛错**（不再返回 null）
+</code></pre>
+<p>与 2026-11-09 删除 <code>web_generic.Result</code> 同一处理方式。爬虫的优先队列也已改用
+<code>LenoContainers.PriorityQueue</code>（<code>web_crawler.leno</code> 里那 60 行手写堆已删）。</p>
 <p>原生依赖：<code>lib/win/libcurl-x64.dll</code>（Windows）/ <code>lib/linux/libcurl.so</code>（Linux），已在 <code>leno.toml</code> 的 <code>[native-libs]</code> 声明。
 库文件自 2026-11-19 起<strong>按平台分目录</strong>存放（与 LenoSqlite / LenoMusic / LenoQR / LenoSDL3 统一）。</p>
 <h2 id="字符集-响应体自动转-utf-8-2026-10-06-新增">字符集：响应体自动转 UTF-8（2026-10-06 新增）</h2>
@@ -823,7 +840,7 @@ var rs = web.renderMany(b, urls, opt, 3)
 <pre><code class="language-bash">build\leno.exe build\leno_module\LenoWeb\examples\tests\run_tests.leno
 </code></pre>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块组成-lib">模块组成（lib/）</a></li><li><a href="#字符集-响应体自动转-utf-8-2026-10-06-新增">字符集：响应体自动转 UTF-8（2026-10-06 新增）</a></li><li><a href="#html-解析与选择器">HTML 解析与选择器</a></li><ul class="lv3"><li><a href="#解析性能-2026-10-25-优化">解析性能（2026-10-25 优化）</a></li><li><a href="#选择器-取值一步到位-2026-10-20">选择器 + 取值一步到位（2026-10-20）</a></li><li><a href="#命名实体">命名实体</a></li></ul><li><a href="#上传-multipart-form-data-新增">上传：multipart/form-data（新增）</a></li><li><a href="#爬虫">爬虫</a></li><ul class="lv3"><li><a href="#优先队列">优先队列</a></li><li><a href="#sitemap">Sitemap</a></li><li><a href="#gzip-deflate-解压-web_gzip-lenocompress-2026-10-06-新增-10-17-收编">gzip / DEFLATE 解压（web_gzip → LenoCompress，2026-10-06 新增 / 10-17 收编）</a></li><li><a href="#断点续爬">断点续爬</a></li><li><a href="#断点续传下载">断点续传下载</a></li></ul><li><a href="#并发批抓-curl_multi-新增">并发批抓（curl_multi，新增）</a></li><li><a href="#反爬基础-新增">反爬基础（新增）</a></li><ul class="lv3"><li><a href="#tls-指纹-ja3-ja4-只改套件不够">TLS 指纹（JA3/JA4）：只改套件不够</a></li></ul><li><a href="#多线程">多线程</a></li><li><a href="#动态渲染-无头浏览器-2026-10-07-新增">动态渲染：无头浏览器（2026-10-07 新增）</a></li><li><a href="#已知限制">已知限制</a></li><li><a href="#示例与测试">示例与测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块组成-lib">模块组成（lib/）</a></li><ul class="lv3"><li><a href="#破坏性变更-2026-11-24-stack-已从这里移除">⚠ 破坏性变更（2026-11-24）：Stack 已从这里移除</a></li></ul><li><a href="#字符集-响应体自动转-utf-8-2026-10-06-新增">字符集：响应体自动转 UTF-8（2026-10-06 新增）</a></li><li><a href="#html-解析与选择器">HTML 解析与选择器</a></li><ul class="lv3"><li><a href="#解析性能-2026-10-25-优化">解析性能（2026-10-25 优化）</a></li><li><a href="#选择器-取值一步到位-2026-10-20">选择器 + 取值一步到位（2026-10-20）</a></li><li><a href="#命名实体">命名实体</a></li></ul><li><a href="#上传-multipart-form-data-新增">上传：multipart/form-data（新增）</a></li><li><a href="#爬虫">爬虫</a></li><ul class="lv3"><li><a href="#优先队列">优先队列</a></li><li><a href="#sitemap">Sitemap</a></li><li><a href="#gzip-deflate-解压-web_gzip-lenocompress-2026-10-06-新增-10-17-收编">gzip / DEFLATE 解压（web_gzip → LenoCompress，2026-10-06 新增 / 10-17 收编）</a></li><li><a href="#断点续爬">断点续爬</a></li><li><a href="#断点续传下载">断点续传下载</a></li></ul><li><a href="#并发批抓-curl_multi-新增">并发批抓（curl_multi，新增）</a></li><li><a href="#反爬基础-新增">反爬基础（新增）</a></li><ul class="lv3"><li><a href="#tls-指纹-ja3-ja4-只改套件不够">TLS 指纹（JA3/JA4）：只改套件不够</a></li></ul><li><a href="#多线程">多线程</a></li><li><a href="#动态渲染-无头浏览器-2026-10-07-新增">动态渲染：无头浏览器（2026-10-07 新增）</a></li><li><a href="#已知限制">已知限制</a></li><li><a href="#示例与测试">示例与测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../LenoWeb能力缺口与修复路线.html">← 上一篇</a><a href="../archive/LenoNet_崩溃问题排查记录.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

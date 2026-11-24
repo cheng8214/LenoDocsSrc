@@ -30,9 +30,9 @@
 源 README：<code>Leno/build/leno_module/LenoContainers/README.md</code>（本页是同步副本，改请改源）</p>
 </blockquote>
 <h1 id="lenocontainers">LenoContainers</h1>
-<p>栈 / 队列 / LRU 容器，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
-<p>四个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>LRU[V]</code>（严格按最近访问淘汰）/ <code>ClockLRU[V]</code>
-（CLOCK 二次机会，<strong>O(1) 近似</strong> LRU，2026-11-24 起）。</p>
+<p>栈 / 队列 / 优先队列 / 缓存淘汰，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
+<p>五个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>PriorityQueue[T]</code> /
+<code>LRU[V]</code>（严格按最近访问淘汰）/ <code>ClockLRU[V]</code>（CLOCK 二次机会，<strong>O(1) 近似</strong> LRU）。</p>
 <h2 id="用法">用法</h2>
 <pre><code class="language-leno">import &quot;Containers&quot; as ct
 
@@ -40,12 +40,22 @@ var s = new ct.Stack[int]()
 s.push(1)
 s.push(2)
 print(s.pop())              // 2（后进先出）
-print(s.len())              // 1
+print(s.to_array())         // [1]（快照，非破坏性）
 
 var q = new ct.Queue[string]()
-q.push(&quot;a&quot;)
-q.push(&quot;b&quot;)
-print(q.pop())              // a（先进先出）
+q.push_all([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])
+print(q.pop())              // a
+print(q.pop_n(2))           // [b, c]（一次出队 2 个；不够抛错）
+
+// 优先队列：比较器 &lt;0 ⇒ a 先出；返回 0 时**按入队序**先入先出（堆本身不稳定）
+var pq = new ct.PriorityQueue[int](cmp = func(int a, int b): int {
+    if a &gt; b { return -1 }  // 大顶
+    if a &lt; b { return 1 }
+    return 0
+})
+pq.push(3); pq.push(9); pq.push(5)
+print(pq.top())             // 9（不出队）
+print(pq.pop())             // 9
 
 var l = new ct.LRU[int](cap = 128)
 l.put(&quot;k&quot;, 1)
@@ -68,7 +78,7 @@ print(c.get(&quot;k&quot;, -1))       // 1
 </thead>
 <tbody>
 <tr>
-<td><code>push(v)</code></td>
+<td><code>push(v)</code> / <code>push_all(Array[T])</code></td>
 <td>入栈</td>
 </tr>
 <tr>
@@ -83,8 +93,13 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td><code>len()</code> / <code>is_empty()</code> / <code>clear()</code></td>
 <td></td>
 </tr>
+<tr>
+<td><code>to_array(): Array[T]</code></td>
+<td>栈底 → 栈顶的<strong>副本</strong>（改它不影响栈）</td>
+</tr>
 </tbody>
 </table>
+<p>也可以直接灌初值：<code>new ct.Stack[int](items = [1, 2, 3])</code>（命名参数构造 + 字段默认值）。</p>
 <h3 id="queue-t"><code>Queue[T]</code></h3>
 <table>
 <thead>
@@ -95,12 +110,16 @@ print(c.get(&quot;k&quot;, -1))       // 1
 </thead>
 <tbody>
 <tr>
-<td><code>push(v)</code></td>
+<td><code>push(v)</code> / <code>push_all(Array[T])</code></td>
 <td>入队（尾部）</td>
 </tr>
 <tr>
 <td><code>pop(): T</code></td>
 <td>出队（头部）；<strong>空队列抛错</strong></td>
+</tr>
+<tr>
+<td><code>pop_n(n): Array[T]</code></td>
+<td>一次出队 n 个（按出队顺序）；<code>n &lt; 1</code> 或超过剩余 ⇒ 抛错（不静默少给）</td>
 </tr>
 <tr>
 <td><code>peek(): T</code></td>
@@ -110,22 +129,60 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td><code>len()</code> / <code>is_empty()</code> / <code>clear()</code></td>
 <td></td>
 </tr>
+<tr>
+<td><code>to_array(): Array[T]</code></td>
+<td>队首 → 队尾的副本（扣掉已出队的空洞）</td>
+</tr>
 </tbody>
 </table>
 <p>队列是 <strong>head 指针 + 惰性压缩</strong>：<code>pop</code> 只挪指针，积压超过一半且超过 64 个时才整体搬一次，
 平摊 O(1) —— 不是 <code>Array.remove(0)</code> 那种每次 O(n) 整体搬移。</p>
-<h3 id="lru-v"><code>LRU[V]</code></h3>
+<h3 id="priorityqueue-t"><code>PriorityQueue[T]</code></h3>
 <table>
 <thead>
 <tr>
-<th>方法</th>
+<th>成员</th>
 <th>说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>put(k, v)</code></td>
-<td>写入；超容量时淘汰<strong>最久未使用</strong></td>
+<td><code>cmp: func(T, T):int</code></td>
+<td>比较器字段，构造时给（<code>new ct.PriorityQueue[int](cmp = …)</code>）；<code>null</code> ⇒ 全相等 ⇒ 退化成 FIFO</td>
+</tr>
+<tr>
+<td><code>push(v)</code> / <code>pop(): T</code> / <code>top(): T</code></td>
+<td>入堆 / 出堆 / 看堆顶；<strong>空堆 pop/top 抛错</strong></td>
+</tr>
+<tr>
+<td><code>len()</code> / <code>is_empty()</code> / <code>clear()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>to_array(): Array[T]</code></td>
+<td><strong>堆序</strong>（只保证父优于子），不是出队顺序</td>
+</tr>
+<tr>
+<td><code>drain_sorted(): Array[T]</code></td>
+<td>依次弹出全部 ⇒ 真实出队顺序（用完堆为空）</td>
+</tr>
+</tbody>
+</table>
+<p>两条契约：
+- <strong>同优先级 FIFO</strong>：比较器返回 0 时按入队序号先入先出（堆本身不稳定，这是手写堆最常错的地方）；
+- <strong>空堆抛错</strong>，不返回 null。</p>
+<h3 id="lru-v"><code>LRU[V]</code></h3>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>put(k, v): string?</code></td>
+<td>写入；超容量时淘汰<strong>最久未使用</strong>，返回被淘汰的 key（<code>null</code> = 没淘汰）</td>
 </tr>
 <tr>
 <td><code>get(k, default): V</code></td>
@@ -136,16 +193,24 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td>命中<strong>不提升</strong>访问序（批量只读用它，省掉搬移）</td>
 </tr>
 <tr>
+<td><code>keys(): Array[string]</code></td>
+<td>现存 key，最久未使用 → 最近使用</td>
+</tr>
+<tr>
 <td><code>has(k)</code> / <code>remove(k)</code> / <code>len()</code> / <code>capacity()</code></td>
 <td></td>
 </tr>
 <tr>
-<td><code>set_capacity(n)</code></td>
-<td>调小立即淘汰到新上限；<code>n &lt; 1</code> 抛错</td>
+<td><code>set_capacity(n): Array[string]</code></td>
+<td>调小立即淘汰到新上限，返回被淘汰的 key；<code>n &lt; 1</code> 抛错</td>
+</tr>
+<tr>
+<td><code>on_evict: func(string, V):void</code></td>
+<td>淘汰回调（见下）</td>
 </tr>
 <tr>
 <td><code>clear()</code></td>
-<td></td>
+<td>清空；挂了 <code>on_evict</code> 就逐条通知</td>
 </tr>
 </tbody>
 </table>
@@ -153,14 +218,14 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <table>
 <thead>
 <tr>
-<th>方法</th>
+<th>成员</th>
 <th>说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>put(k, v)</code></td>
-<td>写入；满时按 CLOCK 淘汰（近似"最久未使用"）</td>
+<td><code>put(k, v): string?</code></td>
+<td>写入；满时按 CLOCK 淘汰（近似"最久未使用"），返回被淘汰的 key</td>
 </tr>
 <tr>
 <td><code>get(k, default): V</code></td>
@@ -171,12 +236,20 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td>只读，连"最近用过"位都不动</td>
 </tr>
 <tr>
+<td><code>keys(): Array[string]</code></td>
+<td>现存 key（<strong>环序</strong>，不是访问序）</td>
+</tr>
+<tr>
 <td><code>has(k)</code> / <code>remove(k)</code> / <code>len()</code> / <code>capacity()</code> / <code>clear()</code></td>
 <td></td>
 </tr>
 <tr>
-<td><code>set_capacity(n)</code></td>
+<td><code>set_capacity(n): Array[string]</code></td>
 <td><strong>只支持调大</strong>；缩容抛错（定长环要重建，见下）</td>
+</tr>
+<tr>
+<td><code>on_evict: func(string, V):void</code></td>
+<td>淘汰回调（见下）</td>
 </tr>
 </tbody>
 </table>
@@ -186,14 +259,33 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <code>peek</code> 都是 <strong>O(1)，与 cap 无关</strong>。</p>
 <p>取舍：<code>ClockLRU</code> 淘汰的是<strong>近似</strong>最久未使用（不是严格的），且不支持缩容。
 要"淘汰的确实是最久未使用"、cap 又不大（≤128 很划算）就用 <code>LRU</code>。</p>
+<h3 id="on_evict-淘汰时交还资源-两个缓存容器都有"><code>on_evict</code>：淘汰时交还资源（两个缓存容器都有）</h3>
+<p>缓存里装的常常是<strong>有副作用的资源</strong>（SDL 纹理 <code>Ptr</code>、打开的文件、socket），淘汰那一刻必须释放：</p>
+<pre><code class="language-leno">func destroyTex(string path, Ptr[u8] t) {
+    if t != null { core.lib().SDL_DestroyTexture(t) }
+}
+
+var tex = new ct.ClockLRU[Ptr[u8]](cap = 64, on_evict = destroyTex)
+tex.put(&quot;a.png&quot;, SDL3.loadImageTexture(r.handle, &quot;a.png&quot;))   // 满了淘汰 ⇒ 自动销毁
+tex.clear()                                                  // 逐条销毁剩余
+</code></pre>
+<ul>
+<li>触发时机：<strong>自动淘汰</strong>（超容量 / <code>set_capacity</code> 缩容）与 <code>clear()</code>；</li>
+<li>显式 <code>remove(k)</code> <strong>不触发</strong> —— 那是调用方主动拿走的，由它自己收尾；</li>
+<li>回调签名是 <code>(key, value)</code>：大多数场景只用 value，key 用来记账/打印。</li>
+</ul>
 <h2 id="边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</h2>
 <ol>
 <li><strong>空容器取值一律抛错</strong>，不返回 <code>null</code> / <code>0</code> / 默认值 —— 空栈 <code>pop()</code> 是写错了，
-   给它一个 0 只会让错误漂到离病因很远的地方。（<code>LRU.get/peek</code> 是例外：它是缓存，
-   缺失本来就是常态，所以默认值<strong>由调用点显式给</strong>。）</li>
+   给它一个 0 只会让错误漂到离病因很远的地方。错误串统一前缀
+   <code>Containers.&lt;类型&gt;.&lt;方法&gt;:</code>，要按字符串分支也有得抓。
+   （<code>LRU.get/peek</code> 是例外：缓存命中缺失本来就是常态，默认值<strong>由调用点显式给</strong>。）</li>
 <li><strong><code>len()</code> 是逻辑元素个数</strong>（队列扣掉已出队但未压缩的空洞）。</li>
-<li><strong><code>LRU</code> 按最近访问淘汰</strong>（<code>get</code> 会提升，<code>peek</code> 不会）；<strong><code>ClockLRU</code> 是近似</strong>。</li>
-<li><strong>键类型固定为 <code>string</code></strong>：两者都用 <code>Dict[string, V]</code> 存值；要别的键类型请自己包一层。</li>
+<li><strong><code>LRU</code> 按最近访问淘汰</strong>（<code>get</code> 会提升，<code>peek</code> 不会）；<strong><code>ClockLRU</code> 是近似</strong>；
+   <strong><code>PriorityQueue</code> 同优先级 FIFO</strong>。</li>
+<li><strong>键类型固定为 <code>string</code></strong>：两个缓存都用 <code>Dict[string, V]</code> 存值；要别的键类型请自己包一层。</li>
+<li><strong>不带锁</strong>。Leno 的并发模型是 Channel 传值 + <code>thread_local</code>，容器不做加锁版本；
+   要跨线程就整份传，或者把容器留在一个线程里用 Channel 收发。</li>
 </ol>
 <h2 id="复杂度">复杂度</h2>
 <table>
@@ -220,6 +312,13 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td>均摊 O(1)</td>
 <td>—</td>
 <td>—</td>
+</tr>
+<tr>
+<td><code>PriorityQueue</code></td>
+<td>O(log n)</td>
+<td>O(log n)</td>
+<td>—</td>
+<td>O(1)</td>
 </tr>
 <tr>
 <td><code>LRU</code></td>
@@ -260,7 +359,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </tr>
 <tr>
 <td><code>Queue.push</code> / <code>pop</code></td>
-<td>32 / 90</td>
+<td>36 / 84</td>
 </tr>
 <tr>
 <td><code>Queue.pop</code> 缓存 <code>len</code> 前（A/B）</td>
@@ -269,6 +368,18 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <tr>
 <td><code>Array.remove(0)</code> 出队（反面教材）</td>
 <td>16 982</td>
+</tr>
+<tr>
+<td><code>PriorityQueue.push</code>（N=500k 随机优先级）</td>
+<td>430</td>
+</tr>
+<tr>
+<td><code>PriorityQueue.pop</code>（N=500k，含 sink）</td>
+<td>4 120</td>
+</tr>
+<tr>
+<td>对照：<code>Array.add</code> 500k + 全量 <code>sort</code></td>
+<td>13 + 1 528</td>
 </tr>
 </tbody>
 </table>
@@ -315,10 +426,49 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </tbody>
 </table>
 <p><code>cap=1024</code> 的写入：<code>LRU.put</code> 新 key 2 825、覆盖 2 253；<code>ClockLRU.put</code> 新 key 1 182、覆盖 380。
-<code>LRU.set_capacity(4096 → 128)</code> 一次裁 3 968 个：<strong>251 µs</strong>（批量裁前缀，不是逐次
-<code>remove(0)</code>）。</p>
-<p>结论：<strong>cap ≤ 128 用 LRU 就够</strong>（<code>peek</code> 快的场景也可以一直用 LRU）；<strong>cap 上千、或
-<code>get</code> 在热路径上，用 <code>ClockLRU</code></strong> —— 它的 <code>get</code> 曲线是平的。</p>
+<code>LRU.set_capacity(4096 → 128)</code> 一次裁 3 968 个：<strong>251 µs</strong>（批量裁前缀，不是逐次 <code>remove(0)</code>）。</p>
+<p>几条读数的解读（都是实测，不是估算）：</p>
+<ul>
+<li><strong><code>Stack.push</code> 35 ns vs 裸 <code>Array.add</code> 8 ns</strong>：差的 27 ns 就是<strong>一次 struct 方法调用</strong>
+  （工程内实测：自由函数 17 ns、非泛型方法 38 ns、泛型方法 37 ns —— <strong>泛型没有额外惩罚</strong>）。
+  这段没法在容器层消掉，只能靠编译器内联。</li>
+<li><strong><code>PriorityQueue</code> 每元素 ~4 µs</strong>：log₂(500k) ≈ 19 层，每层 1~2 次比较，而<strong>每次比较要付
+  一次 <code>cmp</code> 函数调用（约 55 ns）</strong> + 两次 <code>Array[T]</code> 下标（泛型下标比 <code>Array[int]</code> 贵 ~12 ns）。
+  所以：<strong>元素多、又要边插边取</strong>才用堆；纯"攒完一次性排序"直接 <code>sort</code> 更快（1 528 ns/元素，
+  但只排一次）。爬虫这种"队列上万、每次只取一个"的场景是对的。</li>
+<li><strong><code>ClockLRU.get</code> 曲线是平的</strong>（16→4096 只从 320 涨到 369），<code>LRU.get</code> 是斜的。</li>
+</ul>
+<h2 id="在仓库里的真实使用">在仓库里的真实使用</h2>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>用的什么</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LenoWeb/lib/web_crawler.leno</code></td>
+<td><code>PriorityQueue[CrawlItem]</code></td>
+<td>爬虫的 URL 前沿本来手写了一份二叉堆（<code>_higher/_swap/_siftUp/_siftDown</code> 共 60 行）；收编后 <code>seq</code>（同优先级 FIFO）与断点续爬都靠容器的契约保住</td>
+</tr>
+<tr>
+<td><code>LenoSDL3/lib/sdl_menu.leno</code></td>
+<td><code>ClockLRU[Ptr[u8]]</code> + <code>on_evict</code></td>
+<td>菜单图标缓存原来两条平行数组 + 线性扫描、<strong>没有容量上限</strong>（长跑应用持续占显存）；现在 O(1) 命中、容量封顶、淘汰即 <code>SDL_DestroyTexture</code>。单槽 MRU 快路径保留（同一图标相邻行连续绘制时不碰字典）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠ <strong>LenoWeb 的 <code>web_generic.Stack</code> 已删除（2026-11-24，破坏性）</strong>：它和 <code>Containers.Stack</code>
+<strong>同名</strong>，而编译器的四张类型表全局按名字索引 —— 用户同时 <code>import "Web"</code> 与
+<code>import "Containers"</code> 会直接报
+「跨模块同名struct 'Stack' … 运行期只能保留一份 … 请给其中一个改名」。
+现在只有一份实现（本模块的），<code>use web.Stack</code> / 字段 <code>size</code> / <code>init()</code> 不再存在，
+迁移写法：<code>import "Containers" as ct; new ct.Stack[T]()</code>，长度用 <code>len()</code>、判空用 <code>is_empty()</code>。
+与 2026-11-09 <code>web_generic.Result</code> 的处理方式一致。</p>
+</blockquote>
 <h2 id="跑测试">跑测试</h2>
 <pre><code>build\leno.exe build\leno_module\LenoContainers\test\test_containers.leno
 </code></pre>
@@ -327,13 +477,24 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </code></pre>
 <h2 id="变更记录">变更记录</h2>
 <ul>
-<li><strong>0.2.0</strong>（2026-11-24）：新增 <code>ClockLRU</code>（O(1) 近似 LRU）；<code>LRU</code> 加 <code>peek</code>（不提升）；
-  <code>Queue.pop</code> 只取一次 <code>items.len()</code>；<code>LRU.set_capacity</code> 缩容改批量裁剪（4096→128 从
-  几十毫秒降到 0.25 ms）。以上均附实测数字，见「性能实测」。</li>
+<li><strong>0.3.0</strong>（2026-11-24）：<ul>
+<li>新增 <code>PriorityQueue[T]</code>（二叉堆；同优先级 FIFO；空堆抛错）。</li>
+<li>新增 <code>Stack/Queue.to_array()</code>、<code>Queue.pop_n()</code>、<code>Stack/Queue.push_all()</code>、<code>LRU/ClockLRU.keys()</code>。</li>
+<li>两个缓存容器新增 <strong><code>on_evict</code> 淘汰回调</strong> 与 <code>put</code> 返回被淘汰的 key（用来释放纹理/文件句柄）。</li>
+<li>错误串统一前缀 <code>Containers.&lt;类型&gt;.&lt;方法&gt;:</code>；文档明确"不带锁"。</li>
+<li>真实替换：LenoWeb 爬虫的二叉堆、LenoSDL3 菜单图标缓存（见上表）。</li>
+<li>顺带修了编译器一个 bug：<strong>跨模块泛型 struct 的 func 类型字段</strong>命名构造时泛型参数没替换
+    （<code>new ct.PriorityQueue[int](cmp = func(int,int):int {...})</code> 报类型不匹配）。
+    根因是替换时靠"遍历本单元 AST 找 struct 定义"，跨模块那个 AST 根本不在本单元；现改为从
+    符号表 <code>struct_type_params</code> 取。回归用例：<code>assert/test_struct_init_func_field_cross.leno</code>。</li>
+</ul>
+</li>
+<li><strong>0.2.0</strong>（2026-11-24）：新增 <code>ClockLRU</code>；<code>LRU.peek</code>；<code>Queue.pop</code> 只取一次 <code>items.len()</code>；
+  <code>LRU.set_capacity</code> 缩容改批量裁剪（4096→128 从几十毫秒降到 0.25 ms）。</li>
 <li><strong>0.1.0</strong>：<code>Stack</code> / <code>Queue</code> / <code>LRU</code> 初版。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#on_evict-淘汰时交还资源-两个缓存容器都有">on_evict：淘汰时交还资源（两个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
