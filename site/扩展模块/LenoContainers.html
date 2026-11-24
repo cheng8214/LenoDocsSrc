@@ -30,7 +30,9 @@
 源 README：<code>Leno/build/leno_module/LenoContainers/README.md</code>（本页是同步副本，改请改源）</p>
 </blockquote>
 <h1 id="lenocontainers">LenoContainers</h1>
-<p>栈 / 队列 / LRU 三个容器，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
+<p>栈 / 队列 / LRU 容器，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
+<p>四个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>LRU[V]</code>（严格按最近访问淘汰）/ <code>ClockLRU[V]</code>
+（CLOCK 二次机会，<strong>O(1) 近似</strong> LRU，2026-11-24 起）。</p>
 <h2 id="用法">用法</h2>
 <pre><code class="language-leno">import &quot;Containers&quot; as ct
 
@@ -48,6 +50,12 @@ print(q.pop())              // a（先进先出）
 var l = new ct.LRU[int](cap = 128)
 l.put(&quot;k&quot;, 1)
 print(l.get(&quot;k&quot;, -1))       // 1；缺失返回调用点给的默认值
+print(l.peek(&quot;k&quot;, -1))      // 1；只读，**不提升**访问序
+
+// cap 上千、要严格 O(1) ⇒ 换成 ClockLRU（淘汰顺序只是近似）
+var c = new ct.ClockLRU[int](cap = 4096)
+c.put(&quot;k&quot;, 1)
+print(c.get(&quot;k&quot;, -1))       // 1
 </code></pre>
 <h2 id="api">API</h2>
 <h3 id="stack-t"><code>Stack[T]</code></h3>
@@ -124,6 +132,10 @@ print(l.get(&quot;k&quot;, -1))       // 1；缺失返回调用点给的默认�
 <td>命中会提升为最近使用；缺失返回默认值</td>
 </tr>
 <tr>
+<td><code>peek(k, default): V</code></td>
+<td>命中<strong>不提升</strong>访问序（批量只读用它，省掉搬移）</td>
+</tr>
+<tr>
 <td><code>has(k)</code> / <code>remove(k)</code> / <code>len()</code> / <code>capacity()</code></td>
 <td></td>
 </tr>
@@ -137,53 +149,191 @@ print(l.get(&quot;k&quot;, -1))       // 1；缺失返回调用点给的默认�
 </tr>
 </tbody>
 </table>
+<h3 id="clocklru-v"><code>ClockLRU[V]</code></h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>put(k, v)</code></td>
+<td>写入；满时按 CLOCK 淘汰（近似"最久未使用"）</td>
+</tr>
+<tr>
+<td><code>get(k, default): V</code></td>
+<td>命中打一个"最近用过"位（O(1)）；缺失返回默认值</td>
+</tr>
+<tr>
+<td><code>peek(k, default): V</code></td>
+<td>只读，连"最近用过"位都不动</td>
+</tr>
+<tr>
+<td><code>has(k)</code> / <code>remove(k)</code> / <code>len()</code> / <code>capacity()</code> / <code>clear()</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>set_capacity(n)</code></td>
+<td><strong>只支持调大</strong>；缩容抛错（定长环要重建，见下）</td>
+</tr>
+</tbody>
+</table>
+<p>实现是 <strong>定长环 + 每格一个 ref 位</strong>：<code>get</code> 命中只写一位、不搬数组、不找 key
+（key→下标在 <code>slot</code> 字典里）；淘汰时 CLOCK 指针走环，<code>ref=1</code> 清零放过（给第二次
+机会）、<code>ref=0</code> 淘汰、<code>ref=-1</code>（<code>remove</code> 留下的死槽）直接复用。所以 <code>get</code> / <code>put</code> /
+<code>peek</code> 都是 <strong>O(1)，与 cap 无关</strong>。</p>
+<p>取舍：<code>ClockLRU</code> 淘汰的是<strong>近似</strong>最久未使用（不是严格的），且不支持缩容。
+要"淘汰的确实是最久未使用"、cap 又不大（≤128 很划算）就用 <code>LRU</code>。</p>
 <h2 id="边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</h2>
 <ol>
 <li><strong>空容器取值一律抛错</strong>，不返回 <code>null</code> / <code>0</code> / 默认值 —— 空栈 <code>pop()</code> 是写错了，
-   给它一个 0 只会让错误漂到离病因很远的地方。</li>
+   给它一个 0 只会让错误漂到离病因很远的地方。（<code>LRU.get/peek</code> 是例外：它是缓存，
+   缺失本来就是常态，所以默认值<strong>由调用点显式给</strong>。）</li>
 <li><strong><code>len()</code> 是逻辑元素个数</strong>（队列扣掉已出队但未压缩的空洞）。</li>
-<li><strong>LRU 按最近访问淘汰</strong>（<code>get</code> 会提升），不是按插入顺序。</li>
-<li><strong>键类型固定为 <code>string</code></strong>：LRU 用 <code>Dict[string, V]</code> + 顺序数组实现；要别的键类型
-   请自己包一层。</li>
+<li><strong><code>LRU</code> 按最近访问淘汰</strong>（<code>get</code> 会提升，<code>peek</code> 不会）；<strong><code>ClockLRU</code> 是近似</strong>。</li>
+<li><strong>键类型固定为 <code>string</code></strong>：两者都用 <code>Dict[string, V]</code> 存值；要别的键类型请自己包一层。</li>
 </ol>
 <h2 id="复杂度">复杂度</h2>
 <table>
 <thead>
 <tr>
 <th>容器</th>
-<th><code>push</code></th>
+<th><code>push</code> / <code>put</code></th>
 <th><code>pop</code></th>
 <th><code>get</code></th>
+<th><code>peek</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Stack</td>
+<td><code>Stack</code></td>
 <td>均摊 O(1)</td>
 <td>均摊 O(1)</td>
+<td>—</td>
 <td>—</td>
 </tr>
 <tr>
-<td>Queue</td>
+<td><code>Queue</code></td>
 <td>均摊 O(1)</td>
 <td>均摊 O(1)</td>
+<td>—</td>
 <td>—</td>
 </tr>
 <tr>
-<td>LRU</td>
+<td><code>LRU</code></td>
 <td>O(n)</td>
 <td>—</td>
 <td>O(n)</td>
+<td><strong>O(1)</strong></td>
+</tr>
+<tr>
+<td><code>ClockLRU</code></td>
+<td><strong>均摊 O(1)</strong></td>
+<td>—</td>
+<td><strong>O(1)</strong></td>
+<td><strong>O(1)</strong></td>
 </tr>
 </tbody>
 </table>
-<p>LRU 的 O(n) 来自"数组里找 key 再搬位置"。cap 在几千以内没问题；要真正的 O(1)
-得上双向链表 + 节点表，在 Leno 里手写那套的复杂度远超收益。</p>
+<p><code>LRU</code> 的 O(n) 来自"数组里找 key 再搬位置"（<code>peek</code> 不搬，所以是 O(1)）；
+<code>ClockLRU</code> 换来 O(1)，代价是淘汰顺序只是近似。</p>
+<h2 id="性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，<code>bench/bench_containers.leno</code>）</h2>
+<p>单位 ns/op，<code>N=2,000,000</code>；<code>pop</code> 类读数含一个 <code>sink()</code> 调用（自由函数约 17 ns/op），
+LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小数。</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>ns/op</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>裸 <code>Array.add</code>（对照）</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>Stack.push</code> / <code>pop</code></td>
+<td>35 / 68</td>
+</tr>
+<tr>
+<td><code>Queue.push</code> / <code>pop</code></td>
+<td>32 / 90</td>
+</tr>
+<tr>
+<td><code>Queue.pop</code> 缓存 <code>len</code> 前（A/B）</td>
+<td>101 → 94</td>
+</tr>
+<tr>
+<td><code>Array.remove(0)</code> 出队（反面教材）</td>
+<td>16 982</td>
+</tr>
+</tbody>
+</table>
+<p><code>get</code> 命中随 cap 的变化（ns/op）：</p>
+<table>
+<thead>
+<tr>
+<th>cap</th>
+<th>16</th>
+<th>128</th>
+<th>1024</th>
+<th>4096</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LRU.get</code></td>
+<td>379</td>
+<td>624</td>
+<td>2 178</td>
+<td>7 659</td>
+</tr>
+<tr>
+<td><code>LRU.peek</code></td>
+<td>—</td>
+<td>—</td>
+<td>361</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>ClockLRU.get</code></td>
+<td>320</td>
+<td>357</td>
+<td>361</td>
+<td><strong>369</strong></td>
+</tr>
+<tr>
+<td>裸 <code>Dict.get</code>（对照，1024 键）</td>
+<td></td>
+<td></td>
+<td>319</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><code>cap=1024</code> 的写入：<code>LRU.put</code> 新 key 2 825、覆盖 2 253；<code>ClockLRU.put</code> 新 key 1 182、覆盖 380。
+<code>LRU.set_capacity(4096 → 128)</code> 一次裁 3 968 个：<strong>251 µs</strong>（批量裁前缀，不是逐次
+<code>remove(0)</code>）。</p>
+<p>结论：<strong>cap ≤ 128 用 LRU 就够</strong>（<code>peek</code> 快的场景也可以一直用 LRU）；<strong>cap 上千、或
+<code>get</code> 在热路径上，用 <code>ClockLRU</code></strong> —— 它的 <code>get</code> 曲线是平的。</p>
 <h2 id="跑测试">跑测试</h2>
 <pre><code>build\leno.exe build\leno_module\LenoContainers\test\test_containers.leno
 </code></pre>
+<h2 id="跑基准">跑基准</h2>
+<pre><code>build\leno.exe build\leno_module\LenoContainers\bench\bench_containers.leno
+</code></pre>
+<h2 id="变更记录">变更记录</h2>
+<ul>
+<li><strong>0.2.0</strong>（2026-11-24）：新增 <code>ClockLRU</code>（O(1) 近似 LRU）；<code>LRU</code> 加 <code>peek</code>（不提升）；
+  <code>Queue.pop</code> 只取一次 <code>items.len()</code>；<code>LRU.set_capacity</code> 缩容改批量裁剪（4096→128 从
+  几十毫秒降到 0.25 ms）。以上均附实测数字，见「性能实测」。</li>
+<li><strong>0.1.0</strong>：<code>Stack</code> / <code>Queue</code> / <code>LRU</code> 初版。</li>
+</ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#lru-v">LRU[V</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
