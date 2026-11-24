@@ -31,8 +31,9 @@
 </blockquote>
 <h1 id="lenocontainers">LenoContainers</h1>
 <p>栈 / 队列 / 优先队列 / 缓存淘汰，<strong>边界行为固定成契约</strong>。纯 Leno，无原生依赖。</p>
-<p>六个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>Deque[T]</code>（双端队列）/ <code>PriorityQueue[T]</code> /
-<code>LRU[V]</code>（严格按最近访问淘汰）/ <code>ClockLRU[V]</code>（CLOCK 二次机会，<strong>O(1) 近似</strong> LRU）。</p>
+<p>七个类型：<code>Stack[T]</code> / <code>Queue[T]</code> / <code>Deque[T]</code>（双端队列）/ <code>PriorityQueue[T]</code> /
+<code>LRU[V]</code>（严格淘汰但 <code>get</code> 是 O(n)）/ <code>ClockLRU[V]</code>（O(1) 近似 LRU）/
+<strong><code>LRUO1[V]</code>（严格淘汰 + 全 O(1)，2026-11-25 新增）</strong>。</p>
 <h2 id="用法">用法</h2>
 <pre><code class="language-leno">import &quot;Containers&quot; as ct
 
@@ -107,6 +108,10 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td><code>to_array(): Array[T]</code></td>
 <td>栈底 → 栈顶的<strong>副本</strong>（改它不影响栈）</td>
 </tr>
+<tr>
+<td><code>at(i): T</code></td>
+<td>按逻辑下标看元素（0 = 栈底）；越界抛错</td>
+</tr>
 </tbody>
 </table>
 <p>也可以直接灌初值：<code>new ct.Stack[int](items = [1, 2, 3])</code>（命名参数构造 + 字段默认值）。</p>
@@ -143,6 +148,14 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <td><code>to_array(): Array[T]</code></td>
 <td>队首 → 队尾的副本（扣掉已出队的空洞）</td>
 </tr>
+<tr>
+<td><code>at(i): T</code></td>
+<td>按逻辑下标看元素（0 = 队首）；越界抛错</td>
+</tr>
+<tr>
+<td><code>remove_at(i): T</code></td>
+<td>摘掉第 i 个（<strong>O(n)</strong>；按条件取走一条时用，纯 FIFO 出队仍用 <code>pop()</code>）</td>
+</tr>
 </tbody>
 </table>
 <p>队列是 <strong>head 指针 + 惰性压缩</strong>：<code>pop</code> 只挪指针，积压超过一半且超过 64 个时才整体搬一次，
@@ -159,6 +172,14 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <tr>
 <td><code>push_front(v)</code> / <code>push_back(v)</code></td>
 <td>两端入队，均摊 O(1)</td>
+</tr>
+<tr>
+<td><code>push_front_all(Array[T])</code> / <code>push_back_all(Array[T])</code></td>
+<td>批量入队（<code>push_front_all([a,b])</code> ⇒ 逻辑顺序 b,a,…）</td>
+</tr>
+<tr>
+<td><code>pop_front_n(k): Array[T]</code></td>
+<td>一次从队首取走 k 个；<code>k &lt; 1</code> 或超过剩余 ⇒ 抛错</td>
 </tr>
 <tr>
 <td><code>pop_front(): T</code> / <code>pop_back(): T</code></td>
@@ -308,7 +329,55 @@ print(c.get(&quot;k&quot;, -1))       // 1
 <code>peek</code> 都是 <strong>O(1)，与 cap 无关</strong>。</p>
 <p>取舍：<code>ClockLRU</code> 淘汰的是<strong>近似</strong>最久未使用（不是严格的），且不支持缩容。
 要"淘汰的确实是最久未使用"、cap 又不大（≤128 很划算）就用 <code>LRU</code>。</p>
-<h3 id="on_evict-淘汰时交还资源-两个缓存容器都有"><code>on_evict</code>：淘汰时交还资源（两个缓存容器都有）</h3>
+<h3 id="lruo1-v-严格最近访问淘汰-get-put-全-o-1"><code>LRUO1[V]</code>（严格最近访问淘汰 + get/put 全 O(1)）</h3>
+<p>API 与 <code>LRU</code> <strong>完全一致</strong>（<code>put / get / peek / has / remove / keys / len / capacity /
+set_capacity / clear / on_evict</code>），区别只是内部结构：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>LRU</code></th>
+<th><code>ClockLRU</code></th>
+<th><strong><code>LRUO1</code></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>淘汰顺序</td>
+<td><strong>严格</strong>最久未使用</td>
+<td>近似（CLOCK 二次机会）</td>
+<td><strong>严格</strong>最久未使用</td>
+</tr>
+<tr>
+<td><code>get</code></td>
+<td>O(n)</td>
+<td>O(1)</td>
+<td><strong>O(1)</strong></td>
+</tr>
+<tr>
+<td><code>put</code></td>
+<td>O(n)</td>
+<td>均摊 O(1)</td>
+<td><strong>O(1)</strong></td>
+</tr>
+<tr>
+<td>额外内存</td>
+<td>1 条 key 数组</td>
+<td>1 条环 + 1 条 ref</td>
+<td>每键两条 int + 1 条 key</td>
+</tr>
+<tr>
+<td>支持缩容</td>
+<td>✅</td>
+<td>❌（抛错）</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>实现是<strong>整数下标双向链表</strong>（<code>prev/next</code> 两个 <code>Array[int]</code> + <code>keyAt</code> + <code>slot</code> 字典），
+不是 <code>Ptr</code> 链表；被 remove/淘汰的下标进<strong>空闲栈</strong>复用 ⇒ 数组不会无限长。
+容量可在 4096 这种量级上仍然 <code>get</code>/<code>put</code> 全 O(1)，且<strong>淘汰顺序严格</strong>。</p>
+<h3 id="on_evict-淘汰时交还资源-三个缓存容器都有"><code>on_evict</code>：淘汰时交还资源（三个缓存容器都有）</h3>
 <p>缓存里装的常常是<strong>有副作用的资源</strong>（SDL 纹理 <code>Ptr</code>、打开的文件、socket），淘汰那一刻必须释放：</p>
 <pre><code class="language-leno">func destroyTex(string path, Ptr[u8] t) {
     if t != null { core.lib().SDL_DestroyTexture(t) }
@@ -388,7 +457,14 @@ tex.clear()                                                  // 逐条销毁剩�
 <td><strong>均摊 O(1)</strong></td>
 <td>—</td>
 <td><strong>O(1)</strong></td>
+<td><strong>O(1)</strong>（近似淘汰）</td>
+</tr>
+<tr>
+<td><code>LRUO1</code></td>
 <td><strong>O(1)</strong></td>
+<td>—</td>
+<td><strong>O(1)</strong></td>
+<td><strong>O(1)</strong>（严格淘汰）</td>
 </tr>
 </tbody>
 </table>
@@ -464,47 +540,58 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </thead>
 <tbody>
 <tr>
-<td><code>LRU.get</code></td>
-<td>379</td>
-<td>624</td>
-<td>2 178</td>
-<td>7 659</td>
+<td><code>LRU.get</code>（严格，O(n)）</td>
+<td>399</td>
+<td>656</td>
+<td>2 313</td>
+<td>7 342</td>
 </tr>
 <tr>
 <td><code>LRU.peek</code></td>
 <td>—</td>
 <td>—</td>
-<td>361</td>
+<td>351</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>ClockLRU.get</code></td>
-<td>320</td>
-<td>357</td>
-<td>361</td>
-<td><strong>369</strong></td>
+<td><code>ClockLRU.get</code>（近似，O(1)）</td>
+<td>414</td>
+<td>404</td>
+<td>369</td>
+<td><strong>371</strong></td>
+</tr>
+<tr>
+<td><strong><code>LRUO1.get</code>（严格，O(1)）</strong></td>
+<td><strong>493</strong></td>
+<td><strong>507</strong></td>
+<td><strong>502</strong></td>
+<td><strong>513</strong></td>
 </tr>
 <tr>
 <td>裸 <code>Dict.get</code>（对照，1024 键）</td>
 <td></td>
 <td></td>
-<td>319</td>
+<td>312</td>
 <td></td>
 </tr>
 </tbody>
 </table>
-<p><code>cap=1024</code> 的写入：<code>LRU.put</code> 新 key 2 825、覆盖 2 253；<code>ClockLRU.put</code> 新 key 1 182、覆盖 380。
-<code>LRU.set_capacity(4096 → 128)</code> 一次裁 3 968 个：<strong>251 µs</strong>（批量裁前缀，不是逐次 <code>remove(0)</code>）。</p>
+<p><code>cap=1024</code> 的写入：<code>LRU.put</code> 新 key 2 929、覆盖 2 449；<code>ClockLRU</code> 1 162 / 399；
+<strong><code>LRUO1</code> 1 322 / 约 500</strong>。
+<code>LRU.set_capacity(4096 → 128)</code> 一次裁 3 968 个：<strong>473 µs</strong>（批量裁前缀，不是逐次 <code>remove(0)</code>）。</p>
+<p>一句话选型：<strong>cap ≤128 用 <code>LRU</code></strong>（最省事）；<strong>要 O(1) 又要严格淘汰 ⇒ <code>LRUO1</code></strong>
+（每次比 <code>ClockLRU</code> 慢约 130 ns，换来严格顺序，4096 时比 <code>LRU</code> 快 14 倍且仍严格）；
+<strong>"够用的近似"就 <code>ClockLRU</code></strong>（不用维护链表）。</p>
 <p>几条读数的解读（都是实测，不是估算）：</p>
 <ul>
-<li><strong><code>Stack.push</code> 35 ns vs 裸 <code>Array.add</code> 8 ns</strong>：差的 27 ns 就是<strong>一次 struct 方法调用</strong>
+<li><strong><code>Stack.push</code> 35 ns vs 裸 <code>Array.add</code> 9 ns</strong>：差的 26 ns 就是<strong>一次 struct 方法调用</strong>
   （工程内实测：自由函数 17 ns、非泛型方法 38 ns、泛型方法 37 ns —— <strong>泛型没有额外惩罚</strong>）。
   这段没法在容器层消掉，只能靠编译器内联。</li>
 <li><strong><code>PriorityQueue</code> 每元素 ~4 µs</strong>：log₂(500k) ≈ 19 层，每层 1~2 次比较，而<strong>每次比较要付
   一次 <code>cmp</code> 函数调用（约 55 ns）</strong> + 两次 <code>Array[T]</code> 下标（泛型下标比 <code>Array[int]</code> 贵 ~12 ns）。
-  所以：<strong>元素多、又要边插边取</strong>才用堆；纯"攒完一次性排序"直接 <code>sort</code> 更快（1 528 ns/元素，
+  所以：<strong>元素多、又要边插边取</strong>才用堆；纯"攒完一次性排序"直接 <code>sort</code> 更快（1 530 ns/元素，
   但只排一次）。爬虫这种"队列上万、每次只取一个"的场景是对的。</li>
-<li><strong><code>ClockLRU.get</code> 曲线是平的</strong>（16→4096 只从 320 涨到 369），<code>LRU.get</code> 是斜的。</li>
+<li><strong><code>ClockLRU</code> / <code>LRUO1</code> 的 <code>get</code> 曲线是平的</strong>（4096 也只到 371 / 513），<code>LRU.get</code> 是斜的（7 342）。</li>
 </ul>
 <h2 id="在仓库里的真实使用">在仓库里的真实使用</h2>
 <table>
@@ -589,6 +676,11 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </code></pre>
 <h2 id="变更记录">变更记录</h2>
 <ul>
+<li><strong>0.5.0</strong>（2026-11-25）：新增 <strong><code>LRUO1[V]</code></strong> —— 严格最久未使用淘汰 + <code>get</code>/<code>put</code> 全 O(1)
+  （整数下标双向链表 + 空闲下标复用）。实测 <code>get</code> 命中 493 / 507 / 502 / 513 ns（cap 16/128/1024/4096），
+  曲线平且淘汰严格；同 cap 下 <code>LRU</code> 是 399 / 656 / 2 313 / 7 342。测试里加了与 <code>LRU</code> 的
+  2000 步<strong>随机对拍</strong>（每一步 <code>keys()</code> 必须逐项一致），用来钉死链表摘/接的正确性。
+  bench 增 <code>LRUO1</code> 段与三者在 cap 扫描里的对比。</li>
 <li><strong>0.4.0</strong>（2026-11-24）：新增 <strong><code>Deque[T]</code></strong>（双端队列，两端均摊 O(1)，含 <code>at/set/remove_at</code>）。
   三处"缺双端"的真实代码因此收编：<code>sdl_edit</code> 撤销/重做（4 条平行数组 → <code>Deque[UndoFrame]</code>）、
   <code>web_cdp</code> 事件队列（按 method 领取不再重建数组）、<code>sdl_listbox</code> 日志窗（借"批量裁剪"范式）。
@@ -615,7 +707,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <li><strong>0.1.0</strong>：<code>Stack</code> / <code>Queue</code> / <code>LRU</code> 初版。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#on_evict-淘汰时交还资源-两个缓存容器都有">on_evict：淘汰时交还资源（两个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
