@@ -105,8 +105,43 @@ done
 <li>换完库记得跑一次 <code>leno.exe build/leno_module/run_all_tests.leno</code>（要用<strong>编译器</strong>跑，
   不是 VM），52 个用例里包含 SQLite 的 NULL 语义、事务回滚、坏 SQL 报错等契约。</li>
 </ul>
+<h2 id="记录写入-insert-insertmany-2026-11-24">记录写入：<code>insert</code> / <code>insertMany</code>（2026-11-24）</h2>
+<p><code>Database</code> 现在能直接吃<strong>有字段名的记录</strong>（struct）：列名由 <code>reflect.fields(rec)</code> 生成，
+不用再在调用点手抄列名 / <code>?</code> 个数 / bind 序号三处 —— 漏改其中一个就是"值塞进错的列"，
+<strong>不报错</strong>，只是数据悄悄错位。</p>
+<pre><code class="language-leno">struct Song {
+    int id = 0
+    string name = &quot;&quot;
+    float dur = 0.0
+    bool liked = false
+}
+
+var d = sqlite3.open(&quot;music.db&quot;)
+// 列 = 字段名（声明顺序）；id 是自增主键 ⇒ skip 掉
+var r = d.insert(&quot;song&quot;, new Song(name = &quot;晴天&quot;, dur = 269.0), [&quot;id&quot;])
+if r.isOk() {
+    print(&quot;rowid=&quot; + _str(r.get()))
+} else {
+    print(&quot;失败：&quot; + r.msg)
+}
+
+// 批量：同一个事务，要么全进、要么全不进
+Array[any] many = [new Song(name = &quot;七里香&quot;), new Song(name = &quot;稻香&quot;)]
+var rm = d.insertMany(&quot;song&quot;, many, [&quot;id&quot;])
+</code></pre>
+<p>口径：</p>
+<ul>
+<li>列名 = 字段名，按<strong>声明顺序</strong>；表名由调用方给（不做转义 —— 别把用户输入拼进来）</li>
+<li>值走 <code>bind()</code> 自动分派 <code>int</code> / <code>float</code> / <code>string</code> / <code>null</code>；<strong><code>bool</code> 存 0/1</strong></li>
+<li>失败一律 <code>Result.err</code> 并带 SQLite 原话（表不存在、列数不匹配可以分开看）</li>
+<li>返回值：<code>insert</code> 给 <code>lastInsertRowid()</code>，<code>insertMany</code> 给成功条数</li>
+</ul>
+<blockquote>
+<p>只适合"手里已经有 struct 记录"的场景（模型直接落库）。如果数据本来就是
+HTTP 请求里的 <code>Dict</code>，<code>db.run(sql, [params])</code> 那条路更直接 —— 不要为了用它多绕一层。</p>
+</blockquote>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#库按平台分目录-2026-11-18-起">库按平台分目录（2026-11-18 起）</a></li><li><a href="#怎么换-sqlite-版本">怎么换 SQLite 版本</a></li><li><a href="#android-打包怎么用">Android 打包怎么用</a></li><li><a href="#注意">注意</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#库按平台分目录-2026-11-18-起">库按平台分目录（2026-11-18 起）</a></li><li><a href="#怎么换-sqlite-版本">怎么换 SQLite 版本</a></li><li><a href="#android-打包怎么用">Android 打包怎么用</a></li><li><a href="#注意">注意</a></li><li><a href="#记录写入-insert-insertmany-2026-11-24">记录写入：insert / insertMany（2026-11-24）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoZip.html">← 上一篇</a><a href="../扩展模块/_总览.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

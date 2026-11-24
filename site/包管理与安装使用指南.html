@@ -43,7 +43,7 @@ export func hello() {
     print(&quot;Hello from my-pkg!&quot;)
 }
 
-export func add(var a, var b) {
+export func add(any a, any b) {
     return a + b
 }
 
@@ -502,11 +502,11 @@ cd leno-math
 export var PI = 3.1415926535
 export var E  = 2.7182818284
 
-export func add(var a, var b) {
+export func add(any a, any b) {
     return a + b
 }
 
-export func multiply(var a, var b) {
+export func multiply(any a, any b) {
     return a * b
 }
 
@@ -517,7 +517,7 @@ export func factorial(int n):int {
     return n * factorial(n - 1)
 }
 
-export func square(var x) {
+export func square(any x) {
     return x * x
 }
 

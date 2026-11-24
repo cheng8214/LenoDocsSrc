@@ -275,7 +275,7 @@ main() {
 <p><code>threads.start(func, arg1, arg2, ...)</code> 支持向线程函数传递参数，参数会深拷贝到子线程。</p>
 <pre><code class="language-leno">import threads
 
-func greet(var name, var count) {
+func greet(any name, any count) {
     for count to var i {
         print(&quot;Hello, &quot; + name + &quot;!&quot;)
     }
@@ -304,7 +304,7 @@ var ch = threads.channel(0)
 <h3 id="基本发送与接收">基本发送与接收</h3>
 <pre><code class="language-leno">import threads
 
-func sender(var ch) {
+func sender(any ch) {
     ch.send(&quot;hello&quot;)
     ch.send(42)
     ch.send(3.14)
@@ -352,7 +352,7 @@ main() {
 </ul>
 <pre><code class="language-leno">import threads
 
-func producer(var ch) {
+func producer(any ch) {
     for 5 to var i {
         ch.send(i)
     }
@@ -386,7 +386,7 @@ main() {
 <h3 id="生产者-消费者模式">生产者-消费者模式</h3>
 <pre><code class="language-leno">import threads
 
-func producer(var ch) {
+func producer(any ch) {
     for 10 to var i {
         ch.send(i)
         print(&quot;生产: &quot; + i)
@@ -394,7 +394,7 @@ func producer(var ch) {
     ch.close()
 }
 
-func consumer(var ch) {
+func consumer(any ch) {
     while true {
         var msg = ch.receive()
         if msg == null {
@@ -416,7 +416,7 @@ main() {
 <h3 id="双线程通讯">双线程通讯</h3>
 <pre><code class="language-leno">import threads
 
-func sender(var ch) {
+func sender(any ch) {
     for 3 to var i {
         ch.send(&quot;消息&quot; + (i + 1))
     }
@@ -424,7 +424,7 @@ func sender(var ch) {
     ch.close()
 }
 
-func receiver(var ch) {
+func receiver(any ch) {
     while true {
         var msg = ch.receive()
         print(&quot;接收: &quot; + msg)
@@ -547,7 +547,7 @@ cstruct MEMORYSTATUS {
     u64 dwTotalPhys
 }
 
-func get_memory_info(var ch) {
+func get_memory_info(any ch) {
     // 在子线程中使用 cstruct
     var kernel32 = ffi.load(&quot;kernel32.dll&quot;)
     var mem = MEMORYSTATUS.malloc()
@@ -598,8 +598,8 @@ main() {
 }
 </code></pre>
 <h3 id="嵌套函数调用">嵌套函数调用</h3>
-<pre><code class="language-leno">func add(var a, var b) { return a + b }
-func multiply(var a, var b) { return a * b }
+<pre><code class="language-leno">func add(any a, any b) { return a + b }
+func multiply(any a, any b) { return a * b }
 
 func test() {
     var result = multiply(add(3, 4), 2)
@@ -607,7 +607,7 @@ func test() {
 }
 </code></pre>
 <h3 id="递归">递归</h3>
-<pre><code class="language-leno">func fibonacci(var n) {
+<pre><code class="language-leno">func fibonacci(any n) {
     if n &lt;= 1 { return n }
     return fibonacci(n - 1) + fibonacci(n - 2)
 }
@@ -632,7 +632,7 @@ func test() {
 import times as ti
 import rands
 
-func bubble_sort(var arr) {
+func bubble_sort(any arr) {
     var n = arr.len()
     for n - 1 to var i {
         for n - i - 1 to var j {
@@ -646,7 +646,7 @@ func bubble_sort(var arr) {
     return arr
 }
 
-func sort_worker(var ch) {
+func sort_worker(any ch) {
     var arr = rands.int_array(1, 1000)
     var s = ti.ms()
     var result = bubble_sort(arr)
@@ -718,7 +718,8 @@ print(t.join())  // hello 42
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">var count = 0
+<pre><code class="language-leno">import threads
+var count = 0
 var arr = [1, 2, 3]
 
 func worker() {
@@ -816,7 +817,8 @@ CRC 表的 <code>table_entry(1)</code> 返回 185 / -1 / 0 —— 看起来像�
 </tbody>
 </table>
 <p><strong>因为是深拷贝，子线程改了字段主线程看不见</strong> —— 结果要靠 <code>join()</code> 的返回值或 <code>Channel</code> 带回来：</p>
-<pre><code class="language-leno">struct P { int x = 0 }
+<pre><code class="language-leno">import threads
+struct P { int x = 0 }
 func work(P p): int {
     p.x = 100        // 改的是**副本**
     return p.x       // ✓ 结果从返回值走
@@ -1029,7 +1031,7 @@ async func bad() {
 
 // ✅ 正确：选择一种模型
 // 方案1：纯线程
-func worker(var ch) { ... }
+func worker(any ch) { ... }
 var t = threads.start(worker, ch)
 
 // 方案2：纯协程

@@ -1556,7 +1556,7 @@ Button b = win.addButton({x: 20, y: 40, w: 180, h: 64, text: "50%", type: "prima
 win.set_widget_opacity(b, 0.5)      // 0.0~1.0，越界自动夹紧 ✓
 ```
 
-**实现（要点：控件侧零改动 ✓，只在收口处动手 ✓）**
+**实现（要点：**控件侧零改动** ✓，只在收口处动手 ✓）**
 - `sdl_renderer`：新增**全局 alpha 缩放** `setAlphaScale(s)`，在 3 个收口处统一乘 ——
   `setColor`（所有着色矩形/线/圆角矩形 ✓）、`setColorFloat` ✓、`pushTexBatch`（**纹理批**；文字也走
   这里 ✓ ⇒ **别在 `drawText` 里再乘一次**，否则"平方淡化" 0.5×0.5=0.25 ✗）；

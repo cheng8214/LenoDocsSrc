@@ -154,7 +154,7 @@ regexs.find(&quot;中文字abc&quot;, &quot;abc&quot;)            // 3 ✓（按
 // [RegexMatch{start: 3, last: 5, text: &quot;123&quot;}, RegexMatch{start: 9, last: 11, text: &quot;456&quot;}]
 
 for matches to m {
-    io.print(m.text + &quot; @&quot; + m.start)     // 字段类型已知 ⇒ 不做收窄（m.text 是 string、m.start 是 int）
+    print(m.text + &quot; @&quot; + m.start)     // 字段类型已知 ⇒ 不做收窄（m.text 是 string、m.start 是 int）
     var seg = &quot;abc123def456&quot;[m.start : m.last]   // ⇒ &quot;123&quot;：直接切，不用 -1 ✓
 }
 </code></pre>
@@ -598,6 +598,7 @@ main() {
 </code></pre>
 <h3 id="提取-url-中的域名">提取 URL 中的域名</h3>
 <pre><code class="language-leno">import strings
+import regexs
 
 func extract_domain(string url):string {
     // 这条用字符串分段（更直观、也更快 ✓）。现在用正则也行：

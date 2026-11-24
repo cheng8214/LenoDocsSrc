@@ -47,7 +47,7 @@ import io
 main() {
     // 获取当前目录
     var cwd = dirs.cwd()
-    io.print(cwd)
+    print(cwd)
 
     // 创建目录
     dirs.mkdir(&quot;new_folder&quot;)
@@ -85,7 +85,7 @@ use dirs.DirInfo
 main() {
     DirInfo info = dirs.stat(&quot;build.bat&quot;)     // 字段类型编译期已知
     Array[DirEntry] es = dirs.walk(&quot;src&quot;)     // 元素类型编译期已知
-    io.print(info.size)
+    print(info.size)
 }
 </code></pre>
 <p>两个名字<strong>也可以不写 <code>use</code> 直接用</strong>（编译器按 native 类型规格兜底解析）；两种写法等价，
@@ -441,7 +441,7 @@ for files to f { ... }
 // files = [&quot;error.c&quot;, &quot;gc.c&quot;, &quot;lexer.c&quot;, &quot;main.c&quot;, ...]
 
 for files to f {
-    io.print(f)
+    print(f)
 }
 </code></pre>
 <h3 id="list_drives"><code>list_drives()</code></h3>
@@ -464,8 +464,8 @@ for es to e {
     string root = e.root            // 编译期就知道是 string（无需 as / 收窄）
     Array[string] ds = e.dirs       // 子目录名
     Array[string] fs = e.files      // 文件名；元素类型是 string ⇒ 能直接进 Array[string] 的方法
-    io.print(root + &quot; → &quot; + _str(fs.len()) + &quot; 个文件&quot;)
-    for fs to f { io.print(&quot;  &quot; + f) }
+    print(root + &quot; → &quot; + _str(fs.len()) + &quot; 个文件&quot;)
+    for fs to f { print(&quot;  &quot; + f) }
 }
 </code></pre>
 <p><strong>字段含义</strong>（<code>dirs</code> / <code>files</code> 都只给<strong>名字</strong>、不含路径 ⇒ 完整路径用 <code>dirs.join(e.root, name)</code>）:</p>
@@ -565,9 +565,9 @@ for es to e {
 <pre><code class="language-leno">DirInfo info = dirs.stat(&quot;build.bat&quot;)     // 类型可以直接标出来（v3.2.5 起；或先 `use dirs.DirInfo`）
 // info = DirInfo{ exists: true, size: 2917, is_file: true, is_dir: false, mtime: 0 }
 
-io.print(&quot;大小: &quot; + info.size + &quot; 字节&quot;)     // info.size 直接是 int ⇒ 能直接参与运算
-io.print(&quot;是文件: &quot; + info.is_file)          // 直接是 bool ⇒ 能直接进 if
-io.print(&quot;是目录: &quot; + info.is_dir)
+print(&quot;大小: &quot; + info.size + &quot; 字节&quot;)     // info.size 直接是 int ⇒ 能直接参与运算
+print(&quot;是文件: &quot; + info.is_file)          // 直接是 bool ⇒ 能直接进 if
+print(&quot;是目录: &quot; + info.is_dir)
 </code></pre>
 <blockquote>
 <p>⚠ <strong>v3.2.4 起返回结构体、不再是 <code>dict</code></strong>：旧形态的键名与现在的字段名<strong>逐字相同</strong> ⇒ <code>info.size</code> /
@@ -589,25 +589,45 @@ io.print(&quot;是目录: &quot; + info.is_dir)
 <h2 id="示例代码">示例代码</h2>
 <h3 id="1-批量重命名文件">1. 批量重命名文件</h3>
 <pre><code class="language-leno">import dirs
+import files
 import io
 
 main() {
-    var files = dirs.listdir(&quot;.&quot;)
+    // ⚠ 一定要在**指定的目录**里做批量改名，别用 &quot;.&quot;：
+    //   这段逻辑会把它看到的每个 .txt 都改名，在仓库根跑就会把构建清单
+    //   （sources_core.txt 之类）改成 .bak，build.bat 直接找不到输入。
+    var sandbox = dirs.join(_tmpdir(), &quot;leno_rename_demo&quot;)
+    if not dirs.exists(sandbox) {
+        dirs.mkdir(sandbox)
+    }
+
+    // 造点素材：两个 .txt + 一个不该动的文件
+    files.write(dirs.join(sandbox, &quot;a.txt&quot;), &quot;A&quot;)
+    files.write(dirs.join(sandbox, &quot;b.txt&quot;), &quot;B&quot;)
+    files.write(dirs.join(sandbox, &quot;keep.leno&quot;), &quot;// 不动它&quot;)
+
+    var list = dirs.listdir(sandbox)
     var count = 0
 
-    for files to f {
-        // 将所有 .txt 文件重命名为 .bak
+    for list to f {
+        // 把所有 .txt 文件重命名为 .bak
         if dirs.extname(f) == &quot;.txt&quot; {
-            var new_name = dirs.basename(f) + &quot;.bak&quot;
-            if dirs.rename(f, new_name) {
+            var old_path = dirs.join(sandbox, f)
+            var new_path = dirs.join(sandbox, dirs.basename(f) + &quot;.bak&quot;)
+            if dirs.rename(old_path, new_path) {
                 count = count + 1
-                io.print(&quot;重命名: &quot; + f + &quot; -&gt; &quot; + new_name)
+                print(&quot;重命名: &quot; + f + &quot; -&gt; &quot; + dirs.basename(new_path))
             }
         }
     }
 
-    io.print(&quot;共重命名 &quot; + count + &quot; 个文件&quot;)
+    print(&quot;共重命名 &quot; + count + &quot; 个文件&quot;)
 }
+</code></pre>
+<p>输出：</p>
+<pre><code>重命名: a.txt -&gt; a.txt.bak
+重命名: b.txt -&gt; b.txt.bak
+共重命名 2 个文件
 </code></pre>
 <hr>
 <h3 id="2-递归查找文件">2. 递归查找文件</h3>
@@ -615,7 +635,7 @@ main() {
 import io
 
 // 递归查找所有 .leno 文件
-func find_leno_files(var path) -&gt; array {
+func find_leno_files(any path) : array {
     var result = []
     var entries = dirs.walk(path)
 
@@ -635,10 +655,10 @@ func find_leno_files(var path) -&gt; array {
 
 main() {
     var leno_files = find_leno_files(&quot;src&quot;)
-    io.print(&quot;找到 &quot; + leno_files.count() + &quot; 个 .leno 文件:&quot;)
+    print(&quot;找到 &quot; + leno_files.count() + &quot; 个 .leno 文件:&quot;)
 
     for leno_files to f {
-        io.print(&quot;  &quot; + f)
+        print(&quot;  &quot; + f)
     }
 }
 </code></pre>
@@ -653,8 +673,8 @@ main() {
     var backup_dir = &quot;backup_&quot; + times.now()
 
     // 创建备份目录
-    if !dirs.mkdir_p(backup_dir) {
-        io.print(&quot;创建备份目录失败&quot;)
+    if not dirs.mkdir_p(backup_dir) {
+        print(&quot;创建备份目录失败&quot;)
         return
     }
 
@@ -673,7 +693,7 @@ main() {
         }
     }
 
-    io.print(&quot;备份完成: &quot; + count + &quot; 个文件&quot;)
+    print(&quot;备份完成: &quot; + count + &quot; 个文件&quot;)
 }
 </code></pre>
 <hr>
@@ -682,7 +702,7 @@ main() {
 import io
 
 // 计算目录总大小（简化版，只统计当前层）
-func calc_dir_size(var path) -&gt; int {
+func calc_dir_size(any path) : int {
     var total = 0
     var entries = dirs.walk(path)
 
@@ -702,8 +722,8 @@ func calc_dir_size(var path) -&gt; int {
 
 main() {
     var size = calc_dir_size(&quot;src&quot;)
-    io.print(&quot;src 目录总大小: &quot; + size + &quot; 字节&quot;)
-    io.print(&quot;约 &quot; + (size / 1024) + &quot; KB&quot;)
+    print(&quot;src 目录总大小: &quot; + size + &quot; 字节&quot;)
+    print(&quot;约 &quot; + (size / 1024) + &quot; KB&quot;)
 }
 </code></pre>
 <hr>
@@ -724,13 +744,13 @@ main() {
             if ext == pattern {
                 if dirs.delete(f) {
                     removed = removed + 1
-                    io.print(&quot;删除: &quot; + f)
+                    print(&quot;删除: &quot; + f)
                 }
             }
         }
     }
 
-    io.print(&quot;共清理 &quot; + removed + &quot; 个临时文件&quot;)
+    print(&quot;共清理 &quot; + removed + &quot; 个临时文件&quot;)
 }
 </code></pre>
 <hr>

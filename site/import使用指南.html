@@ -276,6 +276,7 @@ export alias StrDict = Dict[string, string]
 </code></pre>
 <pre><code class="language-leno">// main.leno
 import &quot;types.leno&quot; as t
+import types
 
 main() {
     Size w = 100              // Size 被识别为 int
@@ -295,6 +296,7 @@ export func makeSize(int w, int h): MySize {
 </code></pre>
 <pre><code class="language-leno">// main.leno
 import &quot;types.leno&quot; as t
+import types
 use t.MySize       // 将 MySize 别名导入当前作用域
 
 main() {
@@ -1056,7 +1058,7 @@ struct Rectangle {
 <pre><code class="language-leno">// main.leno
 import &quot;shape.leno&quot; as shape
 
-func process(var obj) {
+func process(any obj) {
     if obj is shape.Circle {
         print(&quot;圆，半径: &quot; + obj.radius)
     } else if obj is shape.Rectangle {

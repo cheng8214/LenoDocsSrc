@@ -56,7 +56,7 @@ main() {
     if conn != null {
         conn.send(&quot;GET / HTTP/1.0\r\n\r\n&quot;)
         var response = conn.recv(1024)
-        io.print(response)
+        print(response)
         conn.close()
     }
 }
@@ -105,7 +105,7 @@ Socket conn = sockets.connect(&quot;www.example.com&quot;, 443)  // 支持 DNS �
 - 失败（端口被占用等）: <code>null</code></p>
 <pre><code class="language-leno">Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
 if server != null {
-    io.print(&quot;服务器已启动&quot;)
+    print(&quot;服务器已启动&quot;)
 }
 </code></pre>
 <blockquote>
@@ -141,7 +141,7 @@ var i = 0
 while i &lt; ready.len() {
     var data = ready[i].recv(1024)
     if data != null {
-        io.print(&quot;收到: &quot; + data)
+        print(&quot;收到: &quot; + data)
     }
     i = i + 1
 }
@@ -155,7 +155,7 @@ while i &lt; ready.len() {
 - 成功: IP 地址字符串
 - 失败: <code>null</code></p>
 <pre><code class="language-leno">var ip = sockets.resolve(&quot;www.baidu.com&quot;)
-io.print(&quot;baidu.com -&gt; &quot; + ip)  // 例如: 39.156.70.239
+print(&quot;baidu.com -&gt; &quot; + ip)  // 例如: 39.156.70.239
 </code></pre>
 <hr>
 <h3 id="字节序转换">字节序转换</h3>
@@ -175,7 +175,7 @@ var addr_h  = sockets.ntohl(addr_be)     // 网络序 -&gt; 主机序 (32位)
 <pre><code class="language-leno">Socket conn = sockets.connect(&quot;127.0.0.1&quot;, 8080)
 if conn != null {
     var sent = conn.send(&quot;Hello, Server!&quot;)
-    io.print(&quot;发送成功: &quot; + sent)
+    print(&quot;发送成功: &quot; + sent)
 }
 </code></pre>
 <blockquote>
@@ -198,7 +198,7 @@ if conn != null {
 （没有 <code>set_timeout</code> 就是永久卡死，看起来像"对端没发数据"）。<code>recvfrom</code> / <code>arecv</code> 同口径。</p>
 <pre><code class="language-leno">var data = conn.recv(1024)
 if data != null {
-    io.print(&quot;收到: &quot; + data)
+    print(&quot;收到: &quot; + data)
 }
 </code></pre>
 <hr>
@@ -216,7 +216,7 @@ if data != null {
 <pre><code class="language-leno">Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
 Socket client = server.accept()
 if client != null {
-    io.print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
+    print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
 }
 </code></pre>
 <blockquote>
@@ -247,7 +247,7 @@ udp.sendto(&quot;Hello UDP&quot;, &quot;127.0.0.1&quot;, 9999)
 - 失败: <code>null</code></p>
 <pre><code class="language-leno">var result = udp.recvfrom(1024)
 if result != null {
-    io.print(&quot;从 &quot; + result[1] + &quot;:&quot; + result[2] + &quot; 收到: &quot; + result[0])
+    print(&quot;从 &quot; + result[1] + &quot;:&quot; + result[2] + &quot; 收到: &quot; + result[0])
 }
 </code></pre>
 <hr>
@@ -265,7 +265,7 @@ if result != null {
 - 成功: IP 地址字符串
 - 失败: <code>null</code></p>
 <pre><code class="language-leno">Socket client = server.accept()
-io.print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.168.1.100&quot;
+print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.168.1.100&quot;
 </code></pre>
 <hr>
 <h3 id="sock-peer_port"><code>sock.peer_port()</code></h3>
@@ -273,7 +273,7 @@ io.print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.1
 <p><strong>返回</strong>: 
 - 成功: 端口号 (int)
 - 失败: <code>null</code></p>
-<pre><code class="language-leno">io.print(&quot;客户端端口: &quot; + client.peer_port())  // 例如: 52341
+<pre><code class="language-leno">print(&quot;客户端端口: &quot; + client.peer_port())  // 例如: 52341
 </code></pre>
 <hr>
 <h3 id="sock-local_addr"><code>sock.local_addr()</code></h3>
@@ -281,7 +281,7 @@ io.print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.1
 <p><strong>返回</strong>: 
 - 成功: IP 地址字符串
 - 失败: <code>null</code></p>
-<pre><code class="language-leno">io.print(&quot;本地IP: &quot; + conn.local_addr())  // 例如: &quot;192.168.10.13&quot;
+<pre><code class="language-leno">print(&quot;本地IP: &quot; + conn.local_addr())  // 例如: &quot;192.168.10.13&quot;
 </code></pre>
 <hr>
 <h3 id="sock-local_port"><code>sock.local_port()</code></h3>
@@ -289,7 +289,7 @@ io.print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.1
 <p><strong>返回</strong>: 
 - 成功: 端口号 (int)
 - 失败: <code>null</code></p>
-<pre><code class="language-leno">io.print(&quot;本地端口: &quot; + conn.local_port())  // 例如: 13169
+<pre><code class="language-leno">print(&quot;本地端口: &quot; + conn.local_port())  // 例如: 13169
 </code></pre>
 <hr>
 <h3 id="sock-error"><code>sock.error()</code></h3>
@@ -297,7 +297,7 @@ io.print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.1
 <p><strong>返回</strong>: <code>int</code> - 错误码（0 表示无错误）</p>
 <pre><code class="language-leno">var data = conn.recv(1024)
 if data == null {
-    io.print(&quot;接收失败，错误码: &quot; + conn.error())
+    print(&quot;接收失败，错误码: &quot; + conn.error())
 }
 </code></pre>
 <p><strong>说明</strong>: 每次 <code>send</code>、<code>recv</code>、<code>sendto</code>、<code>recvfrom</code>、<code>accept</code> 等操作失败时会自动记录错误码。</p>
@@ -330,9 +330,9 @@ conn.close()
     // 异步等待数据，释放事件循环给其他协程
     var data = await conn.arecv(1024)
     if data != null {
-        io.print(&quot;收到: &quot; + data)
+        print(&quot;收到: &quot; + data)
     } else {
-        io.print(&quot;连接已关闭&quot;)
+        print(&quot;连接已关闭&quot;)
     }
 }
 </code></pre>
@@ -381,20 +381,20 @@ main() {
     // 1. 连接服务器
     Socket conn = sockets.connect(&quot;www.example.com&quot;, 80)
     if conn == null {
-        io.print(&quot;连接失败&quot;)
+        print(&quot;连接失败&quot;)
         return
     }
 
-    io.print(&quot;已连接到 &quot; + conn.peer_addr() + &quot;:&quot; + conn.peer_port())
-    io.print(&quot;本地地址: &quot; + conn.local_addr() + &quot;:&quot; + conn.local_port())
+    print(&quot;已连接到 &quot; + conn.peer_addr() + &quot;:&quot; + conn.peer_port())
+    print(&quot;本地地址: &quot; + conn.local_addr() + &quot;:&quot; + conn.local_port())
 
     // 2. 设置超时
     conn.set_timeout(5000)
 
     // 3. 发送请求
     var request = &quot;GET / HTTP/1.0\r\nHost: www.example.com\r\n\r\n&quot;
-    if !conn.send(request) {
-        io.print(&quot;发送失败，错误码: &quot; + conn.error())
+    if not conn.send(request) {
+        print(&quot;发送失败，错误码: &quot; + conn.error())
         conn.close()
         return
     }
@@ -409,7 +409,7 @@ main() {
         response = response + chunk
     }
 
-    io.print(&quot;响应长度: &quot; + response.len())
+    print(&quot;响应长度: &quot; + response.len())
 
     // 5. 优雅关闭
     conn.shutdown(2)
@@ -426,23 +426,23 @@ main() {
     // 1. 创建服务器
     Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
     if server == null {
-        io.print(&quot;启动服务器失败&quot;)
+        print(&quot;启动服务器失败&quot;)
         return
     }
 
-    io.print(&quot;服务器运行在 &quot; + server.local_addr() + &quot;:&quot; + server.local_port())
+    print(&quot;服务器运行在 &quot; + server.local_addr() + &quot;:&quot; + server.local_port())
 
     // 2. 接受连接
     Socket client = server.accept()
     if client != null {
-        io.print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
+        print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
 
         // 3. 通信
         var data = client.recv(1024)
         if data != null {
             client.send(&quot;Echo: &quot; + data)
         } else {
-            io.print(&quot;接收失败，错误码: &quot; + client.error())
+            print(&quot;接收失败，错误码: &quot; + client.error())
         }
 
         // 4. 关闭客户端
@@ -462,11 +462,11 @@ main() {
     // 创建 UDP socket
     Socket udp = sockets.udp_bind(&quot;0.0.0.0&quot;, 9999)
     if udp == null {
-        io.print(&quot;绑定失败&quot;)
+        print(&quot;绑定失败&quot;)
         return
     }
 
-    io.print(&quot;UDP 本地端口: &quot; + udp.local_port())
+    print(&quot;UDP 本地端口: &quot; + udp.local_port())
 
     // 发送
     udp.sendto(&quot;Hello!&quot;, &quot;127.0.0.1&quot;, 9998)
@@ -474,7 +474,7 @@ main() {
     // 接收
     var result = udp.recvfrom(1024)
     if result != null {
-        io.print(&quot;从 &quot; + result[1] + &quot;:&quot; + result[2] + &quot; 收到: &quot; + result[0])
+        print(&quot;从 &quot; + result[1] + &quot;:&quot; + result[2] + &quot; 收到: &quot; + result[0])
     }
 
     udp.close()
@@ -498,7 +498,7 @@ main() {
         if client != null {
             client.set_nonblocking(true)
             clients.add(client)
-            io.print(&quot;新客户端: &quot; + client.peer_addr())
+            print(&quot;新客户端: &quot; + client.peer_addr())
         }
 
         // 使用 select 检测可读的 socket
@@ -509,11 +509,11 @@ main() {
             while i &lt; ready.len() {
                 var data = ready[i].recv(1024)
                 if data == null {
-                    io.print(&quot;客户端断开，错误码: &quot; + ready[i].error())
+                    print(&quot;客户端断开，错误码: &quot; + ready[i].error())
                     ready[i].close()
                     // 从列表移除...
                 } else {
-                    io.print(&quot;收到: &quot; + data)
+                    print(&quot;收到: &quot; + data)
                 }
                 i = i + 1
             }
@@ -531,18 +531,18 @@ import asyncs
 import io
 
 async func handle_client(Socket client, int id) {
-    io.print($&quot;[#{id}] 客户端已连接&quot;)
+    print($&quot;[#{id}] 客户端已连接&quot;)
 
     while true {
         // 异步等待数据，让出执行权给其他协程
         var data = await client.arecv(1024)
         if data == null or data == &quot;&quot; {
-            io.print($&quot;[#{id}] 客户端断开&quot;)
+            print($&quot;[#{id}] 客户端断开&quot;)
             client.close()
             return
         }
 
-        io.print($&quot;[#{id}] 收到: {data}&quot;)
+        print($&quot;[#{id}] 收到: {data}&quot;)
         client.send(&quot;Echo: &quot; + data)
 
         if data == &quot;DISCONNECT&quot; {
@@ -575,7 +575,7 @@ async func client(int id) {
     if conn is Socket {
         conn.send($&quot;Hello from client {id}&quot;)
         var reply = await conn.arecv(1024)
-        io.print($&quot;[Client#{id}] 收到: {reply}&quot;)
+        print($&quot;[Client#{id}] 收到: {reply}&quot;)
         conn.send(&quot;DISCONNECT&quot;)
         await asyncs.sleep(50)
         conn.close()
@@ -640,7 +640,7 @@ main() {
     var future = conn.arecv(1024)
     var data = await asyncs.timeout(future, ms)
     if data == null {
-        io.print(&quot;接收超时&quot;)
+        print(&quot;接收超时&quot;)
         return &quot;&quot;
     }
     return data
@@ -652,10 +652,10 @@ main() {
 <pre><code class="language-leno">Socket conn = sockets.connect(&quot;www.baidu.com&quot;, 80)
 if conn != null {
     // 对端信息（服务器地址）
-    io.print(&quot;对端: &quot; + conn.peer_addr() + &quot;:&quot; + conn.peer_port())
+    print(&quot;对端: &quot; + conn.peer_addr() + &quot;:&quot; + conn.peer_port())
 
     // 本地信息（客户端地址）
-    io.print(&quot;本地: &quot; + conn.local_addr() + &quot;:&quot; + conn.local_port())
+    print(&quot;本地: &quot; + conn.local_addr() + &quot;:&quot; + conn.local_port())
 
     conn.close()
 }
@@ -663,7 +663,7 @@ if conn != null {
 <h3 id="错误处理模式">错误处理模式</h3>
 <pre><code class="language-leno">Socket conn = sockets.connect(&quot;www.example.com&quot;, 80)
 if conn == null {
-    io.print(&quot;连接失败&quot;)
+    print(&quot;连接失败&quot;)
     return
 }
 
@@ -673,9 +673,9 @@ var data = conn.recv(1024)
 if data == null {
     var err = conn.error()
     if err != 0 {
-        io.print(&quot;接收出错，错误码: &quot; + err)
+        print(&quot;接收出错，错误码: &quot; + err)
     } else {
-        io.print(&quot;连接已正常关闭&quot;)
+        print(&quot;连接已正常关闭&quot;)
     }
 }
 
@@ -703,7 +703,7 @@ conn.close()
 <pre><code class="language-leno">import sockets
 import io
 
-func http_get(string host, string path) -&gt; string {
+func http_get(string host, string path) : string {
     Socket conn = sockets.connect(host, 80)
     if conn == null {
         return &quot;&quot;
@@ -715,8 +715,8 @@ func http_get(string host, string path) -&gt; string {
     request = request + &quot;Host: &quot; + host + &quot;\r\n&quot;
     request = request + &quot;Connection: close\r\n\r\n&quot;
 
-    if !conn.send(request) {
-        io.print(&quot;发送失败: &quot; + conn.error())
+    if not conn.send(request) {
+        print(&quot;发送失败: &quot; + conn.error())
         conn.close()
         return &quot;&quot;
     }
@@ -736,9 +736,9 @@ func http_get(string host, string path) -&gt; string {
 
 main() {
     var html = http_get(&quot;www.example.com&quot;, &quot;/&quot;)
-    io.print(&quot;响应长度: &quot; + html.len())
-    io.print(&quot;前100字符:&quot;)
-    io.print(html.take(0, 100))
+    print(&quot;响应长度: &quot; + html.len())
+    print(&quot;前100字符:&quot;)
+    print(html.take(0, 100))
 }
 </code></pre>
 <hr>
@@ -749,15 +749,15 @@ import io
 main() {
     Socket server = sockets.listen(&quot;127.0.0.1&quot;, 8080)
     if server == null {
-        io.print(&quot;启动服务器失败&quot;)
+        print(&quot;启动服务器失败&quot;)
         return
     }
 
-    io.print(&quot;Echo 服务器运行在 127.0.0.1:8080&quot;)
+    print(&quot;Echo 服务器运行在 127.0.0.1:8080&quot;)
 
     Socket client = server.accept()
     if client != null {
-        io.print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
+        print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
 
         while true {
             var data = client.recv(1024)
@@ -767,7 +767,7 @@ main() {
             client.send(&quot;Echo: &quot; + data)
         }
 
-        io.print(&quot;客户端已断开&quot;)
+        print(&quot;客户端已断开&quot;)
         client.close()
     }
 
@@ -785,17 +785,17 @@ main() {
 
     Socket udp = sockets.udp_bind(&quot;127.0.0.1&quot;, port)
     if udp == null {
-        io.print(&quot;绑定失败&quot;)
+        print(&quot;绑定失败&quot;)
         return
     }
 
-    io.print(&quot;UDP 聊天已启动 (端口 &quot; + udp.local_port() + &quot;)&quot;)
+    print(&quot;UDP 聊天已启动 (端口 &quot; + udp.local_port() + &quot;)&quot;)
 
     udp.sendto(&quot;Hello!&quot;, &quot;127.0.0.1&quot;, peer_port)
 
     var result = udp.recvfrom(1024)
     if result != null {
-        io.print(&quot;对方说: &quot; + result[0])
+        print(&quot;对方说: &quot; + result[0])
     }
 
     udp.close()
@@ -810,7 +810,7 @@ var clients = []
 var client_names = []
 var client_counter = 0
 
-func broadcast(string msg, var exclude) {
+func broadcast(string msg, any exclude) {
     var i = 0
     while i &lt; clients.len() {
         if clients[i] != exclude {
@@ -823,16 +823,16 @@ func broadcast(string msg, var exclude) {
 main() {
     var port = 8888
 
-    io.print(&quot;=== 非阻塞聊天服务器 ===&quot;)
+    print(&quot;=== 非阻塞聊天服务器 ===&quot;)
 
     Socket server = sockets.listen(&quot;127.0.0.1&quot;, port)
     if server == null {
-        io.print(&quot;启动失败&quot;)
+        print(&quot;启动失败&quot;)
         return
     }
 
     server.set_nonblocking(true)
-    io.print(&quot;服务器运行在 127.0.0.1:&quot; + port)
+    print(&quot;服务器运行在 127.0.0.1:&quot; + port)
 
     while true {
         // 接受新连接
@@ -841,7 +841,7 @@ main() {
             client_counter = client_counter + 1
             var name = &quot;User&quot; + client_counter
 
-            io.print(&quot;新客户端: &quot; + name + &quot; (&quot; + client.peer_addr() + &quot;)&quot;)
+            print(&quot;新客户端: &quot; + name + &quot; (&quot; + client.peer_addr() + &quot;)&quot;)
 
             client.set_nonblocking(true)
             client.send(&quot;Welcome &quot; + name + &quot;!\n&quot;)
@@ -871,7 +871,7 @@ main() {
                 var data = sock.recv(1024)
 
                 if data == null {
-                    io.print(&quot;[&quot; + client_names[client_idx] + &quot;] 断开 (错误码: &quot; + sock.error() + &quot;)&quot;)
+                    print(&quot;[&quot; + client_names[client_idx] + &quot;] 断开 (错误码: &quot; + sock.error() + &quot;)&quot;)
                     sock.close()
 
                     var new_clients = []
@@ -890,7 +890,7 @@ main() {
                     var msg = data.trim()
                     if msg.len() &gt; 0 {
                         var n = client_names[client_idx]
-                        io.print(&quot;[&quot; + n + &quot;]: &quot; + msg)
+                        print(&quot;[&quot; + n + &quot;]: &quot; + msg)
                         broadcast(&quot;[&quot; + n + &quot;]: &quot; + msg + &quot;\n&quot;, sock)
                     }
                 }
@@ -909,9 +909,9 @@ import io
 main() {
     var ip = sockets.resolve(&quot;www.baidu.com&quot;)
     if ip != null {
-        io.print(&quot;baidu.com -&gt; &quot; + ip)
+        print(&quot;baidu.com -&gt; &quot; + ip)
     } else {
-        io.print(&quot;DNS 解析失败&quot;)
+        print(&quot;DNS 解析失败&quot;)
     }
 }
 </code></pre>
@@ -955,8 +955,8 @@ async func fetch_multiple() {
     await f2
 
     var results = asyncs.all([f1, f2])
-    io.print(&quot;example.com: &quot; + results[0].len() + &quot; 字节&quot;)
-    io.print(&quot;baidu.com: &quot; + results[1].len() + &quot; 字节&quot;)
+    print(&quot;example.com: &quot; + results[0].len() + &quot; 字节&quot;)
+    print(&quot;baidu.com: &quot; + results[1].len() + &quot; 字节&quot;)
 }
 
 main() {
@@ -970,7 +970,7 @@ import asyncs
 import io
 
 async func handle_client(Socket client, int id) {
-    io.print(&quot;处理客户端 &quot; + id + &quot; (&quot; + client.peer_addr() + &quot;)&quot;)
+    print(&quot;处理客户端 &quot; + id + &quot; (&quot; + client.peer_addr() + &quot;)&quot;)
 
     var data = client.recv(1024)
     if data != null {
@@ -1298,7 +1298,7 @@ sock.send(&quot;&quot;)  // 返回 true，但不发送任何 TCP 数据
 <p><strong>返回</strong>: 网络字节序的 16 位整数</p>
 <pre><code class="language-leno">var port = 8080
 var port_be = sockets.htons(port)
-io.print(&quot;端口 &quot; + port + &quot; 的网络字节序: &quot; + port_be)  // 36895
+print(&quot;端口 &quot; + port + &quot; 的网络字节序: &quot; + port_be)  // 36895
 </code></pre>
 <hr>
 <h3 id="sockets-htonl-host_long"><code>sockets.htonl(host_long)</code></h3>

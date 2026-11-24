@@ -63,9 +63,9 @@
 import asyncs
 
 async func demo() {
-    io.print(&quot;开始&quot;)
+    print(&quot;开始&quot;)
     await asyncs.sleep(1000)    // 暂停 1 秒
-    io.print(&quot;1秒后&quot;)
+    print(&quot;1秒后&quot;)
 }
 
 main() {
@@ -80,14 +80,15 @@ main() {
 </code></pre>
 <hr>
 <h3 id="2-async-函数返回值">2. async 函数返回值</h3>
-<pre><code class="language-leno">async func fetch_data(string name):string {
+<pre><code class="language-leno">import asyncs
+async func fetch_data(string name):string {
     await asyncs.sleep(500)
     return $&quot;数据: {name}&quot;
 }
 
 async func test() {
     var result = await fetch_data(&quot;测试&quot;)
-    io.print(result)    // 输出: 数据: 测试
+    print(result)    // 输出: 数据: 测试
 }
 
 main() {
@@ -98,9 +99,10 @@ main() {
 <hr>
 <h3 id="3-并发执行">3. 并发执行</h3>
 <p>同时启动多个任务，总耗时 = 最慢的那个任务：</p>
-<pre><code class="language-leno">async func task(string name, int ms) {
+<pre><code class="language-leno">import asyncs
+async func task(string name, int ms) {
     await asyncs.sleep(ms)
-    io.print($&quot;任务 {name} 完成&quot;)
+    print($&quot;任务 {name} 完成&quot;)
 }
 
 main() {
@@ -131,9 +133,9 @@ main() {
 
     // 然后用 all() 收集结果
     var results = asyncs.all([f1, f2, f3])
-    io.print(results[0])
-    io.print(results[1])
-    io.print(results[2])
+    print(results[0])
+    print(results[1])
+    print(results[2])
 }
 </code></pre>
 <hr>
@@ -148,25 +150,26 @@ async func test() {
     var result = await asyncs.timeout(slow_task(), 1000)
 
     if result is null {
-        io.print(&quot;超时了！&quot;)
+        print(&quot;超时了！&quot;)
     } else {
-        io.print(result)
+        print(result)
     }
 }
 </code></pre>
 <hr>
 <h3 id="6-主动让出执行权">6. 主动让出执行权</h3>
 <p>使用 <code>yield()</code> 让其他协程先运行：</p>
-<pre><code class="language-leno">async func task_a() {
-    io.print(&quot;A: 步骤1&quot;)
+<pre><code class="language-leno">import asyncs
+async func task_a() {
+    print(&quot;A: 步骤1&quot;)
     await asyncs.yield()     // 让出执行权
-    io.print(&quot;A: 步骤2&quot;)
+    print(&quot;A: 步骤2&quot;)
 }
 
 async func task_b() {
-    io.print(&quot;B: 步骤1&quot;)
+    print(&quot;B: 步骤1&quot;)
     await asyncs.yield()
-    io.print(&quot;B: 步骤2&quot;)
+    print(&quot;B: 步骤2&quot;)
 }
 
 main() {
@@ -188,7 +191,7 @@ B: 步骤2
 import asyncs
 
 async func download(string url, int delay):string {
-    io.print($&quot;开始下载: {url}&quot;)
+    print($&quot;开始下载: {url}&quot;)
     await asyncs.sleep(delay)
     return $&quot;{url} 下载完成&quot;
 }
@@ -206,17 +209,17 @@ async func main_task() {
 
     var results = asyncs.all([f1, f2, f3])
 
-    io.print(&quot;\n所有下载完成:&quot;)
-    io.print(results[0])
-    io.print(results[1])
-    io.print(results[2])
+    print(&quot;\n所有下载完成:&quot;)
+    print(results[0])
+    print(results[1])
+    print(results[2])
 }
 
 main() {
-    io.print(&quot;=== 并发下载测试 ===&quot;)
+    print(&quot;=== 并发下载测试 ===&quot;)
     main_task()
     asyncs.run()
-    io.print(&quot;=== 完成 ===&quot;)
+    print(&quot;=== 完成 ===&quot;)
 }
 </code></pre>
 <p>输出：</p>
@@ -281,7 +284,8 @@ async func async_fn() {
 }
 </code></pre>
 <h3 id="2-必须调用-asyncs-run">2. 必须调用 asyncs.run()</h3>
-<pre><code class="language-leno">main() {
+<pre><code class="language-leno">import asyncs
+main() {
     async_fn()         // 只创建协程，不会执行
     // 忘记调用 asyncs.run() → 协程不会运行
 }
@@ -400,9 +404,9 @@ async func risky():string {
 async func safe_catch() {
     try {
         var result = await risky()
-        io.print($&quot;成功: {result}&quot;)
+        print($&quot;成功: {result}&quot;)
     } catch e {
-        io.print($&quot;捕获异常: {e}&quot;)
+        print($&quot;捕获异常: {e}&quot;)
     }
 }
 
@@ -428,7 +432,7 @@ async func outer() {
     try {
         await inner()    // 异常在这里重新抛出
     } catch e {
-        io.print($&quot;捕获: {e}&quot;)
+        print($&quot;捕获: {e}&quot;)
     }
 }
 </code></pre>
@@ -541,7 +545,8 @@ main() {
 <a href="module_asyncs.html#实战并发网络客户端2026-11-14">module_asyncs.md</a>。</p>
 <h3 id="关于保活协程">关于保活协程</h3>
 <p>在早期版本中，如果所有协程都阻塞在 <code>await arecv()</code>/<code>await aaccept()</code> 上，<code>asyncs.run()</code> 会过早退出。当时的解决方法是添加一个额外的"保活"协程：</p>
-<pre><code class="language-leno">// 旧写法（已不再需要）
+<pre><code class="language-leno">import asyncs
+// 旧写法（已不再需要）
 async func keeper(int ms) {
     await asyncs.sleep(ms)
 }

@@ -46,11 +46,11 @@ import io
 main() {
     // 解析 JSON 字符串
     var obj = jsons.decode('{&quot;name&quot;: &quot;Leno&quot;, &quot;version&quot;: 1.0}')
-    io.print(obj.name)  // &quot;Leno&quot;
+    print(obj.name)  // &quot;Leno&quot;
 
     // 编码为 JSON
     var json_str = jsons.encode(obj)
-    io.print(json_str)  // {&quot;name&quot;:&quot;Leno&quot;,&quot;version&quot;:1}
+    print(json_str)  // {&quot;name&quot;:&quot;Leno&quot;,&quot;version&quot;:1}
 }
 </code></pre>
 <hr>
@@ -117,18 +117,18 @@ if obj is Dict[string, any] {
 </blockquote>
 <pre><code class="language-leno">// 解析对象
 var obj = jsons.decode('{&quot;name&quot;: &quot;张三&quot;, &quot;age&quot;: 25}')
-io.print(obj.name)   // &quot;张三&quot;
-io.print(obj.age)    // 25
+print(obj.name)   // &quot;张三&quot;
+print(obj.age)    // 25
 
 // 解析数组
 var arr = jsons.decode('[1, 2, 3, &quot;hello&quot;]')
-io.print(arr[0])     // 1
-io.print(arr[3])     // &quot;hello&quot;
+print(arr[0])     // 1
+print(arr[3])     // &quot;hello&quot;
 
 // 解析嵌套结构
 var nested = jsons.decode('{&quot;user&quot;: {&quot;id&quot;: 1, &quot;name&quot;: &quot;李四&quot;}, &quot;tags&quot;: [&quot;a&quot;, &quot;b&quot;]}')
-io.print(nested.user.name)   // &quot;李四&quot;
-io.print(nested.tags[0])     // &quot;a&quot;
+print(nested.user.name)   // &quot;李四&quot;
+print(nested.tags[0])     // &quot;a&quot;
 
 // 解析基本类型
 var str = jsons.decode('&quot;hello world&quot;')   // &quot;hello world&quot;
@@ -488,7 +488,7 @@ jsons.fill(got, js)                  // tag=1、p1=&quot;hi&quot;、p2=2.5  ← 
 <p><strong>返回</strong>: <code>string</code> - 格式化后的 JSON 字符串</p>
 <pre><code class="language-leno">var obj = {name: &quot;Leno&quot;, version: 1.0, tags: [&quot;a&quot;, &quot;b&quot;]}
 var pretty = jsons.encode_pretty(obj)
-io.print(pretty)
+print(pretty)
 </code></pre>
 <p>输出：</p>
 <pre><code class="language-json">{
@@ -511,10 +511,10 @@ io.print(pretty)
 - 失败: <code>null</code>（文件不存在或解析错误）</p>
 <pre><code class="language-leno">var data = jsons.read_file(&quot;config.json&quot;)
 if data != null {
-    io.print(&quot;服务器: &quot; + data.host)
-    io.print(&quot;端口: &quot; + data.port)
+    print(&quot;服务器: &quot; + data.host)
+    print(&quot;端口: &quot; + data.port)
 } else {
-    io.print(&quot;读取配置文件失败&quot;)
+    print(&quot;读取配置文件失败&quot;)
 }
 </code></pre>
 <hr>
@@ -531,9 +531,9 @@ if data != null {
 }
 
 if jsons.write_file(&quot;config.json&quot;, config) {
-    io.print(&quot;配置已保存&quot;)
+    print(&quot;配置已保存&quot;)
 } else {
-    io.print(&quot;保存失败&quot;)
+    print(&quot;保存失败&quot;)
 }
 </code></pre>
 <hr>
@@ -672,12 +672,12 @@ main() {
 
         // 保存默认配置
         jsons.write_file(&quot;app.json&quot;, config)
-        io.print(&quot;已创建默认配置文件&quot;)
+        print(&quot;已创建默认配置文件&quot;)
     }
 
     // 使用配置
-    io.print(&quot;应用: &quot; + config.app_name)
-    io.print(&quot;数据库: &quot; + config.database.host + &quot;:&quot; + config.database.port)
+    print(&quot;应用: &quot; + config.app_name)
+    print(&quot;数据库: &quot; + config.database.host + &quot;:&quot; + config.database.port)
 }
 </code></pre>
 <hr>
@@ -686,11 +686,11 @@ main() {
 import io
 
 // 模拟 API 响应处理
-func parse_user_list(var json_text) {
+func parse_user_list(any json_text) {
     var data = jsons.decode(json_text)
 
     if data == null {
-        io.print(&quot;解析失败&quot;)
+        print(&quot;解析失败&quot;)
         return []
     }
 
@@ -718,9 +718,9 @@ main() {
 
     var users = parse_user_list(api_response)
 
-    io.print(&quot;共 &quot; + users.len() + &quot; 个用户:&quot;)
+    print(&quot;共 &quot; + users.len() + &quot; 个用户:&quot;)
     for users to u {
-        io.print(&quot;  - &quot; + u.name + &quot; (&quot; + u.email + &quot;)&quot;)
+        print(&quot;  - &quot; + u.name + &quot; (&quot; + u.email + &quot;)&quot;)
     }
 }
 </code></pre>
@@ -730,7 +730,7 @@ main() {
 import io
 
 // 导出用户数据为 JSON
-func export_users(var users, var filename) {
+func export_users(any users, any filename) {
     var data = {
         export_time: &quot;2026-01-01&quot;,
         total: users.len(),
@@ -738,10 +738,10 @@ func export_users(var users, var filename) {
     }
 
     if jsons.write_file(filename, data) {
-        io.print(&quot;导出成功: &quot; + filename)
+        print(&quot;导出成功: &quot; + filename)
         return true
     } else {
-        io.print(&quot;导出失败&quot;)
+        print(&quot;导出失败&quot;)
         return false
     }
 }
@@ -762,7 +762,7 @@ main() {
 import io
 
 // 将 CSV 风格数据转换为 JSON
-func csv_to_json(var headers, var rows) {
+func csv_to_json(any headers, any rows) {
     var result = []
 
     for rows to row {
@@ -787,7 +787,7 @@ main() {
     var json_data = csv_to_json(headers, rows)
     var json_text = jsons.encode_pretty(json_data)
 
-    io.print(json_text)
+    print(json_text)
 }
 </code></pre>
 <p>输出：</p>
@@ -818,29 +818,29 @@ main() {
     var data = jsons.read_file(&quot;cs.json&quot;)
 
     if data == null {
-        io.print(&quot;无法读取文件&quot;)
+        print(&quot;无法读取文件&quot;)
         return
     }
 
     // 显示诗集信息
-    io.print(&quot;【&quot; + data.collection.name + &quot;】&quot;)
-    io.print(&quot;描述: &quot; + data.collection.description)
-    io.print(&quot;共收录 &quot; + data.collection.total + &quot; 首&quot;)
-    io.print(&quot;&quot;)
+    print(&quot;【&quot; + data.collection.name + &quot;】&quot;)
+    print(&quot;描述: &quot; + data.collection.description)
+    print(&quot;共收录 &quot; + data.collection.total + &quot; 首&quot;)
+    print(&quot;&quot;)
 
     // 遍历所有诗歌
     for data.poems to poem {
-        io.print(&quot;═══════════════════════&quot;)
-        io.print(&quot;【&quot; + poem.title + &quot;】&quot;)
-        io.print(&quot;作者: &quot; + poem.author.name + &quot; (&quot; + poem.author.dynasty + &quot;)&quot;)
+        print(&quot;═══════════════════════&quot;)
+        print(&quot;【&quot; + poem.title + &quot;】&quot;)
+        print(&quot;作者: &quot; + poem.author.name + &quot; (&quot; + poem.author.dynasty + &quot;)&quot;)
 
         // 显示诗句
-        io.print(&quot;\n原文:&quot;)
+        print(&quot;\n原文:&quot;)
         for poem.content to line {
-            io.print(&quot;  &quot; + line.text)
+            print(&quot;  &quot; + line.text)
         }
 
-        io.print(&quot;&quot;)
+        print(&quot;&quot;)
     }
 }
 </code></pre>
@@ -850,7 +850,7 @@ main() {
 import io
 
 // 检查字符串是否是有效的 JSON
-func is_valid_json(var text) -&gt; bool {
+func is_valid_json(any text) : bool {
     var result = jsons.decode(text)
     return result != null
 }
@@ -867,7 +867,7 @@ main() {
 
     for tests to test {
         var valid = is_valid_json(test)
-        io.print(test + &quot; -&gt; &quot; + (valid ? &quot;有效&quot; : &quot;无效&quot;))
+        print(test + &quot; -&gt; &quot; + (valid ? &quot;有效&quot; : &quot;无效&quot;))
     }
 }
 </code></pre>

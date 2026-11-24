@@ -9287,6 +9287,7 @@ export alias StrDict = Dict[string, string]
 </code></pre>
 <pre><code class="language-leno">// main.leno
 import &quot;types.leno&quot; as t
+import types
 
 main() {
     Size s = 100              // Size 即 int
@@ -9304,6 +9305,7 @@ export func makeSize(int w, int h): MySize {
 </code></pre>
 <pre><code class="language-leno">// main.leno
 import &quot;types.leno&quot; as t
+import types
 use t.MySize       // use 导入别名
 
 main() {
@@ -9677,7 +9679,7 @@ print(type(outer))         // Box[Box[int]]
 
 main() {
     print(&quot;Hello LenoLang&quot;)     // 全局 print
-    io.print(&quot;通过io模块访问&quot;)   // 模块方式访问
+    print(&quot;通过io模块访问&quot;)   // 模块方式访问
 }
 </code></pre>
 <h3 id="times-时间模块">times 时间模块</h3>
@@ -9826,47 +9828,51 @@ main() {
 </blockquote>
 <h3 id="files-文件操作模块">files 文件操作模块</h3>
 <pre><code class="language-leno">import files
+import dirs
 
 main() {
-    // 简单读写（适合小文件）
-    files.write(&quot;data.txt&quot;, &quot;Hello, World!&quot;)
-    var content = files.read(&quot;data.txt&quot;)
-    print(content)
-
-    // 检查文件是否存在
-    if files.exists(&quot;data.txt&quot;) {
-        print(&quot;文件存在&quot;)
+    // ⚠ 示例一律在**临时目录**里操作：用相对路径会在你自己的项目根读写，
+    //   而文档示例是会被真跑的（本站的文档代码校验就是这么干的）。
+    var dir = dirs.join(_tmpdir(), &quot;leno_files_demo&quot;)
+    if not dirs.exists(dir) {
+        dirs.mkdir(dir)
     }
+    var p = dirs.join(dir, &quot;data.txt&quot;)
 
-    // 删除文件
-    files.delete(&quot;data.txt&quot;)
+    // 简单读写（适合小文件）
+    files.write(p, &quot;Hello, World!&quot;)
+    print(files.read(p))          // Hello, World!
+    print(files.exists(p))        // true
 
-    // 打开文件进行复杂操作
-    // 模式: &quot;r&quot;读, &quot;w&quot;写, &quot;a&quot;追加, &quot;rb&quot;二进制读, &quot;wb&quot;二进制写
-    var f = files.open(&quot;data.txt&quot;, &quot;w&quot;)
+    // 打开文件写（模式: &quot;r&quot;读, &quot;w&quot;写, &quot;a&quot;追加, &quot;rb&quot;二进制读, &quot;wb&quot;二进制写）
+    var f = files.open(p, &quot;w&quot;)
     f.write(&quot;Line 1\n&quot;)
     f.write(&quot;Line 2\n&quot;)
     f.close()
 
-    // 读取文件
-    var f2 = files.open(&quot;data.txt&quot;, &quot;r&quot;)
-    var text = f2.read()       // 读取全部内容
+    // 读回全部内容
+    var f2 = files.open(p, &quot;r&quot;)
+    var text = f2.read()
     f2.close()
+    print(text)
 
-    // 二进制文件操作（适合大文件）
-    var src = files.open(&quot;source.zip&quot;, &quot;rb&quot;)
-    var dst = files.open(&quot;copy.zip&quot;, &quot;wb&quot;)
+    // 文件大小（字节；文本模式下 \n 会写成 \r\n，所以是 16 不是 14）
+    var f3 = files.open(p, &quot;rb&quot;)
+    print(f3.len())               // 16
+    f3.close()
 
-    // 获取文件大小
-    var size = src.len()
-
-    // 读取并写入（适合小文件）
-    var data = src.read()
-    dst.write(data)
-
-    src.close()
-    dst.close()
+    // 用完删掉（返回是否成功）
+    print(files.delete(p))        // true
 }
+</code></pre>
+<p>输出：</p>
+<pre><code>Hello, World!
+true
+Line 1
+Line 2
+
+16
+true
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：文件操作后必须调用 close()</strong></p>
@@ -9877,6 +9883,8 @@ f.close()  // 不要忘记关闭
 </blockquote>
 <h3 id="jsons-json-模块">jsons JSON 模块</h3>
 <pre><code class="language-leno">import jsons
+import dirs
+import files
 
 main() {
     // 解析 JSON 字符串
@@ -9908,9 +9916,12 @@ main() {
     // }
 
     // 文件操作：read_file 同样返回 any，取值方式与 decode 一致
-    jsons.write_file(&quot;data.json&quot;, data)
-    var loaded = jsons.read_file(&quot;data.json&quot;)
+    //   ⚠ 写临时目录，不要用相对路径（会在你的项目根留下 data.json）
+    var jp = dirs.join(_tmpdir(), &quot;leno_data.json&quot;)
+    jsons.write_file(jp, data)
+    var loaded = jsons.read_file(jp)
     print(jsons.get_str(loaded, &quot;name&quot;, &quot;&quot;))      // 测试
+    print(files.delete(jp))                       // true
 }
 </code></pre>
 <p><strong>常用取值助手</strong>（<code>get_str/int/float/bool</code> 返回<strong>对应具体类型</strong>，<code>get_obj</code> 返回 <code>any</code>；缺失/类型不符时返回默认值或 <code>null</code>）：</p>
@@ -9975,7 +9986,7 @@ main() {
 
         // 接收响应
         var response = conn.recv(1024)
-        io.print(response)
+        print(response)
 
         // 关闭连接
         conn.close()
@@ -9989,7 +10000,7 @@ import asyncs
 import io
 
 async func handle_client(Socket client, int id) {
-    io.print($&quot;[#{id}] 客户端已连接&quot;)
+    print($&quot;[#{id}] 客户端已连接&quot;)
     while true {
         var data = await client.arecv(1024)
         if data == null { break }
@@ -11295,7 +11306,7 @@ import asyncs
 import io
 
 async func handle_client(Socket client, int id) {
-    io.print($&quot;[#{id}] 客户端已连接&quot;)
+    print($&quot;[#{id}] 客户端已连接&quot;)
     while true {
         var data = await client.arecv(1024)  // 异步接收，不阻塞事件循环
         if data == null { break }
@@ -11516,16 +11527,19 @@ main() {
 </table>
 <blockquote>
 <p><strong>⚠️ 必须调用</strong> <strong><code>asyncs.run()</code></strong> <strong>启动事件循环</strong></p>
-<pre><code class="language-leno">async func task() {
-    await asyncs.sleep(100)
-    print(&quot;完成&quot;)
-}
-
-main() {
-    task()
-    asyncs.run()    // 必须调用，否则异步任务不会执行
-}
+<pre><code class="language-leno">import asyncs
 </code></pre>
+</blockquote>
+<blockquote>
+<p>async func task() {
+ await asyncs.sleep(100)
+ print("完成")
+}</p>
+<p>main() {
+ task()
+ asyncs.run()    // 必须调用，否则异步任务不会执行
+}</p>
+<pre><code></code></pre>
 </blockquote>
 <hr>
 <h2 id="cstruct-union-与-ptr-原生内存">cstruct、union 与 Ptr（原生内存）</h2>
@@ -11715,7 +11729,8 @@ align(16) cstruct Aligned { i32 v }     // 强制 16 字节对齐：size = 16
 </tbody>
 </table>
 <p><code>Ptr[cstruct]</code> <strong>可以直接解引用</strong>成实例视图（等价于 C 的 <code>p-&gt;x</code> 写成 <code>p[0].x</code>）：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-leno">import ffi
+main() {
     Ptr[V3] p = ffi.malloc(V3.size() * 2)
 
     p[0].x = 7.0               // 写第一个元素
@@ -11727,7 +11742,8 @@ align(16) cstruct Aligned { i32 v }     // 强制 16 字节对齐：size = 16
 }
 </code></pre>
 <p><code>char**</code>（argv、<code>getline(char**, size_t*)</code> 这类出参）用 <code>Ptr[Ptr[u8]]</code>：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-leno">import ffi
+main() {
     Ptr[Ptr[u8]] argv = ffi.malloc(8 * 2)
     Ptr[u8] s0 = ffi.malloc(4)
     ffi.write_string(s0, 0, &quot;hi&quot;)     // 连 '\0' 一起写
@@ -11778,7 +11794,8 @@ align(16) cstruct Aligned { i32 v }     // 强制 16 字节对齐：size = 16
 </tbody>
 </table>
 <p>C 侧返回的指针如果调用方知道大小，用 <code>ffi.bind_size</code> 挂上去：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-leno">import ffi
+main() {
     Ptr[u8] raw = ffi.malloc(64)
     ffi.bind_size(raw, 16)         // 只允许前 16 字节
     raw[15] = 1                    // ✅
@@ -11809,7 +11826,8 @@ clib user32_b {
 <p>这个偏差在照抄 C 头文件时很危险（<code>void f(SDL_Rect r)</code> 在 C 里是<strong>按值</strong>，
 而这里会被当成传指针、C 侧收到的就是垃圾）—— 所以编译器对裸写法给<strong>警告</strong>。</p>
 <p>调用时 cstruct 实例会自动取地址：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-leno">import ffi
+main() {
     user32_b lib = ffi.load(&quot;user32.dll&quot;)
     var pt = POINT.malloc()
     lib.GetCursorPos(pt)           // 实例 → 指针，自动转换
@@ -12348,6 +12366,7 @@ export func createBuffer(u32 cap): DataBuffer {
 </code></pre>
 <pre><code class="language-leno">// main.leno - use 导入后直接使用
 import &quot;cs_def.leno&quot; as cs
+import ffi
 use cs.DataBuffer
 
 main() {
@@ -12391,6 +12410,7 @@ export func newBuffer(u32 cap): DataBuffer {
 </code></pre>
 <pre><code class="language-leno">// main.leno - 调用方正确推断类型
 import &quot;wrapper.leno&quot; as w
+import ffi
 
 main() {
     var buf = w.newBuffer(512)   // buf 被推断为 DataBuffer
