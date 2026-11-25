@@ -101,9 +101,9 @@
 <tr>
 <td><strong>P1.1</strong></td>
 <td>高</td>
-<td><strong><code>for c to v</code> 本身零分配</strong>（编译器接入协议）</td>
-<td>⬜</td>
-<td><code>for</code> 的分配为 0，且<strong>不</strong>比现在的 55 ns/op 慢（下表说明了为什么这不是白捡的）</td>
+<td><strong><code>for c to v</code> 本身零分配</strong>（语义期优先取 <code>raw()</code>）</td>
+<td>✅ <strong>已完成（2026-11-25）</strong></td>
+<td>1M 项：<strong>55 → 34 ns/op</strong>、分配 <strong>8 MB → ~0</strong>（20 万项 1,271 B），断言里钉住</td>
 </tr>
 <tr>
 <td><strong>P2</strong></td>
@@ -260,11 +260,18 @@ build\leno.exe assert\run_tests.leno build\leno.exe assert :: 361 s，预期 666
 <p>验证：<code>test_threads_native_state</code> / <code>test_reflect_stress</code> / <code>test_thread_heap_reclaim</code>
 在 <code>LENO_GC_STRESS=512</code> 下各连跑 4 次，<strong>12/12 全过</strong>；全量压力套件仍是 666/2（只剩两条
 async IO 超时，与 P0 时一致）。</p>
-<h3 id="p1-迭代协议-库级-2026-11-25-编译器接入-p1-1">P1 迭代协议 —— 库级 ✅（2026-11-25）+ 编译器接入 ⬜（P1.1）</h3>
-<p>现状：<code>for c to v</code> 是<strong>语义期改写成 <code>c.to_array()</code></strong>（见 <code>semantic_rewrite_for_iterable</code>）⇒
-每轮遍历分配一个快照数组。</p>
-<p><strong>已完成（库级协议）</strong>：<code>Iter[T]</code> / <code>DequeIter[T]</code> 游标 + <code>Stack/Queue/Deque/PriorityQueue.iter()</code>、
-<code>LRU.keys_iter()</code>。用法 <code>while it.has_next() { if it.next() is int =&gt; v { … } }</code>，零数组复制。</p>
+<h3 id="p1-p1-1-迭代协议-两半都完成-2026-11-25">P1 / P1.1 迭代协议 —— ✅ 两半都完成（2026-11-25）</h3>
+<p>现状回顾：<code>for c to v</code> 原本被语义期改写成 <code>c.to_array()</code> ⇒ 每轮分配一个快照数组。</p>
+<p><strong>P1（库级游标）</strong>：<code>Iter[T]</code> / <code>DequeIter[T]</code> + <code>Stack/Queue/Deque/PriorityQueue.iter()</code>、
+<code>LRU.keys_iter()</code>。用法 <code>while it.has_next() { if it.next() is int =&gt; v { … } }</code>。</p>
+<p><strong>P1.1（让 <code>for</code> 本身零分配）</strong> —— 实际解法比原计划简单得多：
+<strong>不是</strong>把 <code>for</code> 降级成 <code>len()/at()</code> 循环（那要先把方法调用内联，否则每元素 +50 ns），
+而是让语义期<strong>优先挑容器上的 <code>raw()</code></strong>（约定：返回内部数组本身、不复制），
+找不到才回落 <code>to_array()</code>/<code>keys()</code>。于是 <code>for</code> 拿到的就是真数组 ⇒ 既有数组迭代路径原样复用。</p>
+<pre><code class="language-leno">// semantic_visit_func.c: semantic_rewrite_for_iterable
+for c to v   →   for c.raw() to v        // 有 raw 时
+             →   for c.to_array() to v   // 否则（Queue 的 head 偏移、Deque 两段、ClockLRU 死槽）
+</code></pre>
 <p>实测（N=1,000,000，本机）：</p>
 <table>
 <thead>
@@ -276,31 +283,33 @@ async IO 超时，与 P0 时一致）。</p>
 </thead>
 <tbody>
 <tr>
-<td><code>for st to v</code>（快照）</td>
-<td><strong>55 ns/op</strong></td>
+<td><code>for st to v</code>（0.6.0 及以前，快照）</td>
+<td>55 ns/op</td>
 <td>8 MB</td>
 </tr>
 <tr>
-<td><code>iter()</code> 游标</td>
-<td>100–106 ns/op</td>
-<td>~0（实测 808 B / 20 万项）</td>
+<td><strong><code>for st to v</code>（0.7.0 起，<code>raw()</code>）</strong></td>
+<td><strong>34 ns/op</strong></td>
+<td><strong>~0（20 万项 1,271 B）</strong></td>
 </tr>
 <tr>
-<td><code>for st.items to v</code>（Stack 专用，走公开字段）</td>
+<td><code>iter()</code> 游标</td>
+<td>100–121 ns/op</td>
+<td>~0</td>
+</tr>
+<tr>
+<td><code>for st.items to v</code>（手写内部数组）</td>
 <td>~51 ns/op</td>
 <td>~0</td>
 </tr>
 </tbody>
 </table>
-<p><strong>这张表是 P1.1 的前置情报</strong>：快照是"一次复制 + 数组顺序扫"，复制成本被整轮摊薄 ⇒
-单趟遍历它反而<strong>更快</strong>。所以"把 <code>for</code> 改成走协议"不是白捡的：
-必须先让 codegen 把 <code>len()</code>/<code>at(i)</code> <strong>内联</strong>成数组下标（否则每元素两次方法调用 ≈ +50 ns），
-否则只是把 8 MB 垃圾换成 2× 时间。P1.1 的判据因此写成"分配为 0 <strong>且</strong>不慢于 55 ns/op"。</p>
-<p>第一条候选实现（不新增字节码）：语义期把 <code>for c to v</code> 降级成
-<code>for 0 : c.len()-1 to i { v = c.at(i); &lt;body&gt; }</code>，前提是 <code>len</code>/<code>at</code> 能被窥孔优化成
-<code>OP_LEN</code> + <code>OP_INDEX_ARRAY_*</code>（同类优化已有先例：<code>for</code> 计数器原始减一、比较+跳转融合）。</p>
-<p><strong>语义差异要先拍板</strong>：快照版在循环体里改容器不影响本轮；协议版是实时视图。
-容器 README 已经把两者都写清（"想两者兼得：热路径用 <code>iter()</code>，循环体别改容器"）。</p>
+<p><strong>两个目标同时达成</strong>（分配 0 <strong>且</strong> 比原来更快）：省掉复制本身比"复制被摊薄"更划算。
+游标仍有存在价值 —— 元素不连续的容器（Queue/Deque）只能用它，且它能显式表达"我在实时遍历"。</p>
+<p><strong>语义差异（已写进 README）</strong>：<code>raw()</code> 是<strong>实时视图</strong> —— 在 Stack/PriorityQueue/LRU 上
+边遍历边 <code>push/pop</code> 会被看到（0.6.0 的快照只是把它掩盖了）；Queue/Deque 仍走快照、行为不变。</p>
+<p><strong>回归</strong>：<code>test_containers</code> 第 ⑯ 组 —— 20 万项遍历的 young 增量 &lt; 64 KB（实测 1,271 B）、
+顺序与 <code>to_array()</code>/<code>keys()</code> 逐项一致、无 <code>raw()</code> 的容器（Queue/Deque）行为不变。</p>
 <h3 id="p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</h3>
 <p>现在"看效果"已有两条可行路径：<code>image_lab.leno save</code>（3×2 拼图落盘）、
 <code>qr_maker.leno shot</code>（窗口内容回读成 PNG，靠定时器 + <code>markFrameRedraw()</code> + <code>readPixelsAt</code>）。</p>
@@ -350,9 +359,12 @@ async IO 超时，与 P0 时一致）。</p>
 <li><strong>2026-11-25（再晚）</strong>：<strong>P1 的库级部分完成</strong> —— <code>LenoContainers 0.6.0</code> 新增 <code>iter()</code> /
   <code>keys_iter()</code> 游标，遍历 20 万项分配 1.6 MB → 808 B；同时用实测数字把 <strong>P1.1（编译器接入）</strong>
   的前提讲清：单趟遍历快照反而更快（55 vs 106 ns/op），所以必须先内联 <code>len</code>/<code>at</code> 才值得改。</li>
+<li><strong>2026-11-25（收尾）</strong>：<strong>P1.1 完成</strong> —— 放弃"把 <code>for</code> 降级成 <code>len()/at()</code>"那条重路，
+  改成语义期<strong>优先取 <code>raw()</code></strong>（返回内部数组）。<code>LenoContainers 0.7.0</code>：<code>for st to v</code>
+  <strong>55 → 34 ns/op、8 MB → ~0</strong>，两个目标一次达成；Queue/Deque/ClockLRU/LRUO1 保持快照路径。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-已完成-2026-11-25">P0.1 子线程 VM 的完整性校验 —— ✅ 已完成（2026-11-25）</a></li><li><a href="#p1-迭代协议-库级-2026-11-25-编译器接入-p1-1">P1 迭代协议 —— 库级 ✅（2026-11-25）+ 编译器接入 ⬜（P1.1）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-已完成-2026-11-25">P0.1 子线程 VM 的完整性校验 —— ✅ 已完成（2026-11-25）</a></li><li><a href="#p1-p1-1-迭代协议-两半都完成-2026-11-25">P1 / P1.1 迭代协议 —— ✅ 两半都完成（2026-11-25）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/VM字节码校验与崩溃防护设计方案.html">← 上一篇</a><a href="async_await入门指南.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
