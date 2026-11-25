@@ -1,10 +1,11 @@
 # 案例：LenoCleaner —— C 盘清理工具
 
+![LenoCleaner 运行时主界面](../images/案例/cleaner-1-main.png)
+
+> 本机实际运行截图（`dist/cleaner_master.exe`，15 类可清理项）。
+
 > 本地仓库：`D:\CLeno\LenoCleaner`（11 个 `.leno` / 4,529 行 / 20 张界面图）
 > 包名：`CleanerMaster 0.1.0`
-
-![清理](../images/案例/cleaner-1-clean.png)
-![浏览器缓存](../images/案例/cleaner-2-browser.png)
 
 ## 它是什么
 

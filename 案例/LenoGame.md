@@ -1,5 +1,9 @@
 # 案例：LenoGame —— 9 个用 Leno 写的图形小游戏
 
+![五子棋 运行时](../images/案例/game-1-gomoku.png)
+
+> 本机实际运行截图：`leno.exe gomoku.leno` 起的五子棋对战菜单。
+
 > 本地仓库：`D:\CLeno\LenoGame`（25 个 `.leno` / 21,217 行 / 1,971 张素材图）
 
 ## 它是什么

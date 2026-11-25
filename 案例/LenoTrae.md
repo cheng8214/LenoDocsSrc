@@ -1,10 +1,11 @@
 # 案例：LenoTrae —— Trae 每日自动签到
 
+![LenoTrae 运行时主界面](../images/案例/trae-1-main.png)
+
+> 本机实际运行截图（`dist/trae_gui.exe`）；账号与设备号已打码。
+
 > 本地仓库：`D:\CLeno\LenoTrae`（12 个 `.leno` / 3,460 行）
 > 特点：托盘 GUI + 定时调度 + 失败重试
-
-![设置](../images/案例/trae-1-settings.png)
-![启动](../images/案例/trae-2-startup.png)
 
 ## 它是什么
 

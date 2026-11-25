@@ -1,9 +1,10 @@
 # 案例：LenoWorkBuddy —— WorkBuddy 自动签到 + 成长中心
 
-> 本地仓库：`D:\CLeno\LenoWorkBuddy`（16 个 `.leno` / 5,338 行）
+![LenoWorkBuddy 运行时主界面](../images/案例/wb-1-main.png)
 
-![启动](../images/案例/wb-1-startup.png)
-![签到结果](../images/案例/wb-2-check.png)
+> 本机实际运行截图（`dist/wb_gui.exe`）；账号已打码。
+
+> 本地仓库：`D:\CLeno\LenoWorkBuddy`（16 个 `.leno` / 5,338 行）
 
 ## 它是什么
 

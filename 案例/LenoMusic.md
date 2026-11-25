@@ -1,9 +1,10 @@
 # 案例：LenoMusic —— 多音源音乐搜索与下载
 
-> 本地仓库：`D:\CLeno\LenoMusic`（46 个 `.leno` / 16,420 行 / 28 张界面图）
+![LenoMusic 运行时主界面](../images/案例/music-1-main.png)
 
-![榜单](../images/案例/music-1-bangdan.png)
-![试听](../images/案例/music-2-audition.png)
+> 本机实际运行截图（`dist/musicdl_gui.exe`）。
+
+> 本地仓库：`D:\CLeno\LenoMusic`（46 个 `.leno` / 16,420 行 / 28 张界面图）
 
 ## 它是什么
 

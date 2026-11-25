@@ -1,8 +1,10 @@
 # 案例：Aria —— 桌面音乐客户端
 
-> 本地仓库：`D:\CLeno\Aria`（79 个 `.leno` / 27,475 行 / 646 张图片资源）
+![Aria 运行时首页](../images/案例/aria-1-app.png)
 
-![Aria 主界面](../images/案例/aria-1-app.png)
+> 本机实际运行截图（`dist/aria.exe`）。
+
+> 本地仓库：`D:\CLeno\Aria`（79 个 `.leno` / 27,475 行 / 646 张图片资源）
 
 ## 它是什么
 

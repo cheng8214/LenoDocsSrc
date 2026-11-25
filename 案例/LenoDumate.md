@@ -1,8 +1,10 @@
 # 案例：LenoDumate —— 百度搭子每日签到
 
-> 仓库：`gitee.com/cheng8214/LenoDumate`（7 个 `.leno` / 2,011 行）
+![LenoDumate 界面](../images/案例/dumate-1-app.png)
 
-![主界面](../images/案例/dumate-1-app.png)
+> 截图来自项目仓库（本机启动后为托盘态，未能截到主窗口）。
+
+> 仓库：`gitee.com/cheng8214/LenoDumate`（7 个 `.leno` / 2,011 行）
 
 ## 它是什么
 
