@@ -271,8 +271,67 @@ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
 看到 <code>0xFEEEFEEE</code> ⇒ 双重释放 ⇒ 找"谁还拥有这块内存"；
 修复后跑最小复现 + 单测 + 全量。</p>
 </blockquote>
+<hr>
+<h2 id="八-实战-gc-把还活着的对象回收了-2026-11-25-修">八、实战：GC 把<strong>还活着</strong>的对象回收了（2026-11-25 修）</h2>
+<p><strong>症状</strong>：同一进程里连续两次对 1280×800 的图 <code>encodePNG</code>，第二次必崩：</p>
+<pre><code>[崩溃] 0xC0000005  @ 函数 deflate_level / compress_deflate.leno:117（当前指令 OP_LOADK）
+</code></pre>
+<p>单次编码正常；纯 <code>zlib</code> 连压同一份 4MB 数据三次也正常 ⇒ 一开始被误判成"deflate 的 bug"。</p>
+<p><strong>最小复现</strong>（15 行，不用 LenoImage）：</p>
+<pre><code class="language-leno">for 0 : 1 to round {
+    Array[int] scan = []
+    for 0 : 4199999 to i { scan.add(i % 251) }     // 4MB
+    string s = strings.from_bytes(scan)
+    z.zlib(s)                                       // ← 第 2 轮在这里崩
+}
+</code></pre>
+<p><strong>定位过程（这套流程可复用）</strong>：</p>
+<ol>
+<li><code>_gc(false)</code> 关掉 GC 再跑 ⇒ <strong>不崩</strong> ⇒ 立刻锁定"GC 相关"，不用再猜算法。</li>
+<li>打开 <code>LENO_GC_FREELOG=1</code>（新增，见下）重跑，崩溃报告里多出一行：</li>
+</ol>
+<pre><code>   [FREELOG] fault addr 0x…040 落在**已释放**的 数组元素缓冲（块大小 1048576 字节）
+   [LOCALS] 帧 3 func=zlib locals=… count=11
+</code></pre>
+<ol>
+<li>同一次运行还会打印 <code>[SANITY] 标记阶段即将越界读：arr=… count=69765 elements=…</code>
+   —— 它是用 <code>VirtualQuery</code> 探测"最后一个元素所在页是否可读"，比"地址落在曾经 free 过的区间"
+   可靠（后者会被 malloc 复用误报，实测踩过）。</li>
+<li><code>[BACKTRACE]</code> 给出模块内偏移；<code>gcc -g</code> 编一版后
+   <code>addr2line -e build\leno_dbg.exe -f -C 0x140000000+偏移</code>（PE 要<strong>加映像基址</strong>）
+   直接指到 <code>gc_scan_children</code>（<code>gc.c:940</code> 的 <code>gc_mark_value(arr-&gt;elements[i])</code>）。</li>
+</ol>
+<p><strong>根因</strong>：寄存器 VM 的<strong>原地帧</strong>（zero-copy frame，见 <code>vm_call.inc</code>）让被调方的寄存器区
+直接复用调用方的窗口，但<strong>只填了实参、没清非参数槽位</strong>，理由是"调用方寄存器里一定是合法
+Value"。错在<strong>"合法" ≠ "还活着"</strong>：那段内存是上一帧用过的同一段，里面可能残留<strong>指向已回收
+对象</strong>的旧 Value；而 GC 按 <code>local_count</code> 扫整帧 ⇒ 把悬空指针当根扫进去 ⇒ 解引用已释放的
+<code>elements</code> 数组 ⇒ 0xC0000005。</p>
+<p><strong>修法</strong>：原地帧也把 <code>[实参之后, local_count)</code> 全部填 <code>null</code>（<code>vm_call.inc</code>）。
+代价实测为 0：<code>fib(30)</code> 66.1ms（基线 66.5）、函数调用基准 3.79s（基线 3.90s）。</p>
+<p><strong>回归用例</strong>：<code>assert/test_gc_stale_register.leno</code>（3 轮「1MB 数组 → from_bytes → zlib」，
+修前必崩、修后稳定通过 —— 用"临时回退修复"的二进制验证过它确实能抓到）。</p>
+<p><strong>新增诊断开关（默认关，零开销）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>环境变量</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LENO_GC_FREELOG=1</code></td>
+<td>记录每次 free 的 (地址, 大小, 种类)；崩溃时用 fault addr 反查"这块是谁放的"；同时毒化已释放内存、并在标记阶段用 <code>VirtualQuery</code> 预检越界读、打印帧寄存器与 C 栈回溯</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>教训（比这条 bug 更值钱）：<strong>GC 只应该看到"一定会被初始化或明确写过"的槽位</strong>。
+任何"跳过初始化"的优化，只要那块内存可能被 GC 扫描，就必须能证明
+"跳过之后不可能残留悬空指针"——本仓这一次恰好证明不了。</p>
+</blockquote>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-先认症状-这些是崩溃-不是报错">一、先认症状：这些是崩溃，不是报错</a></li><li><a href="#二-最重要的教训-环境不同-是假象">二、最重要的教训：「环境不同」是假象</a></li><li><a href="#三-定位流程-按顺序做-别跳">三、定位流程（按顺序做，别跳）</a></li><ul class="lv3"><li><a href="#第-1-步-判断崩在编译期还是运行期">第 1 步：判断崩在编译期还是运行期</a></li><li><a href="#第-2-步-二分到最小用例">第 2 步：二分到最小用例</a></li><li><a href="#第-3-步-编调试版-gdb-核心一步">第 3 步：编调试版 + gdb（核心一步）</a></li><li><a href="#第-4-步-认-毒值">第 4 步：认"毒值"</a></li><li><a href="#第-5-步-顺着栈找-第二个所有者">第 5 步：顺着栈找"第二个所有者"</a></li></ul><li><a href="#四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</a></li><ul class="lv3"><li><a href="#共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</a></li><li><a href="#就地改-kind">② 就地改 kind</a></li><li><a href="#固定数组无上限">③ 固定数组无上限</a></li></ul><li><a href="#五-工具可用性-本机实测">五、工具可用性（本机实测）</a></li><li><a href="#六-修复后的验证清单">六、修复后的验证清单</a></li><li><a href="#七-一句话速查">七、一句话速查</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-先认症状-这些是崩溃-不是报错">一、先认症状：这些是崩溃，不是报错</a></li><li><a href="#二-最重要的教训-环境不同-是假象">二、最重要的教训：「环境不同」是假象</a></li><li><a href="#三-定位流程-按顺序做-别跳">三、定位流程（按顺序做，别跳）</a></li><ul class="lv3"><li><a href="#第-1-步-判断崩在编译期还是运行期">第 1 步：判断崩在编译期还是运行期</a></li><li><a href="#第-2-步-二分到最小用例">第 2 步：二分到最小用例</a></li><li><a href="#第-3-步-编调试版-gdb-核心一步">第 3 步：编调试版 + gdb（核心一步）</a></li><li><a href="#第-4-步-认-毒值">第 4 步：认"毒值"</a></li><li><a href="#第-5-步-顺着栈找-第二个所有者">第 5 步：顺着栈找"第二个所有者"</a></li></ul><li><a href="#四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</a></li><ul class="lv3"><li><a href="#共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</a></li><li><a href="#就地改-kind">② 就地改 kind</a></li><li><a href="#固定数组无上限">③ 固定数组无上限</a></li></ul><li><a href="#五-工具可用性-本机实测">五、工具可用性（本机实测）</a></li><li><a href="#六-修复后的验证清单">六、修复后的验证清单</a></li><li><a href="#七-一句话速查">七、一句话速查</a></li><li><a href="#八-实战-gc-把还活着的对象回收了-2026-11-25-修">八、实战：GC 把还活着的对象回收了（2026-11-25 修）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="窥孔优化复盘.html">← 上一篇</a><a href="语法改进建议_2026-11-02.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
