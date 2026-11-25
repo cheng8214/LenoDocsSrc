@@ -754,11 +754,18 @@ for clash to f { }      // 旧实现 ⇒ for clash.raw() to f ⇒ for 7 to f ⇒
 export face Iterable { func each(): Array }
 export struct Stack[T] impl Iterable { func each(): Array[T] { return items } … }
 </code></pre>
-<p><code>for c to v</code> 的规则是<strong>纯结构判定</strong>：恰好实现 1 个 face + 该 face 恰好 1 个方法 +
-该方法返回 <code>Array</code> ⇒ 遍历那个方法；0 个或多个 face ⇒ 字段遍历。于是任何类型只要
-<code>impl</code> 一个符合形状的 face 就能被 <code>for</code> 遍历，编译器无需为任何具体名字留位置。
-（中途还试过"在 C 里注册内置 face Iterable + <code>strdup("each")</code>"—— 那只是把写死换个地方放，
-同样被否；现在的实现里没有任何名字常量。）</p>
+<p><strong>最终定稿（2026-11-26）：<code>Iterable</code> 是语言保留的 face 名</strong>（地位同 <code>main</code>：不是关键字，
+但语言赋予语义），判定只看"<strong>impl 列表里有它</strong>"，形状（1 个无参方法、返回 <code>Array</code>）
+在 face 声明处校验。</p>
+<p>中间还试错过两次，都记下来：</p>
+<ol>
+<li><strong>"看形状"</strong>（恰好 1 个 face + 单方法 + 返回 Array 就自动可迭代）—— 会<strong>误捕</strong>：
+   <code>face Snapshot { func bytes(): Array }</code> + <code>impl Snapshot</code> 的 struct，<code>for b to k</code>
+   会去遍历 <code>bytes</code>。形状像 ≠ 声明了要遍历。<strong>否决</strong>。</li>
+<li><strong>"在 C 里注册内置 face + <code>strdup("each")</code>"</strong> —— 只是把写死换个地方放，且方法名仍是常量。<strong>否决</strong>。</li>
+</ol>
+<p>现在的取舍是明确的：C 里保留<strong>一个</strong>语言规范名 <code>Iterable</code>（一处 <code>face_def_find("Iterable")</code>），
+换来"零形状猜测、零误捕、零新语法、用户写法不变"；方法名始终从 face 声明里读。</p>
 <p><strong>测试</strong>：<code>assert/test_iterable_face.leno</code>（协议遍历 + 自定义类型 + 字段遍历反面）；
 <code>assert/test_for_container_iter.leno</code>（显式 <code>.raw()</code>/<code>.to_array()</code>/<code>.keys()</code> 路径）。</p>
 <hr>

@@ -144,29 +144,32 @@ for l to k { print(k) }         // 缓存遍历的是 **key**
 }
 export struct Stack[T] impl Iterable { … func each(): Array[T] { return items } … }
 </code></pre>
-<p><code>for c to v</code> 的判定规则（<strong>编译器只做结构判定，源码里没有 <code>Iterable</code>/<code>each</code> 任何字符串</strong>）：</p>
+<p><code>for c to v</code> 的判定规则很简单：<strong><code>impl</code> 列表里有 <code>Iterable</code></strong>。</p>
 <table>
 <thead>
 <tr>
-<th>struct 的 face 情况</th>
+<th>struct 的声明</th>
 <th><code>for c to v</code> 的语义</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>恰好 1 个 face，且它恰好 1 个方法、该方法返回 <code>Array</code></td>
-<td>遍历 <code>c.&lt;那个方法&gt;()</code> 的结果（元素）</td>
+<td><code>impl Iterable</code></td>
+<td>遍历 <code>c.&lt;Iterable 声明里的那个方法&gt;()</code>（元素）</td>
 </tr>
 <tr>
-<td>0 个 face</td>
+<td>没 impl Iterable（包括实现了别的 face）</td>
 <td><strong>字段遍历</strong>（k = 字段名，本语言原有语义）</td>
-</tr>
-<tr>
-<td>≥2 个 face</td>
-<td>字段遍历（不猜是哪一个）</td>
 </tr>
 </tbody>
 </table>
+<p>两点要注意：</p>
+<ul>
+<li><code>Iterable</code> 是<strong>语言保留的 face 名</strong>（地位同 <code>main</code>：不是关键字，但语言赋予语义）。
+  它的形状被钉死为「恰好 1 个方法、无参数、返回 <code>Array</code>」，写歪了<strong>编译期报错</strong>；</li>
+<li>编译器里出现的只有 <code>"Iterable"</code> 这一个名字（一处）；方法名（<code>each</code>）来自 face 声明，
+  不在编译器里。所以自定义别的 face（哪怕形状一样）<strong>不会</strong>被误捕成可迭代。</li>
+</ul>
 <p>所以容器直接写就行：</p>
 <pre><code class="language-leno">for st to v { }        // 栈底 → 栈顶（37 ns/op、20 万项 1,271 B 分配 ≈ 0）
 for q to v { }         // 队首 → 队尾（Queue 内部有 head 空洞 ⇒ each() 给快照）
@@ -887,10 +890,14 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <h2 id="变更记录">变更记录</h2>
 <ul>
 <li>
+<p><strong>0.8.1</strong>（2026-11-26）：<code>Iterable</code> 定为<strong>语言保留的 face 名</strong>，判定从"看形状"改成
+  "看 impl 列表"。修掉一个真隐患：旧规则会把任何「单 face＋单方法＋返回 Array」的类型
+  误判成可迭代（实测 <code>face Snapshot { func bytes(): Array }</code> ⇒ <code>for b to k</code> 遍历 bytes
+  而不是字段）。现在形状在 face 声明处校验（1 个无参方法、返回 Array），写歪编译期报错。</p>
+</li>
+<li>
 <p><strong>0.8.0</strong>（2026-11-25）：新增 <code>face Iterable { func each(): Array }</code>，七个类型全部 <code>impl Iterable</code>
-  ⇒ <strong><code>for st to v</code> 直接遍历元素/键</strong>（37 ns/op、20 万项 ≈ 0 分配）。判定是<strong>结构式</strong>的
-  （恰好 1 个 face + 该 face 恰好 1 个方法 + 返回 Array），编译器源码里没有任何
-  <code>Iterable</code>/<code>each</code> 字符串；自定义类型只要 <code>impl Iterable</code> 就能被 <code>for</code> 遍历。
+  ⇒ <strong><code>for st to v</code> 直接遍历元素/键</strong>（37 ns/op、20 万项 ≈ 0 分配）。
   显式写法（<code>.raw()</code> / <code>.to_array()</code> / <code>.keys()</code> / <code>iter()</code>）继续保留。</p>
 </li>
 <li>
