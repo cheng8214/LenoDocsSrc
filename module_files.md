@@ -350,7 +350,7 @@ f.close()
 
 ---
 
-### `writeln(string)`
+### `write(string)`
 
 写入字符串并添加换行符。
 
@@ -367,10 +367,9 @@ import files
 var f = files.open("log.txt", "w")
 
 // 写入多行
-f.writeln("2024-01-15 10:30:00 - 程序启动")
-f.writeln("2024-01-15 10:30:01 - 加载配置")
-f.writeln("2024-01-15 10:30:02 - 初始化完成")
-
+f.write("2024-01-15 10:30:00 - 程序启动" + "\n")
+f.write("2024-01-15 10:30:01 - 加载配置" + "\n")
+f.write("2024-01-15 10:30:02 - 初始化完成" + "\n")
 f.close()
 ```
 
@@ -607,7 +606,7 @@ import files
 
 // 追加单行
 var log = files.open("app.log", "a")
-log.writeln("[" + get_time() + "] 用户登录")
+log.write("[" + get_time() + "] 用户登录" + "\n")
 log.close()
 
 // 追加多行
@@ -624,9 +623,8 @@ import files
 var f = files.open("report.txt", "w")
 
 // 写入表头
-f.writeln("========== 报告 ==========")
-f.writeln("")
-
+f.write("========== 报告 ==========" + "\n")
+f.write("" + "\n")
 // 写入数据
 var items = [
     {"name": "产品A", "price": 100, "qty": 5},
@@ -635,13 +633,12 @@ var items = [
 
 for items to item {
     var line = item["name"] + " | " + item["price"] + "元 | x" + item["qty"]
-    f.writeln(line)
+    f.write(line + "\n")
 }
 
 // 写入总计
-f.writeln("")
-f.writeln("=========================")
-
+f.write("" + "\n")
+f.write("=========================" + "\n")
 f.close()
 ```
 
@@ -841,9 +838,9 @@ func logger_log(string level, string message) {
         return
     }
     
-    var time_str = times.now().format("yyyy-MM-dd HH:mm:ss")
+    var time_str = times.format(times.now(), "%Y-%m-%d %H:%M:%S")
     var log_line = "[" + time_str + "] [" + level + "] " + message
-    Logger.file.writeln(log_line)
+    Logger.file.write(log_line)
 }
 
 func logger_info(string message) {
@@ -878,7 +875,7 @@ main() {
 import files
 import arrays
 
-func read_csv(string path): Array[Array[string]] {
+func read_csv(string path): Array[Dict] {
     var f = files.open(path, "r")
     var lines = f.readlines()
     f.close()
@@ -908,15 +905,14 @@ func write_csv(string path, Array[string] headers, Array[Array[string]] records)
     var f = files.open(path, "w")
     
     // 写入表头
-    f.writeln(headers.join(","))
-    
+    f.write(headers.join(",") + "\n")
     // 写入数据
     for records to record {
         var values = []
         for headers to h {
             values.add(record[h])
         }
-        f.writeln(values.join(","))
+        f.write(values.join(",") + "\n")
     }
     
     f.close()
@@ -970,7 +966,7 @@ func write_binary_data(string path) {
 }
 
 // 读取二进制数据
-func read_binary_data(path) {
+func read_binary_data(string path): Array[int] {
     var f = files.open(path, "rb")
     
     // 读取魔数
@@ -1027,7 +1023,7 @@ func find_and_replace(path, old_str, new_str):bool {
     return true
 }
 
-func find_in_file(path, search_str) {
+func find_in_file(string path, string search_str): Array[string] {
     var f = files.open(path, "r")
     var line_num = 1
     var matches = []

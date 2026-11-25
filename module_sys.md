@@ -813,7 +813,7 @@ main() {
 ### 示例4：清屏动画效果
 
 ```leno
-import times
+import threads   // threads.sleep(ms)：times 模块里没有 sleep
 
 main() {
     print("========== 清屏演示 ==========")
