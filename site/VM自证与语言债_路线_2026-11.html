@@ -306,7 +306,40 @@ export struct Stack[T] impl Iterable { func each(): Array[T] { return items } �
 这种），已否决 —— 详见 <code>语言摩擦与隐式契约清单.md</code> 的 M12。</p>
 <p>实测：<code>for st to v</code> <strong>37 ns/op、20 万项 1,271 B</strong>（比快照快，因为没有 8MB 复制）；
 <code>for st.raw() to v</code> 34 ns/op；<code>for st.to_array() to v</code> 52 ns/op + 8 MB。
-自定义类型只要 <code>impl Iterable</code> 就能被 <code>for</code> 遍历（回归用例 <code>assert/test_iterable_face.leno</code>）。</p>
+自定义类型只要 <code>impl Iterable</code> 就能被 <code>for</code> 遍历。</p>
+<p><strong>压测（2026-11-26）</strong>：<code>assert/test_iterable_stress.leno</code> 把协议从头到尾打了一遍 ——</p>
+<table>
+<thead>
+<tr>
+<th>组</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 七个容器</td>
+<td>元素顺序 / 下标变量 / break / continue / 空容器 / 嵌套遍历</td>
+</tr>
+<tr>
+<td>② 跨模块</td>
+<td>别的模块里 <code>impl Iterable</code> 的 <code>Bag</code>、泛型 <code>Wrap[T]</code>，主模块照样能遍历</td>
+</tr>
+<tr>
+<td>③ 体积</td>
+<td>5 轮 × 20 万 = 100 万次迭代，累加和精确比对</td>
+</tr>
+<tr>
+<td>④ 人写错了</td>
+<td>8 条诊断：face 多方法 / 带参数 / 返回非 Array / 缺方法 / face 不存在 / 签名不符 / 返回类型不符 / <strong>face 类型变量遍历必须给警告</strong></td>
+</tr>
+<tr>
+<td>⑤ 所有通道</td>
+<td>每个容器把 <code>for</code> 协议 / <code>raw()</code> / <code>to_array()</code> / <code>keys()</code> / <code>each()</code> / <code>iter()</code> 全部打一遍，结果逐条对账</td>
+</tr>
+</tbody>
+</table>
+<p>新增诊断：<code>for &lt;face 类型的变量&gt; to v</code> 此前<strong>静默 0 次</strong>（face 没有字段），
+现在给"空循环"警告并说清怎么改（先收窄成具体 struct）。</p>
 <p><strong>同一天里"显式表达式"这段仍然有效</strong>（保留为不依赖协议的低层写法）：</p>
 <pre><code class="language-leno">for st.raw() to v { }        // 0 复制 + 数组满速
 for st.to_array() to v { }   // 快照
