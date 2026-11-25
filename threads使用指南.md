@@ -556,7 +556,7 @@ main() {
     // 收集结果
     var total = 0.0
     for 4 to var i {
-        var ms = ch.receive()
+        var ms = _int(ch.receive())    // receive 返回 any，先转成整数
         print("线程" + (i + 1) + ": " + ms + "毫秒")
         total = total + ms
     }

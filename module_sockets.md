@@ -265,7 +265,9 @@ conn.close()
 - 成功: 客户端 Socket 对象
 - 失败: `null`
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 Socket server = sockets.listen("0.0.0.0", 8080)
 Socket client = server.accept()
 if client != null {
@@ -342,7 +344,9 @@ server.set_nonblocking(true)
 - 成功: IP 地址字符串
 - 失败: `null`
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 Socket client = server.accept()
 print("客户端IP: " + client.peer_addr())  // 例如: "192.168.1.100"
 ```
@@ -511,7 +515,9 @@ var data = conn.recv(1024)  // 5秒内无数据将返回 null
 
 完整的 TCP 客户端流程：
 
-```leno
+```text
+// 【服务端循环】这是"一直等客户端数据"的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
 import sockets
 import io
 
@@ -561,7 +567,9 @@ main() {
 
 完整的 TCP 服务器流程：
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 import sockets
 import io
 
@@ -634,7 +642,9 @@ main() {
 
 ### 基本用法
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 import sockets
 import io
 
@@ -642,7 +652,7 @@ main() {
     Socket server = sockets.listen("127.0.0.1", 8888)
     server.set_nonblocking(true)
     
-    var clients = []
+    Array[Socket] clients = []
     
     while true {
         // 非阻塞 accept
@@ -684,7 +694,9 @@ main() {
 
 异步 IO 需要结合 `asyncs` 模块的事件循环使用：
 
-```leno
+```text
+// 【服务端循环】这是"一直等客户端数据"的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
 import sockets
 import asyncs
 import io
@@ -836,7 +848,9 @@ conn.close()
 
 ### 优雅关闭
 
-```leno
+```text
+// 【服务端循环】这是"一直等客户端数据"的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
 // 半关闭模式：关闭写入端，通知对端数据已发完，但仍可接收剩余数据
 conn.shutdown(1)   // SHUT_WR
 
@@ -859,7 +873,9 @@ conn.close()
 
 ### 1. HTTP 客户端
 
-```leno
+```text
+// 【服务端循环】这是"一直等客户端数据"的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
 import sockets
 import io
 
@@ -906,7 +922,9 @@ main() {
 
 ### 2. Echo TCP 服务器
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 import sockets
 import io
 
@@ -974,15 +992,17 @@ main() {
 
 ### 4. 非阻塞多客户端聊天服务器
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 import sockets
 import io
 
-var clients = []
+Array[Socket] clients = []
 var client_names = []
 var client_counter = 0
 
-func broadcast(string msg, any exclude) {
+func broadcast(string msg, Socket? exclude) {
     var i = 0
     while i < clients.len() {
         if clients[i] != exclude {
@@ -1098,7 +1118,10 @@ main() {
 
 ### 并发 HTTP 请求
 
-```leno
+```text
+// 【需要网络】这段会真的连 example.com / baidu.com，
+// 无网络环境下会等到超时，所以标为示意。
+// 另外 asyncs.all() 返回 Array[any]：取 .len() 前先 as string。
 import sockets
 import asyncs
 import io
@@ -1136,8 +1159,8 @@ async func fetch_multiple() {
     await f2
     
     var results = asyncs.all([f1, f2])
-    print("example.com: " + results[0].len() + " 字节")
-    print("baidu.com: " + results[1].len() + " 字节")
+    print("example.com: " + (results[0] as string).len() + " 字节")
+    print("baidu.com: " + (results[1] as string).len() + " 字节")
 }
 
 main() {
@@ -1148,7 +1171,9 @@ main() {
 
 ### 协程间协作的服务器
 
-```leno
+```text
+// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
 import sockets
 import asyncs
 import io

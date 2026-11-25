@@ -203,6 +203,13 @@ p.free()
 ```leno
 import ffi
 
+// Point 的定义（各示例独立，不依赖上文）
+cstruct Point {
+    i32 x
+    i32 y
+}
+
+
 main() {
     // 分配内存
     var mem = ffi.malloc(8)
@@ -394,7 +401,9 @@ main() {
     
     // 获取指针，传递给 Windows API
     var ptr = processes.to_ptr()
-    var count = ffi.call_int(psapi, "EnumProcesses", ptr, 400, ...)
+    // 真实调用需要传"输出参数"指针：
+    //   var count = ffi.call_int(psapi, "EnumProcesses", ptr, 400, count_ptr)
+    var count = 3   // 这里用 3 演示遍历
     
     // 访问返回的数据
     for 0 : count - 1 to i {
@@ -609,6 +618,13 @@ print("重复释放: " + result2)  // false
 
 ```leno
 import ffi
+
+// Point 的定义（示例独立，不依赖上文）
+cstruct Point {
+    i32 x
+    i32 y
+}
+
 
 main() {
     var p = Point.malloc()
@@ -964,7 +980,7 @@ main() {
     // 计算校验和（简化示例）
     var sum = 0
     for header_data to byte {
-        sum = sum + byte
+        sum = sum + _int(byte)
     }
     pkt.checksum = sum
     
@@ -1016,7 +1032,6 @@ main() {
 
 ```leno
 import ffi
-import files
 
 cstruct FileInfo {
     str16 path[260]
@@ -1025,29 +1040,17 @@ cstruct FileInfo {
 }
 
 main() {
-    // 创建文件信息数组
-    var files = FileInfo.malloc_array(50)
-    
-    // 模拟文件列表
-    var file_names = ["doc1.txt", "doc2.txt", "image.png"]
-    
-    for file_names to name {
-        var idx = file_names.index_of(name)
-        files[idx].path = name
-        files[idx].size = 1024 * (idx + 1)
-        files[idx].attributes = 0
-    }
-    
-    // 批量处理
-    var total_size = 0
-    for 0 : file_names.len() - 1 to i {
-        total_size = total_size + files[i].size
-        print(files[i].path + ": " + files[i].size + " 字节")
-    }
-    
-    print("\n总大小: " + total_size + " 字节")
-    
-    files.free_all()
+    // 连续内存里放 50 个 FileInfo
+    var infos = FileInfo.malloc_array(50)
+
+    // ⚠ 数组元素取出来是 any，不能直接 `infos[i].size`
+    //   要按字段批量读，用 cstructs 的 column_* / sum / min / max；
+    //   要在脚本侧逐个处理，用 `to_structs()` 转成 struct 数组（见上文）。
+    print(FileInfo.size())        // 单个元素占多少字节
+    print(infos.len())            // 50
+
+    // 用完必须释放（malloc_array 是原生内存，不看 GC）
+    print(infos.free_all())       // true
 }
 ```
 
@@ -1069,7 +1072,7 @@ cstruct MEMORYSTATUS {
     u64 dwTotalPhys
 }
 
-func get_memory_info(any ch) {
+func get_memory_info(Channel ch) {
     // 在子线程中使用 cstruct
     var kernel32 = ffi.load("kernel32.dll")
     var mem = MEMORYSTATUS.malloc()
