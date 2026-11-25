@@ -53,7 +53,7 @@ string s = tpl.render(&quot;&lt;b&gt;{{name}}&lt;/b&gt;{{#items}} {{t}}{{/items}
 <tbody>
 <tr>
 <td><code>{{ name }}</code></td>
-<td>变量替换（<strong>HTML 转义</strong> <code>&amp; &lt; &gt; " '</code>）</td>
+<td>变量替换（<strong>HTML 转义</strong> <code>&amp; &lt; &gt; " ' </code> =`）</td>
 </tr>
 <tr>
 <td><code>{{{ name }}}</code> / <code>{{&amp; name }}</code></td>
@@ -66,6 +66,10 @@ string s = tpl.render(&quot;&lt;b&gt;{{name}}&lt;/b&gt;{{#items}} {{t}}{{/items}
 <tr>
 <td><code>{{^ list }}…{{/ list }}</code></td>
 <td>反向区块：falsy 才渲染</td>
+</tr>
+<tr>
+<td><code>{{&gt; name }}</code></td>
+<td>片段：从 <code>renderWithPartials</code> 的 partials 表取（缺失 = 空串，递归深度上限 64）</td>
 </tr>
 <tr>
 <td><code>{{! 注释 }}</code></td>
@@ -93,7 +97,19 @@ string s = tpl.render(&quot;&lt;b&gt;{{name}}&lt;/b&gt;{{#items}} {{t}}{{/items}
 <tbody>
 <tr>
 <td><code>render(tpl, data)</code></td>
-<td>渲染（<code>data: Dict[string, any]</code>）</td>
+<td>渲染（<code>data: Dict[string, any]</code>；结构错时<strong>宽松</strong>处理，见下）</td>
+</tr>
+<tr>
+<td><code>renderWithPartials(tpl, data, partials)</code></td>
+<td>带片段渲染（<code>partials: Dict[string, string]</code>）</td>
+</tr>
+<tr>
+<td><code>renderStrict(tpl, data)</code></td>
+<td>结构有错（未闭合 / 名字不匹配 / 多余闭合）<strong>直接抛错</strong></td>
+</tr>
+<tr>
+<td><code>check(tpl)</code></td>
+<td>只做结构检查 → <code>Array[string]</code>（空 = 可渲染），不需要数据</td>
 </tr>
 <tr>
 <td><code>tokenize(tpl)</code></td>
@@ -101,15 +117,27 @@ string s = tpl.render(&quot;&lt;b&gt;{{name}}&lt;/b&gt;{{#items}} {{t}}{{/items}
 </tr>
 <tr>
 <td><code>escape(s)</code></td>
-<td>HTML 转义</td>
+<td>HTML 转义（六个字符：<code>&amp; &lt; &gt; " ' \</code> =`）</td>
 </tr>
 </tbody>
 </table>
+<p>两条契约（2026-11-25 补）：</p>
+<ul>
+<li><strong>区块必须按名字配对</strong>：<code>{{#a}}…{{/b}}</code> 不再"强行配对"（旧实现只数深度 ⇒ 写错也静默渲染出错位文本）。
+  <code>render</code> 保持宽松（没配到就渲染到末尾），要用得放心就先 <code>check</code> 或直接 <code>renderStrict</code>。</li>
+<li><strong>片段缺失是空串</strong>，不报错、不中断（partials 是运行期给的，模板里写死名字也可能暂时没给）。</li>
+</ul>
+<h2 id="变更记录">变更记录</h2>
+<ul>
+<li><strong>0.2.0</strong>（2026-11-25）：新增 <code>{{&gt; partial}}</code> + <code>renderWithPartials</code>、<code>check</code>、<code>renderStrict</code>；
+  区块配对改为<strong>按名字</strong>（修掉"写错也静默渲染"）；转义补 <code>`</code> 和 <code>=</code>。</li>
+<li><strong>0.1.0</strong>：变量 / 区块 / 反向区块 / 注释 / 点路径 / 转义。</li>
+</ul>
 <h2 id="跑测试">跑测试</h2>
 <pre><code class="language-bat">build\leno.exe build\leno_module\LenoTemplate\test\test_template.leno
 </code></pre>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#语法-mustache-子集">语法（Mustache 子集）</a></li><li><a href="#api">API</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#语法-mustache-子集">语法（Mustache 子集）</a></li><li><a href="#api">API</a></li><li><a href="#变更记录">变更记录</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoMarkdown.html">← 上一篇</a><a href="../扩展模块/LenoValidate.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

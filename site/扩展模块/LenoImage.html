@@ -66,6 +66,10 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 <td>构造（<code>px</code> 长度必须 = w·h·4）</td>
 </tr>
 <tr>
+<td><code>clone(img)</code></td>
+<td>深拷贝（在原图上画又不想毁原图时先克隆）</td>
+</tr>
+<tr>
 <td><code>Image.set/get/getA/setA</code></td>
 <td>单点读写（RGBA 序；越界抛错）</td>
 </tr>
@@ -86,12 +90,40 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 <td>长边等比缩放</td>
 </tr>
 <tr>
+<td><code>scaleToFit(src, maxW, maxH, pxArt)</code></td>
+<td>等比装进 <code>maxW×maxH</code> 的框（<strong>只缩不放</strong>）</td>
+</tr>
+<tr>
 <td><code>crop(src, x, y, w, h)</code> / <code>flipH</code> / <code>flipV</code></td>
 <td>裁剪 / 翻转</td>
 </tr>
 <tr>
 <td><code>rotate90</code> / <code>rotate180</code> / <code>rotate270</code></td>
 <td>像素完美旋转（90/270 宽高互换）</td>
+</tr>
+<tr>
+<td><code>blit(dst, src, x, y)</code></td>
+<td>贴图<strong>覆盖</strong>（含 alpha；越界部分自动裁掉）</td>
+</tr>
+<tr>
+<td><code>blitAlpha(dst, src, x, y)</code></td>
+<td>贴图<strong>alpha 混合</strong>（source-over，按 src.a）</td>
+</tr>
+<tr>
+<td><code>fillCircle(img, cx, cy, r, r,g,b,a)</code></td>
+<td>实心圆（原地画）</td>
+</tr>
+<tr>
+<td><code>drawRect(img, x0,y0,x1,y1, …)</code></td>
+<td>矩形<strong>描边</strong>（填充用 <code>Image.fillRect</code>）</td>
+</tr>
+<tr>
+<td><code>line(img, x0,y0,x1,y1, …)</code></td>
+<td>直线（Bresenham，八方向）</td>
+</tr>
+<tr>
+<td><code>toGray(img)</code> / <code>invert(img)</code></td>
+<td>灰度（BT.601，保留 alpha）/ 反色（返回新图）</td>
 </tr>
 <tr>
 <td><code>decodePNG(data)</code> / <code>encodePNG(img)</code></td>
@@ -103,6 +135,10 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 </tr>
 </tbody>
 </table>
+<p><strong>原地 vs 新图</strong>：<code>blit/blitAlpha/fillCircle/drawRect/line</code> 都是<strong>原地改 dst</strong>（拼图/水印/标注的语义）；
+<code>toGray/invert/crop/flip*/rotate*/resize*/scaleTo*</code> 返回<strong>新图</strong>、不改入参。</p>
+<p><strong>越界策略（故意分两种）</strong>：贴图越界<strong>自动裁掉</strong>（边缘贴半张是常态）；图元坐标<strong>钳到图内</strong>
+（画到图外的部分直接不画，不抛错）。</p>
 <h2 id="口径">口径</h2>
 <ul>
 <li><strong>像素格式 ARGB8888，内存序 B,G,R,A</strong>：与 SDL3 的 <code>PIXELFORMAT_ARGB8888</code> surface 一致，

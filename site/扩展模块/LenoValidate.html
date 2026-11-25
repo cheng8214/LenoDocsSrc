@@ -55,7 +55,12 @@ if errs.len() == 0 { /* 通过 */ }
 <tbody>
 <tr>
 <td><code>required</code></td>
-<td>缺失 / 显式 <code>null</code> 报错</td>
+<td>缺失 / 显式 <code>null</code> 报错（<strong>空串不算缺失</strong>，要非空加 <code>notEmpty</code>）</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>notEmpty</code></td>
+<td>空串 / 空数组 / 空 Dict 报错</td>
 <td><code>false</code></td>
 </tr>
 <tr>
@@ -65,7 +70,7 @@ if errs.len() == 0 { /* 通过 */ }
 </tr>
 <tr>
 <td><code>minNum</code> / <code>maxNum</code></td>
-<td>数值范围（int/float 都认）</td>
+<td>数值范围（int/float 都认）；<strong>值不是数值时明确报错</strong>（不再静默放过）</td>
 <td><code>null</code></td>
 </tr>
 <tr>
@@ -88,6 +93,16 @@ if errs.len() == 0 { /* 通过 */ }
 <td>自定义 <code>func(any): string?</code>，返回 null = 通过</td>
 <td><code>null</code></td>
 </tr>
+<tr>
+<td><code>sub</code></td>
+<td>嵌套：值是 Dict 时按子 <code>Schema</code> 再验一层，错误字段名 <code>父.子</code></td>
+<td><code>null</code></td>
+</tr>
+<tr>
+<td><code>item</code></td>
+<td>数组元素：值是 Array 时逐个按该 <code>Rule</code> 验，错误字段名 <code>父[i]</code></td>
+<td><code>null</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="api">API</h2>
@@ -101,7 +116,11 @@ if errs.len() == 0 { /* 通过 */ }
 <tbody>
 <tr>
 <td><code>validate(data, schema)</code></td>
-<td>校验整个 Dict → <code>Array[string]</code>（空 = 通过）</td>
+<td>校验整个 Dict → <code>Array[string]</code>（<code>"字段: 消息"</code>，空 = 通过）</td>
+</tr>
+<tr>
+<td><code>validateDetailed(data, schema)</code></td>
+<td>校验 → <code>Array[FieldError]</code>（<code>field</code> / <code>message</code> / <code>kind</code>，按字段标红用这个）</td>
 </tr>
 <tr>
 <td><code>checkValue(val, rule)</code></td>
@@ -113,15 +132,24 @@ if errs.len() == 0 { /* 通过 */ }
 </tr>
 </tbody>
 </table>
+<p><code>FieldError.kind</code> 取值：<code>required</code> / <code>empty</code> / <code>type</code> / <code>range</code> / <code>len</code> / <code>enum</code> / <code>pattern</code> / <code>check</code>。</p>
 <ul>
 <li>只检查 schema 里声明的字段，<strong>未声明的字段不报错</strong>（容忍多余字段）。</li>
 <li><code>typ = "number"</code> 是宽松类型：int/float 都收；<code>typ = "int"</code> 只认 int。</li>
+<li>嵌套 / 数组的字段路径：<code>addr.city</code>、<code>tags[2]</code>（顶层就是字段名本身）。</li>
+</ul>
+<h2 id="变更记录">变更记录</h2>
+<ul>
+<li><strong>0.2.0</strong>（2026-11-25）：新增 <code>notEmpty</code>、嵌套 <code>sub</code>、数组元素 <code>item</code>、结构化错误
+  <code>validateDetailed</code> + <code>FieldError</code>；范围规则遇到非数值<strong>不再静默</strong>（明确报错）。
+  <code>validate</code> / <code>checkValue</code> 的返回格式与旧行为保持一致。</li>
+<li><strong>0.1.0</strong>：必填 / 类型 / 范围 / 长度 / 枚举 / 正则 / 自定义。</li>
 </ul>
 <h2 id="跑测试">跑测试</h2>
 <pre><code class="language-bat">build\leno.exe build\leno_module\LenoValidate\test\test_validate.leno
 </code></pre>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#规则">规则</a></li><li><a href="#api">API</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#规则">规则</a></li><li><a href="#api">API</a></li><li><a href="#变更记录">变更记录</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoTemplate.html">← 上一篇</a><a href="../扩展模块/LenoLog.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
