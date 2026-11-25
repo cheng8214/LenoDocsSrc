@@ -19,16 +19,15 @@
 
 ```leno
 import jsons
-import io
 
 main() {
-    // 解析 JSON 字符串
+    // decode 返回 any ⇒ 取值必须用 get_* / dig，或先 `as` 收窄成具体容器
     var obj = jsons.decode('{"name": "Leno", "version": 1.0}')
-    print(obj.name)  // "Leno"
-    
-    // 编码为 JSON
-    var json_str = jsons.encode(obj)
-    print(json_str)  // {"name":"Leno","version":1}
+    print(jsons.get_str(obj, "name", ""))          // Leno
+    print(jsons.get_float(obj, "version", 0.0))    // 1.0
+
+    // 编码回 JSON 字符串
+    print(jsons.encode(obj))
 }
 ```
 
@@ -522,33 +521,32 @@ jsons.write_text("out.json", text)     // 原样落盘 ✓
 
 ```leno
 import jsons
-import io
+import dirs
 
 main() {
-    // 读取配置
-    var config = jsons.read_file("app.json")
-    
+    // 配置写到临时目录，避免在项目根留下 app.json
+    var cfg = dirs.join(_tmpdir(), "leno_app.json")
+
+    // 读配置：文件不存在 / 解析失败都给 null
+    var config = jsons.read_file(cfg)
     if config == null {
-        // 使用默认配置
+        // 第一次运行：写一份默认配置
         config = {
-            app_name: "MyApp",
-            version: "1.0.0",
-            debug: false,
-            database: {
-                host: "localhost",
-                port: 3306,
-                name: "mydb"
-            }
+            "app_name": "MyApp",
+            "version": "1.0.0",
+            "debug": false,
+            "database": {"host": "localhost", "port": 3306, "name": "mydb"}
         }
-        
-        // 保存默认配置
-        jsons.write_file("app.json", config)
+        jsons.write_file(cfg, config)
         print("已创建默认配置文件")
     }
-    
-    // 使用配置
-    print("应用: " + config.app_name)
-    print("数据库: " + config.database.host + ":" + config.database.port)
+
+    // ⚠ config 是 any：不能 config.app_name，取值一律走 get_*
+    print("应用: " + jsons.get_str(config, "app_name", ""))
+
+    var db = jsons.get_obj(config, "database")
+    print("数据库: " + jsons.get_str(db, "host", "") + ":" +
+          _str(jsons.get_int(db, "port", 0)))
 }
 ```
 
@@ -558,44 +556,32 @@ main() {
 
 ```leno
 import jsons
-import io
 
-// 模拟 API 响应处理
-func parse_user_list(any json_text) {
+// 处理模拟 API 响应：返回 "姓名 <邮箱>" 列表
+func parse_user_list(string json_text): Array[string] {
     var data = jsons.decode(json_text)
-    
     if data == null {
         print("解析失败")
         return []
     }
-    
-    var users = []
-    
-    for data.users to user {
-        users.add({
-            id: user.id,
-            name: user.name,
-            email: user.email
-        })
+
+    // data 是 any ⇒ 先 dig 出数组，再收窄成 Array[any]
+    var raw = jsons.dig(data, "users") as Array[any]
+    Array[string] out = []
+    for raw to u {
+        var item = u as Dict
+        out.add(jsons.get_str(item, "name", "") + " <" + jsons.get_str(item, "email", "") + ">")
     }
-    
-    return users
+    return out
 }
 
 main() {
-    var api_response = '{
-        "total": 2,
-        "users": [
-            {"id": 1, "name": "张三", "email": "zhangsan@example.com"},
-            {"id": 2, "name": "李四", "email": "lisi@example.com"}
-        ]
-    }'
-    
-    var users = parse_user_list(api_response)
-    
-    print("共 " + users.len() + " 个用户:")
-    for users to u {
-        print("  - " + u.name + " (" + u.email + ")")
+    var api = '{"total": 2, "users": [{"id": 1, "name": "张三", "email": "zhangsan@example.com"}, {"id": 2, "name": "李四", "email": "lisi@example.com"}]}'
+
+    var lines = parse_user_list(api)
+    print("共 " + lines.len() + " 个用户:")
+    for lines to l {
+        print("  - " + l)
     }
 }
 ```
@@ -606,16 +592,16 @@ main() {
 
 ```leno
 import jsons
-import io
+import dirs
 
 // 导出用户数据为 JSON
-func export_users(any users, any filename) {
+func export_users(Array[Dict] users, string filename): bool {
     var data = {
-        export_time: "2026-01-01",
-        total: users.len(),
-        users: users
+        "export_time": "2026-01-01",
+        "total": users.len(),
+        "users": users
     }
-    
+
     if jsons.write_file(filename, data) {
         print("导出成功: " + filename)
         return true
@@ -626,13 +612,14 @@ func export_users(any users, any filename) {
 }
 
 main() {
-    var users = [
-        {id: 1, name: "张三", age: 25},
-        {id: 2, name: "李四", age: 30},
-        {id: 3, name: "王五", age: 28}
+    Array[Dict] users = [
+        {"id": 1, "name": "张三", "age": 25},
+        {"id": 2, "name": "李四", "age": 30},
+        {"id": 3, "name": "王五", "age": 28}
     ]
-    
-    export_users(users, "users_export.json")
+
+    // 写临时目录，别在当前目录留文件
+    export_users(users, dirs.join(_tmpdir(), "users_export.json"))
 }
 ```
 
@@ -642,35 +629,32 @@ main() {
 
 ```leno
 import jsons
-import io
 
 // 将 CSV 风格数据转换为 JSON
-func csv_to_json(any headers, any rows) {
-    var result = []
-    
+//   ⚠ 形参要写具体类型：写 any 的话 headers.len() / row[i] 都会被拦
+func csv_to_json(Array[string] headers, Array[Array[string]] rows): Array[Dict] {
+    Array[Dict] result = []
+
     for rows to row {
         var obj = {}
-        for 0:(headers.len() - 1) to i {
+        for 0:headers.len() - 1 to i {
             obj[headers[i]] = row[i]
         }
         result.add(obj)
     }
-    
+
     return result
 }
 
 main() {
-    var headers = ["name", "age", "city"]
-    var rows = [
+    Array[string] headers = ["name", "age", "city"]
+    Array[Array[string]] rows = [
         ["张三", "25", "北京"],
-        ["李四", "30", "上海"],
-        ["王五", "28", "广州"]
+        ["李四", "30", "上海"]
     ]
-    
+
     var json_data = csv_to_json(headers, rows)
-    var json_text = jsons.encode_pretty(json_data)
-    
-    print(json_text)
+    print(jsons.encode_pretty(json_data))
 }
 ```
 
@@ -701,35 +685,37 @@ main() {
 
 ```leno
 import jsons
-import io
 
 main() {
-    var data = jsons.read_file("cs.json")
-    
+    // 真实项目里这里是 jsons.read_file("cs.json")；这里内嵌一份等价数据，方便直接跑
+    var json_text = "{\"collection\": {\"name\": \"经典唐诗选\", \"description\": \"脍炙人口的唐诗\", \"total\": 2}, \"poems\": [{\"title\": \"静夜思\", \"author\": {\"name\": \"李白\", \"dynasty\": \"唐\"}, \"content\": [\"床前明月光\", \"疑是地上霜\"]}]}"
+
+    var data = jsons.decode(json_text)
     if data == null {
-        print("无法读取文件")
+        print("解析失败")
         return
     }
-    
-    // 显示诗集信息
-    print("【" + data.collection.name + "】")
-    print("描述: " + data.collection.description)
-    print("共收录 " + data.collection.total + " 首")
-    print("")
-    
-    // 遍历所有诗歌
-    for data.poems to poem {
-        print("═══════════════════════")
-        print("【" + poem.title + "】")
-        print("作者: " + poem.author.name + " (" + poem.author.dynasty + ")")
-        
-        // 显示诗句
-        print("\n原文:")
-        for poem.content to line {
-            print("  " + line.text)
+
+    // ⚠ data 是 any：不能 data.collection.name，用 get_obj 逐层收窄
+    var col = jsons.get_obj(data, "collection")
+    print("【" + jsons.get_str(col, "name", "") + "】")
+    print("描述: " + jsons.get_str(col, "description", ""))
+    print("共收录 " + _str(jsons.get_int(col, "total", 0)) + " 首")
+
+    // 数组同理：先取出来收窄成 Array[any]，再逐项 as Dict
+    var poems = jsons.dig(data, "poems") as Array[any]
+    for poems to raw {
+        var poem = raw as Dict
+        print("【" + jsons.get_str(poem, "title", "") + "】")
+
+        var author = jsons.get_obj(poem, "author")
+        print("作者: " + jsons.get_str(author, "name", "") +
+              " (" + jsons.get_str(author, "dynasty", "") + ")")
+
+        var lines = jsons.get_obj(poem, "content") as Array[any]
+        for lines to l {
+            print("  " + (l as string))
         }
-        
-        print("")
     }
 }
 ```
@@ -740,10 +726,9 @@ main() {
 
 ```leno
 import jsons
-import io
 
 // 检查字符串是否是有效的 JSON
-func is_valid_json(any text) : bool {
+func is_valid_json(string text): bool {
     var result = jsons.decode(text)
     return result != null
 }
@@ -757,10 +742,11 @@ main() {
         '{"unclosed": "string}',
         ''
     ]
-    
+
     for tests to test {
         var valid = is_valid_json(test)
-        print(test + " -> " + (valid ? "有效" : "无效"))
+        // ⚠ Leno 没有 `条件 ? a : b`，一行内的选择写成 if … then … else
+        print(test + " -> " + (if valid then "有效" else "无效"))
     }
 }
 ```

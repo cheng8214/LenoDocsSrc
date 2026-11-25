@@ -261,27 +261,29 @@ print(big)  // 12345678901234567890
 ```leno
 main() {
     print("========== 用户注册 ==========")
-    
-    // 获取用户输入
+
+    // 读取用户输入
     var name = input("请输入用户名: ")
     var age_str = input("请输入年龄: ")
     var email = input("请输入邮箱: ")
-    
-    // 转换年龄为数字
-    var age = _int(age_str)
-    
+
+    // 转成整数：用 _int_or 而不是 _int
+    //   （_int 要求整串都是数字，用户手滑打错就直接抛错；
+    //     _int_or 转不了给默认值，交互程序更合适）
+    var age = _int_or(age_str, 0)
+
     // 显示注册信息
     print("\n========== 注册信息 ==========")
     print("用户名:", name)
     print("年龄:", age)
     print("邮箱:", email)
-    
+
     // 确认
     var confirm = input("\n信息正确吗? (y/n): ")
     if confirm == "y" or confirm == "Y" {
         print("注册成功!")
     } else {
-        print("请重新注册")
+        print("取消注册")
     }
 }
 ```
@@ -291,20 +293,14 @@ main() {
 ```leno
 main() {
     print("========== 简单计算器 ==========")
-    
-    // 获取第一个数字
-    var num1_str = input("输入第一个数字: ")
-    var num1 = _float(num1_str)
-    
-    // 获取运算符
+
+    // 一次读完：转不动就给 0.0（_float 会直接抛错）
+    var num1 = _float_or(input("输入第一个数: "), 0.0)
     var op = input("输入运算符 (+, -, *, /): ")
-    
-    // 获取第二个数字
-    var num2_str = input("输入第二个数字: ")
-    var num2 = _float(num2_str)
-    
-    // 计算结果
-    var result = 0
+    var num2 = _float_or(input("输入第二个数: "), 0.0)
+
+    // ⚠ 初值必须是 0.0（float）：写 0（int）之后再赋 float 会报类型不匹配
+    var result = 0.0
     if op == "+" {
         result = num1 + num2
     } else if op == "-" {
@@ -312,7 +308,7 @@ main() {
     } else if op == "*" {
         result = num1 * num2
     } else if op == "/" {
-        if num2 != 0 {
+        if num2 != 0.0 {
             result = num1 / num2
         } else {
             print("错误: 不能除以零")
@@ -322,8 +318,7 @@ main() {
         print("错误: 无效的运算符")
         return
     }
-    
-    // 显示结果
+
     print("结果:", num1, op, num2, "=", result)
 }
 ```
@@ -331,6 +326,7 @@ main() {
 ### 示例3：进度显示
 
 ```leno
+import threads
 import times
 
 main() {
@@ -366,17 +362,17 @@ main() {
 // 调试级别
 var DEBUG = true
 
-func debug_print(msg) {
+func debug_print(string msg) {
     if DEBUG {
         print("[DEBUG]", msg)
     }
 }
 
-func info_print(msg) {
+func info_print(string msg) {
     print("[INFO]", msg)
 }
 
-func error_print(msg) {
+func error_print(string msg) {
     print("[ERROR]", msg)
 }
 
@@ -385,7 +381,7 @@ main() {
     
     debug_print("初始化变量...")
     var data = [1, 2, 3, 4, 5]
-    debug_print("数据:", data)
+    debug_print("数据: " + _str(data))
     
     debug_print("处理数据...")
     var sum = 0
@@ -393,7 +389,7 @@ main() {
         sum = sum + item
     }
     
-    info_print("总和:", sum)
+    info_print("总和: " + _str(sum))
     
     if sum > 100 {
         error_print("总和超出预期")
@@ -412,24 +408,26 @@ import files
 import dirs
 
 main() {
-    // 获取操作系统
+    // 读取操作系统
     var os = _os()
     print("操作系统:", os)
-    
-    // 根据系统选择路径格式
-    var path
+
+    // 按系统选择路径写法
+    //   ⚠ var path 后面必须给初值（var 不能只声明不初始化，要声明类型请写 string path）
+    var path = ""
     if os == "windows" {
         path = "C:\\Users\\Admin\\Documents"
     } else {
         path = "/home/user/documents"
     }
-    
-    // 更好的方式：使用 dirs 模块
-    var better_path = dirs.join("folder", "subfolder", "file.txt")
+    print("路径:", path)
+
+    // 更好的方式：dirs.join 自动用对分隔符（它一次只拼两段，多段就嵌套调用）
+    var better_path = dirs.join(dirs.join("folder", "subfolder"), "file.txt")
     print("路径:", better_path)
-    
+
     // 检查文件是否存在
-    var test_file = "test.txt"
+    var test_file = dirs.join(_tmpdir(), "test.txt")
     if files.exists(test_file) {
         print("文件存在:", test_file)
     } else {
