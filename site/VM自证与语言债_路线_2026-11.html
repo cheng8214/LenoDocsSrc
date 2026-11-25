@@ -101,9 +101,9 @@
 <tr>
 <td><strong>P1.1</strong></td>
 <td>高</td>
-<td><strong><code>for c to v</code> 本身零分配</strong>（语义期优先取 <code>raw()</code>）</td>
+<td>零分配遍历的落地形态：<strong>显式 <code>raw()</code></strong>（曾试过语义期按方法名自动改写，<strong>已删除</strong>）</td>
 <td>✅ <strong>已完成（2026-11-25）</strong></td>
-<td>1M 项：<strong>55 → 34 ns/op</strong>、分配 <strong>8 MB → ~0</strong>（20 万项 1,271 B），断言里钉住</td>
+<td>1M 项：<code>for st.raw() to v</code> <strong>34 ns/op、~0 分配</strong>（对照 <code>to_array()</code> 57 ns/op + 8 MB）；<code>for &lt;struct&gt; to v</code> 回到字段遍历，有<strong>反面断言</strong>钉住</td>
 </tr>
 <tr>
 <td><strong>P2</strong></td>
@@ -264,15 +264,24 @@ async IO 超时，与 P0 时一致）。</p>
 <p>现状回顾：<code>for c to v</code> 原本被语义期改写成 <code>c.to_array()</code> ⇒ 每轮分配一个快照数组。</p>
 <p><strong>P1（库级游标）</strong>：<code>Iter[T]</code> / <code>DequeIter[T]</code> + <code>Stack/Queue/Deque/PriorityQueue.iter()</code>、
 <code>LRU.keys_iter()</code>。用法 <code>while it.has_next() { if it.next() is int =&gt; v { … } }</code>。</p>
-<p><strong>P1.1（让 <code>for</code> 本身零分配）</strong> —— 实际解法比原计划简单得多：
-<strong>不是</strong>把 <code>for</code> 降级成 <code>len()/at()</code> 循环（那要先把方法调用内联，否则每元素 +50 ns），
-而是让语义期<strong>优先挑容器上的 <code>raw()</code></strong>（约定：返回内部数组本身、不复制），
-找不到才回落 <code>to_array()</code>/<code>keys()</code>。于是 <code>for</code> 拿到的就是真数组 ⇒ 既有数组迭代路径原样复用。</p>
-<pre><code class="language-leno">// semantic_visit_func.c: semantic_rewrite_for_iterable
-for c to v   →   for c.raw() to v        // 有 raw 时
-             →   for c.to_array() to v   // 否则（Queue 的 head 偏移、Deque 两段、ClockLRU 死槽）
+<p><strong>P1.1（零分配遍历）</strong> —— 走了两步，第二步把第一步推翻了，值得记下来：</p>
+<p><strong>第一步（已删除）：语义期按方法名自动改写。</strong>
+<code>for c to v</code> 被改写成 <code>for c.raw() to v</code>（找不到 <code>raw</code> 就用 <code>to_array</code>/<code>keys</code>），
+看起来"白捡"：分配 8 MB → 0、还比原来快（34 vs 55 ns/op）。</p>
+<p><strong>第二步：删掉它。</strong> 理由只有一条 —— <strong>编译器不该猜方法名</strong>：</p>
+<ul>
+<li>用户结构体只要碰巧有个同名方法（哪怕 <code>func raw(): int</code>），<code>for f to v</code> 就被<strong>静默劫持</strong>：
+  实测变成 <code>for 7 to v</code>（遍历 0..6），不报错、也不符合预期；</li>
+<li>三个名字的优先级是纯约定，无处声明、无处检查，与本仓"注册即数据、拒绝名字特判"的取向冲突
+  （同 <code>_env</code> 特判被否决那次）。</li>
+</ul>
+<p><strong>最终形态：显式表达式，编译器零特判。</strong></p>
+<pre><code class="language-leno">for st.raw() to v { }        // 0 复制 + 数组满速
+for st.to_array() to v { }   // 快照
+for lru.keys() to k { }      // 缓存 key
+var it = st.iter()           // 游标（元素不连续的容器用这个）
 </code></pre>
-<p>实测（N=1,000,000，本机）：</p>
+<p>实测（N=1,000,000，本机）—— 性能与"自动改写"那一版<strong>完全一样</strong>（本来就是同一条降级链）：</p>
 <table>
 <thead>
 <tr>
@@ -283,33 +292,29 @@ for c to v   →   for c.raw() to v        // 有 raw 时
 </thead>
 <tbody>
 <tr>
-<td><code>for st to v</code>（0.6.0 及以前，快照）</td>
-<td>55 ns/op</td>
-<td>8 MB</td>
-</tr>
-<tr>
-<td><strong><code>for st to v</code>（0.7.0 起，<code>raw()</code>）</strong></td>
+<td><code>for st.raw() to v</code></td>
 <td><strong>34 ns/op</strong></td>
 <td><strong>~0（20 万项 1,271 B）</strong></td>
 </tr>
 <tr>
-<td><code>iter()</code> 游标</td>
-<td>100–121 ns/op</td>
-<td>~0</td>
+<td><code>for st.to_array() to v</code></td>
+<td>57 ns/op</td>
+<td>8 MB</td>
 </tr>
 <tr>
-<td><code>for st.items to v</code>（手写内部数组）</td>
-<td>~51 ns/op</td>
+<td><code>iter()</code> 游标</td>
+<td>104–121 ns/op</td>
 <td>~0</td>
 </tr>
 </tbody>
 </table>
-<p><strong>两个目标同时达成</strong>（分配 0 <strong>且</strong> 比原来更快）：省掉复制本身比"复制被摊薄"更划算。
-游标仍有存在价值 —— 元素不连续的容器（Queue/Deque）只能用它，且它能显式表达"我在实时遍历"。</p>
-<p><strong>语义差异（已写进 README）</strong>：<code>raw()</code> 是<strong>实时视图</strong> —— 在 Stack/PriorityQueue/LRU 上
-边遍历边 <code>push/pop</code> 会被看到（0.6.0 的快照只是把它掩盖了）；Queue/Deque 仍走快照、行为不变。</p>
-<p><strong>回归</strong>：<code>test_containers</code> 第 ⑯ 组 —— 20 万项遍历的 young 增量 &lt; 64 KB（实测 1,271 B）、
-顺序与 <code>to_array()</code>/<code>keys()</code> 逐项一致、无 <code>raw()</code> 的容器（Queue/Deque）行为不变。</p>
+<p><strong>语义</strong>：<code>raw()</code> / <code>iter()</code> 是<strong>实时视图</strong>（边遍历边改容器会被看到）；
+<code>to_array()</code> / <code>keys()</code> 是<strong>快照</strong>。README 里三条路并列写清。</p>
+<p><strong>回归</strong>：<code>assert/test_for_container_iter.leno</code> 重写 —— 每条显式路径都钉住，并加了
+<strong>反面断言</strong>："有同名 <code>raw(): int</code> 的结构体，<code>for f to v</code> 仍是字段遍历"（旧实现会遍历 0..6）。
+<code>test_containers</code> 第 ⑯ 组改为显式 <code>.raw()</code> 的零分配断言。</p>
+<p><strong>若将来还想恢复语法糖</strong>：做成<strong>声明式</strong>（struct 上标注"迭代用哪个方法"），
+信息来自声明而不是名字猜测 —— 这是还没有的一项语言工作，记在下面"下一步"。</p>
 <h3 id="p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</h3>
 <p>现在"看效果"已有两条可行路径：<code>image_lab.leno save</code>（3×2 拼图落盘）、
 <code>qr_maker.leno shot</code>（窗口内容回读成 PNG，靠定时器 + <code>markFrameRedraw()</code> + <code>readPixelsAt</code>）。</p>
@@ -360,8 +365,13 @@ for c to v   →   for c.raw() to v        // 有 raw 时
   <code>keys_iter()</code> 游标，遍历 20 万项分配 1.6 MB → 808 B；同时用实测数字把 <strong>P1.1（编译器接入）</strong>
   的前提讲清：单趟遍历快照反而更快（55 vs 106 ns/op），所以必须先内联 <code>len</code>/<code>at</code> 才值得改。</li>
 <li><strong>2026-11-25（收尾）</strong>：<strong>P1.1 完成</strong> —— 放弃"把 <code>for</code> 降级成 <code>len()/at()</code>"那条重路，
-  改成语义期<strong>优先取 <code>raw()</code></strong>（返回内部数组）。<code>LenoContainers 0.7.0</code>：<code>for st to v</code>
-  <strong>55 → 34 ns/op、8 MB → ~0</strong>，两个目标一次达成；Queue/Deque/ClockLRU/LRUO1 保持快照路径。</li>
+  <code>LenoContainers 0.7.0</code> 提供 <code>raw()</code>（返回内部数组）：<code>for st.raw() to v</code>
+  <strong>34 ns/op、8 MB → ~0</strong>。</li>
+<li><strong>2026-11-25（同日撤回）</strong>：<code>for c to v</code> 的<strong>自动改写已删除</strong> —— 语义期按方法名
+  （<code>raw</code>/<code>to_array</code>/<code>keys</code>）猜"这个 struct 怎么遍历"属于名字特判：用户结构体碰巧有
+  <code>func raw(): int</code> 时 <code>for f to v</code> 被静默劫持成 <code>for 7 to v</code>（遍历 0..6）。
+  现在 <code>for &lt;struct&gt; to k, v</code> 只有<strong>字段遍历</strong>一种语义，遍历元素要显式写 <code>.raw()</code> /
+  <code>.to_array()</code> / <code>.keys()</code>；反面断言已进 <code>assert/test_for_container_iter.leno</code>。</li>
 </ul>
 </main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-已完成-2026-11-25">P0.1 子线程 VM 的完整性校验 —— ✅ 已完成（2026-11-25）</a></li><li><a href="#p1-p1-1-迭代协议-两半都完成-2026-11-25">P1 / P1.1 迭代协议 —— ✅ 两半都完成（2026-11-25）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>

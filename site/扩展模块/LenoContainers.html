@@ -133,76 +133,77 @@ for l to k { print(k) }         // 缓存遍历的是 **key**
 <li>普通 struct（没有 <code>to_array</code> / <code>keys</code>）<strong>行为不变</strong>，仍是字段遍历；</li>
 <li>可空容器（<code>Queue? q</code>）不接管，保持原来的判空诊断（先判空再遍历）；</li>
 <li>底层实现：语义期把被遍历对象改写成 <code>c.to_array()</code> / <code>c.keys()</code> ⇒ <strong>每次遍历会分配一个快照数组</strong>。
-  0.7.0 起：容器只要提供 <code>raw()</code>（返回内部数组，不复制），语义期就优先用它 ⇒ <strong><code>for</code> 本身就零分配</strong>；
-  Queue/Deque 这类元素不连续的容器没有 <code>raw()</code>，仍走快照。细节与实测见下一节。
+  ⚠ <code>for c to v</code> <strong>不会</strong>自动变成"遍历元素"（编译器不认方法名、也不猜）——
+  要遍历元素请显式写 <code>for c.raw() to v</code> / <code>for c.to_array() to v</code>，见下一节。
   热路径上想零分配，就自己 <code>peek</code> / <code>at</code> 按下标走。</li>
 </ul>
-<h2 id="零分配遍历-2026-11-25-0-7-0-起-for-本身就零分配">零分配遍历（2026-11-25，0.7.0 起 <code>for</code> 本身就零分配）</h2>
-<p><strong>默认写法就行</strong>：<code>for c to v</code> 现在会优先找容器上的 <code>raw()</code>（返回<strong>内部数组本身</strong>、不复制），
-找不到才回落 <code>to_array()</code>。所以：</p>
-<pre><code class="language-leno">for st to v { }          // Stack：raw() 路径 ⇒ 零分配 + 数组满速（34 ns/op）
-for pq to v { }          // PriorityQueue：raw() 路径（堆序）
-for lru to k { }         // LRU：raw() 路径（最久 → 最近，同 keys()）
-for q to v { }           // Queue：没有 raw（有 head 偏移）⇒ 仍走 to_array() 快照
-for d to v { }           // Deque：同理（两段结构）
+<h2 id="遍历-三条路-自己写清楚走哪条-2026-11-25">遍历：三条路，<strong>自己写清楚走哪条</strong>（2026-11-25）</h2>
+<p>先说规则：<strong><code>for &lt;struct&gt; to k, v</code> 永远是字段遍历</strong>（k = 字段名）。容器不会"自动变成可遍历" ——
+编译器不认识任何方法名，也不会去猜（曾经按 <code>raw</code>/<code>to_array</code>/<code>keys</code> 猜过一版，<strong>已删除</strong>：
+用户结构体碰巧有个同名 <code>raw()</code> 就会被静默劫持，实测 <code>for f to v</code> 变成 <code>for 7 to v</code>）。</p>
+<p>要遍历元素，写表达式（都是普通语法，编译器零特判）：</p>
+<pre><code class="language-leno">for st.raw() to v { }        // 0 复制 + 数组满速（34 ns/op）—— raw 返回**内部数组本身**
+for st.to_array() to v { }   // 快照（57 ns/op）—— 循环体里改容器不影响本轮
+for lru.keys() to k { }      // 缓存遍历 key（最久 → 最近）
+for q.to_array() to v { }    // Queue / Deque / PriorityQueue 同理：显式 to_array()
 </code></pre>
-<p>要<strong>显式</strong>控制走哪条路，用游标（每元素不复制，但两次方法调用）：</p>
+<p>元素一次都不复制、也不想快照？用游标（每元素两次方法调用，慢一点，但元素不连续的容器也能用）：</p>
 <pre><code class="language-leno">var it = st.iter()                       // Stack / Queue / PriorityQueue / Deque 都有
 while it.has_next() {
     if it.next() is int =&gt; v { sink(v) }  // next() 返回 T?（走完给 null）
 }
-var kit = lru.keys_iter()                 // 缓存：遍历 key（最久 → 最近）
+var kit = lru.keys_iter()                 // 缓存：遍历 key
 </code></pre>
 <table>
 <thead>
 <tr>
 <th>容器</th>
-<th><code>for</code> 走哪条</th>
-<th>零分配</th>
-<th><code>iter()</code> / <code>keys_iter()</code></th>
+<th>零分配遍历</th>
+<th>快照遍历</th>
+<th>游标</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>Stack</code></td>
-<td><code>raw()</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>for st.raw() to v</code> ✅</td>
+<td><code>for st.to_array() to v</code></td>
+<td><code>st.iter()</code></td>
 </tr>
 <tr>
 <td><code>PriorityQueue</code></td>
-<td><code>raw()</code>（堆序）</td>
-<td>✅</td>
-<td>✅</td>
+<td><code>for pq.raw() to v</code> ✅（堆序）</td>
+<td><code>.to_array()</code></td>
+<td><code>pq.iter()</code></td>
 </tr>
 <tr>
 <td><code>LRU</code></td>
-<td><code>raw()</code>（顺序 = <code>keys()</code>）</td>
-<td>✅</td>
-<td>✅</td>
+<td><code>for lru.raw() to k</code> ✅（顺序 = <code>keys()</code>）</td>
+<td><code>.keys()</code></td>
+<td><code>lru.keys_iter()</code></td>
 </tr>
 <tr>
 <td><code>Queue</code></td>
-<td><code>to_array()</code>（head 偏移）</td>
-<td>❌</td>
-<td>✅</td>
+<td>❌（有 head 偏移，内部不连续）</td>
+<td><code>.to_array()</code></td>
+<td><code>q.iter()</code> ✅</td>
 </tr>
 <tr>
 <td><code>Deque</code></td>
-<td><code>to_array()</code>（f/b 两段）</td>
-<td>❌</td>
-<td>✅</td>
+<td>❌（f/b 两段）</td>
+<td><code>.to_array()</code></td>
+<td><code>dq.iter()</code> ✅</td>
 </tr>
 <tr>
 <td><code>ClockLRU</code></td>
-<td><code>keys()</code>（有死槽）</td>
-<td>❌</td>
+<td>❌（环里有死槽）</td>
+<td><code>.keys()</code></td>
 <td>❌（用 <code>keys()</code>）</td>
 </tr>
 <tr>
 <td><code>LRUO1</code></td>
-<td><code>keys()</code>（链表）</td>
-<td>❌</td>
+<td>❌（链表结构）</td>
+<td><code>.keys()</code></td>
 <td>❌（用 <code>keys()</code>）</td>
 </tr>
 </tbody>
@@ -218,34 +219,30 @@ var kit = lru.keys_iter()                 // 缓存：遍历 key（最久 → �
 </thead>
 <tbody>
 <tr>
-<td><code>for st to v</code>（0.7.0 起，走 <code>raw()</code>）</td>
+<td><code>for st.raw() to v</code></td>
 <td><strong>34 ns/op</strong></td>
 <td><strong>~0</strong>（20 万项实测 1,271 B）</td>
 </tr>
 <tr>
-<td><code>for st to v</code>（0.6.0 及以前，快照）</td>
-<td>55 ns/op</td>
+<td><code>for st.to_array() to v</code></td>
+<td>57 ns/op</td>
 <td>8 MB</td>
 </tr>
 <tr>
 <td><code>iter()</code> + <code>has_next()</code></td>
-<td>106~121 ns/op</td>
-<td>~0</td>
-</tr>
-<tr>
-<td><code>for st.items to v</code>（手写内部数组）</td>
-<td>~51 ns/op</td>
+<td>104~121 ns/op</td>
 <td>~0</td>
 </tr>
 </tbody>
 </table>
-<p>读法：<code>raw()</code> 是把"内部数组"直接交给 <code>for</code>，所以<strong>既省掉复制、又保留数组顺序扫的速度</strong>；
-游标省的是复制但每元素两次方法调用，反而更慢（它是给"元素不连续"的容器用的兜底）。</p>
-<p><strong>语义：<code>raw()</code> 是实时视图</strong>（不是快照）。</p>
+<p>读法：<code>raw()</code> 把"内部数组"直接交给 <code>for</code> ⇒ 既省掉复制、又保留数组顺序扫的速度，
+所以它<strong>比快照还快</strong>（少一次 8MB 复制）。游标省的是复制，但每元素两次方法调用，
+因此更慢 —— 它是给"元素不连续"的容器（Queue/Deque）用的兜底。</p>
+<p><strong>语义差别（必须知道）</strong>：</p>
 <ul>
-<li><code>for c to v</code> 在 Stack/PriorityQueue/LRU 上 ⇒ 循环体里 <code>push</code>/<code>pop</code> 会<strong>被看到</strong>
-  （边遍历边改容器本来就该避免；0.6.0 及以前的快照只是把它掩盖了）；</li>
-<li><code>for q to v</code> / <code>for d to v</code>（无 <code>raw</code>）⇒ 仍是快照，行为与以前完全一样。</li>
+<li><code>raw()</code> 是<strong>实时视图</strong>：循环体里 <code>push</code>/<code>pop</code> 会被看到（边遍历边改容器本来就该避免）；</li>
+<li><code>to_array()</code> / <code>keys()</code> 是<strong>快照</strong>：循环体里改容器不影响本轮（但每轮分配）；</li>
+<li>游标 <code>iter()</code> 也是实时视图。</li>
 </ul>
 <h2 id="api">API</h2>
 <h3 id="stack-t"><code>Stack[T]</code></h3>
@@ -846,10 +843,11 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <h2 id="变更记录">变更记录</h2>
 <ul>
 <li>
-<p><strong>0.7.0</strong>（2026-11-25）：<strong><code>for c to v</code> 本身零分配</strong> —— 语义期优先挑 <code>raw()</code>（返回内部数组），
-  <code>Stack</code> / <code>PriorityQueue</code> / <code>LRU</code> 各加一个 <code>raw()</code>。实测 1M 项：<strong>55 → 34 ns/op</strong>、
-  分配 <strong>8 MB → ~0</strong>（20 万项 1,271 B）；Queue/Deque/ClockLRU/LRUO1 保持快照路径不变。
-  测试新增第 ⑯ 组（零分配断言、顺序与 <code>to_array()</code>/<code>keys()</code> 一致、无 <code>raw()</code> 的容器行为不变）。</p>
+<p><strong>0.7.0</strong>（2026-11-25）：新增 <code>raw()</code>（返回<strong>内部数组本身</strong>）—— <code>Stack</code> / <code>PriorityQueue</code> / <code>LRU</code>。
+  用法是<strong>显式</strong>的 <code>for st.raw() to v</code>：实测 1M 项 <strong>34 ns/op、~0 分配</strong>（对照
+  <code>to_array()</code> 57 ns/op + 8 MB）。⚠ 同一天内曾有一版让语义期按方法名自动改写 <code>for c to v</code>，
+  <strong>已删除</strong>（编译器不该猜方法名：同名 <code>raw()</code> 会被静默劫持）；<code>for &lt;struct&gt; to k, v</code>
+  回到唯一的"字段遍历"语义。测试第 ⑯ 组改为显式写法，并加"撞名不被劫持"的反面断言。</p>
 </li>
 <li>
 <p><strong>0.6.0</strong>（2026-11-25）：新增<strong>零分配遍历</strong>——<code>Iter[T]</code> / <code>DequeIter[T]</code> 游标 +
@@ -902,7 +900,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#直接遍历-for-c-to-v-2026-11-25-起">直接遍历（for c to v，2026-11-25 起）</a></li><li><a href="#零分配遍历-2026-11-25-0-7-0-起-for-本身就零分配">零分配遍历（2026-11-25，0.7.0 起 for 本身就零分配）</a></li><ul class="lv3"><li><a href="#实测-n-1-000-000-本机">实测（N=1,000,000，本机）</a></li></ul><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#直接遍历-for-c-to-v-2026-11-25-起">直接遍历（for c to v，2026-11-25 起）</a></li><li><a href="#遍历-三条路-自己写清楚走哪条-2026-11-25">遍历：三条路，自己写清楚走哪条（2026-11-25）</a></li><ul class="lv3"><li><a href="#实测-n-1-000-000-本机">实测（N=1,000,000，本机）</a></li></ul><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
