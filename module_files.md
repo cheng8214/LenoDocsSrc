@@ -731,14 +731,25 @@ f.close()
 
 ```leno
 import files
+import dirs
 
 func copy_file(string src, string dst) {
     var content = files.read(src)
     files.write(dst, content)
 }
 
-copy_file("source.txt", "backup.txt")
-```
+main() {
+    // 先造一个源文件（示例不该依赖仓库里恰好存在的文件）
+    var src = dirs.join(_tmpdir(), "source.txt")
+    var dst = dirs.join(_tmpdir(), "backup.txt")
+    files.write(src, "Hello, Leno!")
+
+    copy_file(src, dst)
+    print(files.read(dst))          // Hello, Leno!
+
+    print(files.delete(src))        // true
+    print(files.delete(dst))        // true
+}```
 
 ### 大文件复制（分块）
 
@@ -867,6 +878,7 @@ main() {
 ### 示例3：CSV 文件处理
 
 ```leno
+import dirs
 import files
 import arrays
 
@@ -896,18 +908,16 @@ func read_csv(string path): Array[Dict] {
     return records
 }
 
-func write_csv(string path, Array[string] headers, Array[Array[string]] records) {
+func write_csv(string path, Array[string] headers, Array[Dict] records) {
     var f = files.open(path, "w")
     
     // 写入表头
     f.write(headers.join(",") + "\n")
     // 写入数据
-    // 按**下标**取：records 是 Array[Array[string]]，用字符串键会报「索引必须是整数」
-    for 0:records.len() - 1 to r {
-        var record = records[r]
+    for records to record {
         var values = []
-        for 0:headers.len() - 1 to i {
-            values.add(record[i])
+        for headers to h {
+            values.add(_str(record[h]))
         }
         f.write(values.join(",") + "\n")
     }
@@ -917,7 +927,10 @@ func write_csv(string path, Array[string] headers, Array[Array[string]] records)
 
 main() {
     // 读取 CSV
-    var data = read_csv("data.csv")
+    // 先写一份样例 CSV（示例不该依赖仓库里恰好有 data.csv）
+    var p = dirs.join(_tmpdir(), "data.csv")
+    files.write(p, "name,age\n张三,25\n李四,30\n")
+    var data = read_csv(p)
     for data to row {
         print(row["name"] + ": " + row["age"])
     }
@@ -937,6 +950,7 @@ main() {
 ```leno
 import strings
 import files
+import dirs
 
 // 写入二进制数据
 func write_binary_data(string path) {
@@ -964,7 +978,7 @@ func write_binary_data(string path) {
 }
 
 // 读取二进制数据
-func read_binary_data(string path): Array[int]? {
+func read_binary_data(string path): string? {
     var f = files.open(path, "rb")
     
     // 读取魔数
@@ -981,8 +995,10 @@ func read_binary_data(string path): Array[int]? {
     
     // 读取数据长度
     var len_bytes = f.read(4)
-    var data_len = (len_bytes[0] << 24) | (len_bytes[1] << 16) | 
-                   (len_bytes[2] << 8) | len_bytes[3]
+    // ⚠ 字符串下标拿到的是**单字符字符串**，不能直接参与位运算
+    //   ⇒ 用 codepoint_at(i) 取码点（这几字节都在 0..255）
+    var data_len = (len_bytes.codepoint_at(0) << 24) | (len_bytes.codepoint_at(1) << 16) |
+                   (len_bytes.codepoint_at(2) << 8) | len_bytes.codepoint_at(3)
     print("数据长度: " + data_len)
     
     // 读取数据
@@ -993,15 +1009,21 @@ func read_binary_data(string path): Array[int]? {
 }
 
 main() {
-    write_binary_data("data.bin")
-    var data = read_binary_data("data.bin")
-    print("读取了 " + data.len() + " 字节")
+    // 写临时目录，别在当前目录留 data.bin
+    var p = dirs.join(_tmpdir(), "data.bin")
+    write_binary_data(p)
+    var data = read_binary_data(p)
+    if data != null {
+        print("读取了 " + data.len() + " 字节")
+    }
+    print(files.delete(p))
 }
 ```
 
 ### 示例5：文件搜索和替换
 
 ```leno
+import dirs
 import files
 
 func find_and_replace(string path, string old_str, string new_str): bool {
@@ -1021,7 +1043,7 @@ func find_and_replace(string path, string old_str, string new_str): bool {
     return true
 }
 
-func find_in_file(string path, string search_str): Array[string] {
+func find_in_file(string path, string search_str): Array[Dict] {
     var f = files.open(path, "r")
     var line_num = 1
     var matches = []
@@ -1044,14 +1066,20 @@ func find_in_file(string path, string search_str): Array[string] {
 }
 
 main() {
+    // 先造一个配置文件
+    var cfg = dirs.join(_tmpdir(), "config.txt")
+    files.write(cfg, "debug=true\nport=8080\n")
+    // 先造一个待搜索的文件
+    var src = dirs.join(_tmpdir(), "source.txt")
+    files.write(src, "hello old world\nsecond line\n")
     // 查找
-    var results = find_in_file("source.txt", "TODO")
+    var results = find_in_file(src, "TODO")
     for results to r {
         print("行 " + r["line"] + ": " + r["content"])
     }
     
     // 替换
-    var changed = find_and_replace("config.txt", "localhost", "127.0.0.1")
+    var changed = find_and_replace(cfg, "localhost", "127.0.0.1")
     if changed {
         print("替换成功")
     }
