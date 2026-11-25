@@ -127,7 +127,15 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 </tr>
 <tr>
 <td><code>decodePNG(data)</code> / <code>encodePNG(img)</code></td>
-<td>PNG 编解码（返回 <code>Result</code>）</td>
+<td>PNG 编解码（返回 <code>Result</code>）；编码<strong>逐行自适应滤波</strong></td>
+</tr>
+<tr>
+<td><code>encodePNGWithFilter(img, f)</code></td>
+<td>指定滤波（0=None 1=Sub 2=Up 3=Average 4=Paeth，-1=自适应）</td>
+</tr>
+<tr>
+<td><code>encodePNGNoFilter(img)</code></td>
+<td>旧行为（恒 None）；体积对照 / 逐字节可预测时用</td>
 </tr>
 <tr>
 <td><code>decodePNGFile(path)</code> / <code>encodePNGFile(img, path)</code></td>
@@ -145,16 +153,68 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
   方便和"读纹理 <code>readPixelsAt</code> 的结果"零拷贝互操作；对外 <code>get/set</code> 用 RGBA 逻辑序，内部换算。</li>
 <li><strong>缩放按 alpha 预乘加权</strong>：直接平均非预乘 RGBA 会让透明边缘发黑。</li>
 <li><strong>PNG 解码</strong>：颜色类型 0/2/4/6、位深 8、非隔行；调色板/位深 16/Adam7 报错（不静默给错图）。</li>
-<li><strong>PNG 编码</strong>：恒输出 8 位 RGBA（类型 6），每行 filter=None。</li>
+<li><strong>PNG 编码</strong>：恒输出 8 位 RGBA（类型 6）；<strong>每行在 None/Sub/Up/Average/Paeth 里自适应挑一个</strong>
+  （代价 = 滤波后字节按有符号取绝对值求和，取最小 —— libpng 的默认启发式）。
+  实测（同一进程，本机）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>图</th>
+<th>自适应</th>
+<th>None</th>
+<th>差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>渐变 512×512</td>
+<td>6.6 KB</td>
+<td>314.7 KB</td>
+<td><strong>−98%</strong></td>
+</tr>
+<tr>
+<td>绘制图 300×220（演示窗口那张）</td>
+<td>7.1 KB</td>
+<td>87.6 KB</td>
+<td><strong>−92%</strong></td>
+</tr>
+<tr>
+<td>真截图 1280×800（UI 大片纯色）</td>
+<td>60.3 KB</td>
+<td>53.5 KB</td>
+<td><strong>+12%（反而更大）</strong></td>
+</tr>
+</tbody>
+</table>
+<p>⚠ 最后一行是真实情况：本模块的 zlib 是<strong>固定 Huffman</strong>（没有动态码表），对"大片同色"的
+界面截图，None 留下的长游程反而更好压。所以提供 <code>encodePNGWithFilter</code> / <code>encodePNGNoFilter</code>：
+对这类图可以两种都编一遍取小的（或者直接指定 None）。照片/渐变/绘制图仍然是自适应明显更省。</p>
+<h2 id="变更记录">变更记录</h2>
+<ul>
+<li><strong>0.3.0</strong>（2026-11-25）：PNG 编码改成<strong>逐行自适应滤波</strong>（渐变 −98%、绘制图 −92%，
+  但界面截图这类大片纯色的反而 +12% ⇒ 同时给出 <code>encodePNGWithFilter</code> / <code>encodePNGNoFilter</code>
+  自行选择）；编码器不再为每行 5 种滤波各物化一份候选数组（内存/GC 压力大减，快 ~15%）；
+  新增绘制/合成 API（<code>blit</code> / <code>blitAlpha</code> / <code>fillCircle</code> / <code>drawRect</code> / <code>line</code> / <code>toGray</code> /
+  <code>invert</code> / <code>clone</code> / <code>scaleToFit</code>）；新增可视化演示窗口 + <code>save</code> 拼图模式。</li>
+<li><strong>0.2.0</strong>（2026-11-24）：模块初版（构造/读写/缩放/几何/PNG 编解码）。</li>
 </ul>
 <h2 id="来源">来源</h2>
 <p>缩放采样从 <code>tools/lib/image_ops.leno</code>（Ptr 版，给 SDL3 零拷贝用）移植成 Array[int] 版；
 PNG 编解码借 <code>LenoCompress</code> 的 <code>inflateZlib</code> / <code>zlib</code> / <code>crc32</code> 拼块 + 反滤波。</p>
+<h2 id="可视化演示-看效果-不只看断言">可视化演示（看效果，不只看断言）</h2>
+<p><code>leno_gui/应用/图像处理演示/image_lab.leno</code>：SDL3 窗口里并排六格 ——
+绘制（渐变+圆+描边+线）/ 灰度 / 反色 / 旋转 / 真图缩略 / 水印，顶部还打印 PNG 编码的 A/B 体积。</p>
+<pre><code class="language-bat">build\leno.exe leno_gui\应用\图像处理演示\image_lab.leno        :: 开窗口（ESC 退出）
+build\leno.exe leno_gui\应用\图像处理演示\image_lab.leno save   :: 不开窗，拼一张 preview.png 落盘
+</code></pre>
+<p><code>save</code> 模式产出的就是"这个模块画出来长什么样"的直接证据：
+<code>leno_gui/应用/图像处理演示/preview.png</code>（3×2 拼图）。</p>
 <h2 id="跑测试">跑测试</h2>
 <pre><code class="language-bat">build\leno.exe build\leno_module\LenoImage\test\test_image.leno
 </code></pre>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#口径">口径</a></li><li><a href="#来源">来源</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#api">API</a></li><li><a href="#口径">口径</a></li><li><a href="#变更记录">变更记录</a></li><li><a href="#来源">来源</a></li><li><a href="#可视化演示-看效果-不只看断言">可视化演示（看效果，不只看断言）</a></li><li><a href="#跑测试">跑测试</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoHTTP.html">← 上一篇</a><a href="../扩展模块/LenoMarkdown.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
