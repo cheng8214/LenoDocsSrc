@@ -370,7 +370,15 @@ func rewrite_url(string u, bool subdir):string {
     if strings.starts_with(u, "http:") or strings.starts_with(u, "https:") { return u }
     if strings.starts_with(u, "mailto:") or strings.starts_with(u, "javascript:") { return u }
     if strings.starts_with(u, "data:") or strings.starts_with(u, "#") { return u }
-    if subdir { return u }
+    if subdir {
+        // ⚠ 这里原来直接 `return u`，于是子目录页里的 `xxx.md` **不会被改成 .html**
+        //   （实测：案例/_总览 的表格链接全指向 Aria.md，浏览器点开是 404）。
+        //   子目录页内的相对链接路径本身是对的，只差扩展名。
+        if not strings.has(u, "build/leno_module/") {
+            u = strings.replace(u, ".md", ".html")
+        }
+        return u
+    }
     if strings.starts_with(u, "../docs/") {
         u = u.slice(8, u.len() - 1)
     } else {
@@ -625,7 +633,10 @@ main() {
             md_warn += 1
         }
 
-        var subdir = strings.starts_with(rel, "扩展模块/") or strings.starts_with(rel, "archive/")
+        // 任何子目录页都要在链接/资源前加 `../`
+        //   ⚠ 此前这里硬编码了 "扩展模块/" 与 "archive/"：新增 `案例/` 后，
+        //     页面里所有导航（首页 / 分类 / 其它文档）与 style.css 全部指到不存在的路径。
+        var subdir = strings.has(rel, "/")
         var body = fix_links(md.to_html(text), subdir)
         collect_headings(text)
         var toc = toc_html()

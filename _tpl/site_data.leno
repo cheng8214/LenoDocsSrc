@@ -31,16 +31,18 @@ export var CATEGORIES = [
         ["F2_非可空与可空类型设计.md", "类型收窄与绑定语法改进.md", "解构语法实现文档.md", "enum载荷_设计草案.md", "注解系统与optkeys设计草案.md", "struct 里const可行性.md", "struct_extend_设计草案.md", "cstruct_packed_align_设计文档.md", "错误与空值契约.md", "单一事实来源与重复实现收敛.md", "寄存式与栈式的差异清单.md", "错误堆栈追踪改进方案.md"]),
     cat("05 GUI · 平台", false, "LenoSDL3 控件与渲染、Android / Web / LenoNet / LenoHtml",
         ["PREFIX:LenoSDL3_", "LenoSDL3像素直写渲染优化.md", "PREFIX:Android", "PREFIX:LenoWeb", "PREFIX:LenoNet", "PREFIX:LenoHtml"]),
-    cat("06 开发台账", true, "待办、待修、实测评估与改进清单 —— 维护者视角，按需展开",
-        ["PREFIX:待办", "PREFIX:待修", "SUFFIX:修复追踪.md", "SUFFIX:改进建议.md", "SUFFIX:修复追踪.md", "语言摩擦与隐式契约清单.md", "Leno语言改进建议.md"]),
+    cat("06 案例 · 真实项目", false, "用 Leno 真写出来的项目：桌面应用 / 游戏 / 系统工具 / 自动化 / 运维",
+        ["PREFIX:案例/"]),
+    cat("07 开发台账", true, "待办、待修、实测评估与改进清单 —— 维护者视角，按需展开",
+        ["PREFIX:待办", "PREFIX:待修", "SUFFIX:修复追踪.md", "SUFFIX:改进建议.md", "语言摩擦与隐式契约清单.md", "Leno语言改进建议.md"]),
     cat("08 扩展模块（独立包）", false, "按需 import 的扩展包：压缩 / 加密 / HTTP / SQLite / SDL3 / Web / Excel / 二维码…",
         ["PREFIX:扩展模块/"]),
-    cat("07 性能 · 排查 · 历史", true, "性能数据与已完结的排查记录；部分基于旧栈式 VM，看前先核对源码",
+    cat("09 性能 · 排查 · 历史", true, "性能数据与已完结的排查记录；部分基于旧栈式 VM，看前先核对源码",
         ["REST"]),
 ]
 
 // 文件名 stem → 首页显示名（module_* 另有自动规则）
-export var DISPLAY_NAME = {"FAQ": "常见问题", "idioms": "惯用写法速查", "LENB-format-reverse-notes": "LENB 格式逆向笔记", "leno对比": "Leno 与其他语言对比", "cstruct_packed_align_设计文档": "C 结构体对齐与 packed 设计", "struct_extend_设计草案": "struct 继承设计草案", "struct 里const可行性": "struct 中 const 的可行性", "async_await入门指南": "async / await 入门指南", "import使用指南": "import 使用指南", "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）", "注解系统与optkeys设计草案": "注解系统与 @optkeys（已实现）", "enum载荷_设计草案": "enum 载荷（已实现）"}
+export var DISPLAY_NAME = {"FAQ": "常见问题", "idioms": "惯用写法速查", "LENB-format-reverse-notes": "LENB 格式逆向笔记", "leno对比": "Leno 与其他语言对比", "cstruct_packed_align_设计文档": "C 结构体对齐与 packed 设计", "struct_extend_设计草案": "struct 继承设计草案", "struct 里const可行性": "struct 中 const 的可行性", "async_await入门指南": "async / await 入门指南", "import使用指南": "import 使用指南", "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）", "注解系统与optkeys设计草案": "注解系统与 @optkeys（已实现）", "enum载荷_设计草案": "enum 载荷（已实现）", "_总览": "案例总览", "Aria": "Aria · 桌面音乐客户端", "LenoMusic": "LenoMusic · 音乐搜索下载", "LenoGame": "LenoGame · 9 个图形小游戏", "LenoCleaner": "LenoCleaner · C 盘清理", "LenoTrae": "LenoTrae · Trae 自动签到", "LenoWorkBuddy": "LenoWorkBuddy · 自动签到", "LenoDumate": "LenoDumate · 搭子签到", "AriaDeployd": "AriaDeployd · 部署守护进程"}
 
 export var DESC_FALLBACK = {"idioms": "高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法"}
 
@@ -48,5 +50,5 @@ export var DESC_FALLBACK = {"idioms": "高频惯用写法：数组 / 字典构�
 export var EXT_DISPLAY = {"_总览": "扩展模块总览", "LenoCLI": "CLI · 命令行解析", "LenoCompress": "Compress · 压缩", "LenoConfig": "Config · 配置读取", "LenoContainers": "Containers · 栈/队列/LRU", "LenoCrypto": "Crypto · 加密", "LenoCSV": "CSV · 表格读写", "LenoFS": "FS · 文件系统", "LenoGlob": "Glob · 通配匹配", "LenoHTTP": "HTTP · 服务端", "LenoLog": "Log · 日志", "LenoMusic": "Music · 音频", "LenoQR": "QR · 二维码", "LenoResult": "Result · 错误与空值", "LenoSDL3": "SDL3 · GUI 渲染", "LenoSqlite": "sqlite3 · 数据库", "LenoStats": "Stats · 统计", "LenoTUI": "TUI · 终端输出", "LenoUUID": "UUID · 唯一 ID", "LenoWeb": "Web · HTTP/HTML/爬虫", "LenoXLSX": "XLSX · Excel", "LenoZip": "Zip · 归档"}
 
 // 首页「从这里开始」的快捷卡：(标题, 说明, 链接, 角标)
-export var PATHS = [["零基础学 Leno", "从没写过代码？从这里开始", "Leno零基础入门.html", "① 小白入门"], ["装好并跑起来", "拿 exe → 第一个项目 → 打包成 exe", "安装与第一个项目.html", "② 安装上手"], ["抄一段就用", "读写文件 / JSON / 参数 / 线程 15 个现成任务", "常见任务cookbook.html", "③ 任务配方"], ["学 Leno（全貌）", "语法 + 类型系统 + 模块", "Leno入门教程.html", "入门教程"], ["看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"], ["查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"], ["查模块 API", "20 个标准模块的函数清单", "module_strings.html", "模块索引"], ["扩展模块", "压缩 / 加密 / HTTP / SQLite / Web / GUI…", "扩展模块/_总览.html", "独立包"]]
+export var PATHS = [["零基础学 Leno", "从没写过代码？从这里开始", "Leno零基础入门.html", "① 小白入门"], ["装好并跑起来", "拿 exe → 第一个项目 → 打包成 exe", "安装与第一个项目.html", "② 安装上手"], ["抄一段就用", "读写文件 / JSON / 参数 / 线程 15 个现成任务", "常见任务cookbook.html", "③ 任务配方"], ["学 Leno（全貌）", "语法 + 类型系统 + 模块", "Leno入门教程.html", "入门教程"], ["看真实项目", "桌面应用 / 游戏 / 系统工具 / 自动化 8 个案例", "案例/_总览.html", "案例"], ["看惯用法", "别再写 Array[Array[string]]", "idioms.html", "惯用写法"], ["查报错", "症状 → 病因 → 怎么办", "语言陷阱速查.html", "陷阱速查"], ["查模块 API", "20 个标准模块的函数清单", "module_strings.html", "模块索引"], ["扩展模块", "压缩 / 加密 / HTTP / SQLite / Web / GUI…", "扩展模块/_总览.html", "独立包"]]
 
