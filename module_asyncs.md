@@ -74,14 +74,22 @@ var result = await future  // 阻塞直到任务完成，返回结果
 
 ```leno
 import asyncs
+
+async func task1() {
+    await asyncs.sleep(100)
+    print("task1 完成")
+}
+
+async func task2() {
+    await asyncs.sleep(50)
+    print("task2 完成")
+}
+
 main() {
-    // 创建多个异步任务
-    task1()
+    task1()          // 注册协程（此刻还没跑）
     task2()
-    task3()
-    
-    // 启动事件循环
-    asyncs.run()  // 阻塞直到所有协程完成
+    asyncs.run()     // 启动事件循环，阻塞到所有协程完成
+    print("全部完成")
 }
 ```
 
@@ -139,14 +147,23 @@ async func cooperative_task() {
 
 ```leno
 import asyncs
+
+async func async_task1() {
+    await asyncs.sleep(30)
+    print("task1 完成")
+}
+
+async func async_task2() {
+    await asyncs.sleep(60)
+    print("task2 完成")
+}
+
 main() {
-    // 创建协程
-    async_task1()
+    async_task1()      // 创建协程（还没开始跑）
     async_task2()
-    
-    // 启动事件循环
-    asyncs.run()
-    
+
+    asyncs.run()       // 启动事件循环：阻塞到全部完成
+
     print("所有协程完成")
 }
 ```
@@ -344,23 +361,22 @@ async func with_timeout() {
 
 ```leno
 import asyncs
-import io
 
-// 模拟网络请求
 async func fetch_url(string url):string {
     print("请求: " + url)
-    await asyncs.sleep(200)  // 模拟网络延迟
+    await asyncs.sleep(200)
     return "响应: " + url
 }
 
+async func fetch_both() {
+    var f1 = fetch_url("api/users")
+    var f2 = fetch_url("api/posts")
+    print(await f1)
+    print(await f2)
+}
+
 main() {
-    // 顺序执行（会阻塞等待）
-    var result1 = fetch_url("api/users")
-    var result2 = fetch_url("api/posts")
-    
-    print(await result1)
-    print(await result2)
-    
+    fetch_both()
     asyncs.run()
 }
 ```
@@ -371,32 +387,35 @@ main() {
 
 ```leno
 import asyncs
-import io
 
-async func fetch_user(int id):Dict {
+struct User {
+    int id = 0
+    string name = ""
+}
+
+async func fetch_user(int id):User {
     await asyncs.sleep(100)
-    return {id: id, name: "用户" + id}
+    return new User(id = id, name = "用户" + id)
 }
 
 async func fetch_concurrent() {
     print("开始并发请求...")
-    
-    // 同时启动多个请求
+
     var f1 = fetch_user(1)
     var f2 = fetch_user(2)
     var f3 = fetch_user(3)
-    
-    // 等待所有请求完成
+
     await f1
     await f2
     await f3
-    
-    // 收集结果
+
     var users = asyncs.all([f1, f2, f3])
-    
     print("获取到 " + users.len() + " 个用户")
-    for users to user {
-        print("  - " + user.name)
+    for users to raw {
+        var u = raw as User
+        if u != null {
+            print("  - " + u.name)
+        }
     }
 }
 
@@ -511,35 +530,29 @@ main() {
 
 ```leno
 import asyncs
-import io
 
-// 异步递归遍历
-async func async_walk(any items, int depth) {
-    for items to item {
-        var indent = "  ".rep(depth)
-        print(indent + item.name)
-        
-        if (item.children.len() > 0) {
-            await asyncs.yield()
-            await async_walk(item.children, depth + 1)
-        }
+struct Node {
+    string name = ""
+    Array[Node] children = []
+}
+
+async func walk(Node n, int depth) {
+    print("  ".rep(depth) + n.name)
+    for n.children to c {
+        await asyncs.yield()
+        await walk(c, depth + 1)
     }
 }
 
 main() {
-    var tree = [
-        {name: "A", children: [
-            {name: "A1", children: []},
-            {name: "A2", children: [
-                {name: "A2-1", children: []}
-            ]}
-        ]},
-        {name: "B", children: [
-            {name: "B1", children: []}
-        ]}
-    ]
-    
-    async_walk(tree, 0)
+    var tree = new Node(name = "A")
+    tree.children.add(new Node(name = "A1"))
+
+    var a2 = new Node(name = "A2")
+    a2.children.add(new Node(name = "A2-1"))
+    tree.children.add(a2)
+
+    walk(tree, 0)
     asyncs.run()
 }
 ```
@@ -552,13 +565,13 @@ main() {
 import asyncs
 import io
 
-async func process_item(any item, int index):string {
+async func process_item(string item, int index):string {
     // 模拟处理
     await asyncs.sleep(50)
     return "已处理: " + item
 }
 
-async func batch_process(any items) {
+async func batch_process(Array[string] items) {
     var total = items.len()
     var futures = []
     
@@ -771,13 +784,24 @@ main() {
 
 ```leno
 import asyncs
+
+async func task1() {
+    await asyncs.sleep(30)
+    print("task1 完成")
+}
+
+async func task2() {
+    await asyncs.sleep(10)
+    print("task2 完成")
+}
+
 main() {
-    task1()   // 注册协程
-    task2()   // 注册协程
-    
-    asyncs.run()  // 阻塞，直到 task1 和 task2 都完成
-    
-    print("所有协程完成")  // run() 返回后才执行
+    task1()             // 注册协程
+    task2()
+
+    asyncs.run()        // 阻塞到 task1、task2 都完成
+
+    print("所有协程完成")  // run() 返回之后才执行这行
 }
 ```
 

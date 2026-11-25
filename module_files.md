@@ -735,7 +735,7 @@ f.close()
 ```leno
 import files
 
-func copy_file(src, dst) {
+func copy_file(string src, string dst) {
     var content = files.read(src)
     files.write(dst, content)
 }
@@ -748,7 +748,7 @@ copy_file("source.txt", "backup.txt")
 ```leno
 import files
 
-func copy_large_file(src, dst, chunk_size) {
+func copy_large_file(string src, string dst, int chunk_size) {
     var src_f = files.open(src, "rb")
     var dst_f = files.open(dst, "wb")
     
@@ -831,11 +831,11 @@ var Logger = {
     "level": "INFO"
 }
 
-func logger_init(path) {
+func logger_init(string path) {
     Logger.file = files.open(path, "a")
 }
 
-func logger_log(level, message) {
+func logger_log(string level, string message) {
     if Logger.file == null {
         print("日志未初始化")
         return
@@ -846,11 +846,11 @@ func logger_log(level, message) {
     Logger.file.writeln(log_line)
 }
 
-func logger_info(message) {
+func logger_info(string message) {
     logger_log("INFO", message)
 }
 
-func logger_error(message) {
+func logger_error(string message) {
     logger_log("ERROR", message)
 }
 
@@ -878,7 +878,7 @@ main() {
 import files
 import arrays
 
-func read_csv(path) {
+func read_csv(string path): Array[Array[string]] {
     var f = files.open(path, "r")
     var lines = f.readlines()
     f.close()
@@ -904,7 +904,7 @@ func read_csv(path) {
     return records
 }
 
-func write_csv(path, headers, records) {
+func write_csv(string path, Array[string] headers, Array[Array[string]] records) {
     var f = files.open(path, "w")
     
     // 写入表头
@@ -945,7 +945,7 @@ main() {
 import files
 
 // 写入二进制数据
-func write_binary_data(path) {
+func write_binary_data(string path) {
     var f = files.open(path, "wb")
     
     // 写入魔数
