@@ -356,7 +356,7 @@ f.write(&quot;Name: &quot; + name)
 f.close()
 </code></pre>
 <hr>
-<h3 id="writeln-string"><code>writeln(string)</code></h3>
+<h3 id="write-string"><code>write(string)</code></h3>
 <p>写入字符串并添加换行符。</p>
 <p><strong>参数</strong>:
 - <code>string</code> (string): 要写入的内容</p>
@@ -369,10 +369,9 @@ f.close()
 var f = files.open(&quot;log.txt&quot;, &quot;w&quot;)
 
 // 写入多行
-f.writeln(&quot;2024-01-15 10:30:00 - 程序启动&quot;)
-f.writeln(&quot;2024-01-15 10:30:01 - 加载配置&quot;)
-f.writeln(&quot;2024-01-15 10:30:02 - 初始化完成&quot;)
-
+f.write(&quot;2024-01-15 10:30:00 - 程序启动&quot; + &quot;\n&quot;)
+f.write(&quot;2024-01-15 10:30:01 - 加载配置&quot; + &quot;\n&quot;)
+f.write(&quot;2024-01-15 10:30:02 - 初始化完成&quot; + &quot;\n&quot;)
 f.close()
 </code></pre>
 <hr>
@@ -572,7 +571,7 @@ fout.close()
 
 // 追加单行
 var log = files.open(&quot;app.log&quot;, &quot;a&quot;)
-log.writeln(&quot;[&quot; + get_time() + &quot;] 用户登录&quot;)
+log.write(&quot;[&quot; + get_time() + &quot;] 用户登录&quot; + &quot;\n&quot;)
 log.close()
 
 // 追加多行
@@ -586,9 +585,8 @@ f.close()
 var f = files.open(&quot;report.txt&quot;, &quot;w&quot;)
 
 // 写入表头
-f.writeln(&quot;========== 报告 ==========&quot;)
-f.writeln(&quot;&quot;)
-
+f.write(&quot;========== 报告 ==========&quot; + &quot;\n&quot;)
+f.write(&quot;&quot; + &quot;\n&quot;)
 // 写入数据
 var items = [
     {&quot;name&quot;: &quot;产品A&quot;, &quot;price&quot;: 100, &quot;qty&quot;: 5},
@@ -597,13 +595,12 @@ var items = [
 
 for items to item {
     var line = item[&quot;name&quot;] + &quot; | &quot; + item[&quot;price&quot;] + &quot;元 | x&quot; + item[&quot;qty&quot;]
-    f.writeln(line)
+    f.write(line + &quot;\n&quot;)
 }
 
 // 写入总计
-f.writeln(&quot;&quot;)
-f.writeln(&quot;=========================&quot;)
-
+f.write(&quot;&quot; + &quot;\n&quot;)
+f.write(&quot;=========================&quot; + &quot;\n&quot;)
 f.close()
 </code></pre>
 <hr>
@@ -675,18 +672,30 @@ f.close()
 <h2 id="快捷操作">快捷操作</h2>
 <h3 id="复制文件">复制文件</h3>
 <pre><code class="language-leno">import files
+import dirs
 
-func copy_file(src, dst) {
+func copy_file(string src, string dst) {
     var content = files.read(src)
     files.write(dst, content)
 }
 
-copy_file(&quot;source.txt&quot;, &quot;backup.txt&quot;)
+main() {
+    // 先造一个源文件（示例不该依赖仓库里恰好存在的文件）
+    var src = dirs.join(_tmpdir(), &quot;source.txt&quot;)
+    var dst = dirs.join(_tmpdir(), &quot;backup.txt&quot;)
+    files.write(src, &quot;Hello, Leno!&quot;)
+
+    copy_file(src, dst)
+    print(files.read(dst))          // Hello, Leno!
+
+    print(files.delete(src))        // true
+    print(files.delete(dst))        // true
+}
 </code></pre>
 <h3 id="大文件复制-分块">大文件复制（分块）</h3>
 <pre><code class="language-leno">import files
 
-func copy_large_file(src, dst, chunk_size) {
+func copy_large_file(string src, string dst, int chunk_size) {
     var src_f = files.open(src, &quot;rb&quot;)
     var dst_f = files.open(dst, &quot;wb&quot;)
 
@@ -755,58 +764,54 @@ main() {
 </blockquote>
 <h3 id="示例2-日志记录器">示例2：日志记录器</h3>
 <pre><code class="language-leno">import files
+import dirs
 import times
 
-var Logger = {
-    &quot;file&quot;: null,
-    &quot;level&quot;: &quot;INFO&quot;
+// 日志写到临时目录（别在当前目录留 app.log）
+var log_path = dirs.join(_tmpdir(), &quot;app.log&quot;)
+
+func logger_init() {
+    files.write(log_path, &quot;&quot;)          // 清空
 }
 
-func logger_init(path) {
-    Logger.file = files.open(path, &quot;a&quot;)
-}
-
-func logger_log(level, message) {
-    if Logger.file == null {
-        print(&quot;日志未初始化&quot;)
-        return
+func logger_log(string level, string message) {
+    var line = &quot;[&quot; + times.format(times.now(), &quot;%Y-%m-%d %H:%M:%S&quot;) + &quot;] &quot; + level + &quot; &quot; + message
+    // 追加：先读后写（小日志够用；大文件请用 files.open(path, &quot;a&quot;) + defer f.close()）
+    var old = &quot;&quot;
+    if files.exists(log_path) {
+        old = files.read(log_path)
     }
-
-    var time_str = times.now().format(&quot;yyyy-MM-dd HH:mm:ss&quot;)
-    var log_line = &quot;[&quot; + time_str + &quot;] [&quot; + level + &quot;] &quot; + message
-    Logger.file.writeln(log_line)
+    files.write(log_path, old + line + &quot;\n&quot;)
 }
 
-func logger_info(message) {
+func logger_info(string message) {
     logger_log(&quot;INFO&quot;, message)
 }
 
-func logger_error(message) {
+func logger_error(string message) {
     logger_log(&quot;ERROR&quot;, message)
 }
 
 func logger_close() {
-    if Logger.file != null {
-        Logger.file.close()
-        Logger.file = null
+    if files.exists(log_path) {
+        print(files.read(log_path))
+        print(files.delete(log_path))   // 收尾删掉，断言 true
     }
 }
 
 main() {
-    logger_init(&quot;app.log&quot;)
-
+    logger_init()
     logger_info(&quot;程序启动&quot;)
-    logger_info(&quot;加载配置完成&quot;)
-    logger_error(&quot;连接数据库失败&quot;)
-
+    logger_error(&quot;示例错误&quot;)
     logger_close()
 }
 </code></pre>
 <h3 id="示例3-csv-文件处理">示例3：CSV 文件处理</h3>
-<pre><code class="language-leno">import files
+<pre><code class="language-leno">import dirs
+import files
 import arrays
 
-func read_csv(path) {
+func read_csv(string path): Array[Dict] {
     var f = files.open(path, &quot;r&quot;)
     var lines = f.readlines()
     f.close()
@@ -832,19 +837,18 @@ func read_csv(path) {
     return records
 }
 
-func write_csv(path, headers, records) {
+func write_csv(string path, Array[string] headers, Array[Dict] records) {
     var f = files.open(path, &quot;w&quot;)
 
     // 写入表头
-    f.writeln(headers.join(&quot;,&quot;))
-
+    f.write(headers.join(&quot;,&quot;) + &quot;\n&quot;)
     // 写入数据
     for records to record {
         var values = []
         for headers to h {
-            values.add(record[h])
+            values.add(_str(record[h]))
         }
-        f.writeln(values.join(&quot;,&quot;))
+        f.write(values.join(&quot;,&quot;) + &quot;\n&quot;)
     }
 
     f.close()
@@ -852,7 +856,10 @@ func write_csv(path, headers, records) {
 
 main() {
     // 读取 CSV
-    var data = read_csv(&quot;data.csv&quot;)
+    // 先写一份样例 CSV（示例不该依赖仓库里恰好有 data.csv）
+    var p = dirs.join(_tmpdir(), &quot;data.csv&quot;)
+    files.write(p, &quot;name,age\n张三,25\n李四,30\n&quot;)
+    var data = read_csv(p)
     for data to row {
         print(row[&quot;name&quot;] + &quot;: &quot; + row[&quot;age&quot;])
     }
@@ -867,10 +874,12 @@ main() {
 }
 </code></pre>
 <h3 id="示例4-二进制文件处理">示例4：二进制文件处理</h3>
-<pre><code class="language-leno">import files
+<pre><code class="language-leno">import strings
+import files
+import dirs
 
 // 写入二进制数据
-func write_binary_data(path) {
+func write_binary_data(string path) {
     var f = files.open(path, &quot;wb&quot;)
 
     // 写入魔数
@@ -881,21 +890,21 @@ func write_binary_data(path) {
 
     // 写入数据长度（4字节大端）
     var data_len = 256
-    f.write(char((data_len &gt;&gt; 24) &amp; 0xFF))
-    f.write(char((data_len &gt;&gt; 16) &amp; 0xFF))
-    f.write(char((data_len &gt;&gt; 8) &amp; 0xFF))
-    f.write(char(data_len &amp; 0xFF))
+    f.write(strings.char((data_len &gt;&gt; 24) &amp; 0xFF))
+    f.write(strings.char((data_len &gt;&gt; 16) &amp; 0xFF))
+    f.write(strings.char((data_len &gt;&gt; 8) &amp; 0xFF))
+    f.write(strings.char(data_len &amp; 0xFF))
 
     // 写入数据
     for 0 : data_len - 1 to i {
-        f.write(char(i &amp; 0xFF))
+        f.write(strings.char(i &amp; 0xFF))
     }
 
     f.close()
 }
 
 // 读取二进制数据
-func read_binary_data(path) {
+func read_binary_data(string path): string? {
     var f = files.open(path, &quot;rb&quot;)
 
     // 读取魔数
@@ -912,8 +921,10 @@ func read_binary_data(path) {
 
     // 读取数据长度
     var len_bytes = f.read(4)
-    var data_len = (len_bytes[0] &lt;&lt; 24) | (len_bytes[1] &lt;&lt; 16) | 
-                   (len_bytes[2] &lt;&lt; 8) | len_bytes[3]
+    // ⚠ 字符串下标拿到的是**单字符字符串**，不能直接参与位运算
+    //   ⇒ 用 codepoint_at(i) 取码点（这几字节都在 0..255）
+    var data_len = (len_bytes.codepoint_at(0) &lt;&lt; 24) | (len_bytes.codepoint_at(1) &lt;&lt; 16) |
+                   (len_bytes.codepoint_at(2) &lt;&lt; 8) | len_bytes.codepoint_at(3)
     print(&quot;数据长度: &quot; + data_len)
 
     // 读取数据
@@ -924,15 +935,21 @@ func read_binary_data(path) {
 }
 
 main() {
-    write_binary_data(&quot;data.bin&quot;)
-    var data = read_binary_data(&quot;data.bin&quot;)
-    print(&quot;读取了 &quot; + data.len() + &quot; 字节&quot;)
+    // 写临时目录，别在当前目录留 data.bin
+    var p = dirs.join(_tmpdir(), &quot;data.bin&quot;)
+    write_binary_data(p)
+    var data = read_binary_data(p)
+    if data != null {
+        print(&quot;读取了 &quot; + data.len() + &quot; 字节&quot;)
+    }
+    print(files.delete(p))
 }
 </code></pre>
 <h3 id="示例5-文件搜索和替换">示例5：文件搜索和替换</h3>
-<pre><code class="language-leno">import files
+<pre><code class="language-leno">import dirs
+import files
 
-func find_and_replace(path, old_str, new_str):bool {
+func find_and_replace(string path, string old_str, string new_str): bool {
     // ⚠ 走**原始字节**通道（open &quot;rb&quot;/&quot;wb&quot;）：`files.read` 会剥 BOM，只有 `open(rb)` 拿得到原样字节
     //   ⇒ 图省事写成 `files.write(path, files.read(path).replace(...))` 会**丢掉 BOM**
     //   （见上文「字节保真（行尾 / BOM）」一节）。想连 BOM 一起保真就得这么写 ✓
@@ -949,7 +966,7 @@ func find_and_replace(path, old_str, new_str):bool {
     return true
 }
 
-func find_in_file(path, search_str) {
+func find_in_file(string path, string search_str): Array[Dict] {
     var f = files.open(path, &quot;r&quot;)
     var line_num = 1
     var matches = []
@@ -960,7 +977,7 @@ func find_in_file(path, search_str) {
             break
         }
 
-        if line.contains(search_str) {
+        if line.has(search_str) {
             matches.add({&quot;line&quot;: line_num, &quot;content&quot;: line})
         }
 
@@ -972,14 +989,20 @@ func find_in_file(path, search_str) {
 }
 
 main() {
+    // 先造一个配置文件
+    var cfg = dirs.join(_tmpdir(), &quot;config.txt&quot;)
+    files.write(cfg, &quot;debug=true\nport=8080\n&quot;)
+    // 先造一个待搜索的文件
+    var src = dirs.join(_tmpdir(), &quot;source.txt&quot;)
+    files.write(src, &quot;hello old world\nsecond line\n&quot;)
     // 查找
-    var results = find_in_file(&quot;source.txt&quot;, &quot;TODO&quot;)
+    var results = find_in_file(src, &quot;TODO&quot;)
     for results to r {
         print(&quot;行 &quot; + r[&quot;line&quot;] + &quot;: &quot; + r[&quot;content&quot;])
     }
 
     // 替换
-    var changed = find_and_replace(&quot;config.txt&quot;, &quot;localhost&quot;, &quot;127.0.0.1&quot;)
+    var changed = find_and_replace(cfg, &quot;localhost&quot;, &quot;127.0.0.1&quot;)
     if changed {
         print(&quot;替换成功&quot;)
     }
@@ -1114,7 +1137,7 @@ try {
 <p><em>文档版本: 1.0</em><br>
 <em>最后更新: 2026-05-17</em></p>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#使用方式">使用方式</a></li><li><a href="#文件打开模式">文件打开模式</a></li><ul class="lv3"><li><a href="#模式选择建议">模式选择建议</a></li></ul><li><a href="#模块方法-静态方法">模块方法（静态方法）</a></li><ul class="lv3"><li><a href="#open-path-mode">open(path, mode)</a></li><li><a href="#exists-path">exists(path)</a></li><li><a href="#delete-path">delete(path)</a></li><li><a href="#read-path">read(path)</a></li><li><a href="#write-path-content">write(path, content)</a></li></ul><li><a href="#文件对象方法">文件对象方法</a></li><ul class="lv3"><li><a href="#read-read-n">read() / read(n)</a></li><li><a href="#readline">readline()</a></li><li><a href="#readlines">readlines()</a></li><li><a href="#write-string">write(string)</a></li><li><a href="#writeln-string">writeln(string)</a></li><li><a href="#seek-pos-whence">seek(pos, whence)</a></li><li><a href="#tell">tell()</a></li><li><a href="#len">len()</a></li><li><a href="#eof">eof()</a></li><li><a href="#close">close()</a></li></ul><li><a href="#读取操作">读取操作</a></li><ul class="lv3"><li><a href="#读取整个文件">读取整个文件</a></li><li><a href="#逐行读取">逐行读取</a></li><li><a href="#分块读取-大文件">分块读取（大文件）</a></li></ul><li><a href="#写入操作">写入操作</a></li><ul class="lv3"><li><a href="#覆盖写入">覆盖写入</a></li><li><a href="#字节保真-行尾-bom-批量改写务必看这一节">字节保真（行尾 / BOM）—— 批量改写务必看这一节</a></li><li><a href="#追加写入">追加写入</a></li><li><a href="#写入格式化数据">写入格式化数据</a></li></ul><li><a href="#文件定位">文件定位</a></li><ul class="lv3"><li><a href="#随机访问">随机访问</a></li><li><a href="#修改文件特定位置">修改文件特定位置</a></li></ul><li><a href="#文件属性">文件属性</a></li><ul class="lv3"><li><a href="#获取文件大小">获取文件大小</a></li><li><a href="#检查文件状态">检查文件状态</a></li></ul><li><a href="#快捷操作">快捷操作</a></li><ul class="lv3"><li><a href="#复制文件">复制文件</a></li><li><a href="#大文件复制-分块">大文件复制（分块）</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-配置文件读写">示例1：配置文件读写</a></li><li><a href="#示例2-日志记录器">示例2：日志记录器</a></li><li><a href="#示例3-csv-文件处理">示例3：CSV 文件处理</a></li><li><a href="#示例4-二进制文件处理">示例4：二进制文件处理</a></li><li><a href="#示例5-文件搜索和替换">示例5：文件搜索和替换</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-文件编码">1. 文件编码</a></li><li><a href="#2-路径分隔符">2. 路径分隔符</a></li><li><a href="#3-文件关闭">3. 文件关闭</a></li><li><a href="#4-大文件处理">4. 大文件处理</a></li><li><a href="#5-错误处理">5. 错误处理</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#概述">概述</a></li><ul class="lv3"><li><a href="#特性">特性</a></li></ul><li><a href="#使用方式">使用方式</a></li><li><a href="#文件打开模式">文件打开模式</a></li><ul class="lv3"><li><a href="#模式选择建议">模式选择建议</a></li></ul><li><a href="#模块方法-静态方法">模块方法（静态方法）</a></li><ul class="lv3"><li><a href="#open-path-mode">open(path, mode)</a></li><li><a href="#exists-path">exists(path)</a></li><li><a href="#delete-path">delete(path)</a></li><li><a href="#read-path">read(path)</a></li><li><a href="#write-path-content">write(path, content)</a></li></ul><li><a href="#文件对象方法">文件对象方法</a></li><ul class="lv3"><li><a href="#read-read-n">read() / read(n)</a></li><li><a href="#readline">readline()</a></li><li><a href="#readlines">readlines()</a></li><li><a href="#write-string">write(string)</a></li><li><a href="#write-string_1">write(string)</a></li><li><a href="#seek-pos-whence">seek(pos, whence)</a></li><li><a href="#tell">tell()</a></li><li><a href="#len">len()</a></li><li><a href="#eof">eof()</a></li><li><a href="#close">close()</a></li></ul><li><a href="#读取操作">读取操作</a></li><ul class="lv3"><li><a href="#读取整个文件">读取整个文件</a></li><li><a href="#逐行读取">逐行读取</a></li><li><a href="#分块读取-大文件">分块读取（大文件）</a></li></ul><li><a href="#写入操作">写入操作</a></li><ul class="lv3"><li><a href="#覆盖写入">覆盖写入</a></li><li><a href="#字节保真-行尾-bom-批量改写务必看这一节">字节保真（行尾 / BOM）—— 批量改写务必看这一节</a></li><li><a href="#追加写入">追加写入</a></li><li><a href="#写入格式化数据">写入格式化数据</a></li></ul><li><a href="#文件定位">文件定位</a></li><ul class="lv3"><li><a href="#随机访问">随机访问</a></li><li><a href="#修改文件特定位置">修改文件特定位置</a></li></ul><li><a href="#文件属性">文件属性</a></li><ul class="lv3"><li><a href="#获取文件大小">获取文件大小</a></li><li><a href="#检查文件状态">检查文件状态</a></li></ul><li><a href="#快捷操作">快捷操作</a></li><ul class="lv3"><li><a href="#复制文件">复制文件</a></li><li><a href="#大文件复制-分块">大文件复制（分块）</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#示例1-配置文件读写">示例1：配置文件读写</a></li><li><a href="#示例2-日志记录器">示例2：日志记录器</a></li><li><a href="#示例3-csv-文件处理">示例3：CSV 文件处理</a></li><li><a href="#示例4-二进制文件处理">示例4：二进制文件处理</a></li><li><a href="#示例5-文件搜索和替换">示例5：文件搜索和替换</a></li></ul><li><a href="#注意事项">注意事项</a></li><ul class="lv3"><li><a href="#1-文件编码">1. 文件编码</a></li><li><a href="#2-路径分隔符">2. 路径分隔符</a></li><li><a href="#3-文件关闭">3. 文件关闭</a></li><li><a href="#4-大文件处理">4. 大文件处理</a></li><li><a href="#5-错误处理">5. 错误处理</a></li></ul><li><a href="#最佳实践">最佳实践</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_ffi_api.html">← 上一篇</a><a href="module_io.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

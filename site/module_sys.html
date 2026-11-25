@@ -922,14 +922,15 @@ main() {
 }
 </code></pre>
 <h3 id="示例4-清屏动画效果">示例4：清屏动画效果</h3>
-<pre><code class="language-leno">import times
+<pre><code class="language-leno">// 注：sleep(ms) 是**全局内置**（times.c 注册），直接调，不用 import；
+//     协程里请改用 `await asyncs.sleep(ms)`（否则会阻塞整个事件循环）
 
 main() {
     print(&quot;========== 清屏演示 ==========&quot;)
     for 0 : 10 to i {
         _clear()
         print(&quot;倒计时: &quot; + (10 - i))
-        threads.sleep(1000)
+        sleep(1000)          // 全局内置，无需 import
     }
     _clear()
     print(&quot;完成!&quot;)

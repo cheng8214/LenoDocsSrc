@@ -83,14 +83,22 @@ var result = await future  // 阻塞直到任务完成，返回结果
 <h3 id="事件循环">事件循环</h3>
 <p>使用 <code>asyncs.run()</code> 启动事件循环，执行所有待处理的协程：</p>
 <pre><code class="language-leno">import asyncs
-main() {
-    // 创建多个异步任务
-    task1()
-    task2()
-    task3()
 
-    // 启动事件循环
-    asyncs.run()  // 阻塞直到所有协程完成
+async func task1() {
+    await asyncs.sleep(100)
+    print(&quot;task1 完成&quot;)
+}
+
+async func task2() {
+    await asyncs.sleep(50)
+    print(&quot;task2 完成&quot;)
+}
+
+main() {
+    task1()          // 注册协程（此刻还没跑）
+    task2()
+    asyncs.run()     // 启动事件循环，阻塞到所有协程完成
+    print(&quot;全部完成&quot;)
 }
 </code></pre>
 <hr>
@@ -127,13 +135,22 @@ main() {
 <p><strong>参数</strong>: 无<br>
 <strong>返回</strong>: <code>null</code></p>
 <pre><code class="language-leno">import asyncs
+
+async func async_task1() {
+    await asyncs.sleep(30)
+    print(&quot;task1 完成&quot;)
+}
+
+async func async_task2() {
+    await asyncs.sleep(60)
+    print(&quot;task2 完成&quot;)
+}
+
 main() {
-    // 创建协程
-    async_task1()
+    async_task1()      // 创建协程（还没开始跑）
     async_task2()
 
-    // 启动事件循环
-    asyncs.run()
+    asyncs.run()       // 启动事件循环：阻塞到全部完成
 
     print(&quot;所有协程完成&quot;)
 }
@@ -314,55 +331,57 @@ async func with_timeout() {
 <h2 id="示例代码">示例代码</h2>
 <h3 id="1-基础异步任务">1. 基础异步任务</h3>
 <pre><code class="language-leno">import asyncs
-import io
 
-// 模拟网络请求
 async func fetch_url(string url):string {
     print(&quot;请求: &quot; + url)
-    await asyncs.sleep(200)  // 模拟网络延迟
+    await asyncs.sleep(200)
     return &quot;响应: &quot; + url
 }
 
+async func fetch_both() {
+    var f1 = fetch_url(&quot;api/users&quot;)
+    var f2 = fetch_url(&quot;api/posts&quot;)
+    print(await f1)
+    print(await f2)
+}
+
 main() {
-    // 顺序执行（会阻塞等待）
-    var result1 = fetch_url(&quot;api/users&quot;)
-    var result2 = fetch_url(&quot;api/posts&quot;)
-
-    print(await result1)
-    print(await result2)
-
+    fetch_both()
     asyncs.run()
 }
 </code></pre>
 <hr>
 <h3 id="2-并发请求">2. 并发请求</h3>
 <pre><code class="language-leno">import asyncs
-import io
 
-async func fetch_user(int id):Dict {
+struct User {
+    int id = 0
+    string name = &quot;&quot;
+}
+
+async func fetch_user(int id):User {
     await asyncs.sleep(100)
-    return {id: id, name: &quot;用户&quot; + id}
+    return new User(id = id, name = &quot;用户&quot; + id)
 }
 
 async func fetch_concurrent() {
     print(&quot;开始并发请求...&quot;)
 
-    // 同时启动多个请求
     var f1 = fetch_user(1)
     var f2 = fetch_user(2)
     var f3 = fetch_user(3)
 
-    // 等待所有请求完成
     await f1
     await f2
     await f3
 
-    // 收集结果
     var users = asyncs.all([f1, f2, f3])
-
     print(&quot;获取到 &quot; + users.len() + &quot; 个用户&quot;)
-    for users to user {
-        print(&quot;  - &quot; + user.name)
+    for users to raw {
+        var u = raw as User
+        if u != null {
+            print(&quot;  - &quot; + u.name)
+        }
     }
 }
 
@@ -458,35 +477,29 @@ main() {
 <hr>
 <h3 id="5-异步递归">5. 异步递归</h3>
 <pre><code class="language-leno">import asyncs
-import io
 
-// 异步递归遍历
-async func async_walk(any items, int depth) {
-    for items to item {
-        var indent = &quot;  &quot;.rep(depth)
-        print(indent + item.name)
+struct Node {
+    string name = &quot;&quot;
+    Array[Node] children = []
+}
 
-        if (item.children.len() &gt; 0) {
-            await asyncs.yield()
-            await async_walk(item.children, depth + 1)
-        }
+async func walk(Node n, int depth) {
+    print(&quot;  &quot;.rep(depth) + n.name)
+    for n.children to c {
+        await asyncs.yield()
+        await walk(c, depth + 1)
     }
 }
 
 main() {
-    var tree = [
-        {name: &quot;A&quot;, children: [
-            {name: &quot;A1&quot;, children: []},
-            {name: &quot;A2&quot;, children: [
-                {name: &quot;A2-1&quot;, children: []}
-            ]}
-        ]},
-        {name: &quot;B&quot;, children: [
-            {name: &quot;B1&quot;, children: []}
-        ]}
-    ]
+    var tree = new Node(name = &quot;A&quot;)
+    tree.children.add(new Node(name = &quot;A1&quot;))
 
-    async_walk(tree, 0)
+    var a2 = new Node(name = &quot;A2&quot;)
+    a2.children.add(new Node(name = &quot;A2-1&quot;))
+    tree.children.add(a2)
+
+    walk(tree, 0)
     asyncs.run()
 }
 </code></pre>
@@ -495,13 +508,13 @@ main() {
 <pre><code class="language-leno">import asyncs
 import io
 
-async func process_item(any item, int index):string {
+async func process_item(string item, int index):string {
     // 模拟处理
     await asyncs.sleep(50)
     return &quot;已处理: &quot; + item
 }
 
-async func batch_process(any items) {
+async func batch_process(Array[string] items) {
     var total = items.len()
     var futures = []
 
@@ -708,13 +721,24 @@ main() {
 <li><strong>阻塞主线程</strong>：<code>run()</code> 返回前，主线程代码不会继续执行</li>
 </ul>
 <pre><code class="language-leno">import asyncs
+
+async func task1() {
+    await asyncs.sleep(30)
+    print(&quot;task1 完成&quot;)
+}
+
+async func task2() {
+    await asyncs.sleep(10)
+    print(&quot;task2 完成&quot;)
+}
+
 main() {
-    task1()   // 注册协程
-    task2()   // 注册协程
+    task1()             // 注册协程
+    task2()
 
-    asyncs.run()  // 阻塞，直到 task1 和 task2 都完成
+    asyncs.run()        // 阻塞到 task1、task2 都完成
 
-    print(&quot;所有协程完成&quot;)  // run() 返回后才执行
+    print(&quot;所有协程完成&quot;)  // run() 返回之后才执行这行
 }
 </code></pre>
 <p>事件循环的调度顺序：
@@ -762,7 +786,7 @@ main() {
   拿到结果再 <code>join()</code>：</li>
 </ul>
 <pre><code class="language-leno">func worker(any ch, int n) {
-    threads.sleep(30)                       // 模拟 CPU 活
+    sleep(30)                       // 模拟 CPU 活
     if ch is Channel { ch.send(n * 2) }
 }
 

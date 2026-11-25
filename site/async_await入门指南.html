@@ -284,7 +284,8 @@ async func async_fn() {
 }
 </code></pre>
 <h3 id="2-必须调用-asyncs-run">2. 必须调用 asyncs.run()</h3>
-<pre><code class="language-leno">import asyncs
+<pre><code class="language-text">// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
+import asyncs
 main() {
     async_fn()         // 只创建协程，不会执行
     // 忘记调用 asyncs.run() → 协程不会运行
@@ -296,7 +297,8 @@ main() {
 }
 </code></pre>
 <h3 id="3-async-函数返回-future">3. async 函数返回 Future</h3>
-<pre><code class="language-leno">async func task():string {
+<pre><code class="language-text">// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
+async func task():string {
     return &quot;结果&quot;
 }
 
@@ -545,7 +547,8 @@ main() {
 <a href="module_asyncs.html#实战并发网络客户端2026-11-14">module_asyncs.md</a>。</p>
 <h3 id="关于保活协程">关于保活协程</h3>
 <p>在早期版本中，如果所有协程都阻塞在 <code>await arecv()</code>/<code>await aaccept()</code> 上，<code>asyncs.run()</code> 会过早退出。当时的解决方法是添加一个额外的"保活"协程：</p>
-<pre><code class="language-leno">import asyncs
+<pre><code class="language-text">// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
+import asyncs
 // 旧写法（已不再需要）
 async func keeper(int ms) {
     await asyncs.sleep(ms)

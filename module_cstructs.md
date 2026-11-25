@@ -1062,7 +1062,8 @@ cstruct 定义可以在多线程环境中安全使用。由于 cstruct 定义是
 
 ### 在线程中使用 cstruct
 
-```leno
+```text
+// 【跨线程示意】这块在子线程里 load DLL 并调 API，需要正确的系统 API 签名（与 ffi 指南同口径），标为示意
 import ffi
 import threads
 

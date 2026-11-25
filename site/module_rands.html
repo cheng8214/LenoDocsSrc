@@ -354,8 +354,12 @@ main() {
     for 1:10 to i {
         var score = rands.gauss(75, 15)
         // 限制在 0-100 之间
-        if (score &lt; 0) score = 0
-        if (score &gt; 100) score = 100
+        if score &lt; 0 {
+        score = 0
+    }
+        if score &gt; 100 {
+        score = 100
+    }
         print(&quot;  学生&quot; + i + &quot;: &quot; + score)
     }
 

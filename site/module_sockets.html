@@ -213,7 +213,9 @@ if data != null {
 <p><strong>返回</strong>: 
 - 成功: 客户端 Socket 对象
 - 失败: <code>null</code></p>
-<pre><code class="language-leno">Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+Socket server = sockets.listen(&quot;0.0.0.0&quot;, 8080)
 Socket client = server.accept()
 if client != null {
     print(&quot;客户端来自: &quot; + client.peer_addr() + &quot;:&quot; + client.peer_port())
@@ -264,7 +266,9 @@ if result != null {
 <p><strong>返回</strong>: 
 - 成功: IP 地址字符串
 - 失败: <code>null</code></p>
-<pre><code class="language-leno">Socket client = server.accept()
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+Socket client = server.accept()
 print(&quot;客户端IP: &quot; + client.peer_addr())  // 例如: &quot;192.168.1.100&quot;
 </code></pre>
 <hr>
@@ -374,7 +378,9 @@ var data = conn.recv(1024)  // 5秒内无数据将返回 null
 <hr>
 <h2 id="tcp-客户端">TCP 客户端</h2>
 <p>完整的 TCP 客户端流程：</p>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【服务端循环】这是&quot;一直等客户端数据&quot;的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
+import sockets
 import io
 
 main() {
@@ -419,7 +425,9 @@ main() {
 <hr>
 <h2 id="tcp-服务器">TCP 服务器</h2>
 <p>完整的 TCP 服务器流程：</p>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+import sockets
 import io
 
 main() {
@@ -483,14 +491,16 @@ main() {
 <hr>
 <h2 id="非阻塞-io">非阻塞 IO</h2>
 <h3 id="基本用法">基本用法</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+import sockets
 import io
 
 main() {
     Socket server = sockets.listen(&quot;127.0.0.1&quot;, 8888)
     server.set_nonblocking(true)
 
-    var clients = []
+    Array[Socket] clients = []
 
     while true {
         // 非阻塞 accept
@@ -526,7 +536,9 @@ main() {
 <p><code>sockets</code> 模块提供了基于事件循环的异步 IO 方法，配合 <code>async</code>/<code>await</code> 可以在单个协程中实现非阻塞的网络通信，避免阻塞整个事件循环。</p>
 <h3 id="基本模式">基本模式</h3>
 <p>异步 IO 需要结合 <code>asyncs</code> 模块的事件循环使用：</p>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【服务端循环】这是&quot;一直等客户端数据&quot;的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
+import sockets
 import asyncs
 import io
 
@@ -682,7 +694,9 @@ if data == null {
 conn.close()
 </code></pre>
 <h3 id="优雅关闭">优雅关闭</h3>
-<pre><code class="language-leno">// 半关闭模式：关闭写入端，通知对端数据已发完，但仍可接收剩余数据
+<pre><code class="language-text">// 【服务端循环】这是&quot;一直等客户端数据&quot;的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
+// 半关闭模式：关闭写入端，通知对端数据已发完，但仍可接收剩余数据
 conn.shutdown(1)   // SHUT_WR
 
 // 继续接收对端数据
@@ -700,7 +714,9 @@ conn.close()
 <hr>
 <h2 id="示例代码">示例代码</h2>
 <h3 id="1-http-客户端">1. HTTP 客户端</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【服务端循环】这是&quot;一直等客户端数据&quot;的收发循环，单跑会一直阻塞，
+// 所以标为示意；真实项目里它跑在 accept 之后的处理流程中。
+import sockets
 import io
 
 func http_get(string host, string path) : string {
@@ -743,7 +759,9 @@ main() {
 </code></pre>
 <hr>
 <h3 id="2-echo-tcp-服务器">2. Echo TCP 服务器</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+import sockets
 import io
 
 main() {
@@ -803,14 +821,16 @@ main() {
 </code></pre>
 <hr>
 <h3 id="4-非阻塞多客户端聊天服务器">4. 非阻塞多客户端聊天服务器</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+import sockets
 import io
 
-var clients = []
+Array[Socket] clients = []
 var client_names = []
 var client_counter = 0
 
-func broadcast(string msg, any exclude) {
+func broadcast(string msg, Socket? exclude) {
     var i = 0
     while i &lt; clients.len() {
         if clients[i] != exclude {
@@ -918,7 +938,10 @@ main() {
 <hr>
 <h2 id="与-asyncs-模块配合使用">与 asyncs 模块配合使用</h2>
 <h3 id="并发-http-请求">并发 HTTP 请求</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要网络】这段会真的连 example.com / baidu.com，
+// 无网络环境下会等到超时，所以标为示意。
+// 另外 asyncs.all() 返回 Array[any]：取 .len() 前先 as string。
+import sockets
 import asyncs
 import io
 
@@ -955,8 +978,8 @@ async func fetch_multiple() {
     await f2
 
     var results = asyncs.all([f1, f2])
-    print(&quot;example.com: &quot; + results[0].len() + &quot; 字节&quot;)
-    print(&quot;baidu.com: &quot; + results[1].len() + &quot; 字节&quot;)
+    print(&quot;example.com: &quot; + (results[0] as string).len() + &quot; 字节&quot;)
+    print(&quot;baidu.com: &quot; + (results[1] as string).len() + &quot; 字节&quot;)
 }
 
 main() {
@@ -965,7 +988,9 @@ main() {
 }
 </code></pre>
 <h3 id="协程间协作的服务器">协程间协作的服务器</h3>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【需要真实客户端】服务端示例：`accept()` 会一直阻塞等连接，
+// 单跑这段会挂住，所以这里标为示意。
+import sockets
 import asyncs
 import io
 

@@ -651,12 +651,18 @@ _int_or(&quot;7&quot;, 42)     // 7 ✓      _int_or(&quot;abc&quot;, 42)  // 42
 <li><code>ffi.utf8_to_utf16("中文abc")</code> → <code>ffi.utf16_to_utf8(…)</code> ⇒ 往返正确 ✓</li>
 </ul>
 <h3 id="asyncs-all-只收-已完成-的-future-漏了-await-就抛错-2026-10-10-起">㉘ <code>asyncs.all</code> <strong>只收"已完成"的 Future</strong> —— 漏了 <code>await</code> 就<strong>抛错</strong>（2026-10-10 起 ✓）</h3>
-<pre><code class="language-leno">async func job(int v): int { await asyncs.sleep(1); return v }
+<pre><code class="language-leno">import asyncs
+
+async func job(int v): int {
+    await asyncs.sleep(1)
+    return v
+}
+
 main() {
     var a = job(1)
     var b = job(2)
     asyncs.run()
-    print(_str(asyncs.all([a, b])))    // ⚠ 这里只是&quot;跑完了&quot;，见下面正确写法 ✓
+    print(_str(asyncs.all([a, b])))    // 看起来&quot;跑完了&quot;，但顺序/时机不可靠
 }
 </code></pre>
 <p>文档原话是「收集多个<strong>已完成</strong> Future 的结果」✓（<code>docs/module_asyncs.md:231</code> ✓），
@@ -670,12 +676,24 @@ main() {
 而真因是"你没等它" ✓（"静默给错值"是本文最想消灭的一类 ✓）。
 <strong>代价实测</strong>：全量套件只挂了<strong>一条钉桩</strong>（P30 ✓ 已同步更新 ✓）⇒ 全仓无人依赖旧行为 ✓。</p>
 <p><strong>正确写法</strong> ✓：</p>
-<pre><code class="language-leno">async func collect(): Array[any] {
+<pre><code class="language-leno">import asyncs
+
+async func job(int v): int {
+    await asyncs.sleep(1)
+    return v
+}
+
+async func collect() {
     var a = job(1)
     var b = job(2)
-    await a          // ← 必须先等完 ✓
+    await a                       // ← 必须先等完
     await b
-    return asyncs.all([a, b])   // [1, 2] ✓
+    print(_str(asyncs.all([a, b])))   // [1, 2]
+}
+
+main() {
+    collect()
+    asyncs.run()
 }
 </code></pre>
 <p>（<code>all</code> 本身<strong>不需要</strong>在 async 上下文里 ✓ —— 它只是读 Future 的结果 ✓）</p>

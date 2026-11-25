@@ -286,13 +286,15 @@ print(big)  // 12345678901234567890
 <pre><code class="language-leno">main() {
     print(&quot;========== 用户注册 ==========&quot;)
 
-    // 获取用户输入
+    // 读取用户输入
     var name = input(&quot;请输入用户名: &quot;)
     var age_str = input(&quot;请输入年龄: &quot;)
     var email = input(&quot;请输入邮箱: &quot;)
 
-    // 转换年龄为数字
-    var age = _int(age_str)
+    // 转成整数：用 _int_or 而不是 _int
+    //   （_int 要求整串都是数字，用户手滑打错就直接抛错；
+    //     _int_or 转不了给默认值，交互程序更合适）
+    var age = _int_or(age_str, 0)
 
     // 显示注册信息
     print(&quot;\n========== 注册信息 ==========&quot;)
@@ -305,7 +307,7 @@ print(big)  // 12345678901234567890
     if confirm == &quot;y&quot; or confirm == &quot;Y&quot; {
         print(&quot;注册成功!&quot;)
     } else {
-        print(&quot;请重新注册&quot;)
+        print(&quot;取消注册&quot;)
     }
 }
 </code></pre>
@@ -313,19 +315,13 @@ print(big)  // 12345678901234567890
 <pre><code class="language-leno">main() {
     print(&quot;========== 简单计算器 ==========&quot;)
 
-    // 获取第一个数字
-    var num1_str = input(&quot;输入第一个数字: &quot;)
-    var num1 = _float(num1_str)
-
-    // 获取运算符
+    // 一次读完：转不动就给 0.0（_float 会直接抛错）
+    var num1 = _float_or(input(&quot;输入第一个数: &quot;), 0.0)
     var op = input(&quot;输入运算符 (+, -, *, /): &quot;)
+    var num2 = _float_or(input(&quot;输入第二个数: &quot;), 0.0)
 
-    // 获取第二个数字
-    var num2_str = input(&quot;输入第二个数字: &quot;)
-    var num2 = _float(num2_str)
-
-    // 计算结果
-    var result = 0
+    // ⚠ 初值必须是 0.0（float）：写 0（int）之后再赋 float 会报类型不匹配
+    var result = 0.0
     if op == &quot;+&quot; {
         result = num1 + num2
     } else if op == &quot;-&quot; {
@@ -333,7 +329,7 @@ print(big)  // 12345678901234567890
     } else if op == &quot;*&quot; {
         result = num1 * num2
     } else if op == &quot;/&quot; {
-        if num2 != 0 {
+        if num2 != 0.0 {
             result = num1 / num2
         } else {
             print(&quot;错误: 不能除以零&quot;)
@@ -344,12 +340,12 @@ print(big)  // 12345678901234567890
         return
     }
 
-    // 显示结果
     print(&quot;结果:&quot;, num1, op, num2, &quot;=&quot;, result)
 }
 </code></pre>
 <h3 id="示例3-进度显示">示例3：进度显示</h3>
-<pre><code class="language-leno">import times
+<pre><code class="language-leno">import threads
+import times
 
 main() {
     print(&quot;========== 处理中 ==========&quot;)
@@ -371,7 +367,7 @@ main() {
         printf(&quot;] %d%%&quot;, percent)
 
         // 模拟处理时间
-        threads.sleep(100)
+        sleep(100)          // 全局内置，无需 import
     }
 
     print(&quot;\n处理完成!&quot;)
@@ -381,17 +377,17 @@ main() {
 <pre><code class="language-leno">// 调试级别
 var DEBUG = true
 
-func debug_print(msg) {
+func debug_print(string msg) {
     if DEBUG {
         print(&quot;[DEBUG]&quot;, msg)
     }
 }
 
-func info_print(msg) {
+func info_print(string msg) {
     print(&quot;[INFO]&quot;, msg)
 }
 
-func error_print(msg) {
+func error_print(string msg) {
     print(&quot;[ERROR]&quot;, msg)
 }
 
@@ -400,7 +396,7 @@ main() {
 
     debug_print(&quot;初始化变量...&quot;)
     var data = [1, 2, 3, 4, 5]
-    debug_print(&quot;数据:&quot;, data)
+    debug_print(&quot;数据: &quot; + _str(data))
 
     debug_print(&quot;处理数据...&quot;)
     var sum = 0
@@ -408,7 +404,7 @@ main() {
         sum = sum + item
     }
 
-    info_print(&quot;总和:&quot;, sum)
+    info_print(&quot;总和: &quot; + _str(sum))
 
     if sum &gt; 100 {
         error_print(&quot;总和超出预期&quot;)
@@ -424,24 +420,26 @@ main() {
 import dirs
 
 main() {
-    // 获取操作系统
+    // 读取操作系统
     var os = _os()
     print(&quot;操作系统:&quot;, os)
 
-    // 根据系统选择路径格式
-    var path
+    // 按系统选择路径写法
+    //   ⚠ var path 后面必须给初值（var 不能只声明不初始化，要声明类型请写 string path）
+    var path = &quot;&quot;
     if os == &quot;windows&quot; {
         path = &quot;C:\\Users\\Admin\\Documents&quot;
     } else {
         path = &quot;/home/user/documents&quot;
     }
+    print(&quot;路径:&quot;, path)
 
-    // 更好的方式：使用 dirs 模块
-    var better_path = dirs.join(&quot;folder&quot;, &quot;subfolder&quot;, &quot;file.txt&quot;)
+    // 更好的方式：dirs.join 自动用对分隔符（它一次只拼两段，多段就嵌套调用）
+    var better_path = dirs.join(dirs.join(&quot;folder&quot;, &quot;subfolder&quot;), &quot;file.txt&quot;)
     print(&quot;路径:&quot;, better_path)
 
     // 检查文件是否存在
-    var test_file = &quot;test.txt&quot;
+    var test_file = dirs.join(_tmpdir(), &quot;test.txt&quot;)
     if files.exists(test_file) {
         print(&quot;文件存在:&quot;, test_file)
     } else {

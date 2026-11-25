@@ -153,11 +153,11 @@
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>print</code></strong> <strong>自动换行，<code>printf</code></strong> <strong>不换行</strong></p>
+</blockquote>
 <pre><code class="language-leno">print(&quot;a&quot;)            // 输出 &quot;a\n&quot;
 printf(&quot;a&quot;)           // 输出 &quot;a&quot;（无换行）
 printf(&quot;a\n&quot;)         // 输出 &quot;a\n&quot;（手动换行）
 </code></pre>
-</blockquote>
 <hr>
 <h2 id="变量与类型">变量与类型</h2>
 <h3 id="快速口诀">快速口诀</h3>
@@ -244,7 +244,9 @@ test(&quot;hello&quot;)          // x 仍然是 any
 </code></pre>
 <p><strong>⚠️ <code>var</code> 不能用作类型参数</strong></p>
 <p><code>var</code> 的语义是"推断类型"，只能用在顶层位置。如果需要表示"任意类型"，请使用 <code>any</code>：</p>
-<pre><code class="language-leno">// ❌ 错误：var 不能用作类型参数
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 错误：var 不能用作类型参数
 Array[var] pair = [1, &quot;hello&quot;]    // 编译报错：var 不能用作类型参数，请改用 any
 Dict[string, var] m = {&quot;a&quot;: 1}   // 编译报错：var 不能用作类型参数，请改用 any
 
@@ -368,6 +370,7 @@ Dict[string, any] m = {&quot;a&quot;: 1}   // 合法：值可以是任意类型
 </blockquote>
 <blockquote>
 <p><strong>⚠️ 注意：<code>type()</code> 始终返回 <code>"int"</code></strong></p>
+</blockquote>
 <pre><code class="language-leno">int a = 10
 print(type(a))      // &quot;int&quot;（当前是 int48）
 
@@ -375,8 +378,6 @@ a = 100000000000000000000
 print(type(a))      // &quot;int&quot;（底层自动升级，对外无变化）
 </code></pre>
 <p>变量声明为 <code>int</code>，底层运算自动处理溢出升级，<code>type()</code> 始终返回 <code>"int"</code>，对用户完全透明。</p>
-</blockquote>
-<blockquote>
 <p><strong>🔧 int 自动升级的运算</strong></p>
 <p>以下运算在结果超出 int48 范围时会<strong>自动升级</strong>为 BigInt：</p>
 <pre><code class="language-leno">// 加法、减法、乘法：自动检测溢出并升级
@@ -394,7 +395,6 @@ int / int → int                // 整数除法
 int / float → float            // 浮点除法
 </code></pre>
 <p>从用户角度看，<code>int</code> 就是任意精度整数 — 你不需要关心底层细节，语言已经替你处理好了。</p>
-</blockquote>
 <h3 id="理解-var-类型推断">理解 var 类型推断</h3>
 <p><code>var</code> 是 Leno 的类型推断关键字。编译器根据<strong>初始值</strong>推断类型：</p>
 <pre><code class="language-leno">main() {
@@ -417,6 +417,7 @@ int / float → float            // 浮点除法
 <blockquote>
 <p><strong>⚠️ 注意：<code>int</code> 声明 vs <code>var</code> 推断 — 行为一致</strong></p>
 <p>无论你用 <code>int x = 10</code> 还是 <code>var x = 10</code>，运算溢出保护的行为完全相同：</p>
+</blockquote>
 <pre><code class="language-leno">int a = 2000000000
 var b = 2000000000
 print(a + b)        // 4000000000，正确
@@ -426,7 +427,6 @@ print(type(a + b))  // &quot;int&quot;（4000000000 仍在 int48 范围内）
 var huge1 = 10000000000000 * 10000000000000
 print(type(huge1))  // &quot;int&quot;（超出 int48 范围自动升级）
 </code></pre>
-</blockquote>
 <h3 id="变量声明总结">变量声明总结</h3>
 <pre><code class="language-leno">main() {
     // 显式类型声明
@@ -447,20 +447,22 @@ print(type(huge1))  // &quot;int&quot;（超出 int48 范围自动升级）
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：变量类型一旦确定，终身不变</strong></p>
-<pre><code class="language-leno">var a = 1        // a 永久是 int
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var a = 1        // a 永久是 int
 a = 2            // ✅ 值改变，类型不变
 a = &quot;hello&quot;      // ❌ 报错：无法将 string 赋值给 int
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：多变量声明中每个变量独立赋值，不是并行赋值</strong></p>
 <pre><code class="language-leno">var a = 10, b, c = 1    // a=10, b=null, c=1（各自独立）
 // 不是：a=10, b=10, c=1
 </code></pre>
-</blockquote>
 <h3 id="const-常量声明">const 常量声明</h3>
 <p><code>const</code> 用于声明<strong>不可变</strong>的常量，必须在声明时初始化，之后不能再赋值：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     // 类型推断（推荐写法）
     const PI = 3.14159         // 推断为 float
     const MAX_SIZE = 100       // 推断为 int
@@ -548,7 +550,9 @@ B val = 42                  // B 最终解析为 int
 alias NamedMap  = Dict[string, StrDict]    // Dict[string, Dict[string, string]]
 </code></pre>
 <p><strong>函数参数和返回值</strong>：</p>
-<pre><code class="language-leno">alias IntList = Array[int]
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+alias IntList = Array[int]
 func sum(IntList arr):int { ... }     // 参数
 func make_list():IntList { ... }      // 返回类型
 </code></pre>
@@ -582,7 +586,9 @@ var doubled = map(IntArr nums, double)   // 等价于 map(nums, double)
 <h3 id="int-float-自动升级">int/float 自动升级</h3>
 <p><code>int</code> 是任意精度大整数，永远不会溢出。<code>float</code> 是 IEEE 754 双精度浮点数。</p>
 <p><code>int</code> 可以自动升级为 <code>float</code>（安全），但不能降级：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     float x = 42        // ✅ int → float，自动升级
     int y = 3.14        // ❌ float → int，不允许降级
 
@@ -591,6 +597,7 @@ var doubled = map(IntArr nums, double)   // 等价于 map(nums, double)
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：大整数转 float 可能丢失精度</strong></p>
+</blockquote>
 <pre><code class="language-leno">int a = 123456789123456789    // int 任意精度，精确存储
 float f = a                    // 转为 float，丢失低位精度
 print(a)                       // 123456789123456789（精确）
@@ -623,12 +630,13 @@ int _1 = 42                    // ✓ 这是**变量名**（下划线开头的�
 </code></pre>
 <p><strong>前导小数点 <code>.5</code>（2026-11-02 起）</strong>：<code>var x = .5</code> / <code>var y = -.5</code> 与 <code>0.5</code> / <code>-0.5</code> 等价。
 <code>.</code> 前面<strong>刚结束一个表达式</strong>时仍是成员访问（<code>p.x</code> / <code>arr[0].y</code> / <code>(p).x</code>），不受影响。</p>
-</blockquote>
 <h3 id="null-类型">null 类型</h3>
 <p>null 表示"没有值"。在 Leno 中，null 的赋值规则取决于目标类型是<strong>值类型</strong>还是<strong>引用类型</strong>。</p>
 <h4 id="引用类型-可以赋值为-null">引用类型——可以赋值为 null</h4>
 <p><code>string</code>、<code>Array</code>、<code>Dict</code>、<code>struct</code>、<code>face</code>、<code>func</code>、<code>Ptr</code> 等引用类型天然可以为 null：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     string s = null         // ✅ string 是引用类型，可以为 null
     Dict d = null           // ✅ Dict 是引用类型，可以为 null
     Array a = null          // ✅ Array 是引用类型，可以为 null
@@ -651,7 +659,9 @@ int _1 = 42                    // ✓ 这是**变量名**（下划线开头的�
 </code></pre>
 <h4 id="值类型-不能赋值为-null">值类型——不能赋值为 null</h4>
 <p><code>int</code>、<code>float</code>、<code>bool</code>、<code>bigint</code> 是值类型，<strong>不能直接赋值为 null</strong>。如需允许 null，请使用<strong>可空类型</strong> <code>int?</code>、<code>float?</code> 等：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     int a = null          // ❌ 编译错误：值类型不能赋值为 null
     int? b = null         // ✅ 可空类型可以赋值为 null
     float f = null        // ❌ 编译错误：值类型不能赋值为 null
@@ -660,16 +670,19 @@ int _1 = 42                    // ✓ 这是**变量名**（下划线开头的�
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：null 不能参与算术运算</strong></p>
-<pre><code class="language-leno">int a = null          // ❌ 编译错误：int 不能赋值为 null
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+int a = null          // ❌ 编译错误：int 不能赋值为 null
 null + 1              // ❌ 编译错误：null 类型不能参与算术运算
 null == null          // true
 null == 0             // false
 null == &quot;&quot;            // false
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：<code>var x = null</code></strong> <strong>后类型未锁定，类似空数组</strong></p>
-<pre><code class="language-leno">var x = null        // 类型为 any（未锁定）
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var x = null        // 类型为 any（未锁定）
 x = 42              // 锁定为 int
 x = &quot;hello&quot;         // ❌ 已锁定为 int
 
@@ -677,7 +690,6 @@ var arr = []        // 类型为 Array（未锁定）
 arr.add(1)          // 锁定为 Array[int]
 arr.add(&quot;hello&quot;)    // ❌ 已锁定为 Array[int]
 </code></pre>
-</blockquote>
 <h3 id="泛型类型">泛型类型</h3>
 <p>Leno 的泛型类型不仅支持内置的 <code>Array</code>、<code>Dict</code>、<code>Ptr</code> 等，还支持自定义 struct 的泛型类型注解：</p>
 <pre><code class="language-leno">struct Box[T] {
@@ -728,20 +740,18 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>var empty = []</code></strong> <strong>和</strong> <strong><code>Array[int] arr = []</code></strong> <strong>含义不同</strong></p>
+</blockquote>
 <pre><code class="language-leno">var empty = []              // 类型为 Array（未锁定），添加元素后确定类型
 empty.add(1)                // 锁定为 Array[int]
 
 Array[int] arr = []         // 类型已确定为 Array[int]，等同于 Array[int] arr
 arr.add(1)                  // ✅ 直接添加
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：泛型类型注解与类型擦除</strong></p>
 <p>泛型参数在编译期完成类型检查，运行时保留类型参数信息用于 <code>type()</code> 反射：
 - <code>type(intBox)</code> 返回 <code>"Box[int]"</code>，包含类型参数信息
 - <code>Box[int]</code> 和 <code>Box[string]</code> 运行时共享同一个 struct 定义
 - 泛型不会产生代码膨胀（无需为每种实例化生成独立代码）</p>
-</blockquote>
 <h3 id="文件级别变量">文件级别变量</h3>
 <pre><code class="language-leno">var a = 100     // 文件级别变量（在main函数外声明）
 
@@ -750,7 +760,9 @@ main() {
 }
 </code></pre>
 <p>文件级别也可以用 <code>const</code> 声明常量：</p>
-<pre><code class="language-leno">const PI = 3.14159      // 文件级别常量
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+const PI = 3.14159      // 文件级别常量
 const MAX_CONN = 100    // 不可修改
 
 main() {
@@ -760,7 +772,9 @@ main() {
 </code></pre>
 <h3 id="整数类型自动收窄-已支持">整数类型自动收窄 ✅ 已支持</h3>
 <p>cstruct 字段的 C 类型（<code>i32</code>/<code>u32</code>/<code>i16</code>/<code>u16</code>/<code>i8</code>/<code>u8</code>）<strong>隐式转换为 <code>int</code></strong>，无需 <code>as int</code>：</p>
-<pre><code class="language-leno">// ✅ 自动 — cstruct 字段
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ✅ 自动 — cstruct 字段
 int x  = pt.x           // i32 → int
 int sc = e.scancode     // u16 → int
 int s  = pt.x + pt.y    // 参与运算
@@ -940,7 +954,10 @@ Array[float] halves = nums.map(func(any x, any i) { return _float(x) / 2 }) // �
 <blockquote>
 <p><strong>💡 为什么需要 <code>_uint32()</code>？</strong></p>
 <p>Leno 的 <code>&gt;&gt;</code> 是算术右移（符号位扩展），位运算在 Leno 的大整数语义下可能出现非预期的符号扩展。<code>_uint32()</code> 将值转为无符号表示，确保位运算和右移按 32 位无符号语义执行。</p>
-<pre><code class="language-leno">// ❌ 不用 _uint32：算术右移高位补 1
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 不用 _uint32：算术右移高位补 1
 int x = 0x80000000    // -2147483648
 x &gt;&gt; 1                // -1073741824（高位补 1，仍是负数）
 
@@ -954,8 +971,6 @@ _uint32(0x80000000) &gt;&gt; 1    // 1073741824（高位补 0）
 _int32((_uint32(x) &amp; _uint32(y)) | (_uint32(~x) &amp; _uint32(z)))  // MD5 F 函数
 </code></pre>
 <p><code>_uint32()</code> 等效于 <code>to_unsigned(_int32(x))</code> 的组合操作，一步完成"截断 32 位 → 转无符号"。</p>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：固定位宽函数与 <code>_int()</code> 的区别</strong></p>
 <table>
 <thead>
@@ -1013,8 +1028,6 @@ _int32((_uint32(x) &amp; _uint32(y)) | (_uint32(~x) &amp; _uint32(z)))  // MD5 F
 （内部自动用 bigint；以前会夹到 <code>INT64_MAX</code>，是静默错值）。浮点本身就是有限值，所以
 输出的是<strong>该 double 的精确十进制展开</strong>：<code>_int(1e30)</code> ⇒ <code>1000000000000000019884624838656</code>
 （不是 <code>10^30</code>）。<code>NaN</code> / <code>±Infinity</code> 无法转整数 ⇒ <strong>运行时错误</strong>。</p>
-</blockquote>
-<blockquote>
 <p><strong>📊 固定位宽函数对比</strong></p>
 <table>
 <thead>
@@ -1062,7 +1075,6 @@ _int32(_uint32(x) ^ _uint32(y))      // 32 位无符号 XOR → 截断回有符�
 _int32(_uint32(x) + _uint32(y))      // 32 位无符号 ADD → 截断回有符号
 _int32(_int32(x) &lt;&lt; c | ((_int32(x) &amp; 0xFFFFFFFF) &gt;&gt;&gt; (32 - c)))  // 32 位循环左移（用 &gt;&gt;&gt;）
 </code></pre>
-</blockquote>
 <p><strong>典型应用：加密算法中的 32 位环绕运算</strong></p>
 <pre><code class="language-leno">// TEA 加密算法需要 32 位环绕运算
 int DELTA = -0x61C88647
@@ -1083,7 +1095,9 @@ for 32 {
 <li><strong>目标为 string</strong>：int / float / bool / null 自动转成字符串表示（<code>100 as string</code> → <code>"100"</code>）</li>
 <li><strong>string → 数值</strong>：<code>as</code> <strong>不做解析</strong>，<code>"12" as int</code> 现在是<strong>编译期报错</strong>，请用 <code>_int()</code> / <code>_int_or()</code> / <code>_float_or()</code></li>
 </ul>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     // 同类型：返回原值
     var x = 42
     var xi = x as int          // 42
@@ -1330,6 +1344,7 @@ cstruct SDL_GlyphMetrics { i32 minX; i32 maxX; i32 minY; i32 maxY; i32 advance }
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>type()</code></strong> <strong>返回的是值的类型，不是变量的编译时类型</strong></p>
+</blockquote>
 <pre><code class="language-leno">int? a = null
 print(type(a))    // &quot;null&quot;（因为当前值是 null）
 a = 10
@@ -1338,7 +1353,6 @@ a = 100000000000000000000
 print(type(a))    // &quot;int&quot;（值超出 int48，底层自动升级，对外不变）
 </code></pre>
 <p><strong>type() 对 int 始终返回 <code>"int"</code></strong>，无论底层是 int48 还是 BigInt 存储，对用户完全透明。</p>
-</blockquote>
 <hr>
 <h2 id="运算符">运算符</h2>
 <h3 id="算术运算符">算术运算符</h3>
@@ -1350,6 +1364,7 @@ print(type(a))    // &quot;int&quot;（值超出 int48，底层自动升级，�
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>/</code></strong> <strong>根据操作数类型决定结果类型</strong></p>
+</blockquote>
 <pre><code class="language-leno">var a = 7 / 2       // int（3），整数除法
 var b = 7 / 2.0     // float（3.5），浮点除法
 var c = 7.0 / 2     // float（3.5），浮点除法
@@ -1382,19 +1397,19 @@ var c = 7.0 / 2     // float（3.5），浮点除法
 </tr>
 </tbody>
 </table>
-</blockquote>
 <h3 id="位运算符">位运算符</h3>
 <pre><code class="language-leno">&amp;   // 按位与
 |   // 按位或
 ^   // 按位异或
 ~   // 按位非
 &lt;&lt;  // 左移
-&gt;&gt;  // 右移（算术右移，符号位扩展）
-&gt;&gt;&gt; // 逻辑右移（无符号右移，高位补 0）
+&gt;  // 右移（算术右移，符号位扩展）
+&gt;&gt; // 逻辑右移（无符号右移，高位补 0）
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>~</code></strong> <strong>按位取反的返回值</strong></p>
 <p><code>~x</code> 等价于 <code>-x - 1</code>，对任意精度整数都成立：</p>
+</blockquote>
 <pre><code class="language-leno">~5       // -6    （= -5 - 1）
 ~0       // -1    （= -0 - 1）
 ~(-1)    // 0     （= -(-1) - 1 = 1 - 1）
@@ -1404,8 +1419,6 @@ var c = 7.0 / 2     // float（3.5），浮点除法
 <pre><code class="language-leno">_int32(~0xEFCDAB89)   // 0x10325476（32 位取反）
 // 不用 _int32 时：~0xEFCDAB89 = -4023233418（64 位扩展）
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：<code>&gt;&gt;</code></strong> <strong>是算术右移（符号位扩展）</strong></p>
 <pre><code class="language-leno">int x = 0x80000000    // 负数（最高位为 1）
 x &gt;&gt; 1                // 算术右移，高位补 1，结果仍为负数
@@ -1427,7 +1440,9 @@ x &gt;&gt;&gt; 1               // 逻辑右移 → 140737488355327（0x7FFFFFFFF
 <p><strong>💡 32 位逻辑右移的正确写法</strong></p>
 <p>Leno 的 <code>int</code> 是 48 位有符号整数，<code>_int32()</code> 返回的负数会符号扩展到 48 位。
 要实现 32 位逻辑右移，需要先 <code>&amp; 0xFFFFFFFF</code> 截断为 32 位无符号值，再用 <code>&gt;&gt;&gt;</code>：</p>
-<pre><code class="language-leno">// ❌ 错误：_int32 的负数符号扩展后 &gt;&gt;&gt; 是 48 位逻辑右移
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 错误：_int32 的负数符号扩展后 &gt;&gt;&gt; 是 48 位逻辑右移
 _int32(0x856d6974) &gt;&gt;&gt; 8     // 结果不对
 
 // ✅ 正确：先截断为 32 位无符号值，再逻辑右移
@@ -1436,18 +1451,17 @@ _int32(0x856d6974) &gt;&gt;&gt; 8     // 结果不对
 <p><strong>💡 32 位循环移位用 <code>&gt;&gt;&gt;</code></strong></p>
 <pre><code class="language-leno">// 循环左移 rotl32
 func rotl32(int x, int n):int {
-    n = _int32(n) &amp; 31
-    if (n == 0) { return _int32(x) }
-    return _int32((_int32(x) &lt;&lt; n) | ((_int32(x) &amp; 0xFFFFFFFF) &gt;&gt;&gt; (32 - n)))
+n = _int32(n) &amp; 31
+if (n == 0) { return _int32(x) }
+return _int32((_int32(x) &lt;&lt; n) | ((_int32(x) &amp; 0xFFFFFFFF) &gt;&gt;&gt; (32 - n)))
 }
 
 // 循环右移 rotr32
 func rotr32(int x, int n):int {
-    return rotl32(x, 32 - (_int32(n) &amp; 31))
+return rotl32(x, 32 - (_int32(n) &amp; 31))
 }
 </code></pre>
 <p><code>&gt;&gt;&gt;</code> 在加密算法（TEA、XXTEA、Speck、RC5 等）中特别有用，替代了之前需要手写 <code>lshr32</code> 函数的写法。</p>
-</blockquote>
 <h3 id="复合赋值运算符">复合赋值运算符</h3>
 <pre><code class="language-leno">+=  -=  *=  /=  %=      // 算术复合赋值
 &amp;=  |=  ^=  &lt;&lt;=  &gt;&gt;=  &gt;&gt;&gt;=  // 位运算复合赋值
@@ -1479,7 +1493,9 @@ int e = d += 3         // e == 3、d == 3（复合赋值同样有值）
 </code></pre>
 <p>实参位置的 <code>名 = 值</code> 另有含义：<strong>命名实参</strong>（见下一节）。想真的在实参里赋值，
 必须<strong>显式加括号</strong>：</p>
-<pre><code class="language-leno">func f(int x, int y): int { return x * 10 + y }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func f(int x, int y): int { return x * 10 + y }
 
 int a = 0
 f(a = 1, 2)      // ❌ 编译错误：f 没有名为 a 的形参（a 不是形参名，x/y 才是）
@@ -1544,11 +1560,10 @@ box(0, 0, w = 300, h = 50)      // 中间的 w 也能跳过（有字面量默认
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>and</code>/<code>or</code></strong> <strong>返回的是实际值，不一定是 bool</strong></p>
+</blockquote>
 <pre><code class="language-leno">var result = 1 and 2    // result 是 2（int），不是 true
 var x = &quot;&quot; or &quot;hi&quot;      // x 是 &quot;hi&quot;（string），不是 true
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：<code>and</code>/<code>or</code></strong> <strong>的返回类型由编译器推断</strong></p>
 <ul>
 <li>常量折叠：<code>1 and 2</code> → 编译器知道结果是 2，推断为 <code>int</code></li>
@@ -1556,10 +1571,9 @@ var x = &quot;&quot; or &quot;hi&quot;      // x 是 &quot;hi&quot;（string）�
 <li>不确定时：函数参数等无法追踪 → 回退为 <code>bool</code></li>
 </ul>
 <pre><code class="language-leno">func test(any x) {
-    var r = x and 2     // r 推断为 bool（编译器不确定 x 的值）
+var r = x and 2     // r 推断为 bool（编译器不确定 x 的值）
 }
 </code></pre>
-</blockquote>
 <h3 id="短路求值">短路求值</h3>
 <pre><code class="language-leno">main() {
     func sideEffect(any msg) {     // ⚠ 形参**必须带类型**（无类型写法 `func f(msg)` 会报「期望参数名」✗）
@@ -1577,7 +1591,10 @@ var x = &quot;&quot; or &quot;hi&quot;      // x 是 &quot;hi&quot;（string）�
 <h3 id="运算符类型规则">运算符类型规则</h3>
 <blockquote>
 <p><strong>⚠️ 重要：bool 和 null 不能参与算术运算</strong></p>
-<pre><code class="language-leno">true + 1         // ❌ 编译错误：bool 类型不能参与算术运算
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+true + 1         // ❌ 编译错误：bool 类型不能参与算术运算
 true - 1         // ❌ 编译错误
 &quot;hello&quot; - &quot;lo&quot;   // ❌ 编译错误：string 类型不能参与减法
 &quot;hello&quot; * 2      // ❌ 编译错误：string 类型不能参与乘法
@@ -1585,7 +1602,6 @@ null + 1         // ❌ 编译错误：null 类型不能参与算术运算
 int? a = null
 a + 1            // ⚠️ 编译警告：nullable 值类型参与运算，可能为 null
 </code></pre>
-</blockquote>
 <p><strong><code>+</code></strong> <strong>特殊规则：</strong> 一边是 string 时，自动转为字符串拼接：</p>
 <pre><code class="language-leno">&quot;hello&quot; + &quot; world&quot;   // &quot;hello world&quot;
 &quot;hello&quot; + 42         // &quot;hello42&quot;
@@ -1599,7 +1615,9 @@ null == 0         // false
 null == null      // true
 </code></pre>
 <p><strong><code>&lt;</code></strong> <strong><code>&gt;</code></strong> <strong>规则：</strong> 禁止跨类型比较：</p>
-<pre><code class="language-leno">1 &lt; &quot;2&quot;           // ❌ 编译错误：无法比较 int 和 string
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+1 &lt; &quot;2&quot;           // ❌ 编译错误：无法比较 int 和 string
 true &lt; false      // ❌ 编译错误：bool 类型不能比较大小
 1 &lt; 2.0           // ✅ int 和 float 可以比较
 &quot;abc&quot; &lt; &quot;def&quot;     // ✅ 字典序比较
@@ -1666,7 +1684,10 @@ true &lt; false      // ❌ 编译错误：bool 类型不能比较大小
 <p><strong>⚠️ bool 不能直接参与算术运算</strong></p>
 <p>bool 虽然可以隐式转为 int，但<strong>不能直接参与算术运算</strong>（<code>+</code>、<code>-</code>、<code>*</code>、<code>/</code> 等）。
 如需运算，先赋值给 int 变量或用 <code>as int</code> / <code>_int()</code> 转换：</p>
-<pre><code class="language-leno">true + 1           // ❌ 编译错误：bool 不能参与算术运算
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+true + 1           // ❌ 编译错误：bool 不能参与算术运算
 int a = true       // ✅ 隐式转换，a = 1
 a + 1              // ✅ 结果为 2
 (true as int) + 1  // ✅ 显式转换后运算，结果为 2
@@ -1678,7 +1699,6 @@ float ratio = false       // ratio = 0.0
 Array[int] flags = [true, false, true]  // [1, 0, 1]
 Dict[string, int] m = {&quot;ok&quot;: true, &quot;fail&quot;: false}  // {&quot;ok&quot;: 1, &quot;fail&quot;: 0}
 </code></pre>
-</blockquote>
 <h3 id="成员检查运算符-in-not-in">成员检查运算符 (in / not in)</h3>
 <p><code>in</code> 和 <code>not in</code> 用于检查成员关系：</p>
 <pre><code class="language-leno">main() {
@@ -1804,6 +1824,7 @@ struct App {
 <p><strong>⚠️ <code>?.</code> 返回可空类型</strong></p>
 <p><code>expr?.method()</code> 的返回类型是 <code>ReturnType?</code>（可空），即使原方法返回非空类型。
 如果需要非空值，推荐配合 <code>??</code>，也可用 <code>if != null</code>：</p>
+</blockquote>
 <pre><code class="language-leno">Font? f = _widget?._font        // 类型是 Font?，不是 Font
 int? s = _font?.size            // 类型是 int?，不是 int
 
@@ -1813,28 +1834,27 @@ print(_font?.size ?? 0)
 // 也可：if 检查后 as 转换
 if s != null { print(s as int) }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ <code>?.</code> 不适用于回调调用</strong></p>
 <p><code>?.</code> 仅支持字段访问和方法调用，不支持函数字段的可空调用：</p>
-<pre><code class="language-leno">struct Button {
-    func(float):void? _onClick
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Button {
+func(float):void? _onClick
 
-    // ❌ 不能用 _onClick?.(value)  —— 语法不支持
-    if _onClick != null { _onClick(value) }   // ✅ 正确写法
+// ❌ 不能用 _onClick?.(value)  —— 语法不支持
+if _onClick != null { _onClick(value) }   // ✅ 正确写法
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 复合条件仍需 <code>if</code></strong></p>
 <p>当 null 检查需要与其他条件组合时，<code>?.</code> 无法替代：</p>
-<pre><code class="language-leno">// ❌ 无法用 ?. 表达
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 无法用 ?. 表达
 if _font != null and _font.ok { fnt.releaseFont(_font) }
 
 // ✅ 保持 if 写法
 </code></pre>
 <p>同理，<code>if x != null { x.method(); x = null }</code> 这种有副作用的模式也不能用 <code>?.</code> 简化。</p>
-</blockquote>
 <h4 id="配合-一步到位">配合 <code>??</code> 一步到位</h4>
 <p><code>?.</code> 返回可空类型，<code>??</code> 提供默认值，两者配合是最实用的组合：</p>
 <pre><code class="language-leno">struct SpinBox {
@@ -1857,11 +1877,11 @@ if _font != null and _font.ok { fnt.releaseFont(_font) }
 <blockquote>
 <p><strong>⚠️ <code>?.</code> 只对 struct/face 类型可靠</strong>：对 <code>clib</code>（<code>ffi.Library</code>）用 <code>?.</code> 虽然<strong>能编译</strong>，
 但运行期会报「类型 object 上不存在方法」。判断 <code>lib()</code> 是否加载成功仍需 <code>if</code> 守卫：</p>
+</blockquote>
 <pre><code class="language-leno">sdl3 l = lib()
 if l == null { return false }  // clib 类型别用 ?.
 return l.SDL_Init(flags)
 </code></pre>
-</blockquote>
 <h3 id="空值合并运算符">空值合并运算符 <code>??</code></h3>
 <p><code>??</code> 是空值合并运算符：当左侧为 <strong>null</strong> 时返回右侧的值，左侧非 null 时返回左侧的值。它是短路求值的。</p>
 <pre><code class="language-leno">struct Font {
@@ -1894,7 +1914,9 @@ struct Widget {
 </code></pre>
 <h4 id="与-or-的区别">与 <code>or</code> 的区别</h4>
 <p><code>or</code> 也会在左值为 null 时返回右值，但它对<strong>所有假值</strong>（0、0.0、false、""、null）都生效。<code>??</code> 只对 <strong>null</strong> 生效：</p>
-<pre><code class="language-leno">float? val = 0.0
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+float? val = 0.0
 
 val or 1.0     // 1.0 —— ❌ 0.0 被当成假值，错误地回退
 val ?? 1.0     // 0.0 —— ✅ 0.0 不是 null，保留原值
@@ -1956,19 +1978,19 @@ var result = f ?? defaultFont   // 类型推断为 Font（非空）
 <blockquote>
 <p><strong>⚠️ <code>??</code> 是短路求值</strong></p>
 <p>当左侧非 null 时，右侧<strong>不会执行</strong>：</p>
+</blockquote>
 <pre><code class="language-leno">// acquireFontAuto 只有在 _font 为 null 时才会被调用
 var f = _font ?? acquireFontAuto(15)
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ <code>??</code> 不适用于回调调用</strong></p>
 <p><code>??</code> 用于值合并，不能替代回调的 null 检查：</p>
-<pre><code class="language-leno">func(float):void? _onChange
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func(float):void? _onChange
 
 // ❌ 不能用 _onChange ?? func(v) { }  —— 语义不对
 if _onChange != null { _onChange(value) }   // ✅ 正确写法
 </code></pre>
-</blockquote>
 <h4 id="空值合并赋值-2026-11-02">空值合并赋值 <code>??=</code>（2026-11-02）</h4>
 <p><code>lhs ??= rhs</code> 是"<strong>只在 lhs 为 null 时才写入</strong>"的复合赋值：</p>
 <pre><code class="language-leno">int? a = null
@@ -1990,11 +2012,11 @@ print(b)        // 7
 </ul>
 <blockquote>
 <p>典型用法：给"可能没传的参数/可能缺的配置项"补默认值</p>
+</blockquote>
 <pre><code class="language-leno">Dict opts = load_opts()
 opts[&quot;w&quot;] ??= 360
 opts[&quot;h&quot;] ??= 200
 </code></pre>
-</blockquote>
 <h3 id="运算符示例">运算符示例</h3>
 <pre><code class="language-leno">main() {
     // 算术运算
@@ -2086,25 +2108,27 @@ opts[&quot;h&quot;] ??= 200
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：类型守卫只在 if 块内有效</strong></p>
-<pre><code class="language-leno">func test(any x) {
-    if x is int {
-        int n = x     // ✅ 守卫内 x 是 int
-    }
-    int m = x        // ❌ 报错：离开 if 后 x 恢复为 any
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any x) {
+if x is int {
+int n = x     // ✅ 守卫内 x 是 int
+}
+int m = x        // ❌ 报错：离开 if 后 x 恢复为 any
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：<code>or</code></strong> <strong>条件不收窄类型</strong></p>
-<pre><code class="language-leno">func test(any x, any y) {
-    if x is int or y is string {
-        int n = x      // ❌ 报错：or 条件下不收窄
-    }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any x, any y) {
+if x is int or y is string {
+int n = x      // ❌ 报错：or 条件下不收窄
+}
 }
 </code></pre>
 <p><strong>原因</strong>：<code>or</code> 的短路语义意味着两侧条件不一定都成立，无法保证类型安全。
 编译器检测到 <code>or</code> 条件中包含类型守卫时，会发出<strong>编译警告</strong>提醒不会触发收窄。</p>
-</blockquote>
 <h4 id="dict-字段访问类型守卫">Dict 字段访问类型守卫</h4>
 <p>类型守卫支持对 Dict 字段进行收窄，语法为 <code>obj.field is Type</code>：</p>
 <pre><code class="language-leno">var s = {name: &quot;张三&quot;, age: 25, scores: [85, 90, 78]}
@@ -2130,7 +2154,9 @@ for students to s {
 }
 </code></pre>
 <p><strong>嵌套字段守卫</strong>：对于嵌套字段（如 <code>data.inner.count</code>），需要通过中间变量逐层守卫：</p>
-<pre><code class="language-leno">// 注意：字典字面量会推出精确的嵌套类型（这里是 Dict[string, Dict[string, int]]），
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 注意：字典字面量会推出精确的嵌套类型（这里是 Dict[string, Dict[string, int]]），
 // 所以 `data.inner.count` 本来就是 int，不需要守卫。
 // 下面用 Dict[string, any] 模拟&quot;值类型未知&quot;的 JSON 场景：
 Dict[string, any] data = {inner: {count: 5}}
@@ -2188,7 +2214,9 @@ if data.inner is Dict {
 <h4 id="类型守卫的无效场景">类型守卫的无效场景</h4>
 <p>以下场景中类型守卫<strong>不会</strong>收窄类型：</p>
 <p><strong>1. <code>is</code> 表达式赋值给变量后不能收窄：</strong></p>
-<pre><code class="language-leno">func test(any b) {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any b) {
     var is_int = b is int   // is_int 是 bool 变量
     if is_int {
         int n = b           // ❌ 无法收窄，b 仍是 any
@@ -2196,7 +2224,9 @@ if data.inner is Dict {
 }
 </code></pre>
 <p><strong>2. 函数返回的 bool 不能用于收窄：</strong></p>
-<pre><code class="language-leno">func check_type(any x):bool {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func check_type(any x):bool {
     return x is string
 }
 
@@ -2207,7 +2237,9 @@ func test(any c) {
 }
 </code></pre>
 <p><strong>3. 闭包内 any 参数保持 any（无守卫时不收窄）：</strong></p>
-<pre><code class="language-leno">func test(any x) {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any x) {
     func inner() {
         print(type(x))      // &quot;any&quot;
         int a = x           // ❌ 错误：无法将 any 赋值给 int
@@ -2247,7 +2279,9 @@ test(42)
 </code></pre>
 <h4 id="is-array-的特殊行为"><code>is Array</code> 的特殊行为</h4>
 <p><code>is Array</code> 匹配<strong>所有数组类型</strong>（包括 <code>Array[int]</code>、<code>Array[string]</code> 等），但<strong>不会收窄类型</strong>：</p>
-<pre><code class="language-leno">var arr = [1, 2, 3]      // arr 是 Array[int]
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var arr = [1, 2, 3]      // arr 是 Array[int]
 if arr is Array {         // ✅ 匹配成功
     arr.add(&quot;hello&quot;)      // ❌ 错误：期望 int，传入 string
 }
@@ -2447,7 +2481,9 @@ if data is Array and data[0] is Dict and data[0][&quot;age&quot;] is int {
 - <code>a</code> 的类型<strong>已经是 Type</strong>，不需要 <code>as</code></p>
 <h4 id="使用示例">使用示例</h4>
 <p><strong>1. 函数返回 nullable 的解包：</strong></p>
-<pre><code class="language-leno">func selectOne(HtmlNode root, string selector): HtmlNode? { ... }
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+func selectOne(HtmlNode root, string selector): HtmlNode? { ... }
 
 // 旧写法：临时变量 + as 强转
 HtmlNode? opt = selectOne(root, &quot;title&quot;)
@@ -2493,7 +2529,9 @@ for arr to item {
 }
 </code></pre>
 <p><strong>5. struct 类型绑定：</strong></p>
-<pre><code class="language-leno">struct Point {
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+struct Point {
     int x
     int y
 }
@@ -2558,7 +2596,9 @@ if make_point() is Point =&gt; p {
 </table>
 <h4 id="容易踩的坑">容易踩的坑</h4>
 <p><strong>坑 1：else 里访问不到绑定变量</strong></p>
-<pre><code class="language-leno">if arr[i] is int =&gt; a {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+if arr[i] is int =&gt; a {
     print(a)      // ✅ 可以
 } else {
     print(a)      // ❌ 编译错误，a 不存在
@@ -2590,7 +2630,9 @@ if getToken() is Token =&gt; t2 {
 <p>这其实是好处——<code>=&gt;</code> 保证表达式不会偷偷多调用。</p>
 </blockquote>
 <p><strong>坑 4：别在 <code>=&gt;</code> 后面再 <code>as</code></strong></p>
-<pre><code class="language-leno">// 多此一举
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 多此一举
 if x is Admin =&gt; a {
     var b = a as Admin   // ❌ a 已经是 Admin 了
 }
@@ -2887,32 +2929,32 @@ func describe(any s) {
 <blockquote>
 <p><strong>⚠️ 注意：<code>case is</code> 匹配成功后变量类型会被收窄</strong></p>
 <p><code>case is</code> 匹配成功后，变量类型在分支内自动收窄为匹配的类型，可以直接访问 struct 字段、调用 face 方法：</p>
+</blockquote>
 <pre><code class="language-leno">Shape s = new Rect(w=3.0, h=4.0)
 switch s {
-    case is Rect {
-        // s 被收窄为 Rect，可直接访问 .w .h 字段
-        print(&quot;宽: &quot; + s.w + &quot; 高: &quot; + s.h)
-    }
-    case is Circle {
-        print(&quot;半径: &quot; + s.radius)  // 收窄为 Circle
-    }
-    default {
-        print(&quot;其他形状&quot;)   // 未收窄，s 仍为 Shape
-    }
+case is Rect {
+// s 被收窄为 Rect，可直接访问 .w .h 字段
+print(&quot;宽: &quot; + s.w + &quot; 高: &quot; + s.h)
+}
+case is Circle {
+print(&quot;半径: &quot; + s.radius)  // 收窄为 Circle
+}
+default {
+print(&quot;其他形状&quot;)   // 未收窄，s 仍为 Shape
+}
 }
 </code></pre>
 <p><strong>支持的类型：</strong> <code>int</code>、<code>float</code>、<code>string</code>、<code>bool</code>、<code>null</code>、<code>Array</code>、<code>Dict</code>、struct、face、enum 等。</p>
 <pre><code class="language-leno">enum Color { red; green; blue }
 
 main() {
-    var c = Color
-    switch c {
-        case is Color { print(&quot;是 Color 枚举&quot;) }   // 匹配 enum 定义对象
-        default { print(&quot;其他类型&quot;) }
-    }
+var c = Color
+switch c {
+case is Color { print(&quot;是 Color 枚举&quot;) }   // 匹配 enum 定义对象
+default { print(&quot;其他类型&quot;) }
+}
 }
 </code></pre>
-</blockquote>
 <h4 id="case-is-解构"><code>case is</code> 解构</h4>
 <p>在 <code>case is Type</code> 匹配 struct 类型时，可以在类型名后加括号提取字段值到变量：</p>
 <pre><code class="language-leno">struct Point {
@@ -3156,24 +3198,24 @@ for d to key, value {
 <li>数组/字符串：第二个变量是<strong>索引</strong>（int）</li>
 <li>字典：第二个变量是<strong>值</strong>（value）</li>
 </ul>
+</blockquote>
 <pre><code class="language-leno">for arr to item, index    // index 是 int 索引
 for str to char, index    // index 是 int 索引
 for dict to key, value    // value 是键对应的值
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：遍历 any 类型（常见陷阱）</strong></p>
 <p>当遍历对象的类型在编译期未知（<code>any</code> 类型）时，<code>for X to y</code> 可能<strong>静默不迭代</strong>（不报错也不循环）：</p>
-<pre><code class="language-leno">// ❌ 可能静默失败：files 是 any 类型
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 可能静默失败：files 是 any 类型
 for files to f { }  // 如果 files 是 any，不会迭代
 
 // ✅ 通用修复：用索引循环替代 for-each
 int n = _int(files.len())
 for 0 : n - 1 to i {
-    var f = _str(files[i])
+var f = _str(files[i])
 }
 </code></pre>
-</blockquote>
 <h4 id="for-循环快速参考表">for 循环快速参考表</h4>
 <table>
 <thead>
@@ -3313,16 +3355,15 @@ main() {
 —— 下一行的内容不会再被吞成返回值。此前 <code>return</code> 换行后会继续找表达式，于是
 <code>return</code> + <code>h()</code> 静默变成 <code>return h()</code>（后续代码全成不可达）、<code>return</code> + <code>defer …</code>
 报成「期望表达式」✗。多行表达式不受影响：只要表达式<strong>从 <code>return</code> 那一行开始</strong>就行。</p>
+</blockquote>
 <pre><code class="language-leno">// ✅ 多行表达式：从 return 行开始
 return a +
-       b
+b
 
 // ✅ 裸 return；后面的语句会被报「不可达代码」
 return
 print(&quot;不会执行&quot;)
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：参数尽量写具体类型，避免裸 <code>any</code></strong></p>
 <pre><code class="language-leno">// ✅ 推荐：写具体类型
 func add(int a, int b):int { return a + b }
@@ -3332,17 +3373,18 @@ func add(any a, any b) { return a + b }    // add(&quot;a&quot;, &quot;b&quot;) 
 
 // ✅ 如果必须用 any，请加类型守卫
 func add(any a, any b) {
-    if a is int and b is int { return a + b }
-    return 0
+if a is int and b is int { return a + b }
+return 0
 }
 </code></pre>
 <p><code>any</code> <strong>参数永远是</strong> <strong><code>any</code>，不会根据调用推断类型</strong>：</p>
-<pre><code class="language-leno">func test(any x) {
-    int a = x    // ❌ 报错：any 不能赋给 int
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any x) {
+int a = x    // ❌ 报错：any 不能赋给 int
 }
 test(1)           // x 内部仍然是 any，不是 int
 </code></pre>
-</blockquote>
 <h3 id="前向引用">前向引用</h3>
 <p>函数可以先调用后定义：</p>
 <pre><code class="language-leno">main() {
@@ -3404,16 +3446,17 @@ main() {
 <li>默认值类型必须<strong>匹配参数类型</strong>（遵循升级不降级规则）</li>
 <li><code>var a</code> 无默认值时类型为 <code>any</code>，<code>var b = 0</code> 推断为 <code>int</code></li>
 </ol>
-<pre><code class="language-leno">func bad(int x = 10, int y) { }      // ❌ 默认参数不能在必选参数前面
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func bad(int x = 10, int y) { }      // ❌ 默认参数不能在必选参数前面
 func bad2(int x, int y = 3.14) { }   // ❌ float 不能赋给 int（降级）
 
 func ok(any a, any b = 10) {
-    a         // 编译期 any（无默认值，不推断）
-    b         // 编译期 int（从默认值 10 收窄）
+a         // 编译期 any（无默认值，不推断）
+b         // 编译期 int（从默认值 10 收窄）
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>✅ 新特性：默认参数支持常量表达式和全局变量引用</strong></p>
 <p>默认值不再局限于字面量，还支持以下形式：</p>
 <pre><code class="language-leno">enum Flags { ALL = 0xFF; NONE = 0x00 }
@@ -3425,7 +3468,6 @@ func h(int x, int max = GLOBAL_MAX):int { return x + max }  // 全局变量
 func k(int x, int y = Flags.ALL, int z = 5 * 2):int { return x + y + z }  // 混合
 </code></pre>
 <p>局部函数（定义在 <code>main</code> 或其他函数内部的函数）同样支持这些默认值形式。</p>
-</blockquote>
 <h3 id="var-速查-变量-vs-参数">var 速查：变量 vs 参数</h3>
 <p><strong><code>var</code> 和 <code>any</code> 在不同场景含义完全不同：</strong></p>
 <table>
@@ -3532,9 +3574,7 @@ func k(int x, int y = Flags.ALL, int z = 5 * 2):int { return x + y + z }  // 混
 </tr>
 </tbody>
 </table>
-<blockquote>
 <p>需要访问 struct 字段或调用方法 → 具体类型或 <code>is</code> 收窄。只需打印/比较 → 可用 any，但仍建议写具体类型更安全。</p>
-</blockquote>
 <p><strong><code>any</code> 的编译时 vs 运行时：</strong></p>
 <p><code>any</code> 类型的关键区别——<strong>编译时检查赋值，运行时检查运算</strong>：</p>
 <table>
@@ -3621,7 +3661,9 @@ func test(int c) {
 }
 </code></pre>
 <h4 id="错误-2-省略返回类型导致后续麻烦">❌ 错误 2：省略返回类型导致后续麻烦</h4>
-<pre><code class="language-leno">func getValue() {      // 返回 any
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func getValue() {      // 返回 any
     return 42
 }
 
@@ -3636,13 +3678,17 @@ int y = _int(getValue())  // ✅ 每次调用都要转换
 int x = getValue()     // ✅ 直接可用
 </code></pre>
 <h4 id="错误-3-any-类型不能直接调用方法">❌ 错误 3：any 类型不能直接调用方法</h4>
-<pre><code class="language-leno">func process(any obj) {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func process(any obj) {
     obj.add(1)           // ❌ 报错：不能在 any 类型上调用方法 'add'
     obj.len()            // ❌ 报错：不能在 any 类型上调用方法 'len'
 }
 </code></pre>
 <p><strong>✅ 修复方案：</strong></p>
-<pre><code class="language-leno">// 方案1：使用 is 类型收窄（推荐，安全）
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 方案1：使用 is 类型收窄（推荐，安全）
 func process(any obj) {
     if obj is Array[int] {
         obj.add(1)       // ✅ 守卫内 obj 是 Array[int]
@@ -3965,14 +4011,16 @@ var pair = func[K, V](K k, V v): Pair[K, V] {
 </tbody>
 </table>
 <p>你也可以用 <code>A</code>、<code>X</code>、<code>Item</code>、<code>Element</code> 等任意名称：</p>
-<pre><code class="language-leno">func swap[A, B](A a, B b): Pair[B, A] { return new Pair[B, A](key=b, val=a) }
+</blockquote>
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+func swap[A, B](A a, B b): Pair[B, A] { return new Pair[B, A](key=b, val=a) }
 
 struct List[Item] { Item data; List next }
 
 func select[Src, Dst](Src input): Dst { ... }
 </code></pre>
 <p><strong>类型参数名只在定义作用域内有效</strong>，不同函数/struct 之间互不影响。</p>
-</blockquote>
 <h4 id="自动推断类型参数">自动推断类型参数</h4>
 <p>编译器会根据调用时的实参<strong>自动推断</strong>具体类型：</p>
 <pre><code class="language-leno">// === 单类型参数 ===
@@ -4015,16 +4063,18 @@ var r2 = first[string, float](&quot;pi&quot;, 3.14)  // T=string, U=float → �
 <li>需要确保返回值的具体类型时</li>
 <li>代码可读性要求高的场景</li>
 </ul>
-<pre><code class="language-leno">func coalesce[T](T a, T b): T {
-    if a != null { return a }
-    return b
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func coalesce[T](T a, T b): T {
+if a != null { return a }
+return b
 }
 
 // ❌ coalesce(null, 42) — 无法推断 T
 // ✅ 必须显式指定：
 var val = coalesce[int](null, 42)    // T = int
 </code></pre>
-</blockquote>
 <h4 id="泛型函数接受泛型-struct-参数">泛型函数接受泛型 struct 参数</h4>
 <p>泛型函数的参数类型可以是泛型 struct，实现类型安全的容器操作：</p>
 <pre><code class="language-leno">struct Box[T] {
@@ -4074,7 +4124,9 @@ func maxBy[T: Comparable](T a, T b): T {
 }
 </code></pre>
 <p><strong>struct 实现 face 后即可作为约束类型参数使用：</strong></p>
-<pre><code class="language-leno">struct IntBox impl Comparable {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，face 在上文定义，
+// 单独编译会报&quot;未定义的 face&quot;，这是预期结果。
+struct IntBox impl Comparable {
     int value
     func compare(Comparable other): int {
         var o = other as IntBox
@@ -4109,7 +4161,9 @@ main() {
 }
 </code></pre>
 <p><strong>泛型约束也可用于 struct 定义：</strong></p>
-<pre><code class="language-leno">struct SortedBox[T: Comparable] {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+struct SortedBox[T: Comparable] {
     T value
 }
 
@@ -4241,7 +4295,9 @@ main() {
 </code></pre>
 <p><strong>编译期约束校验：</strong></p>
 <p>如果传入的类型没有实现约束 face，编译器会报错：</p>
-<pre><code class="language-leno">struct NotComparable {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct NotComparable {
     int value
 }
 
@@ -4316,7 +4372,9 @@ main() {
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">// any: 完全动态，接受任何类型
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// any: 完全动态，接受任何类型
 func print_any(any x) {
     print(type(x))           // 运行时才能知道类型
 }
@@ -4541,7 +4599,9 @@ print(debug)    // true
 </code></pre>
 <h4 id="错误检测">错误检测</h4>
 <p>编译器会检查多返回值的数量和类型：</p>
-<pre><code class="language-leno">// ❌ 返回值数量不匹配
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 返回值数量不匹配
 func bad(): [int, string] {
     return 1, &quot;ok&quot;, 42    // 错误：声明 2 个，返回了 3 个
 }
@@ -4582,7 +4642,9 @@ var[string, int](a, b) = get_user()   // 错误：槽位 string 与返回值 int
   “求值失败怎么办、按什么顺序求”，不值得</li>
 <li>可以叠加（语法上允许写多条注解；<strong>目前只有 <code>@optkeys</code></strong>，所以暂时用不到叠加）：</li>
 </ul>
-<pre><code class="language-leno">@optkeys([&quot;w&quot;, &quot;h&quot;])
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+@optkeys([&quot;w&quot;, &quot;h&quot;])
 export func createHBox(Dict opts): HBox { ... }
 </code></pre>
 <blockquote>
@@ -4597,7 +4659,9 @@ export func createHBox(Dict opts): HBox { ... }
 <p><strong>它解决什么问题</strong>：LenoSDL3 的控件都用 <code>Dict</code> 传选项，键名写错（<code>tip</code> 打成 <code>tilp</code>、
 <code>pad_x</code> 打成 <code>pad_xx</code>）以前是<strong>运行时静默丢弃</strong> —— 界面少个提示、看着一切正常，只能靠肉眼比对。</p>
 <p><code>@optkeys</code> 把“这个构造函数认哪些键”告诉编译器 ⇒ <strong>编译期</strong>就报出来：</p>
-<pre><code class="language-leno">@optkeys([&quot;x&quot;, &quot;y&quot;, &quot;w&quot;, &quot;h&quot;, &quot;pad_x&quot;, &quot;spacing&quot;, &quot;bg_color&quot;])
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+@optkeys([&quot;x&quot;, &quot;y&quot;, &quot;w&quot;, &quot;h&quot;, &quot;pad_x&quot;, &quot;spacing&quot;, &quot;bg_color&quot;])
 export func createBox(Dict opts): HBox { ... }
 
 main() {
@@ -4644,7 +4708,9 @@ main() {
 <p><code>"false"</code> 是非空字符串，在真假判定里是<strong>真</strong> ⇒ 界面行为反了，而编译不报、运行也不报
 （<code>?? false</code> 只做空值兜底，不会把字符串转成 bool）。</p>
 <p>键名后面加 <code>:类型</code> 就能在编译期拦住：</p>
-<pre><code class="language-leno">@optkeys([&quot;visible:bool&quot;, &quot;w:num&quot;, &quot;tip:string&quot;, &quot;headers:Array&quot;, &quot;align&quot;])
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+@optkeys([&quot;visible:bool&quot;, &quot;w:num&quot;, &quot;tip:string&quot;, &quot;headers:Array&quot;, &quot;align&quot;])
 func createBox(Dict opts): HBox { ... }
 </code></pre>
 <table>
@@ -4697,7 +4763,9 @@ func createBox(Dict opts): HBox { ... }
 你在应用里写错类型，编译期就会看到警告。</p>
 </blockquote>
 <h3 id="给自己的函数加注解">给自己的函数加注解</h3>
-<pre><code class="language-leno">// 你的框架/工具函数也可以声明白名单
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+// 你的框架/工具函数也可以声明白名单
 @optkeys([&quot;title&quot;, &quot;width&quot;, &quot;color&quot;])
 export func makeCard(Dict opts): Card { ... }
 </code></pre>
@@ -4746,40 +4814,38 @@ struct Rectangle {
 <blockquote>
 <p><strong>⚠️ 同一行写多个字段时必须用 <code>;</code> 分隔（2026-11-15 起编译期报错）</strong></p>
 <p>换行就是分隔；<strong>同一行只写空格不算分隔</strong>。方法、<code>const</code> 关联常量与字段之间同理。</p>
+</blockquote>
 <pre><code class="language-leno">struct P { int x; int y }      // ✓
 struct P { int x int y }       // ✗ 同一行的 struct 成员之间必须用 ';'（或者换行）
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>💡 方法里自引用写 <code>self</code>（不是 <code>this</code>）</strong></p>
 <pre><code class="language-leno">struct Box {
-    int v = 0
-    func bump(): void { self.v = self.v + 1 }   // ✓ self
-    func me(): Box { return self }              // ✓ 返回的就是该对象本身（引用语义）
+int v = 0
+func bump(): void { self.v = self.v + 1 }   // ✓ self
+func me(): Box { return self }              // ✓ 返回的就是该对象本身（引用语义）
 }
 </code></pre>
 <p><code>this</code> 是 C++ / Java / C# 的习惯 ✗ —— Leno 里<strong>没有这个关键字</strong>，写它会报
 「未定义的变量: this」（现在会<strong>顺带提示</strong>改 <code>self</code> ✓）。</p>
-</blockquote>
-<blockquote>
 <p><strong>💡 建议：使用有意义的默认值</strong></p>
-<pre><code class="language-leno">// ✅ 好的设计：合理的默认值
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ✅ 好的设计：合理的默认值
 struct ServerConfig {
-    string host = &quot;localhost&quot;
-    int port = 8080
-    int timeout = 30
-    bool enableLog = true
+string host = &quot;localhost&quot;
+int port = 8080
+int timeout = 30
+bool enableLog = true
 }
 
 // ❌ 不推荐：所有字段都是 0/空值
 struct ServerConfig {
-    string host = &quot;&quot;
-    int port = 0
-    int timeout = 0
-    bool enableLog = false
+string host = &quot;&quot;
+int port = 0
+int timeout = 0
+bool enableLog = false
 }
 </code></pre>
-</blockquote>
 <h3 id="创建结构体实例">创建结构体实例</h3>
 <pre><code class="language-leno">// 命名参数创建（推荐）
 var p1 = new Point(x = 10, y = 20)
@@ -4791,10 +4857,12 @@ var rect2 = new Rectangle() // x = 0, y = 0, width = null, height = null
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：struct 创建必须使用</strong> <strong><code>new</code></strong> <strong>关键字和命名参数形式</strong></p>
-<pre><code class="language-leno">var p = new Point(10, 20)      // ❌ 错误：必须使用 new Point(x = 10, y = 20)
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var p = new Point(10, 20)      // ❌ 错误：必须使用 new Point(x = 10, y = 20)
 var p = new Point(x = 10, y = 20)  // ✅ 正确
 </code></pre>
-</blockquote>
 <h3 id="访问和修改字段">访问和修改字段</h3>
 <pre><code class="language-leno">var p = new Point(x = 10, y = 20)
 
@@ -4816,13 +4884,14 @@ var y2 = p[&quot;y&quot;]
 </blockquote>
 <h3 id="null-默认值与编译时警告">null 默认值与编译时警告</h3>
 <p><strong>⚠️ 重要：默认值为 null 的字段，访问其成员会有编译时警告</strong></p>
-<pre><code class="language-leno">struct Container {
-    dict data = null      // 默认 null
-    array items = null    // 默认 null
+<pre><code class="language-text">// 【演示错误】对不支持索引的对象取下标会报错，这里正是演示它。
+struct Container {
+    Dict? data = null      // 默认 null
+    Array? items = null    // 默认 null
 }
 
 struct Outer {
-    Container inner = null
+    Container? inner = null
 }
 
 main() {
@@ -4844,7 +4913,9 @@ main() {
 <p><strong>注意</strong>：从 2026-07-12 起，null 字段链式访问从<strong>编译错误</strong>改为<strong>编译警告</strong>。编译会通过，但运行时如果字段确实为 null 则会报错。建议先检查非 null 再访问。</p>
 </blockquote>
 <p><strong>在方法中访问 null 字段</strong>：</p>
-<pre><code class="language-leno">struct LinkedList {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct LinkedList {
     Node head = null
 
     func getFirst():int {
@@ -5031,7 +5102,9 @@ func find_user(int id): User? {
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     int? a = null
     int b = a + 1         // ❌ 编译错误：'a' 声明为 null 且此后未赋值 ⇒「null 不能参与算术运算」
     print(b)
@@ -5059,14 +5132,18 @@ func find_user(int id): User? {
 - <code>string? s = null; s + "x"</code> → ✅ 安全（string 拼接天然处理 null）</p>
 </blockquote>
 <h4 id="类型兼容规则">类型兼容规则</h4>
-<pre><code class="language-leno">Point normal = new Point(x=1)
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+Point normal = new Point(x=1)
 Point? opt = normal      // ✅ Type → Type? 兼容（非空赋给可空）
 
 Point? opt2 = null
 Point p2 = opt2          // ❌ Type? → Type 不兼容（可能为 null，不安全）
 </code></pre>
 <h4 id="非常量默认值限制">非常量默认值限制</h4>
-<pre><code class="language-leno">struct Bad {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Bad {
     Point? pt = new Point(x=99)   // ❌ 编译错误：new 不是常量表达式
 }
 
@@ -5080,7 +5157,9 @@ struct Good {
 <hr>
 <p><strong>⚠️ 重要：值类型字段必须指定默认值</strong></p>
 <p>在 Leno 中，<code>float</code>、<code>int</code>、<code>bool</code> 等<strong>值类型</strong>字段如果不指定默认值，初始值是 <strong>null</strong> 而不是 0 或 false。这会导致算术运算产生<strong>编译警告</strong>或运行时错误：</p>
-<pre><code class="language-leno">struct Counter {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Counter {
     float value           // ❌ 初始值是 null，不是 0.0
     int count             // ❌ 初始值是 null，不是 0
     bool active           // ❌ 初始值是 null，不是 false
@@ -5177,14 +5256,17 @@ p1.print_coord()                    // Point(10, 20)
 <li><strong>✅ 外部通过实例</strong>：<code>obj.field_name</code> 可以访问</li>
 <li><strong>❌ 外部函数的局部变量</strong>：即使该变量的类型是某个 struct，也不能用 <code>new StructName()</code> 后直接 <code>.field</code> 赋值</li>
 </ul>
-<pre><code class="language-leno">struct Point {
-    int x
-    int y
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Point {
+int x
+int y
 
-    // ✅ 方法内直接访问字段
-    func move(int dx) {
-        x = x + dx       // 等价于 self.x = self.x + dx
-    }
+// ✅ 方法内直接访问字段
+func move(int dx) {
+x = x + dx       // 等价于 self.x = self.x + dx
+}
 }
 
 // ✅ 外部通过实例访问
@@ -5193,23 +5275,24 @@ print(p.x)               // 1
 
 // ❌ 外部函数中 new 出来的 struct 不能直接 .field 赋值
 func makePoint(): Point {
-    var pt = new Point()
-    // pt.x = 100         // ❌ 编译错误：&quot;无法确定字段索引&quot;
-    return new Point(x = 100, y = 200)  // ✅ 用构造参数
+var pt = new Point()
+// pt.x = 100         // ❌ 编译错误：&quot;无法确定字段索引&quot;
+return new Point(x = 100, y = 200)  // ✅ 用构造参数
 }
 </code></pre>
 <p><strong>解决方案</strong>：把需要操作字段的逻辑放到 struct 的<strong>方法</strong>里。</p>
 <pre><code class="language-leno">struct Point {
-    int x; int y
-    func createFrom(int v): Point {     // ✅ 方法内可以操作字段
-        x = v; y = v; return self
-    }
+int x; int y
+func createFrom(int v): Point {     // ✅ 方法内可以操作字段
+x = v; y = v; return self
+}
 }
 </code></pre>
-</blockquote>
 <p><strong>使用插值字符串输出 struct</strong>：</p>
 <p>推荐使用 <code>$"..."</code> 来格式化输出，比字符串拼接更简洁：</p>
-<pre><code class="language-leno">struct Point {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Point {
     int x = 0
     int y = 0
 }
@@ -5375,7 +5458,9 @@ process_points(points)
 </code></pre>
 <p><strong>struct 与类型守卫结合使用</strong>：</p>
 <p>当使用 <code>var</code> 接收 struct 实例时，类型守卫可以收窄类型，安全访问字段：</p>
-<pre><code class="language-leno">struct Student {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Student {
     string name = &quot;&quot;
     int age = 0
 }
@@ -5576,7 +5661,9 @@ main() {
 }
 </code></pre>
 <p><strong>自引用 struct 使用可空类型 <code>Type?</code></strong>：</p>
-<pre><code class="language-leno">// ❌ 错误：会导致栈溢出（无限递归）
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 错误：会导致栈溢出（无限递归）
 struct Node {
     int value
     Node next    // 没有默认值，会无限创建 Node
@@ -5765,7 +5852,9 @@ struct Class {
 <p>需要访问 struct 字段 → 用<strong>具体类型</strong>参数。只需要打印、比较、索引 → 可以用 <code>any</code>。</p>
 <h4 id="链表示例">链表示例</h4>
 <p>利用 struct 自引用实现完整数据结构：</p>
-<pre><code class="language-leno">struct Node {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Node {
     int value
     Node next = null       // 必须 null，否则无限递归
 }
@@ -5818,17 +5907,21 @@ struct DictWrapper[K = string, V = int] {
 <blockquote>
 <p><strong>💡 默认类型参数</strong></p>
 <p>当<strong>所有类型参数都有默认值</strong>时，实例化可以省略类型参数：</p>
-<pre><code class="language-leno">var b1 = new Box[int](value=42)   // 显式指定
+</blockquote>
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+var b1 = new Box[int](value=42)   // 显式指定
 var b2 = new Box(value=100)       // 省略，T 默认 int
 </code></pre>
 <p>如果<strong>部分参数无默认值</strong>，仍然必须显式指定：</p>
 <pre><code class="language-leno">struct Cache[K, V = int] { K key; V val }
 new Cache[string](key=&quot;name&quot;, val=1)   // K 必须指定
 </code></pre>
-</blockquote>
 <h4 id="实例化泛型-struct">实例化泛型 struct</h4>
 <p>使用 <code>new StructName[具体类型](...)</code> 创建实例，<strong>除非所有类型参数都有默认值，否则不可省略</strong>：</p>
-<pre><code class="language-leno">// 用 int 实例化
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 用 int 实例化
 var intBox = new Box[int](value = 42)
 print(intBox.value)     // 42
 
@@ -5979,9 +6072,12 @@ print(chained.value)    // 168
 <blockquote>
 <p><strong>⚠️ 注意 1：方法参数类型不匹配会被编译器报错</strong></p>
 <p>泛型 struct 的方法参数类型会根据实例化类型进行检查。如果传入类型不匹配，编译器会报错：</p>
-<pre><code class="language-leno">struct Box[T] {
-    T value
-    func set(T v) { self.value = v }
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Box[T] {
+T value
+func set(T v) { self.value = v }
 }
 
 var intBox = new Box[int](value=42)
@@ -5991,41 +6087,39 @@ var strBox = new Box[string](value=&quot;hi&quot;)
 strBox.set(123)        // ❌ 编译错误：set 第 1 个参数类型不匹配: 期望 string, 实际 int
 </code></pre>
 <p>多泛型参数时，每个参数都会独立检查：</p>
-<pre><code class="language-leno">struct Pair[K, V] {
-    K key
-    V val
-    func setBoth(K k, V v) { self.key = k; self.val = v }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Pair[K, V] {
+K key
+V val
+func setBoth(K k, V v) { self.key = k; self.val = v }
 }
 
 var p = new Pair[string, int](key=&quot;x&quot;, val=1)
 p.setBoth(1, &quot;x&quot;)      // ❌ 两个参数都报错：第1个期望 string 实际 int，第2个期望 int 实际 string
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 2：Array/Dict 默认值已深拷贝（已修复）</strong></p>
 <p><del>泛型参数在编译期检查后会被擦除，<code>Box[int]</code> 和 <code>Box[string]</code> 运行时共享同一个 struct 定义。如果 struct 内部使用了可变的引用类型字段（如数组），不同实例化类型之间可能意外共享数据。</del></p>
 <p><strong>已修复</strong>：<code>struct_instance_new</code> 在初始化时对 Array/Dict/Struct 类型的默认值自动深拷贝，每个实例拥有独立副本。</p>
 <pre><code class="language-leno">struct Container[T] {
-    Array items = []     // ✅ 每个实例独立的 []
+Array? items = []     // ✅ 每个实例独立的 []
 }
 var c1 = new Container[int]()
 var c2 = new Container[string]()
 c1.items.add(42)
 print(c2.items.len())   // 0（不再共享）
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 3：泛型函数调用时 <code>[</code> 可能被误解析为数组索引</strong></p>
 <p>当函数名同时也是变量名时，<code>funcName[Type](args)</code> 可能被解析为数组索引。Leno 编译器会自动区分这两种情况，但在复杂表达式中可能出现歧义。建议：</p>
 <ul>
 <li>优先使用类型推断，省略显式类型参数：<code>identity(42)</code> 而非 <code>identity[int](42)</code></li>
 <li>只在推断失败时才显式指定：<code>empty[int]()</code></li>
 </ul>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 4：泛型函数参数类型不一致时不会自动转换</strong></p>
 <p>显式指定类型参数后，编译器会严格检查参数类型，不会做隐式转换：</p>
-<pre><code class="language-leno">func strict[T](T a, T b): T { return a }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func strict[T](T a, T b): T { return a }
 
 strict[int](1, 2)          // ✅ OK
 strict[int](1, &quot;x&quot;)        // ❌ 编译错误：第 2 个参数类型不匹配
@@ -6033,18 +6127,18 @@ strict[string](&quot;a&quot;, &quot;b&quot;)   // ✅ OK
 </code></pre>
 <p>如果需要灵活类型，使用 <code>any</code> 参数（但建议加类型守卫）：</p>
 <pre><code class="language-leno">func flexible(any a, any b) {
-    if a is int and b is int { return a + b }
-    return 0
+if a is int and b is int { return a + b }
+return 0
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 5：方法参数数量不匹配也会报错</strong></p>
 <p>非 泛型 struct 的方法同样会检查参数数量和类型：</p>
-<pre><code class="language-leno">struct Point {
-    int x
-    int y
-    func setXY(int a, int b) { self.x = a; self.y = b }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Point {
+int x
+int y
+func setXY(int a, int b) { self.x = a; self.y = b }
 }
 
 var pt = new Point(x=1, y=2)
@@ -6052,90 +6146,84 @@ pt.setXY(1)              // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 
 pt.setXY(1, 2, 3)        // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 实际 3
 pt.setXY(&quot;x&quot;, 10)        // ❌ setXY 第 1 个参数类型不匹配: 期望 int, 实际 string
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 6：泛型函数中 <code>func(T):void</code> 返回类型的匹配</strong></p>
 <p>当泛型函数的参数类型是函数类型且返回 <code>void</code> 时，传入的具体函数也必须返回 <code>void</code>（或不声明返回类型）：</p>
 <pre><code class="language-leno">func make_printer[T](T prefix): func(T):void {
-    func inner(T val):void {    // ✅ 正确：显式声明 :void
-        print(prefix)
-        print(val)
-    }
-    return inner
+func inner(T val):void {    // ✅ 正确：显式声明 :void
+print(prefix)
+print(val)
+}
+return inner
 }
 </code></pre>
 <p>注意：<code>func(T):void</code> 中的 <code>void</code> 是特殊关键字，表示无返回值。不要写成 <code>func(T):null</code> 或省略。</p>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 7：泛型参数参与算术运算时保持泛型类型</strong></p>
 <p>泛型参数参与算术运算（如 <code>n - 1</code>、<code>n * 2</code>）时，结果类型仍保持泛型参数类型，不会退化为 <code>float</code>：</p>
 <pre><code class="language-leno">func factorial[T](T n): T {
-    if n &lt;= 1 { return 1 }
-    return n * factorial(n - 1)   // n-1 的类型仍为 T，不会变成 float
+if n &lt;= 1 { return 1 }
+return n * factorial(n - 1)   // n-1 的类型仍为 T，不会变成 float
 }
 
 print(factorial[int](5))   // 120
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 8：泛型 struct 省略类型参数会报错</strong></p>
 <p>泛型 struct 实例化时必须提供类型参数，省略会导致编译错误：</p>
-<pre><code class="language-leno">struct Box[T] {
-    T value
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Box[T] {
+T value
 }
 
 var b = new Box(value=42)       // ❌ 编译错误：泛型 struct 'Box' 需要类型参数（如 Box[类型]）
 var b = new Box[int](value=42)  // ✅ 正确
 </code></pre>
 <p>这与内置泛型类型（<code>Array</code>、<code>Dict</code>）不同——内置类型可以省略类型参数，编译器会从初始值推断。但自定义泛型 struct 必须显式指定。</p>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 9：泛型函数体内创建泛型 struct — 类型参数如何传递</strong></p>
 <p>在泛型函数（如 <code>func Ok[T](T val)</code>）内部创建泛型 struct（如 <code>new Result[T]()</code>）时，类型参数 <code>T</code> 会通过调用链自动传递：</p>
 <pre><code class="language-leno">func Ok[T](T val): Result[T] {
-    return new Result[T](data=val, ok=true)    // ✅ T 由调用方 Ok[float] 传入，closure 携带
+return new Result[T](data=val, ok=true)    // ✅ T 由调用方 Ok[float] 传入，closure 携带
 }
 
 func Err[T](string msg): Result[T] {
-    return new Result[T](ok=false, error=msg)  // ✅ T 同样通过调用链传递，无需 dummy 参数
+return new Result[T](ok=false, error=msg)  // ✅ T 同样通过调用链传递，无需 dummy 参数
 }
 
 func reverse[T](Array[T] arr): Array[T] {
-    var s = new Stack[T]()                       // ✅ T 由调用方 reverse[int] 传入
-    ...
+var s = new Stack[T]()                       // ✅ T 由调用方 reverse[int] 传入
+...
 }
 </code></pre>
 <p><strong>原理</strong>：调用泛型函数时（如 <code>Ok[float](...)</code>），编译器生成 <code>OP_PUSH_TYPE_ARGS</code> 指令将类型参数编码为常量。<code>OP_CALL</code> 创建 closure 时将这些类型参数存入 <code>closure.type_param_args</code>。函数体内创建泛型 struct 时，<code>OP_STRUCT_INIT</code> 直接从 closure 读取解析，<strong>不再依赖运行时值推断</strong>。</p>
 <p>这个机制保证了无论函数参数是否携带泛型类型（如 <code>Err[T](string msg)</code> 只有 string 参数），都能正确获取 T 的具体类型。</p>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 10：<code>int / int = int</code> 整数除法在泛型上下文中的陷阱</strong></p>
 <p>Leno 中 <code>int / int</code> 执行整数除法（向零取整），结果也是 <code>int</code>：</p>
 <pre><code class="language-leno">var a = 10 / 3      // a = 3（int），而不是 3.333
 var b = 10.0 / 3    // b = 3.333...（float）
 </code></pre>
 <p>这在与泛型组合时尤为危险。例如 <code>Result[float]</code> 的构造：</p>
-<pre><code class="language-leno">func safeDivide(int a, int b): Result[float] {
-    return Ok[float](a / b)     // ❌ a/b = 3（int），泛型推断为 int，与 float 不匹配
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func safeDivide(int a, int b): Result[float] {
+return Ok[float](a / b)     // ❌ a/b = 3（int），泛型推断为 int，与 float 不匹配
 }
 </code></pre>
 <p><strong>正确做法</strong>：</p>
 <pre><code class="language-leno">func safeDivide(int a, int b): Result[float] {
-    return Ok[float]((a as float) / (b as float))  // ✅ 显式转为浮点除法
+return Ok[float]((a as float) / (b as float))  // ✅ 显式转为浮点除法
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 11：face 变量不能直接访问底层 struct 的字段和非 face 方法</strong></p>
 <p>face 类型的变量<strong>只能调用 face 中声明的方法</strong>，不能访问底层 struct 的字段或未声明的方法：</p>
-<pre><code class="language-leno">face Sortable {
-    func sortKey(): float
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+face Sortable {
+func sortKey(): float
 }
 
 struct Student impl Sortable {
-    string name
-    float score
-    func sortKey(): float { return self.score }
+string name
+float score
+func sortKey(): float { return self.score }
 }
 
 var s = new Student(name=&quot;Alice&quot;, score=85.0)
@@ -6149,32 +6237,32 @@ face_s.name            // ❌ 语义错误：face 'Sortable' 没有字段 'name'
 print(student.name)    // ✅
 </code></pre>
 <p>这是 Leno 的类型安全设计——保证通过 face 变量只能看到接口约定的行为，而非具体实现的内部细节。</p>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 12：泛型约束语法 <code>[T: FaceName]</code></strong></p>
 <p>可以用 <code>: FaceName</code> 为泛型类型参数添加约束，限制 T 必须实现了某个 face：</p>
 <pre><code class="language-leno">face Comparable {
-    func compare(Comparable other): int
+func compare(Comparable other): int
 }
 
 // T: Comparable — T 必须实现了 Comparable
 func maxBy[T: Comparable](T a, T b): T {
-    if a.compare(b) &gt;= 0 { return a }
-    return b
+if a.compare(b) &gt;= 0 { return a }
+return b
 }
 
 struct OrdInt impl Comparable {
-    int value
-    func compare(Comparable other): int {
-        var o = other as OrdInt
-        if self.value &lt; o.value { return -1 }
-        if self.value &gt; o.value { return 1 }
-        return 0
-    }
+int value
+func compare(Comparable other): int {
+var o = other as OrdInt
+if self.value &lt; o.value { return -1 }
+if self.value &gt; o.value { return 1 }
+return 0
+}
 }
 </code></pre>
 <p>约束也支持跨模块使用：</p>
-<pre><code class="language-leno">// constraint_module.leno
+<pre><code class="language-text">// 【签名示意】`{ ... }` 表示&quot;实现略&quot;，整块不能直接跑；
+// 这一节要看的是 @optkeys 对**字典键**的校验。
+// constraint_module.leno
 export face Comparable { ... }
 export func maxBy[T: Comparable](T a, T b): T { ... }
 
@@ -6187,32 +6275,30 @@ var r = cm.maxBy(a, b)  // ✅ 跨模块约束泛型调用
 </code></pre>
 <p><strong>完整可运行示例</strong>：</p>
 <pre><code class="language-leno">face Comparable {
-    func compare(Comparable other): int
+func compare(Comparable other): int
 }
 struct OrdInt impl Comparable {
-    int value
-    func compare(Comparable other): int {
-        var o = other as OrdInt
-        if self.value &lt; o.value { return -1 }
-        if self.value &gt; o.value { return 1 }
-        return 0
-    }
+int value
+func compare(Comparable other): int {
+var o = other as OrdInt
+if self.value &lt; o.value { return -1 }
+if self.value &gt; o.value { return 1 }
+return 0
+}
 }
 func id[T: Comparable](T a): T { return a }
 
 main() {
-    var o1 = new OrdInt(value=10)
-    var r1 = id(o1)
-    print(r1.value)     // 10
+var o1 = new OrdInt(value=10)
+var r1 = id(o1)
+print(r1.value)     // 10
 }
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意 13：泛型 struct 的方法调用 —— <code>c.set(99)</code> 直接生效</strong></p>
 <p>泛型 struct 的方法参数中 <code>T</code> 在编译期被解析为 struct 类型（<code>TYPE_STRUCT "T"</code>），但语义检查器会识别出它是 struct 的泛型参数名，跳过编译期类型比对，交给运行时处理：</p>
 <pre><code class="language-leno">struct Cell[T] {
-    T value
-    func set(T v) { self.value = v }
+T value
+func set(T v) { self.value = v }
 }
 
 var c1 = new Cell[int](value=42)
@@ -6220,10 +6306,11 @@ c1.set(99)              // ✅ runtime: T=int, 99 是 int，正确
 print(c1.value)          // 99
 </code></pre>
 <p>这种设计使得泛型方法在保持编译期解析简单的前提下，在运行时获得正确的类型检查，兼顾了性能和灵活性。</p>
-</blockquote>
 <h4 id="嵌套泛型类型">嵌套泛型类型</h4>
 <p>泛型参数可以是复合类型，如 <code>Array[int]</code>、<code>Dict[string, int]</code> 等：</p>
-<pre><code class="language-leno">// Box 中存放数组
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+// Box 中存放数组
 var arrBox = new Box[Array[int]](value = [1, 2, 3])
 print(arrBox.value[0])  // 1
 
@@ -6371,12 +6458,12 @@ main() {
 <h4 id="二叉搜索树">二叉搜索树</h4>
 <pre><code class="language-leno">struct TreeNode {
     int value
-    TreeNode left = null
-    TreeNode right = null
+    TreeNode? left = null
+    TreeNode? right = null
 }
 
 struct BST {
-    TreeNode root = null
+    TreeNode? root = null
 
     func insert(int val) {
         root = insertNode(root, val)
@@ -6733,28 +6820,34 @@ main() {
 <blockquote>
 <p><strong>⚠️ NRVO 只跳过 return 时的析构，作用域结束时仍要析构</strong></p>
 <p>NRVO 跳过的是 <strong>return 语句处的析构</strong>，不是 <strong>作用域结束处的析构</strong>。</p>
-<pre><code class="language-leno">func makeBox(int v): Box {
-    var b = new Box(value=v)
-    return b          // NRVO 跳过
+</blockquote>
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+func makeBox(int v): Box {
+var b = new Box(value=v)
+return b          // NRVO 跳过
 }
 // 调用者得到 box 后，box 出作用域时析构
 </code></pre>
 <p>只有在直接返回局部变量时编译器才会应用 NRVO。如果返回的是表达式或临时值，不会触发：</p>
-<pre><code class="language-leno">func makeBoxExpr(int v): Box {
-    return new Box(value=v)   // 不会触发 NRVO，临时对象在 return 时析构
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+func makeBoxExpr(int v): Box {
+return new Box(value=v)   // 不会触发 NRVO，临时对象在 return 时析构
 }
 
 main() {
-    var box = makeBoxExpr(42)
-    // makeBoxExpr 中 new Box() 没有局部变量承载，返回时无析构可跳过
-    // 析构在 box 出作用域时触发
+var box = makeBoxExpr(42)
+// makeBoxExpr 中 new Box() 没有局部变量承载，返回时无析构可跳过
+// 析构在 box 出作用域时触发
 }
 </code></pre>
-</blockquote>
 <h3 id="struct-常见问题">struct 常见问题</h3>
 <p><strong>Q: 为什么自引用 struct 必须设 null 默认值？</strong></p>
 <p>A: 否则会无限递归创建实例，导致栈溢出：</p>
-<pre><code class="language-leno">// ❌ 错误
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 错误
 struct Node {
     Node next    // 创建 Node 时要创建 next，创建 next 时要创建 next.next...
 }
@@ -6766,7 +6859,9 @@ struct Node {
 </code></pre>
 <p><strong>Q: 为什么 any 参数不能访问 struct 字段？</strong></p>
 <p>A: <code>any</code> 参数类型为 <code>any</code>，编译器不知道具体类型，无法生成字段访问指令：</p>
-<pre><code class="language-leno">func test(any list) {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any list) {
     list.head = null    // ❌ 编译器不知道 list 是什么类型
 }
 
@@ -6778,7 +6873,9 @@ func test(LinkedList list) {
 <p><strong>Q: 为什么 <code>any</code> 类型不能调用方法？</strong></p>
 <p>A: <code>any</code> 类型在编译期没有类型信息，编译器无法验证方法是否存在、参数是否匹配。旧版会全局搜
 索同名方法碰运气，导致不确定性行为。新版强制要求显式收窄：</p>
-<pre><code class="language-leno">func test(any obj) {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func test(any obj) {
     obj.add(1)          // ❌ 编译错误：不能在 any 上调用方法
 
     // 修复1：is 类型收窄
@@ -6795,7 +6892,7 @@ func test(Array[int] obj) {
 <p><strong>Q: 如何检查 null 字段？</strong></p>
 <p>A: 使用 <code>!= null</code> 或 <code>== null</code> 检查：</p>
 <pre><code class="language-leno">struct Container {
-    dict data = null
+    Dict? data = null
 }
 
 func safeAccess(Container c) {
@@ -6995,11 +7092,12 @@ func mutate(Node n) {
 <blockquote>
 <p><strong>⚠️ 常见陷阱：函数返回后修改</strong></p>
 <p>从函数返回的 struct 实例也是引用，修改它会直接影响原始对象：</p>
+</blockquote>
 <pre><code class="language-leno">func find_node(Array[Node] list, int id): Node {
-    for list.len() to i {
-        if list[i].id == id { return list[i] }
-    }
-    Node empty = new Node(); return empty
+for list.len() to i {
+if list[i].id == id { return list[i] }
+}
+Node empty = new Node(); return empty
 }
 
 // 调用方
@@ -7007,7 +7105,6 @@ Node found = find_node(arr, 2)
 found.name = &quot;modified&quot;    // 直接修改了 arr 中的原始节点！
 </code></pre>
 <p>如果需要只读快照，请用 <code>.copy()</code> 或逐字段手动构造新实例。</p>
-</blockquote>
 <hr>
 <h2 id="face-接口">face（接口）</h2>
 <p>face 用于定义方法签名契约，让不同 struct 实现相同的行为，实现多态。Leno 采用<strong>名义类型（nominal typing）</strong>——struct 必须<strong>显式声明 <code>impl</code></strong> 才算实现 face。</p>
@@ -7065,22 +7162,25 @@ print(box.compareTo(100))   // -1
 <li><strong>泛型 face impl 完全支持</strong>，含 T 在参数和返回类型位置</li>
 <li><strong>约束检查完全支持</strong>：<code>func f[T: Comparable](T a, T b)</code> 可以约束 T</li>
 </ul>
-<pre><code class="language-leno">// 泛型 face：T 在返回类型
+</blockquote>
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+// 泛型 face：T 在返回类型
 face Box[T] {
-    func unwrap(): T
-    func wrap(T v)
+func unwrap(): T
+func wrap(T v)
 }
 
 struct IntBox impl Box[int] {
-    int value = 0
-    func unwrap(): int { return self.value }
-    func wrap(int v) { self.value = v }
+int value = 0
+func unwrap(): int { return self.value }
+func wrap(int v) { self.value = v }
 }
 
 struct StrBox impl Box[string] {
-    string value = &quot;&quot;
-    func unwrap(): string { return self.value }
-    func wrap(string v) { self.value = v }
+string value = &quot;&quot;
+func unwrap(): string { return self.value }
+func wrap(string v) { self.value = v }
 }
 
 var ib = new IntBox(value=42)
@@ -7088,24 +7188,25 @@ assert_eq(ib.unwrap(), 42)  // ✅ T 被替换为 int
 
 // 泛型 face：T 在参数位置
 face Comparable[T] {
-    func compareTo(T other): int
+func compareTo(T other): int
 }
 
 struct OrdInt impl Comparable[int] {
-    int value
-    func compareTo(int other): int { ... }
+int value
+func compareTo(int other): int { ... }
 }
 
 // 泛型约束
 func maxBy[T: Comparable](T a, T b): T {
-    if a.compareTo(b) &gt;= 0 { return a }
-    return b
+if a.compareTo(b) &gt;= 0 { return a }
+return b
 }
 </code></pre>
-</blockquote>
 <h3 id="struct-实现-face">struct 实现 face</h3>
 <p>struct 必须<strong>显式声明 <code>impl</code></strong> 才算实现 face，仅方法签名匹配不算实现：</p>
-<pre><code class="language-leno">face Speaker {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+face Speaker {
     func speak():string
 }
 
@@ -7122,7 +7223,9 @@ struct Cat {
 // Cat 有 speak():string 方法，但未声明 impl Speaker，不能传给 Speaker 参数
 </code></pre>
 <p><strong>为什么必须显式 impl？</strong> 防止意外满足接口：</p>
-<pre><code class="language-leno">face Serializable { func serialize():string }
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+face Serializable { func serialize():string }
 
 struct Password {
     string value = &quot;&quot;
@@ -7137,14 +7240,18 @@ main() {
 }
 </code></pre>
 <p><strong>多个 face 用逗号分隔：</strong></p>
-<pre><code class="language-leno">struct FileLogger impl Writer, Speaker {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+struct FileLogger impl Writer, Speaker {
     func write(string content) { }
     func flush() { }
     func speak():string { return &quot;FileLogger&quot; }
 }
 </code></pre>
 <p><strong>impl 编译期检查：</strong></p>
-<pre><code class="language-leno">// ❌ 编译错误：声明了但缺少方法
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ❌ 编译错误：声明了但缺少方法
 struct Fish impl Speaker {
     func swim() { }    // 缺少 speak() 方法
 }
@@ -7196,7 +7303,9 @@ struct BadAdder impl Adder {
 </tbody>
 </table>
 <p><strong>未 impl 但传给 face 参数时的错误提示：</strong></p>
-<pre><code class="language-leno">struct Dog {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+struct Dog {
     func speak():string { return &quot;woof&quot; }
 }
 
@@ -7228,7 +7337,9 @@ main() {
 }
 </code></pre>
 <h3 id="face-作为参数类型">face 作为参数类型</h3>
-<pre><code class="language-leno">func make_sound(Speaker s) {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+func make_sound(Speaker s) {
     print(s.speak())
 }
 
@@ -7236,13 +7347,17 @@ var d = new Dog()
 make_sound(d)    // 输出: woof
 </code></pre>
 <h3 id="face-作为变量类型">face 作为变量类型</h3>
-<pre><code class="language-leno">Speaker s = new Dog()
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+Speaker s = new Dog()
 print(s.speak())     // ✅ 可以调用 face 定义的方法
 
 s = new Cat()        // ❌ 编译错误：Cat 未 impl Speaker
 </code></pre>
 <p><strong>face 变量的访问限制</strong>：face 变量只能访问 face 中定义的方法，不能访问底层 struct 的字段或非 face 方法：</p>
-<pre><code class="language-leno">face Speaker {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+face Speaker {
     func speak():string
 }
 
@@ -7271,7 +7386,9 @@ print(dog.getAge())  // ✅ 转型后可以调用
 </blockquote>
 <h3 id="face-类型守卫">face 类型守卫</h3>
 <p>使用 <code>is</code> 运算符在运行时检查 struct 是否实现了某个 face（仅检查显式 <code>impl</code> 声明）：</p>
-<pre><code class="language-leno">var obj = new Dog()
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+var obj = new Dog()
 if obj is Speaker {
     print(obj.speak())     // 守卫内 obj 视为 Speaker 类型
 }
@@ -7282,7 +7399,9 @@ if obj not is Speaker {
 }
 </code></pre>
 <p><strong>显式 impl vs 无 impl 的区别</strong>：</p>
-<pre><code class="language-leno">face Speaker {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+face Speaker {
     func speak():string
 }
 
@@ -7452,7 +7571,9 @@ func describe(Shape s) {
 </blockquote>
 <h3 id="face-数组类型推断">face 数组类型推断</h3>
 <p>当数组中包含多个实现了同一 face 的 struct 时，编译器自动推断为该 face 类型：</p>
-<pre><code class="language-leno">struct Dog impl Speaker {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，face 在上文定义，
+// 单独编译会报&quot;未定义的 face&quot;，这是预期结果。
+struct Dog impl Speaker {
     func speak():string { return &quot;woof&quot; }
 }
 
@@ -7476,7 +7597,9 @@ main() {
 }
 </code></pre>
 <p><strong>混合 struct 和 face 变量</strong>：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+main() {
     Speaker a = new Dog()    // face 类型变量
     var d = new Dog()        // struct 类型变量
 
@@ -7536,7 +7659,9 @@ main() {
 <li><strong>泛型实参可以写模块限定名</strong>
    <code>Array[a.Speaker]</code>、<code>Box[a.Dog]</code> 现在都直接可用（旧版本会报"不支持模块限定名"）。<code>use</code> 后的短名同样可用：</li>
 </ol>
-<pre><code class="language-leno">   import &quot;animal.leno&quot; as a
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+   import &quot;animal.leno&quot; as a
 
    Array[a.Speaker] arr = []    // ✅ 直接写模块限定名
    use a.Speaker
@@ -7546,7 +7671,9 @@ main() {
 <li><strong>struct 存入 <code>Array[face]</code> 可直接 add</strong>
    <code>impl</code> 了该 face 的 struct 可直接 <code>arr.add(d)</code>，编译器会自动检查兼容性（2026-07-12 已修复）：</li>
 </ol>
-<pre><code class="language-leno">   Array[Speaker] arr = []
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+   Array[Speaker] arr = []
    Dog d = new Dog()
    arr.add(d)                   // ✅ 编译器自动检查 Dog impl Speaker
    // arr.add(someNonImplObj)   // ❌ 类型不匹配：期望 Speaker，实际 struct Xxx
@@ -7571,7 +7698,9 @@ main() {
 </li>
 </ol>
 <h3 id="face-不能实例化">face 不能实例化</h3>
-<pre><code class="language-leno">Speaker s = new Speaker()    // ❌ 错误：face 不能实例化
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+Speaker s = new Speaker()    // ❌ 错误：face 不能实例化
 </code></pre>
 <h3 id="完整示例">完整示例</h3>
 <pre><code class="language-leno">face Shape {
@@ -7660,14 +7789,16 @@ enum Http {
 </blockquote>
 <blockquote>
 <p><strong>⚠️ 同一行写多个成员时必须用 <code>;</code> 分隔（2026-11-15 起编译期报错）</strong></p>
+</blockquote>
 <pre><code class="language-leno">enum E { A; B }     // ✓
 enum E { A, B }     // ✗ 逗号不是 enum 成员的分隔符（它只用于 `int a, b, c` 这类声明列表）
 enum E { A B }      // ✗ 同一行的 enum 成员之间必须用 ';'（或者换行）
 </code></pre>
 <p>换行写成员则不需要分隔符。struct / cstruct / face 的成员同样遵守这条。</p>
-</blockquote>
 <h3 id="使用枚举">使用枚举</h3>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+main() {
     // 访问枚举值
     print(Color.red)        // 0
     print(Color.green)      // 1
@@ -7697,6 +7828,7 @@ enum E { A B }      // ✗ 同一行的 enum 成员之间必须用 ';'（或者�
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：枚举值本质上是 int</strong></p>
+</blockquote>
 <pre><code class="language-leno">var c = Color.red
 print(type(c))      // &quot;int&quot;
 
@@ -7705,10 +7837,9 @@ int color_code = Color.blue
 
 // 也可以直接与 int 比较
 if Color.red == 0 {
-    print(&quot;red 等于 0&quot;)
+print(&quot;red 等于 0&quot;)
 }
 </code></pre>
-</blockquote>
 <h3 id="带载荷的枚举-成员带数据">带载荷的枚举（成员带数据）</h3>
 <p>成员可以带参数 —— 一个成员就变成"带数据的分支"，比 <code>struct + tag</code> 更安全
 （<code>tag</code> 与载荷的有效性由编译器保证，<code>switch</code> 还能查穷尽性）：</p>
@@ -7756,7 +7887,9 @@ main() {
 它自己声明的类型（不是 <code>any</code>）。详见 <code>docs/enum载荷_设计草案.md</code>。</p>
 </blockquote>
 <h3 id="枚举作为函数参数">枚举作为函数参数</h3>
-<pre><code class="language-leno">func handle_status(int status) {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+func handle_status(int status) {
     if status == Status.ok {
         print(&quot;处理成功&quot;)
     } else if status == Status.error {
@@ -7836,11 +7969,11 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：混合类型数组推断为</strong> <strong><code>Array[any]</code></strong></p>
+</blockquote>
 <pre><code class="language-leno">var arr = [1, 2, 3]           // Array[int]
 var arr2 = [1, 2.0]           // Array[float]（int 升级为 float）
 var arr3 = [1, &quot;hello&quot;]       // Array[any]（混合类型，可以添加任何类型）
 </code></pre>
-</blockquote>
 <p><strong>数组类型推断规则：</strong></p>
 <table>
 <thead>
@@ -7868,7 +8001,9 @@ var arr3 = [1, &quot;hello&quot;]       // Array[any]（混合类型，可以添
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">// 空数组：类型为 Array（未指定）
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 空数组：类型为 Array（未指定）
 var arr = []
 print(type(arr))    // &quot;Array&quot;
 arr.add(1)          // 添加 int 后变为 Array[int]
@@ -7922,7 +8057,9 @@ Array[int] arr2 = []   // ✅ 等同于上面
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">var arr = []
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var arr = []
 arr.add(1)           // ✅ 类型变为 Array[int]
 arr.insert(0, 2)     // ✅ 正确
 arr[0] = 3           // ✅ 正确
@@ -7962,7 +8099,9 @@ arr[0] = &quot;bad&quot;       // ❌ 报错：期望 int
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">var arr = [1, 2, 3]        // arr 是 Array[int]
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var arr = [1, 2, 3]        // arr 是 Array[int]
 Array[int] bb = arr        // ✅ 相同类型
 
 Array any_arr = arr        // ✅ 允许：Array 是通配符，接受任何数组
@@ -7992,6 +8131,7 @@ Array[any] any_arr2 = arr  // ❌ 错误：Array[int] 不能赋给 Array[any]
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：数组是引用类型，赋值不会复制</strong></p>
+</blockquote>
 <pre><code class="language-leno">var a = [1, 2, 3]
 var b = a          // b 和 a 指向同一个数组
 b[0] = 99
@@ -8002,7 +8142,6 @@ var c = a.copy()
 c[0] = 0
 print(a[0])        // 99（a 不受影响）
 </code></pre>
-</blockquote>
 <h3 id="数组方法">数组方法</h3>
 <pre><code class="language-leno">main() {
     var arr = [1, 2, 3]
@@ -8102,12 +8241,12 @@ print(a[0])        // 99（a 不受影响）
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：数组比较会比较每个元素</strong></p>
+</blockquote>
 <pre><code class="language-leno">var a = [1, 2, 3]
 var b = [1, 2, 3]
 print(a == b)       // true（内容相同）
 print(a == [1, 2])  // false（长度不同）
 </code></pre>
-</blockquote>
 <h3 id="多维数组">多维数组</h3>
 <pre><code class="language-leno">main() {
     // 二维数组
@@ -8198,7 +8337,9 @@ print(a == [1, 2])  // false（长度不同）
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">// 空字典：类型为 Dict（未指定）
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 空字典：类型为 Dict（未指定）
 var dict = {}
 print(type(dict))    // &quot;Dict&quot;
 dict.set(&quot;key&quot;, 1)   // 添加 string 键后变为 Dict[string, int]
@@ -8259,7 +8400,9 @@ Dict[int, string] id_map2 = {}   // ✅ 空的 Dict[int, string]
 </tr>
 </tbody>
 </table>
-<pre><code class="language-leno">var dict = {}
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var dict = {}
 dict.set(&quot;a&quot;, 1)     // ✅ 类型变为 Dict[string, int]
 dict[&quot;b&quot;] = 2        // ✅ 正确
 dict.c = 3           // ✅ 正确（点号访问）
@@ -8322,24 +8465,24 @@ dict[&quot;e&quot;] = &quot;bad&quot;    // ❌ 报错：期望 int
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：<code>[]</code></strong> <strong>和</strong> <strong><code>.</code></strong> <strong>都可以添加新键</strong></p>
+</blockquote>
 <pre><code class="language-leno">var d = {name: &quot;cheng&quot;}
 d[&quot;age&quot;] = 25         // ✅ 添加新键
 d.email = &quot;a@b.com&quot;   // ✅ 添加新键
 // 不需要先检查键是否存在，直接赋值即可
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：字典保持插入顺序</strong></p>
 <pre><code class="language-leno">var dict = {c: 3, a: 1, b: 2}
 for dict to key, value {
-    print($&quot;{key}: {value}&quot;)
+print($&quot;{key}: {value}&quot;)
 }
 // 输出顺序: c:3, a:1, b:2（按插入顺序，不是按字母排序）
 </code></pre>
-</blockquote>
 <h3 id="类型化字典-dict-k-v">类型化字典（<code>Dict[K, V]</code>）✅</h3>
 <p>无类型字典 <code>Dict</code> 的值全是 <code>any</code>，每次读取都要 <code>is string</code> / <code>is int</code> 等运行时判断。<strong>类型化字典</strong> <code>Dict[string, bool]</code> 把键值类型固定下来，值类型由编译器检查，读取时不再需要收窄判断：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     // 类型化字典：键是 string，值是 bool
     Dict[string, bool] visited = {}
 
@@ -8418,13 +8561,13 @@ string nm = names.get(&quot;user&quot;, &quot;&quot;)       // 默认值 &quot;&
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：字典也是引用类型</strong></p>
+</blockquote>
 <pre><code class="language-leno">var a = {name: &quot;cheng&quot;}
 var b = a          // b 和 a 指向同一个字典
 b.name = &quot;li&quot;
 print(a.name)      // &quot;li&quot;（a 也被修改了）
 // 需要独立副本请使用 .copy()
 </code></pre>
-</blockquote>
 <h3 id="set-与-d-key-value-性能对比"><code>set()</code> 与 <code>d[key] = value</code> 性能对比</h3>
 <table>
 <thead>
@@ -8447,12 +8590,12 @@ print(a.name)      // &quot;li&quot;（a 也被修改了）
 </tr>
 </tbody>
 </table>
-<blockquote>
 <p><strong>建议</strong>：优先用 <code>d["key"] = value</code>，性能更好且直观。<code>set()</code> 主要用于方法引用场景。</p>
-</blockquote>
 <h3 id="嵌套类型">嵌套类型</h3>
 <p>数组和字典可以互相嵌套，类型精确推断：</p>
-<pre><code class="language-leno">// 数组包含字典
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// 数组包含字典
 var arrDict = [{&quot;name&quot;: &quot;a&quot;}, {&quot;name&quot;: &quot;b&quot;}]
 print(type(arrDict))  // Array[Dict[string, string]]
 
@@ -8555,7 +8698,9 @@ print(c)    // 3.14
 </code></pre>
 <h3 id="const-解构"><code>const</code> 解构</h3>
 <p>使用 <code>const</code> 声明解构变量为常量：</p>
-<pre><code class="language-leno">var data = [10, 20, 30]
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var data = [10, 20, 30]
 const[int, int, int](a, b, c) = data
 
 a = 100    // ❌ 错误：const 变量不可修改
@@ -8638,7 +8783,9 @@ var[](first, second) = getUser()    // 只取 int 和 string
 </table>
 <p>上面四种写法<strong>均已实测通过</strong>（<code>[1, 2]</code>、<code>[f(), g()]</code>、直接解构数组都行）。</p>
 <p>两条会撞上的限制 —— 第一条<strong>已有定向提示</strong>（2026-10-02 起），第二条按下面的理由<strong>不做</strong>：</p>
-<pre><code class="language-leno">var (a, b, c) = arr          // ❌ [语法错误] 解构声明必须写形状：var[...](a, b) = 值（const 同理）；
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var (a, b, c) = arr          // ❌ [语法错误] 解构声明必须写形状：var[...](a, b) = 值（const 同理）；
                              //    数据源类型确定时可省类型写成空的 var[]（源为 any 时不行）。
                              //    若要给**已存在**的变量并行赋值，请写 `a, b = ...`
                              //    ⚠ 加这条提示之前，这里报的是「期望变量名」（`(` 被当成表达式开头），
@@ -8719,7 +8866,9 @@ print(config.exported_b)    // 20
 <h4 id="易错点-只作用于紧跟它的字面量">易错点：$ 只作用于紧跟它的字面量</h4>
 <p>⚠️ <strong>插值不是"整行生效"的</strong>，它只修饰 <code>$</code> 后面紧跟的那个 <code>"..."</code>。一旦你把它和 <code>+</code> 拼接混用，
 <strong>后面的普通字符串里的 <code>{...}</code> 不会被替换，而是原样输出</strong>：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     var cnt = 100
     var total = 500
 
@@ -8937,7 +9086,9 @@ print(config.exported_b)    // 20
 </tbody>
 </table>
 <h4 id="何时用-slice-何时用-byte_slice">何时用 <code>slice</code> 何时用 <code>byte_slice</code></h4>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+main() {
     var text = &quot;你好世界&quot;
 
     // ✅ 处理文本：用 slice（按字符，闭区间：含 end）
@@ -9214,7 +9365,7 @@ $&quot;ratio={(pi / 2) * 100:.1f}%&quot;  // 百分号写在 `}` **外面**（�
     print(s5.take(6, 5))        // world
 
     // Unicode 子串提取
-    var cn2 = &quot;你好世界hello&quot;
+    var cn2b = &quot;你好世界hello&quot;
     print(cn2.slice(0, 1))       // &quot;你好&quot;
     print(cn2.take(2, 2))       // &quot;世界&quot;
 
@@ -9259,7 +9410,9 @@ func helper() {
     return &quot;内部使用&quot;
 }
 </code></pre>
-<pre><code class="language-leno">// main.leno
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// main.leno
 import &quot;math_utils.leno&quot; as math
 
 main() {
@@ -9426,13 +9579,15 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>💡 跨模块 <code>new</code>：短名和模块限定名都行</strong>（旧版本曾要求 <code>use</code> 后只能用短名）：</p>
-<pre><code class="language-leno">import &quot;animal.leno&quot; as a
+</blockquote>
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+import &quot;animal.leno&quot; as a
 Dog d1 = new a.Dog()     // ✅ 不用 use 也能写模块限定名
 use a.Dog
 Dog d2 = new Dog()       // ✅ use 后用短名
 a.Dog d3 = new a.Dog()   // ✅ use 之后仍可写模块限定名
 </code></pre>
-</blockquote>
 <p><strong>use 导入的类型可作为 export func 返回类型：</strong></p>
 <p><code>use</code> 导入的 struct/face 类型可以直接作为 <code>export func</code> 的返回类型，调用方能正确推断：</p>
 <pre><code class="language-leno">// item.leno
@@ -9494,7 +9649,9 @@ main() {
 </blockquote>
 <p><strong>链式调用与编译期检查：</strong></p>
 <p><code>use</code> 导入 clib 类型后，编译器会从源模块复制完整的函数签名，实现<strong>编译期参数检查</strong>（函数名、参数数量、参数类型）。同时支持链式调用——通过模块函数返回的 clib 对象直接调用方法：</p>
-<pre><code class="language-leno">import &quot;sdl_base.leno&quot; as base
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+import &quot;sdl_base.leno&quot; as base
 use base.renderer_lib
 
 main() {
@@ -9649,7 +9806,9 @@ export struct Box[T] {
     }
 }
 </code></pre>
-<pre><code class="language-leno">// main.leno
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+// main.leno
 import &quot;container.leno&quot; as cm
 use cm.Box
 
@@ -9876,11 +10035,11 @@ true
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：文件操作后必须调用 close()</strong></p>
+</blockquote>
 <pre><code class="language-leno">var f = files.open(&quot;data.txt&quot;, &quot;w&quot;)
 f.write(&quot;content&quot;)
 f.close()  // 不要忘记关闭
 </code></pre>
-</blockquote>
 <h3 id="jsons-json-模块">jsons JSON 模块</h3>
 <pre><code class="language-leno">import jsons
 import dirs
@@ -9995,7 +10154,8 @@ main() {
 </code></pre>
 <h4 id="异步-socket-配合-arecv-aaccept">异步 socket 配合 arecv/aaccept</h4>
 <p>配合 <code>async</code>/<code>await</code> 和 <code>asyncs</code> 模块，可以实现非阻塞的多客户端并发服务器：</p>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【服务端示例】需要真实客户端连接，单跑会一直阻塞等数据。
+import sockets
 import asyncs
 import io
 
@@ -10287,7 +10447,9 @@ main() {
 </code></pre>
 <p>如果类型不匹配（如 <code>%d</code> 传入字符串），输出 <code>&lt;type_error&gt;</code>；参数不足时输出 <code>&lt;missing&gt;</code>。</p>
 <h5 id="常见用法示例">常见用法示例</h5>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+main() {
     // 对齐表格
     print(format(&quot;%-10s %5d&quot;, &quot;Apple&quot;, 5))
     print(format(&quot;%-10s %5d&quot;, &quot;Banana&quot;, 12))
@@ -10387,13 +10549,17 @@ main() {
 </code></pre>
 <h4 id="导入别名限制">导入别名限制</h4>
 <p>别名不能使用关键字或内部模块名称：</p>
-<pre><code class="language-leno">import &quot;myfile.leno&quot; as io       // ❌ 错误：io 是内部模块
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+import &quot;myfile.leno&quot; as io       // ❌ 错误：io 是内部模块
 import &quot;myfile.leno&quot; as if       // ❌ 错误：if 是关键字
 import &quot;myfile.leno&quot; as mymod    // ✅ 正确
 </code></pre>
 <h3 id="模块在数组中的类型行为">模块在数组中的类型行为</h3>
 <p>导入的模块放入数组后，类型会变为 <code>Dict</code>，这是<strong>设计上的选择</strong>：</p>
-<pre><code class="language-leno">import math, string_utils
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+import math, string_utils
 
 var modules = [math, string_utils]  // 类型: Array[Dict[string, any]]
 
@@ -10456,7 +10622,8 @@ ops[0].add(1, 2)               // ✅ 正常工作
 </code></pre>
 <h3 id="try-finally-无-catch">try-finally（无 catch）</h3>
 <p>没有 <code>catch</code> 时，<code>finally</code> 仍会执行，但异常会继续向外传播：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【演示错误】故意不捕获异常，程序会以非 0 退出（本节讲的是 finally 一定执行）。
+main() {
     try {
         throw &quot;unhandled&quot;
     } finally {
@@ -10487,20 +10654,21 @@ ops[0].add(1, 2)               // ✅ 正常工作
 3. <code>finally</code> 块始终执行</p>
 <blockquote>
 <p><strong>⚠️ 注意：finally 块只会执行一次</strong></p>
+</blockquote>
 <pre><code class="language-leno">var count = 0
 try {
-    throw &quot;error&quot;
+throw &quot;error&quot;
 } catch e {
-    // 处理异常
+// 处理异常
 } finally {
-    count = count + 1
+count = count + 1
 }
 print(count)   // 1（不是 2）
 </code></pre>
-</blockquote>
 <h3 id="throw-语句">throw 语句</h3>
 <p><code>throw</code> 可以抛出任何类型的值：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【演示错误】抛出异常后程序终止：抛字符串就得到字符串，抛整数就得到整数。
+main() {
     // 抛出字符串
     throw &quot;字符串错误&quot;
 
@@ -10557,6 +10725,7 @@ print(count)   // 1（不是 2）
 <blockquote>
 <p><strong>✅ 统一异常格式</strong></p>
 <p><code>throw</code> 语句会自动包装为异常对象，<code>catch e</code> 拿到的 <code>e</code> 统一是含 <code>.msg</code>、<code>.file</code>、<code>.line</code>、<code>.stack</code> 属性的异常对象。<code>print(e)</code> 会输出 <code>.msg</code> 的值。</p>
+</blockquote>
 <pre><code class="language-leno">// throw 字符串 → 自动包装为异常对象
 try { throw &quot;error&quot; } catch e { print(e) }        // &quot;error&quot;（输出 msg）
 try { throw &quot;error&quot; } catch e { print(e.msg) }    // &quot;error&quot;
@@ -10573,25 +10742,24 @@ try { var a = 1/0 } catch e { print(e.msg) }
 </code></pre>
 <p>⚠ <strong>引擎错误 vs 你自己 <code>throw</code> 的字符串</strong>（2026-10-02 统一文案）：</p>
 <ul>
-<li><strong>引擎</strong>产生的错误（除零、越界、<code>_int("x")</code> 失败、原生模块报错……）的 <code>e.msg</code> <strong>自带</strong>
-  <code>[位置] file:line (func: 名)</code> 和 <code>[调用栈]</code> ⇒ 任何 <code>print(e)</code> / <code>"…" + e</code> 的日志都能直接
-  看到出错位置。此前原生模块只登记一句裸消息（如 <code>无法将字符串转换为整数</code>），日志里
-  "凭空"没有行号 —— 位置明明在 <code>e.line</code>/<code>e.file</code> 里，却没人打印它。</li>
-<li>你自己 <code>throw "xxx"</code> 的字符串<strong>原样保留</strong>（那是你的数据，不追加任何东西）；要看位置就读
-  <code>e.file</code> / <code>e.line</code> / <code>e.stack</code>。</li>
-<li>位置块的行号与 <code>e.line</code> <strong>同源</strong>（都按"当前指令"算，不再差一行）。</li>
-<li>异常<strong>跨边界</strong>（协程的失败经 <code>asyncs.run()</code> 抛回、<code>await</code>、FFI 回调）时<strong>原样保留</strong>：
-  <code>e.msg</code> / <code>e.line</code> / <code>e.stack</code> 都还是"错误发生地"那一份，不会被改写成"接住它的那一行"。</li>
-<li><code>try { … } finally { … }</code>（<strong>不写 catch</strong>）里抛的异常会<strong>照常向外抛</strong>：finally 必然先执行，
-  异常文案与位置原样传给外层 <code>catch</code>（此前这条路径会把异常<strong>静默吞掉</strong> ✗）。</li>
-<li><code>finally</code> 里的 <code>return</code> / <code>throw</code> / <code>break</code> / <code>continue</code> 会<strong>覆盖</strong>正在传播的异常
-  （与 JS/Python 一致）：<code>return</code> ⇒ 正常返回那个值、异常丢弃；<code>throw</code> ⇒ 用新的那个异常
-  （含它自己的位置）；<code>break</code>/<code>continue</code> ⇒ 跳出去、异常丢弃。</li>
-<li><strong>回调里抛的异常会正常上抛</strong>：<code>arr.map/filter/reduce</code> 的回调、FFI 回调里 <code>throw</code>，
-  外层的 <code>try { … } catch e</code> 都能接住，<code>e.msg</code>/<code>e.line</code> 就是抛出的那份（既不消失，
-  也不会让程序异常退出）。</li>
+<li><strong>引擎</strong>产生的错误（除零、越界、<code>_int("x")</code> 失败、原生模块报错……）的 <code>e.msg</code> <strong>自带</strong></li>
 </ul>
-</blockquote>
+<p><code>[位置] file:line (func: 名)</code> 和 <code>[调用栈]</code> ⇒ 任何 <code>print(e)</code> / <code>"…" + e</code> 的日志都能直接
+看到出错位置。此前原生模块只登记一句裸消息（如 <code>无法将字符串转换为整数</code>），日志里
+"凭空"没有行号 —— 位置明明在 <code>e.line</code>/<code>e.file</code> 里，却没人打印它。
+- 你自己 <code>throw "xxx"</code> 的字符串<strong>原样保留</strong>（那是你的数据，不追加任何东西）；要看位置就读
+<code>e.file</code> / <code>e.line</code> / <code>e.stack</code>。
+- 位置块的行号与 <code>e.line</code> <strong>同源</strong>（都按"当前指令"算，不再差一行）。
+- 异常<strong>跨边界</strong>（协程的失败经 <code>asyncs.run()</code> 抛回、<code>await</code>、FFI 回调）时<strong>原样保留</strong>：
+<code>e.msg</code> / <code>e.line</code> / <code>e.stack</code> 都还是"错误发生地"那一份，不会被改写成"接住它的那一行"。
+- <code>try { … } finally { … }</code>（<strong>不写 catch</strong>）里抛的异常会<strong>照常向外抛</strong>：finally 必然先执行，
+异常文案与位置原样传给外层 <code>catch</code>（此前这条路径会把异常<strong>静默吞掉</strong> ✗）。
+- <code>finally</code> 里的 <code>return</code> / <code>throw</code> / <code>break</code> / <code>continue</code> 会<strong>覆盖</strong>正在传播的异常
+（与 JS/Python 一致）：<code>return</code> ⇒ 正常返回那个值、异常丢弃；<code>throw</code> ⇒ 用新的那个异常
+（含它自己的位置）；<code>break</code>/<code>continue</code> ⇒ 跳出去、异常丢弃。
+- <strong>回调里抛的异常会正常上抛</strong>：<code>arr.map/filter/reduce</code> 的回调、FFI 回调里 <code>throw</code>，
+外层的 <code>try { … } catch e</code> 都能接住，<code>e.msg</code>/<code>e.line</code> 就是抛出的那份（既不消失，
+也不会让程序异常退出）。</p>
 <h3 id="函数内异常传播">函数内异常传播</h3>
 <p>函数内部抛出的异常会自动传播到调用者的 <code>try-catch</code>：</p>
 <pre><code class="language-leno">func divide(int a, int b):int {
@@ -10644,22 +10812,22 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：catch 块中 throw 后 finally 仍会执行</strong></p>
+</blockquote>
 <pre><code class="language-leno">var finally_ran = false
 try {
-    try {
-        throw &quot;first&quot;
-    } catch e {
-        throw &quot;second&quot;         // catch 中重新 throw
-    } finally {
-        finally_ran = true     // ✅ 仍然执行
-    }
+try {
+throw &quot;first&quot;
 } catch e {
-    print(e)                    // second
+throw &quot;second&quot;         // catch 中重新 throw
+} finally {
+finally_ran = true     // ✅ 仍然执行
+}
+} catch e {
+print(e)                    // second
 }
 print(finally_ran)              // true
 </code></pre>
 <p>执行顺序：try → catch（throw）→ finally → 外层 catch</p>
-</blockquote>
 <h3 id="常见运行时异常">常见运行时异常</h3>
 <p>以下操作会自动抛出异常，可以被 <code>try-catch</code> 捕获：</p>
 <table>
@@ -11140,6 +11308,7 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：关闭通道后仍可接收剩余数据</strong></p>
+</blockquote>
 <pre><code class="language-leno">var ch = threads.channel(10)
 ch.send(&quot;a&quot;)
 ch.send(&quot;b&quot;)
@@ -11148,7 +11317,6 @@ print(ch.receive())          // &quot;a&quot;（仍可接收缓冲区中的数�
 print(ch.receive())          // &quot;b&quot;
 // ch.receive()              // 通道为空且已关闭，返回 null
 </code></pre>
-</blockquote>
 <h3 id="通道传递-null-值">通道传递 null 值</h3>
 <p>通道可以传递 <code>null</code> 值，但需要注意区分"通道返回 null 是因为值为 null 还是因为通道为空"：</p>
 <pre><code class="language-leno">import threads
@@ -11301,7 +11469,8 @@ main() {
 </code></pre>
 <h3 id="网络-io-异步-async-socket">网络 IO 异步 (async socket)</h3>
 <p>配合 <code>sockets</code> 模块的 <code>aaccept</code> / <code>arecv</code> 方法，可以用协程实现非阻塞的网络服务器：</p>
-<pre><code class="language-leno">import sockets
+<pre><code class="language-text">// 【服务端示例】需要真实客户端连接，单跑会一直阻塞等数据。
+import sockets
 import asyncs
 import io
 
@@ -11397,11 +11566,13 @@ async func caller(int x): int {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ <code>await</code> 只能在 <code>async</code> 函数中使用</strong></p>
-<pre><code class="language-leno">func normal() {
-    var result = await some_async()   // ❌ 编译错误
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+func normal() {
+var result = await some_async()   // ❌ 编译错误
 }
 </code></pre>
-</blockquote>
 <h3 id="async-函数返回另一个-async-调用">async 函数返回另一个 async 调用</h3>
 <p>async 函数直接 <code>return</code> 另一个 async 函数调用时，返回的是<strong>嵌套 Future</strong>，需要两次 <code>await</code>：</p>
 <pre><code class="language-leno">async func inner_async(int v): int {
@@ -11527,20 +11698,18 @@ main() {
 </table>
 <blockquote>
 <p><strong>⚠️ 必须调用</strong> <strong><code>asyncs.run()</code></strong> <strong>启动事件循环</strong></p>
+</blockquote>
 <pre><code class="language-leno">import asyncs
+async func task() {
+await asyncs.sleep(100)
+print(&quot;完成&quot;)
+}
+
+main() {
+task()
+asyncs.run()    // 必须调用，否则异步任务不会执行
+}
 </code></pre>
-</blockquote>
-<blockquote>
-<p>async func task() {
- await asyncs.sleep(100)
- print("完成")
-}</p>
-<p>main() {
- task()
- asyncs.run()    // 必须调用，否则异步任务不会执行
-}</p>
-<pre><code></code></pre>
-</blockquote>
 <hr>
 <h2 id="cstruct-union-与-ptr-原生内存">cstruct、union 与 Ptr（原生内存）</h2>
 <p>Leno 有两套“结构体”，用途不同：</p>
@@ -11597,7 +11766,9 @@ main() {
 }
 </code></pre>
 <p>批量分配用 <code>malloc_array(n)</code>，它返回一个<strong>数组对象</strong>（不是单个实例）：</p>
-<pre><code class="language-leno">main() {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+main() {
     var vs = V3.malloc_array(3)
     vs[0].x = 1.0
     vs[1].x = 2.0
@@ -11640,7 +11811,9 @@ main() {
 </table>
 <p>⚠ 字段<strong>必须是 C 布局类型</strong> —— 写 <code>int x</code> / <code>float y</code> 会报错（那是 Leno 类型），要用 <code>i32</code> / <code>f32</code>。</p>
 <h3 id="数组字段与嵌套">数组字段与嵌套</h3>
-<pre><code class="language-leno">cstruct Line {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+cstruct Line {
     V3 a
     V3 b
     u8 color[4]
@@ -11729,7 +11902,9 @@ align(16) cstruct Aligned { i32 v }     // 强制 16 字节对齐：size = 16
 </tbody>
 </table>
 <p><code>Ptr[cstruct]</code> <strong>可以直接解引用</strong>成实例视图（等价于 C 的 <code>p-&gt;x</code> 写成 <code>p[0].x</code>）：</p>
-<pre><code class="language-leno">import ffi
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+import ffi
 main() {
     Ptr[V3] p = ffi.malloc(V3.size() * 2)
 
@@ -11794,7 +11969,8 @@ main() {
 </tbody>
 </table>
 <p>C 侧返回的指针如果调用方知道大小，用 <code>ffi.bind_size</code> 挂上去：</p>
-<pre><code class="language-leno">import ffi
+<pre><code class="language-text">// 【演示错误】故意越界写，会抛「内存访问越界」，程序以非 0 退出。
+import ffi
 main() {
     Ptr[u8] raw = ffi.malloc(64)
     ffi.bind_size(raw, 16)         // 只允许前 16 字节
@@ -11811,7 +11987,9 @@ main() {
 </ul>
 <h3 id="clib-传结构体-裸-cstruct-名-指针">clib 传结构体：裸 cstruct 名 = <strong>指针</strong></h3>
 <p><code>clib</code> 里写 cstruct 名，语义是<strong>传指针</strong>（不是 C 的按值传结构体）：</p>
-<pre><code class="language-leno">cstruct POINT { i32 x ; i32 y }
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+cstruct POINT { i32 x ; i32 y }
 
 // ⚠ 这种写法会被当作 Ptr[POINT]（编译器给一条警告，提示你确认语义）
 clib user32_a {
@@ -11826,7 +12004,9 @@ clib user32_b {
 <p>这个偏差在照抄 C 头文件时很危险（<code>void f(SDL_Rect r)</code> 在 C 里是<strong>按值</strong>，
 而这里会被当成传指针、C 侧收到的就是垃圾）—— 所以编译器对裸写法给<strong>警告</strong>。</p>
 <p>调用时 cstruct 实例会自动取地址：</p>
-<pre><code class="language-leno">import ffi
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+import ffi
 main() {
     user32_b lib = ffi.load(&quot;user32.dll&quot;)
     var pt = POINT.malloc()
@@ -11946,7 +12126,9 @@ main() {
 </tbody>
 </table>
 <p>正确做法：线程各自 <code>malloc</code> 自己的缓冲，<strong>传数据不传实例</strong>：</p>
-<pre><code class="language-leno">func worker(any ch) {
+<pre><code class="language-text">// 【续上例】本块接在上一个代码块后面写，用到了上文定义的类型，
+// 单独编译会报&quot;未定义的类型/变量&quot;，这是预期结果。
+func worker(any ch) {
     var v = V3.malloc()
     v.x = 1.0
     if ch is Channel {
@@ -12025,11 +12207,11 @@ FFI 层无法知道 C 函数用哪个分配器分配的内存（<code>free</code
 <li>✅ <strong>不需要释放</strong>的 C 字符串（如 <code>strerror</code>、<code>GetCommandLineA</code>、<code>SDL_GetError</code> 等返回静态缓冲区的函数）——直接用 <code>str8</code> 即可</li>
 <li>❌ <strong>需要释放</strong>的 C 字符串（如 <code>curl_easy_escape</code> 等返回动态分配内存的函数）——改用三步走：</li>
 </ul>
+</blockquote>
 <pre><code class="language-leno">Ptr ptr = ffi.call_ptr(lib, &quot;curl_easy_escape&quot;, handle, url, 0)
 string result = ffi.read_string(ptr, 0)
 ffi.call_void(lib, &quot;curl_free&quot;, ptr)  // 手动释放 C 内存
 </code></pre>
-</blockquote>
 <h3 id="内存操作">内存操作</h3>
 <pre><code class="language-leno">import ffi
 
@@ -12496,7 +12678,9 @@ main() {
    ⇒ 多线程写同一块内存就是数据竞争，必须自己保证“一块内存只有一个线程写”
    （或只读共享、结果走 Channel 传纯数据）</li>
 </ol>
-<pre><code class="language-leno">// ✅ 正确：每个线程独立使用 cstruct
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+// ✅ 正确：每个线程独立使用 cstruct
 func worker(any ch) {
     var s = TEST_STRUCT.malloc()  // 子线程独立分配
     s.field1 = 123
@@ -12579,17 +12763,19 @@ main() {
 </code></pre>
 <blockquote>
 <p><strong>⚠️ 注意：左右两边数量必须相等</strong></p>
-<pre><code class="language-leno">a, b = 1, 2, 3    // ❌ 报错：数量不匹配
+</blockquote>
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+a, b = 1, 2, 3    // ❌ 报错：数量不匹配
 a, b, c = 1, 2    // ❌ 报错：数量不匹配
 </code></pre>
-</blockquote>
-<blockquote>
 <p><strong>⚠️ 注意：并行赋值和 var 多变量声明是不同的语法</strong></p>
-<pre><code class="language-leno">var a = 10, b = 20     // 多变量声明：各自独立赋值
+<pre><code class="language-text">// 【反例】本块里的 ❌ 行是**故意写错**的，用来演示编译器怎么报错；
+// 整块编译不过正是本节要讲的内容。
+var a = 10, b = 20     // 多变量声明：各自独立赋值
 a, b = b, a             // 并行赋值：同时交换
 // var a, b = b, a      // ❌ 这是多变量声明，不是并行赋值
 </code></pre>
-</blockquote>
 <h3 id="闭包">闭包</h3>
 <pre><code class="language-leno">main() {
     // 测试1: 基本闭包
