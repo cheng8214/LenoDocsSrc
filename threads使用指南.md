@@ -196,10 +196,10 @@ Channel 是线程间安全通讯的核心机制，参考 Go 语言的 channel �
 
 ```leno
 // 有缓冲通道（异步）— 缓冲区大小为 N
-var ch = threads.channel(10)
+Channel ch = threads.channel(10)
 
 // 无缓冲通道（同步）— send 阻塞直到有人 receive
-var ch = threads.channel(0)
+Channel ch = threads.channel(0)
 ```
 
 ### 基本发送与接收
@@ -207,7 +207,7 @@ var ch = threads.channel(0)
 ```leno
 import threads
 
-func sender(any ch) {
+func sender(Channel ch) {
     ch.send("hello")
     ch.send(42)
     ch.send(3.14)
@@ -215,7 +215,7 @@ func sender(any ch) {
 }
 
 main() {
-    var ch = threads.channel(10)
+    Channel ch = threads.channel(10)
     var t = threads.start(sender, ch)
 
     print(ch.receive())    // hello
@@ -234,7 +234,7 @@ main() {
 import threads
 
 main() {
-    var ch = threads.channel(2)
+    Channel ch = threads.channel(2)
 
     // try_send: 成功返回 true，失败（满/关闭）返回 false
     assert_eq(ch.try_send("A"), true)
@@ -261,7 +261,7 @@ main() {
 ```leno
 import threads
 
-func producer(any ch) {
+func producer(Channel ch) {
     for 5 to var i {
         ch.send(i)
     }
@@ -269,7 +269,7 @@ func producer(any ch) {
 }
 
 main() {
-    var ch = threads.channel(10)
+    Channel ch = threads.channel(10)
     var t = threads.start(producer, ch)
 
     while true {
@@ -300,7 +300,7 @@ main() {
 ```leno
 import threads
 
-func producer(any ch) {
+func producer(Channel ch) {
     for 10 to var i {
         ch.send(i)
         print("生产: " + i)
@@ -308,7 +308,7 @@ func producer(any ch) {
     ch.close()
 }
 
-func consumer(any ch) {
+func consumer(Channel ch) {
     while true {
         var msg = ch.receive()
         if msg == null {
@@ -320,7 +320,7 @@ func consumer(any ch) {
 }
 
 main() {
-    var ch = threads.channel(5)
+    Channel ch = threads.channel(5)
     var tp = threads.start(producer, ch)
     var tc = threads.start(consumer, ch)
     tp.join()
@@ -333,7 +333,7 @@ main() {
 ```leno
 import threads
 
-func sender(any ch) {
+func sender(Channel ch) {
     for 3 to var i {
         ch.send("消息" + (i + 1))
     }
@@ -341,7 +341,7 @@ func sender(any ch) {
     ch.close()
 }
 
-func receiver(any ch) {
+func receiver(Channel ch) {
     while true {
         var msg = ch.receive()
         print("接收: " + msg)
@@ -352,7 +352,7 @@ func receiver(any ch) {
 }
 
 main() {
-    var ch = threads.channel(10)
+    Channel ch = threads.channel(10)
     var ts = threads.start(sender, ch)
     var tr = threads.start(receiver, ch)
     ts.join()
@@ -415,7 +415,7 @@ cstruct MEMORYSTATUS {
     u64 dwTotalPhys
 }
 
-func get_memory_info(any ch) {
+func get_memory_info(Channel ch) {
     // 在子线程中使用 cstruct
     var kernel32 = ffi.load("kernel32.dll")
     var mem = MEMORYSTATUS.malloc()
@@ -429,7 +429,7 @@ func get_memory_info(any ch) {
 }
 
 main() {
-    var ch = threads.channel(1)
+    Channel ch = threads.channel(1)
     var t = threads.start(get_memory_info, ch)
     var total_mem = ch.receive()
     print("总物理内存: " + total_mem)
@@ -523,7 +523,7 @@ import threads
 import times as ti
 import rands
 
-func bubble_sort(any arr) {
+func bubble_sort(Array[int] arr) {
     var n = arr.len()
     for n - 1 to var i {
         for n - i - 1 to var j {
@@ -537,7 +537,7 @@ func bubble_sort(any arr) {
     return arr
 }
 
-func sort_worker(any ch) {
+func sort_worker(Channel ch) {
     var arr = rands.int_array(1, 1000)
     var s = ti.ms()
     var result = bubble_sort(arr)
@@ -546,7 +546,7 @@ func sort_worker(any ch) {
 }
 
 main() {
-    var ch = threads.channel(4)
+    Channel ch = threads.channel(4)
 
     // 启动 4 个排序线程
     for 4 to var i {
@@ -554,7 +554,7 @@ main() {
     }
 
     // 收集结果
-    var total = 0
+    var total = 0.0
     for 4 to var i {
         var ms = ch.receive()
         print("线程" + (i + 1) + ": " + ms + "毫秒")
@@ -889,7 +889,7 @@ async func bad() {
 
 // ✅ 正确：选择一种模型
 // 方案1：纯线程
-func worker(any ch) { ... }
+func worker(Channel ch) { ... }
 var t = threads.start(worker, ch)
 
 // 方案2：纯协程
@@ -974,7 +974,7 @@ print(w.run_parallel(1, 2))                     // 6
 import threads
 
 // 分 4 份并行；回调是闭包 ⇒ 可以用捕获的 channel 把结果带回来
-var ch = threads.channel(8)
+Channel ch = threads.channel(8)
 var started = threads.parallel_for(4, func(int i) {
     ch.send(i * 10)
 })
@@ -1029,7 +1029,7 @@ main() {
 |---|---|
 | `Channel[int] ch` | `int` ✓ |
 | `Channel[Pt] ch` | `Pt` ✓（可再取字段） |
-| `var ch = threads.channel(1)`（裸 `Channel`） | `any`（**回落**，仍可用但需 `_int(...)` / 收窄） |
+| `Channel ch = threads.channel(1)`（裸 `Channel`） | `any`（**回落**，仍可用但需 `_int(...)` / 收窄） |
 | `ch.try_receive()` | 恒为 `any` ✓ **这是有意的**：空通道它给 `null`，说它是 `T` 就是撒谎（要精确得先有"可空元素"的表示） |
 
 ⚠ 两条口径：
