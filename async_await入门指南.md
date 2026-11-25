@@ -263,7 +263,8 @@ async func async_fn() {
 
 ### 2. 必须调用 asyncs.run()
 
-```leno
+```text
+// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
 import asyncs
 main() {
     async_fn()         // 只创建协程，不会执行
@@ -278,7 +279,8 @@ main() {
 
 ### 3. async 函数返回 Future
 
-```leno
+```text
+// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
 async func task():string {
     return "结果"
 }
@@ -561,7 +563,8 @@ main() {
 
 在早期版本中，如果所有协程都阻塞在 `await arecv()`/`await aaccept()` 上，`asyncs.run()` 会过早退出。当时的解决方法是添加一个额外的"保活"协程：
 
-```leno
+```text
+// 【对照示例】不是完整程序：❌ 是错误写法，✅ 是正确写法
 import asyncs
 // 旧写法（已不再需要）
 async func keeper(int ms) {
