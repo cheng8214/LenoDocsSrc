@@ -696,19 +696,31 @@ b0.text = badge          // 这里读本结构体的字段完全正常 ✓
 <li><code>new</code> 处按别名替换 struct_name 时（<code>parser_expr.c</code>）只取 <code>struct_name</code>、<strong>丢了
    <code>module_qualifier</code></strong> ⇒ <code>new StackAlias[int]()</code> 报「未定义的 struct 类型 'Stack'」。</li>
 </ol>
-<p><strong>回归用例</strong>：<code>assert/test_alias_generic_cross.leno</code>（本地泛型 / <code>Array[T]</code> / 跨模块限定名 /
-已实例化 / 值别名 / <code>use</code> 导入 / 再导出 共 8 条路径）+ <code>assert/helpers/alias_box_mod.leno</code>。</p>
-<p><strong>实际收益</strong>：<code>LenoWeb.web_generic.Stack</code> 从"只能删掉（破坏性）"变成
-<code>export alias Stack[T] = ct.Stack[T]</code> —— <code>use web.Stack</code> 保住，实现只剩容器那份。</p>
-<p><strong>顺带修掉的两个真 bug</strong>（2026-11-25，让"文件内 + 限定名"这条能跑；上游已改 + 用例已加）：</p>
+<p><strong>当天又补的两处</strong>（都是"别名真用起来"之后才暴露的，同属这条能力的收尾）：</p>
 <ol>
-<li>值别名探测（<code>parser_func.c</code> 的 <code>IDENT DOT IDENT</code>）把 <code>alias X[T] = m.Y[T]</code> 误判成
-   <code>alias X = Enum.member</code> ⇒ 后面的 <code>[T]</code> 被当作<strong>下标表达式</strong> ⇒ 报「未定义的变量: T」
-   （完全指错靶子）。修法：<strong>带类型参数的一律不是值别名</strong>；成员名后面跟 <code>[</code> 也回退按类型解析。</li>
-<li><code>new</code> 处按别名替换 struct_name 时（<code>parser_expr.c</code>）只取 <code>struct_name</code>、<strong>丢了
-   <code>module_qualifier</code></strong> ⇒ <code>new StackAlias[int]()</code> 报「未定义的 struct 类型 'Stack'」。
-   修法：限定名拼成 <code>qual.name</code> 再往下传。</li>
+<li><strong>别名作函数形参/返回类型不展开</strong>：签名归一化跑在 <code>AST_USE</code> 之前，而"被调函数定义在后、
+   调用点在前"时 callee 自己的归一化（<code>visit_func_impl</code>）还没轮到 ⇒ 期望类型停在别名名
+   （<code>BoxAlias[int]</code>），实参却已被 <code>new</code> 展开成真身（<code>Box[int]</code>）⇒ 假报
+   「第 1 个参数类型不匹配: 期望 BoxAlias[int], 实际 Box[int]」。
+   修法：调用点取 <code>func_def-&gt;u.func.param_types[i]</code> / <code>return_type</code> 时就地
+   <code>resolve_alias_in_type</code>（幂等，结果写回 AST ⇒ 后续调用点不再重复）。</li>
+<li><strong>别名与目标同名</strong>（<code>export alias Stack[T] = ct.Stack[T]</code>，再由 <code>Web.leno</code> 转出）被误判成
+   「类型别名 'Stack' 存在循环引用」：展开成 <code>ct.Stack[T]</code>、去掉模块前缀后又回到 <code>Stack</code>，
+   展开栈命中自己。修法：命中展开栈时<strong>先查全局 struct 表</strong> —— 存在同名真 struct 就以它为终点
+   （真 struct 优先于同名别名）；只有查不到时才是真循环（<code>alias A = Array[A]</code> 照旧报错 ✓）。</li>
 </ol>
+<p><strong>回归用例（11 条路径 + 同名再导出）</strong>：</p>
+<ul>
+<li><code>assert/test_alias_generic_cross.leno</code>：A 本地泛型 / B <code>Array[T]</code> / C 跨模块限定名 /
+  D 已实例化 / E 值别名 / F <code>use</code> 导入 / G 跨模块已实例化 / H 限定名 / I <strong>作形参</strong> /
+  J <strong>作返回类型</strong> / K 局部注解；</li>
+<li><code>assert/test_alias_same_name.leno</code>：<strong>同名别名的再导出</strong>（<code>use web.Stack</code> / <code>web.Stack[string]</code> /
+  与 <code>ct.Stack</code> 互赋 / 作形参）；</li>
+<li><code>assert/helpers/alias_box_mod.leno</code>：被引用的夹具模块。</li>
+</ul>
+<p><strong>实际收益</strong>：<code>LenoWeb.web_generic.Stack</code> 从"只能删掉（破坏性）"变成
+<code>export alias Stack[T] = ct.Stack[T]</code> —— <code>use web.Stack</code> 保住，实现只剩容器那份，
+且与 <code>ct.Stack</code> 是<strong>同一个类型</strong>（可互赋、可作形参）。</p>
 <p>回归用例：<code>assert/test_alias_generic_cross.leno</code>（本地泛型 alias / <code>Array[T]</code> / 跨模块限定名 /
 已实例化 / 值别名 五条路径）。</p>
 <blockquote>
