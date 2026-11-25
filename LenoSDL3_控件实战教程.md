@@ -1,12 +1,14 @@
 # LenoSDL3 控件实战教程
 
+> 本文需要 SDL3 窗口环境，代码块是**示意**，无法在无图形环境下运行。
+
 > 这份教程不罗列 API 签名，而是按**真实项目的搭建顺序**讲：怎么开窗、怎么摆控件、怎么让它们响应、怎么避开已经踩过的坑。
 > 代码全部取自 Aria（音乐播放器）和 `LenoSDL3/examples/` 的实测用例——都是跑得起来的写法。
 > API 速查与附录里的几十条实测坑点见 [SDL3 常用 API 与易踩坑速查](扩展模块/LenoSDL3_常用API与易踩坑速查.html)；单个控件的设计细节见 [Card 卡片控件设计文档](LenoSDL3_Card卡片控件设计文档.html)。
 
 ## 一、最小可运行：一个窗口 + 一个按钮
 
-```leno
+```text
 import "SDL3" as SDL3
 
 main() {
@@ -43,7 +45,7 @@ main() {
 
 Aria 的界面几乎全靠 `HBox`（横排）和 `VBox`（竖排）嵌套拼出来，少量需要精确落点的用 `AnchorBox`。
 
-```leno
+```text
 // 取自 Aria/lib/page_widgets.leno ——「正在加载…」行：Spinner + 文案
 HBox row = SDL3.createHBox({x: 0, y: 0, w: w, h: 40,
                             pad_x: 0, pad_y: 0, spacing: 12, justify: 1})
@@ -69,7 +71,7 @@ Aria 的嵌套层次（取自 `player_core.leno`）：`root`(VBox) → `body`(HB
 
 ### 4.1 点击回调
 
-```leno
+```text
 // 取自 Aria/lib/player_core.leno
 Button qClear = SDL3.createButton({image_path: ui.ico("menu_delete_all.png"),
                                    image_size: 16, w: 26, h: 26, radius: 6})
@@ -86,7 +88,7 @@ qh.add(qClear, {grow: 0, shrink: 0, basis: 26, align: 1})
 
 Aria 里大量小图形（圆形播放钮、角标、进度环）都用 `Canvas.on_draw` 画，而不是塞图片：
 
-```leno
+```text
 // 取自 Aria/lib/page_widgets.leno 的 play_dot()
 Canvas cv = SDL3.createCanvas({x: 0, y: 0, w: 26, h: 26, pad: 0,
                                bg_color: TRANS, border: false})

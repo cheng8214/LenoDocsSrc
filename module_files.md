@@ -749,7 +749,8 @@ main() {
 
     print(files.delete(src))        // true
     print(files.delete(dst))        // true
-}```
+}
+```
 
 ### 大文件复制（分块）
 

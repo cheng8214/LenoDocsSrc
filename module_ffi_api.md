@@ -704,7 +704,7 @@ func getProcessId() {
 }
 
 main() {
-    int pid = getProcessId()
+    var pid = _int(getProcessId())   // 该函数没写返回类型 ⇒ 返回 any，先取整
     print("最终 PID: " + pid)
 }
 ```

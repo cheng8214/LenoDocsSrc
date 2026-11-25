@@ -1,5 +1,7 @@
 # LenoSDL3 窗口与控件参考
 
+> 本文是控件 API 参考，代码块是**片段**，需要 SDL3 窗口环境。
+
 > 本文按 **先窗口、后通用约定、再逐个控件** 的顺序，把 Leno 的桌面 GUI 能力讲清楚。
 > 全部内容以 `Leno/leno_gui` 下的**官方活文档与实测用例**为准（`控件/总览/showcase.leno` 一窗展示全部控件，按控件分类的 `test_*.leno` 逐个验证属性），创建参数对照 `SDL3.leno` 门面的 `@optkeys` 白名单。代码照着改就能跑。
 > 按项目搭建顺序的实战路线见 [LenoSDL3 控件实战教程](LenoSDL3_控件实战教程.html)；实测坑点见 [SDL3 常用 API 与易踩坑速查](扩展模块/LenoSDL3_常用API与易踩坑速查.html)；官方用例清单见文末[第十章](#十官方活文档导览leno_gui)。
@@ -23,7 +25,7 @@
 
 ### 1.1 最小可运行骨架
 
-```leno
+```text
 import "SDL3" as SDL3
 use SDL3.Event
 use SDL3.Renderer
@@ -68,7 +70,7 @@ main() {
 | `flags` | SDL 窗口标志。可写 `WindowFlag.RESIZABLE`（需 `use SDL3.WindowFlag`），老代码也用 `0x20` |
 | `icon` | 窗口图标 PNG 路径。跨平台必须显式传（Windows 靠 exe 资源，Linux/macOS 没有） |
 
-```leno
+```text
 import dirs
 var icon = dirs.join(dirs.res_dir(), "images/app.png")
 var win = SDL3.createWindow({title: "应用", w: 800, h: 600, icon: icon, resizable: true})
@@ -80,7 +82,7 @@ var win = SDL3.createWindow({title: "应用", w: 800, h: 600, icon: icon, resiza
 
 `test_theme.leno` 演示了完整的主题系统——**顺序很关键：先设主题，再建窗口和控件**。
 
-```leno
+```text
 SDL3.setTheme(SDL3.darkTheme())     // 或 SDL3.lightTheme()
 var win = SDL3.createWindow({title: "主题测试", w: 880, h: 580})  // 不传 bg_color
 // onRender 回调留空：让窗口内部用主题背景色清屏，别硬编码黑色
@@ -126,7 +128,7 @@ win.run(func(Event ev): bool { ... }, func(Renderer r) {})
 | `win.cancelClose()` | `onEvent` 里配合 `isWindowClose()` | 拦下这次销毁 → 做"关闭到托盘" |
 | `SDL3.requestExit()` | 托盘回调、定时器、渲染回调 | 请求主循环收尾（下一轮生效），销毁所有窗口 |
 
-```leno
+```text
 win.run(func(Event ev): bool {
     if ev.isWindowClose() {
         if tray == null { return false }   // 没托盘就别拦，否则没入口恢复
@@ -196,7 +198,7 @@ win.run(func(Event ev): bool {
 
 `test_layout.leno` 是这套语义的完整实测。容器 `add(widget, opts)`：
 
-```leno
+```text
 HBox row = win.addHBox({x: 10, y: 44, w: 800, h: 46, spacing: 8, pad_x: 6, pad_y: 6})
 row.add(SDL3.createButton({text: "grow:2", w: 80, h: 34}), {grow: 2})   // 占 2/4
 row.add(SDL3.createButton({text: "grow:1", w: 80, h: 34}), {grow: 1})   // 各占 1/4
@@ -219,7 +221,7 @@ row.add(SDL3.createButton({text: "grow:1", w: 80, h: 34}), {grow: 1})
 
 ### 2.4 回调签名（按实测，别猜）
 
-```leno
+```text
 btn.on_click(func() { ... })                              // 绝大多数控件：无参
 cv.on_click(func(float lx, float ly) { ... })              // Canvas：局部坐标
 cb.on_change(func(bool v) { ... })                         // CheckBox/Toggle/Radio
@@ -243,7 +245,7 @@ cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) { ... })
 
 ### 3.1 Label —— 文字标签
 
-```leno
+```text
 Label lb = SDL3.createLabel({text: "歌曲名", font_size: 14, text_color: #333333FF,
                              align: 0, tip: "完整标题"})
 lb.set_text("新标题")
@@ -258,7 +260,7 @@ box.add(lb, {grow: 1, align: 1})
 
 `test_button_v3.leno` 逐项测了类型、颜色、外观开关、光标、字体样式和动态方法。
 
-```leno
+```text
 // 五种预设
 Button b = win.addButton({text: "Primary", x: 30, y: 55, w: 130, h: 40,
                           type: "primary", tip: "主要操作"})
@@ -287,7 +289,7 @@ Button icon = SDL3.createButton({image_path: ui.ico("menu_delete_all.png"),
 
 ### 3.4 CheckBox —— 复选框
 
-```leno
+```text
 var cb = win.addCheckBox({text: "我同意用户协议", x: 40, y: 40, checked: false})
 cb.on_change(func(bool v) { print("复选框 -> " + v) })
 bool v = cb.is_checked()
@@ -300,7 +302,7 @@ bool v = cb.is_checked()
 
 同 `group` 字符串的为一组，组内互斥；不同 `group` 互不影响。
 
-```leno
+```text
 win.addRadioButton({text: "选项 A", x: 40, y: 100, group: "mode", checked: true})
 win.addRadioButton({text: "选项 B", x: 40, y: 140, group: "mode"})
 ```
@@ -309,7 +311,7 @@ win.addRadioButton({text: "选项 B", x: 40, y: 140, group: "mode"})
 
 ### 3.6 Toggle —— 开关
 
-```leno
+```text
 var tg = win.addToggle({text: "Wi-Fi", x: 240, y: 200, on: true, anim: true})
 tg.on_change(func(bool v) { ... })
 bool on = tg.is_on()
@@ -326,7 +328,7 @@ bool on = tg.is_on()
 
 `showcase.leno` 的"文本输入"卡片给了三种典型用法；`settings.leno` 演示了 IME 句柄下发。
 
-```leno
+```text
 // 单行 / 密码 / 多行
 win.addEdit({x: 90, y: 322, w: 220, h: 30, placeholder: "请输入姓名"})
 win.addEdit({x: 90, y: 362, w: 220, h: 30, password: true, placeholder: "密码"})
@@ -348,7 +350,7 @@ ed.on_enter(func() { ... })
 
 ### 4.2 SpinBox —— 数字输入框
 
-```leno
+```text
 var sp = SDL3.createSpinBox({x: 590, y: 286, w: 120, min: 10, max: 20,
                              value: 14, step: 1, int_mode: true})
 sp.on_change(func(float v) { ... })
@@ -359,7 +361,7 @@ sp.on_change(func(float v) { ... })
 
 ### 4.3 Slider —— 滑块
 
-```leno
+```text
 var sl = win.addSlider({x: 470, y: 96, w: 240, h: 24, min: 0, max: 100, value: 40, tip: "拖动调节"})
 sl.on_change(func(float v) { status.set_text("滑块 = " + (v as string)) })
 
@@ -371,7 +373,7 @@ var vertical = win.addSlider({x: 470, y: 140, w: 24, h: 150, min: 0, max: 10, va
 
 ### 4.4 ProgressBar —— 进度条
 
-```leno
+```text
 var pg = win.addProgressBar({x: 560, y: 140, w: 240, h: 22, value: 30, clickable: true})
 pg.on_change(func(float v) { ... })
 pg.set_value(pg.get_value() + 20.0)
@@ -390,7 +392,7 @@ pg.set_value(pg.get_value() + 20.0)
 
 跨平台自带 8 色板 + RGBA 滑杆 + 实时预览 + 十六进制值，不依赖系统色板。
 
-```leno
+```text
 SDL3.pickColor({color: 当前色, title: "选个颜色"}, func(Color c) { 当前色 = c })
 ```
 
@@ -411,7 +413,7 @@ SDL3.pickColor({color: 当前色, title: "选个颜色"}, func(Color c) { 当前
 **HBox / VBox 参数**：`x`/`y`/`w`/`h`、`pad_x`/`pad_y`（或 `padTop`/`padBottom`/`padLeft`/`padRight`）、`spacing`、`justify`、`bg_color`、`bg_radius`、`clip`、`visible`、`enabled`。
 **方法**：`add(widget, opts)`、`remove()`、`clear()`、`reset()`、`set_bg_color()`、`set_pos()`、`set_size()`、`measure_w()`、`measure_h()`。
 
-```leno
+```text
 // AnchorBox：锚点定位，不是 grow/basis
 var ab = win.addAnchorBox({x: 410, y: 410, w: 390, h: 350, pad_x: 8, pad_y: 8})
 ab.add(SDL3.createLabel({text: "左上"}), {left: 8, top: 8})
@@ -426,7 +428,7 @@ ab.add(SDL3.createButton({text: "右下", w: 90, h: 32}), {right: 8, bottom: 8})
 **参数**：`cols`（列数）、`col_weights`、`col_spacing`、`row_spacing`、`spacing`、`pad_x`/`pad_y`、`min_col_width`、`align`、`w`/`h`。
 **方法**：`add(widget, {align: 1})`、`set_cols()`、`remove()`、`clear()`、`count()`、`measure_h()`、`measure_w()`。
 
-```leno
+```text
 GridLayout grid = SDL3.createGridLayout({cols: 2, col_weights: [1, 2], spacing: 8})
 grid.add(SDL3.createLabel({text: "名称"}), {align: 1})
 grid.add(SDL3.createLabel({text: "值"}),   {align: 1})
@@ -436,7 +438,7 @@ grid.add(SDL3.createLabel({text: "值"}),   {align: 1})
 
 `showcase` 和 `settings` 都用一个 `card()` 构建器做"边框卡片 + 标题"——**容器加入布局用 `createPanel` + `tab.addToPage`，顶层用 `win.addPanel`**：
 
-```leno
+```text
 // showcase：顶层卡片
 func card(Window win, float x, float y, float w, float h, string title): Panel {
     var p = win.addPanel({x:x, y:y, w:w, h:h, bg_color: #1C1E26FF, radius:10, border_color: #5A5F6EFF})
@@ -459,7 +461,7 @@ func card(Window win, float x, float y, float w, float h, string title): Panel {
 
 `showcase` 的标准写法：容器注册进窗口，内容用一个 `createVBox` 自适应。
 
-```leno
+```text
 var sv = win.addScrollView({x: 878, y: 426, w: 372, h: 180, content_w: 340, content_h: 520})
 var svBox = SDL3.createVBox({pad_x: 10, pad_y: 10, spacing: 8})
 for 12 to i {
@@ -477,7 +479,7 @@ sv.set_content(svBox)
 
 ⚠ **页内坐标是"相对内容区左上角"**：内容区原点 = `(tab.x, tab.y + tab_h)`，`settings.leno` 里的 `card()` 就是这么换算的。
 
-```leno
+```text
 var tab = win.addTabControl({x: 878, y: 684, w: 372, h: 250,
                              tabs: ["基础", "高级"], active: 0, tab_h: 30})
 tab.addToPage(0, SDL3.createLabel({text: "基础设置"}), 20, 20)      // (widget, dx, dy)
@@ -504,7 +506,7 @@ tab.on_change(func(int idx) { ... })
 
 ### 6.1 ListBox —— 列表
 
-```leno
+```text
 var lb = SDL3.createListBox({x: 470, y: 396, w: 160, h: 150,
                              items: ["苹果", "香蕉", "橘子"], selected: 0})
 lb.on_change(func(Array[int] idxs) { status.set_text("选中 " + idxs.len() + " 项") })
@@ -521,7 +523,7 @@ var multi = SDL3.createListBox({items: ["红", "绿", "蓝"], mode: 1})   // mod
 
 顶层**必须 `win.addComboBox`**；放进 Tab/容器时用 `createComboBox` + `add`（靠全局注册表画弹层）。
 
-```leno
+```text
 var cbx = win.addComboBox({x: 470, y: 700, w: 240, h: 32,
                            items: ["选项一", "选项二"], placeholder: "请选择",
                            selected: 1, tip: "下拉演示"})
@@ -537,7 +539,7 @@ cbx.on_change(func(int idx) { status.set_text("下拉: " + cbx.get_selected_text
 
 `test_table_features.leno` 演示了复选框列、行级颜色和空状态。
 
-```leno
+```text
 Array[string] headers = ["", "任务", "状态", "耗时"]
 Array[int] aligns = [1, 0, 1, 2]
 Array[Array[string]] rows = [["", "编译模块A", "成功", "1.2s"], ...]
@@ -589,7 +591,7 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 
 ### 7.1 ImageView —— 图片展示
 
-```leno
+```text
 ImageView iv = SDL3.createImageView({image_path: path, image_mode: 0,
                                      border: true, radius: 8,
                                      cursor: SDL3.SystemCursor.POINTER, tip: "封面"})
@@ -607,7 +609,7 @@ iv.on_click(func() { ... })
 
 `test_canvas_tab.leno` 把 Canvas 的坐标、裁剪、持久像素层讲得很清楚。
 
-```leno
+```text
 Canvas cv = SDL3.createCanvas({w: 26, h: 26, pad: 0, bg_color: #00000000, border: false})
 cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
     // 局部坐标：(0,0)=左上角，(cw,ch)=右下角；越界图元会被裁剪到画布内
@@ -620,7 +622,7 @@ cv.on_click(func(float lx, float ly) { ... })   // ⚠ 收局部坐标，不是�
 
 **持久画布**：Canvas 自身**没有**像素级方法（旧的 `persist`/`set_pixel` 那套已不存在）。持久层用 `PixelBuffer` + `Renderer.blitBuffer`：
 
-```leno
+```text
 PixelBuffer buf = new PixelBuffer()
 buf.init(260, 190)
 cv.on_click(func(float lx, float ly) {
@@ -663,7 +665,7 @@ cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) {
 
 一次操作的"回声"，不占布局、不吃事件、自动淡出。
 
-```leno
+```text
 SDL3.toast("已复制")
 SDL3.toastKind("保存失败", SDL3.TOAST_ERROR)
 SDL3.toastFull("正在解析…", SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
@@ -682,7 +684,7 @@ SDL3.toastFull("正在解析…", SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
 
 **MenuBar 是构建器写法**，先 `addMenu` 拿 int id，再往 id 里加项（`showcase.leno` / `settings.leno` 一致）：
 
-```leno
+```text
 var bar = win.addMenuBar({x: 0, y: 0, w: 920, h: 30, font_size: 14})
 
 int mFile = bar.addMenu("文件")
@@ -711,7 +713,7 @@ win.setContextMenu(bar, ctx)
 
 无边框、置顶、非模态；图标传图片路径。
 
-```leno
+```text
 PopMenu pm = SDL3.createPopMenu({})
 pm.addItem("隐藏窗口", imgPath, func() { ... })
 pm.addCheck("窗口置顶", imgPath, false, func() { ... })
@@ -744,7 +746,7 @@ pm.poll()                                   // 主循环里调：点菜单外自
 
 ### 9.2 Dialog —— 对话框
 
-```leno
+```text
 // 模态确认：结果走回调，不要读返回值
 SDL3.msgBox("确认", ["删除后无法恢复"], "删除", "取消", true, func() { do_delete() })
 

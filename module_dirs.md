@@ -45,16 +45,23 @@ main() {
 
 ```leno
 import dirs
-import io
+import files
 use dirs.DirEntry
 use dirs.DirInfo
 
 main() {
-    DirInfo info = dirs.stat("build.bat")     // 字段类型编译期已知
-    Array[DirEntry] es = dirs.walk("src")     // 元素类型编译期已知
+    // 先在临时目录造点东西 —— 示例不该依赖仓库里恰好有 src/
+    var root = dirs.join(_tmpdir(), "leno_dirs_demo")
+    if not dirs.exists(root) {
+        dirs.mkdir_p(root)
+    }
+    files.write(dirs.join(root, "a.txt"), "hello")
+
+    DirInfo info = dirs.stat(dirs.join(root, "a.txt"))   // 字段类型编译期已知
+    Array[DirEntry] es = dirs.walk(root)                 // 元素类型编译期已知
     print(info.size)
-}
-```
+    print(es.len())
+}```
 
 两个名字**也可以不写 `use` 直接用**（编译器按 native 类型规格兜底解析）；两种写法等价，
 写 `use` 的好处是：出处明确、名字冲突时有正式出口、工具能列出该模块导出的类型。
@@ -662,8 +669,8 @@ import dirs
 import io
 
 // 递归查找所有 .leno 文件
-func find_leno_files(any path) : array {
-    var result = []
+func find_leno_files(string path): Array[string] {
+    Array[string] result = []
     var entries = dirs.walk(path)
     
     for entries to entry {
@@ -698,10 +705,19 @@ main() {
 import dirs
 import io
 import times
+import files
 
 main() {
-    var source_dir = "src"
-    var backup_dir = "backup_" + times.now()
+    // 造一个临时"源码目录"（示例不该依赖仓库里恰好有 src/）
+    var source_dir = dirs.join(_tmpdir(), "leno_backup_demo")
+    if not dirs.exists(source_dir) {
+        dirs.mkdir_p(source_dir)
+    }
+    files.write(dirs.join(source_dir, "a.c"), "int main(void){return 0;}")
+    files.write(dirs.join(source_dir, "b.c"), "int add(int a,int b){return a+b;}")
+    files.write(dirs.join(source_dir, "readme.md"), "不是 .c，不会被复制")
+
+    var backup_dir = dirs.join(_tmpdir(), "leno_backup_" + _str(times.now()))
     
     // 创建备份目录
     if not dirs.mkdir_p(backup_dir) {
@@ -734,33 +750,38 @@ main() {
 
 ```leno
 import dirs
-import io
+import files
 
 // 计算目录总大小（简化版，只统计当前层）
-func calc_dir_size(any path) : int {
+func calc_dir_size(string path): int {
     var total = 0
     var entries = dirs.walk(path)
-    
+
     for entries to entry {
         var root = entry.root
-        var files = entry.files
-        
-        for files to f {
+        var f_list = entry.files
+
+        for f_list to f {
             var full_path = dirs.join(root, f)
             var info = dirs.stat(full_path)
             total = total + info.size
         }
     }
-    
+
     return total
 }
 
 main() {
-    var size = calc_dir_size("src")
-    print("src 目录总大小: " + size + " 字节")
-    print("约 " + (size / 1024) + " KB")
-}
-```
+    // 造一个临时目录再算，避免依赖仓库里的 src/
+    var root = dirs.join(_tmpdir(), "leno_size_demo")
+    if not dirs.exists(root) {
+        dirs.mkdir_p(root)
+    }
+    files.write(dirs.join(root, "a.txt"), "hello")        // 5 字节
+    files.write(dirs.join(root, "b.txt"), "hello leno")   // 10 字节
+
+    print(calc_dir_size(root))
+}```
 
 ---
 
