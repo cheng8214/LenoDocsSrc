@@ -363,9 +363,11 @@ build\leno.exe build\leno_module\run_all_tests.leno
 </tbody>
 </table>
 <p>两条都直接 <code>abort()</code>（压力模式就是拿来炸的），并打印持有者/子对象的类型、代数、marked 位。</p>
-<p><strong>已知边界</strong>：子线程 VM 整体跳过（<code>marked</code> 位会被别的线程留下 stale 值 + 跨堆引用是常态）；
-<code>Channel</code>/<code>Thread</code>/<code>ffi</code> 库对象跳过；<code>test_async_io_limit</code> / <code>test_async_sockets</code> 在压力下会
-<strong>超时</strong>（I/O 计时用例，不是缺陷）。详见 <code>VM自证与语言债_路线_2026-11.md</code>。</p>
+<p><strong>已知边界</strong>：<code>Channel</code>/<code>Thread</code>/<code>ffi</code> 库对象跳过（前两者不走普通堆语义、后者有意永不回收）；
+跨堆对象（<code>owner_thread</code> 与本 VM 的 <code>thread_serial</code> 不同）跳过 —— 这是<strong>合法</strong>的
+（Channel 载荷、<code>threads.start</code> 返回值），也是子线程 VM 能一起校验的原因（2026-11-25 P0.1）。
+<code>test_async_io_limit</code> / <code>test_async_sockets</code> 在压力下会<strong>超时</strong>（I/O 计时用例，不是缺陷）。
+详见 <code>VM自证与语言债_路线_2026-11.md</code>。</p>
 </main>
   <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-先认症状-这些是崩溃-不是报错">一、先认症状：这些是崩溃，不是报错</a></li><li><a href="#二-最重要的教训-环境不同-是假象">二、最重要的教训：「环境不同」是假象</a></li><li><a href="#三-定位流程-按顺序做-别跳">三、定位流程（按顺序做，别跳）</a></li><ul class="lv3"><li><a href="#第-1-步-判断崩在编译期还是运行期">第 1 步：判断崩在编译期还是运行期</a></li><li><a href="#第-2-步-二分到最小用例">第 2 步：二分到最小用例</a></li><li><a href="#第-3-步-编调试版-gdb-核心一步">第 3 步：编调试版 + gdb（核心一步）</a></li><li><a href="#第-4-步-认-毒值">第 4 步：认"毒值"</a></li><li><a href="#第-5-步-顺着栈找-第二个所有者">第 5 步：顺着栈找"第二个所有者"</a></li></ul><li><a href="#四-本仓库的已知高危模式-写新代码时避开">四、本仓库的已知高危模式（写新代码时避开）</a></li><ul class="lv3"><li><a href="#共享子节点-这次的真凶">① 共享子节点 —— 这次的真凶</a></li><li><a href="#就地改-kind">② 就地改 kind</a></li><li><a href="#固定数组无上限">③ 固定数组无上限</a></li></ul><li><a href="#五-工具可用性-本机实测">五、工具可用性（本机实测）</a></li><li><a href="#六-修复后的验证清单">六、修复后的验证清单</a></li><li><a href="#七-一句话速查">七、一句话速查</a></li><li><a href="#八-实战-gc-把还活着的对象回收了-2026-11-25-修">八、实战：GC 把还活着的对象回收了（2026-11-25 修）</a></li><li><a href="#九-主动找-gc-缺陷-gc-stress-2026-11-25-新增">九、主动找 GC 缺陷：--gc-stress（2026-11-25 新增）</a></li></ul></aside>
 </div>

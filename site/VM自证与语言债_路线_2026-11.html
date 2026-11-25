@@ -88,8 +88,8 @@
 <td><strong>P0.1</strong></td>
 <td>高</td>
 <td>子线程 VM 的完整性校验（P0 的已知边界）</td>
-<td>⬜</td>
-<td><code>test_threads_native_state</code> 在压力下也过；跨堆引用不再需要靠"整体跳过"</td>
+<td>✅ <strong>已完成（2026-11-25）</strong></td>
+<td>三处并发用例在压力下各连跑 4 次全过；全量压力 666/2（仍只剩两条 async IO 超时）</td>
 </tr>
 <tr>
 <td><strong>P1</strong></td>
@@ -168,8 +168,8 @@ set LENO_GC_STRESS=512 &amp;&amp; build\leno.exe assert\test_x.leno             
 <tbody>
 <tr>
 <td>子线程 VM（<code>vm.thread_serial != 0</code>）</td>
-<td><strong>跳过</strong>两项校验</td>
-<td>子线程的 <code>marked</code> 位会被别的线程的 GC 留下 stale 值；跨堆引用在那里是常态 ⇒ 现在会假阳性（见 P0.1）</td>
+<td><strong>照常校验</strong>（P0.1 已放开）</td>
+<td>跨堆指针靠"<code>owner_thread</code> 是否等于本 VM 的 serial"逐值判掉，不需要全局堆注册表，也就不会去走别人正在改的堆链</td>
 </tr>
 <tr>
 <td><code>Channel</code> / <code>Thread</code> / <code>ffi</code> 库对象</td>
@@ -188,6 +188,14 @@ set LENO_GC_STRESS=512 &amp;&amp; build\leno.exe assert\test_x.leno             
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>P0.1 的真实收获：先修的是工具自己的 bug。</strong> 放开子线程后 <code>test_threads_native_state</code>
+间歇报"悬空根"，而报告里 <code>young=…</code> 与那个对象地址<strong>完全相同</strong> —— 说明对象明明在堆上。
+根因是三份"本线程状态"用了普通 <code>static</code>（开关 <code>gc_verify_graph_on</code> 除外）：
+两个子线程同时 GC 时，A 刚建好索引、B 就把 <code>cnt</code> 清 0 重建 ⇒ A 在自己的堆里"查不到"对象。
+改成 <code>THREAD_LOCAL</code> 后 4/4 稳定通过。
+教训与 P0 本身一致：<strong>校验器自己也要能被信任</strong> —— 假阳性的工具会让人把它关掉。</p>
+</blockquote>
 <h3 id="实测-2026-11-25-本机">实测（2026-11-25 本机）</h3>
 <table>
 <thead>
@@ -218,6 +226,11 @@ set LENO_GC_STRESS=512 &amp;&amp; build\leno.exe assert\test_x.leno             
 <td><strong>65 passed</strong></td>
 <td>33 s</td>
 </tr>
+<tr>
+<td>三项并发用例（P0.1 后）</td>
+<td><strong>12/12 全过</strong>（各连跑 4 次：threads_native_state / reflect_stress / thread_heap_reclaim）</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
 <p>CI 建议跑法（跳过两个 I/O 计时用例的做法：它们本来就靠网络/时间，压力模式下不适用）：</p>
@@ -227,11 +240,19 @@ build\leno.exe assert\run_tests.leno build\leno.exe assert :: 361 s，预期 666
 </code></pre>
 <hr>
 <h2 id="四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</h2>
-<h3 id="p0-1-子线程-vm-的完整性校验-p0-的补口-约-1-天">P0.1 子线程 VM 的完整性校验（P0 的补口，约 1 天）</h3>
-<p>现在整块跳过子线程。要做的是<strong>按 <code>vm.thread_serial</code> 分别建堆索引</strong>，并且把"跨堆指针"从
-"悬空指针"里区分出来：维护一张 <code>thread_serial → {young_heap, old_heap}</code> 的注册表（线程启动时注册、
-结束时注销），校验时先查"这个指针属于哪个 VM 的堆"。做完这条，<code>test_threads_native_state</code>
-在压力下也应该全绿。</p>
+<h3 id="p0-1-子线程-vm-的完整性校验-已完成-2026-11-25">P0.1 子线程 VM 的完整性校验 —— ✅ 已完成（2026-11-25）</h3>
+<p>原计划是"建一张 <code>thread_serial → {young_heap, old_heap}</code> 的全局注册表"。<strong>实际不需要</strong>：
+<code>Object.owner_thread</code> 在分配时就记下了"这个对象属于哪个 VM 的堆"，所以只要
+<strong>逐值比较 <code>owner_thread</code> 与本 VM 的 <code>thread_serial</code></strong> 就能把"跨堆引用（合法）"和
+"悬空指针（缺陷）"分开，而且完全不用去遍历别的线程正在改动的堆链（那才是数据竞争）。</p>
+<p>真正要修的是<strong>校验器自己的三个 <code>static</code></strong>：它们记的是"本线程正在做什么"
+（索引指针/计数/容量、<code>pass_active</code>、"当前持有者"），必须 <code>THREAD_LOCAL</code>。
+两个子线程同时 GC 时，A 刚建好索引、B 就把 <code>cnt</code> 清 0 重建 ⇒ A 在自己的堆里"查不到"对象，
+报出假的悬空根（报告里 <code>young=</code> 与那个对象地址一模一样，正是破案线索）。
+<code>gc_verify_graph_on</code> 则<strong>不能</strong> TLS —— 新线程的 TLS 会初始化成 0，那样子线程根本不开校验。</p>
+<p>验证：<code>test_threads_native_state</code> / <code>test_reflect_stress</code> / <code>test_thread_heap_reclaim</code>
+在 <code>LENO_GC_STRESS=512</code> 下各连跑 4 次，<strong>12/12 全过</strong>；全量压力套件仍是 666/2（只剩两条
+async IO 超时，与 P0 时一致）。</p>
 <h3 id="p1-迭代协议-约-3-5-天">P1 迭代协议（约 3–5 天）</h3>
 <p>现状：<code>for c to v</code> 是<strong>语义期改写成 <code>c.to_array()</code></strong>（见 <code>semantic_rewrite_for_iterable</code>）⇒
 每轮遍历分配一个快照数组。容器的 README 里只能写"热路径请自己按下标走"，这就是摩擦。</p>
@@ -281,9 +302,12 @@ build\leno.exe assert\run_tests.leno build\leno.exe assert :: 361 s，预期 666
 <ul>
 <li><strong>2026-11-25</strong>：新建本文档；<strong>P0 完成</strong>（<code>--gc-stress</code> + 悬空根校验 + 标记完整性校验，
   已用它实证抓回"原地帧不清槽位"那个 bug；常规/压力两套测试数字见 §三）。</li>
+<li><strong>2026-11-25（同日晚）</strong>：<strong>P0.1 完成</strong> —— 子线程 VM 也纳入校验（靠 <code>owner_thread</code> 分跨堆，
+  不建全局堆注册表）；同时修掉校验器自身把"本线程状态"写成普通 <code>static</code> 导致的假阳性
+  （并发 GC 时互相清索引）。三项并发用例 12/12 通过。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-p0-的补口-约-1-天">P0.1 子线程 VM 的完整性校验（P0 的补口，约 1 天）</a></li><li><a href="#p1-迭代协议-约-3-5-天">P1 迭代协议（约 3–5 天）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-已完成-2026-11-25">P0.1 子线程 VM 的完整性校验 —— ✅ 已完成（2026-11-25）</a></li><li><a href="#p1-迭代协议-约-3-5-天">P1 迭代协议（约 3–5 天）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="archive/VM字节码校验与崩溃防护设计方案.html">← 上一篇</a><a href="async_await入门指南.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

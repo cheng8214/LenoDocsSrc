@@ -336,7 +336,7 @@
 <tr>
 <td>T36</td>
 <td><strong>P0</strong></td>
-<td><strong>GC 自证</strong>（<code>--gc-stress[=N]</code> + <code>LENO_GC_STRESS</code> 环境变量；每次回收做「悬空根」+「标记完整性」两处校验）—— ✅ <strong>已完成（2026-11-25）</strong>：用它把"原地帧不清非参槽位 ⇒ GC 扫到悬空指针"那个 <code>0xC0000005</code> <strong>一句话报回根因</strong>（<code>[GC-VERIFY] 悬空根：帧 6 的寄存器 10 … func=zlib</code>）。常规 668/0、压力 666/2（两条 async IO 超时）。后续四项（子线程校验 / 迭代协议 / 可视化回归 / PGO）见新文档</td>
+<td><strong>GC 自证</strong>（<code>--gc-stress[=N]</code> + <code>LENO_GC_STRESS</code> 环境变量；每次回收做「悬空根」+「标记完整性」两处校验；<strong>含子线程 VM</strong>，靠 <code>owner_thread</code> 分跨堆）—— ✅ <strong>已完成（2026-11-25）</strong>：用它把"原地帧不清非参槽位 ⇒ GC 扫到悬空指针"那个 <code>0xC0000005</code> <strong>一句话报回根因</strong>（<code>[GC-VERIFY] 悬空根：帧 6 的寄存器 10 … func=zlib</code>）。常规 668/0、压力 666/2（两条 async IO 超时）。后续四项（子线程校验 / 迭代协议 / 可视化回归 / PGO）见新文档</td>
 <td>已完成（半天）</td>
 <td>低（默认零开销，只在 <code>--gc-stress</code> 下跑）</td>
 <td>—</td>
