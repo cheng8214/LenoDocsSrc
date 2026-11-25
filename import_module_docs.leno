@@ -19,13 +19,15 @@ const LENOREPO = "../../../Leno/build/leno_module"
 // 包名 → 模块目录名 / import 名（与总 README 的「模块一览」一致，防"包名 ≠ import 名"的坑）
 //   两个数组按下标一一对应；用平行数组而不是 struct 数组，是为了让"加一行要改两处"
 //   这件事在 diff 里一眼可见 ✓
+// ★ 2026-11-25：补上 LenoImage / LenoTemplate / LenoValidate（随 gitee 319b3885 新增的三个纯 Leno 模块）。
+//   漏在这张表里 ⇒ 它们有 README 也不会进文档站（总览也没链接）。
 var IMPORTS = ["CLI", "Compress", "Config", "Containers", "Crypto", "CSV", "FS", "Glob", "GameHelper", "HTTP",
-               "Log", "Markdown", "Music", "QR", "Result", "SDL3", "sqlite3", "Stats",
-               "Sys", "TUI", "UUID", "Win32", "XLSX", "Zip", "Web"]
+               "Image", "Log", "Markdown", "Music", "QR", "Result", "SDL3", "sqlite3", "Stats",
+               "Sys", "Template", "TUI", "UUID", "Validate", "Win32", "XLSX", "Zip", "Web"]
 var PKGS = ["LenoCLI", "LenoCompress", "LenoConfig", "LenoContainers", "LenoCrypto", "LenoCSV", "LenoFS", "LenoGlob",
-            "LenoHack", "LenoHTTP", "LenoLog", "LenoMarkdown", "LenoMusic", "LenoQR",
-            "LenoResult", "LenoSDL3", "LenoSqlite", "LenoStats", "LenoSys", "LenoTUI",
-            "LenoUUID", "LenoWin32", "LenoXLSX", "LenoZip", "LenoWeb"]
+            "LenoHack", "LenoHTTP", "LenoImage", "LenoLog", "LenoMarkdown", "LenoMusic", "LenoQR",
+            "LenoResult", "LenoSDL3", "LenoSqlite", "LenoStats", "LenoSys", "LenoTemplate", "LenoTUI",
+            "LenoUUID", "LenoValidate", "LenoWin32", "LenoXLSX", "LenoZip", "LenoWeb"]
 
 // 多入口模块（import 名有几个）
 func imports_of(string name):string {
