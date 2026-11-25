@@ -126,11 +126,11 @@ main() {
 
 > **⚠️ 注意：`print`** **自动换行，`printf`** **不换行**
 >
-> ```leno
-> print("a")            // 输出 "a\n"
-> printf("a")           // 输出 "a"（无换行）
-> printf("a\n")         // 输出 "a\n"（手动换行）
-> ```
+```leno
+print("a")            // 输出 "a\n"
+printf("a")           // 输出 "a"（无换行）
+printf("a\n")         // 输出 "a\n"（手动换行）
+```
 
 ***
 
@@ -244,37 +244,37 @@ main() {
 
 > **⚠️ 注意：`type()` 始终返回 `"int"`**
 >
-> ```leno
-> int a = 10
-> print(type(a))      // "int"（当前是 int48）
->
-> a = 100000000000000000000
-> print(type(a))      // "int"（底层自动升级，对外无变化）
-> ```
->
-> 变量声明为 `int`，底层运算自动处理溢出升级，`type()` 始终返回 `"int"`，对用户完全透明。
+```leno
+int a = 10
+print(type(a))      // "int"（当前是 int48）
 
-> **🔧 int 自动升级的运算**
->
-> 以下运算在结果超出 int48 范围时会**自动升级**为 BigInt：
->
-> ```leno
-> // 加法、减法、乘法：自动检测溢出并升级
-> var a = 1000000000000000
-> var b = a + a                  // 自动升级
-> var c = a * a                  // 自动升级
-> var d = -140737488355328       // INT48_MIN 取负超出范围，自动升级
->
-> // 超过 int64 范围也能正确处理
-> var huge = 100000000000000000000 * 100000000000000000000
-> print(type(huge))              // "int"
->
-> // 除法规则
-> int / int → int                // 整数除法
-> int / float → float            // 浮点除法
-> ```
->
-> 从用户角度看，`int` 就是任意精度整数 — 你不需要关心底层细节，语言已经替你处理好了。
+a = 100000000000000000000
+print(type(a))      // "int"（底层自动升级，对外无变化）
+```
+
+变量声明为 `int`，底层运算自动处理溢出升级，`type()` 始终返回 `"int"`，对用户完全透明。
+
+**🔧 int 自动升级的运算**
+
+以下运算在结果超出 int48 范围时会**自动升级**为 BigInt：
+
+```leno
+// 加法、减法、乘法：自动检测溢出并升级
+var a = 1000000000000000
+var b = a + a                  // 自动升级
+var c = a * a                  // 自动升级
+var d = -140737488355328       // INT48_MIN 取负超出范围，自动升级
+
+// 超过 int64 范围也能正确处理
+var huge = 100000000000000000000 * 100000000000000000000
+print(type(huge))              // "int"
+
+// 除法规则
+int / int → int                // 整数除法
+int / float → float            // 浮点除法
+```
+
+从用户角度看，`int` 就是任意精度整数 — 你不需要关心底层细节，语言已经替你处理好了。
 
 ### 理解 var 类型推断
 
@@ -303,16 +303,16 @@ main() {
 >
 > 无论你用 `int x = 10` 还是 `var x = 10`，运算溢出保护的行为完全相同：
 >
-> ```leno
-> int a = 2000000000
-> var b = 2000000000
-> print(a + b)        // 4000000000，正确
-> print(type(a + b))  // "int"（4000000000 仍在 int48 范围内）
->
-> // 更大的运算
-> var huge1 = 10000000000000 * 10000000000000
-> print(type(huge1))  // "int"（超出 int48 范围自动升级）
-> ```
+```leno
+int a = 2000000000
+var b = 2000000000
+print(a + b)        // 4000000000，正确
+print(type(a + b))  // "int"（4000000000 仍在 int48 范围内）
+
+// 更大的运算
+var huge1 = 10000000000000 * 10000000000000
+print(type(huge1))  // "int"（超出 int48 范围自动升级）
+```
 
 ### 变量声明总结
 
@@ -337,18 +337,18 @@ main() {
 
 > **⚠️ 注意：变量类型一旦确定，终身不变**
 >
-> ```leno
-> var a = 1        // a 永久是 int
-> a = 2            // ✅ 值改变，类型不变
-> a = "hello"      // ❌ 报错：无法将 string 赋值给 int
-> ```
+```leno
+var a = 1        // a 永久是 int
+a = 2            // ✅ 值改变，类型不变
+a = "hello"      // ❌ 报错：无法将 string 赋值给 int
+```
 
-> **⚠️ 注意：多变量声明中每个变量独立赋值，不是并行赋值**
->
-> ```leno
-> var a = 10, b, c = 1    // a=10, b=null, c=1（各自独立）
-> // 不是：a=10, b=10, c=1
-> ```
+**⚠️ 注意：多变量声明中每个变量独立赋值，不是并行赋值**
+
+```leno
+var a = 10, b, c = 1    // a=10, b=null, c=1（各自独立）
+// 不是：a=10, b=10, c=1
+```
 
 ### const 常量声明
 
@@ -487,45 +487,45 @@ main() {
 
 > **⚠️ 注意：大整数转 float 可能丢失精度**
 >
-> ```leno
-> int a = 123456789123456789    // int 任意精度，精确存储
-> float f = a                    // 转为 float，丢失低位精度
-> print(a)                       // 123456789123456789（精确）
-> print(f)                       // 1.2345678912345679e+17（约 15-17 位有效数字）
-> ```
->
-> 这不是 Leno 的 bug，而是 IEEE 754 双精度浮点数的固有特性。
->
-> **float 输出规则**：
->
-> - float 值始终带小数点或科学计数法，不会和 int 混淆
-> - 整数值的 float 追加 `.0`：`50000000.0`
-> - 大数/极小数自动使用科学计数法：`5e+64`
-> - 保留 17 位有效数字（double 最大精度）
->
-> **字面量也支持指数写法**（2026-10-12 起 ✓）：`1e10` / `1.0e10` / `1.5e-3` / `2E+8`
-> —— 写成 float（`type(1e10)` = `"float"` ✓）。所以上面**打印出来的形式可以原样粘回源码** ✓
-> （此前只有 enum 成员值能吃指数、普通表达式报语法错 ⇒ 输出不可回读 ✗）。
-> ⚠ `0x1E10` 不受影响（十六进制里的 `E` 是数字 ⇒ 仍是整数 `7696` ✓）；`1efoo` / `1e` / `1e1e1`
-> 仍按语法错处理（`e` 后必须真跟数字）✓
->
-> **数字分隔符 `_`（2026-11-02 起）**：长数字可以按组加下划线，纯粹为了好读，
-> 值完全不变。`_` 只能出现在**两个数字之间**：
->
-> ```leno
-> int timeout = 3_600_000        // 3600000（毫秒）
-> int mask    = 0xFF_FF_00_00    // 0xFFFF0000
-> int bin     = 0b1010_1010      // 170
-> float ratio = 1_000.5          // 1000.5
-> float big   = 1_0e3            // 10000.0
->
-> int bad1 = 1_                  // ✗ 报「同一行出现标识符」（`_` 后面没有数字）
-> int bad2 = 1__0                // ✗ 同上（不能连续两个下划线）
-> int _1 = 42                    // ✓ 这是**变量名**（下划线开头的标识符），不是数字
-> ```
->
-> **前导小数点 `.5`（2026-11-02 起）**：`var x = .5` / `var y = -.5` 与 `0.5` / `-0.5` 等价。
-> `.` 前面**刚结束一个表达式**时仍是成员访问（`p.x` / `arr[0].y` / `(p).x`），不受影响。
+```leno
+int a = 123456789123456789    // int 任意精度，精确存储
+float f = a                    // 转为 float，丢失低位精度
+print(a)                       // 123456789123456789（精确）
+print(f)                       // 1.2345678912345679e+17（约 15-17 位有效数字）
+```
+
+这不是 Leno 的 bug，而是 IEEE 754 双精度浮点数的固有特性。
+
+**float 输出规则**：
+
+- float 值始终带小数点或科学计数法，不会和 int 混淆
+- 整数值的 float 追加 `.0`：`50000000.0`
+- 大数/极小数自动使用科学计数法：`5e+64`
+- 保留 17 位有效数字（double 最大精度）
+
+**字面量也支持指数写法**（2026-10-12 起 ✓）：`1e10` / `1.0e10` / `1.5e-3` / `2E+8`
+—— 写成 float（`type(1e10)` = `"float"` ✓）。所以上面**打印出来的形式可以原样粘回源码** ✓
+（此前只有 enum 成员值能吃指数、普通表达式报语法错 ⇒ 输出不可回读 ✗）。
+⚠ `0x1E10` 不受影响（十六进制里的 `E` 是数字 ⇒ 仍是整数 `7696` ✓）；`1efoo` / `1e` / `1e1e1`
+仍按语法错处理（`e` 后必须真跟数字）✓
+
+**数字分隔符 `_`（2026-11-02 起）**：长数字可以按组加下划线，纯粹为了好读，
+值完全不变。`_` 只能出现在**两个数字之间**：
+
+```leno
+int timeout = 3_600_000        // 3600000（毫秒）
+int mask    = 0xFF_FF_00_00    // 0xFFFF0000
+int bin     = 0b1010_1010      // 170
+float ratio = 1_000.5          // 1000.5
+float big   = 1_0e3            // 10000.0
+
+int bad1 = 1_                  // ✗ 报「同一行出现标识符」（`_` 后面没有数字）
+int bad2 = 1__0                // ✗ 同上（不能连续两个下划线）
+int _1 = 42                    // ✓ 这是**变量名**（下划线开头的标识符），不是数字
+```
+
+**前导小数点 `.5`（2026-11-02 起）**：`var x = .5` / `var y = -.5` 与 `0.5` / `-0.5` 等价。
+`.` 前面**刚结束一个表达式**时仍是成员访问（`p.x` / `arr[0].y` / `(p).x`），不受影响。
 
 ### null 类型
 
@@ -573,25 +573,25 @@ main() {
 
 > **⚠️ 注意：null 不能参与算术运算**
 >
-> ```leno
-> int a = null          // ❌ 编译错误：int 不能赋值为 null
-> null + 1              // ❌ 编译错误：null 类型不能参与算术运算
-> null == null          // true
-> null == 0             // false
-> null == ""            // false
-> ```
+```leno
+int a = null          // ❌ 编译错误：int 不能赋值为 null
+null + 1              // ❌ 编译错误：null 类型不能参与算术运算
+null == null          // true
+null == 0             // false
+null == ""            // false
+```
 
-> **⚠️ 注意：`var x = null`** **后类型未锁定，类似空数组**
->
-> ```leno
-> var x = null        // 类型为 any（未锁定）
-> x = 42              // 锁定为 int
-> x = "hello"         // ❌ 已锁定为 int
->
-> var arr = []        // 类型为 Array（未锁定）
-> arr.add(1)          // 锁定为 Array[int]
-> arr.add("hello")    // ❌ 已锁定为 Array[int]
-> ```
+**⚠️ 注意：`var x = null`** **后类型未锁定，类似空数组**
+
+```leno
+var x = null        // 类型为 any（未锁定）
+x = 42              // 锁定为 int
+x = "hello"         // ❌ 已锁定为 int
+
+var arr = []        // 类型为 Array（未锁定）
+arr.add(1)          // 锁定为 Array[int]
+arr.add("hello")    // ❌ 已锁定为 Array[int]
+```
 
 ### 泛型类型
 
@@ -647,20 +647,20 @@ main() {
 
 > **⚠️ 注意：`var empty = []`** **和** **`Array[int] arr = []`** **含义不同**
 >
-> ```leno
-> var empty = []              // 类型为 Array（未锁定），添加元素后确定类型
-> empty.add(1)                // 锁定为 Array[int]
->
-> Array[int] arr = []         // 类型已确定为 Array[int]，等同于 Array[int] arr
-> arr.add(1)                  // ✅ 直接添加
-> ```
+```leno
+var empty = []              // 类型为 Array（未锁定），添加元素后确定类型
+empty.add(1)                // 锁定为 Array[int]
 
-> **⚠️ 注意：泛型类型注解与类型擦除**
->
-> 泛型参数在编译期完成类型检查，运行时保留类型参数信息用于 `type()` 反射：
-> - `type(intBox)` 返回 `"Box[int]"`，包含类型参数信息
-> - `Box[int]` 和 `Box[string]` 运行时共享同一个 struct 定义
-> - 泛型不会产生代码膨胀（无需为每种实例化生成独立代码）
+Array[int] arr = []         // 类型已确定为 Array[int]，等同于 Array[int] arr
+arr.add(1)                  // ✅ 直接添加
+```
+
+**⚠️ 注意：泛型类型注解与类型擦除**
+
+泛型参数在编译期完成类型检查，运行时保留类型参数信息用于 `type()` 反射：
+- `type(intBox)` 返回 `"Box[int]"`，包含类型参数信息
+- `Box[int]` 和 `Box[string]` 运行时共享同一个 struct 定义
+- 泛型不会产生代码膨胀（无需为每种实例化生成独立代码）
 
 ### 文件级别变量
 
@@ -846,60 +846,60 @@ main() {
 >
 > Leno 的 `>>` 是算术右移（符号位扩展），位运算在 Leno 的大整数语义下可能出现非预期的符号扩展。`_uint32()` 将值转为无符号表示，确保位运算和右移按 32 位无符号语义执行。
 >
-> ```leno
-> // ❌ 不用 _uint32：算术右移高位补 1
-> int x = 0x80000000    // -2147483648
-> x >> 1                // -1073741824（高位补 1，仍是负数）
->
-> // ✅ 方法一：用 _uint32 转为无符号值
-> _uint32(0x80000000) >> 1    // 1073741824（高位补 0）
->
-> // ✅ 方法二：用 >>> 逻辑右移（推荐，语义更清晰）
-> (_int32(0x80000000) & 0xFFFFFFFF) >>> 1    // 1073741824（高位补 0）
->
-> // _uint32 在加密算法中简化位运算
-> _int32((_uint32(x) & _uint32(y)) | (_uint32(~x) & _uint32(z)))  // MD5 F 函数
-> ```
->
-> `_uint32()` 等效于 `to_unsigned(_int32(x))` 的组合操作，一步完成"截断 32 位 → 转无符号"。
+```leno
+// ❌ 不用 _uint32：算术右移高位补 1
+int x = 0x80000000    // -2147483648
+x >> 1                // -1073741824（高位补 1，仍是负数）
 
-> **⚠️ 注意：固定位宽函数与 `_int()` 的区别**
->
-> | 写法 | 语义 | 结果 |
-> |------|------|------|
-> | `_int(3.14)` | 强制类型转换 | `3`（截断小数） |
-> | `_int32(3.14)` | 截断为 32 位有符号整数 | `3` |
-> | `_int32(0x1FFFFFFFF)` | 32 位有符号环绕 | `-1`（低 32 位） |
-> | `_uint32(-1)` | 转为 32 位无符号整数 | `4294967295`（= 0xFFFFFFFF） |
-> | `_uint64(-1)` | 转为 64 位无符号整数 | `18446744073709551615`（= 0xFFFFFFFFFFFFFFFF） |
-> | `_uint8(257)` | 截断为 8 位无符号整数 | `1`（257 & 0xFF） |
-> | `_byte(-1)` | 等同于 `_uint8(-1)` | `255` |
-> | `_int(0x1FFFFFFFF)` | 保持原值 | `8589934591`（不截断） |
->
-> `_int()` 是类型转换，不改变数值；固定位宽函数是位宽截断，会环绕。
->
-> **超出 int64 的浮点也保持数值**（2026-11-11 起）：`_int(1e20)` ⇒ `100000000000000000000`
-> （内部自动用 bigint；以前会夹到 `INT64_MAX`，是静默错值）。浮点本身就是有限值，所以
-> 输出的是**该 double 的精确十进制展开**：`_int(1e30)` ⇒ `1000000000000000019884624838656`
-> （不是 `10^30`）。`NaN` / `±Infinity` 无法转整数 ⇒ **运行时错误**。
+// ✅ 方法一：用 _uint32 转为无符号值
+_uint32(0x80000000) >> 1    // 1073741824（高位补 0）
 
-> **📊 固定位宽函数对比**
->
-> | 函数 | 返回范围 | 用途 |
-> |------|---------|------|
-> | `_int32(x)` | -2147483648 ~ 2147483647 | 32 位有符号运算结果 |
-> | `_uint32(x)` | 0 ~ 4294967295 | 32 位无符号位运算（&, \|, ^, >>>） |
-> | `_int64(x)` | -9223372036854775808 ~ 9223372036854775807 | 64 位有符号运算 |
-> | `_uint64(x)` | 0 ~ 18446744073709551615 | 64 位无符号位运算、FFI 交互 |
-> | `_uint8(x)` | 0 ~ 255 | 字节操作、协议解析、颜色值 |
-> | `_byte(x)` | 0 ~ 255 | `_uint8` 别名，语义更清晰 |
->
-> ```leno
-> // 典型加密算法中的配合模式：
-> _int32(_uint32(x) ^ _uint32(y))      // 32 位无符号 XOR → 截断回有符号
-> _int32(_uint32(x) + _uint32(y))      // 32 位无符号 ADD → 截断回有符号
-> _int32(_int32(x) << c | ((_int32(x) & 0xFFFFFFFF) >>> (32 - c)))  // 32 位循环左移（用 >>>）
-> ```
+// ✅ 方法二：用 >>> 逻辑右移（推荐，语义更清晰）
+(_int32(0x80000000) & 0xFFFFFFFF) >>> 1    // 1073741824（高位补 0）
+
+// _uint32 在加密算法中简化位运算
+_int32((_uint32(x) & _uint32(y)) | (_uint32(~x) & _uint32(z)))  // MD5 F 函数
+```
+
+`_uint32()` 等效于 `to_unsigned(_int32(x))` 的组合操作，一步完成"截断 32 位 → 转无符号"。
+
+**⚠️ 注意：固定位宽函数与 `_int()` 的区别**
+
+| 写法 | 语义 | 结果 |
+|------|------|------|
+| `_int(3.14)` | 强制类型转换 | `3`（截断小数） |
+| `_int32(3.14)` | 截断为 32 位有符号整数 | `3` |
+| `_int32(0x1FFFFFFFF)` | 32 位有符号环绕 | `-1`（低 32 位） |
+| `_uint32(-1)` | 转为 32 位无符号整数 | `4294967295`（= 0xFFFFFFFF） |
+| `_uint64(-1)` | 转为 64 位无符号整数 | `18446744073709551615`（= 0xFFFFFFFFFFFFFFFF） |
+| `_uint8(257)` | 截断为 8 位无符号整数 | `1`（257 & 0xFF） |
+| `_byte(-1)` | 等同于 `_uint8(-1)` | `255` |
+| `_int(0x1FFFFFFFF)` | 保持原值 | `8589934591`（不截断） |
+
+`_int()` 是类型转换，不改变数值；固定位宽函数是位宽截断，会环绕。
+
+**超出 int64 的浮点也保持数值**（2026-11-11 起）：`_int(1e20)` ⇒ `100000000000000000000`
+（内部自动用 bigint；以前会夹到 `INT64_MAX`，是静默错值）。浮点本身就是有限值，所以
+输出的是**该 double 的精确十进制展开**：`_int(1e30)` ⇒ `1000000000000000019884624838656`
+（不是 `10^30`）。`NaN` / `±Infinity` 无法转整数 ⇒ **运行时错误**。
+
+**📊 固定位宽函数对比**
+
+| 函数 | 返回范围 | 用途 |
+|------|---------|------|
+| `_int32(x)` | -2147483648 ~ 2147483647 | 32 位有符号运算结果 |
+| `_uint32(x)` | 0 ~ 4294967295 | 32 位无符号位运算（&, \|, ^, >>>） |
+| `_int64(x)` | -9223372036854775808 ~ 9223372036854775807 | 64 位有符号运算 |
+| `_uint64(x)` | 0 ~ 18446744073709551615 | 64 位无符号位运算、FFI 交互 |
+| `_uint8(x)` | 0 ~ 255 | 字节操作、协议解析、颜色值 |
+| `_byte(x)` | 0 ~ 255 | `_uint8` 别名，语义更清晰 |
+
+```leno
+// 典型加密算法中的配合模式：
+_int32(_uint32(x) ^ _uint32(y))      // 32 位无符号 XOR → 截断回有符号
+_int32(_uint32(x) + _uint32(y))      // 32 位无符号 ADD → 截断回有符号
+_int32(_int32(x) << c | ((_int32(x) & 0xFFFFFFFF) >>> (32 - c)))  // 32 位循环左移（用 >>>）
+```
 
 **典型应用：加密算法中的 32 位环绕运算**
 
@@ -1133,16 +1133,16 @@ main() {
 
 > **⚠️ 注意：`type()`** **返回的是值的类型，不是变量的编译时类型**
 >
-> ```leno
-> int? a = null
-> print(type(a))    // "null"（因为当前值是 null）
-> a = 10
-> print(type(a))    // "int"（值变成了 10）
-> a = 100000000000000000000
-> print(type(a))    // "int"（值超出 int48，底层自动升级，对外不变）
-> ```
->
-> **type() 对 int 始终返回 `"int"`**，无论底层是 int48 还是 BigInt 存储，对用户完全透明。
+```leno
+int? a = null
+print(type(a))    // "null"（因为当前值是 null）
+a = 10
+print(type(a))    // "int"（值变成了 10）
+a = 100000000000000000000
+print(type(a))    // "int"（值超出 int48，底层自动升级，对外不变）
+```
+
+**type() 对 int 始终返回 `"int"`**，无论底层是 int48 还是 BigInt 存储，对用户完全透明。
 
 ***
 
@@ -1160,20 +1160,20 @@ main() {
 
 > **⚠️ 注意：`/`** **根据操作数类型决定结果类型**
 >
-> ```leno
-> var a = 7 / 2       // int（3），整数除法
-> var b = 7 / 2.0     // float（3.5），浮点除法
-> var c = 7.0 / 2     // float（3.5），浮点除法
-> // 需要浮点除法：至少一个操作数是 float
-> ```
->
-> **除法规则：**
->
-> | 操作数类型             | 结果类型     | 示例                     |
-> | ----------------- | -------- | ---------------------- |
-> | `int / int`       | `int`    | `5 / 2 = 2`            |
-> | `int / float`     | `float`  | `5 / 2.0 = 2.5`        |
-> | `float / int`     | `float`  | `5.0 / 2 = 2.5`        |
+```leno
+var a = 7 / 2       // int（3），整数除法
+var b = 7 / 2.0     // float（3.5），浮点除法
+var c = 7.0 / 2     // float（3.5），浮点除法
+// 需要浮点除法：至少一个操作数是 float
+```
+
+**除法规则：**
+
+| 操作数类型             | 结果类型     | 示例                     |
+| ----------------- | -------- | ---------------------- |
+| `int / int`       | `int`    | `5 / 2 = 2`            |
+| `int / float`     | `float`  | `5 / 2.0 = 2.5`        |
+| `float / int`     | `float`  | `5.0 / 2 = 2.5`        |
 
 ### 位运算符
 
@@ -1183,83 +1183,83 @@ main() {
 ^   // 按位异或
 ~   // 按位非
 <<  // 左移
->>  // 右移（算术右移，符号位扩展）
->>> // 逻辑右移（无符号右移，高位补 0）
+>  // 右移（算术右移，符号位扩展）
+>> // 逻辑右移（无符号右移，高位补 0）
 ```
 
 > **⚠️ 注意：`~`** **按位取反的返回值**
 >
 > `~x` 等价于 `-x - 1`，对任意精度整数都成立：
 >
-> ```leno
-> ~5       // -6    （= -5 - 1）
-> ~0       // -1    （= -0 - 1）
-> ~(-1)    // 0     （= -(-1) - 1 = 1 - 1）
-> ~(-6)    // 5     （= -(-6) - 1 = 6 - 1）
-> ```
->
-> 对于需要 32 位环绕取反的场景，使用 `_int32(~x)`：
->
-> ```leno
-> _int32(~0xEFCDAB89)   // 0x10325476（32 位取反）
-> // 不用 _int32 时：~0xEFCDAB89 = -4023233418（64 位扩展）
-> ```
+```leno
+~5       // -6    （= -5 - 1）
+~0       // -1    （= -0 - 1）
+~(-1)    // 0     （= -(-1) - 1 = 1 - 1）
+~(-6)    // 5     （= -(-6) - 1 = 6 - 1）
+```
 
-> **⚠️ 注意：`>>`** **是算术右移（符号位扩展）**
->
-> ```leno
-> int x = 0x80000000    // 负数（最高位为 1）
-> x >> 1                // 算术右移，高位补 1，结果仍为负数
-> ```
->
-> **`>>>`** **是逻辑右移（高位补 0）**
->
-> `>>>` 对 48 位值做无符号右移，高位始终补 0，不考虑符号位：
->
-> ```leno
-> int x = -1            // 48 位全 1：0xFFFFFFFFFFFF
-> x >> 1                // 算术右移 → -1（高位补 1）
-> x >>> 1               // 逻辑右移 → 140737488355327（0x7FFFFFFFFFFF，高位补 0）
->
-> // 正数时 >>> 和 >> 结果相同
-> 256 >>> 8             // 1
-> 256 >> 8              // 1
->
-> // 负数时 >>> 和 >> 结果不同
-> (-256) >>> 8          // 1099511627775（高位补 0）
-> (-256) >> 8           // -1（高位补 1）
-> ```
->
-> **💡 32 位逻辑右移的正确写法**
->
-> Leno 的 `int` 是 48 位有符号整数，`_int32()` 返回的负数会符号扩展到 48 位。
-> 要实现 32 位逻辑右移，需要先 `& 0xFFFFFFFF` 截断为 32 位无符号值，再用 `>>>`：
->
-> ```leno
-> // ❌ 错误：_int32 的负数符号扩展后 >>> 是 48 位逻辑右移
-> _int32(0x856d6974) >>> 8     // 结果不对
->
-> // ✅ 正确：先截断为 32 位无符号值，再逻辑右移
-> (_int32(0x856d6974) & 0xFFFFFFFF) >>> 8   // 8744297
-> ```
->
-> **💡 32 位循环移位用 `>>>`**
->
-> ```leno
-> // 循环左移 rotl32
-> func rotl32(int x, int n):int {
->     n = _int32(n) & 31
->     if (n == 0) { return _int32(x) }
->     return _int32((_int32(x) << n) | ((_int32(x) & 0xFFFFFFFF) >>> (32 - n)))
-> }
->
-> // 循环右移 rotr32
-> func rotr32(int x, int n):int {
->     return rotl32(x, 32 - (_int32(n) & 31))
-> }
-> ```
->
-> `>>>` 在加密算法（TEA、XXTEA、Speck、RC5 等）中特别有用，替代了之前需要手写 `lshr32` 函数的写法。
+对于需要 32 位环绕取反的场景，使用 `_int32(~x)`：
+
+```leno
+_int32(~0xEFCDAB89)   // 0x10325476（32 位取反）
+// 不用 _int32 时：~0xEFCDAB89 = -4023233418（64 位扩展）
+```
+
+**⚠️ 注意：`>>`** **是算术右移（符号位扩展）**
+
+```leno
+int x = 0x80000000    // 负数（最高位为 1）
+x >> 1                // 算术右移，高位补 1，结果仍为负数
+```
+
+**`>>>`** **是逻辑右移（高位补 0）**
+
+`>>>` 对 48 位值做无符号右移，高位始终补 0，不考虑符号位：
+
+```leno
+int x = -1            // 48 位全 1：0xFFFFFFFFFFFF
+x >> 1                // 算术右移 → -1（高位补 1）
+x >>> 1               // 逻辑右移 → 140737488355327（0x7FFFFFFFFFFF，高位补 0）
+
+// 正数时 >>> 和 >> 结果相同
+256 >>> 8             // 1
+256 >> 8              // 1
+
+// 负数时 >>> 和 >> 结果不同
+(-256) >>> 8          // 1099511627775（高位补 0）
+(-256) >> 8           // -1（高位补 1）
+```
+
+**💡 32 位逻辑右移的正确写法**
+
+Leno 的 `int` 是 48 位有符号整数，`_int32()` 返回的负数会符号扩展到 48 位。
+要实现 32 位逻辑右移，需要先 `& 0xFFFFFFFF` 截断为 32 位无符号值，再用 `>>>`：
+
+```leno
+// ❌ 错误：_int32 的负数符号扩展后 >>> 是 48 位逻辑右移
+_int32(0x856d6974) >>> 8     // 结果不对
+
+// ✅ 正确：先截断为 32 位无符号值，再逻辑右移
+(_int32(0x856d6974) & 0xFFFFFFFF) >>> 8   // 8744297
+```
+
+**💡 32 位循环移位用 `>>>`**
+
+```leno
+// 循环左移 rotl32
+func rotl32(int x, int n):int {
+n = _int32(n) & 31
+if (n == 0) { return _int32(x) }
+return _int32((_int32(x) << n) | ((_int32(x) & 0xFFFFFFFF) >>> (32 - n)))
+}
+
+// 循环右移 rotr32
+func rotr32(int x, int n):int {
+return rotl32(x, 32 - (_int32(n) & 31))
+}
+```
+
+`>>>` 在加密算法（TEA、XXTEA、Speck、RC5 等）中特别有用，替代了之前需要手写 `lshr32` 函数的写法。
 
 ### 复合赋值运算符
 
@@ -1378,22 +1378,22 @@ main() {
 
 > **⚠️ 注意：`and`/`or`** **返回的是实际值，不一定是 bool**
 >
-> ```leno
-> var result = 1 and 2    // result 是 2（int），不是 true
-> var x = "" or "hi"      // x 是 "hi"（string），不是 true
-> ```
+```leno
+var result = 1 and 2    // result 是 2（int），不是 true
+var x = "" or "hi"      // x 是 "hi"（string），不是 true
+```
 
-> **⚠️ 注意：`and`/`or`** **的返回类型由编译器推断**
->
-> - 常量折叠：`1 and 2` → 编译器知道结果是 2，推断为 `int`
-> - 常量传播：`var x = 1; x and 2` → 编译器追踪 x=1，推断为 `int`
-> - 不确定时：函数参数等无法追踪 → 回退为 `bool`
->
-> ```leno
-> func test(any x) {
->     var r = x and 2     // r 推断为 bool（编译器不确定 x 的值）
-> }
-> ```
+**⚠️ 注意：`and`/`or`** **的返回类型由编译器推断**
+
+- 常量折叠：`1 and 2` → 编译器知道结果是 2，推断为 `int`
+- 常量传播：`var x = 1; x and 2` → 编译器追踪 x=1，推断为 `int`
+- 不确定时：函数参数等无法追踪 → 回退为 `bool`
+
+```leno
+func test(any x) {
+var r = x and 2     // r 推断为 bool（编译器不确定 x 的值）
+}
+```
 
 ### 短路求值
 
@@ -1416,15 +1416,15 @@ main() {
 
 > **⚠️ 重要：bool 和 null 不能参与算术运算**
 >
-> ```leno
-> true + 1         // ❌ 编译错误：bool 类型不能参与算术运算
-> true - 1         // ❌ 编译错误
-> "hello" - "lo"   // ❌ 编译错误：string 类型不能参与减法
-> "hello" * 2      // ❌ 编译错误：string 类型不能参与乘法
-> null + 1         // ❌ 编译错误：null 类型不能参与算术运算
-> int? a = null
-> a + 1            // ⚠️ 编译警告：nullable 值类型参与运算，可能为 null
-> ```
+```leno
+true + 1         // ❌ 编译错误：bool 类型不能参与算术运算
+true - 1         // ❌ 编译错误
+"hello" - "lo"   // ❌ 编译错误：string 类型不能参与减法
+"hello" * 2      // ❌ 编译错误：string 类型不能参与乘法
+null + 1         // ❌ 编译错误：null 类型不能参与算术运算
+int? a = null
+a + 1            // ⚠️ 编译警告：nullable 值类型参与运算，可能为 null
+```
 
 **`+`** **特殊规则：** 一边是 string 时，自动转为字符串拼接：
 
@@ -1474,22 +1474,22 @@ Leno 允许部分类型之间的**隐式转换**，规则如下：
 > bool 虽然可以隐式转为 int，但**不能直接参与算术运算**（`+`、`-`、`*`、`/` 等）。
 > 如需运算，先赋值给 int 变量或用 `as int` / `_int()` 转换：
 >
-> ```leno
-> true + 1           // ❌ 编译错误：bool 不能参与算术运算
-> int a = true       // ✅ 隐式转换，a = 1
-> a + 1              // ✅ 结果为 2
-> (true as int) + 1  // ✅ 显式转换后运算，结果为 2
-> _int(true) + 1     // ✅ 同上
-> ```
->
-> **适用场景**：bool 隐式转 int 常用于赋值、传参、数组/字典初始化等场景：
->
-> ```leno
-> int count = true          // count = 1
-> float ratio = false       // ratio = 0.0
-> Array[int] flags = [true, false, true]  // [1, 0, 1]
-> Dict[string, int] m = {"ok": true, "fail": false}  // {"ok": 1, "fail": 0}
-> ```
+```leno
+true + 1           // ❌ 编译错误：bool 不能参与算术运算
+int a = true       // ✅ 隐式转换，a = 1
+a + 1              // ✅ 结果为 2
+(true as int) + 1  // ✅ 显式转换后运算，结果为 2
+_int(true) + 1     // ✅ 同上
+```
+
+**适用场景**：bool 隐式转 int 常用于赋值、传参、数组/字典初始化等场景：
+
+```leno
+int count = true          // count = 1
+float ratio = false       // ratio = 0.0
+Array[int] flags = [true, false, true]  // [1, 0, 1]
+Dict[string, int] m = {"ok": true, "fail": false}  // {"ok": 1, "fail": 0}
+```
 
 ### 成员检查运算符 (in / not in)
 
@@ -1611,42 +1611,42 @@ struct App {
 > `expr?.method()` 的返回类型是 `ReturnType?`（可空），即使原方法返回非空类型。
 > 如果需要非空值，推荐配合 `??`，也可用 `if != null`：
 >
-> ```leno
-> Font? f = _widget?._font        // 类型是 Font?，不是 Font
-> int? s = _font?.size            // 类型是 int?，不是 int
->
-> // 推荐：?? 直接出非空值
-> print(_font?.size ?? 0)
->
-> // 也可：if 检查后 as 转换
-> if s != null { print(s as int) }
-> ```
+```leno
+Font? f = _widget?._font        // 类型是 Font?，不是 Font
+int? s = _font?.size            // 类型是 int?，不是 int
 
-> **⚠️ `?.` 不适用于回调调用**
->
-> `?.` 仅支持字段访问和方法调用，不支持函数字段的可空调用：
->
-> ```leno
-> struct Button {
->     func(float):void? _onClick
->
->     // ❌ 不能用 _onClick?.(value)  —— 语法不支持
->     if _onClick != null { _onClick(value) }   // ✅ 正确写法
-> }
-> ```
+// 推荐：?? 直接出非空值
+print(_font?.size ?? 0)
 
-> **⚠️ 复合条件仍需 `if`**
->
-> 当 null 检查需要与其他条件组合时，`?.` 无法替代：
->
-> ```leno
-> // ❌ 无法用 ?. 表达
-> if _font != null and _font.ok { fnt.releaseFont(_font) }
->
-> // ✅ 保持 if 写法
-> ```
->
-> 同理，`if x != null { x.method(); x = null }` 这种有副作用的模式也不能用 `?.` 简化。
+// 也可：if 检查后 as 转换
+if s != null { print(s as int) }
+```
+
+**⚠️ `?.` 不适用于回调调用**
+
+`?.` 仅支持字段访问和方法调用，不支持函数字段的可空调用：
+
+```leno
+struct Button {
+func(float):void? _onClick
+
+// ❌ 不能用 _onClick?.(value)  —— 语法不支持
+if _onClick != null { _onClick(value) }   // ✅ 正确写法
+}
+```
+
+**⚠️ 复合条件仍需 `if`**
+
+当 null 检查需要与其他条件组合时，`?.` 无法替代：
+
+```leno
+// ❌ 无法用 ?. 表达
+if _font != null and _font.ok { fnt.releaseFont(_font) }
+
+// ✅ 保持 if 写法
+```
+
+同理，`if x != null { x.method(); x = null }` 这种有副作用的模式也不能用 `?.` 简化。
 
 #### 配合 `??` 一步到位
 
@@ -1672,11 +1672,11 @@ struct SpinBox {
 
 > **⚠️ `?.` 只对 struct/face 类型可靠**：对 `clib`（`ffi.Library`）用 `?.` 虽然**能编译**，
 > 但运行期会报「类型 object 上不存在方法」。判断 `lib()` 是否加载成功仍需 `if` 守卫：
-> ```leno
-> sdl3 l = lib()
-> if l == null { return false }  // clib 类型别用 ?.
-> return l.SDL_Init(flags)
-> ```
+```leno
+sdl3 l = lib()
+if l == null { return false }  // clib 类型别用 ?.
+return l.SDL_Init(flags)
+```
 
 ### 空值合并运算符 `??`
 
@@ -1769,21 +1769,21 @@ or        （最低）
 >
 > 当左侧非 null 时，右侧**不会执行**：
 >
-> ```leno
-> // acquireFontAuto 只有在 _font 为 null 时才会被调用
-> var f = _font ?? acquireFontAuto(15)
-> ```
+```leno
+// acquireFontAuto 只有在 _font 为 null 时才会被调用
+var f = _font ?? acquireFontAuto(15)
+```
 
-> **⚠️ `??` 不适用于回调调用**
->
-> `??` 用于值合并，不能替代回调的 null 检查：
->
-> ```leno
-> func(float):void? _onChange
->
-> // ❌ 不能用 _onChange ?? func(v) { }  —— 语义不对
-> if _onChange != null { _onChange(value) }   // ✅ 正确写法
-> ```
+**⚠️ `??` 不适用于回调调用**
+
+`??` 用于值合并，不能替代回调的 null 检查：
+
+```leno
+func(float):void? _onChange
+
+// ❌ 不能用 _onChange ?? func(v) { }  —— 语义不对
+if _onChange != null { _onChange(value) }   // ✅ 正确写法
+```
 
 #### 空值合并赋值 `??=`（2026-11-02）
 
@@ -1808,11 +1808,11 @@ print(b)        // 7
 - **目标必须可空**：`int a = 0; a ??= 1` 直接编译报错（恒不生效，100% 是笔误）。
 
 > 典型用法：给"可能没传的参数/可能缺的配置项"补默认值
-> ```leno
-> Dict opts = load_opts()
-> opts["w"] ??= 360
-> opts["h"] ??= 200
-> ```
+```leno
+Dict opts = load_opts()
+opts["w"] ??= 360
+opts["h"] ??= 200
+```
 
 ### 运算符示例
 
@@ -1921,27 +1921,27 @@ main() {
 
 > **⚠️ 注意：类型守卫只在 if 块内有效**
 >
-> ```leno
-> func test(any x) {
->     if x is int {
->         int n = x     // ✅ 守卫内 x 是 int
->     }
->     int m = x        // ❌ 报错：离开 if 后 x 恢复为 any
-> }
-> ```
+```leno
+func test(any x) {
+if x is int {
+int n = x     // ✅ 守卫内 x 是 int
+}
+int m = x        // ❌ 报错：离开 if 后 x 恢复为 any
+}
+```
 
-> **⚠️ 注意：`or`** **条件不收窄类型**
->
-> ```leno
-> func test(any x, any y) {
->     if x is int or y is string {
->         int n = x      // ❌ 报错：or 条件下不收窄
->     }
-> }
-> ```
->
-> **原因**：`or` 的短路语义意味着两侧条件不一定都成立，无法保证类型安全。
-> 编译器检测到 `or` 条件中包含类型守卫时，会发出**编译警告**提醒不会触发收窄。
+**⚠️ 注意：`or`** **条件不收窄类型**
+
+```leno
+func test(any x, any y) {
+if x is int or y is string {
+int n = x      // ❌ 报错：or 条件下不收窄
+}
+}
+```
+
+**原因**：`or` 的短路语义意味着两侧条件不一定都成立，无法保证类型安全。
+编译器检测到 `or` 条件中包含类型守卫时，会发出**编译警告**提醒不会触发收窄。
 
 #### Dict 字段访问类型守卫
 
@@ -2735,35 +2735,35 @@ func describe(any s) {
 >
 > `case is` 匹配成功后，变量类型在分支内自动收窄为匹配的类型，可以直接访问 struct 字段、调用 face 方法：
 >
-> ```leno
-> Shape s = new Rect(w=3.0, h=4.0)
-> switch s {
->     case is Rect {
->         // s 被收窄为 Rect，可直接访问 .w .h 字段
->         print("宽: " + s.w + " 高: " + s.h)
->     }
->     case is Circle {
->         print("半径: " + s.radius)  // 收窄为 Circle
->     }
->     default {
->         print("其他形状")   // 未收窄，s 仍为 Shape
->     }
-> }
-> ```
->
-> **支持的类型：** `int`、`float`、`string`、`bool`、`null`、`Array`、`Dict`、struct、face、enum 等。
->
-> ```leno
-> enum Color { red; green; blue }
->
-> main() {
->     var c = Color
->     switch c {
->         case is Color { print("是 Color 枚举") }   // 匹配 enum 定义对象
->         default { print("其他类型") }
->     }
-> }
-> ```
+```leno
+Shape s = new Rect(w=3.0, h=4.0)
+switch s {
+case is Rect {
+// s 被收窄为 Rect，可直接访问 .w .h 字段
+print("宽: " + s.w + " 高: " + s.h)
+}
+case is Circle {
+print("半径: " + s.radius)  // 收窄为 Circle
+}
+default {
+print("其他形状")   // 未收窄，s 仍为 Shape
+}
+}
+```
+
+**支持的类型：** `int`、`float`、`string`、`bool`、`null`、`Array`、`Dict`、struct、face、enum 等。
+
+```leno
+enum Color { red; green; blue }
+
+main() {
+var c = Color
+switch c {
+case is Color { print("是 Color 枚举") }   // 匹配 enum 定义对象
+default { print("其他类型") }
+}
+}
+```
 
 #### `case is` 解构
 
@@ -3063,26 +3063,26 @@ for d to key, value {
 > - 数组/字符串：第二个变量是**索引**（int）
 > - 字典：第二个变量是**值**（value）
 >
-> ```leno
-> for arr to item, index    // index 是 int 索引
-> for str to char, index    // index 是 int 索引
-> for dict to key, value    // value 是键对应的值
-> ```
+```leno
+for arr to item, index    // index 是 int 索引
+for str to char, index    // index 是 int 索引
+for dict to key, value    // value 是键对应的值
+```
 
-> **⚠️ 注意：遍历 any 类型（常见陷阱）**
->
-> 当遍历对象的类型在编译期未知（`any` 类型）时，`for X to y` 可能**静默不迭代**（不报错也不循环）：
->
-> ```leno
-> // ❌ 可能静默失败：files 是 any 类型
-> for files to f { }  // 如果 files 是 any，不会迭代
->
-> // ✅ 通用修复：用索引循环替代 for-each
-> int n = _int(files.len())
-> for 0 : n - 1 to i {
->     var f = _str(files[i])
-> }
-> ```
+**⚠️ 注意：遍历 any 类型（常见陷阱）**
+
+当遍历对象的类型在编译期未知（`any` 类型）时，`for X to y` 可能**静默不迭代**（不报错也不循环）：
+
+```leno
+// ❌ 可能静默失败：files 是 any 类型
+for files to f { }  // 如果 files 是 any，不会迭代
+
+// ✅ 通用修复：用索引循环替代 for-each
+int n = _int(files.len())
+for 0 : n - 1 to i {
+var f = _str(files[i])
+}
+```
 
 #### for 循环快速参考表
 
@@ -3172,40 +3172,40 @@ main() {
 > `return` + `h()` 静默变成 `return h()`（后续代码全成不可达）、`return` + `defer …`
 > 报成「期望表达式」✗。多行表达式不受影响：只要表达式**从 `return` 那一行开始**就行。
 >
-> ```leno
-> // ✅ 多行表达式：从 return 行开始
-> return a +
->        b
->
-> // ✅ 裸 return；后面的语句会被报「不可达代码」
-> return
-> print("不会执行")
-> ```
+```leno
+// ✅ 多行表达式：从 return 行开始
+return a +
+b
 
-> **⚠️ 注意：参数尽量写具体类型，避免裸 `any`**
->
-> ```leno
-> // ✅ 推荐：写具体类型
-> func add(int a, int b):int { return a + b }
->
-> // ⚠️ 不推荐：裸 any 参数不做类型检查，运行时可能出错
-> func add(any a, any b) { return a + b }    // add("a", "b") 不会编译报错，但运行时可能异常
->
-> // ✅ 如果必须用 any，请加类型守卫
-> func add(any a, any b) {
->     if a is int and b is int { return a + b }
->     return 0
-> }
-> ```
->
-> `any` **参数永远是** **`any`，不会根据调用推断类型**：
->
-> ```leno
-> func test(any x) {
->     int a = x    // ❌ 报错：any 不能赋给 int
-> }
-> test(1)           // x 内部仍然是 any，不是 int
-> ```
+// ✅ 裸 return；后面的语句会被报「不可达代码」
+return
+print("不会执行")
+```
+
+**⚠️ 注意：参数尽量写具体类型，避免裸 `any`**
+
+```leno
+// ✅ 推荐：写具体类型
+func add(int a, int b):int { return a + b }
+
+// ⚠️ 不推荐：裸 any 参数不做类型检查，运行时可能出错
+func add(any a, any b) { return a + b }    // add("a", "b") 不会编译报错，但运行时可能异常
+
+// ✅ 如果必须用 any，请加类型守卫
+func add(any a, any b) {
+if a is int and b is int { return a + b }
+return 0
+}
+```
+
+`any` **参数永远是** **`any`，不会根据调用推断类型**：
+
+```leno
+func test(any x) {
+int a = x    // ❌ 报错：any 不能赋给 int
+}
+test(1)           // x 内部仍然是 any，不是 int
+```
 
 ### 前向引用
 
@@ -3276,31 +3276,31 @@ main() {
 > 3. 默认值类型必须**匹配参数类型**（遵循升级不降级规则）
 > 4. `var a` 无默认值时类型为 `any`，`var b = 0` 推断为 `int`
 >
-> ```leno
-> func bad(int x = 10, int y) { }      // ❌ 默认参数不能在必选参数前面
-> func bad2(int x, int y = 3.14) { }   // ❌ float 不能赋给 int（降级）
->
-> func ok(any a, any b = 10) {
->     a         // 编译期 any（无默认值，不推断）
->     b         // 编译期 int（从默认值 10 收窄）
-> }
-> ```
+```leno
+func bad(int x = 10, int y) { }      // ❌ 默认参数不能在必选参数前面
+func bad2(int x, int y = 3.14) { }   // ❌ float 不能赋给 int（降级）
 
-> **✅ 新特性：默认参数支持常量表达式和全局变量引用**
->
-> 默认值不再局限于字面量，还支持以下形式：
->
-> ```leno
-> enum Flags { ALL = 0xFF; NONE = 0x00 }
-> int GLOBAL_MAX = 100
->
-> func f(int x, int y = Flags.ALL):int { return x + y }       // enum 常量
-> func g(int x, int y = 10 + 20):int { return x + y }         // 常量表达式
-> func h(int x, int max = GLOBAL_MAX):int { return x + max }  // 全局变量
-> func k(int x, int y = Flags.ALL, int z = 5 * 2):int { return x + y + z }  // 混合
-> ```
->
-> 局部函数（定义在 `main` 或其他函数内部的函数）同样支持这些默认值形式。
+func ok(any a, any b = 10) {
+a         // 编译期 any（无默认值，不推断）
+b         // 编译期 int（从默认值 10 收窄）
+}
+```
+
+**✅ 新特性：默认参数支持常量表达式和全局变量引用**
+
+默认值不再局限于字面量，还支持以下形式：
+
+```leno
+enum Flags { ALL = 0xFF; NONE = 0x00 }
+int GLOBAL_MAX = 100
+
+func f(int x, int y = Flags.ALL):int { return x + y }       // enum 常量
+func g(int x, int y = 10 + 20):int { return x + y }         // 常量表达式
+func h(int x, int max = GLOBAL_MAX):int { return x + max }  // 全局变量
+func k(int x, int y = Flags.ALL, int z = 5 * 2):int { return x + y + z }  // 混合
+```
+
+局部函数（定义在 `main` 或其他函数内部的函数）同样支持这些默认值形式。
 
 ### var 速查：变量 vs 参数
 
@@ -3332,7 +3332,7 @@ main() {
 | `==` / `!=` 比较 | ✅ | ✅ |
 | `<` `>` 大小比较 | ✅ | ❌（需先收窄为具体数值类型） |
 
-> 需要访问 struct 字段或调用方法 → 具体类型或 `is` 收窄。只需打印/比较 → 可用 any，但仍建议写具体类型更安全。
+需要访问 struct 字段或调用方法 → 具体类型或 `is` 收窄。只需打印/比较 → 可用 any，但仍建议写具体类型更安全。
 
 **`any` 的编译时 vs 运行时：**
 
@@ -3687,15 +3687,15 @@ Leno 支持函数级泛型，通过在函数名后添加 `[T, U, ...]` 声明类
 >
 > 你也可以用 `A`、`X`、`Item`、`Element` 等任意名称：
 >
-> ```leno
-> func swap[A, B](A a, B b): Pair[B, A] { return new Pair[B, A](key=b, val=a) }
->
-> struct List[Item] { Item data; List next }
->
-> func select[Src, Dst](Src input): Dst { ... }
-> ```
->
-> **类型参数名只在定义作用域内有效**，不同函数/struct 之间互不影响。
+```leno
+func swap[A, B](A a, B b): Pair[B, A] { return new Pair[B, A](key=b, val=a) }
+
+struct List[Item] { Item data; List next }
+
+func select[Src, Dst](Src input): Dst { ... }
+```
+
+**类型参数名只在定义作用域内有效**，不同函数/struct 之间互不影响。
 
 #### 自动推断类型参数
 
@@ -3746,16 +3746,16 @@ var r2 = first[string, float]("pi", 3.14)  // T=string, U=float → 返回 "pi"
 > - 需要确保返回值的具体类型时
 > - 代码可读性要求高的场景
 >
-> ```leno
-> func coalesce[T](T a, T b): T {
->     if a != null { return a }
->     return b
-> }
->
-> // ❌ coalesce(null, 42) — 无法推断 T
-> // ✅ 必须显式指定：
-> var val = coalesce[int](null, 42)    // T = int
-> ```
+```leno
+func coalesce[T](T a, T b): T {
+if a != null { return a }
+return b
+}
+
+// ❌ coalesce(null, 42) — 无法推断 T
+// ✅ 必须显式指定：
+var val = coalesce[int](null, 42)    // T = int
+```
 
 #### 泛型函数接受泛型 struct 参数
 
@@ -4516,43 +4516,43 @@ struct Rectangle {
 >
 > 换行就是分隔；**同一行只写空格不算分隔**。方法、`const` 关联常量与字段之间同理。
 >
-> ```leno
-> struct P { int x; int y }      // ✓
-> struct P { int x int y }       // ✗ 同一行的 struct 成员之间必须用 ';'（或者换行）
-> ```
+```leno
+struct P { int x; int y }      // ✓
+struct P { int x int y }       // ✗ 同一行的 struct 成员之间必须用 ';'（或者换行）
+```
 
-> **💡 方法里自引用写 `self`（不是 `this`）**
->
-> ```leno
-> struct Box {
->     int v = 0
->     func bump(): void { self.v = self.v + 1 }   // ✓ self
->     func me(): Box { return self }              // ✓ 返回的就是该对象本身（引用语义）
-> }
-> ```
->
-> `this` 是 C++ / Java / C# 的习惯 ✗ —— Leno 里**没有这个关键字**，写它会报
-> 「未定义的变量: this」（现在会**顺带提示**改 `self` ✓）。
+**💡 方法里自引用写 `self`（不是 `this`）**
 
-> **💡 建议：使用有意义的默认值**
->
-> ```leno
-> // ✅ 好的设计：合理的默认值
-> struct ServerConfig {
->     string host = "localhost"
->     int port = 8080
->     int timeout = 30
->     bool enableLog = true
-> }
->
-> // ❌ 不推荐：所有字段都是 0/空值
-> struct ServerConfig {
->     string host = ""
->     int port = 0
->     int timeout = 0
->     bool enableLog = false
-> }
-> ```
+```leno
+struct Box {
+int v = 0
+func bump(): void { self.v = self.v + 1 }   // ✓ self
+func me(): Box { return self }              // ✓ 返回的就是该对象本身（引用语义）
+}
+```
+
+`this` 是 C++ / Java / C# 的习惯 ✗ —— Leno 里**没有这个关键字**，写它会报
+「未定义的变量: this」（现在会**顺带提示**改 `self` ✓）。
+
+**💡 建议：使用有意义的默认值**
+
+```leno
+// ✅ 好的设计：合理的默认值
+struct ServerConfig {
+string host = "localhost"
+int port = 8080
+int timeout = 30
+bool enableLog = true
+}
+
+// ❌ 不推荐：所有字段都是 0/空值
+struct ServerConfig {
+string host = ""
+int port = 0
+int timeout = 0
+bool enableLog = false
+}
+```
 
 ### 创建结构体实例
 
@@ -4568,10 +4568,10 @@ var rect2 = new Rectangle() // x = 0, y = 0, width = null, height = null
 
 > **⚠️ 注意：struct 创建必须使用** **`new`** **关键字和命名参数形式**
 >
-> ```leno
-> var p = new Point(10, 20)      // ❌ 错误：必须使用 new Point(x = 10, y = 20)
-> var p = new Point(x = 10, y = 20)  // ✅ 正确
-> ```
+```leno
+var p = new Point(10, 20)      // ❌ 错误：必须使用 new Point(x = 10, y = 20)
+var p = new Point(x = 10, y = 20)  // ✅ 正确
+```
 
 ### 访问和修改字段
 
@@ -4976,39 +4976,39 @@ struct Calculator {
 > - **✅ 外部通过实例**：`obj.field_name` 可以访问
 > - **❌ 外部函数的局部变量**：即使该变量的类型是某个 struct，也不能用 `new StructName()` 后直接 `.field` 赋值
 >
-> ```leno
-> struct Point {
->     int x
->     int y
->
->     // ✅ 方法内直接访问字段
->     func move(int dx) {
->         x = x + dx       // 等价于 self.x = self.x + dx
->     }
-> }
->
-> // ✅ 外部通过实例访问
-> var p = new Point(x = 1, y = 2)
-> print(p.x)               // 1
->
-> // ❌ 外部函数中 new 出来的 struct 不能直接 .field 赋值
-> func makePoint(): Point {
->     var pt = new Point()
->     // pt.x = 100         // ❌ 编译错误："无法确定字段索引"
->     return new Point(x = 100, y = 200)  // ✅ 用构造参数
-> }
-> ```
->
-> **解决方案**：把需要操作字段的逻辑放到 struct 的**方法**里。
->
-> ```leno
-> struct Point {
->     int x; int y
->     func createFrom(int v): Point {     // ✅ 方法内可以操作字段
->         x = v; y = v; return self
->     }
-> }
-> ```
+```leno
+struct Point {
+int x
+int y
+
+// ✅ 方法内直接访问字段
+func move(int dx) {
+x = x + dx       // 等价于 self.x = self.x + dx
+}
+}
+
+// ✅ 外部通过实例访问
+var p = new Point(x = 1, y = 2)
+print(p.x)               // 1
+
+// ❌ 外部函数中 new 出来的 struct 不能直接 .field 赋值
+func makePoint(): Point {
+var pt = new Point()
+// pt.x = 100         // ❌ 编译错误："无法确定字段索引"
+return new Point(x = 100, y = 200)  // ✅ 用构造参数
+}
+```
+
+**解决方案**：把需要操作字段的逻辑放到 struct 的**方法**里。
+
+```leno
+struct Point {
+int x; int y
+func createFrom(int v): Point {     // ✅ 方法内可以操作字段
+x = v; y = v; return self
+}
+}
+```
 
 **使用插值字符串输出 struct**：
 
@@ -5606,17 +5606,17 @@ struct DictWrapper[K = string, V = int] {
 >
 > 当**所有类型参数都有默认值**时，实例化可以省略类型参数：
 >
-> ```leno
-> var b1 = new Box[int](value=42)   // 显式指定
-> var b2 = new Box(value=100)       // 省略，T 默认 int
-> ```
->
-> 如果**部分参数无默认值**，仍然必须显式指定：
->
-> ```leno
-> struct Cache[K, V = int] { K key; V val }
-> new Cache[string](key="name", val=1)   // K 必须指定
-> ```
+```leno
+var b1 = new Box[int](value=42)   // 显式指定
+var b2 = new Box(value=100)       // 省略，T 默认 int
+```
+
+如果**部分参数无默认值**，仍然必须显式指定：
+
+```leno
+struct Cache[K, V = int] { K key; V val }
+new Cache[string](key="name", val=1)   // K 必须指定
+```
 
 #### 实例化泛型 struct
 
@@ -5784,294 +5784,294 @@ print(chained.value)    // 168
 >
 > 泛型 struct 的方法参数类型会根据实例化类型进行检查。如果传入类型不匹配，编译器会报错：
 >
-> ```leno
-> struct Box[T] {
->     T value
->     func set(T v) { self.value = v }
-> }
->
-> var intBox = new Box[int](value=42)
-> intBox.set("wrong")    // ❌ 编译错误：set 第 1 个参数类型不匹配: 期望 int, 实际 string
->
-> var strBox = new Box[string](value="hi")
-> strBox.set(123)        // ❌ 编译错误：set 第 1 个参数类型不匹配: 期望 string, 实际 int
-> ```
->
-> 多泛型参数时，每个参数都会独立检查：
->
-> ```leno
-> struct Pair[K, V] {
->     K key
->     V val
->     func setBoth(K k, V v) { self.key = k; self.val = v }
-> }
->
-> var p = new Pair[string, int](key="x", val=1)
-> p.setBoth(1, "x")      // ❌ 两个参数都报错：第1个期望 string 实际 int，第2个期望 int 实际 string
-> ```
+```leno
+struct Box[T] {
+T value
+func set(T v) { self.value = v }
+}
 
-> **⚠️ 注意 2：Array/Dict 默认值已深拷贝（已修复）**
->
-> ~~泛型参数在编译期检查后会被擦除，`Box[int]` 和 `Box[string]` 运行时共享同一个 struct 定义。如果 struct 内部使用了可变的引用类型字段（如数组），不同实例化类型之间可能意外共享数据。~~
->
-> **已修复**：`struct_instance_new` 在初始化时对 Array/Dict/Struct 类型的默认值自动深拷贝，每个实例拥有独立副本。
->
-> ```leno
-> struct Container[T] {
->     Array items = []     // ✅ 每个实例独立的 []
-> }
-> var c1 = new Container[int]()
-> var c2 = new Container[string]()
-> c1.items.add(42)
-> print(c2.items.len())   // 0（不再共享）
-> ```
+var intBox = new Box[int](value=42)
+intBox.set("wrong")    // ❌ 编译错误：set 第 1 个参数类型不匹配: 期望 int, 实际 string
 
-> **⚠️ 注意 3：泛型函数调用时 `[` 可能被误解析为数组索引**
->
-> 当函数名同时也是变量名时，`funcName[Type](args)` 可能被解析为数组索引。Leno 编译器会自动区分这两种情况，但在复杂表达式中可能出现歧义。建议：
->
-> - 优先使用类型推断，省略显式类型参数：`identity(42)` 而非 `identity[int](42)`
-> - 只在推断失败时才显式指定：`empty[int]()`
+var strBox = new Box[string](value="hi")
+strBox.set(123)        // ❌ 编译错误：set 第 1 个参数类型不匹配: 期望 string, 实际 int
+```
 
-> **⚠️ 注意 4：泛型函数参数类型不一致时不会自动转换**
->
-> 显式指定类型参数后，编译器会严格检查参数类型，不会做隐式转换：
->
-> ```leno
-> func strict[T](T a, T b): T { return a }
->
-> strict[int](1, 2)          // ✅ OK
-> strict[int](1, "x")        // ❌ 编译错误：第 2 个参数类型不匹配
-> strict[string]("a", "b")   // ✅ OK
-> ```
->
-> 如果需要灵活类型，使用 `any` 参数（但建议加类型守卫）：
-> ```leno
-> func flexible(any a, any b) {
->     if a is int and b is int { return a + b }
->     return 0
-> }
-> ```
+多泛型参数时，每个参数都会独立检查：
 
-> **⚠️ 注意 5：方法参数数量不匹配也会报错**
->
-> 非 泛型 struct 的方法同样会检查参数数量和类型：
->
-> ```leno
-> struct Point {
->     int x
->     int y
->     func setXY(int a, int b) { self.x = a; self.y = b }
-> }
->
-> var pt = new Point(x=1, y=2)
-> pt.setXY(1)              // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 实际 1
-> pt.setXY(1, 2, 3)        // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 实际 3
-> pt.setXY("x", 10)        // ❌ setXY 第 1 个参数类型不匹配: 期望 int, 实际 string
-> ```
+```leno
+struct Pair[K, V] {
+K key
+V val
+func setBoth(K k, V v) { self.key = k; self.val = v }
+}
 
-> **⚠️ 注意 6：泛型函数中 `func(T):void` 返回类型的匹配**
->
-> 当泛型函数的参数类型是函数类型且返回 `void` 时，传入的具体函数也必须返回 `void`（或不声明返回类型）：
->
-> ```leno
-> func make_printer[T](T prefix): func(T):void {
->     func inner(T val):void {    // ✅ 正确：显式声明 :void
->         print(prefix)
->         print(val)
->     }
->     return inner
-> }
-> ```
->
-> 注意：`func(T):void` 中的 `void` 是特殊关键字，表示无返回值。不要写成 `func(T):null` 或省略。
+var p = new Pair[string, int](key="x", val=1)
+p.setBoth(1, "x")      // ❌ 两个参数都报错：第1个期望 string 实际 int，第2个期望 int 实际 string
+```
 
-> **⚠️ 注意 7：泛型参数参与算术运算时保持泛型类型**
->
-> 泛型参数参与算术运算（如 `n - 1`、`n * 2`）时，结果类型仍保持泛型参数类型，不会退化为 `float`：
->
-> ```leno
-> func factorial[T](T n): T {
->     if n <= 1 { return 1 }
->     return n * factorial(n - 1)   // n-1 的类型仍为 T，不会变成 float
-> }
->
-> print(factorial[int](5))   // 120
-> ```
+**⚠️ 注意 2：Array/Dict 默认值已深拷贝（已修复）**
 
-> **⚠️ 注意 8：泛型 struct 省略类型参数会报错**
->
-> 泛型 struct 实例化时必须提供类型参数，省略会导致编译错误：
->
-> ```leno
-> struct Box[T] {
->     T value
-> }
->
-> var b = new Box(value=42)       // ❌ 编译错误：泛型 struct 'Box' 需要类型参数（如 Box[类型]）
-> var b = new Box[int](value=42)  // ✅ 正确
-> ```
->
-> 这与内置泛型类型（`Array`、`Dict`）不同——内置类型可以省略类型参数，编译器会从初始值推断。但自定义泛型 struct 必须显式指定。
+~~泛型参数在编译期检查后会被擦除，`Box[int]` 和 `Box[string]` 运行时共享同一个 struct 定义。如果 struct 内部使用了可变的引用类型字段（如数组），不同实例化类型之间可能意外共享数据。~~
 
-> **⚠️ 注意 9：泛型函数体内创建泛型 struct — 类型参数如何传递**
->
-> 在泛型函数（如 `func Ok[T](T val)`）内部创建泛型 struct（如 `new Result[T]()`）时，类型参数 `T` 会通过调用链自动传递：
->
-> ```leno
-> func Ok[T](T val): Result[T] {
->     return new Result[T](data=val, ok=true)    // ✅ T 由调用方 Ok[float] 传入，closure 携带
-> }
->
-> func Err[T](string msg): Result[T] {
->     return new Result[T](ok=false, error=msg)  // ✅ T 同样通过调用链传递，无需 dummy 参数
-> }
->
-> func reverse[T](Array[T] arr): Array[T] {
->     var s = new Stack[T]()                       // ✅ T 由调用方 reverse[int] 传入
->     ...
-> }
-> ```
->
-> **原理**：调用泛型函数时（如 `Ok[float](...)`），编译器生成 `OP_PUSH_TYPE_ARGS` 指令将类型参数编码为常量。`OP_CALL` 创建 closure 时将这些类型参数存入 `closure.type_param_args`。函数体内创建泛型 struct 时，`OP_STRUCT_INIT` 直接从 closure 读取解析，**不再依赖运行时值推断**。
->
-> 这个机制保证了无论函数参数是否携带泛型类型（如 `Err[T](string msg)` 只有 string 参数），都能正确获取 T 的具体类型。
+**已修复**：`struct_instance_new` 在初始化时对 Array/Dict/Struct 类型的默认值自动深拷贝，每个实例拥有独立副本。
 
-> **⚠️ 注意 10：`int / int = int` 整数除法在泛型上下文中的陷阱**
->
-> Leno 中 `int / int` 执行整数除法（向零取整），结果也是 `int`：
->
-> ```leno
-> var a = 10 / 3      // a = 3（int），而不是 3.333
-> var b = 10.0 / 3    // b = 3.333...（float）
-> ```
->
-> 这在与泛型组合时尤为危险。例如 `Result[float]` 的构造：
->
-> ```leno
-> func safeDivide(int a, int b): Result[float] {
->     return Ok[float](a / b)     // ❌ a/b = 3（int），泛型推断为 int，与 float 不匹配
-> }
-> ```
->
-> **正确做法**：
-> ```leno
-> func safeDivide(int a, int b): Result[float] {
->     return Ok[float]((a as float) / (b as float))  // ✅ 显式转为浮点除法
-> }
-> ```
+```leno
+struct Container[T] {
+Array items = []     // ✅ 每个实例独立的 []
+}
+var c1 = new Container[int]()
+var c2 = new Container[string]()
+c1.items.add(42)
+print(c2.items.len())   // 0（不再共享）
+```
 
-> **⚠️ 注意 11：face 变量不能直接访问底层 struct 的字段和非 face 方法**
->
-> face 类型的变量**只能调用 face 中声明的方法**，不能访问底层 struct 的字段或未声明的方法：
->
-> ```leno
-> face Sortable {
->     func sortKey(): float
-> }
->
-> struct Student impl Sortable {
->     string name
->     float score
->     func sortKey(): float { return self.score }
-> }
->
-> var s = new Student(name="Alice", score=85.0)
-> Sortable face_s = s
->
-> face_s.sortKey()       // ✅ face 声明的方法
-> face_s.name            // ❌ 语义错误：face 'Sortable' 没有字段 'name'
-> ```
->
-> **解决办法**：使用 `as` 转型访问底层 struct：
-> ```leno
-> var student = face_s as Student
-> print(student.name)    // ✅
-> ```
->
-> 这是 Leno 的类型安全设计——保证通过 face 变量只能看到接口约定的行为，而非具体实现的内部细节。
+**⚠️ 注意 3：泛型函数调用时 `[` 可能被误解析为数组索引**
 
-> **⚠️ 注意 12：泛型约束语法 `[T: FaceName]`**
->
-> 可以用 `: FaceName` 为泛型类型参数添加约束，限制 T 必须实现了某个 face：
->
-> ```leno
-> face Comparable {
->     func compare(Comparable other): int
-> }
->
-> // T: Comparable — T 必须实现了 Comparable
-> func maxBy[T: Comparable](T a, T b): T {
->     if a.compare(b) >= 0 { return a }
->     return b
-> }
->
-> struct OrdInt impl Comparable {
->     int value
->     func compare(Comparable other): int {
->         var o = other as OrdInt
->         if self.value < o.value { return -1 }
->         if self.value > o.value { return 1 }
->         return 0
->     }
-> }
-> ```
->
-> 约束也支持跨模块使用：
->
-> ```leno
-> // constraint_module.leno
-> export face Comparable { ... }
-> export func maxBy[T: Comparable](T a, T b): T { ... }
->
-> // main.leno
-> import "constraint_module.leno" as cm
-> use cm.Comparable
->
-> struct OrdInt impl Comparable { ... }
-> var r = cm.maxBy(a, b)  // ✅ 跨模块约束泛型调用
-> ```
->
-> **完整可运行示例**：
->
-> ```leno
-> face Comparable {
->     func compare(Comparable other): int
-> }
-> struct OrdInt impl Comparable {
->     int value
->     func compare(Comparable other): int {
->         var o = other as OrdInt
->         if self.value < o.value { return -1 }
->         if self.value > o.value { return 1 }
->         return 0
->     }
-> }
-> func id[T: Comparable](T a): T { return a }
->
-> main() {
->     var o1 = new OrdInt(value=10)
->     var r1 = id(o1)
->     print(r1.value)     // 10
-> }
-> ```
+当函数名同时也是变量名时，`funcName[Type](args)` 可能被解析为数组索引。Leno 编译器会自动区分这两种情况，但在复杂表达式中可能出现歧义。建议：
 
-> **⚠️ 注意 13：泛型 struct 的方法调用 —— `c.set(99)` 直接生效**
->
-> 泛型 struct 的方法参数中 `T` 在编译期被解析为 struct 类型（`TYPE_STRUCT "T"`），但语义检查器会识别出它是 struct 的泛型参数名，跳过编译期类型比对，交给运行时处理：
->
-> ```leno
-> struct Cell[T] {
->     T value
->     func set(T v) { self.value = v }
-> }
->
-> var c1 = new Cell[int](value=42)
-> c1.set(99)              // ✅ runtime: T=int, 99 是 int，正确
-> print(c1.value)          // 99
-> ```
->
-> 这种设计使得泛型方法在保持编译期解析简单的前提下，在运行时获得正确的类型检查，兼顾了性能和灵活性。
+- 优先使用类型推断，省略显式类型参数：`identity(42)` 而非 `identity[int](42)`
+- 只在推断失败时才显式指定：`empty[int]()`
+
+**⚠️ 注意 4：泛型函数参数类型不一致时不会自动转换**
+
+显式指定类型参数后，编译器会严格检查参数类型，不会做隐式转换：
+
+```leno
+func strict[T](T a, T b): T { return a }
+
+strict[int](1, 2)          // ✅ OK
+strict[int](1, "x")        // ❌ 编译错误：第 2 个参数类型不匹配
+strict[string]("a", "b")   // ✅ OK
+```
+
+如果需要灵活类型，使用 `any` 参数（但建议加类型守卫）：
+```leno
+func flexible(any a, any b) {
+if a is int and b is int { return a + b }
+return 0
+}
+```
+
+**⚠️ 注意 5：方法参数数量不匹配也会报错**
+
+非 泛型 struct 的方法同样会检查参数数量和类型：
+
+```leno
+struct Point {
+int x
+int y
+func setXY(int a, int b) { self.x = a; self.y = b }
+}
+
+var pt = new Point(x=1, y=2)
+pt.setXY(1)              // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 实际 1
+pt.setXY(1, 2, 3)        // ❌ 方法 'setXY' 参数数量不匹配: 期望 2, 实际 3
+pt.setXY("x", 10)        // ❌ setXY 第 1 个参数类型不匹配: 期望 int, 实际 string
+```
+
+**⚠️ 注意 6：泛型函数中 `func(T):void` 返回类型的匹配**
+
+当泛型函数的参数类型是函数类型且返回 `void` 时，传入的具体函数也必须返回 `void`（或不声明返回类型）：
+
+```leno
+func make_printer[T](T prefix): func(T):void {
+func inner(T val):void {    // ✅ 正确：显式声明 :void
+print(prefix)
+print(val)
+}
+return inner
+}
+```
+
+注意：`func(T):void` 中的 `void` 是特殊关键字，表示无返回值。不要写成 `func(T):null` 或省略。
+
+**⚠️ 注意 7：泛型参数参与算术运算时保持泛型类型**
+
+泛型参数参与算术运算（如 `n - 1`、`n * 2`）时，结果类型仍保持泛型参数类型，不会退化为 `float`：
+
+```leno
+func factorial[T](T n): T {
+if n <= 1 { return 1 }
+return n * factorial(n - 1)   // n-1 的类型仍为 T，不会变成 float
+}
+
+print(factorial[int](5))   // 120
+```
+
+**⚠️ 注意 8：泛型 struct 省略类型参数会报错**
+
+泛型 struct 实例化时必须提供类型参数，省略会导致编译错误：
+
+```leno
+struct Box[T] {
+T value
+}
+
+var b = new Box(value=42)       // ❌ 编译错误：泛型 struct 'Box' 需要类型参数（如 Box[类型]）
+var b = new Box[int](value=42)  // ✅ 正确
+```
+
+这与内置泛型类型（`Array`、`Dict`）不同——内置类型可以省略类型参数，编译器会从初始值推断。但自定义泛型 struct 必须显式指定。
+
+**⚠️ 注意 9：泛型函数体内创建泛型 struct — 类型参数如何传递**
+
+在泛型函数（如 `func Ok[T](T val)`）内部创建泛型 struct（如 `new Result[T]()`）时，类型参数 `T` 会通过调用链自动传递：
+
+```leno
+func Ok[T](T val): Result[T] {
+return new Result[T](data=val, ok=true)    // ✅ T 由调用方 Ok[float] 传入，closure 携带
+}
+
+func Err[T](string msg): Result[T] {
+return new Result[T](ok=false, error=msg)  // ✅ T 同样通过调用链传递，无需 dummy 参数
+}
+
+func reverse[T](Array[T] arr): Array[T] {
+var s = new Stack[T]()                       // ✅ T 由调用方 reverse[int] 传入
+...
+}
+```
+
+**原理**：调用泛型函数时（如 `Ok[float](...)`），编译器生成 `OP_PUSH_TYPE_ARGS` 指令将类型参数编码为常量。`OP_CALL` 创建 closure 时将这些类型参数存入 `closure.type_param_args`。函数体内创建泛型 struct 时，`OP_STRUCT_INIT` 直接从 closure 读取解析，**不再依赖运行时值推断**。
+
+这个机制保证了无论函数参数是否携带泛型类型（如 `Err[T](string msg)` 只有 string 参数），都能正确获取 T 的具体类型。
+
+**⚠️ 注意 10：`int / int = int` 整数除法在泛型上下文中的陷阱**
+
+Leno 中 `int / int` 执行整数除法（向零取整），结果也是 `int`：
+
+```leno
+var a = 10 / 3      // a = 3（int），而不是 3.333
+var b = 10.0 / 3    // b = 3.333...（float）
+```
+
+这在与泛型组合时尤为危险。例如 `Result[float]` 的构造：
+
+```leno
+func safeDivide(int a, int b): Result[float] {
+return Ok[float](a / b)     // ❌ a/b = 3（int），泛型推断为 int，与 float 不匹配
+}
+```
+
+**正确做法**：
+```leno
+func safeDivide(int a, int b): Result[float] {
+return Ok[float]((a as float) / (b as float))  // ✅ 显式转为浮点除法
+}
+```
+
+**⚠️ 注意 11：face 变量不能直接访问底层 struct 的字段和非 face 方法**
+
+face 类型的变量**只能调用 face 中声明的方法**，不能访问底层 struct 的字段或未声明的方法：
+
+```leno
+face Sortable {
+func sortKey(): float
+}
+
+struct Student impl Sortable {
+string name
+float score
+func sortKey(): float { return self.score }
+}
+
+var s = new Student(name="Alice", score=85.0)
+Sortable face_s = s
+
+face_s.sortKey()       // ✅ face 声明的方法
+face_s.name            // ❌ 语义错误：face 'Sortable' 没有字段 'name'
+```
+
+**解决办法**：使用 `as` 转型访问底层 struct：
+```leno
+var student = face_s as Student
+print(student.name)    // ✅
+```
+
+这是 Leno 的类型安全设计——保证通过 face 变量只能看到接口约定的行为，而非具体实现的内部细节。
+
+**⚠️ 注意 12：泛型约束语法 `[T: FaceName]`**
+
+可以用 `: FaceName` 为泛型类型参数添加约束，限制 T 必须实现了某个 face：
+
+```leno
+face Comparable {
+func compare(Comparable other): int
+}
+
+// T: Comparable — T 必须实现了 Comparable
+func maxBy[T: Comparable](T a, T b): T {
+if a.compare(b) >= 0 { return a }
+return b
+}
+
+struct OrdInt impl Comparable {
+int value
+func compare(Comparable other): int {
+var o = other as OrdInt
+if self.value < o.value { return -1 }
+if self.value > o.value { return 1 }
+return 0
+}
+}
+```
+
+约束也支持跨模块使用：
+
+```leno
+// constraint_module.leno
+export face Comparable { ... }
+export func maxBy[T: Comparable](T a, T b): T { ... }
+
+// main.leno
+import "constraint_module.leno" as cm
+use cm.Comparable
+
+struct OrdInt impl Comparable { ... }
+var r = cm.maxBy(a, b)  // ✅ 跨模块约束泛型调用
+```
+
+**完整可运行示例**：
+
+```leno
+face Comparable {
+func compare(Comparable other): int
+}
+struct OrdInt impl Comparable {
+int value
+func compare(Comparable other): int {
+var o = other as OrdInt
+if self.value < o.value { return -1 }
+if self.value > o.value { return 1 }
+return 0
+}
+}
+func id[T: Comparable](T a): T { return a }
+
+main() {
+var o1 = new OrdInt(value=10)
+var r1 = id(o1)
+print(r1.value)     // 10
+}
+```
+
+**⚠️ 注意 13：泛型 struct 的方法调用 —— `c.set(99)` 直接生效**
+
+泛型 struct 的方法参数中 `T` 在编译期被解析为 struct 类型（`TYPE_STRUCT "T"`），但语义检查器会识别出它是 struct 的泛型参数名，跳过编译期类型比对，交给运行时处理：
+
+```leno
+struct Cell[T] {
+T value
+func set(T v) { self.value = v }
+}
+
+var c1 = new Cell[int](value=42)
+c1.set(99)              // ✅ runtime: T=int, 99 是 int，正确
+print(c1.value)          // 99
+```
+
+这种设计使得泛型方法在保持编译期解析简单的前提下，在运行时获得正确的类型检查，兼顾了性能和灵活性。
 
 #### 嵌套泛型类型
 
@@ -6551,27 +6551,27 @@ main() {
 >
 > NRVO 跳过的是 **return 语句处的析构**，不是 **作用域结束处的析构**。
 >
-> ```leno
-> func makeBox(int v): Box {
->     var b = new Box(value=v)
->     return b          // NRVO 跳过
-> }
-> // 调用者得到 box 后，box 出作用域时析构
-> ```
->
-> 只有在直接返回局部变量时编译器才会应用 NRVO。如果返回的是表达式或临时值，不会触发：
->
-> ```leno
-> func makeBoxExpr(int v): Box {
->     return new Box(value=v)   // 不会触发 NRVO，临时对象在 return 时析构
-> }
->
-> main() {
->     var box = makeBoxExpr(42)
->     // makeBoxExpr 中 new Box() 没有局部变量承载，返回时无析构可跳过
->     // 析构在 box 出作用域时触发
-> }
-> ```
+```leno
+func makeBox(int v): Box {
+var b = new Box(value=v)
+return b          // NRVO 跳过
+}
+// 调用者得到 box 后，box 出作用域时析构
+```
+
+只有在直接返回局部变量时编译器才会应用 NRVO。如果返回的是表达式或临时值，不会触发：
+
+```leno
+func makeBoxExpr(int v): Box {
+return new Box(value=v)   // 不会触发 NRVO，临时对象在 return 时析构
+}
+
+main() {
+var box = makeBoxExpr(42)
+// makeBoxExpr 中 new Box() 没有局部变量承载，返回时无析构可跳过
+// 析构在 box 出作用域时触发
+}
+```
 
 ### struct 常见问题
 
@@ -6754,19 +6754,19 @@ func mutate(Node n) {
 > **⚠️ 常见陷阱：函数返回后修改**
 >
 > 从函数返回的 struct 实例也是引用，修改它会直接影响原始对象：
-> ```leno
-> func find_node(Array[Node] list, int id): Node {
->     for list.len() to i {
->         if list[i].id == id { return list[i] }
->     }
->     Node empty = new Node(); return empty
-> }
->
-> // 调用方
-> Node found = find_node(arr, 2)
-> found.name = "modified"    // 直接修改了 arr 中的原始节点！
-> ```
-> 如果需要只读快照，请用 `.copy()` 或逐字段手动构造新实例。
+```leno
+func find_node(Array[Node] list, int id): Node {
+for list.len() to i {
+if list[i].id == id { return list[i] }
+}
+Node empty = new Node(); return empty
+}
+
+// 调用方
+Node found = find_node(arr, 2)
+found.name = "modified"    // 直接修改了 arr 中的原始节点！
+```
+如果需要只读快照，请用 `.copy()` 或逐字段手动构造新实例。
 
 ***
 
@@ -6840,44 +6840,44 @@ print(box.compareTo(100))   // -1
 > - **泛型 face impl 完全支持**，含 T 在参数和返回类型位置
 > - **约束检查完全支持**：`func f[T: Comparable](T a, T b)` 可以约束 T
 >
-> ```leno
-> // 泛型 face：T 在返回类型
-> face Box[T] {
->     func unwrap(): T
->     func wrap(T v)
-> }
->
-> struct IntBox impl Box[int] {
->     int value = 0
->     func unwrap(): int { return self.value }
->     func wrap(int v) { self.value = v }
-> }
->
-> struct StrBox impl Box[string] {
->     string value = ""
->     func unwrap(): string { return self.value }
->     func wrap(string v) { self.value = v }
-> }
->
-> var ib = new IntBox(value=42)
-> assert_eq(ib.unwrap(), 42)  // ✅ T 被替换为 int
->
-> // 泛型 face：T 在参数位置
-> face Comparable[T] {
->     func compareTo(T other): int
-> }
->
-> struct OrdInt impl Comparable[int] {
->     int value
->     func compareTo(int other): int { ... }
-> }
->
-> // 泛型约束
-> func maxBy[T: Comparable](T a, T b): T {
->     if a.compareTo(b) >= 0 { return a }
->     return b
-> }
-> ```
+```leno
+// 泛型 face：T 在返回类型
+face Box[T] {
+func unwrap(): T
+func wrap(T v)
+}
+
+struct IntBox impl Box[int] {
+int value = 0
+func unwrap(): int { return self.value }
+func wrap(int v) { self.value = v }
+}
+
+struct StrBox impl Box[string] {
+string value = ""
+func unwrap(): string { return self.value }
+func wrap(string v) { self.value = v }
+}
+
+var ib = new IntBox(value=42)
+assert_eq(ib.unwrap(), 42)  // ✅ T 被替换为 int
+
+// 泛型 face：T 在参数位置
+face Comparable[T] {
+func compareTo(T other): int
+}
+
+struct OrdInt impl Comparable[int] {
+int value
+func compareTo(int other): int { ... }
+}
+
+// 泛型约束
+func maxBy[T: Comparable](T a, T b): T {
+if a.compareTo(b) >= 0 { return a }
+return b
+}
+```
 
 ### struct 实现 face
 
@@ -7344,13 +7344,13 @@ enum Http {
 
 > **⚠️ 同一行写多个成员时必须用 `;` 分隔（2026-11-15 起编译期报错）**
 >
-> ```leno
-> enum E { A; B }     // ✓
-> enum E { A, B }     // ✗ 逗号不是 enum 成员的分隔符（它只用于 `int a, b, c` 这类声明列表）
-> enum E { A B }      // ✗ 同一行的 enum 成员之间必须用 ';'（或者换行）
-> ```
->
-> 换行写成员则不需要分隔符。struct / cstruct / face 的成员同样遵守这条。
+```leno
+enum E { A; B }     // ✓
+enum E { A, B }     // ✗ 逗号不是 enum 成员的分隔符（它只用于 `int a, b, c` 这类声明列表）
+enum E { A B }      // ✗ 同一行的 enum 成员之间必须用 ';'（或者换行）
+```
+
+换行写成员则不需要分隔符。struct / cstruct / face 的成员同样遵守这条。
 
 ### 使用枚举
 
@@ -7386,18 +7386,18 @@ main() {
 
 > **⚠️ 注意：枚举值本质上是 int**
 >
-> ```leno
-> var c = Color.red
-> print(type(c))      // "int"
->
-> // 可以将枚举值赋给 int 变量
-> int color_code = Color.blue
->
-> // 也可以直接与 int 比较
-> if Color.red == 0 {
->     print("red 等于 0")
-> }
-> ```
+```leno
+var c = Color.red
+print(type(c))      // "int"
+
+// 可以将枚举值赋给 int 变量
+int color_code = Color.blue
+
+// 也可以直接与 int 比较
+if Color.red == 0 {
+print("red 等于 0")
+}
+```
 
 ### 带载荷的枚举（成员带数据）
 
@@ -7551,11 +7551,11 @@ main() {
 
 > **⚠️ 注意：混合类型数组推断为** **`Array[any]`**
 >
-> ```leno
-> var arr = [1, 2, 3]           // Array[int]
-> var arr2 = [1, 2.0]           // Array[float]（int 升级为 float）
-> var arr3 = [1, "hello"]       // Array[any]（混合类型，可以添加任何类型）
-> ```
+```leno
+var arr = [1, 2, 3]           // Array[int]
+var arr2 = [1, 2.0]           // Array[float]（int 升级为 float）
+var arr3 = [1, "hello"]       // Array[any]（混合类型，可以添加任何类型）
+```
 
 **数组类型推断规则：**
 
@@ -7661,17 +7661,17 @@ main() {
 
 > **⚠️ 注意：数组是引用类型，赋值不会复制**
 >
-> ```leno
-> var a = [1, 2, 3]
-> var b = a          // b 和 a 指向同一个数组
-> b[0] = 99
-> print(a[0])        // 99（a 也被修改了）
->
-> // 需要独立副本请使用 .copy()
-> var c = a.copy()
-> c[0] = 0
-> print(a[0])        // 99（a 不受影响）
-> ```
+```leno
+var a = [1, 2, 3]
+var b = a          // b 和 a 指向同一个数组
+b[0] = 99
+print(a[0])        // 99（a 也被修改了）
+
+// 需要独立副本请使用 .copy()
+var c = a.copy()
+c[0] = 0
+print(a[0])        // 99（a 不受影响）
+```
 
 ### 数组方法
 
@@ -7782,12 +7782,12 @@ main() {
 
 > **⚠️ 注意：数组比较会比较每个元素**
 >
-> ```leno
-> var a = [1, 2, 3]
-> var b = [1, 2, 3]
-> print(a == b)       // true（内容相同）
-> print(a == [1, 2])  // false（长度不同）
-> ```
+```leno
+var a = [1, 2, 3]
+var b = [1, 2, 3]
+print(a == b)       // true（内容相同）
+print(a == [1, 2])  // false（长度不同）
+```
 
 ### 多维数组
 
@@ -7980,22 +7980,22 @@ main() {
 
 > **⚠️ 注意：`[]`** **和** **`.`** **都可以添加新键**
 >
-> ```leno
-> var d = {name: "cheng"}
-> d["age"] = 25         // ✅ 添加新键
-> d.email = "a@b.com"   // ✅ 添加新键
-> // 不需要先检查键是否存在，直接赋值即可
-> ```
+```leno
+var d = {name: "cheng"}
+d["age"] = 25         // ✅ 添加新键
+d.email = "a@b.com"   // ✅ 添加新键
+// 不需要先检查键是否存在，直接赋值即可
+```
 
-> **⚠️ 注意：字典保持插入顺序**
->
-> ```leno
-> var dict = {c: 3, a: 1, b: 2}
-> for dict to key, value {
->     print($"{key}: {value}")
-> }
-> // 输出顺序: c:3, a:1, b:2（按插入顺序，不是按字母排序）
-> ```
+**⚠️ 注意：字典保持插入顺序**
+
+```leno
+var dict = {c: 3, a: 1, b: 2}
+for dict to key, value {
+print($"{key}: {value}")
+}
+// 输出顺序: c:3, a:1, b:2（按插入顺序，不是按字母排序）
+```
 
 ### 类型化字典（`Dict[K, V]`）✅
 
@@ -8096,13 +8096,13 @@ main() {
 
 > **⚠️ 注意：字典也是引用类型**
 >
-> ```leno
-> var a = {name: "cheng"}
-> var b = a          // b 和 a 指向同一个字典
-> b.name = "li"
-> print(a.name)      // "li"（a 也被修改了）
-> // 需要独立副本请使用 .copy()
-> ```
+```leno
+var a = {name: "cheng"}
+var b = a          // b 和 a 指向同一个字典
+b.name = "li"
+print(a.name)      // "li"（a 也被修改了）
+// 需要独立副本请使用 .copy()
+```
 
 ### `set()` 与 `d[key] = value` 性能对比
 
@@ -8111,7 +8111,7 @@ main() {
 | 性能（10万次） | ~150ms | **~100ms**（快 1.5 倍） |
 | 推荐 | - | ✅ 更快更直观 |
 
-> **建议**：优先用 `d["key"] = value`，性能更好且直观。`set()` 主要用于方法引用场景。
+**建议**：优先用 `d["key"] = value`，性能更好且直观。`set()` 主要用于方法引用场景。
 
 ### 嵌套类型
 
@@ -8976,13 +8976,13 @@ use shape.(
 ```
 
 > **💡 跨模块 `new`：短名和模块限定名都行**（旧版本曾要求 `use` 后只能用短名）：
-> ```leno
-> import "animal.leno" as a
-> Dog d1 = new a.Dog()     // ✅ 不用 use 也能写模块限定名
-> use a.Dog
-> Dog d2 = new Dog()       // ✅ use 后用短名
-> a.Dog d3 = new a.Dog()   // ✅ use 之后仍可写模块限定名
-> ```
+```leno
+import "animal.leno" as a
+Dog d1 = new a.Dog()     // ✅ 不用 use 也能写模块限定名
+use a.Dog
+Dog d2 = new Dog()       // ✅ use 后用短名
+a.Dog d3 = new a.Dog()   // ✅ use 之后仍可写模块限定名
+```
 
 **use 导入的类型可作为 export func 返回类型：**
 
@@ -9473,11 +9473,11 @@ true
 
 > **⚠️ 注意：文件操作后必须调用 close()**
 >
-> ```leno
-> var f = files.open("data.txt", "w")
-> f.write("content")
-> f.close()  // 不要忘记关闭
-> ```
+```leno
+var f = files.open("data.txt", "w")
+f.write("content")
+f.close()  // 不要忘记关闭
+```
 
 ### jsons JSON 模块
 
@@ -10077,17 +10077,17 @@ main() {
 
 > **⚠️ 注意：finally 块只会执行一次**
 >
-> ```leno
-> var count = 0
-> try {
->     throw "error"
-> } catch e {
->     // 处理异常
-> } finally {
->     count = count + 1
-> }
-> print(count)   // 1（不是 2）
-> ```
+```leno
+var count = 0
+try {
+throw "error"
+} catch e {
+// 处理异常
+} finally {
+count = count + 1
+}
+print(count)   // 1（不是 2）
+```
 
 ### throw 语句
 
@@ -10133,41 +10133,41 @@ main() {
 >
 > `throw` 语句会自动包装为异常对象，`catch e` 拿到的 `e` 统一是含 `.msg`、`.file`、`.line`、`.stack` 属性的异常对象。`print(e)` 会输出 `.msg` 的值。
 >
-> ```leno
-> // throw 字符串 → 自动包装为异常对象
-> try { throw "error" } catch e { print(e) }        // "error"（输出 msg）
-> try { throw "error" } catch e { print(e.msg) }    // "error"
-> try { throw "error" } catch e { print(e.stack) }  // 调用栈
->
-> // 引擎的运行期错误 → 同样是异常对象，且 msg 自带「[位置] + [调用栈]」
-> try { var a = 1/0 } catch e { print(e.msg) }
-> // 除零错误：除数为 0
-> //   [操作] 除法 (/)
-> //   [内部] DIV (/)
-> //   [位置] script.leno:3 (func: main)
-> //   [调用栈]
-> //     #0 main @ script.leno:3
-> ```
->
-> ⚠ **引擎错误 vs 你自己 `throw` 的字符串**（2026-10-02 统一文案）：
->
-> - **引擎**产生的错误（除零、越界、`_int("x")` 失败、原生模块报错……）的 `e.msg` **自带**
->   `[位置] file:line (func: 名)` 和 `[调用栈]` ⇒ 任何 `print(e)` / `"…" + e` 的日志都能直接
->   看到出错位置。此前原生模块只登记一句裸消息（如 `无法将字符串转换为整数`），日志里
->   "凭空"没有行号 —— 位置明明在 `e.line`/`e.file` 里，却没人打印它。
-> - 你自己 `throw "xxx"` 的字符串**原样保留**（那是你的数据，不追加任何东西）；要看位置就读
->   `e.file` / `e.line` / `e.stack`。
-> - 位置块的行号与 `e.line` **同源**（都按"当前指令"算，不再差一行）。
-> - 异常**跨边界**（协程的失败经 `asyncs.run()` 抛回、`await`、FFI 回调）时**原样保留**：
->   `e.msg` / `e.line` / `e.stack` 都还是"错误发生地"那一份，不会被改写成"接住它的那一行"。
-> - `try { … } finally { … }`（**不写 catch**）里抛的异常会**照常向外抛**：finally 必然先执行，
->   异常文案与位置原样传给外层 `catch`（此前这条路径会把异常**静默吞掉** ✗）。
-> - `finally` 里的 `return` / `throw` / `break` / `continue` 会**覆盖**正在传播的异常
->   （与 JS/Python 一致）：`return` ⇒ 正常返回那个值、异常丢弃；`throw` ⇒ 用新的那个异常
->   （含它自己的位置）；`break`/`continue` ⇒ 跳出去、异常丢弃。
-> - **回调里抛的异常会正常上抛**：`arr.map/filter/reduce` 的回调、FFI 回调里 `throw`，
->   外层的 `try { … } catch e` 都能接住，`e.msg`/`e.line` 就是抛出的那份（既不消失，
->   也不会让程序异常退出）。
+```leno
+// throw 字符串 → 自动包装为异常对象
+try { throw "error" } catch e { print(e) }        // "error"（输出 msg）
+try { throw "error" } catch e { print(e.msg) }    // "error"
+try { throw "error" } catch e { print(e.stack) }  // 调用栈
+
+// 引擎的运行期错误 → 同样是异常对象，且 msg 自带「[位置] + [调用栈]」
+try { var a = 1/0 } catch e { print(e.msg) }
+// 除零错误：除数为 0
+//   [操作] 除法 (/)
+//   [内部] DIV (/)
+//   [位置] script.leno:3 (func: main)
+//   [调用栈]
+//     #0 main @ script.leno:3
+```
+
+⚠ **引擎错误 vs 你自己 `throw` 的字符串**（2026-10-02 统一文案）：
+
+- **引擎**产生的错误（除零、越界、`_int("x")` 失败、原生模块报错……）的 `e.msg` **自带**
+`[位置] file:line (func: 名)` 和 `[调用栈]` ⇒ 任何 `print(e)` / `"…" + e` 的日志都能直接
+看到出错位置。此前原生模块只登记一句裸消息（如 `无法将字符串转换为整数`），日志里
+"凭空"没有行号 —— 位置明明在 `e.line`/`e.file` 里，却没人打印它。
+- 你自己 `throw "xxx"` 的字符串**原样保留**（那是你的数据，不追加任何东西）；要看位置就读
+`e.file` / `e.line` / `e.stack`。
+- 位置块的行号与 `e.line` **同源**（都按"当前指令"算，不再差一行）。
+- 异常**跨边界**（协程的失败经 `asyncs.run()` 抛回、`await`、FFI 回调）时**原样保留**：
+`e.msg` / `e.line` / `e.stack` 都还是"错误发生地"那一份，不会被改写成"接住它的那一行"。
+- `try { … } finally { … }`（**不写 catch**）里抛的异常会**照常向外抛**：finally 必然先执行，
+异常文案与位置原样传给外层 `catch`（此前这条路径会把异常**静默吞掉** ✗）。
+- `finally` 里的 `return` / `throw` / `break` / `continue` 会**覆盖**正在传播的异常
+（与 JS/Python 一致）：`return` ⇒ 正常返回那个值、异常丢弃；`throw` ⇒ 用新的那个异常
+（含它自己的位置）；`break`/`continue` ⇒ 跳出去、异常丢弃。
+- **回调里抛的异常会正常上抛**：`arr.map/filter/reduce` 的回调、FFI 回调里 `throw`，
+外层的 `try { … } catch e` 都能接住，`e.msg`/`e.line` 就是抛出的那份（既不消失，
+也不会让程序异常退出）。
 
 ### 函数内异常传播
 
@@ -10232,23 +10232,23 @@ main() {
 
 > **⚠️ 注意：catch 块中 throw 后 finally 仍会执行**
 >
-> ```leno
-> var finally_ran = false
-> try {
->     try {
->         throw "first"
->     } catch e {
->         throw "second"         // catch 中重新 throw
->     } finally {
->         finally_ran = true     // ✅ 仍然执行
->     }
-> } catch e {
->     print(e)                    // second
-> }
-> print(finally_ran)              // true
-> ```
->
-> 执行顺序：try → catch（throw）→ finally → 外层 catch
+```leno
+var finally_ran = false
+try {
+try {
+throw "first"
+} catch e {
+throw "second"         // catch 中重新 throw
+} finally {
+finally_ran = true     // ✅ 仍然执行
+}
+} catch e {
+print(e)                    // second
+}
+print(finally_ran)              // true
+```
+
+执行顺序：try → catch（throw）→ finally → 外层 catch
 
 ### 常见运行时异常
 
@@ -10769,15 +10769,15 @@ main() {
 
 > **⚠️ 注意：关闭通道后仍可接收剩余数据**
 >
-> ```leno
-> var ch = threads.channel(10)
-> ch.send("a")
-> ch.send("b")
-> ch.close()
-> print(ch.receive())          // "a"（仍可接收缓冲区中的数据）
-> print(ch.receive())          // "b"
-> // ch.receive()              // 通道为空且已关闭，返回 null
-> ```
+```leno
+var ch = threads.channel(10)
+ch.send("a")
+ch.send("b")
+ch.close()
+print(ch.receive())          // "a"（仍可接收缓冲区中的数据）
+print(ch.receive())          // "b"
+// ch.receive()              // 通道为空且已关闭，返回 null
+```
 
 ### 通道传递 null 值
 
@@ -11066,11 +11066,11 @@ async func caller(int x): int {
 
 > **⚠️ `await` 只能在 `async` 函数中使用**
 >
-> ```leno
-> func normal() {
->     var result = await some_async()   // ❌ 编译错误
-> }
-> ```
+```leno
+func normal() {
+var result = await some_async()   // ❌ 编译错误
+}
+```
 
 ### async 函数返回另一个 async 调用
 
@@ -11185,18 +11185,18 @@ main() {
 
 > **⚠️ 必须调用** **`asyncs.run()`** **启动事件循环**
 >
-> ```leno
+```leno
 import asyncs
-> async func task() {
->     await asyncs.sleep(100)
->     print("完成")
-> }
->
-> main() {
->     task()
->     asyncs.run()    // 必须调用，否则异步任务不会执行
-> }
-> ```
+async func task() {
+await asyncs.sleep(100)
+print("完成")
+}
+
+main() {
+task()
+asyncs.run()    // 必须调用，否则异步任务不会执行
+}
+```
 
 ***
 
@@ -11597,11 +11597,11 @@ main() {
 > - ✅ **不需要释放**的 C 字符串（如 `strerror`、`GetCommandLineA`、`SDL_GetError` 等返回静态缓冲区的函数）——直接用 `str8` 即可
 > - ❌ **需要释放**的 C 字符串（如 `curl_easy_escape` 等返回动态分配内存的函数）——改用三步走：
 >
-> ```leno
-> Ptr ptr = ffi.call_ptr(lib, "curl_easy_escape", handle, url, 0)
-> string result = ffi.read_string(ptr, 0)
-> ffi.call_void(lib, "curl_free", ptr)  // 手动释放 C 内存
-> ```
+```leno
+Ptr ptr = ffi.call_ptr(lib, "curl_easy_escape", handle, url, 0)
+string result = ffi.read_string(ptr, 0)
+ffi.call_void(lib, "curl_free", ptr)  // 手动释放 C 内存
+```
 
 ### 内存操作
 
@@ -12023,18 +12023,18 @@ main() {
 
 > **⚠️ 注意：左右两边数量必须相等**
 >
-> ```leno
-> a, b = 1, 2, 3    // ❌ 报错：数量不匹配
-> a, b, c = 1, 2    // ❌ 报错：数量不匹配
-> ```
+```leno
+a, b = 1, 2, 3    // ❌ 报错：数量不匹配
+a, b, c = 1, 2    // ❌ 报错：数量不匹配
+```
 
-> **⚠️ 注意：并行赋值和 var 多变量声明是不同的语法**
->
-> ```leno
-> var a = 10, b = 20     // 多变量声明：各自独立赋值
-> a, b = b, a             // 并行赋值：同时交换
-> // var a, b = b, a      // ❌ 这是多变量声明，不是并行赋值
-> ```
+**⚠️ 注意：并行赋值和 var 多变量声明是不同的语法**
+
+```leno
+var a = 10, b = 20     // 多变量声明：各自独立赋值
+a, b = b, a             // 并行赋值：同时交换
+// var a, b = b, a      // ❌ 这是多变量声明，不是并行赋值
+```
 
 ### 闭包
 

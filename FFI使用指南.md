@@ -143,7 +143,10 @@ main() {
 
 ### 1.3 调用 C 标准库函数
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -192,7 +195,10 @@ main() {
 
 除了 `ffi.call_*` 动态调用方式，Leno 还支持 `clib` 声明式调用，具有**零摩擦**类型转换、编译期检查和运行时安全保障：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 声明 C 库函数签名
@@ -266,7 +272,10 @@ clib 函数的返回值根据 C 类型自动转换为 Leno 原生类型，无需
 | `Ptr` | `Ptr` / `null` | 指针原样返回，NULL 返回 null |
 | `void` | `null` | 无返回值 |
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 clib msvcrt {
     i32 abs(i32 x)
     u64 _strtoui64(str8 s, Ptr end, i32 base)
@@ -294,7 +303,10 @@ string msg = lib.strerror(2)
 > - ✅ **不需要释放**的 C 字符串（如 `strerror`、`GetCommandLineA`、`SDL_GetError` 等返回静态缓冲区的函数）——直接用 `str8` 返回类型
 > - ❌ **需要释放**的 C 字符串（如 `curl_easy_escape`、`curl_easy_unescape` 等返回动态分配内存的函数）——**不要直接用 `str8`**，改用以下三步走：
 >
-> ```leno
+> ```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 > // 对于需要释放的 C 字符串，使用 call_ptr + read_string + 手动释放
 > Ptr ptr = ffi.call_ptr(lib, "curl_easy_escape", handle, url, 0)
 > if ptr == null { return url }
@@ -324,7 +336,10 @@ Leno `int` 可以直接传给任何 C 整数类型参数，编译器和运行时
 | `bool` | `bool` | true→1, false→0 |
 | `cstruct名` | cstruct 实例 | 自动调用 `to_ptr()` 传指针，也兼容 `Ptr` 和 `null` |
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 clib msvcrt {
     i32 abs(i32 x)
 }
@@ -392,7 +407,10 @@ int truncated = big as int32  // 显式截断，丢弃高位
 
 ### 2.1 加载和释放动态库
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -424,7 +442,10 @@ main() {
 
 ### 2.2 调用 Windows API
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -469,7 +490,10 @@ main() {
 
 FFI 提供了针对不同返回类型的调用函数：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -524,7 +548,10 @@ main() {
 
 **方法 1：字节偏移（底层方式，适用于裸 `Ptr`）**
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -551,7 +578,10 @@ main() {
 
 使用 `Ptr[T]` + `read_at`/`write_at`，无需手动计算字节偏移：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -679,7 +709,10 @@ main() {
 
 `ffi.ptr_from_int` 和 `ffi.ptr_to_int` 是一对互逆操作，用于在指针和整数之间转换：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -820,7 +853,10 @@ main() {
 
 **与 FFI 函数配合使用：**
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -877,7 +913,10 @@ main() {
 
 在 cstruct 中使用 `Ptr[T]` 可以让代码更加类型安全：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 定义 STARTUPINFO 结构体（使用 Ptr[T]）
@@ -1010,7 +1049,10 @@ Windows API 通常有 ANSI 版本（A 后缀）和 Unicode 版本（W 后缀）�
 
 **方式一：clib 声明式调用（推荐，自动转换）**
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 声明时使用 str16，调用时自动完成 UTF-8→UTF-16 转换
@@ -1031,7 +1073,10 @@ main() {
 
 **方式二：ffi.call_* 动态调用（手动转换）**
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -1083,7 +1128,10 @@ main() {
 
 ### 6.1 进程枚举
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 进程信息结构（使用 str16 自动 UTF-16 转换）
@@ -1147,7 +1195,10 @@ main() {
 
 ### 6.2 注册表操作
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 main() {
@@ -1211,7 +1262,10 @@ main() {
 
 #### 方式一：clib 声明式调用（推荐，cstruct 自动传指针）
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 定义 POINT 结构体
@@ -1262,7 +1316,10 @@ main() {
 
 #### 方式二：ffi.call_* 动态调用（需手动传指针）
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 cstruct POINT {
@@ -1296,7 +1353,10 @@ FFI 回调允许将 Leno 函数作为函数指针传递给 C 代码，使 C 函�
 
 Leno 提供 `cfunc` 声明来定义回调函数签名，与 `clib` 风格统一，具有编译期类型检查：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 声明 cfunc 回调签名（只能使用 C 布局类型）
@@ -1347,7 +1407,10 @@ main() {
 
 使用 `cfunc` + `clib` 调用 `qsort` 的完整示例：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 声明 cfunc 回调签名
@@ -1417,7 +1480,10 @@ main() {
 
 回调对象使用 `ffi.free()` 统一释放，与释放指针和库对象的方式相同：
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 var cb = ffi.callback(my_func, MyCfunc)
 // ... 使用回调 ...
 ffi.free(cb)  // 释放回调资源
@@ -1445,7 +1511,10 @@ Leno VM 是单线程运行的，不能从非主线程直接调用。为了安全
 
 #### 示例：SDL3 文件对话框
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 clib sdl3 {
@@ -1537,7 +1606,10 @@ FFI 回调功能在不同平台上的支持情况：
 
 每次 FFI 调用（`ffi.call_*` 或 `clib` 调用）返回后，Leno 会立即缓存 `GetLastError()`（Windows）或 `errno`（Linux/macOS）的值。通过 `ffi.last_error()` 可以安全地获取该错误码，避免后续 Leno 内部操作覆盖线程错误码。
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 clib kernel32 {
@@ -1571,7 +1643,10 @@ main() {
 
 #### 错误处理最佳实践
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // 安全的库加载
@@ -1651,7 +1726,10 @@ FFI 内存分配（`ffi.malloc`、`ffi.calloc`、`ffi.alloc`）创建的对象�
 
 > **GC 兜底机制**：FFI 资源（`ffi.malloc`/`ffi.load`/`ffi.callback` 创建的对象）由 Leno GC 自动追踪。即使忘记显式 `ffi.free()`，当对象不再被引用、GC 回收时会自动释放底层 C 内存/句柄/回调，**不会泄漏**。但 GC 回收时机不确定（取决于堆压力），**推荐显式 `ffi.free()`** 以精确控制生命周期和及时释放资源。需要异常安全时用 `try-catch-finally`，功能等价于 `defer`。
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // ===== 原则 1: defer 自动释放（推荐写法） =====
@@ -1727,7 +1805,10 @@ func processLargeData() {
 
 ### 8.3 类型安全
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 
 // ===== 使用类型守卫 =====
@@ -1807,7 +1888,10 @@ var bar = "[" + filled + "] " + p + "%"
 
 `clib` 类型经过函数返回值时，之前会丢失类型信息（被当作 `struct`）。**现已修复**。
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 clib kernel32 { i32 GetTickCount() }
 
 // ✅ 现在可用（已修复）
@@ -1994,7 +2078,8 @@ Leno cstruct **按字段自然对齐**（与 C 编译器默认行为一致），
 
 使用 `cstruct.size()` 和 `cstruct.alignment()` 验证布局是否与 C 头文件一致：
 
-```leno
+```text
+// 【ABI 校验示意】ffi.sizeof_type 只认它自己支持的类型名（如 int/ptr），传 'u32' 会报未知类型
 import ffi
 
 // Windows PROCESSENTRY32W 的关键字段（简化版）
@@ -2016,9 +2101,9 @@ main() {
     print("对齐要求: " + align + " 字节")               // 8 (u64 的对齐)
 
     // 获取单个 C 类型的大小和对齐
-    int u32_size = ffi.sizeof_type("u32")    // 4
-    int u64_align = ffi.alignof("u64")       // 8
-    print("u32 大小: " + u32_size + ", u64 对齐: " + u64_align)
+    int size_of_u32 = ffi.sizeof_type("u32")    // 4
+    int align_of_u64 = ffi.alignof("u64")       // 8
+    print("u32 大小: " + size_of_u32 + ", u64 对齐: " + align_of_u64)
 }
 ```
 
@@ -2156,7 +2241,10 @@ Leno 的 `threads.start()` 创建的线程有独立的 VM，但共享同一个�
   ⇒ 子线程读那个全局名就能看到同一个地址 ✓（下面例子里 `sharedBuf` 就是这么用的 ✓）。
 - **不共享回调对象**：`ffi.callback` 创建的回调对象绑定到创建它的 VM，跨线程使用需通过跨线程回调编组机制（见 7.4 节）
 
-```leno
+```text
+// 【签名示意】这段会真的去 load DLL / call 系统 API：
+//   签名（参数类型、调用约定）必须与目标 DLL 完全一致，否则**直接崩**；
+//   部分 API 还会阻塞。所以这里标为示意，运行时请在自己的工程里逐步验证。
 import ffi
 import threads
 
