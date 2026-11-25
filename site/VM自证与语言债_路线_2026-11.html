@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VM 自证与语言债 · 下一阶段路线（2026-11） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="VM自证与语言债_路线_2026-11.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">09 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">VM 自证与语言债 · 下一阶段路线（2026-11）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_reflect.html">reflect 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 案例 · 真实项目 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="案例/Aria.html">Aria · 桌面音乐客户端</a><a href="案例/AriaDeployd.html">AriaDeployd · 部署守护进程</a><a href="案例/LenoCleaner.html">LenoCleaner · C 盘清理</a><a href="案例/LenoDumate.html">LenoDumate · 搭子签到</a><a href="案例/LenoGame.html">LenoGame · 9 个图形小游戏</a><a href="案例/LenoTrae.html">LenoTrae · Trae 自动签到</a><a href="案例/LenoWorkBuddy.html">LenoWorkBuddy · 自动签到</a><a href="案例/LenoMusic.html">Music · 音频</a><a href="案例/_总览.html">扩展模块总览</a></div></details><details><summary>07 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoConfig.html">Config · 配置读取</a><a href="扩展模块/LenoContainers.html">Containers · 栈/队列/LRU</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoImage.html">LenoImage</a><a href="扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="扩展模块/LenoTemplate.html">LenoTemplate</a><a href="扩展模块/LenoValidate.html">LenoValidate</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoTUI.html">TUI · 终端输出</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>09 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">31</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno 与其他语言对比</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="VM自证与语言债_路线_2026-11.html" class="active" aria-current="page">VM自证与语言债_路线_2026-11</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="vm-自证与语言债-下一阶段路线-2026-11">VM 自证与语言债 · 下一阶段路线（2026-11）</h1>
+<blockquote>
+<p><strong>这份文档是"待办清单 + 进度表"，不是论文。</strong>
+规矩：<strong>做完一项就把表里那一行改成 ✅ 并写上实测数字</strong>，没做的保持 ⬜（不要提前打勾）。</p>
+</blockquote>
+<hr>
+<h2 id="一-为什么是这四件事">一、为什么是这四件事</h2>
+<p>本轮（2026-11-25）修的那个 <code>0xC0000005</code> 说明了问题所在：单次 <code>encodePNG</code> 正常、纯 <code>zlib</code>
+连压三次正常、缓存清干净仍然崩 —— 真正的根因是 <strong>VM 的原地帧没清非参槽位，GC 把悬空指针
+当根扫进去</strong>，而崩溃现场报在 <code>LenoCompress.deflate_level</code> 的 <code>OP_LOADK</code> 上，<strong>指错了三个模块</strong>。
+靠人工从"报错位置"反推到"真正根因"花了整整一轮。</p>
+<p>结论：<strong>这个项目的瓶颈不是"再加功能"，而是"能跑对"还没变成"能被证明跑对"。</strong>
+所以下面四项按"不做会持续流血"排序，而不是按"做起来爽"排序。</p>
+<table>
+<thead>
+<tr>
+<th>现状指标（2026-11-25 校准）</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语言断言</td>
+<td><strong>668 passed / 0 failed</strong></td>
+</tr>
+<tr>
+<td>模块测试</td>
+<td><strong>65 passed / 0 failed</strong>（25 个模块）</td>
+</tr>
+<tr>
+<td>文档站</td>
+<td>137 篇 / 9 组</td>
+</tr>
+<tr>
+<td>mingw 上的 ASan</td>
+<td>❌ 不可用（<code>-lasan</code> 缺失）⇒ 只能自建检测手段</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="二-待办总表">二、待办总表</h2>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>优先级</th>
+<th>事项</th>
+<th>状态</th>
+<th>判据（怎样算做完）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>最高</td>
+<td><strong>GC 自证：压力模式 + 对象图校验</strong></td>
+<td>✅ <strong>已完成（2026-11-25）</strong></td>
+<td><code>--gc-stress</code> 能跑；对"原地帧不清槽位"的旧代码能<strong>一句话报出根因</strong>；常规/压力两套测试都跑过</td>
+</tr>
+<tr>
+<td><strong>P0.1</strong></td>
+<td>高</td>
+<td>子线程 VM 的完整性校验（P0 的已知边界）</td>
+<td>⬜</td>
+<td><code>test_threads_native_state</code> 在压力下也过；跨堆引用不再需要靠"整体跳过"</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>高</td>
+<td><strong>迭代协议（零分配遍历）</strong></td>
+<td>⬜</td>
+<td><code>bench_containers</code> 里"遍历 1M 元素"的分配次数 = 0</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>中</td>
+<td><strong>可视化回归</strong>（渲染/绘图/字体）</td>
+<td>⬜</td>
+<td>一条命令输出"哪一格变了、差几个像素、diff 图在哪"</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td>
+<td>中</td>
+<td><strong>PGO + 布局稳定性</strong>（不再挖指令级）</td>
+<td>⬜</td>
+<td><code>fib(30)</code> 回到 44ms 量级且 400k 排序不回退</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="三-p0-详情-已完成">三、P0 详情（已完成）</h2>
+<h3 id="做了什么">做了什么</h3>
+<p><strong>① <code>--gc-stress[=N]</code>（命令行）与 <code>LENO_GC_STRESS=N</code>（环境变量）</strong></p>
+<pre><code>build\leno.exe --gc-stress=512 assert\run_tests.leno build\leno.exe assert      :: 旗标
+set LENO_GC_STRESS=512 &amp;&amp; build\leno.exe assert\test_x.leno                     :: 环境变量
+</code></pre>
+<ul>
+<li>每 N 次分配强制挂一次回收请求（默认 64）—— 复用既有钩子 <code>gc.force_every</code>；</li>
+<li>环境变量那条是必须的：断言套件是<strong>逐个子进程</strong>跑的，子进程不继承命令行旗标；</li>
+<li>实现：<code>gc_request_stress()</code>（参数解析时登记，<code>gc_init</code> 应用）+ <code>gc_set_stress()</code>。</li>
+</ul>
+<p><strong>② 两处校验（每次回收自动跑，默认零开销）</strong></p>
+<table>
+<thead>
+<tr>
+<th>校验</th>
+<th>时机</th>
+<th>抓什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>悬空根校验</strong></td>
+<td>标记<strong>之前</strong></td>
+<td>帧寄存器里的对象指针必须真的在 young/old 堆链上。不在 ⇒ 就是"槽位没清、残留上一轮已回收对象"</td>
+</tr>
+<tr>
+<td><strong>标记完整性校验</strong></td>
+<td>标记<strong>之后</strong>、sweep <strong>之前</strong></td>
+<td>活对象（marked）的每个子引用，该被标记的（年轻代 / FULL 模式全部）必须也 marked。否则它马上会被 sweep 掉，而持有者还留着指针</td>
+</tr>
+</tbody>
+</table>
+<p>命中就 <code>abort()</code> 并打印持有者/子对象的<strong>类型、代数、marked 位</strong>（型号名而不是数字）。</p>
+<h3 id="它抓到了什么-实证">它抓到了什么（实证）</h3>
+<p>把"原地帧清非参槽位"那行<strong>临时回退</strong>（模拟旧代码）后，同一条命令给出的就是根因：</p>
+<pre><code>[GC-VERIFY] 悬空根：帧 6 的寄存器 10 指向**不在堆上**的对象 0x…（type=Array owner_thread=0 本VM serial=0）
+            （典型原因：这段寄存器槽没被初始化/清理，残留着上一轮已回收对象的指针）
+            该帧 func=zlib local_count=11
+</code></pre>
+<p>而<strong>修复版</strong>同一条命令全绿。这就是本节的价值：同样的 bug，人工定位花了一轮，工具 1 行。</p>
+<h3 id="已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>处理</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>子线程 VM（<code>vm.thread_serial != 0</code>）</td>
+<td><strong>跳过</strong>两项校验</td>
+<td>子线程的 <code>marked</code> 位会被别的线程的 GC 留下 stale 值；跨堆引用在那里是常态 ⇒ 现在会假阳性（见 P0.1）</td>
+</tr>
+<tr>
+<td><code>Channel</code> / <code>Thread</code> / <code>ffi</code> 库对象</td>
+<td>白名单跳过</td>
+<td>Channel 是 <code>malloc</code> 的、不进堆链表；Thread 由线程系统跨 VM 交接；ffi 库对象有意永不回收</td>
+</tr>
+<tr>
+<td><code>owner_thread</code> 与当前 VM 不同的对象</td>
+<td>跳过</td>
+<td>跨堆引用合法（Channel 载荷、<code>threads.start</code> 返回值）</td>
+</tr>
+<tr>
+<td><code>test_async_io_limit</code> / <code>test_async_sockets</code></td>
+<td>压力下<strong>超时</strong>（120 s 上限）</td>
+<td>I/O 计时用例，回收频率放大后跑不完 ⇒ <strong>不是</strong> GC 缺陷</td>
+</tr>
+</tbody>
+</table>
+<h3 id="实测-2026-11-25-本机">实测（2026-11-25 本机）</h3>
+<table>
+<thead>
+<tr>
+<th>跑法</th>
+<th>结果</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常规断言</td>
+<td><strong>668 passed / 0 failed</strong></td>
+<td>≈60 s</td>
+</tr>
+<tr>
+<td>压力断言 <code>LENO_GC_STRESS=512</code></td>
+<td><strong>666 passed / 2 failed</strong>（两个 async IO 超时，见上）</td>
+<td>361 s</td>
+</tr>
+<tr>
+<td>常规模块测试</td>
+<td><strong>65 passed</strong></td>
+<td>≈10 s</td>
+</tr>
+<tr>
+<td>压力模块测试</td>
+<td><strong>65 passed</strong></td>
+<td>33 s</td>
+</tr>
+</tbody>
+</table>
+<p>CI 建议跑法（跳过两个 I/O 计时用例的做法：它们本来就靠网络/时间，压力模式下不适用）：</p>
+<pre><code>set LENO_GC_STRESS=512
+build\leno.exe build\leno_module\run_all_tests.leno        :: 33 s，65 全绿
+build\leno.exe assert\run_tests.leno build\leno.exe assert :: 361 s，预期 666/2（超时那两条）
+</code></pre>
+<hr>
+<h2 id="四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</h2>
+<h3 id="p0-1-子线程-vm-的完整性校验-p0-的补口-约-1-天">P0.1 子线程 VM 的完整性校验（P0 的补口，约 1 天）</h3>
+<p>现在整块跳过子线程。要做的是<strong>按 <code>vm.thread_serial</code> 分别建堆索引</strong>，并且把"跨堆指针"从
+"悬空指针"里区分出来：维护一张 <code>thread_serial → {young_heap, old_heap}</code> 的注册表（线程启动时注册、
+结束时注销），校验时先查"这个指针属于哪个 VM 的堆"。做完这条，<code>test_threads_native_state</code>
+在压力下也应该全绿。</p>
+<h3 id="p1-迭代协议-约-3-5-天">P1 迭代协议（约 3–5 天）</h3>
+<p>现状：<code>for c to v</code> 是<strong>语义期改写成 <code>c.to_array()</code></strong>（见 <code>semantic_rewrite_for_iterable</code>）⇒
+每轮遍历分配一个快照数组。容器的 README 里只能写"热路径请自己按下标走"，这就是摩擦。</p>
+<p>第一步：给 struct 定义可选协议（<code>iter()</code> 返回游标 + <code>next()</code> 返回 <code>T?</code>，或语言内建 <code>for x in c</code>）；
+容器实现 O(1) 游标；<code>for c to v</code> 在协议存在时走协议、否则回退现有 <code>to_array()</code>（零破坏）。
+判据：<code>bench_containers</code> 增加"遍历 1M 元素，分配计数 = 0"。</p>
+<h3 id="p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</h3>
+<p>现在"看效果"已有两条可行路径：<code>image_lab.leno save</code>（3×2 拼图落盘）、
+<code>qr_maker.leno shot</code>（窗口内容回读成 PNG，靠定时器 + <code>markFrameRedraw()</code> + <code>readPixelsAt</code>）。</p>
+<p>第一步：抽成 <code>tools/visual_golden.leno</code> —— 跑固定 demo → 与 <code>assets/golden/*.png</code> 做像素 diff
+（阈值 + 输出 diff 图），覆盖三类：LenoImage 绘制/缩放、SDL3 控件渲染、字体排版。
+判据：改渲染代码后一条命令给出"哪一格变了、差几个像素"。</p>
+<h3 id="p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</h3>
+<p><code>待办与路线图.md</code> 的 T18 已实测：<code>fib(30)</code> 从 41.9ms 退到 54~60ms 是 <code>vm_run</code> 机器码布局问题，
+<strong>PGO 能找回约 85%</strong>（54.0 → 44.7），但训练集不当会让 400k 排序 +7%。
+第一步：用现有基准（fib / 排序 / pbkdf2 / SDL3 三个 bench）做训练集，测"找回多少、伤不伤排序"。</p>
+<hr>
+<h2 id="五-明确不做的">五、明确<strong>不做</strong>的</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>继续加新模块</td>
+<td>25 个模块 + 137 篇文档已饱和，边际收益最低</td>
+</tr>
+<tr>
+<td>JPEG / WebP</td>
+<td>要引原生库，收益窄；真需要时直接走 <code>LenoSDL3</code> 的 <code>IMG_Load</code></td>
+</tr>
+<tr>
+<td>继续指令级微优化</td>
+<td><code>待办与路线图.md</code> T5 自己的结论就是"单点肥肉已挖完"，剩下是布局抽奖</td>
+</tr>
+<tr>
+<td>async IO 换 IOCP/epoll</td>
+<td>触发条件未满足（现有 select 在 1024 挂起内够用），见 T35</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="六-变更记录">六、变更记录</h2>
+<ul>
+<li><strong>2026-11-25</strong>：新建本文档；<strong>P0 完成</strong>（<code>--gc-stress</code> + 悬空根校验 + 标记完整性校验，
+  已用它实证抓回"原地帧不清槽位"那个 bug；常规/压力两套测试数字见 §三）。</li>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-为什么是这四件事">一、为什么是这四件事</a></li><li><a href="#二-待办总表">二、待办总表</a></li><li><a href="#三-p0-详情-已完成">三、P0 详情（已完成）</a></li><ul class="lv3"><li><a href="#做了什么">做了什么</a></li><li><a href="#它抓到了什么-实证">它抓到了什么（实证）</a></li><li><a href="#已知边界-写清楚-别当它万能">已知边界（写清楚，别当它万能）</a></li><li><a href="#实测-2026-11-25-本机">实测（2026-11-25 本机）</a></li></ul><li><a href="#四-后面三项的第一步-还没做">四、后面三项的第一步（还没做）</a></li><ul class="lv3"><li><a href="#p0-1-子线程-vm-的完整性校验-p0-的补口-约-1-天">P0.1 子线程 VM 的完整性校验（P0 的补口，约 1 天）</a></li><li><a href="#p1-迭代协议-约-3-5-天">P1 迭代协议（约 3–5 天）</a></li><li><a href="#p2-可视化回归-约-2-天">P2 可视化回归（约 2 天）</a></li><li><a href="#p3-pgo-约-1-天出结论">P3 PGO（约 1 天出结论）</a></li></ul><li><a href="#五-明确不做的">五、明确不做的</a></li><li><a href="#六-变更记录">六、变更记录</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="archive/VM字节码校验与崩溃防护设计方案.html">← 上一篇</a><a href="async_await入门指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
