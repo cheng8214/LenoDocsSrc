@@ -53,11 +53,22 @@ float e = 0.3.smoothstep()    // 等价于 maths.smoothstep(0.3) = 0.216
 
 | 函数 | 说明 |
 |------|------|
-| `maths.sin_fast(x)` | 快速正弦近似（Bhaskara I 公式，精度 <0.001，比标准 sin 快约 3-5x） |
-| `maths.cos_fast(x)` | 快速余弦近似（同上） |
+| `maths.sin_fast(x)` | 正弦近似（Bhaskara I 公式），最大绝对误差 **1.63e-3** |
+| `maths.cos_fast(x)` | 余弦近似（同上） |
 
-> **使用建议**：在逐像素渲染、物理模拟等高性能场景中使用 `sin_fast`/`cos_fast`，
-> 在需要精确计算的场景（如金融、科学计算）中使用标准 `sin`/`cos`。
+> **实测速度**（2026-11-25，win32/x64 + 当前 glibc，`build\leno.exe` 每边 200 万次）：
+> `sin_fast` **20.2 ns/次** vs `sin` **20.6 ns/次** —— **基本同速**。
+> 早先"比标准 sin 快约 3-5x"的说法在这个环境**不成立**：Leno 侧 native 调用的固定开销约 15 ns，
+> 把两侧的算术差异盖住了（纯算术层面 Bhaskara 确实更便宜，但落到 ns/次上看不出来）。
+> 误差实测在 `[0,2π]` / 小参数 / 1e5 / 1e6 / 1e9 / 负数区间都是 1.63e-3，
+> 说明归约本身稳定，误差来自公式截断；注释里原来的"精度 <0.001"也偏低。
+
+> **使用建议**：默认用标准 `sin`/`cos`。`sin_fast`/`cos_fast` 只在
+> "1.6e-3 的误差无所谓 **且** 调用开销已被消除（C 扩展或 JIT 内联）"时才值得，
+> 例如逐像素渲染画波形、把值打到 0~255 的像素色（1.6e-3 ≈ 0.4/255，肉眼不可见）。
+
+> ⚠ 范围归约用的是 `(int)(x / 2π)`，`|x| > ~1.35e10` 时 `int` 溢出（未定义行为）；
+> 标准 `sin`/`cos` 走 Payne-Hanek 归约，任意大参数都正确。
 
 ## 对数和指数
 
@@ -249,8 +260,8 @@ float dy = fy - cy
 float dist = maths.hypot(dx, dy)        // 比 sqrt(dx*dx+dy*dy) 更安全
 float invDist = maths.rsqrt(dx*dx + dy*dy) // 一步得到 1/dist，省掉除法
 
-// 快速正弦波
-float wave = maths.sin_fast(t * 6.28)
+// 正弦波（默认用标准 sin；sin_fast 与它同速且误差 1.6e-3，见上面"快速近似三角函数"）
+float wave = maths.sin(t * 6.28)
 
 // 像素值限幅
 int r = maths.clamp(rawR, 0, 255)
