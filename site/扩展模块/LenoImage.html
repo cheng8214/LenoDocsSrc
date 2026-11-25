@@ -139,7 +139,7 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 </tr>
 <tr>
 <td><code>decodePNGFile(path)</code> / <code>encodePNGFile(img, path)</code></td>
-<td>文件版</td>
+<td>文件版（<strong>父目录不存在时返回 <code>Result</code> 错误</strong>，不抛异常）</td>
 </tr>
 </tbody>
 </table>
@@ -192,12 +192,22 @@ var d = img.decodePNGFile(&quot;in.png&quot;)
 对这类图可以两种都编一遍取小的（或者直接指定 None）。照片/渐变/绘制图仍然是自适应明显更省。</p>
 <h2 id="变更记录">变更记录</h2>
 <ul>
-<li><strong>0.3.0</strong>（2026-11-25）：PNG 编码改成<strong>逐行自适应滤波</strong>（渐变 −98%、绘制图 −92%，
+<li>
+<p><strong>0.3.1</strong>（2026-11-25）：<code>encodePNGFile</code> 先判<strong>父目录存在</strong>，缺失时返回
+  <code>Result</code> 错误（"目录不存在：xxx（先 dirs.mkdir_p；或把 path 换成相对<strong>脚本</strong>的路径）"），
+  不再让 <code>files.write</code> 抛一条「无法创建文件」+ 调用栈（实测：在子目录里用"仓库根相对路径"
+  写盘就会踩到，报错完全看不出是目录问题）。回归用例：<code>test/test_image.leno</code> 第 ⑨ 组。</p>
+</li>
+<li>
+<p><strong>0.3.0</strong>（2026-11-25）：PNG 编码改成<strong>逐行自适应滤波</strong>（渐变 −98%、绘制图 −92%，
   但界面截图这类大片纯色的反而 +12% ⇒ 同时给出 <code>encodePNGWithFilter</code> / <code>encodePNGNoFilter</code>
   自行选择）；编码器不再为每行 5 种滤波各物化一份候选数组（内存/GC 压力大减，快 ~15%）；
   新增绘制/合成 API（<code>blit</code> / <code>blitAlpha</code> / <code>fillCircle</code> / <code>drawRect</code> / <code>line</code> / <code>toGray</code> /
-  <code>invert</code> / <code>clone</code> / <code>scaleToFit</code>）；新增可视化演示窗口 + <code>save</code> 拼图模式。</li>
-<li><strong>0.2.0</strong>（2026-11-24）：模块初版（构造/读写/缩放/几何/PNG 编解码）。</li>
+  <code>invert</code> / <code>clone</code> / <code>scaleToFit</code>）；新增可视化演示窗口 + <code>save</code> 拼图模式。</p>
+</li>
+<li>
+<p><strong>0.2.0</strong>（2026-11-24）：模块初版（构造/读写/缩放/几何/PNG 编解码）。</p>
+</li>
 </ul>
 <h2 id="来源">来源</h2>
 <p>缩放采样从 <code>tools/lib/image_ops.leno</code>（Ptr 版，给 SDL3 零拷贝用）移植成 Array[int] 版；
