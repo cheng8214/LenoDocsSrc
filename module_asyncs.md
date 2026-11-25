@@ -832,7 +832,7 @@ main() {
 
 ```leno
 func worker(any ch, int n) {
-    threads.sleep(30)                       // 模拟 CPU 活
+    sleep(30)                       // 模拟 CPU 活
     if ch is Channel { ch.send(n * 2) }
 }
 

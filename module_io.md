@@ -349,7 +349,7 @@ main() {
         printf("] %d%%", percent)
         
         // 模拟处理时间
-        threads.sleep(100)
+        sleep(100)          // 全局内置，无需 import
     }
     
     print("\n处理完成!")
