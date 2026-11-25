@@ -275,7 +275,39 @@ async IO 超时，与 P0 时一致）。</p>
 <li>三个名字的优先级是纯约定，无处声明、无处检查，与本仓"注册即数据、拒绝名字特判"的取向冲突
   （同 <code>_env</code> 特判被否决那次）。</li>
 </ul>
-<p><strong>最终形态：显式表达式，编译器零特判。</strong></p>
+<p><strong>第二步其实是三步</strong>：删掉名字猜测之后先写了"显式表达式"（下面这段），随后又补上了
+<strong>声明式协议</strong>（<code>face Iterable</code>）—— 因为"显式"虽然安全，但把常用写法变啰嗦了。</p>
+<p><strong>第三步（当前形态）：声明式协议，编译器只做结构判定。</strong></p>
+<pre><code class="language-leno">// LenoContainers 里就是一份普通声明，编译器源码里没有 &quot;Iterable&quot;/&quot;each&quot; 任何字符串
+export face Iterable { func each(): Array }
+export struct Stack[T] impl Iterable { func each(): Array[T] { return items } … }
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>struct 的 face 情况</th>
+<th><code>for c to v</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>恰好 1 个 face，且它恰好 1 个方法、返回 <code>Array</code></td>
+<td>遍历 <code>c.&lt;那个方法&gt;()</code>（元素）</td>
+</tr>
+<tr>
+<td>0 个 face</td>
+<td>字段遍历（原有语义）</td>
+</tr>
+<tr>
+<td>≥2 个 face</td>
+<td>字段遍历（不猜是哪个）</td>
+</tr>
+</tbody>
+</table>
+<p>实测：<code>for st to v</code> <strong>37 ns/op、20 万项 1,271 B</strong>（比快照快，因为没有 8MB 复制）；
+<code>for st.raw() to v</code> 34 ns/op；<code>for st.to_array() to v</code> 52 ns/op + 8 MB。
+自定义类型只要 <code>impl Iterable</code> 就能被 <code>for</code> 遍历（回归用例 <code>assert/test_iterable_face.leno</code>）。</p>
+<p><strong>同一天里"显式表达式"这段仍然有效</strong>（保留为不依赖协议的低层写法）：</p>
 <pre><code class="language-leno">for st.raw() to v { }        // 0 复制 + 数组满速
 for st.to_array() to v { }   // 快照
 for lru.keys() to k { }      // 缓存 key

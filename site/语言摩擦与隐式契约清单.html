@@ -749,8 +749,18 @@ for clash to f { }      // 旧实现 ⇒ for clash.raw() to f ⇒ for 7 to f ⇒
 （零分配性能不变：34 ns/op、20 万项 1,271 B）。</p>
 <p><strong>回归（防止种回去）</strong>：<code>assert/test_for_container_iter.leno</code> 含<strong>反面断言</strong> ——
 "有同名 <code>raw(): int</code> 的结构体，<code>for f to v</code> 仍给字段名"。谁把名字改写加回来，这条必挂。</p>
-<p><strong>若将来要语法糖</strong>：做成<strong>声明式</strong>（<code>struct Stack[T] iter_by raw</code> 或 <code>impl Iterable</code>），
-信息来自声明、能进 <code>.lenosymc</code>，并且猜不出时必须<strong>报错</strong>而不是换一条路走。</p>
+<p><strong>语法糖的最终解法（当天晚些时候落地）</strong>：做成<strong>声明式 face</strong>，而不是标注或猜测 ——</p>
+<pre><code class="language-leno">// LenoContainers 里的普通声明；编译器源码里**没有** &quot;Iterable&quot;/&quot;each&quot; 任何字符串
+export face Iterable { func each(): Array }
+export struct Stack[T] impl Iterable { func each(): Array[T] { return items } … }
+</code></pre>
+<p><code>for c to v</code> 的规则是<strong>纯结构判定</strong>：恰好实现 1 个 face + 该 face 恰好 1 个方法 +
+该方法返回 <code>Array</code> ⇒ 遍历那个方法；0 个或多个 face ⇒ 字段遍历。于是任何类型只要
+<code>impl</code> 一个符合形状的 face 就能被 <code>for</code> 遍历，编译器无需为任何具体名字留位置。
+（中途还试过"在 C 里注册内置 face Iterable + <code>strdup("each")</code>"—— 那只是把写死换个地方放，
+同样被否；现在的实现里没有任何名字常量。）</p>
+<p><strong>测试</strong>：<code>assert/test_iterable_face.leno</code>（协议遍历 + 自定义类型 + 字段遍历反面）；
+<code>assert/test_for_container_iter.leno</code>（显式 <code>.raw()</code>/<code>.to_array()</code>/<code>.keys()</code> 路径）。</p>
 <hr>
 <h2 id="与现有文档的分工">与现有文档的分工</h2>
 <table>

@@ -137,20 +137,58 @@ for l to k { print(k) }         // 缓存遍历的是 **key**
   要遍历元素请显式写 <code>for c.raw() to v</code> / <code>for c.to_array() to v</code>，见下一节。
   热路径上想零分配，就自己 <code>peek</code> / <code>at</code> 按下标走。</li>
 </ul>
-<h2 id="遍历-三条路-自己写清楚走哪条-2026-11-25">遍历：三条路，<strong>自己写清楚走哪条</strong>（2026-11-25）</h2>
-<p>先说规则：<strong><code>for &lt;struct&gt; to k, v</code> 永远是字段遍历</strong>（k = 字段名）。容器不会"自动变成可遍历" ——
-编译器不认识任何方法名，也不会去猜（曾经按 <code>raw</code>/<code>to_array</code>/<code>keys</code> 猜过一版，<strong>已删除</strong>：
-用户结构体碰巧有个同名 <code>raw()</code> 就会被静默劫持，实测 <code>for f to v</code> 变成 <code>for 7 to v</code>）。</p>
-<p>要遍历元素，写表达式（都是普通语法，编译器零特判）：</p>
+<h2 id="遍历-for-c-to-v-走声明式协议-2026-11-25">遍历：<code>for c to v</code> 走<strong>声明式协议</strong>（2026-11-25）</h2>
+<p>本模块声明了一个普通 face，容器都实现了它：</p>
+<pre><code class="language-leno">export face Iterable {
+    func each(): Array          // 唯一方法：无参、返回元素数组
+}
+export struct Stack[T] impl Iterable { … func each(): Array[T] { return items } … }
+</code></pre>
+<p><code>for c to v</code> 的判定规则（<strong>编译器只做结构判定，源码里没有 <code>Iterable</code>/<code>each</code> 任何字符串</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>struct 的 face 情况</th>
+<th><code>for c to v</code> 的语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>恰好 1 个 face，且它恰好 1 个方法、该方法返回 <code>Array</code></td>
+<td>遍历 <code>c.&lt;那个方法&gt;()</code> 的结果（元素）</td>
+</tr>
+<tr>
+<td>0 个 face</td>
+<td><strong>字段遍历</strong>（k = 字段名，本语言原有语义）</td>
+</tr>
+<tr>
+<td>≥2 个 face</td>
+<td>字段遍历（不猜是哪一个）</td>
+</tr>
+</tbody>
+</table>
+<p>所以容器直接写就行：</p>
+<pre><code class="language-leno">for st to v { }        // 栈底 → 栈顶（37 ns/op、20 万项 1,271 B 分配 ≈ 0）
+for q to v { }         // 队首 → 队尾（Queue 内部有 head 空洞 ⇒ each() 给快照）
+for pq to v { }        // 堆序（不保证出队序；要优先级顺序用 drain_sorted）
+for lru to k { }       // 缓存：遍历 key（最久 → 最近）
+</code></pre>
+<p>想让<strong>自己的类型</strong>也能被 <code>for</code> 遍历？声明一个 face 并 impl 它，编译器一行都不用改：</p>
+<pre><code class="language-leno">struct MyRange impl Iterable {
+    int n = 0
+    func each(): Array[int] { … }      // 返回什么数组就遍历什么
+}
+for r to v { }                          // 直接可用
+</code></pre>
+<h3 id="也可以完全显式-不依赖协议">也可以完全显式（不依赖协议）</h3>
 <pre><code class="language-leno">for st.raw() to v { }        // 0 复制 + 数组满速（34 ns/op）—— raw 返回**内部数组本身**
-for st.to_array() to v { }   // 快照（57 ns/op）—— 循环体里改容器不影响本轮
-for lru.keys() to k { }      // 缓存遍历 key（最久 → 最近）
-for q.to_array() to v { }    // Queue / Deque / PriorityQueue 同理：显式 to_array()
+for st.to_array() to v { }   // 快照（52 ns/op）—— 循环体里改容器不影响本轮
+for lru.keys() to k { }      // 缓存遍历 key
 </code></pre>
 <p>元素一次都不复制、也不想快照？用游标（每元素两次方法调用，慢一点，但元素不连续的容器也能用）：</p>
 <pre><code class="language-leno">var it = st.iter()                       // Stack / Queue / PriorityQueue / Deque 都有
 while it.has_next() {
-    if it.next() is int =&gt; v { sink(v) }  // next() 返回 T?（走完给 null）
+    if it.next() is int =&gt; v { sink(v) }  // next(): T?（走完给 null）
 }
 var kit = lru.keys_iter()                 // 缓存：遍历 key
 </code></pre>
@@ -219,13 +257,18 @@ var kit = lru.keys_iter()                 // 缓存：遍历 key
 </thead>
 <tbody>
 <tr>
-<td><code>for st.raw() to v</code></td>
-<td><strong>34 ns/op</strong></td>
+<td><code>for st to v</code>（协议 → <code>each()</code>）</td>
+<td><strong>37 ns/op</strong></td>
 <td><strong>~0</strong>（20 万项实测 1,271 B）</td>
 </tr>
 <tr>
-<td><code>for st.to_array() to v</code></td>
-<td>57 ns/op</td>
+<td><code>for st.raw() to v</code>（显式）</td>
+<td>34 ns/op</td>
+<td>~0</td>
+</tr>
+<tr>
+<td><code>for st.to_array() to v</code>（显式快照）</td>
+<td>52~57 ns/op</td>
 <td>8 MB</td>
 </tr>
 <tr>
@@ -235,14 +278,15 @@ var kit = lru.keys_iter()                 // 缓存：遍历 key
 </tr>
 </tbody>
 </table>
-<p>读法：<code>raw()</code> 把"内部数组"直接交给 <code>for</code> ⇒ 既省掉复制、又保留数组顺序扫的速度，
-所以它<strong>比快照还快</strong>（少一次 8MB 复制）。游标省的是复制，但每元素两次方法调用，
+<p>读法：协议版只多一次方法调用（<code>each()</code> 返回内部数组，不复制）⇒ 既省掉 8MB 复制、
+又保留数组顺序扫的速度，所以它<strong>比快照还快</strong>。游标省的是复制，但每元素两次方法调用，
 因此更慢 —— 它是给"元素不连续"的容器（Queue/Deque）用的兜底。</p>
 <p><strong>语义差别（必须知道）</strong>：</p>
 <ul>
-<li><code>raw()</code> 是<strong>实时视图</strong>：循环体里 <code>push</code>/<code>pop</code> 会被看到（边遍历边改容器本来就该避免）；</li>
-<li><code>to_array()</code> / <code>keys()</code> 是<strong>快照</strong>：循环体里改容器不影响本轮（但每轮分配）；</li>
-<li>游标 <code>iter()</code> 也是实时视图。</li>
+<li><code>each()</code>（Stack/PriorityQueue/LRU）= 返回<strong>内部数组</strong> ⇒ <strong>实时视图</strong>：
+  循环体里 <code>push</code>/<code>pop</code> 会被看到（边遍历边改容器本来就该避免）；</li>
+<li><code>each()</code>（Queue/Deque）= 内部不连续 ⇒ 它们返回 <code>to_array()</code> ⇒ <strong>快照</strong>；</li>
+<li><code>to_array()</code> / <code>keys()</code> 显式写时都是快照；游标 <code>iter()</code> 是实时视图。</li>
 </ul>
 <h2 id="api">API</h2>
 <h3 id="stack-t"><code>Stack[T]</code></h3>
@@ -843,6 +887,13 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 <h2 id="变更记录">变更记录</h2>
 <ul>
 <li>
+<p><strong>0.8.0</strong>（2026-11-25）：新增 <code>face Iterable { func each(): Array }</code>，七个类型全部 <code>impl Iterable</code>
+  ⇒ <strong><code>for st to v</code> 直接遍历元素/键</strong>（37 ns/op、20 万项 ≈ 0 分配）。判定是<strong>结构式</strong>的
+  （恰好 1 个 face + 该 face 恰好 1 个方法 + 返回 Array），编译器源码里没有任何
+  <code>Iterable</code>/<code>each</code> 字符串；自定义类型只要 <code>impl Iterable</code> 就能被 <code>for</code> 遍历。
+  显式写法（<code>.raw()</code> / <code>.to_array()</code> / <code>.keys()</code> / <code>iter()</code>）继续保留。</p>
+</li>
+<li>
 <p><strong>0.7.0</strong>（2026-11-25）：新增 <code>raw()</code>（返回<strong>内部数组本身</strong>）—— <code>Stack</code> / <code>PriorityQueue</code> / <code>LRU</code>。
   用法是<strong>显式</strong>的 <code>for st.raw() to v</code>：实测 1M 项 <strong>34 ns/op、~0 分配</strong>（对照
   <code>to_array()</code> 57 ns/op + 8 MB）。⚠ 同一天内曾有一版让语义期按方法名自动改写 <code>for c to v</code>，
@@ -900,7 +951,7 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#直接遍历-for-c-to-v-2026-11-25-起">直接遍历（for c to v，2026-11-25 起）</a></li><li><a href="#遍历-三条路-自己写清楚走哪条-2026-11-25">遍历：三条路，自己写清楚走哪条（2026-11-25）</a></li><ul class="lv3"><li><a href="#实测-n-1-000-000-本机">实测（N=1,000,000，本机）</a></li></ul><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#用法">用法</a></li><li><a href="#直接遍历-for-c-to-v-2026-11-25-起">直接遍历（for c to v，2026-11-25 起）</a></li><li><a href="#遍历-for-c-to-v-走声明式协议-2026-11-25">遍历：for c to v 走声明式协议（2026-11-25）</a></li><ul class="lv3"><li><a href="#也可以完全显式-不依赖协议">也可以完全显式（不依赖协议）</a></li><li><a href="#实测-n-1-000-000-本机">实测（N=1,000,000，本机）</a></li></ul><li><a href="#api">API</a></li><ul class="lv3"><li><a href="#stack-t">Stack[T</a></li><li><a href="#queue-t">Queue[T</a></li><li><a href="#deque-t-双端队列">Deque[T（双端队列）</a></li><li><a href="#priorityqueue-t">PriorityQueue[T</a></li><li><a href="#lru-v">LRU[V</a></li><li><a href="#clocklru-v">ClockLRU[V</a></li><li><a href="#lruo1-v-严格最近访问淘汰-get-put-全-o-1">LRUO1[V（严格最近访问淘汰 + get/put 全 O(1)）</a></li><li><a href="#on_evict-淘汰时交还资源-三个缓存容器都有">on_evict：淘汰时交还资源（三个缓存容器都有）</a></li></ul><li><a href="#边界契约-这就是它存在的理由">边界契约（这就是它存在的理由）</a></li><li><a href="#复杂度">复杂度</a></li><li><a href="#性能实测-2026-11-24-本机单进程-bench-bench_containers-leno">性能实测（2026-11-24，本机单进程，bench/bench_containers.leno）</a></li><li><a href="#在仓库里的真实使用">在仓库里的真实使用</a></li><li><a href="#跑测试">跑测试</a></li><li><a href="#跑基准">跑基准</a></li><li><a href="#变更记录">变更记录</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoConfig.html">← 上一篇</a><a href="../扩展模块/LenoCrypto.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
