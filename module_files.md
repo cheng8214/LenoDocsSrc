@@ -821,26 +821,24 @@ main() {
 
 ```leno
 import files
+import dirs
 import times
 
-var Logger = {
-    "file": null,
-    "level": "INFO"
-}
+// 日志写到临时目录（别在当前目录留 app.log）
+var log_path = dirs.join(_tmpdir(), "app.log")
 
-func logger_init(string path) {
-    Logger.file = files.open(path, "a")
+func logger_init() {
+    files.write(log_path, "")          // 清空
 }
 
 func logger_log(string level, string message) {
-    if Logger.file == null {
-        print("日志未初始化")
-        return
+    var line = "[" + times.format(times.now(), "%Y-%m-%d %H:%M:%S") + "] " + level + " " + message
+    // 追加：先读后写（小日志够用；大文件请用 files.open(path, "a") + defer f.close()）
+    var old = ""
+    if files.exists(log_path) {
+        old = files.read(log_path)
     }
-    
-    var time_str = times.format(times.now(), "%Y-%m-%d %H:%M:%S")
-    var log_line = "[" + time_str + "] [" + level + "] " + message
-    Logger.file.write(log_line)
+    files.write(log_path, old + line + "\n")
 }
 
 func logger_info(string message) {
@@ -852,19 +850,16 @@ func logger_error(string message) {
 }
 
 func logger_close() {
-    if Logger.file != null {
-        Logger.file.close()
-        Logger.file = null
+    if files.exists(log_path) {
+        print(files.read(log_path))
+        print(files.delete(log_path))   // 收尾删掉，断言 true
     }
 }
 
 main() {
-    logger_init("app.log")
-    
+    logger_init()
     logger_info("程序启动")
-    logger_info("加载配置完成")
-    logger_error("连接数据库失败")
-    
+    logger_error("示例错误")
     logger_close()
 }
 ```
@@ -907,10 +902,12 @@ func write_csv(string path, Array[string] headers, Array[Array[string]] records)
     // 写入表头
     f.write(headers.join(",") + "\n")
     // 写入数据
-    for records to record {
+    // 按**下标**取：records 是 Array[Array[string]]，用字符串键会报「索引必须是整数」
+    for 0:records.len() - 1 to r {
+        var record = records[r]
         var values = []
-        for headers to h {
-            values.add(record[h])
+        for 0:headers.len() - 1 to i {
+            values.add(record[i])
         }
         f.write(values.join(",") + "\n")
     }
@@ -938,6 +935,7 @@ main() {
 ### 示例4：二进制文件处理
 
 ```leno
+import strings
 import files
 
 // 写入二进制数据
@@ -952,21 +950,21 @@ func write_binary_data(string path) {
     
     // 写入数据长度（4字节大端）
     var data_len = 256
-    f.write(char((data_len >> 24) & 0xFF))
-    f.write(char((data_len >> 16) & 0xFF))
-    f.write(char((data_len >> 8) & 0xFF))
-    f.write(char(data_len & 0xFF))
+    f.write(strings.char((data_len >> 24) & 0xFF))
+    f.write(strings.char((data_len >> 16) & 0xFF))
+    f.write(strings.char((data_len >> 8) & 0xFF))
+    f.write(strings.char(data_len & 0xFF))
     
     // 写入数据
     for 0 : data_len - 1 to i {
-        f.write(char(i & 0xFF))
+        f.write(strings.char(i & 0xFF))
     }
     
     f.close()
 }
 
 // 读取二进制数据
-func read_binary_data(string path): Array[int] {
+func read_binary_data(string path): Array[int]? {
     var f = files.open(path, "rb")
     
     // 读取魔数
@@ -1006,7 +1004,7 @@ main() {
 ```leno
 import files
 
-func find_and_replace(path, old_str, new_str):bool {
+func find_and_replace(string path, string old_str, string new_str): bool {
     // ⚠ 走**原始字节**通道（open "rb"/"wb"）：`files.read` 会剥 BOM，只有 `open(rb)` 拿得到原样字节
     //   ⇒ 图省事写成 `files.write(path, files.read(path).replace(...))` 会**丢掉 BOM**
     //   （见上文「字节保真（行尾 / BOM）」一节）。想连 BOM 一起保真就得这么写 ✓
@@ -1034,7 +1032,7 @@ func find_in_file(string path, string search_str): Array[string] {
             break
         }
         
-        if line.contains(search_str) {
+        if line.has(search_str) {
             matches.add({"line": line_num, "content": line})
         }
         
