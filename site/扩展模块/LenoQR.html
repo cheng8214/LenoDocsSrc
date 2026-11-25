@@ -386,6 +386,19 @@ Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 dif
   SHA256 <code>FBEFCF8E04BE88F1FA43C68A39C9C6C42E5AB6FE91453B614AC58250821436AA</code>）；
   上游文件未做任何修改（<code>quirc_version()</code> 报 <code>1.0</code>）。</li>
 </ul>
+<h2 id="配套窗口示例-看得见的那种">配套窗口示例（看得见的那种）</h2>
+<p><code>leno_gui/应用/二维码生成器/qr_maker.leno</code>：输入框实时生成二维码、Ctrl+S 存 PNG。
+它把 <code>qr.encode()</code> 的 <code>rows</code> 矩阵用 <strong>LenoImage</strong> 画成像素图（4 格静区 + 整数倍缩放），
+再经 SDL3 贴到窗口上 —— 正好演示三个模块怎么串起来。</p>
+<pre><code class="language-bat">:: 开窗口（ESC 退出，Ctrl+S 存 qr_out.png）
+build\leno.exe leno_gui\应用\二维码生成器\qr_maker.leno
+:: 不开窗口，直接出图（CI / 无显示器）
+build\leno.exe leno_gui\应用\二维码生成器\qr_maker.leno save &quot;要编码的文字&quot;
+:: 开窗口并在 0.8s 后把**窗口内容**回读成 window.png（核对&quot;窗口真实长相&quot;）
+build\leno.exe leno_gui\应用\二维码生成器\qr_maker.leno shot
+</code></pre>
+<p>自测口径（不靠肉眼）：生成的 PNG 再喂给本模块的 <code>decode_png</code> 示例，识别结果必须与原文一致
+（实测中英文混排 UTF-8 也一致）。</p>
 <h2 id="后续可选-都不阻塞现在">后续可选（都不阻塞现在）</h2>
 <ul>
 <li><strong>性能</strong>：v10 已从 16ms 降到 5.4ms；若还要更快，下一步是把矩阵按"每行一个 int 位图"
@@ -396,7 +409,7 @@ Leno 侧（<code>test/dev_emit_matrix.leno</code> 的输出）<strong>逐格 dif
 <li><strong>POSIX</strong>：在 Linux/macOS 上跑 <code>build_so.sh</code> + 五个测试，再往 <code>leno.toml</code> 补 <code>linux</code>/<code>mac</code>。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#生成-encode-纯-leno">生成（encode，纯 Leno）</a></li><li><a href="#识别-decode-quirc">识别（decode，quirc）</a></li><li><a href="#原生库怎么来的">原生库怎么来的</a></li><li><a href="#构建">构建</a></li><li><a href="#打包-p">打包（-p）</a></li><li><a href="#测试">测试</a></li><li><a href="#实测-windows-x64-gcc-15-2-0">实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#边界与已知限制">边界与已知限制</a></li><li><a href="#规格表从哪来">规格表从哪来</a></li><li><a href="#上游与许可">上游与许可</a></li><li><a href="#后续可选-都不阻塞现在">后续可选（都不阻塞现在）</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#生成-encode-纯-leno">生成（encode，纯 Leno）</a></li><li><a href="#识别-decode-quirc">识别（decode，quirc）</a></li><li><a href="#原生库怎么来的">原生库怎么来的</a></li><li><a href="#构建">构建</a></li><li><a href="#打包-p">打包（-p）</a></li><li><a href="#测试">测试</a></li><li><a href="#实测-windows-x64-gcc-15-2-0">实测（Windows x64 · gcc 15.2.0）</a></li><li><a href="#边界与已知限制">边界与已知限制</a></li><li><a href="#规格表从哪来">规格表从哪来</a></li><li><a href="#上游与许可">上游与许可</a></li><li><a href="#配套窗口示例-看得见的那种">配套窗口示例（看得见的那种）</a></li><li><a href="#后续可选-都不阻塞现在">后续可选（都不阻塞现在）</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoMusic.html">← 上一篇</a><a href="../扩展模块/LenoResult.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
