@@ -948,8 +948,52 @@ parallel_for / map / local_get / local_has / local_set）。</p>
 <td><code>async</code> 不跨核</td>
 <td>与线程是两个东西，不要混着讲</td>
 </tr>
+<tr>
+<td><del>线程数 = 任务数</del></td>
+<td><strong>已解决（2026-11-26，线程池）</strong>：<code>parallel_for</code> / <code>map</code> 走常驻 worker 池</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
+<h3 id="线程池-2026-11-26">线程池（2026-11-26）</h3>
+<p><code>threads.start</code> 每条线程都要跑一遍 <code>thread_vm_init</code>（建 VM / gc_init / 注册 native 全局与模块 /
+导入 struct 定义 / 克隆 globals）—— 实测 <strong>203~227 µs/线程</strong>。而 <code>map</code> 原本是"每元素一条线程"
+⇒ 1 万元素光启动就 2 秒级。现在 <code>parallel_for</code> / <code>map</code> 走常驻 worker 池：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原来</th>
+<th>现在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>map(1 万元素)</code></td>
+<td>秒级（~2 s 启动开销）</td>
+<td><strong>17~27 ms</strong></td>
+</tr>
+<tr>
+<td><code>parallel_for(300)</code></td>
+<td>300 条 OS 线程</td>
+<td>池大小条 worker（默认 4）</td>
+</tr>
+</tbody>
+</table>
+<p>实现分两步落地（每步都是可独立验证的提交）：</p>
+<ol>
+<li><strong>纯重构</strong>：把 <code>thread_entry_point</code> 拆成 <code>thread_vm_init()</code> / <code>thread_exec_task()</code> / 收尾三段
+   —— 行为零变化，<code>threads.start</code> 仍是一任务一线程；</li>
+<li><strong>池</strong>：任务队列 + 常驻 worker + 提交/收结果 + <code>pool_size()</code> / <code>set_pool_size(n)</code>。</li>
+</ol>
+<p><strong>一个必须记住的设计约束（否则偶发野指针）</strong>：worker 跑完任务<strong>必须等调用方 reap 之后</strong>
+才接下一条。原因：任务结果分配在 worker 堆上，而任务对象在调用方堆 ⇒ <strong>worker 的 GC 看不见那个结果</strong>，
+若立刻接下一条，下一次 GC 就会把上一条还没取走的结果回收。握手字段是
+<code>ObjThread.is_pool_task / reaped / reap_cond</code>（见 <code>thread_reap</code> 与 <code>pool_worker_main</code>）。</p>
+<p><strong>回归</strong>：<code>assert/test_thread_pool.leno</code> —— <code>map</code> 顺序与内容、<code>parallel_for</code> 每下标恰好一次、
+30 批不泄漏（<code>thread_pending_bytes</code> 归零、堆增长受限）、1 万元素毫秒级。</p>
+<p><strong>仍不做</strong>：让 <code>threads.start</code> 也进池（它的语义是独立生命周期，进池会互相挡住）；
+动态缩容（worker 常驻到进程结束）。</p>
 <h3 id="atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程<strong>共享</strong>的对象（2026-11-26）</h3>
 <pre><code class="language-leno">// 两种写法等价，都支持
 Atomic hits = threads.atomic(0)       // Atomic 是**类型名**（可标注字段/形参/局部）
@@ -1065,7 +1109,7 @@ threads.atomic_add(threads.atomic(0), 1)   // 模块函数形态也保留（低�
 </tbody>
 </table>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】for 的边界在进入时确定 —— 用语义消灭"静默"</a></li><li><a href="#m14-并发模型-2026-11-26-shared-nothing-跨线程一律深克隆-原生指针一律拒绝">M14【并发模型，2026-11-26】shared-nothing：跨线程一律深克隆，原生指针一律拒绝</a></li><ul class="lv3"><li><a href="#拒绝面-这是-shared-nothing-的唯一后门-已经堵上">拒绝面（这是 shared-nothing 的唯一后门，已经堵上）</a></li><li><a href="#已知限制-不是缺陷-是取舍">已知限制（不是缺陷，是取舍）</a></li><li><a href="#atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程共享的对象（2026-11-26）</a></li></ul><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】for 的边界在进入时确定 —— 用语义消灭"静默"</a></li><li><a href="#m14-并发模型-2026-11-26-shared-nothing-跨线程一律深克隆-原生指针一律拒绝">M14【并发模型，2026-11-26】shared-nothing：跨线程一律深克隆，原生指针一律拒绝</a></li><ul class="lv3"><li><a href="#拒绝面-这是-shared-nothing-的唯一后门-已经堵上">拒绝面（这是 shared-nothing 的唯一后门，已经堵上）</a></li><li><a href="#已知限制-不是缺陷-是取舍">已知限制（不是缺陷，是取舍）</a></li><li><a href="#线程池-2026-11-26">线程池（2026-11-26）</a></li><li><a href="#atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程共享的对象（2026-11-26）</a></li></ul><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="扩展模块/LenoCLI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

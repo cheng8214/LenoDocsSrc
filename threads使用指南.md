@@ -200,6 +200,32 @@ main() {
 
 ---
 
+## 线程池（`parallel_for` / `map` 的内部实现）
+
+`threads.parallel_for(n, f)` 和 `threads.map(arr, f)` **不再"每个任务一条 OS 线程"** ——
+它们走常驻 worker 池：worker 各自持有一个 VM（只初始化一次），任务通过队列分发。
+
+```leno
+threads.pool_size()          // 当前池大小（默认 4）
+threads.set_pool_size(8)     // 在**第一次**用池之前设置（1~64）
+```
+
+实测（本机）：
+
+| 场景 | 原来（每任务一条线程） | 现在（池） |
+|---|---|---|
+| `threads.map(1 万元素, f)` | 秒级（光线程启动就 ~2 s） | **17~27 ms** |
+| `parallel_for(300, f)` | 300 条 OS 线程 | 池大小条 worker |
+
+要点：
+
+- **`threads.start` 不变**：它仍然是"一任务一条 OS 线程"，因为它的语义是**独立生命周期**
+  （进池会挡住别人）。只有 `parallel_for` / `map` 走池。
+- 池是**懒启动**的：第一次 `parallel_for` / `map` 时才按当时的 `pool_size` 建 worker；
+  之后再 `set_pool_size` 只改期望值、不动态增删 worker。
+- **结果顺序不变**：`map` 仍按输入顺序收集。
+- worker 常驻不退出（进程结束时随之消亡）——所以别指望"用完池线程就没了"。
+
 ## 线程传参
 
 `threads.start(func, arg1, arg2, ...)` 支持向线程函数传递参数，参数会深拷贝到子线程。

@@ -149,6 +149,38 @@ main() {
 <blockquote>
 <p>某个线程出错时会<strong>把剩下的也等完</strong>，再让异常浮出来（不会留下没人 join 的活线程 ✓）。</p>
 </blockquote>
+<h3 id="threads-pool_size-threads-set_pool_size-n-线程池-2026-11-26"><code>threads.pool_size()</code> / <code>threads.set_pool_size(n)</code> —— 线程池（★ 2026-11-26）</h3>
+<p><code>parallel_for</code> / <code>map</code> 内部走<strong>常驻 worker 池</strong>（worker 各自持有一个 VM，只初始化一次），
+不再"每个任务一条 OS 线程"。</p>
+<pre><code class="language-leno">threads.pool_size()          // 当前池大小（默认 4）
+threads.set_pool_size(8)     // 1~64；须在**第一次**用池之前设置
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>懒启动</td>
+<td>第一次 <code>parallel_for</code> / <code>map</code> 时才建 worker；之后再 <code>set_pool_size</code> 只改期望值</td>
+</tr>
+<tr>
+<td>不受影响</td>
+<td><code>threads.start</code> 仍是"一任务一条 OS 线程"（它的语义是独立生命周期）</td>
+</tr>
+<tr>
+<td>顺序</td>
+<td><code>map</code> 仍按输入顺序收集结果</td>
+</tr>
+<tr>
+<td>实测</td>
+<td><code>map(1 万元素)</code>：秒级（原）→ <strong>17~27 ms</strong>（池）</td>
+</tr>
+</tbody>
+</table>
 <h3 id="threads-parallel_for-n-f"><code>threads.parallel_for(n, f)</code></h3>
 <p>分 n 份并行：<code>f(index)</code> 在 n 个线程上各跑一次（<code>index</code> = <code>0..n-1</code>），等全部结束。</p>
 <p><strong>参数:</strong> <code>n</code>（份数，<code>&lt;= 0</code> ⇒ 空操作）、<code>f</code>（必须是 <code>func(int):…</code>，<strong>恰好一个形参</strong>）
@@ -681,7 +713,7 @@ main() {
 </li>
 </ol>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块函数">模块函数</a></li><ul class="lv3"><li><a href="#threads-start-func-args">threads.start(func, ...args)</a></li><li><a href="#threads-channel-capacity">threads.channel(capacity)</a></li><li><a href="#threads-sleep-ms">threads.sleep(ms)</a></li><li><a href="#threads-current_id">threads.current_id()</a></li><li><a href="#threads-join_all-array-thread">threads.join_all(Array[Thread)</a></li><li><a href="#threads-parallel_for-n-f">threads.parallel_for(n, f)</a></li><li><a href="#threads-map-arr-f">threads.map(arr, f)</a></li><li><a href="#threads-local_get-key-default-threads-local_has-key-threads-local_set-key-value">threads.local_get(key, default) / threads.local_has(key) / threads.local_set(key, value)</a></li><li><a href="#threads-atomic-init-跨线程共享的原子整数-2026-11-26">threads.atomic(init) —— 跨线程共享的原子整数（★ 2026-11-26）</a></li></ul><li><a href="#thread-对象方法">Thread 对象方法</a></li><ul class="lv3"><li><a href="#thread-join">thread.join()</a></li><li><a href="#thread-join_for-timeout_ms">thread.join_for(timeout_ms)</a></li><li><a href="#thread-error">thread.error()</a></li><li><a href="#thread-state">thread.state()</a></li></ul><li><a href="#channel-对象方法">Channel 对象方法</a></li><ul class="lv3"><li><a href="#channel-send-value">channel.send(value)</a></li><li><a href="#跨线程传值的硬约束-2026-10-09-实测-2026-10-12-更新">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</a></li><li><a href="#channel-send_for-value-timeout_ms">channel.send_for(value, timeout_ms)</a></li><li><a href="#threads-select-array-channel-timeout_ms-0">threads.select(Array[Channel, timeout_ms = 0)</a></li><li><a href="#channel-receive">channel.receive()</a></li><li><a href="#channel-t-通道的元素类型-2026-10-12-起">Channel[T —— 通道的元素类型（★ 2026-10-12 起）</a></li><li><a href="#channel-try_send-value">channel.try_send(value)</a></li><li><a href="#channel-try_receive">channel.try_receive()</a></li><li><a href="#channel-close">channel.close()</a></li><li><a href="#channel-is_closed">channel.is_closed()</a></li><li><a href="#channel-len">channel.len()</a></li></ul><li><a href="#完整示例">完整示例</a></li><ul class="lv3"><li><a href="#闭包捕获-channel-通信">闭包捕获 + Channel 通信</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#模块函数">模块函数</a></li><ul class="lv3"><li><a href="#threads-start-func-args">threads.start(func, ...args)</a></li><li><a href="#threads-channel-capacity">threads.channel(capacity)</a></li><li><a href="#threads-sleep-ms">threads.sleep(ms)</a></li><li><a href="#threads-current_id">threads.current_id()</a></li><li><a href="#threads-join_all-array-thread">threads.join_all(Array[Thread)</a></li><li><a href="#threads-pool_size-threads-set_pool_size-n-线程池-2026-11-26">threads.pool_size() / threads.set_pool_size(n) —— 线程池（★ 2026-11-26）</a></li><li><a href="#threads-parallel_for-n-f">threads.parallel_for(n, f)</a></li><li><a href="#threads-map-arr-f">threads.map(arr, f)</a></li><li><a href="#threads-local_get-key-default-threads-local_has-key-threads-local_set-key-value">threads.local_get(key, default) / threads.local_has(key) / threads.local_set(key, value)</a></li><li><a href="#threads-atomic-init-跨线程共享的原子整数-2026-11-26">threads.atomic(init) —— 跨线程共享的原子整数（★ 2026-11-26）</a></li></ul><li><a href="#thread-对象方法">Thread 对象方法</a></li><ul class="lv3"><li><a href="#thread-join">thread.join()</a></li><li><a href="#thread-join_for-timeout_ms">thread.join_for(timeout_ms)</a></li><li><a href="#thread-error">thread.error()</a></li><li><a href="#thread-state">thread.state()</a></li></ul><li><a href="#channel-对象方法">Channel 对象方法</a></li><ul class="lv3"><li><a href="#channel-send-value">channel.send(value)</a></li><li><a href="#跨线程传值的硬约束-2026-10-09-实测-2026-10-12-更新">⚠ 跨线程传值的硬约束（2026-10-09 实测 / 2026-10-12 更新）</a></li><li><a href="#channel-send_for-value-timeout_ms">channel.send_for(value, timeout_ms)</a></li><li><a href="#threads-select-array-channel-timeout_ms-0">threads.select(Array[Channel, timeout_ms = 0)</a></li><li><a href="#channel-receive">channel.receive()</a></li><li><a href="#channel-t-通道的元素类型-2026-10-12-起">Channel[T —— 通道的元素类型（★ 2026-10-12 起）</a></li><li><a href="#channel-try_send-value">channel.try_send(value)</a></li><li><a href="#channel-try_receive">channel.try_receive()</a></li><li><a href="#channel-close">channel.close()</a></li><li><a href="#channel-is_closed">channel.is_closed()</a></li><li><a href="#channel-len">channel.len()</a></li></ul><li><a href="#完整示例">完整示例</a></li><ul class="lv3"><li><a href="#闭包捕获-channel-通信">闭包捕获 + Channel 通信</a></li><li><a href="#生产者-消费者模式">生产者-消费者模式</a></li></ul><li><a href="#注意事项">注意事项</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="module_sys.html">← 上一篇</a><a href="module_times.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

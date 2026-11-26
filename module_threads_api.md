@@ -134,6 +134,23 @@ print("[worker " + _str(threads.current_id()) + "] start")
 
 > 某个线程出错时会**把剩下的也等完**，再让异常浮出来（不会留下没人 join 的活线程 ✓）。
 
+### `threads.pool_size()` / `threads.set_pool_size(n)` —— 线程池（★ 2026-11-26）
+
+`parallel_for` / `map` 内部走**常驻 worker 池**（worker 各自持有一个 VM，只初始化一次），
+不再"每个任务一条 OS 线程"。
+
+```leno
+threads.pool_size()          // 当前池大小（默认 4）
+threads.set_pool_size(8)     // 1~64；须在**第一次**用池之前设置
+```
+
+| 项 | 说明 |
+|---|---|
+| 懒启动 | 第一次 `parallel_for` / `map` 时才建 worker；之后再 `set_pool_size` 只改期望值 |
+| 不受影响 | `threads.start` 仍是"一任务一条 OS 线程"（它的语义是独立生命周期） |
+| 顺序 | `map` 仍按输入顺序收集结果 |
+| 实测 | `map(1 万元素)`：秒级（原）→ **17~27 ms**（池） |
+
 ### `threads.parallel_for(n, f)`
 
 分 n 份并行：`f(index)` 在 n 个线程上各跑一次（`index` = `0..n-1`），等全部结束。
