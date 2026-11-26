@@ -773,10 +773,29 @@ export struct Stack[T] impl Iterable { func each(): Array[T] { return items } �
 <strong>LenoContainers 的 API</strong>，与 M12 同一条红线（模块改个名，警告就静默失效；
 用户结构体里无关的 <code>put()</code> 会误报）。<strong>已撤回</strong>，表里只留 Array/Dict 的方法名
 （内置类型的 API 由语言规定，不算特判）。</p>
-<p>现状与代价（明确写进 README）：<code>for st to v { st.push(x) }</code> <strong>不报警告</strong>，
-实测会"边加边遍历"（5 项能跑到 20 项）。覆盖它的正确做法是方法上的
-<strong><code>@mutates</code> 注解 + 随符号表导出</strong>（语义期看不到运行时方法元数据，必须走导出），
-目前<strong>没做</strong> —— 留作待办，而不是用词表糊过去。</p>
+<p><strong>最终解法（2026-11-26，第三次才做对）：新增 <code>mut</code> 修饰符。</strong></p>
+<pre><code class="language-leno">struct Stack[T] impl Iterable {
+    mut func push(T v) { … }      // 声明&quot;会改结构&quot;
+    func len(): int { … }         // 不改结构就不标
+}
+</code></pre>
+<ul>
+<li>语法：<code>mut</code> 与 <code>pri</code> <strong>同槽位</strong>（<code>mut func</code> / <code>mut pri func</code> / <code>pri mut func</code> 都行），
+  不新增语法位置；<code>mut</code> 成为保留字（全仓 <code>mut</code> 作标识符 0 处）；</li>
+<li>判定：<code>for 容器 to x { 容器.方法() }</code> 里，接收者是 struct 时查它的 <code>mut</code> 方法名集合
+  （语义期从 AST 收，跨模块从 <code>.lenosymc</code> 收）；内置 Array/Dict 仍用名字表
+  （它们的 API 由语言规定，不算特判）；</li>
+<li>导出：<code>.lenosymc</code> <strong>v44 → v45</strong>，方法段在 <code>is_private</code> 后追加 <code>mut</code> 位 ——
+  旧缓存缺这位会读到 <code>param_text</code> 首字节 ⇒ 必须 bump。</li>
+</ul>
+<p><strong>过程中踩的坑（值得记）</strong>：<code>ModuleStructMethod</code> 加字段后，<code>module_symbol_table_set_struct()</code>
+里要<strong>逐个字段手工拷贝</strong> —— 那里已经因为 <code>is_async</code>、<code>is_private</code> 各栽过一次，
+这次 <code>is_mut</code> 是第三次（症状：导出端打印 <code>mut=1</code>、消费端打印 <code>mut=0</code>）。
+另外"收集 mut 方法名"的调用点有 5 处（预扫描 / 模块级几条 / visit_type_def）——
+第一版只写在一处，结果<strong>同文件 struct 也不生效</strong>；现在统一走
+<code>semantic_fill_struct_mut_names()</code>（幂等），每处都调。</p>
+<p>结果是既没有模块词表、也没有新语法位置，<code>for st to v { st.push(x) }</code> 照常报警告，
+自定义类型标 <code>mut</code> 后同样受保护。</p>
 <hr>
 <h2 id="与现有文档的分工">与现有文档的分工</h2>
 <table>

@@ -292,9 +292,13 @@ var kit = lru.keys_iter()                 // 缓存：遍历 key
 <li><code>to_array()</code> / <code>keys()</code> 显式写时都是快照；游标 <code>iter()</code> 是实时视图。</li>
 </ul>
 <p><strong>不要在遍历中修改容器</strong>（实测：视图路径下 <code>for st to v { st.push(x) }</code> 从 5 项跑到 20 项、
-理论上停不下来；<code>pop</code> 会跳过元素）。编译器<strong>不会</strong>给这种写法报警告 ——
-<code>WARN_ITER_MUTATE</code> 只覆盖 Array/Dict（语言内置类型）；给容器列方法名等于让编译器认识
-本模块的 API，已否决。要边遍历边改：先把待处理元素收进临时数组，循环后再统一改。</p>
+理论上停不下来；<code>pop</code> 会跳过元素）。</p>
+<p>本模块的结构性方法都标了 <strong><code>mut</code></strong>（<code>mut func push(T v) { … }</code>），所以这种写法现在会得到
+编译期警告（跨模块也生效 —— 标志随符号表导出）：</p>
+<pre><code>warning: [遍历中修改容器] for 循环体里对正在遍历的容器 'st' 做了**结构性修改**（push）…
+</code></pre>
+<p>自己写的类型想获得同样的保护，就标 <code>mut func grow(...)</code>。要边遍历边改：
+先把待处理元素收进临时数组，循环后再统一改。</p>
 <h2 id="api">API</h2>
 <h3 id="stack-t"><code>Stack[T]</code></h3>
 <table>
@@ -893,6 +897,12 @@ LRU/ClockLRU 读数含 key 拼串。只比同机同时段的趋势，别抠小�
 </code></pre>
 <h2 id="变更记录">变更记录</h2>
 <ul>
+<li>
+<p><strong>0.8.2</strong>（2026-11-26）：所有结构性方法标上 <strong><code>mut</code></strong>（<code>mut func push/pop/put/…</code>）——
+  于是 <code>for st to v { st.push(x) }</code> 会得到编译期 <code>WARN_ITER_MUTATE</code>，<strong>跨模块也生效</strong>
+  （标志随 <code>.lenosymc</code> v45 导出）。之前这个警告要么漏报、要么得靠编译器背本模块的方法名表
+  （后者已否决）。语义不变，只是多了声明。</p>
+</li>
 <li>
 <p><strong>0.8.1</strong>（2026-11-26）：<code>Iterable</code> 定为<strong>语言保留的 face 名</strong>，判定从"看形状"改成
   "看 impl 列表"。修掉一个真隐患：旧规则会把任何「单 face＋单方法＋返回 Array」的类型
