@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leno 与其他语言对比（Python / JS / Go） · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="Leno语法对照_Python_JS_Go.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">01 入门 · 先读这些</a><span class="sep">/</span><span class="here">Leno 与其他语言对比（Python / JS / Go）</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details open><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">11</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a><a href="Leno语法对照_Python_JS_Go.html" class="active" aria-current="page">Leno 对照 Python / JS / Go</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_reflect.html">reflect 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 案例 · 真实项目 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="案例/Aria.html">Aria · 桌面音乐客户端</a><a href="案例/AriaDeployd.html">AriaDeployd · 部署守护进程</a><a href="案例/LenoCleaner.html">LenoCleaner · C 盘清理</a><a href="案例/LenoDumate.html">LenoDumate · 搭子签到</a><a href="案例/LenoGame.html">LenoGame · 9 个图形小游戏</a><a href="案例/LenoTrae.html">LenoTrae · Trae 自动签到</a><a href="案例/LenoWorkBuddy.html">LenoWorkBuddy · 自动签到</a><a href="案例/LenoMusic.html">Music · 音频</a><a href="案例/_总览.html">扩展模块总览</a></div></details><details><summary>07 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoConfig.html">Config · 配置读取</a><a href="扩展模块/LenoContainers.html">Containers · 栈/队列/LRU</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoImage.html">LenoImage</a><a href="扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="扩展模块/LenoTemplate.html">LenoTemplate</a><a href="扩展模块/LenoValidate.html">LenoValidate</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoTUI.html">TUI · 终端输出</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>09 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">31</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno vs Python（早期对比 · 已归档）</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="VM自证与语言债_路线_2026-11.html">VM自证与语言债_路线_2026-11</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="leno-与其他语言对比-python-js-go">Leno 与其他语言对比（Python / JS / Go）</h1>
+<blockquote>
+<p>一句话：读起来像 <strong>Python 的表达式 + JS 的可选链/异步 + Go 的类型与接口</strong>，
+但"符号分工、类型规则、多返回值协议、enum 双形态、GC struct 与裸 cstruct 的二分"
+是 Leno 自己的契约，不是拼盘。</p>
+<p>本文每一条都在 <code>build\leno.exe</code> 上实测或对着 <code>src/</code> 源码核过。
+凡标 <strong>实测</strong> 的是运行结果，不是推测；凡标 <strong>有意不做</strong> 的是设计取舍，不是缺口。</p>
+</blockquote>
+<hr>
+<h2 id="一-怎么读">一、怎么读</h2>
+<p>约定：</p>
+<ul>
+<li><code>✔</code> 支持且语义与对照语言一致</li>
+<li><code>~</code> 支持但语义不同（后面必定有一节解释）</li>
+<li><code>✘</code> 没有</li>
+</ul>
+<p>对照语言只说"通常怎么写"，不追求覆盖它们的全部写法。</p>
+<hr>
+<h2 id="二-总览对照">二、总览对照</h2>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>Python</th>
+<th>JS / TS</th>
+<th>Go</th>
+<th>Leno</th>
+<th>关键差异</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>逻辑运算</td>
+<td><code>and/or/not</code>，返回操作数，空值算假</td>
+<td><code>||/&amp;&amp;/!</code>，返回操作数，空串算假</td>
+<td><code>&amp;&amp;/||/!</code>，恒 bool</td>
+<td><code>and/or/not</code></td>
+<td>~ 返回操作数但<strong>静态类型按 bool</strong>；<code>&amp;&amp;</code>/<code>||</code> 词法层直接报错</td>
+</tr>
+<tr>
+<td>三目</td>
+<td><code>a if c else b</code></td>
+<td><code>c ? a : b</code></td>
+<td>无</td>
+<td><code>if c then a else b</code></td>
+<td>~ 复用 <code>if/then/else</code> 关键字，没有 <code>?:</code></td>
+</tr>
+<tr>
+<td>else if</td>
+<td><code>elif</code></td>
+<td><code>else if</code></td>
+<td><code>else if</code></td>
+<td><code>eif</code></td>
+<td>~ 单独一个关键字</td>
+</tr>
+<tr>
+<td>可空</td>
+<td><code>None</code> + 运行时判空</td>
+<td><code>T | null</code>（TS，<code>strictNullChecks</code>）</td>
+<td>指针 / <code>sql.Null*</code></td>
+<td><code>T?</code> + <code>?.</code> <code>??</code> <code>??=</code></td>
+<td>~ 值类型<strong>不能</strong>为 null，编译期拦</td>
+</tr>
+<tr>
+<td>接口</td>
+<td>抽象基类 / Protocol</td>
+<td><code>interface</code></td>
+<td><code>interface</code></td>
+<td><code>face</code> + <code>impl</code></td>
+<td>~ 没有继承，只有"struct 实现 face"</td>
+</tr>
+<tr>
+<td>继承</td>
+<td>class 多继承</td>
+<td>class 单继承</td>
+<td>组合（无继承）</td>
+<td><strong>没有</strong></td>
+<td>~ 字段组合 + <code>extend</code> 分写方法</td>
+</tr>
+<tr>
+<td>多返回值</td>
+<td>元组</td>
+<td>数组 / 对象解构</td>
+<td>原生多返回值</td>
+<td><code>[T1, T2]</code> + <code>var[T1,T2](a,b)</code></td>
+<td>~ 类型化的解构协议，不是元组值</td>
+</tr>
+<tr>
+<td>枚举</td>
+<td><code>Enum</code>（值可以是任意类型）</td>
+<td><code>enum</code>（数字/字符串）</td>
+<td><code>const iota</code></td>
+<td><code>enum</code> 双形态</td>
+<td>~ 纯 int 常量，或带载荷变体；<strong>同一 enum 不能混用</strong></td>
+</tr>
+<tr>
+<td>列表</td>
+<td><code>list</code></td>
+<td><code>Array</code></td>
+<td>slice</td>
+<td><code>Array[T]</code></td>
+<td>✔</td>
+</tr>
+<tr>
+<td>字典</td>
+<td><code>dict</code></td>
+<td><code>Map</code> / <code>Object</code></td>
+<td><code>map[K]V</code></td>
+<td><code>Dict[K,V]</code></td>
+<td>~ 键统一是 <code>string</code></td>
+</tr>
+<tr>
+<td>集合</td>
+<td><code>set</code></td>
+<td><code>Set</code></td>
+<td><code>map[T]struct{}</code></td>
+<td><strong>没有</strong></td>
+<td>✘ 用 <code>Dict[string,bool]</code> 代替</td>
+</tr>
+<tr>
+<td>元组</td>
+<td><code>tuple</code></td>
+<td>无（数组代替）</td>
+<td>无</td>
+<td><strong>没有元组值</strong></td>
+<td>✘ 多返回值不是元组；要打包用 <code>struct</code></td>
+</tr>
+<tr>
+<td>切片区间</td>
+<td><code>[a:b]</code> 左闭右开</td>
+<td><code>slice(a,b)</code> 左闭右开</td>
+<td><code>[a:b]</code> 左闭右开</td>
+<td><code>[a : b]</code> <strong>闭区间</strong></td>
+<td>~ 两端都含；负终点结果是空</td>
+</tr>
+<tr>
+<td>循环</td>
+<td><code>for x in xs</code> / <code>range</code></td>
+<td><code>for...of</code></td>
+<td><code>for range</code></td>
+<td><code>for xs to x</code> / <code>for 0 : 9 to i</code></td>
+<td>~ <code>to</code> 后面是<strong>循环变量名</strong></td>
+</tr>
+<tr>
+<td>错误处理</td>
+<td>异常</td>
+<td>异常</td>
+<td><code>(v, err)</code> 返回值</td>
+<td><code>throw</code> / <code>try</code> <code>catch</code> <code>finally</code> / <code>defer</code></td>
+<td>~ <code>throw</code> 任意值，运行时统一包成异常对象</td>
+</tr>
+<tr>
+<td>并发</td>
+<td><code>asyncio</code> / 线程</td>
+<td>事件循环 / Worker</td>
+<td>goroutine + channel</td>
+<td><code>threads</code> + <code>Channel</code>；另有 <code>async/await</code></td>
+<td>~ 两条独立轨道，不互相转换</td>
+</tr>
+<tr>
+<td>字符串插值</td>
+<td>f-string</td>
+<td>模板串</td>
+<td>无（<code>fmt.Sprintf</code>）</td>
+<td><code>$"Hi {name}"</code></td>
+<td>✔ 还带格式说明符 <code>{x:.2f}</code></td>
+</tr>
+<tr>
+<td>裸内存</td>
+<td><code>ctypes</code>（外挂）</td>
+<td>无</td>
+<td><code>unsafe.Pointer</code></td>
+<td><code>cstruct</code> / <code>union</code> / <code>Ptr[T]</code></td>
+<td>~ 是<strong>语言级</strong>语法，不是外挂库</td>
+</tr>
+<tr>
+<td>泛型</td>
+<td>3.12 起</td>
+<td>TS 泛型</td>
+<td>1.18 起</td>
+<td><code>Box[T]</code> / <code>[T: 约束]</code> / <code>[T = 默认]</code></td>
+<td>✔ 约束只能是 face 名或具体类型</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="三-十处-长得像-语义不同">三、十处"长得像、语义不同"</h2>
+<h3 id="1-and-or-只当条件用-别当默认值">1. <code>and</code> / <code>or</code>：只当条件用，<strong>别当默认值</strong></h3>
+<pre><code class="language-leno">var a = 0 or &quot;abc&quot;      // 运行期 =&gt; &quot;abc&quot;（string）
+var b = 1 and 2         // 运行期 =&gt; 2（int）
+var c = not 0           // 运行期 =&gt; true（bool，恒 bool）
+</code></pre>
+<p>运行期确实返回<strong>操作数本身</strong>（和 Python 一样），但<strong>静态类型不是操作数类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>实测结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>string s = "" or "默认"</code></td>
+<td>编译错误：<code>期望类型: string / 实际类型: bool</code></td>
+</tr>
+<tr>
+<td><code>int x = 0 or "abc"</code></td>
+<td>编译通过，<strong>运行期崩溃</strong>：<code>CAST_INT: 操作数必须是数字（拿到 string "abc"）</code></td>
+</tr>
+<tr>
+<td><code>var name = input or "默认"</code> 之后 <code>name.len()</code></td>
+<td>推断成 <code>any</code> ⇒ <code>不能在 any 类型上调用方法 'len'</code></td>
+</tr>
+</tbody>
+</table>
+<p>结论：<code>x or default</code> 这个 Python 惯用法在 Leno 里<strong>不能用</strong>。</p>
+<pre><code class="language-leno">// ✘ 别这么写
+string name = input or &quot;匿名&quot;
+
+// ✔ 要默认值就写清楚
+string name = if input == &quot;&quot; then &quot;匿名&quot; else input
+// ✔ 或者用可空 + 空值合并（?? 只对可空生效）
+string? input = try_get()
+string name = input ?? &quot;匿名&quot;
+</code></pre>
+<p><code>&amp;&amp;</code> / <code>||</code> / <code>!</code> 不走"兼容通道"，词法层直接报错并给出替代写法：</p>
+<pre><code>error: 意外的字符 '&amp;&amp;'，请使用 'and' 关键字表示逻辑与
+</code></pre>
+<h3 id="2-真值口径-空字符串-空数组-空字典都算真">2. 真值口径：<strong>空字符串、空数组、空字典都算真</strong></h3>
+<p>只有这些是假（<code>val_is_truthy</code>，<code>src/include/leno_value.h</code>）：</p>
+<p><code>false</code>、<code>0</code>、<code>0.0</code>、<code>null</code>、空的 <code>Ptr</code>。</p>
+<pre><code class="language-leno">&quot;&quot; or 7                     // =&gt; &quot;&quot;    （不是 7！空串为真）
+Array[int] e = []
+e or 7                      // =&gt; []    （空数组也为真）
+if e { … }                  // 条件为真 ⇒ 会进分支（实测）
+</code></pre>
+<p>这跟 Python / JS 是<strong>反的</strong>。判断"空不空"要显式写：</p>
+<pre><code class="language-leno">if s.len() == 0 { … }
+if arr.len() == 0 { … }
+</code></pre>
+<h3 id="3-切片与区间-一律闭区间-负终点是空">3. 切片与区间：一律<strong>闭区间</strong>，负终点是空</h3>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arr[1 : 2]</code></td>
+<td>含下标 1、2（<strong>两个</strong>元素）</td>
+</tr>
+<tr>
+<td><code>s.slice(0, 2)</code></td>
+<td><code>"hel"</code></td>
+</tr>
+<tr>
+<td><code>for 0 : 9 to i</code></td>
+<td>跑 10 轮（<code>to</code> 后面是<strong>循环变量名</strong>，不是终点）</td>
+</tr>
+<tr>
+<td><code>switch case 1 : 4</code></td>
+<td>命中 1、2、3、4</td>
+</tr>
+</tbody>
+</table>
+<p>负下标只有<strong>起点</strong>有意义（从末尾数）；<strong>负终点结果恒为空</strong>，编译器给警告：</p>
+<pre><code class="language-leno">arr[-3 : 2]                  // 倒数第 3 个 → 下标 2
+arr[0 : -1]                  // [] （空，不是&quot;去掉最后一个&quot;）
+arr[0 : arr.len() - 2]       // 要&quot;去掉最后 N 个&quot;这样写
+</code></pre>
+<blockquote>
+<p>全仓口径见 <code>区间口径约定.html</code>。参数名是 <code>n</code> / <code>len</code> / <code>count</code> 的是<strong>长度</strong>，不是端点。</p>
+</blockquote>
+<h3 id="4-多返回值是语言协议-不是元组">4. 多返回值是<strong>语言协议</strong>，不是元组</h3>
+<pre><code class="language-leno">func get_user(): [int, string] { return 42, &quot;Alice&quot; }
+
+var[int, string](id, name) = get_user()
+print(_str(id) + &quot; &quot; + name)
+</code></pre>
+<ul>
+<li>返回类型写成 <code>[T1, T2]</code>，解构写成 <code>var[T1, T2](a, b)</code>；</li>
+<li>返回类型也可以带<strong>键名</strong>（键名目前只是说明性信息，解构仍按位置 —— 实测
+  <code>var[bool,int](ok,n)</code> 拿到 <code>true, 3</code>）：</li>
+</ul>
+<pre><code class="language-leno">func stat(): {&quot;ok&quot;: bool, &quot;count&quot;: int} { return true, 3 }
+var[bool, int](ok, n) = stat()
+</code></pre>
+<ul>
+<li><strong>没有元组值</strong>：不能把 <code>(1, "a")</code> 存进变量、不能作为元素放进 <code>Array</code>。
+  要"打包成一个值"就用 <code>struct</code>（内存里一律 <code>Array[struct]</code>）。</li>
+</ul>
+<h3 id="5-可空是类型的一部分-值类型挂不上-null">5. 可空是<strong>类型的一部分</strong>，值类型挂不上 null</h3>
+<pre><code class="language-leno">int?  a = null       // ✔
+int   b = null       // ✘ 编译错误：变量 'b' 是 int（非可空），不能赋 null
+</code></pre>
+<p>实测报错还带三条提示（告诉你怎么改、以及为什么这么设计）。相关运算符：</p>
+<pre><code class="language-leno">obj?.field           // 安全访问（只对可空生效）
+var x = a ?? 0       // 空值合并
+acc ??= 1            // 空值合并且赋值
+if a is int =&gt; v { … }   // 收窄 + 一次绑定，v 在分支里就是 int
+</code></pre>
+<p><code>any</code> 的用法比 TS 窄：<strong>不能声明局部变量</strong>（只能做参数/返回类型）。</p>
+<pre><code>error: 'any' 类型只能用于函数参数和返回类型，变量声明请使用 'var' 或指定具体类型
+</code></pre>
+<h3 id="6-结构体-face-extend-没有-class-继承">6. 结构体 + face + extend：没有 class 继承</h3>
+<table>
+<thead>
+<tr>
+<th>语言</th>
+<th>复用方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java / C#</td>
+<td>class 单继承 + interface</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>多继承 + 鸭子类型</td>
+</tr>
+<tr>
+<td>Go</td>
+<td>结构嵌入 + 隐式接口</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td>struct + impl trait</td>
+</tr>
+<tr>
+<td><strong>Leno</strong></td>
+<td><code>struct</code> 字段组合 + <code>face</code> 显式 <code>impl</code> + <code>extend</code> 跨文件写方法</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">struct Player { string name = &quot;&quot;; int hp = 100 }
+
+export struct Player impl Drawable {
+    func draw(Canvas c) { … }
+}
+
+// 另一个文件，甚至另一个模块
+extend Player {
+    func heal(int n) { hp = hp + n }
+}
+</code></pre>
+<ul>
+<li>构造 <code>func Player()</code>、析构 <code>func ~Player()</code>（写 <code>__del__</code> / <code>destructor</code> 会得到定向报错）；</li>
+<li>字段默认全公有，<code>pri</code> 是<strong>真私有</strong>（编译期拦，不是命名约定）；</li>
+<li>没有虚函数表/继承链，多态靠 <code>face</code> 值 + <code>case is Type</code> 分派。</li>
+</ul>
+<h3 id="7-enum-双形态-而且不能混用">7. enum 双形态，而且<strong>不能混用</strong></h3>
+<pre><code class="language-leno">// 形态 A：纯 int 常量（和 Go iota / C enum 同气质）
+enum Color { red; green; blue }
+int c = Color.red
+
+// 形态 B：带载荷（和 Rust / OCaml 的变体接近）
+enum Msg { progress(int done, int total); finished(string path) }
+</code></pre>
+<p>规则刻意窄：</p>
+<ul>
+<li>同一个 enum 里<strong>要么全带参数、要么全不带</strong>；</li>
+<li>带载荷的成员<strong>不是 int</strong>（<code>int x = Msg.progress(1,2)</code> 报错，也不能 <code>new Msg(...)</code>）；</li>
+<li>带载荷 enum 的 <code>switch</code> 主题必须是<strong>变量</strong>，漏成员且无 <code>default</code> ⇒ 穷尽性警告；</li>
+<li><code>==</code> 按值比较；<code>jsons.encode</code> 输出成员名（<code>{"progress":{"done":3,"total":10}}</code>）。</li>
+</ul>
+<p><code>switch</code> 本身没有 fallthrough，命中即跳出，<code>break</code> 用来"提前离开整个 switch"。</p>
+<h3 id="8-集合-array-dict-是内置的-容器在扩展模块">8. 集合：Array / Dict 是内置的，容器在扩展模块</h3>
+<p>内置（不需要 import）：</p>
+<pre><code class="language-leno">Array[int] a = [3, 1, 2]
+a.add(4)  a.pop()  a.insert(0, 9)  a.remove(1)
+a.has(3)  a.index_of(1)  a.sort(cmp)  a.reverse()
+a.map(func(int x) { return x * 2 })
+a.filter(func(int x) { return x &gt; 1 })
+a.reduce(func(int acc, int x) { return acc + x }, 0)
+a.join(&quot;,&quot;)  a.sum()  a.flatten()  a.copy()
+
+Dict[string, int] m = {&quot;a&quot;: 1}
+m.put(&quot;b&quot;, 2)  m.get(&quot;b&quot;, 0)  m.has(&quot;a&quot;)  m.keys()  m.values()
+</code></pre>
+<ul>
+<li><code>Array</code> 的方法就是上表这些（<strong>没有</strong> <code>slice</code> / <code>contains</code> / <code>first</code>，切片走 <code>[a:b]</code> 语法）；</li>
+<li><code>Dict</code> 的键是 <code>string</code>；</li>
+<li><strong>没有 List</strong>（Array 兼任）、<strong>没有 Set</strong>（<code>Dict[string,bool]</code> 代替）；</li>
+<li>栈/队列/双端队列/优先队列/三种 LRU 在 <code>LenoContainers</code> 模块：</li>
+</ul>
+<pre><code class="language-leno">import &quot;Containers&quot; as ct
+var st = new ct.Stack[int]()
+st.push(1)
+for st to v { print(v) }     // 容器实现了 Iterable ⇒ 直接遍历元素
+</code></pre>
+<h3 id="9-错误处理-throw-任意值-但统一变成异常对象">9. 错误处理：throw 任意值，但统一变成异常对象</h3>
+<pre><code class="language-leno">try {
+    risky()
+} catch e {
+    print(e.msg)         // e 是 Dict{msg, file, line, stack}
+    print(e.stack)
+} finally {
+    cleanup()
+}
+</code></pre>
+<ul>
+<li><code>throw</code> 可以抛任意值（字符串、int、甚至一个 struct）；到 <code>catch</code> 时<strong>统一包装</strong>成
+  带 <code>msg / file / line / stack</code> 的异常对象 —— 所以 <code>catch e</code> 的类型永远一致；</li>
+<li>已经是异常对象的值会<strong>原样抛出</strong>（位置保留在真正出错的地方，不被改写成"接住它的那行"）；</li>
+<li>与 Go 的 <code>if err != nil</code> 不同：错误走控制流，不是返回值。</li>
+</ul>
+<p><code>defer</code> 是块级清理（不是 Go 的函数级）：</p>
+<pre><code class="language-leno">Ptr p = ffi.malloc(4)
+defer ffi.free(p)      // 所在 {} 退出时执行；多个 defer 逆序
+</code></pre>
+<h3 id="10-字符串-插值-原始串-格式说明符">10. 字符串：插值、原始串、格式说明符</h3>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$"Hi {name}"</code></td>
+<td>插值</td>
+</tr>
+<tr>
+<td><code>@"C:\path\to"</code></td>
+<td>原始串（不转义）</td>
+</tr>
+<tr>
+<td><code>$@"Hi {name} \n"</code></td>
+<td>原始 + 插值</td>
+</tr>
+<tr>
+<td><code>$"pi={x:.2f}"</code></td>
+<td>带格式说明符，脱糖成 <code>format("%.2f", x)</code></td>
+</tr>
+</tbody>
+</table>
+<p>格式说明符是<strong>编译期校验</strong>的（<code>{n:y}</code>、<code>{pi:.2F}</code> 这类手误直接报错，不会静默输出垃圾）。</p>
+<p>字符串函数先查标准库，别自己写：</p>
+<pre><code class="language-leno">strings.pad_start(_str(v), 2, &quot;0&quot;)   // &quot;07&quot;
+strings.split(s, &quot;,&quot;)
+strings.trim_unicode(s)              // 认全角空格 / NBSP
+strings.lines(s)                     // 按行切，认 \r\n
+strings.fmt_size(1536)               // &quot;1 KB&quot;
+</code></pre>
+<hr>
+<h2 id="四-符号一览-按符号查语义">四、符号一览（按符号查语义）</h2>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>位置</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>=&gt;</code></td>
+<td>控制流</td>
+<td>类型守卫的一次绑定：<code>if x is T =&gt; v</code>、<code>case is T =&gt; v</code></td>
+</tr>
+<tr>
+<td><code>=&gt;</code></td>
+<td>表达式</td>
+<td>单表达式匿名函数：<code>x =&gt; x + 1</code>、<code>(int a, int b) =&gt; a * b</code></td>
+</tr>
+<tr>
+<td><code>?.</code></td>
+<td>表达式</td>
+<td>可空安全访问</td>
+</tr>
+<tr>
+<td><code>??</code></td>
+<td>表达式</td>
+<td>空值合并</td>
+</tr>
+<tr>
+<td><code>??=</code></td>
+<td>语句</td>
+<td>空值合并且赋值</td>
+</tr>
+<tr>
+<td><code>:</code></td>
+<td>类型</td>
+<td><code>name: int?</code>、<code>T: Face</code>（泛型约束）、<code>[T = int]</code>（默认）</td>
+</tr>
+<tr>
+<td><code>:</code></td>
+<td>切片 / case</td>
+<td>闭区间：<code>arr[a : b]</code>、<code>case 1 : 4</code></td>
+</tr>
+<tr>
+<td><code>:</code></td>
+<td>插值</td>
+<td>格式说明符：<code>$"{x:.2f}"</code></td>
+</tr>
+<tr>
+<td><code>~</code></td>
+<td>方法名</td>
+<td>析构：<code>func ~Player()</code></td>
+</tr>
+<tr>
+<td><code>@</code></td>
+<td>声明前</td>
+<td>注解：<code>@optkeys(["visible:bool"])</code>；<code>@"..."</code> 是原始串</td>
+</tr>
+<tr>
+<td><code>$</code></td>
+<td>字符串</td>
+<td>插值前缀</td>
+</tr>
+<tr>
+<td><code>mut</code></td>
+<td>方法</td>
+<td>结构性修改：<code>mut func push(v)</code>；在 <code>for</code> 里调用会得到 <code>WARN_ITER_MUTATE</code></td>
+</tr>
+<tr>
+<td><code>eif</code></td>
+<td>语句</td>
+<td><code>else if</code></td>
+</tr>
+<tr>
+<td><code>pri</code></td>
+<td>字段/方法</td>
+<td>真私有（编译期拦）</td>
+</tr>
+<tr>
+<td><code>defer</code></td>
+<td>语句</td>
+<td>块级延迟执行（逆序、降级成 try/finally）</td>
+</tr>
+</tbody>
+</table>
+<p>箭头函数的边界（实测）：<strong>只能单表达式</strong>。写返回类型 <code>(int x): int =&gt; …</code> 或块体 <code>x =&gt; { … }</code>
+都会得到定向报错 —— 要这些就用 <code>func</code>。</p>
+<hr>
+<h2 id="五-没有的东西-诚实清单">五、没有的东西（诚实清单）</h2>
+<table>
+<thead>
+<tr>
+<th>没有</th>
+<th>替代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>class / 继承 / 虚方法</td>
+<td><code>struct</code> 组合 + <code>face</code> + <code>case is Type</code></td>
+</tr>
+<tr>
+<td><code>List</code></td>
+<td><code>Array</code></td>
+</tr>
+<tr>
+<td><code>Set</code></td>
+<td><code>Dict[string, bool]</code></td>
+</tr>
+<tr>
+<td>元组值</td>
+<td>多返回值（<code>[T1,T2]</code>）或 <code>struct</code></td>
+</tr>
+<tr>
+<td><code>&amp;&amp;</code> <code>||</code> <code>?:</code> <code>!</code></td>
+<td><code>and</code> <code>or</code> <code>if…then…else</code> <code>not</code>（词法层拒绝，不是风格问题）</td>
+</tr>
+<tr>
+<td>switch fallthrough</td>
+<td>命中即跳出</td>
+</tr>
+<tr>
+<td>字符串值枚举</td>
+<td><code>export const</code> / <code>Dict</code>（有意不做）</td>
+</tr>
+<tr>
+<td>IANA 时区名</td>
+<td><code>times.utc_offset</code> 自己加减秒（只有本地/UTC 两种口径）</td>
+</tr>
+<tr>
+<td><code>gcd</code> / <code>lcm</code> / <code>is_prime</code> / <code>factorial</code> / <code>cbrt</code> / <code>comb</code></td>
+<td>自己写（标准库确实没有）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="六-运行时气质-决定-写起来的感觉">六、运行时气质（决定"写起来的感觉"）</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>现状</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VM</td>
+<td><strong>寄存器式</strong>，4 字节定长指令（op + A + B + C，各 8 位）</td>
+</tr>
+<tr>
+<td>寄存器上限</td>
+<td>号 ≥ 256 是<strong>编译硬错误</strong>（曾经静默截断 ⇒ 读到别的槽位）</td>
+</tr>
+<tr>
+<td>值表示</td>
+<td>NaN-boxing，<code>Value</code> 8 字节；整数内联 <strong>int48</strong>（约 ±1.4e14），超了自动升 BigInt</td>
+</tr>
+<tr>
+<td>GC</td>
+<td>分代 + 写屏障（remembered set）</td>
+</tr>
+<tr>
+<td>产物裁剪</td>
+<td>方法级 DCE，<strong>只在入口 <code>.lenb</code> 序列化时</strong>剪（<code>.leno</code> 直跑不剪），<code>LENO_NO_DCE=1</code> 可关</td>
+</tr>
+<tr>
+<td>分支</td>
+<td><code>switch</code> ≥ 16 个互不相同的整型 case 自动变二叉比较树（100 case 实测 66ms → 21ms）</td>
+</tr>
+<tr>
+<td>并发</td>
+<td><code>threads</code> 真线程 + <code>Channel</code>；<code>thread_local var</code> 每线程一份；另有 <code>async/await</code> 协程</td>
+</tr>
+<tr>
+<td>FFI</td>
+<td><code>cstruct</code>/<code>union</code>/<code>Ptr[T]</code> 是语言级语法，<code>free()</code>/<code>free_all()</code> 手动管内存</td>
+</tr>
+</tbody>
+</table>
+<p>线程模型有一处与 Go 差别很大：<strong>闭包捕获是副本</strong>。</p>
+<pre><code class="language-leno">int progress = 0
+threads.start(func() { progress = 100 })   // ✘ 改的是副本，外面还是 0，且不报错
+</code></pre>
+<p>线程入口必须是<strong>模块级函数</strong>，结果走 <code>Channel</code> 回来；缓存/表一律用 <code>thread_local var</code>。
+（详见 <code>threads使用指南.html</code>、<code>module_threads_api.html</code>。）</p>
+<hr>
+<h2 id="七-从各语言过来-最容易踩的-5-条">七、从各语言过来，最容易踩的 5 条</h2>
+<h3 id="从-python">从 Python</h3>
+<ol>
+<li><code>and/or</code> <strong>不能当默认值</strong>（见三.1），<code>x or default</code> 编译报错或运行期崩；</li>
+<li><strong>空串/空列表为真</strong>（三.2），<code>if not s:</code> 要写成 <code>if s.len() == 0</code>；</li>
+<li>切片是<strong>闭区间</strong>（三.3）：<code>arr[0:2]</code> 是<strong>两个</strong>元素（含下标 2）；</li>
+<li>没有元组 — 多返回值是类型化协议，不能存进变量（三.4）；</li>
+<li>变量有静态类型：<code>var</code> 能推断，但 <code>int a = null</code> 直接编译错误（三.5）。</li>
+</ol>
+<h3 id="从-js-ts">从 JS / TS</h3>
+<ol>
+<li><code>&amp;&amp;</code> <code>||</code> <code>?:</code> <strong>写不出来</strong>（词法报错），换 <code>and</code> <code>or</code> <code>if…then…else</code>；</li>
+<li>可空要显式写 <code>T?</code>，<code>undefined</code> 不存在，只有 <code>null</code>；</li>
+<li><code>any</code> 只能出现在函数签名上，局部变量用 <code>var</code> 或具体类型；</li>
+<li>数组方法不是 JS 那套：没有 <code>slice</code>/<code>includes</code>/<code>sort()</code> 无参版，切片用 <code>[a:b]</code>，
+   <code>sort</code> 必须给比较器（返回 bool 是运行期错误）；</li>
+<li>对象不是字典：<code>struct</code> 是编译期字段表（字段名写错直接编译失败），动态键值用 <code>Dict</code>。</li>
+</ol>
+<h3 id="从-go">从 Go</h3>
+<ol>
+<li>错误不是返回值，是 <code>throw</code>（<code>catch e</code> 给 <code>msg/file/line/stack</code>）；</li>
+<li><code>defer</code> 是<strong>块级</strong>，不是函数级 —— 写在循环里每轮都执行；</li>
+<li>接口叫 <code>face</code>，且必须显式 <code>impl</code>（没有隐式满足）；</li>
+<li>多返回值要写返回类型 <code>[int, string]</code>，解构是 <code>var[int,string](a,b)</code>；</li>
+<li>没有 goroutine/channel 那种"轻量并发"：<code>threads</code> 是真线程 + 深拷贝传值，
+   要共享内存得自己上锁或用 <code>thread_local</code>。</li>
+</ol>
+<hr>
+<h2 id="八-一句话">八、一句话</h2>
+<p>Leno 的<strong>读法</strong>像 Python + JS，<strong>写法</strong>上更接近 Go / Rust（显式类型、显式 impl、
+显式解构），而<strong>内存模型</strong>是"GC struct + 裸 cstruct"两套并列 —— 目标是一边写业务、
+一边能直接 FFI 接 SDL3 和 C 库，不用外挂 ctypes / FFI 绑定生成器。</p>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#一-怎么读">一、怎么读</a></li><li><a href="#二-总览对照">二、总览对照</a></li><li><a href="#三-十处-长得像-语义不同">三、十处"长得像、语义不同"</a></li><ul class="lv3"><li><a href="#1-and-or-只当条件用-别当默认值">1. and / or：只当条件用，别当默认值</a></li><li><a href="#2-真值口径-空字符串-空数组-空字典都算真">2. 真值口径：空字符串、空数组、空字典都算真</a></li><li><a href="#3-切片与区间-一律闭区间-负终点是空">3. 切片与区间：一律闭区间，负终点是空</a></li><li><a href="#4-多返回值是语言协议-不是元组">4. 多返回值是语言协议，不是元组</a></li><li><a href="#5-可空是类型的一部分-值类型挂不上-null">5. 可空是类型的一部分，值类型挂不上 null</a></li><li><a href="#6-结构体-face-extend-没有-class-继承">6. 结构体 + face + extend：没有 class 继承</a></li><li><a href="#7-enum-双形态-而且不能混用">7. enum 双形态，而且不能混用</a></li><li><a href="#8-集合-array-dict-是内置的-容器在扩展模块">8. 集合：Array / Dict 是内置的，容器在扩展模块</a></li><li><a href="#9-错误处理-throw-任意值-但统一变成异常对象">9. 错误处理：throw 任意值，但统一变成异常对象</a></li><li><a href="#10-字符串-插值-原始串-格式说明符">10. 字符串：插值、原始串、格式说明符</a></li></ul><li><a href="#四-符号一览-按符号查语义">四、符号一览（按符号查语义）</a></li><li><a href="#五-没有的东西-诚实清单">五、没有的东西（诚实清单）</a></li><li><a href="#六-运行时气质-决定-写起来的感觉">六、运行时气质（决定"写起来的感觉"）</a></li><li><a href="#七-从各语言过来-最容易踩的-5-条">七、从各语言过来，最容易踩的 5 条</a></li><ul class="lv3"><li><a href="#从-python">从 Python</a></li><li><a href="#从-js-ts">从 JS / TS</a></li><li><a href="#从-go">从 Go</a></li></ul><li><a href="#八-一句话">八、一句话</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="区间口径约定.html">← 上一篇</a><a href="module_arrays.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>

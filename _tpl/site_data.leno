@@ -22,7 +22,7 @@ export var SITE_TITLE = "Leno Docs"
 
 export var CATEGORIES = [
     cat("01 入门 · 先读这些", false, "第一次接触 Leno：从教程到惯用写法，按顺序读",
-        ["Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md", "示例程序导览.md", "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md", "Leno_规范草稿.md", "区间口径约定.md"]),
+        ["Leno零基础入门.md", "安装与第一个项目.md", "常见任务cookbook.md", "示例程序导览.md", "Leno入门教程.md", "FAQ.md", "idioms.md", "语言陷阱速查.md", "Leno_规范草稿.md", "区间口径约定.md", "Leno语法对照_Python_JS_Go.md"]),
     cat("02 模块 API 参考", false, "20 个标准模块的函数清单 —— 写代码时最常翻的",
         ["PREFIX:module_"]),
     cat("03 使用指南", false, "按任务查：import / 打包 / 并发 / FFI / 加密 / GUI 布局",
@@ -42,9 +42,9 @@ export var CATEGORIES = [
 ]
 
 // 文件名 stem → 首页显示名（module_* 另有自动规则）
-export var DISPLAY_NAME = {"FAQ": "常见问题", "idioms": "惯用写法速查", "LENB-format-reverse-notes": "LENB 格式逆向笔记", "leno对比": "Leno 与其他语言对比", "cstruct_packed_align_设计文档": "C 结构体对齐与 packed 设计", "struct_extend_设计草案": "struct 继承设计草案", "struct 里const可行性": "struct 中 const 的可行性", "async_await入门指南": "async / await 入门指南", "import使用指南": "import 使用指南", "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）", "注解系统与optkeys设计草案": "注解系统与 @optkeys（已实现）", "enum载荷_设计草案": "enum 载荷（已实现）", "_总览": "案例总览", "Aria": "Aria · 桌面音乐客户端", "LenoMusic": "LenoMusic · 音乐搜索下载", "LenoGame": "LenoGame · 9 个图形小游戏", "LenoCleaner": "LenoCleaner · C 盘清理", "LenoTrae": "LenoTrae · Trae 自动签到", "LenoWorkBuddy": "LenoWorkBuddy · 自动签到", "LenoDumate": "LenoDumate · 搭子签到", "AriaDeployd": "AriaDeployd · 部署守护进程"}
+export var DISPLAY_NAME = {"FAQ": "常见问题", "idioms": "惯用写法速查", "LENB-format-reverse-notes": "LENB 格式逆向笔记", "leno对比": "Leno vs Python（早期对比 · 已归档）", "Leno语法对照_Python_JS_Go": "Leno 对照 Python / JS / Go", "cstruct_packed_align_设计文档": "C 结构体对齐与 packed 设计", "struct_extend_设计草案": "struct 继承设计草案", "struct 里const可行性": "struct 中 const 的可行性", "async_await入门指南": "async / await 入门指南", "import使用指南": "import 使用指南", "F2_非可空与可空类型设计": "非可空与可空类型设计（F2）", "注解系统与optkeys设计草案": "注解系统与 @optkeys（已实现）", "enum载荷_设计草案": "enum 载荷（已实现）", "_总览": "案例总览", "Aria": "Aria · 桌面音乐客户端", "LenoMusic": "LenoMusic · 音乐搜索下载", "LenoGame": "LenoGame · 9 个图形小游戏", "LenoCleaner": "LenoCleaner · C 盘清理", "LenoTrae": "LenoTrae · Trae 自动签到", "LenoWorkBuddy": "LenoWorkBuddy · 自动签到", "LenoDumate": "LenoDumate · 搭子签到", "AriaDeployd": "AriaDeployd · 部署守护进程"}
 
-export var DESC_FALLBACK = {"idioms": "高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法"}
+export var DESC_FALLBACK = {"idioms": "高频惯用写法：数组 / 字典构造、字符串处理、错误处理的地道写法", "Leno语法对照_Python_JS_Go": "和 Python / JS / Go 逐条对照：哪些一样、哪些看着像但语义不同、哪些根本没有"}
 
 // 扩展模块的显示名（包名 ≠ import 名）
 export var EXT_DISPLAY = {"_总览": "扩展模块总览", "LenoCLI": "CLI · 命令行解析", "LenoCompress": "Compress · 压缩", "LenoConfig": "Config · 配置读取", "LenoContainers": "Containers · 栈/队列/LRU", "LenoCrypto": "Crypto · 加密", "LenoCSV": "CSV · 表格读写", "LenoFS": "FS · 文件系统", "LenoGlob": "Glob · 通配匹配", "LenoHTTP": "HTTP · 服务端", "LenoLog": "Log · 日志", "LenoMusic": "Music · 音频", "LenoQR": "QR · 二维码", "LenoResult": "Result · 错误与空值", "LenoSDL3": "SDL3 · GUI 渲染", "LenoSqlite": "sqlite3 · 数据库", "LenoStats": "Stats · 统计", "LenoTUI": "TUI · 终端输出", "LenoUUID": "UUID · 唯一 ID", "LenoWeb": "Web · HTTP/HTML/爬虫", "LenoXLSX": "XLSX · Excel", "LenoZip": "Zip · 归档"}
