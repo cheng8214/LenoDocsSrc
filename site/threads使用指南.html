@@ -333,8 +333,8 @@ main() {
 <h2 id="线程池-parallel_for-map-的内部实现">线程池（<code>parallel_for</code> / <code>map</code> 的内部实现）</h2>
 <p><code>threads.parallel_for(n, f)</code> 和 <code>threads.map(arr, f)</code> <strong>不再"每个任务一条 OS 线程"</strong> ——
 它们走常驻 worker 池：worker 各自持有一个 VM（只初始化一次），任务通过队列分发。</p>
-<pre><code class="language-leno">threads.pool_size()          // 当前池大小（默认 4）
-threads.set_pool_size(8)     // 在**第一次**用池之前设置（1~64）
+<pre><code class="language-leno">threads.pool_size()          // 当前池大小（默认 = CPU 核数；探测失败退回 4）
+threads.set_pool_size(8)     // 1~64；**必须在第一次用池之前**调，之后调会报错
 </code></pre>
 <p>实测（本机）：</p>
 <table>
@@ -363,7 +363,7 @@ threads.set_pool_size(8)     // 在**第一次**用池之前设置（1~64）
 <li><strong><code>threads.start</code> 不变</strong>：它仍然是"一任务一条 OS 线程"，因为它的语义是<strong>独立生命周期</strong>
   （进池会挡住别人）。只有 <code>parallel_for</code> / <code>map</code> 走池。</li>
 <li>池是<strong>懒启动</strong>的：第一次 <code>parallel_for</code> / <code>map</code> 时才按当时的 <code>pool_size</code> 建 worker；
-  之后再 <code>set_pool_size</code> 只改期望值、不动态增删 worker。</li>
+  之后再调 <code>set_pool_size</code> 会<strong>报错</strong>（不静默忽略）；worker 常驻到进程结束，不动态增删。</li>
 <li><strong>结果顺序不变</strong>：<code>map</code> 仍按输入顺序收集。</li>
 <li>worker 常驻不退出（进程结束时随之消亡）——所以别指望"用完池线程就没了"。</li>
 </ul>
@@ -1242,7 +1242,7 @@ print(threads.join_all(ts))   // 2
 </code></pre>
 <p>⚠ 三条注意：
 1. <strong><code>n</code> 要自己控</strong>（<code>parallel_for</code> 不会自动按核数分）—— 说几份就几份。
-2. <strong><code>map</code> / <code>parallel_for</code> 走线程池</strong>（★ 2026-11-26）：线程数 = 池大小（默认 4），
+2. <strong><code>map</code> / <code>parallel_for</code> 走线程池</strong>（★ 2026-11-26）：线程数 = 池大小（默认 = CPU 核数），
 不是元素数；<code>map(1 万元素)</code> 实测 17~27 ms。池大小用 <code>threads.set_pool_size(n)</code> 调
 （须在第一次用池之前）。池任务内部再嵌套 <code>map</code> 会<strong>回退到独立线程</strong>（否则 N 个外层任务
 把 worker 占满、各等内层任务 ⇒ 死锁）

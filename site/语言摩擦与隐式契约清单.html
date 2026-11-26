@@ -1010,8 +1010,16 @@ parallel_for / map / local_get / local_has / local_set）。</p>
 <td>池只有 N 个 worker，N 个外层任务各等内层任务，内层任务排队没人跑</td>
 <td>worker 线程带 <code>THREAD_LOCAL tls_in_pool_worker</code>，<code>pool_ready()</code> 见到它就返回 0 ⇒ 调用方回退到"一条任务一条独立线程"</td>
 </tr>
+<tr>
+<td><strong>退出阶段</strong>偶发 <code>0xC0000005</code>（<code>test_threads_parallel</code> 2/10）</td>
+<td><code>pool_ensure_started()</code> 建完线程就返回，worker 还在 <code>thread_vm_init</code> 里<strong>读主线程的结构体定义指针</strong>；主线程此时已跑完测试进入收尾并 <code>struct_def_free_all()</code> ⇒ worker 读到 <code>0xFEEEFEEE</code>（CRT 释放填充）。gdb 栈：<code>sd_hash_first ← struct_def_register ← struct_def_import_from_thread ← thread_vm_init ← pool_worker_main</code></td>
+<td>加"<strong>全部 worker 初始化完成</strong>"屏障（<code>g_pool_cv_ready</code>）：<code>pool_ensure_started</code> 返回前必须等齐；否则主线程的 GC/收尾会和 worker 的初始化抢生命周期</td>
+</tr>
 </tbody>
 </table>
+<p><strong>默认池大小</strong>：从写死 4 改成 <strong>CPU 核数</strong>（<code>GetSystemInfo</code> / <code>sysconf(_SC_NPROCESSORS_ONLN)</code>，探测失败退回 4）——
+写死 4 在 16 核机器上等于静默丢掉 3/4 的机器。<code>set_pool_size</code> 的两种失败
+（越界、池已启动）此前<strong>静默忽略</strong>，现在都抛错（同一条"不能有静默错误"）。</p>
 <p><strong>回归</strong>：<code>assert/test_thread_pool.leno</code> —— <code>map</code> 顺序与内容、<code>parallel_for</code> 每下标恰好一次、
 30 批不泄漏（<code>thread_pending_bytes</code> 归零、堆增长受限）、1 万元素毫秒级、
 <strong>中途失败不打死池</strong>、<strong>池大小 2 时嵌套 map 不死锁</strong>。</p>

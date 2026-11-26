@@ -206,8 +206,8 @@ main() {
 它们走常驻 worker 池：worker 各自持有一个 VM（只初始化一次），任务通过队列分发。
 
 ```leno
-threads.pool_size()          // 当前池大小（默认 4）
-threads.set_pool_size(8)     // 在**第一次**用池之前设置（1~64）
+threads.pool_size()          // 当前池大小（默认 = CPU 核数；探测失败退回 4）
+threads.set_pool_size(8)     // 1~64；**必须在第一次用池之前**调，之后调会报错
 ```
 
 实测（本机）：
@@ -222,7 +222,7 @@ threads.set_pool_size(8)     // 在**第一次**用池之前设置（1~64）
 - **`threads.start` 不变**：它仍然是"一任务一条 OS 线程"，因为它的语义是**独立生命周期**
   （进池会挡住别人）。只有 `parallel_for` / `map` 走池。
 - 池是**懒启动**的：第一次 `parallel_for` / `map` 时才按当时的 `pool_size` 建 worker；
-  之后再 `set_pool_size` 只改期望值、不动态增删 worker。
+  之后再调 `set_pool_size` 会**报错**（不静默忽略）；worker 常驻到进程结束，不动态增删。
 - **结果顺序不变**：`map` 仍按输入顺序收集。
 - worker 常驻不退出（进程结束时随之消亡）——所以别指望"用完池线程就没了"。
 
@@ -1063,7 +1063,7 @@ print(threads.join_all(ts))   // 2
 
 ⚠ 三条注意：
 1. **`n` 要自己控**（`parallel_for` 不会自动按核数分）—— 说几份就几份。
-2. **`map` / `parallel_for` 走线程池**（★ 2026-11-26）：线程数 = 池大小（默认 4），
+2. **`map` / `parallel_for` 走线程池**（★ 2026-11-26）：线程数 = 池大小（默认 = CPU 核数），
    不是元素数；`map(1 万元素)` 实测 17~27 ms。池大小用 `threads.set_pool_size(n)` 调
    （须在第一次用池之前）。池任务内部再嵌套 `map` 会**回退到独立线程**（否则 N 个外层任务
    把 worker 占满、各等内层任务 ⇒ 死锁）

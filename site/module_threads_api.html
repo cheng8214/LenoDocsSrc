@@ -152,8 +152,8 @@ main() {
 <h3 id="threads-pool_size-threads-set_pool_size-n-线程池-2026-11-26"><code>threads.pool_size()</code> / <code>threads.set_pool_size(n)</code> —— 线程池（★ 2026-11-26）</h3>
 <p><code>parallel_for</code> / <code>map</code> 内部走<strong>常驻 worker 池</strong>（worker 各自持有一个 VM，只初始化一次），
 不再"每个任务一条 OS 线程"。</p>
-<pre><code class="language-leno">threads.pool_size()          // 当前池大小（默认 4）
-threads.set_pool_size(8)     // 1~64；须在**第一次**用池之前设置
+<pre><code class="language-leno">threads.pool_size()          // 当前池大小（默认 = CPU 核数）
+threads.set_pool_size(8)     // 1~64；**必须在第一次用池之前**调，否则报错
 </code></pre>
 <table>
 <thead>
@@ -165,7 +165,11 @@ threads.set_pool_size(8)     // 1~64；须在**第一次**用池之前设置
 <tbody>
 <tr>
 <td>懒启动</td>
-<td>第一次 <code>parallel_for</code> / <code>map</code> 时才建 worker；之后再 <code>set_pool_size</code> 只改期望值</td>
+<td>第一次 <code>parallel_for</code> / <code>map</code> 时才建 worker（建完会<strong>等全部 worker 初始化完成</strong>再返回）</td>
+</tr>
+<tr>
+<td>再改大小</td>
+<td>池启动后再调 <code>set_pool_size</code> ⇒ <strong>报错</strong>（此前是静默忽略）；越界同样报错</td>
 </tr>
 <tr>
 <td>不受影响</td>
@@ -209,7 +213,7 @@ main() {
 print(doubled[3])   // 43（4*10+3）
 </code></pre>
 <blockquote>
-<p>★ 2026-11-26 起<strong>走线程池</strong>：线程数 = 池大小（默认 4，见 <code>threads.pool_size()</code>），
+<p>★ 2026-11-26 起<strong>走线程池</strong>：线程数 = 池大小（默认 = CPU 核数，见 <code>threads.pool_size()</code>），
 不再是元素数。实测 <code>map(1 万元素)</code> 从"秒级（一元素一线程）"降到 <strong>17~27 ms</strong>。
 元素可以是 <code>struct</code>（走 TH1 的深克隆 ✓）。</p>
 <p>⚠ <strong>不要在池任务里再调 <code>map</code> / <code>parallel_for</code> 并依赖它并行</strong>：池 worker 内部会回退到

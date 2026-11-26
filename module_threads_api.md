@@ -140,13 +140,14 @@ print("[worker " + _str(threads.current_id()) + "] start")
 不再"每个任务一条 OS 线程"。
 
 ```leno
-threads.pool_size()          // 当前池大小（默认 4）
-threads.set_pool_size(8)     // 1~64；须在**第一次**用池之前设置
+threads.pool_size()          // 当前池大小（默认 = CPU 核数）
+threads.set_pool_size(8)     // 1~64；**必须在第一次用池之前**调，否则报错
 ```
 
 | 项 | 说明 |
 |---|---|
-| 懒启动 | 第一次 `parallel_for` / `map` 时才建 worker；之后再 `set_pool_size` 只改期望值 |
+| 懒启动 | 第一次 `parallel_for` / `map` 时才建 worker（建完会**等全部 worker 初始化完成**再返回） |
+| 再改大小 | 池启动后再调 `set_pool_size` ⇒ **报错**（此前是静默忽略）；越界同样报错 |
 | 不受影响 | `threads.start` 仍是"一任务一条 OS 线程"（它的语义是独立生命周期） |
 | 顺序 | `map` 仍按输入顺序收集结果 |
 | 实测 | `map(1 万元素)`：秒级（原）→ **17~27 ms**（池） |
@@ -187,7 +188,7 @@ Array[int] doubled = threads.map([1, 2, 3, 4], func(int x, int idx): int {
 print(doubled[3])   // 43（4*10+3）
 ```
 
-> ★ 2026-11-26 起**走线程池**：线程数 = 池大小（默认 4，见 `threads.pool_size()`），
+> ★ 2026-11-26 起**走线程池**：线程数 = 池大小（默认 = CPU 核数，见 `threads.pool_size()`），
 > 不再是元素数。实测 `map(1 万元素)` 从"秒级（一元素一线程）"降到 **17~27 ms**。
 > 元素可以是 `struct`（走 TH1 的深克隆 ✓）。
 >
