@@ -990,8 +990,31 @@ parallel_for / map / local_get / local_has / local_set）。</p>
 才接下一条。原因：任务结果分配在 worker 堆上，而任务对象在调用方堆 ⇒ <strong>worker 的 GC 看不见那个结果</strong>，
 若立刻接下一条，下一次 GC 就会把上一条还没取走的结果回收。握手字段是
 <code>ObjThread.is_pool_task / reaped / reap_cond</code>（见 <code>thread_reap</code> 与 <code>pool_worker_main</code>）。</p>
+<p><strong>压测又抓到两个"不压看不出来"的</strong>（都已修，写在这里免得重犯）：</p>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LENO_GC_STRESS=512</code> 下 1/10 崩 <code>0xC0000005</code>，fault addr <code>0x24</code></td>
+<td>任务对象在<strong>调用方堆</strong>，而调用方只把它存进 C 数组（<strong>不是 GC 根</strong>）⇒ 调用方 GC 把"还没跑/还没 reap"的任务对象回收了，worker 仍在写它的 mutex/result</td>
+<td>建任务时登记进 <code>vm.active_threads</code>（普通线程靠的就是这个根），reap 时移除</td>
+</tr>
+<tr>
+<td><code>set_pool_size(2)</code> + <strong>嵌套 map</strong> 8 秒不返回（死锁）</td>
+<td>池只有 N 个 worker，N 个外层任务各等内层任务，内层任务排队没人跑</td>
+<td>worker 线程带 <code>THREAD_LOCAL tls_in_pool_worker</code>，<code>pool_ready()</code> 见到它就返回 0 ⇒ 调用方回退到"一条任务一条独立线程"</td>
+</tr>
+</tbody>
+</table>
 <p><strong>回归</strong>：<code>assert/test_thread_pool.leno</code> —— <code>map</code> 顺序与内容、<code>parallel_for</code> 每下标恰好一次、
-30 批不泄漏（<code>thread_pending_bytes</code> 归零、堆增长受限）、1 万元素毫秒级。</p>
+30 批不泄漏（<code>thread_pending_bytes</code> 归零、堆增长受限）、1 万元素毫秒级、
+<strong>中途失败不打死池</strong>、<strong>池大小 2 时嵌套 map 不死锁</strong>。</p>
 <p><strong>仍不做</strong>：让 <code>threads.start</code> 也进池（它的语义是独立生命周期，进池会互相挡住）；
 动态缩容（worker 常驻到进程结束）。</p>
 <h3 id="atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程<strong>共享</strong>的对象（2026-11-26）</h3>
