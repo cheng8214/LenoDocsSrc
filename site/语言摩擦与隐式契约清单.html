@@ -841,6 +841,43 @@ export struct Stack[T] impl Iterable { func each(): Array[T] { return items } �
 </table>
 <p>压力模式（<code>LENO_GC_STRESS=512</code>）下该用例与模块测试全过。</p>
 <hr>
+<h2 id="m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】<code>for</code> 的边界在<strong>进入时</strong>确定 —— 用语义消灭"静默"</h2>
+<p><strong>动机</strong>：M12 最后剩下的洞是"警告永远补不全" —— 别名（<code>var t = s; t.push()</code>）、闭包捕获、
+线程、FFI 里的修改，编译器都看不到。只要靠警告，就一定有静默。用户定的规矩是
+<strong>不允许静默错误</strong>，于是把这件事从"警告"改成"语义"。</p>
+<p><strong>变更</strong>（<code>codegen_stmt.c</code> 的 <code>gen_for</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>旧行为</th>
+<th>新行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>for a to v { a.add(x) }</code></td>
+<td>每轮重读 len ⇒ <strong>边加边遍历</strong>（实测 5 项跑 20 次，可能停不下来）</td>
+<td>边界 = 进入时的 len ⇒ <strong>只走进入时那些</strong>，新增本轮看不到</td>
+</tr>
+<tr>
+<td><code>for a to v { a.remove(i) }</code></td>
+<td>静默跳过元素，直到越界才报一句"索引越界"</td>
+<td>变短后取元素<strong>当场报错</strong>：<code>数组迭代索引越界（遍历中容器被改短了？for 的边界在进入时已确定；请先收集再统一删除）</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么这样才彻底</strong>：判定只看"长度变没变"，与<strong>谁改的、用什么名字改的</strong>无关 ⇒
+别名 / 闭包 / 线程 / FFI 全覆盖。<code>WARN_ITER_MUTATE</code>（含 <code>mut</code> 声明）继续保留，
+但<strong>正确性不再依赖它</strong>。</p>
+<p><strong>代价与实测</strong>：回边从"融合指令 <code>OP_CMPJMP_ITER</code>（内部重读 len）"改成
+"<code>INC</code> + <code>CMPJMP_LT idx, len_reg</code>"，多一条指令的量级；1M 次裸数组遍历
+<strong>35 ns/op</strong>、<code>for st to v</code> <strong>36 ns/op</strong>（与改前 34~37 同档）。</p>
+<p><strong>回归</strong>：<code>assert/test_for_iter_semantics.leno</code> 重写 ——
+① 追加<strong>不再撑长</strong>（2 轮、len 4）；①b 删除后<strong>必须抛错</strong>且文案含"改短"；
+<code>test_diag_iter_mutate</code> 改用新增的 <code>ce.expect_warning_check()</code>（只 <code>--check</code>，
+因为这类用例现在<strong>运行期就该失败</strong>）；<code>test_mut_stress</code> 的线程用例改用快照路径（Queue）。</p>
+<hr>
 <h2 id="与现有文档的分工">与现有文档的分工</h2>
 <table>
 <thead>
@@ -869,7 +906,7 @@ export struct Stack[T] impl Iterable { func each(): Array[T] { return items } �
 </tbody>
 </table>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】for 的边界在进入时确定 —— 用语义消灭"静默"</a></li><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="扩展模块/LenoCLI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
