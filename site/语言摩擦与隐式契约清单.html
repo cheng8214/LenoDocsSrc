@@ -796,6 +796,50 @@ export struct Stack[T] impl Iterable { func each(): Array[T] { return items } �
 <code>semantic_fill_struct_mut_names()</code>（幂等），每处都调。</p>
 <p>结果是既没有模块词表、也没有新语法位置，<code>for st to v { st.push(x) }</code> 照常报警告，
 自定义类型标 <code>mut</code> 后同样受保护。</p>
+<p><strong>压测覆盖</strong>（<code>assert/test_mut_stress.leno</code> + <code>assert/helpers/mut_mod.leno</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>组</th>
+<th>覆盖</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同文件</td>
+<td><code>mut</code> 报 / 非 mut 不报 / <code>mut pri</code>、<code>pri mut</code> 两种顺序都能解析且私有仍生效</td>
+</tr>
+<tr>
+<td>跨模块</td>
+<td>helper 里的 <code>Bag.add</code>（报）、<code>Bag.size</code>（不报）、泛型 <code>GenBox[int].put</code>（报）</td>
+</tr>
+<tr>
+<td>七个容器</td>
+<td>push/pop/push_front/put/remove 报；len/at/get 不报</td>
+</tr>
+<tr>
+<td>控制流</td>
+<td>if / while / switch 里的 mut 调用都能抓到</td>
+</tr>
+<tr>
+<td>线程 / 协程</td>
+<td><strong>循环体写在 <code>threads.start(func(){…})</code> 与 <code>async func</code> 里同样报</strong></td>
+</tr>
+<tr>
+<td>别名</td>
+<td><code>var t = s; for s to v { t.push() }</code> ⇒ 抓不到（已知边界，按名字匹配）</td>
+</tr>
+<tr>
+<td>误用</td>
+<td>顶层 <code>mut func</code>、字段上 <code>mut int x</code> ⇒ <strong>编译期报错</strong>（此前一个报"期望表达式"、一个静默忽略）</td>
+</tr>
+<tr>
+<td>运行期</td>
+<td>mut 只是声明：遍历累加、pop 后长度、跨模块/泛型调用、线程里边遍历边 pop 都不崩</td>
+</tr>
+</tbody>
+</table>
+<p>压力模式（<code>LENO_GC_STRESS=512</code>）下该用例与模块测试全过。</p>
 <hr>
 <h2 id="与现有文档的分工">与现有文档的分工</h2>
 <table>
