@@ -1020,6 +1020,35 @@ parallel_for / map / local_get / local_has / local_set）。</p>
 <p><strong>默认池大小</strong>：从写死 4 改成 <strong>CPU 核数</strong>（<code>GetSystemInfo</code> / <code>sysconf(_SC_NPROCESSORS_ONLN)</code>，探测失败退回 4）——
 写死 4 在 16 核机器上等于静默丢掉 3/4 的机器。<code>set_pool_size</code> 的两种失败
 （越界、池已启动）此前<strong>静默忽略</strong>，现在都抛错（同一条"不能有静默错误"）。</p>
+<h3 id="池的生命周期-两头都要封-2026-11-26-收尾">池的生命周期：两头都要封（2026-11-26 收尾）</h3>
+<table>
+<thead>
+<tr>
+<th>端</th>
+<th>之前的窗口</th>
+<th>现在</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>起跑</strong></td>
+<td><code>pool_ensure_started()</code> 建完线程就返回，worker 还在 <code>thread_vm_init</code> 里读主线程的结构体定义 / globals 指针；主线程若已进入收尾 ⇒ worker 读到 <code>0xFEEEFEEE</code>（gdb 复现：<code>sd_hash_first ← struct_def_register ← struct_def_import_from_thread ← thread_vm_init</code>）</td>
+<td>屏障 <code>g_pool_cv_ready</code>：全部 worker <strong>初始化完成</strong>才返回</td>
+</tr>
+<tr>
+<td><strong>收尾</strong></td>
+<td>worker 随进程被杀；主线程 <code>gc_free_all()</code> 先释放堆，理论上仍存在"它下一秒碰一下"</td>
+<td><code>pool_shutdown()</code>：置停止位 → 广播 → <strong>逐个 join</strong>；<code>gc_free_all()</code> 开头先调它（顺序变成"人走了再拆房子"）</td>
+</tr>
+</tbody>
+</table>
+<p>顺带修掉 <code>gc_free_all()</code> 里的一处同类隐患：它会对 <code>active_threads</code> 里的每个线程
+<code>platform_thread_join(thread-&gt;os_thread)</code>，而<strong>池任务的 <code>os_thread</code> 是空的</strong>
+（由 worker 代跑）⇒ 现在按 <code>is_pool_task</code> 跳过。</p>
+<p>中间那段（任务执行期）本来就是安全的：调用方阻塞在 reap 上，参数/闭包都活着。
+两头一封，整条生命周期没有窗口。</p>
+<p><strong>回归</strong>：<code>test_thread_pool</code> 新增 ⑧（显式 <code>_gc()</code> 之后池仍可用）；
+<code>test_threads_parallel</code> 压力下连跑 <strong>20 次 0 崩溃</strong>（修前 2/10）。</p>
 <p><strong>回归</strong>：<code>assert/test_thread_pool.leno</code> —— <code>map</code> 顺序与内容、<code>parallel_for</code> 每下标恰好一次、
 30 批不泄漏（<code>thread_pending_bytes</code> 归零、堆增长受限）、1 万元素毫秒级、
 <strong>中途失败不打死池</strong>、<strong>池大小 2 时嵌套 map 不死锁</strong>。</p>
@@ -1140,7 +1169,7 @@ threads.atomic_add(threads.atomic(0), 1)   // 模块函数形态也保留（低�
 </tbody>
 </table>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】for 的边界在进入时确定 —— 用语义消灭"静默"</a></li><li><a href="#m14-并发模型-2026-11-26-shared-nothing-跨线程一律深克隆-原生指针一律拒绝">M14【并发模型，2026-11-26】shared-nothing：跨线程一律深克隆，原生指针一律拒绝</a></li><ul class="lv3"><li><a href="#拒绝面-这是-shared-nothing-的唯一后门-已经堵上">拒绝面（这是 shared-nothing 的唯一后门，已经堵上）</a></li><li><a href="#已知限制-不是缺陷-是取舍">已知限制（不是缺陷，是取舍）</a></li><li><a href="#线程池-2026-11-26">线程池（2026-11-26）</a></li><li><a href="#atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程共享的对象（2026-11-26）</a></li></ul><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#m1-高-threads-start-的入口判据是-module-必须为空-报错文案却说-当前文件-已修-2026-10-12">M1【高】threads.start 的入口判据是"module 必须为空"，报错文案却说"当前文件" —— ✅ 已修（2026-10-12）</a></li><li><a href="#m2-高-调用-函数类型字段-的返回值是-any-声明的返回类型没生效">M2【高】调用"函数类型字段"的返回值是 any（声明的返回类型没生效）</a></li><li><a href="#m3-中-this-不存在-自引用叫-self-但误用-this-的报错不提示">M3【中】this 不存在、自引用叫 self——但误用 this 的报错不提示</a></li><li><a href="#m4-中-模块别名与-struct-字段同名-静默遮蔽-报错指到别处">M4【中】模块别名与 struct 字段同名 ⇒ 静默遮蔽，报错指到别处</a></li><li><a href="#m5-低-三件小摩擦-每个都吃掉一次编译循环">M5【低】三件小摩擦（每个都吃掉一次编译循环）</a></li><li><a href="#m6-高-已修-2026-10-12-c-侧宽值塞进-value-的截断面-val_int-vs-val_int_safe">M6【高，已修 2026-10-12】C 侧宽值塞进 Value 的截断面：val_int vs val_int_safe</a></li><li><a href="#m7-中-已修-2026-10-12-指数字面量曾只有-enum-成员值那条路能用-两条路两种结果">M7【中，✅ 已修 2026-10-12】指数字面量曾只有 enum 成员值那条路能用（两条路两种结果 ✗）</a></li><li><a href="#m8-中-已定口径-2026-10-12-as-里的位宽类型名是-转换指令-不是-可声明的类型">M8【中，✅ 已定口径 2026-10-12】as 里的位宽类型名是「转换指令」，不是「可声明的类型」</a></li><li><a href="#m9-中-已修-2026-10-12-同日又被-us1-翻案-限定名-模块-类型-不能做类型标注-但只有-5-个位置会这么报-其余位置喷一串看不懂的语法错误">M9【中，✅ 已修 2026-10-12 / ★ 同日又被 US1 翻案】限定名（模块.类型）不能做类型标注 —— 但只有 5 个位置会这么报，其余位置喷一串看不懂的语法错误</a></li><li><a href="#m10-高-已修-2026-10-13-跨模块读没-export-的变量-编译不报错-运行期静默变-null">M10【高，✅ 已修 2026-10-13】跨模块读没 export 的变量：编译不报错、运行期静默变 null</a></li><li><a href="#m11-中-已修-2026-10-13-struct-方法里-new-b-键-本结构体字段-隐式-self-在构造参数里失效">M11【中，✅ 已修 2026-10-13】struct 方法里 new B(键 = 本结构体字段)：隐式 self 在构造参数里失效</a></li><li><a href="#m6-alias-跨模块-2026-11-25-修完-原症状保留作记录">M6 · alias 跨模块（2026-11-25 修完，原症状保留作记录）</a></li><li><a href="#m12-设计红线-2026-11-25-编译器不得按名字猜语义-已否决实例-for-容器-to-v">M12【设计红线，2026-11-25】编译器不得按名字猜语义 —— 已否决实例：for 容器 to v</a></li><li><a href="#m13-语义变更-2026-11-26-for-的边界在进入时确定-用语义消灭-静默">M13【语义变更，2026-11-26】for 的边界在进入时确定 —— 用语义消灭"静默"</a></li><li><a href="#m14-并发模型-2026-11-26-shared-nothing-跨线程一律深克隆-原生指针一律拒绝">M14【并发模型，2026-11-26】shared-nothing：跨线程一律深克隆，原生指针一律拒绝</a></li><ul class="lv3"><li><a href="#拒绝面-这是-shared-nothing-的唯一后门-已经堵上">拒绝面（这是 shared-nothing 的唯一后门，已经堵上）</a></li><li><a href="#已知限制-不是缺陷-是取舍">已知限制（不是缺陷，是取舍）</a></li><li><a href="#线程池-2026-11-26">线程池（2026-11-26）</a></li><li><a href="#池的生命周期-两头都要封-2026-11-26-收尾">池的生命周期：两头都要封（2026-11-26 收尾）</a></li><li><a href="#atomic-唯一跨线程共享的对象-2026-11-26">Atomic：唯一跨线程共享的对象（2026-11-26）</a></li></ul><li><a href="#与现有文档的分工">与现有文档的分工</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="Leno语言改进建议.html">← 上一篇</a><a href="扩展模块/LenoCLI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>
