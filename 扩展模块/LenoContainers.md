@@ -448,6 +448,11 @@ build\leno.exe build\leno_module\LenoContainers\bench\bench_containers.leno
 
 ## 变更记录
 
+- **0.8.3**（2026-11-26）：随语言语义变更 —— **`for` 的边界在进入时确定**：
+  `push` 新增的元素本轮看不到（不再"边加边遍历"），`pop`/`remove` 后取元素
+  **当场报错**（"遍历中容器被改短了？"）。本模块 API 不变，只是"遍历中改容器"从
+  "静默出怪结果"变成"确定的语义 + 明确报错"。
+
 - **0.8.2**（2026-11-26）：所有结构性方法标上 **`mut`**（`mut func push/pop/put/…`）——
   于是 `for st to v { st.push(x) }` 会得到编译期 `WARN_ITER_MUTATE`，**跨模块也生效**
   （标志随 `.lenosymc` v45 导出）。之前这个警告要么漏报、要么得靠编译器背本模块的方法名表

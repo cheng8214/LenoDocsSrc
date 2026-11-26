@@ -91,6 +91,8 @@ main() {
 - 模块函数形态也保留：`threads.atomic_add(hits, 1)`（与 `hits.add(1)` 等价）；
 - `Atomic` **不参与深拷贝** —— 它是 shared-nothing 的唯一例外，所以别指望"传个 Atomic 过去
   各改各的"，那本来就不是它的语义；
+- **不能和数字直接比较**：`if a == 0` 编译期就报错（运行期比"是不是同一个对象"，恒 false）——
+  写 `if a.load() == 0`；`_str(a)` 会打印 `<Atomic 42>`（带当前值）；
 - 生命周期：进程收尾统一释放（不做引用计数，避免 double-free）。
 
 ---
