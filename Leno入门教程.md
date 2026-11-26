@@ -3152,6 +3152,34 @@ var f = _str(files[i])
 }
 ```
 
+#### 遍历容器与自定义类型（`impl Iterable`）
+
+`for 结构体 to k, v` 原本是**遍历字段**（k = 字段名）。容器（`LenoContainers` 的 Stack / Queue / LRU…）
+想被 `for` 直接遍历元素，靠的是一个**声明**：
+
+```leno
+import "Containers" as ct
+
+export face Iterable { func each(): Array }        // 模块里声明的普通 face
+
+export struct Stack[T] impl Iterable {
+    func each(): Array[T] { return items }         // 返回什么数组，for 就遍历什么
+}
+
+// 使用方
+for st to v { }            // impl 了 Iterable ⇒ 遍历元素
+for st to v, i { }         // 第二个变量仍是下标
+for b to f { }             // 没 impl Iterable 的 struct ⇒ 遍历字段（f = 字段名）
+```
+
+`Iterable` 是**语言保留的 face 名**（地位和 `main` 一样：不是关键字，但语言认它）。它的形状固定为
+「恰好 1 个方法、无参数、返回 `Array`」，写歪了**编译期报错**；实现别的 face（哪怕形状一样）
+**不会**被当成可遍历。
+
+> **⚠️ 遍历中不要修改容器**：`for st to v { st.push(x) }` 在视图路径下会"边加边遍历"
+> （实测 5 项能跑到 20 次），`pop` 会跳过元素。要边遍历边改：先把要处理的元素收进临时数组，
+> 循环后统一改，或者用游标 `var it = st.iter(); while it.has_next() { … }`。
+
 #### for 循环快速参考表
 
 | 语法 | 说明 | 包含 | 示例输出 |
@@ -11057,6 +11085,8 @@ main() {
 > **⚠️ 注意：线程间共享数据请使用通道**
 >
 > 全局变量是线程隔离的，不能通过全局变量在线程间传递数据。使用通道（Channel）进行线程间通信。
+> 如果只是想共享**一个整数状态**（计数器 / 进度 / 开关），用 `Atomic`（见下面「共享计数器：Atomic」），
+> 它不走深拷贝，是所有线程看到同一份。
 
 ### 线程休眠
 
@@ -11103,7 +11133,68 @@ main() {
 }
 ```
 
-### 线程与异常处理注意事项
+### 共享计数器：Atomic
+
+前面说过线程是隔离的：普通变量、`struct`、`Array` 传给线程都会被**深拷贝**，所以"多个线程一起累加同一个计数器"用普通 `int` 是做不到的（每个线程各加各的副本）。`Atomic` 就是为这一件事准备的，它是**唯一**跨线程共享的可变值。
+
+```leno
+import threads
+
+func worker(Atomic hits, int n) {
+    for 0 : n - 1 to i { hits.add(1) }
+}
+
+main() {
+    Atomic hits = threads.atomic(0)        // 建一个共享计数器
+    Array[Thread] ts = []
+    for 0 : 7 to i { ts.add(threads.start(worker, hits, 10000)) }
+    threads.join_all(ts)
+    print(hits.load())                      // 80000（实测，一个都不丢）
+}
+```
+
+| 操作 | 说明 |
+|---|---|
+| `a.add(n)` / `a.sub(n)` | 返回**加/减完的新值**（不是旧值） |
+| `a.load()` / `a.store(n)` | 读 / 写 |
+| `a.swap(n)` | 返回**旧值** |
+| `a.cas(期望, 新值)` | 相等才写，返回 `bool`（成功与否） |
+
+`Atomic` 是**类型名**，可以当字段和形参：`struct Counter { Atomic hits }`、`func bump(Atomic a)`。模块函数形态也保留：`threads.atomic_add(a, 1)` 与 `a.add(1)` 等价。
+
+**四个典型用法**（都是以前做不到、或者要靠通道绕的）：
+
+```leno
+// ① 任务领取：N 个线程从同一个下标池里领活，天然不重复
+Atomic cursor = threads.atomic(0)
+int i = cursor.add(1) - 1              // 每个线程领到的下标都不同
+
+// ② 进度统计：主线程随时读，不用收消息
+Atomic done = threads.atomic(0)
+// 子线程：done.add(1)     主线程：print(done.load())
+
+// ③ 取消广播：一个线程置位，所有线程都看得见（通道做不到"广播"）
+Atomic stop = threads.atomic(0)
+// 主线程 stop.store(1)    子线程 if stop.load() == 1 { break }
+
+// ④ 只让第一个线程初始化
+if init.cas(0, 1) { loadHeavyResource() }
+```
+
+**做不到的事（别指望它当锁用）**：
+
+- **不能共享对象**：`Array` / `struct` 跨线程仍然是深拷贝，`Atomic` 只保护它自己那一个 64 位整数；
+- **不能跨多个原子保证一致**：`a.sub(x); b.add(x)` 是两步，中间可能被插队（没有多字 CAS）；
+- **不能等待/通知**：没有条件变量，只能轮询 `load()`，必要时配 `threads.sleep`；
+- **只有整数**：没有 `Atomic[float]`，也没有 `min/max`（要就用 `cas` 自己循环）。
+
+两个容易踩的点：
+
+- **不能和数字直接比较**：`if a == 0` 是**编译错误**（运行期会比"是不是同一个对象"，恒 false）⇒ 写 `if a.load() == 0`；
+- **`_str(a)` 打印 `<Atomic 42>`**（带当前值），不是 `[object]`。
+
+选型口诀：**要传数据用 Channel，要共享整数状态用 Atomic**。
+
 
 1. **子线程异常不会自动传播**：必须通过 `join()` 获取
 2. **join() 传播异常后线程状态为 `"error"`**
@@ -12576,6 +12667,9 @@ leno -p program.leno
 | 通道长度 | `ch.len()` |
 | 关闭通道 | `ch.close()` |
 | 线程异常传播 | `join()` 传播子线程异常到主线程 |
+| 共享计数器 | `Atomic a = threads.atomic(0)`（**唯一**跨线程共享的可变值） |
+| 原子操作 | `a.add(n)` / `a.sub(n)` / `a.load()` / `a.store(n)` / `a.swap(n)` / `a.cas(期望, 新值)` |
+| 注意 | `a == 0` 是编译错误（恒 false）⇒ 写 `a.load() == 0` |
 
 ### 其他
 
