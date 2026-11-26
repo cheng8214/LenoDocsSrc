@@ -1242,8 +1242,10 @@ print(threads.join_all(ts))   // 2
 </code></pre>
 <p>⚠ 三条注意：
 1. <strong><code>n</code> 要自己控</strong>（<code>parallel_for</code> 不会自动按核数分）—— 说几份就几份。
-2. <strong><code>map</code> 的线程数 = 元素数</strong>（每个元素一个线程）⇒ 元素多时线程开销会盖过收益；
-重活请用 <code>parallel_for</code> 自己分块 ✓
+2. <strong><code>map</code> / <code>parallel_for</code> 走线程池</strong>（★ 2026-11-26）：线程数 = 池大小（默认 4），
+不是元素数；<code>map(1 万元素)</code> 实测 17~27 ms。池大小用 <code>threads.set_pool_size(n)</code> 调
+（须在第一次用池之前）。池任务内部再嵌套 <code>map</code> 会<strong>回退到独立线程</strong>（否则 N 个外层任务
+把 worker 占满、各等内层任务 ⇒ 死锁）
 3. <strong>回调的形参个数是硬校验</strong>（线程入口由 VM 直接调用，默认参数不会被补齐 ✓）：
 <code>parallel_for</code> 要 <code>f(int)</code>，<code>map</code> 要 <code>f(item, index)</code>（与 <code>arrays.map</code> 同口径 ✓）。</p>
 <h2 id="通道元素类型-channel-t-2026-10-12-起">通道元素类型（<code>Channel[T]</code>，★ 2026-10-12 起）</h2>

@@ -187,8 +187,12 @@ Array[int] doubled = threads.map([1, 2, 3, 4], func(int x, int idx): int {
 print(doubled[3])   // 43（4*10+3）
 ```
 
-> ⚠ **线程数 = 元素数**（每个元素一个线程）⇒ 元素多时线程开销会盖过收益；重活请用
-> `parallel_for` 自己分块 ✓。元素可以是 `struct`（走 TH1 的深克隆 ✓）。
+> ★ 2026-11-26 起**走线程池**：线程数 = 池大小（默认 4，见 `threads.pool_size()`），
+> 不再是元素数。实测 `map(1 万元素)` 从"秒级（一元素一线程）"降到 **17~27 ms**。
+> 元素可以是 `struct`（走 TH1 的深克隆 ✓）。
+>
+> ⚠ **不要在池任务里再调 `map` / `parallel_for` 并依赖它并行**：池 worker 内部会回退到
+> "一条任务一条独立线程"（避免互相等死），能跑但不会用池。
 
 ### `threads.local_get(key, default)` / `threads.local_has(key)` / `threads.local_set(key, value)`
 

@@ -565,6 +565,9 @@ init_chunk 主线程已跑过 ⇒ 子线程直接用共享的 <code>ObjModule</c
   （<code>Array[第 1 实参回调的返回]</code>）⇒ 静态类型精确（<code>Array[int] doubled = threads.map(...)</code> ✓）。</li>
 <li><code>map</code> 的回调形态与 <code>arrays.map</code> <strong>同口径</strong>（<code>f(item, index)</code> 两个形参）—— 用户已有的认知可迁移 ✓。</li>
 <li>⚠ <strong>实现取舍</strong>：<code>map</code> 是"<strong>每元素一个线程</strong>"（线程数 = 元素数）—— 因为<strong>闭包不能作为参数跨线程传</strong>
+  &gt; ★ 2026-11-26 更新：已改为<strong>常驻 worker 池</strong>（线程数 = 池大小，默认 4），<code>map(1 万元素)</code>
+  &gt; 从秒级降到 17~27 ms。详见 <code>语言摩擦与隐式契约清单.md</code> M14 与 <code>threads使用指南.md</code>。
+  &gt; （下面这条"闭包不能跨线程传"的历史限制后来也已解除，保留原文作为记录。）
   （<code>value_clone_for_channel</code> 不认函数值），所以"分块 + 子线程循环调 f"这条路走不通；
   要分块只能用 <code>parallel_for</code>。代价已写进 API 文档 ✓。</li>
 <li>原计划里那条"模块内调用时回调能不能跑"的顾虑，<strong>已被 TH2 顺带解决</strong> ✓（模块函数现在能作入口）。</li>
