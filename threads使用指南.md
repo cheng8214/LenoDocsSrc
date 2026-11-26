@@ -23,6 +23,7 @@ Leno 提供基于 **隔离 VM + Channel** 的多线程支持，参考 Go 语言�
 | `threads.local_*` 字典 | **每线程一份** | 运行期字符串 key 的版本 |
 | `const` 声明 / 模块常量 | 共享，**只读** | 运行期还带只读标记（`OP_LOCK_REF`） |
 | `Channel` / `Thread` | 共享句柄 | 引用语义，内部有锁 |
+| **`Atomic`** | **共享同一份** | 唯一跨线程共享的**可变**值；只能通过原子操作访问（`add/sub/load/store/swap/cas`） |
 
 ### 模块顶层语句什么时候执行？
 
@@ -54,6 +55,43 @@ GF 表（`g_exp = _gf_build_exp()`）就是靠这条。但注意它依赖"主线
 | 子线程写**本线程堆上的对象**（`m.g = [1,2]`） | ✗ **跨堆引用**：该线程退出/GC 后槽里是悬空指针，读到 185 / -1 / 0 这类残值 |
 
 第二种现在会打警告（见「注意事项 2. 全局变量」末尾），根治写法是 `thread_local var`。
+
+### 共享计数器：`Atomic`（2026-11-26）
+
+"多个线程累加同一个计数器"以前**表达不出来** —— 传进去的 `int` / `struct` 会被深拷贝，
+每个线程改的都是自己的副本。现在用 `Atomic`：
+
+```leno
+import threads
+
+func worker(Atomic hits, int n) {
+    for 0 : n - 1 to i { hits.add(1) }
+}
+
+main() {
+    Atomic hits = threads.atomic(0)      // 共享的同一份
+    Array[Thread] ts = []
+    for 0 : 7 to i { ts.add(threads.start(worker, hits, 10000)) }
+    threads.join_all(ts)
+    print(_str(hits.load()))              // 80000（实测）
+}
+```
+
+| 操作 | 说明 |
+|---|---|
+| `hits.add(n)` / `sub(n)` | 返回值 = **加/减完的新值** |
+| `hits.load()` / `store(n)` | 读 / 写 |
+| `hits.swap(n)` | 返回**旧值** |
+| `hits.cas(期望, 新值)` | 命中才写，返回 `bool` |
+
+要点：
+
+- **操作集是封闭的** —— 没有 `lock()/unlock()`（忘了解锁 = 静默死锁），也没有"直接赋值"；
+- `Atomic` 是**类型名**，可以当字段（`struct Counter { Atomic hits }`）和形参；
+- 模块函数形态也保留：`threads.atomic_add(hits, 1)`（与 `hits.add(1)` 等价）；
+- `Atomic` **不参与深拷贝** —— 它是 shared-nothing 的唯一例外，所以别指望"传个 Atomic 过去
+  各改各的"，那本来就不是它的语义；
+- 生命周期：进程收尾统一释放（不做引用计数，避免 double-free）。
 
 ---
 

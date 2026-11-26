@@ -200,6 +200,38 @@ main() {
 值不需要跨线程克隆（只在**同一个线程**里存取）⇒ 放 struct 实例也行 ✓。
 `key` 必须是 `string`；值类型不限（`local_get` 的返回是 `any` —— 存进去的与默认值可能不同型）。
 
+### `threads.atomic(init)` —— 跨线程**共享**的原子整数（★ 2026-11-26）
+
+Leno 的并发模型是 shared-nothing（参数 / 闭包 / Channel 载荷一律深拷贝），所以
+"多个线程累加同一个计数器"用普通 `int`/`struct` **表达不出来**。`Atomic` 是唯一的例外：
+跨线程**共享同一份**，所有访问都走原子指令（无锁）。
+
+```leno
+Atomic hits = threads.atomic(0)      // Atomic 是类型名（可当字段 / 形参）
+hits.add(1)                          // 返回加完的新值
+hits.sub(1)
+hits.load()                          // 读
+hits.store(0)                        // 写
+hits.swap(100)                       // 返回旧值
+hits.cas(100, 7)                     // 命中才写，返回 bool
+```
+
+| 形态 | 写法 |
+|---|---|
+| 实例方法（推荐） | `hits.add(1)` |
+| 模块函数（低层，等价） | `threads.atomic_add(hits, 1)` / `atomic_sub` / `atomic_load` / `atomic_store` / `atomic_swap` / `atomic_cas` |
+
+**契约**：
+
+- 操作集**封闭**——没有 `lock()/unlock()`，也没有"直接赋值"（忘了解锁 = 静默死锁，这里根本不给机会）；
+- 值类型只有 `int`（64 位）；
+- **不参与深拷贝**：传给人线程的就是同一份，这是 shared-nothing 的唯一例外；
+- 生命周期：`malloc` + 进程收尾统一释放（`atomic_free_all`），不做引用计数；
+- 误用（传 `null` / 传别的类型）⇒ 运行期报错并点名 `Atomic`；方法名写错 ⇒ **编译期**
+  报 `类型 'Atomic' 没有方法 'x'`。
+
+实测：8 线程 × 10000 次 `add` ⇒ **恰好 80000**；4 加 4 减各 2000 ⇒ **净 0**（无丢更新）。
+
 ## Thread 对象方法
 
 ### `thread.join()`
