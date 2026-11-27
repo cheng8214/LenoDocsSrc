@@ -754,6 +754,10 @@ SDL3.toastFull("正在解析…", SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
 
 ### 8.3 MenuBar / 右击菜单
 
+**淡入（2026-11-27）**：下拉菜单与右键菜单弹出时约 100ms 淡入（底色/分隔线/悬停底/文字/图标/边框一起）。
+只做淡入不做高度展开——菜单是高频短促交互，鼠标弹出瞬间已在目标项上，高度动画会让项在移动中撞光标。
+只读进度：`SDL3.menuFade()`。子菜单弹出不重播（主面板已经是 1）。
+
 **MenuBar 是构建器写法**，先 `addMenu` 拿 int id，再往 id 里加项（`showcase.leno` / `settings.leno` 一致）：
 
 ```text

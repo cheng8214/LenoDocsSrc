@@ -774,6 +774,9 @@ SDL3.toastFull(&quot;正在解析…&quot;, SDL3.TOAST_INFO, 1200, SDL3.TOAST_TO
 <p><strong>淡入（2026-11-27）</strong>：延迟到点后气泡约 120ms 淡入（背景/边框/文字一起渐显），移开立刻消失。
 只读：<code>SDL3.tipVisible()</code>、<code>SDL3.tipText()</code>、<code>SDL3.tipFade()</code>（0~1 进度）。</p>
 <h3 id="8-3-menubar-右击菜单">8.3 MenuBar / 右击菜单</h3>
+<p><strong>淡入（2026-11-27）</strong>：下拉菜单与右键菜单弹出时约 100ms 淡入（底色/分隔线/悬停底/文字/图标/边框一起）。
+只做淡入不做高度展开——菜单是高频短促交互，鼠标弹出瞬间已在目标项上，高度动画会让项在移动中撞光标。
+只读进度：<code>SDL3.menuFade()</code>。子菜单弹出不重播（主面板已经是 1）。</p>
 <p><strong>MenuBar 是构建器写法</strong>，先 <code>addMenu</code> 拿 int id，再往 id 里加项（<code>showcase.leno</code> / <code>settings.leno</code> 一致）：</p>
 <pre><code class="language-text">var bar = win.addMenuBar({x: 0, y: 0, w: 920, h: 30, font_size: 14})
 
