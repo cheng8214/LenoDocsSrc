@@ -223,6 +223,42 @@ int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有�
 <li>Linux 侧：<code>total</code> 不含 <code>guest/guest_nice</code>（它们已计入 user/nice，重复计会让使用率偏低），
   <code>idle</code> 含 <code>iowait</code>；该分支未在真机实测。</li>
 </ul>
+<h2 id="文件图标-v0-2-起">文件图标（v0.2 起）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fileIcon(path, small = false)</code></td>
+<td><code>{ok, w, h, pixels}</code></td>
+<td>文件/目录在资源管理器里显示的图标；<code>pixels</code> 是 RGBA 数组（行优先）</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">var r = Sys.fileIcon(&quot;C:\\Windows\\notepad.exe&quot;)     // 32×32
+if r[&quot;ok&quot;] as bool {
+    int w = r[&quot;w&quot;] as int
+    int h = r[&quot;h&quot;] as int
+    Array[int] px = r[&quot;pixels&quot;] as Array[int]         // 每像素 R,G,B,A
+}
+Sys.fileIcon(&quot;C:\\Windows&quot;, false)                    // 目录 ⇒ 文件夹图标
+Sys.fileIcon(&quot;C:\\Windows\\notepad.exe&quot;, true)         // 16×16
+</code></pre>
+<p><strong>契约（实测踩出来的）</strong>：</p>
+<ul>
+<li><strong>存在的文件与目录都能取到</strong>（目录给文件夹图标）；<strong>不存在的路径</strong> ⇒ <code>ok=false</code></li>
+<li>⚠ <strong>不要加 <code>SHGFI_USEFILEATTRIBUTES</code></strong>（"按属性给通用图标"）：实测加了之后<strong>目录反而拿不到
+  图标</strong>（<code>hIcon</code> 为空），不加才对</li>
+<li>老图标没有 alpha 通道 ⇒ 该图标的 alpha 全补 255（不做 mask 合成，会略有锯齿）</li>
+<li>位深不是 32 的图标直接 <code>ok=false</code>（Win10 的图标都是 32bpp，极少遇到）</li>
+<li><strong>Linux/macOS 未实现</strong>（freedesktop 那边要走 icon theme 查找，工作量另算）⇒ <code>ok=false</code></li>
+<li>每次调用都要走一遍 Shell + GDI（取图标、建兼容 DC、<code>GetDIBits</code>）⇒ <strong>别每帧调</strong>，缓存结果</li>
+</ul>
 <h2 id="桌面集成">桌面集成</h2>
 <table>
 <thead>
@@ -315,7 +351,7 @@ int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有�
   跨模块使用时按惯例 <code>use Sys.VolumeInfo</code>（或用 <code>var v = ...</code> 让编译器推断）。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#平台与环境">平台与环境</a></li><li><a href="#进程">进程</a></li><li><a href="#磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 listVolumes）</a></li><li><a href="#实时资源-v0-2-起">实时资源（v0.2 起）</a></li><li><a href="#桌面集成">桌面集成</a></li><li><a href="#回收站">回收站</a></li><li><a href="#开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</a></li><li><a href="#口径与边界">口径与边界</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#平台与环境">平台与环境</a></li><li><a href="#进程">进程</a></li><li><a href="#磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 listVolumes）</a></li><li><a href="#实时资源-v0-2-起">实时资源（v0.2 起）</a></li><li><a href="#文件图标-v0-2-起">文件图标（v0.2 起）</a></li><li><a href="#桌面集成">桌面集成</a></li><li><a href="#回收站">回收站</a></li><li><a href="#开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</a></li><li><a href="#口径与边界">口径与边界</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoStats.html">← 上一篇</a><a href="../扩展模块/LenoTUI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

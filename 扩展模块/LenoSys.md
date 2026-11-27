@@ -110,6 +110,33 @@ int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有�
 - Linux 侧：`total` 不含 `guest/guest_nice`（它们已计入 user/nice，重复计会让使用率偏低），
   `idle` 含 `iowait`；该分支未在真机实测。
 
+## 文件图标（v0.2 起）
+
+| 函数 | 返回 | 说明 |
+|---|---|---|
+| `fileIcon(path, small = false)` | `{ok, w, h, pixels}` | 文件/目录在资源管理器里显示的图标；`pixels` 是 RGBA 数组（行优先） |
+
+```leno
+var r = Sys.fileIcon("C:\\Windows\\notepad.exe")     // 32×32
+if r["ok"] as bool {
+    int w = r["w"] as int
+    int h = r["h"] as int
+    Array[int] px = r["pixels"] as Array[int]         // 每像素 R,G,B,A
+}
+Sys.fileIcon("C:\\Windows", false)                    // 目录 ⇒ 文件夹图标
+Sys.fileIcon("C:\\Windows\\notepad.exe", true)         // 16×16
+```
+
+**契约（实测踩出来的）**：
+
+- **存在的文件与目录都能取到**（目录给文件夹图标）；**不存在的路径** ⇒ `ok=false`
+- ⚠ **不要加 `SHGFI_USEFILEATTRIBUTES`**（"按属性给通用图标"）：实测加了之后**目录反而拿不到
+  图标**（`hIcon` 为空），不加才对
+- 老图标没有 alpha 通道 ⇒ 该图标的 alpha 全补 255（不做 mask 合成，会略有锯齿）
+- 位深不是 32 的图标直接 `ok=false`（Win10 的图标都是 32bpp，极少遇到）
+- **Linux/macOS 未实现**（freedesktop 那边要走 icon theme 查找，工作量另算）⇒ `ok=false`
+- 每次调用都要走一遍 Shell + GDI（取图标、建兼容 DC、`GetDIBits`）⇒ **别每帧调**，缓存结果
+
 ## 桌面集成
 
 | 函数 | 说明 |
