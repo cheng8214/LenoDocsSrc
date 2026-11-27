@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>大对象零拷贝跨线程共享（frozen + 引用计数）设计稿 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="大对象零拷贝共享设计.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">09 性能 · 排查 · 历史</a><span class="sep">/</span><span class="here">大对象零拷贝跨线程共享（frozen + 引用计数）设计稿</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">11</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a><a href="Leno语法对照_Python_JS_Go.html">Leno 对照 Python / JS / Go</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_reflect.html">reflect 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 案例 · 真实项目 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="案例/Aria.html">Aria · 桌面音乐客户端</a><a href="案例/AriaDeployd.html">AriaDeployd · 部署守护进程</a><a href="案例/LenoCleaner.html">LenoCleaner · C 盘清理</a><a href="案例/LenoDumate.html">LenoDumate · 搭子签到</a><a href="案例/LenoGame.html">LenoGame · 9 个图形小游戏</a><a href="案例/LenoTrae.html">LenoTrae · Trae 自动签到</a><a href="案例/LenoWorkBuddy.html">LenoWorkBuddy · 自动签到</a><a href="案例/LenoMusic.html">Music · 音频</a><a href="案例/_总览.html">扩展模块总览</a></div></details><details><summary>07 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">25</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoConfig.html">Config · 配置读取</a><a href="扩展模块/LenoContainers.html">Containers · 栈/队列/LRU</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoImage.html">LenoImage</a><a href="扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="扩展模块/LenoTemplate.html">LenoTemplate</a><a href="扩展模块/LenoValidate.html">LenoValidate</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoTUI.html">TUI · 终端输出</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details open><summary>09 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">32</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno vs Python（早期对比 · 已归档）</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="VM自证与语言债_路线_2026-11.html">VM自证与语言债_路线_2026-11</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="大对象零拷贝共享设计.html" class="active" aria-current="page">大对象零拷贝共享设计</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="大对象零拷贝跨线程共享-frozen-引用计数-设计稿">大对象零拷贝跨线程共享（frozen + 引用计数）设计稿</h1>
+<blockquote>
+<p>状态：<strong>已实现（S0–S4 全部落地，2026-11-27）</strong> —— 落地记录、踩坑与偏差见 §14。
+第二稿：按"能编译期拦就不留运行期"改成 <code>Frozen[T]</code> 静态类型。
+前置：并发这一轮已收尾 —— shared-nothing 深克隆 + 拒绝面、<code>Atomic</code>、<code>Channel</code>、池的起跑屏障与收尾 <code>pool_shutdown()</code>。
+本文只解决<strong>一个</strong>遗留项：数据跨线程每次都深拷贝。不碰共享可写堆、不加锁、不改线程模型。</p>
+</blockquote>
+<hr>
+<h2 id="0-一句话">0. 一句话</h2>
+<p><code>_freeze(x)</code> 把对象图<strong>一次性</strong>深拷贝到<strong>堆外共享区</strong>、打上 <code>FROZEN</code> 位、静态类型变成 <code>Frozen[T]</code>；
+此后跨线程传递只做引用计数加减（O(1)），不再拷贝。
+写 frozen 在<strong>编译期</strong>就报错（本作用域、传成参数、方法调用全覆盖），运行期 <code>FROZEN</code> 位只做 <code>any</code> 路径的兜底。</p>
+<p><strong>关键实现取舍</strong>：<code>Frozen[T]</code> <strong>不是新的 <code>TypeKind</code></strong>，而是 <code>TypeInfo</code> 上的一个 <code>frozen</code> 位。
+这样 <code>Array[int]</code> 的所有读特化（<code>OP_INDEX_ARRAY_INT/_IMM</code>、<code>OP_ITER_GET</code>、方法 IC）<strong>一行都不用改、一点都不会变慢</strong>；</p>
+<hr>
+<h2 id="1-现状成本-为什么值得做">1. 现状成本（为什么值得做）</h2>
+<table>
+<thead>
+<tr>
+<th>传输物</th>
+<th>现状</th>
+<th>出处</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>128 KB string 过 Channel</td>
+<td><strong>514 µs/条</strong>，有效带宽 243 MB/s（同数据 <code>ffi.memcpy</code> 22 GB/s）</td>
+<td><code>线程并发能力修复追踪.md:156-165</code></td>
+</tr>
+<tr>
+<td><code>Array[int]</code> 克隆</td>
+<td><strong>67 ns/元素</strong>（10 万元素 7 ms；元素拷贝本身 ~2 ns）</td>
+<td><code>src/object/object_thread.c:367-369</code></td>
+</tr>
+<tr>
+<td><code>threads.map</code> 1 万元素</td>
+<td>17~27 ms（大头是线程启动，不是拷贝）</td>
+<td><code>语言摩擦与隐式契约清单.md:783</code></td>
+</tr>
+<tr>
+<td>Channel 一次传输</td>
+<td><strong>两次深拷贝</strong>：send 克隆进发送堆、receive 再克隆进接收堆（模型使然，见 <code>:77</code>）</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<p>数据越大越亏，而且是<strong>每一次</strong>跨界都亏。frozen 把「每次 O(n)」变成「一次 O(n) + 每次 O(1)」。</p>
+<hr>
+<h2 id="2-现状事实-本设计依赖的地基-全部已核对">2. 现状事实（本设计依赖的地基，全部已核对）</h2>
+<table>
+<thead>
+<tr>
+<th>事实</th>
+<th>锚点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>对象头 <code>Object</code> 32 B：<code>type</code>(4) + <strong>4 B 对齐空洞</strong> + <code>next</code>(8) + <code>marked</code>(4) + <code>flags</code>(1)+<code>generation</code>(1)+<code>survived</code>(1)+<code>owner_thread</code>(1) + <code>size</code>(8)</td>
+<td><code>src/include/leno_value.h:74-88</code></td>
+</tr>
+<tr>
+<td><code>flags</code> 位已满：<code>0x01 INTERNED</code>（<strong>全仓 0 处使用</strong>，只剩定义）、<code>0x20 READONLY</code>、<code>0x40 REMSET</code>、<code>0x80 POOLED</code>、低 4 位池 class</td>
+<td><code>leno_value.h:56-68</code></td>
+</tr>
+<tr>
+<td>分配唯一入口 <code>gc_alloc()</code>；归还唯一入口 <code>gc_free_object()</code>（池化则 memset 回链表）</td>
+<td><code>src/gc.c:702</code>、<code>:462-478</code></td>
+</tr>
+<tr>
+<td>标记/扫描：<code>gc_mark_object</code>、<code>gc_scan_children</code>、显式标记栈</td>
+<td><code>gc.c:1554</code>、<code>:920</code>、<code>:902-916</code></td>
+</tr>
+<tr>
+<td>跨线程唯一闸门 <code>value_clone_for_channel()</code> → <code>channel_clone_value()</code>，6 个调用点</td>
+<td><code>object_thread.c:501-503</code>、<code>:334-498</code>、<code>:1480,1535,1568,1588,1627,1674</code></td>
+</tr>
+<tr>
+<td>跨堆保活机制<strong>已存在</strong>：<code>GCDeadHeap.refs</code> + <code>gc_dead_heap_ref/unref</code></td>
+<td><code>gc.c:517-525</code>、<code>:572-604</code></td>
+</tr>
+<tr>
+<td><code>const</code> 深保护<strong>已实现</strong>：<code>OBJ_FLAG_READONLY</code> + <code>obj_is_readonly()</code> + 6 个检查点</td>
+<td><code>leno_value.h:297-300</code>、<code>07_collections.inc:75,683,711,1004,1032</code>、<code>12_fields_object.inc:131</code>、<code>arrays.c:25</code>、<code>dicts.c:38</code></td>
+</tr>
+<tr>
+<td><strong><code>const</code> 的编译期拦截也已实现</strong>：<code>sem_const_root_name()</code> 上溯到根 + 4 类写法都报错</td>
+<td><code>semantic_upvalue.c:45</code>、<code>visit_var.inc:753-803,824-852,1066</code>、<code>visit_expr.inc:653-679,722-767</code>、<code>visit_module.inc:1582-1587</code></td>
+</tr>
+<tr>
+<td><strong>内置类型 mutator 名表已存在</strong>：Array <code>add/insert/pop/remove/clear/reverse/sort</code>、Dict <code>set/remove/clear</code></td>
+<td><code>semantic_type_utils.c:968-976</code>、<code>:1131-1135</code></td>
+</tr>
+<tr>
+<td>静态类型是 <code>TypeInfo{kind, element_type, key_type, value_type, …}</code>，<code>Ptr[T]/Channel[T]</code> 都<strong>不是新 kind</strong>、只挂 <code>element_type</code> 槽</td>
+<td><code>leno_types.h:441-472</code>、<code>:599-607</code>、<code>type.c:70-107</code></td>
+</tr>
+<tr>
+<td>数组读特化的判据是<strong>静态类型</strong>：<code>ot-&gt;kind == TYPE_ARRAY &amp;&amp; element_type-&gt;kind == TYPE_INT</code></td>
+<td><code>codegen_expr.c:782-783,798-822</code>、<code>codegen_stmt.c:1790-1806</code></td>
+</tr>
+<tr>
+<td>全局内建没有"跟随实参"的返回类型机制；实例方法有（<code>NTYPE_ARG0_ELEM</code> 等）</td>
+<td><code>native.c:479-506</code>、<code>:1006-1040</code>、<code>leno_types.h:531-552</code></td>
+</tr>
+<tr>
+<td><code>.lenosymc</code> 版本 <code>0x0000002D</code>（v45），<code>TypeInfo</code> 序列化按 <code>kind(u8)+nullable(u8)+…</code></td>
+<td><code>sym_table_cache.inc:8-12</code>、<code>:108-160</code>、<code>:183-230</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论：这个项目不需要重做 GC。</strong> 真正的工作量在：① 生命周期与跨界时机；② 让 <code>Frozen[T]</code> 在类型系统里成立且<strong>不吃掉读特化</strong>。</p>
+<hr>
+<h2 id="3-语义">3. 语义</h2>
+<h3 id="3-1-三个内建-照-_gc-_mem-的命名口径-sys-c-1729-1733">3.1 三个内建（照 <code>_gc</code> / <code>_mem</code> 的命名口径，<code>sys.c:1729-1733</code>）</h3>
+<pre><code class="language-leno">var big = []
+for 0 : 999999 to i { big.add(i) }
+
+Frozen[Array[int]] snap = _freeze(big)   // 一次性 O(n)：深拷贝到共享区 + FROZEN 位
+ch.send(snap)                            // O(1)：引用计数 +1
+var v = snap[123]                        // 读：仍是 OP_INDEX_ARRAY_INT 特化（静态 kind 仍是 ARRAY）
+for x in snap { ... }                    // 读：OP_LEN + OP_ITER_GET，一字不改
+var copy = _thaw(snap)                   // 深拷贝回本线程堆，类型回到 Array[int]（可写）
+_is_frozen(snap)                         // true（给 any/动态场景用）
+</code></pre>
+<ul>
+<li><strong>静态类型是 <code>Frozen[T]</code></strong>：<code>_freeze(Array[int]) → Frozen[Array[int]]</code>，<code>_thaw(Frozen[Array[int]]) → Array[int]</code>。</li>
+<li><strong>快照语义</strong>：冻结返回新图，原对象一个字不动、照常可写（§3.4）。</li>
+<li><strong>深</strong>：整图（数组元素、字典键与值、struct 字段）一起冻。</li>
+<li><strong>幂等</strong>：<code>_freeze(已冻结)</code> 直接返回同一对象（引用 +1），不重复拷贝。</li>
+</ul>
+<h3 id="3-2-谁能冻-谁不能-默认在编译期拒">3.2 谁能冻 / 谁不能 —— <strong>默认在编译期拒</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅ 标量 / <code>string</code> / <code>Array</code> / <code>Dict</code> / <code>struct</code>（任意嵌套）</td>
+<td>允许</td>
+</tr>
+<tr>
+<td>❌ <code>Ptr</code> / <code>Ptr[T]</code> / <code>cstruct</code> / FFI 回调 / <code>File</code> / <code>Socket</code></td>
+<td><strong>编译期报错</strong>（静态类型可判），点名类型</td>
+</tr>
+<tr>
+<td>❌ <code>Channel</code> / <code>Channel[T]</code> / <code>Atomic</code> / <code>Thread</code></td>
+<td><strong>编译期报错</strong> —— 本来就是"共享可变"，与不可变语义冲突</td>
+</tr>
+<tr>
+<td>❌ <code>func</code> / 闭包 / 模块</td>
+<td><strong>编译期报错</strong>（S4 前；S4 只放开"堆归属"问题，不放开闭包）</td>
+</tr>
+<tr>
+<td>⚠ 实参静态类型是 <code>any</code></td>
+<td>编译期判不了 ⇒ <strong>运行期</strong>检查并报错（唯一保留的运行期口子）</td>
+</tr>
+</tbody>
+</table>
+<p>理由：这些判断<strong>只看静态类型</strong>，没有一项依赖数据——没有任何理由拖到运行期。</p>
+<h3 id="3-3-环">3.3 环</h3>
+<p><code>_freeze</code> 检测到环 ⇒ <strong>运行期抛错</strong>："冻结对象不能包含环（引用计数无法回收环）"。
+这条<strong>必须</strong>留在运行期：环是数据形状，不是类型。检测复用构建时那张 <code>ptr → 已访问</code> 表，不额外扫。</p>
+<h3 id="3-4-为什么不做-原地冻结">3.4 为什么不做"原地冻结"</h3>
+<p>原地冻结省一次拷贝，但别名不可控：<code>var a = big; var f = _freeze(big)</code> 之后 <code>a.add(x)</code> 会撞上"只读错误"，
+报错点离肇事点十万八千里。快照语义把不可变性收敛到"冻的那一刻"。<strong>这条不讨论。</strong></p>
+<h3 id="3-5-frozen-t-怎么落地-typeinfo-上一个位-不是新-kind">3.5 <code>Frozen[T]</code> 怎么落地：<strong><code>TypeInfo</code> 上一个位，不是新 kind</strong></h3>
+<pre><code class="language-c">struct TypeInfo {
+    TypeKind kind;        // ← 仍是 TYPE_ARRAY / TYPE_DICT / TYPE_STRUCT / TYPE_STRING / 标量
+    int frozen;           // ★ 新增：这一位就代表 Frozen[...]
+    ...
+};
+</code></pre>
+<p><strong>为什么不是新 <code>TypeKind</code></strong>（这是本稿唯一的大决定，有实测判据）：</p>
+<ol>
+<li>读特化的判据是<strong>静态 kind</strong>：<code>codegen_expr.c:782-783</code> 的 <code>arr_spec</code>、<code>codegen_stmt.c:1790-1791</code> 的写特化。
+   一旦静态类型成了新 kind，<code>ot-&gt;kind != TYPE_ARRAY</code> ⇒ 大数组下标读<strong>全部回落</strong>通用 <code>OP_INDEX</code>
+   （<code>07_collections.inc:193</code>：<code>val_is_obj</code> + <code>obj-&gt;type</code> 分支 + <code>val_is_num</code> + <code>value_to_double</code>），
+   恰好把我们想优化的大对象读变慢。用 <code>frozen</code> 位 ⇒ <strong>codegen 零改动</strong>。</li>
+<li><code>for</code> / <code>print</code> / <code>_str</code> / <code>jsons.encode</code> / <code>type(x)</code> / 方法查找全都按 <strong>kind 或运行期对象标签</strong>分派
+   （<code>codegen_stmt.c:938-968</code>、<code>io.c:375</code>、<code>types.c:829</code>、<code>jsons.c:1526-1592</code>、<code>vm_ic.inc:20</code>）
+   ⇒ 只要 kind 不变，这些地方<strong>一行都不用改</strong>。</li>
+<li><code>is</code> / <code>as</code> 的规格编码只认 kind（<code>vm.c:408-411</code> 对未知 kind fail-closed）。
+   用新 kind 会让 <code>x is Frozen[...]</code> <strong>静默恒假</strong>；用 <code>frozen</code> 位则问题变成"显式禁止"（见下）。</li>
+</ol>
+<p><strong>代价（必须付的）</strong>：
+- <code>type.c</code> 四处（<code>type_copy</code> / <code>type_equal</code> / <code>type_to_string</code> / <code>type_free</code>）各加 1~3 行，渲染成 <code>Frozen[Array[int]]</code>；
+- <code>type_is_compatible</code>：<code>frozen → 可变</code> <strong>不兼容</strong>、<code>可变 → frozen</code> <strong>也不兼容</strong>（必须显式 <code>_freeze</code>，
+否则"静态说是不可变、运行期其实可变"——静态保证立刻变假）；
+- <code>.lenosymc</code>：<code>TypeInfo</code> 序列化加 1 字节，<code>LENOSYMC_VERSION</code> <strong>0x2D → 0x2E（v46）</strong>（写 <code>sym_table_cache.inc:108-160</code>、读 <code>:183-230</code> 严格镜像）；
+- parser 认 <code>Frozen[</code> 前缀（照 <code>Channel[</code> / <code>Ptr[</code> 的写法，<code>parser_func.c:129-198</code>）；
+- <strong><code>is</code> / <code>as</code> 的目标类型为 <code>Frozen[...]</code> ⇒ 编译期报错</strong>："<code>frozen</code> 是静态类型、运行期只有对象标签；
+要判冻结请用 <code>_is_frozen()</code>"。这条是"宁报错不静默恒假"。</p>
+<h3 id="3-6-拦截分层-回答-哪些能编译期拦">3.6 拦截分层（回答"哪些能编译期拦"）</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>拦截点</th>
+<th>层级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snap[0] = 1</code> / <code>snap.add(x)</code> / <code>snap.f = 1</code> / <code>snap += x</code></td>
+<td>根符号类型带 frozen ⇒ 复用 <code>const</code> 那 4 条通道</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td><code>func f(Frozen[Array[int]] a)</code> 体内写 <code>a[0]=1</code></td>
+<td>形参类型带 frozen ⇒ 同上</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td>把 frozen 传给 <code>Array[int]</code> 形参 / 赋给 <code>Array[int]</code> 变量</td>
+<td><code>type_is_compatible</code> 拒绝</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td><code>snap.someMutMethod()</code>（struct 的 <code>mut func</code>）</td>
+<td>复用 <code>mut_names</code>（<code>semantic_type_utils.c:2130-2147</code>）</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td><code>_freeze(ptr)</code> / <code>_freeze(ch)</code> / <code>_freeze(atomic)</code> / <code>_freeze(闭包)</code></td>
+<td>静态 kind 判定</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td><code>x is Frozen[T]</code> / <code>x as Frozen[T]</code></td>
+<td>显式禁令</td>
+<td><strong>编译期</strong></td>
+</tr>
+<tr>
+<td><code>any</code> 里装着 frozen → 写</td>
+<td><code>FROZEN</code> 位 + 现有 6 个 readonly 检查点</td>
+<td>运行期（兜底）</td>
+</tr>
+<tr>
+<td>冻结含环 / 跨线程 def 归属 / <code>_freeze(any)</code></td>
+<td>数据相关</td>
+<td>运行期</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>设计原则</strong>：编译期能判的全在编译期；运行期只剩"类型系统看不见"的那一类。<strong>绝不"编译期放过、运行期也不管"</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="4-对象模型-frozen-图的内存形态">4. 对象模型（frozen 图的内存形态）</h2>
+<h3 id="4-1-头部-白嫖-4-字节-sizeof-object-保持-32">4.1 头部：白嫖 4 字节，<code>sizeof(Object)</code> 保持 32</h3>
+<pre><code class="language-c">typedef struct Object {
+    ObjType type;            // @0
+    int32_t refcnt;          // @4  ★ 新增：只用对齐空洞，对象不长大
+    struct Object* next;     // @8
+    int marked;              // @16
+    uint8_t flags;           // @20  0x01 改名为 OBJ_FLAG_FROZEN
+    ...
+} Object;
+</code></pre>
+<ul>
+<li><code>sizeof(Object)</code> 仍是 32（4+4+8+4+4+8）。仓里<strong>现在没有任何 <code>sizeof(Object)</code> 断言</strong> ⇒ S0 补一条 <code>offsetof</code> typedef 断言。</li>
+<li><code>0x01</code> 现在叫 <code>OBJ_FLAG_INTERNED</code>，<code>leno_value.h:60</code> 定义、<strong>全仓 0 处使用</strong> ⇒ 改名 <code>OBJ_FLAG_FROZEN</code>。</li>
+<li><code>owner_thread</code> 对 frozen 无意义，固定填 <code>0xFF</code>（<code>0</code> = 主线程）。</li>
+</ul>
+<h3 id="4-2-分配-绕开-gc_alloc-不进任何堆链">4.2 分配：绕开 <code>gc_alloc</code>，<strong>不进任何堆链</strong></h3>
+<pre><code class="language-c">static Object* frozen_alloc(size_t size, ObjType type);  // calloc + 填头，不挂 young/old_heap、不池化
+</code></pre>
+<ul>
+<li>不能走 <code>gc_alloc()</code>：会把对象挂进<strong>当前线程</strong>的堆，随线程退出被 free。</li>
+<li>不能池化：<code>gc_free_object()</code> 的池化路径会 memset 32 B 再挂回 free_list（<code>gc.c:462-478</code>），与 refcount 冲突。</li>
+<li>不进 <code>gc_track_memory()</code>：否则大 frozen 顶高 GC 阈值却永远回收不掉。</li>
+</ul>
+<h3 id="4-3-释放-归零-显式栈迭代释放整图">4.3 释放：归零 → 显式栈迭代释放整图</h3>
+<pre><code class="language-c">void frozen_unref(Value v);   // 原子减一；归零 ⇒ frozen_free_graph()，显式栈（照 gc_drain_mark_stack）
+</code></pre>
+<ul>
+<li><strong>必须迭代</strong>：100 万层的链递归会爆栈。</li>
+<li>图内边也计数：父持有子 1 份（构建时 <code>refcnt++</code>），父释放时释放子 ⇒ 整图生命周期自然成立。</li>
+</ul>
+<h3 id="4-4-记账">4.4 记账</h3>
+<p>全局原子 <code>g_frozen_bytes</code> / <code>g_frozen_objs</code>；<code>_mem()</code> / <code>_gc_stats()</code> 各加 2 个字段；
+<strong>不并入</strong> <code>gc.young_allocated</code> / <code>old_allocated</code>（否则 GC 被触发但永远收不回 ⇒ 抖动）。</p>
+<hr>
+<h2 id="5-引用计数挂在哪">5. 引用计数挂在哪</h2>
+<h3 id="5-1-位置">5.1 位置</h3>
+<p><strong>不在任何线程堆上。</strong> frozen 图是独立所有权区域（<code>malloc</code> 出来的对象图），跨堆引用靠：</p>
+<ol>
+<li>图内：<code>refcnt</code>（父→子边 + 外部引用）；</li>
+<li>图外：<strong>每个 VM 一张 frozen 注册表</strong>（<code>VM.frozen_reg</code>），记录"本 VM 持有过哪些 frozen 对象"。</li>
+</ol>
+<h3 id="5-2-为什么不在每次赋值上计数">5.2 为什么不在每次赋值上计数</h3>
+<p>逐变量计数要覆盖：局部变量、栈、寄存器、容器元素、struct 字段、闭包 upvalue、帧槽复用……
+容器元素级增减会把 O(1) 的 <code>add</code> 变成"可能触发释放"的路径，还要配写屏障 —— <strong>成本比深拷贝还高</strong>。</p>
+<p>所以采用"<strong>VM 级持有</strong>"：frozen 对象进入某 VM 视野时登记一次（按指针去重），VM 活多久持多久；
+任何局部变量/容器里的同一个指针都天然被保活。
+<strong>代价</strong>：对象会比"实际最后引用"多活一段时间（池任务用 §5.5 的 scope 修补）。</p>
+<p>由此得到一条硬规矩（写进 <code>value_clone_for_channel</code> 注释与文档）：</p>
+<blockquote>
+<p><strong>任何 frozen 指针必须先登记进当前 VM 的注册表，才允许被持有。</strong></p>
+</blockquote>
+<h3 id="5-3-注册表结构">5.3 注册表结构</h3>
+<p>开放寻址 <code>ptr → count</code>，容量 2 的幂、装载因子 0.5；按 VM 一份（<code>VM.frozen_reg</code>），<strong>不参与 GC 扫描</strong>。</p>
+<h3 id="5-4-什么时候-acquire-release">5.4 什么时候 acquire / release</h3>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th>动作</th>
+<th>持有者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_freeze</code> 在本线程创建</td>
+<td>当前 VM <code>acquire</code></td>
+<td>当前 VM</td>
+</tr>
+<tr>
+<td>Channel <strong>send</strong></td>
+<td>槽位 <code>acquire</code>（<code>buffer_owner</code> 旁记 frozen，槽位出清时 release）</td>
+<td>槽位（跨线程安全）</td>
+</tr>
+<tr>
+<td>Channel <strong>receive</strong></td>
+<td>接收 VM <code>acquire</code>（去重）→ 再放掉槽位那份</td>
+<td>接收 VM</td>
+</tr>
+<tr>
+<td><code>threads.start</code> 参数 / 池任务参数</td>
+<td>子线程 VM <code>acquire</code>；<strong>池任务走 scope</strong></td>
+<td>子线程 VM</td>
+</tr>
+<tr>
+<td><code>join</code> 取结果</td>
+<td>父 VM <code>acquire</code></td>
+<td>父 VM</td>
+</tr>
+<tr>
+<td>入口 globals 快照（TH8）</td>
+<td>子线程 VM <code>acquire</code></td>
+<td>子线程 VM</td>
+</tr>
+<tr>
+<td>模块 globals（每线程克隆）</td>
+<td>同 globals</td>
+<td>各 VM</td>
+</tr>
+<tr>
+<td>线程退出 / <code>gc_free_all</code></td>
+<td>注册表全量 release</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>所有 acquire 都发生在<strong>已有克隆点</strong>（§6 闸门里那一行），不新增调用路径。</p>
+</blockquote>
+<h3 id="5-5-池任务必须有-scope">5.5 池任务必须有 scope</h3>
+<p>worker VM 长期存活 ⇒ 只按 VM 记账的话，注册表会涨成"所有历史任务的并集"。任务边界加一对：</p>
+<pre><code class="language-c">int  frozen_scope_mark(VM* vm);
+void frozen_scope_release(VM* vm, int mark);   // 只放本任务新增的条目
+</code></pre>
+<p><code>thread_exec_task()</code> 前后各一次。文档写清："池任务别把 frozen 存进 worker 的长期状态"。</p>
+<h3 id="5-6-objstructdef-objfunction-的堆归属-最容易出血的地方">5.6 <code>ObjStructDef</code> / <code>ObjFunction</code> 的堆归属（最容易出血的地方）</h3>
+<p>frozen struct 里存 <code>ObjStructDef*</code>，冻结闭包里存 <code>ObjFunction*</code> —— 这两类对象<strong>分配在创建它的线程的 GC 堆上</strong>
+（<code>object_struct.c:100</code>、<code>codegen_func.c:106</code>），靠 <code>struct_def_table</code>（THREAD_LOCAL）标记存活。
+那个线程退出、堆被摘除释放后，frozen 图里的指针就悬空。</p>
+<p>对策分两步：
+- <strong>S1~S3</strong>：<code>_freeze</code> 只接受可解析的 def（主导入模块的定义），其它情况明确报错
+"该 struct 的定义所属线程可能已退出，暂不支持冻结" —— 先保证不悬空。
+- <strong>S4</strong>：frozen 图对它指向的堆外对象（def / function）所属堆取一个 <code>gc_dead_heap_ref()</code>（机制已存在 <code>gc.c:586-595</code>），
+图释放时 unref。验收：子线程 <code>_freeze(new S(...))</code> → 子线程退出 → 主线程读字段仍是原值。</p>
+<hr>
+<h2 id="6-与-value_clone_for_channel-唯一闸门的衔接">6. 与 <code>value_clone_for_channel()</code> 唯一闸门的衔接</h2>
+<p>闸门只加<strong>一个前置分支</strong>（<code>channel_clone_value()</code> 最前面，<code>object_thread.c:334</code>）：</p>
+<pre><code class="language-c">static Value channel_clone_value(Value val, int depth) {
+    if (val_is_obj(val) &amp;&amp; (((Object*)val_as_obj(val))-&gt;flags &amp; OBJ_FLAG_FROZEN)) {
+        frozen_acquire(gc.vm, val);      // O(1)：哈希查找 + 计数
+        return val;                       // ★ 不拷贝、不进深度递归
+    }
+    ... 原有的白名单分支一个字都不改 ...
+}
+</code></pre>
+<p>六个调用点（send/receive/try_send/try_receive/send_for + 线程侧三处）<strong>零改动</strong>。</p>
+<h3 id="6-1-组合规则-一条规则覆盖两种用法">6.1 组合规则（一条规则覆盖两种用法）</h3>
+<blockquote>
+<p>递归克隆时，<strong>遇到 frozen 节点就停</strong>（acquire 后原样返回），遇到可变节点照旧深拷贝。</p>
+</blockquote>
+<p>于是：整个大数组冻结后 send ⇒ 全零拷贝；只冻结其中某个大子数组 ⇒ 外层克隆、子数组零拷贝（<strong>部分冻结自动成立</strong>）。</p>
+<h3 id="6-2-拒绝面">6.2 拒绝面</h3>
+<p><code>Ptr</code> / <code>cstruct</code> / FFI / <code>File</code> 仍由闸门拒绝（<code>object_thread.c:243-268</code>）；
+但 <code>_freeze</code> 在<strong>编译期</strong>先拒一遍（§3.2），闸门文案只补一句"frozen 对象按共享传递"。</p>
+<hr>
+<h2 id="7-gc-要改的地方-5-处-全部是-看到-frozen-就停">7. GC 要改的地方（5 处，全部是"看到 frozen 就停"）</h2>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>改法</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gc_mark_object()</code> <code>gc.c:1554</code></td>
+<td>最前面 <code>if (flags &amp; FROZEN) return;</code></td>
+<td>frozen 不归任何堆管，不能进标记栈</td>
+</tr>
+<tr>
+<td><code>gc_scan_children()</code> <code>gc.c:920</code></td>
+<td>同样早退</td>
+<td>图内子引用由 refcount 负责</td>
+</tr>
+<tr>
+<td><code>gc_free_object()</code> <code>gc.c:462-478</code></td>
+<td>断言 <code>!FROZEN</code></td>
+<td>防止被当普通对象 free 进池</td>
+</tr>
+<tr>
+<td>sweep</td>
+<td><strong>不用改</strong></td>
+<td>frozen 从不进 <code>young_heap/old_heap</code> 链，扫不到</td>
+</tr>
+<tr>
+<td><code>gc_free_all()</code> <code>gc.c:2875</code></td>
+<td>堆释放之后 <code>frozen_reg_release_all()</code>；顺序在 <code>pool_shutdown()</code>+join 之后（现状已保证）</td>
+<td>唯一"主动放光"的地方</td>
+</tr>
+</tbody>
+</table>
+<p>附带三件小事：
+- <strong>intern</strong>：frozen string <strong>不进</strong>每线程 intern 表（<code>string_table.c:11-12</code>）；<code>intern_remove</code> 不得对 frozen 调用（<code>gc.c:2094</code>）。
+- <strong>写屏障</strong>：frozen 不可写 ⇒ 永不进 remembered set（§8 在写指令处先抛错，屏障不用改）。
+- <strong>子线程退出</strong>：走 <code>gc_detach_heap</code>（不自调 <code>gc_free_all</code>）⇒ <code>thread_entry_point</code> 收尾（<code>object_thread.c:1011-1037</code>）
+加一次 <code>frozen_reg_release_all(&amp;child_vm)</code>，放在 <code>gc_detach_heap_finish</code> 之前。</p>
+<hr>
+<h2 id="8-不可变执法-编译期为主-运行期只兜底">8. 不可变执法：编译期为主，运行期只兜底</h2>
+<h3 id="8-1-编译期-主">8.1 编译期（主）</h3>
+<p>现有 <code>const</code> 的 4 条通道<strong>直接复用</strong>，只把判据从"根是 <code>const</code>"扩成"根是 <code>const</code> <strong>或根的静态类型带 frozen</strong>"：</p>
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>现状位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>下标赋 <code>A[i]=x</code>（含深层链）</td>
+<td><code>visit_var.inc:753-763</code>、<code>:786-803</code>（根判据 <code>sem_const_root_name</code>，<code>semantic_upvalue.c:45</code>）</td>
+</tr>
+<tr>
+<td>字段赋 <code>A.f=x</code> / 模块字段</td>
+<td><code>visit_var.inc:824-828</code>、<code>:848-852</code></td>
+</tr>
+<tr>
+<td>mutator 方法调用 <code>A.add(x)</code></td>
+<td><code>visit_expr.inc:722-734</code>、<code>:752-767</code>、<code>visit_module.inc:1582-1587</code>（名表 <code>semantic_type_utils.c:968-976</code>、<code>:1131-1135</code>）</td>
+</tr>
+<tr>
+<td><code>A += 1</code> / <code>A++</code></td>
+<td><code>visit_var.inc:1066-1069</code>、<code>visit_expr.inc:653-679</code></td>
+</tr>
+</tbody>
+</table>
+<p>新增两件：
+1. <code>sem_frozen_root()</code>：与 <code>sem_const_root_name()</code> 同构，取根的<strong>静态类型</strong> <code>frozen</code> 位（这样形参也能拦）；
+2. <code>_freeze</code> 的编译期拒绝面（§3.2）+ <code>is/as Frozen</code> 禁令（§3.5）。</p>
+<p>文案要指名解法：「frozen 对象不可修改（要可变副本请 <code>_thaw()</code>；原对象在冻结前是否已改由 <code>_freeze</code> 的快照语义保证）」。</p>
+<h3 id="8-2-运行期-兜底-只在类型系统看不见的路径">8.2 运行期（兜底，只在类型系统看不见的路径）</h3>
+<p><code>obj_is_readonly()</code>（<code>leno_value.h:297-300</code>）判据扩成 <code>flags &amp; (READONLY | FROZEN)</code>，
+覆盖已有的 6 个检查点：<code>OP_SET_FIELD</code>（<code>12_fields_object.inc:131</code>）、<code>OP_INDEX_SET</code> 族（<code>07_collections.inc:711,1004,1032</code>）、
+<code>OP_DICT_SET</code>（<code>:683</code>）、融合 <code>arr.add</code>（<code>:75</code>）、<code>arrays.c:25</code> / <code>dicts.c:38</code> 宏。
+<strong>热路径成本 0</strong>：这些检查已是 <code>unlikely(obj_is_readonly(...))</code>，只多一位与运算（同一个字节）。</p>
+<p>S1 要逐项过的漏洞清单（不走上面这些点）：<code>sort</code> / <code>reverse</code> / <code>insert</code> / <code>remove</code> / <code>clear</code> /
+<code>dict.remove</code> / <code>dict.clear</code> / <code>strings</code> 追加 / <code>jsons.fill</code>（往 frozen struct 填 ⇒ 必须拒）/ FFI 写。</p>
+<hr>
+<h2 id="9-分步实施-每步独立提交-独立可回退">9. 分步实施（每步独立提交、独立可回退）</h2>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>内容</th>
+<th>规模</th>
+<th>验收</th>
+<th>回退</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S0</strong></td>
+<td>头部 <code>refcnt</code> + <code>FROZEN=0x01</code> 改名 + <code>offsetof</code> 断言 + 基准脚本</td>
+<td>~30 行</td>
+<td>677/677；<code>fib(30)</code>/<code>pbkdf2</code>/数组基准与基线差 <strong>&lt;1%</strong></td>
+<td>revert（无行为变化）</td>
+</tr>
+<tr>
+<td><strong>S1a</strong></td>
+<td>冻结内核（同线程，运行期）：<code>frozen_alloc/free/ref</code>、<code>_freeze/_is_frozen/_thaw</code>、环检测、<code>FROZEN</code> 只读位、<code>_mem</code> 记账；<strong>类型暂不变</strong>（<code>_freeze</code> 返回原类型）</td>
+<td>~600–800 行</td>
+<td>12 条单线程用例（嵌套/大数组/环/拒绝/写报错/<code>_thaw</code>/幂等）</td>
+<td>revert</td>
+</tr>
+<tr>
+<td><strong>S1b</strong></td>
+<td>类型系统：<code>TypeInfo.frozen</code> + parser <code>Frozen[</code> + <code>type.c</code> 四处 + 序列化 v46 + 两个 NTYPE 规格（<code>ARG0_FROZEN</code>/<code>ARG0_THAWED</code>）+ 兼容规则 + 编译期写拦截 + <code>is/as</code> 禁令 + <code>_freeze</code> 编译期拒绝面</td>
+<td>~250–400 行</td>
+<td>15 条编译期用例（每条错误都断言<strong>报错文案</strong>）+ 跨模块 struct 字段为 Frozen 的往返</td>
+<td>revert（S1a 的 API 保留）</td>
+</tr>
+<tr>
+<td><strong>S2</strong></td>
+<td>接入闸门：clone 前置分支 + 注册表 + 线程退出/<code>gc_free_all</code> 释放 + 池 scope</td>
+<td>~200–300 行</td>
+<td>15 条跨线程用例；<code>test_thread_pool</code> 加一组</td>
+<td>revert</td>
+</tr>
+<tr>
+<td><strong>S3</strong></td>
+<td>GC 收口：mark/scan/free 三处 + <code>_gc_stats</code> + <code>LENO_GC_STRESS=512</code> 压测</td>
+<td>~100 行</td>
+<td>677/677；压力下 frozen×线程 5 轮；内存峰值符合 §11</td>
+<td>revert</td>
+</tr>
+<tr>
+<td><strong>S4</strong></td>
+<td>def/function 的堆归属：<code>gc_dead_heap_ref</code> + 放开 def 校验</td>
+<td>~80–120 行</td>
+<td>子线程 freeze → 退出 → 主线程读</td>
+<td>revert</td>
+</tr>
+</tbody>
+</table>
+<p>合计约 <strong>1200–1700 行 + 45 条用例</strong>。
+每步都跑：<code>build\leno.exe assert\run_tests.leno build\leno.exe assert</code> + 模块 65/65。
+S2 起加 <code>LENO_GC_STRESS=512</code>（已知 <code>test_async_io_limit</code>、<code>test_async_sockets</code> 在压力下超时，属既有项）。</p>
+<hr>
+<h2 id="10-风险与对策">10. 风险与对策</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>环 ⇒ 泄漏</td>
+<td><code>_freeze</code> 运行期拒绝（§3.3），文档写"要环请用可变对象 + Channel"</td>
+</tr>
+<tr>
+<td>def/function 悬空</td>
+<td>S1~S3 只收主导入定义；S4 用 <code>GCDeadHeap.refs</code> 保活</td>
+</tr>
+<tr>
+<td>注册表膨胀（池 worker）</td>
+<td>任务级 <code>frozen_scope_mark/release</code>（§5.5）</td>
+</tr>
+<tr>
+<td>"先持有后登记" ⇒ UAF</td>
+<td>规矩写进闸门注释；<strong>只有一处</strong>要审（所有跨界都过它）</td>
+</tr>
+<tr>
+<td>原子计数竞争</td>
+<td>只在跨界发生（每次 send 一次 <code>__atomic_add_fetch</code>，与现有 <code>gc_dead_heap_ref</code> 同价）</td>
+</tr>
+<tr>
+<td><code>any</code> 绕过静态检查</td>
+<td>运行期 <code>FROZEN</code> 位兜底（§8.2），并有回归用例专门走 <code>any</code> 路径</td>
+</tr>
+<tr>
+<td><code>Frozen[T]</code> 被误当可变类型传</td>
+<td><code>type_is_compatible</code> 双向不兼容（§3.5）</td>
+</tr>
+<tr>
+<td>移动 frozen 指针</td>
+<td>C 层不做 move 语义；Leno 值语义下"指针"就是 <code>Value</code> 复制，安全</td>
+</tr>
+<tr>
+<td>内存记账误导</td>
+<td><code>_mem()</code> 单列 <code>frozen_bytes</code>；GC 阈值不看它</td>
+</tr>
+<tr>
+<td>重复 freeze 同一数据</td>
+<td>快照不共享 ⇒ 文档建议"冻一次复用"；S5 可做 frozen 图 intern</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="11-验收基准-做完要说得出数字">11. 验收基准（做完要说得出数字）</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>现状</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>128 KB string × 1000 次过 Channel</td>
+<td>514 µs/条（243 MB/s）</td>
+<td><strong>&lt; 5 µs/条</strong>（两次哈希查找 + 原子加减）</td>
+</tr>
+<tr>
+<td>10 万元素 <code>Array[int]</code> × 100 次</td>
+<td>~0.24 ms/次（67 ns/元素）</td>
+<td><strong>O(1)/次</strong>（与元素数无关）</td>
+</tr>
+<tr>
+<td>frozen 数组的<strong>本地读</strong>（<code>f[i]</code> 1 亿次）</td>
+<td><code>Array[int]</code> 基线</td>
+<td><strong>与基线持平（≤1%）</strong> —— 验证 §3.5 的 flag 方案确实没丢特化</td>
+</tr>
+<tr>
+<td><code>threads.map</code> 1 万元素 + 共享 20 MB 只读数组</td>
+<td>每任务各拷一份</td>
+<td>启动 17~27 ms 不变，<strong>任务参数零拷贝</strong></td>
+</tr>
+<tr>
+<td>100 MB 数据 + 4 线程各读</td>
+<td>峰值 ≈ 400 MB+</td>
+<td>峰值 ≈ <strong>100 MB</strong></td>
+</tr>
+<tr>
+<td>回归</td>
+<td>677/677、模块 65/65</td>
+<td>不变，另加 ≈45 条 frozen 用例</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="12-明确不做">12. 明确不做</h2>
+<table>
+<thead>
+<tr>
+<th>不做</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>共享<strong>可写</strong>堆 / 锁 / GIL</td>
+<td>模型的价值就是隔离；要共享可变走 <code>Atomic</code> / Channel</td>
+</tr>
+<tr>
+<td>引用计数下沉到<strong>普通对象</strong></td>
+<td>那才是"重做 GC 所有权"（每次赋值计数 + 写屏障）；本方案收益正来自"只在跨界计数"</td>
+</tr>
+<tr>
+<td>新 <code>TypeKind</code> 表示 Frozen</td>
+<td>会掉读特化（§3.5 第 1 条），且 <code>for/print/jsons</code> 全部要改</td>
+</tr>
+<tr>
+<td><code>Channel</code> 移动语义（move）</td>
+<td>语义分叉（buffered 时发送方可能活得比接收方久），收益与 frozen 重叠</td>
+</tr>
+<tr>
+<td>自动冻结（send 时按大小自动 freeze）</td>
+<td>隐式 O(n) 开销，用户看不见；显式 <code>_freeze</code> 才算得清</td>
+</tr>
+<tr>
+<td>环回收（trial deletion）</td>
+<td>S5 之后的事；拒绝环已覆盖"只读大表"场景</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="13-已按-编译期优先-定的路线-不再需要拍板-除非你否掉">13. 已按"编译期优先"定的路线（不再需要拍板，除非你否掉）</h2>
+<table>
+<thead>
+<tr>
+<th>原问题</th>
+<th>决定</th>
+<th>一句话理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语法形式</td>
+<td><strong><code>Frozen[T]</code> 泛型写法 + <code>_freeze/_thaw/_is_frozen</code> 内建</strong></td>
+<td><code>Ptr[T]</code>/<code>Channel[T]</code> 已是这个写法，用户零学习成本；<code>Frozen</code> 一旦进函数签名，编译期闭环</td>
+</tr>
+<tr>
+<td>写的拦截时机</td>
+<td><strong>编译期为主（4 条 const 通道 + 兼容规则），运行期 <code>FROZEN</code> 位只兜 <code>any</code></strong></td>
+<td>你要求"能编译期拦就别留运行期"；且 <code>const</code> 那套机制已存在，扩判据即可</td>
+</tr>
+<tr>
+<td>环</td>
+<td>运行期拒绝</td>
+<td>环是数据形状，类型系统看不见</td>
+</tr>
+<tr>
+<td>冻结语义</td>
+<td>快照（<code>_freeze</code> 一次 O(n)）</td>
+<td>原地冻结会让别名被误冻，语义不可控</td>
+</tr>
+<tr>
+<td>记账</td>
+<td><code>frozen_bytes</code> 只统计、不计入 GC 阈值</td>
+<td>计入会让 GC 空转</td>
+</tr>
+<tr>
+<td><code>Frozen</code> 的实现形态</td>
+<td><strong><code>TypeInfo.frozen</code> 一位，不新增 <code>TypeKind</code></strong></td>
+<td>新增 kind 会掉 <code>OP_INDEX_ARRAY_INT</code> 等读特化（实测判据 <code>codegen_expr.c:782</code>），恰好拖慢大对象读</td>
+</tr>
+</tbody>
+</table>
+<p><strong>如果你否掉"<code>TypeInfo</code> 位、不加 kind"</strong>，唯一替代是新 <code>TypeKind</code>，代价：所有读特化要加 unwrap、<code>is/as</code> 要新增编码、
+序列化同样 bump，估计多 <strong>300~500 行</strong>且多一次性能回归风险。我的建议是维持现方案。</p>
+<blockquote>
+<p>你说"按路线走"，我就从 <strong>S0</strong> 开始：只加 4 字节 + 一条断言 + 基准脚本，跑 677/677 与 <code>fib(30)</code>/<code>pbkdf2</code> 确认 ≤1% 波动，再进 S1a。</p>
+</blockquote>
+<hr>
+<h2 id="14-落地记录-2026-11-27-s0-s4-全部完成">14. 落地记录（2026-11-27，S0–S4 全部完成）</h2>
+<h3 id="14-1-提交">14.1 提交</h3>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>commit</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S0</td>
+<td><code>6f35029d</code></td>
+<td>头部 <code>refcnt</code>（白嫖对齐空洞，<code>sizeof</code> 仍 32）+ <code>0x01</code> 改名 <code>FROZEN</code> + <code>offsetof</code> 断言</td>
+</tr>
+<tr>
+<td>S1a</td>
+<td><code>cb577a87</code></td>
+<td>冻结内核（<code>frozen_alloc/free/ref</code>、registry、环检测、<code>_freeze/_thaw/_is_frozen</code>、只读位、<code>_gc_stats</code> 账）</td>
+</tr>
+<tr>
+<td>S1b</td>
+<td><code>3af3e028</code></td>
+<td><code>Frozen[T]</code> 静态类型（<code>TypeInfo.frozen</code>）：parser <code>Frozen[</code>、<code>type.c</code> 四处、序列化 <strong>v46</strong>、<code>NTYPE_ARG0_FROZEN/_THAWED</code>、4 条写通道拦截、mutator 名表 + struct <code>mut</code> 拦截、<code>_freeze</code> 编译期拒绝面、<code>is/as Frozen</code> 禁令</td>
+</tr>
+<tr>
+<td>S2</td>
+<td><code>628b5a9a</code></td>
+<td>闸门前置分支（<code>channel_clone_value</code> 最前面）+ 每 VM 注册表 + Channel 槽位 pin 表 + 死堆移交注册表</td>
+</tr>
+<tr>
+<td>S3</td>
+<td><code>15051dd0</code></td>
+<td><code>gc_mark_object</code> / <code>gc_scan_children</code> 见到 frozen 就停；<code>gc_free_object</code> 拒绝 frozen</td>
+</tr>
+<tr>
+<td>S4</td>
+<td><code>db371dab</code></td>
+<td><code>_freeze</code> 校验 <code>def-&gt;header.owner_thread == 0</code>（def 归子线程堆 ⇒ 显式拒绝）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-2-踩到的两个真坑-都不在算法上-在-谁先死-上">14.2 踩到的两个真坑（都不在算法上，在"谁先死"上）</h3>
+<ol>
+<li>
+<p><strong>注册表登记进了错误的 VM（症状：整套用例卡死十几分钟）</strong>
+   <code>thread_vm_init</code> 结束时会把 <code>current_exec_vm</code> <strong>还原成父线程的 VM</strong>（<code>object_thread.c:1007</code>），
+   于是子线程收到 frozen 时登记进了<strong>主线程</strong>的注册表 ⇒ 两条线程并发改同一张开放寻址表，
+   <code>frozen_cnt</code> 超过 cap 后每次插入都再扩容，表现为<strong>永远跑不完</strong>。
+   <strong>修</strong>：一律用 <code>gc.vm</code>（THREAD_LOCAL，<code>gc_init</code> 时就指向本线程 VM）。</p>
+</li>
+<li>
+<p><strong>退出阶段解引用已释放的堆对象（症状：<code>test_channel_struct</code> 30 次崩 3 次）</strong>
+   最初 <code>channel_free_all()</code> 用 <code>obj_is_frozen(buffer[i])</code> 找要 unpin 的槽位 ——
+   但进程收尾时 <code>gc_free_all()</code> 可能<strong>先</strong>把堆释放掉，那些 Value 已经悬空 ⇒ <code>0xC0000005</code>。
+   <strong>修</strong>：Channel 里加一条与 buffer 平行的 <code>Object** frozen_slots</code>，put 时记指针、take/收尾时按指针 unref，
+   <strong>绝不</strong>在收尾路径解引用 buffer 里的 Value。二分定位过程：禁用闸门 ⇒ 仍崩；禁用 slot 读写 ⇒ 不崩。</p>
+</li>
+</ol>
+<h3 id="14-3-与设计稿的偏差-有意为之-都有注释">14.3 与设计稿的偏差（有意为之，都有注释）</h3>
+<table>
+<thead>
+<tr>
+<th>设计稿</th>
+<th>实际</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>池任务用 <code>frozen_scope_mark/release</code> 逐任务放</td>
+<td><strong>暂未做</strong>（按 VM 持有到 worker 退出）</td>
+<td>逐任务 release 与"任务把 frozen 发到未消费的 channel"冲突；Channel 槽位 pin 只保护顶层 frozen 值，半冻结值仍靠注册表 ⇒ 先保证不悬空。代价：长期存活的 worker 会多持一些冻结图（同一张图重复传不会叠加，按指针去重）</td>
+</tr>
+<tr>
+<td>半冻结（可变容器夹 frozen 子对象）完全自动</td>
+<td>支持读/传递；<strong>子对象</strong>存活依赖发送方注册表</td>
+<td>逐元素 pin 要两次 O(n) 扫描 + 记账；已列为后续可做项</td>
+</tr>
+<tr>
+<td>槽位只按"顶层是否 frozen"pin</td>
+<td>同左（<code>frozen_slots</code>）</td>
+<td>顶层就是冻结图时 O(1)，覆盖推荐用法</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-4-实测-build-leno-exe-本机">14.4 实测（<code>build\leno.exe</code>，本机）</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>数字</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_freeze</code> 10 万元素 <code>Array[int]</code></td>
+<td><strong>0.6 ms</strong>（once）</td>
+</tr>
+<tr>
+<td>同一冻结图过 Channel</td>
+<td><strong>5 µs/次</strong>（发送）+ 11 µs/次（收发一对）—— 与元素数无关</td>
+</tr>
+<tr>
+<td>100k × 100 次传递（含线程/通道开销）</td>
+<td>frozen <strong>26.9 ms</strong> vs 可变深拷贝 <strong>138.7 ms</strong> ⇒ <strong>5.2×</strong></td>
+</tr>
+<tr>
+<td>回归</td>
+<td>断言 <strong>679/679</strong>（新增 <code>test_frozen</code>、<code>test_frozen_thread</code>）</td>
+</tr>
+<tr>
+<td>GC 压力 <code>LENO_GC_STRESS=512</code>（全量 679）</td>
+<td><strong>677 通过 / 2 失败</strong> —— 仅 <code>test_async_io_limit</code>、<code>test_async_sockets</code> 超时（I/O 计时类用例在 GC 压力下不适用，属既有已知项，与此功能无关）</td>
+</tr>
+<tr>
+<td>专项 10 轮</td>
+<td><code>test_frozen</code> 10/10、<code>test_frozen_thread</code> 10/10、<code>test_thread_pool</code> 10/10、<code>test_threads_parallel</code> 10/10</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-5-已知边界-写进代码注释与用户文档">14.5 已知边界（写进代码注释与用户文档）</h3>
+<ul>
+<li><code>var v = f[0]</code> 之后 <code>v.add(1)</code>：编译期看不见（元素类型不带 frozen 位）⇒ 运行期 <code>FROZEN</code> 位报错（有回归覆盖）。</li>
+<li><code>_freeze(any)</code>、环、def 归属：只能运行期判。</li>
+<li>池 worker 长期存活时会多持冻结图（见 §14.3）；进程退出时统一由 <code>gc_free_all</code> / <code>channel_free_all</code> 放掉。</li>
+</ul>
+<hr>
+<h3 id="附-本文引用的一手材料">附：本文引用的一手材料</h3>
+<ul>
+<li><code>src/include/leno_value.h</code>（<code>Object</code> / <code>flags</code> / <code>obj_is_readonly</code> / <code>ObjChannel.buffer_owner</code>）</li>
+<li><code>src/include/leno_types.h</code>（<code>TypeKind</code> / <code>TypeInfo</code> / <code>NTYPE_ARG0_*</code> 规格标签）</li>
+<li><code>src/type.c</code>（<code>type_copy/equal/free/to_string</code>、<code>type_channel_generic</code> 等泛型构造）</li>
+<li><code>src/semantic/</code>（<code>sem_const_root_name</code>、mutator 名表、<code>infer_expr_type</code>、<code>visit_var.inc</code> 的 4 条写通道）</li>
+<li><code>src/gc.c</code>（<code>gc_alloc</code> / <code>gc_free_object</code> / <code>gc_scan_children</code> / <code>GCDeadHeap</code> / <code>gc_free_all</code>）</li>
+<li><code>src/object/object_thread.c</code>（<code>channel_clone_value</code> / 线程入口 / 池任务 / Channel 槽位所有权）</li>
+<li><code>src/codegen/codegen_expr.c:782</code>、<code>codegen_stmt.c:1790</code>（读特化判据 —— 选 flag 方案的依据）</li>
+<li><code>LenoDocsSrc/线程并发能力修复追踪.md:77,156-165,766-767</code>（两次深拷贝的模型说明与实测数字）</li>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#0-一句话">0. 一句话</a></li><li><a href="#1-现状成本-为什么值得做">1. 现状成本（为什么值得做）</a></li><li><a href="#2-现状事实-本设计依赖的地基-全部已核对">2. 现状事实（本设计依赖的地基，全部已核对）</a></li><li><a href="#3-语义">3. 语义</a></li><ul class="lv3"><li><a href="#3-1-三个内建-照-_gc-_mem-的命名口径-sys-c-1729-1733">3.1 三个内建（照 _gc / _mem 的命名口径，sys.c:1729-1733）</a></li><li><a href="#3-2-谁能冻-谁不能-默认在编译期拒">3.2 谁能冻 / 谁不能 —— 默认在编译期拒</a></li><li><a href="#3-3-环">3.3 环</a></li><li><a href="#3-4-为什么不做-原地冻结">3.4 为什么不做"原地冻结"</a></li><li><a href="#3-5-frozen-t-怎么落地-typeinfo-上一个位-不是新-kind">3.5 Frozen[T 怎么落地：TypeInfo 上一个位，不是新 kind</a></li><li><a href="#3-6-拦截分层-回答-哪些能编译期拦">3.6 拦截分层（回答"哪些能编译期拦"）</a></li></ul><li><a href="#4-对象模型-frozen-图的内存形态">4. 对象模型（frozen 图的内存形态）</a></li><ul class="lv3"><li><a href="#4-1-头部-白嫖-4-字节-sizeof-object-保持-32">4.1 头部：白嫖 4 字节，sizeof(Object) 保持 32</a></li><li><a href="#4-2-分配-绕开-gc_alloc-不进任何堆链">4.2 分配：绕开 gc_alloc，不进任何堆链</a></li><li><a href="#4-3-释放-归零-显式栈迭代释放整图">4.3 释放：归零 → 显式栈迭代释放整图</a></li><li><a href="#4-4-记账">4.4 记账</a></li></ul><li><a href="#5-引用计数挂在哪">5. 引用计数挂在哪</a></li><ul class="lv3"><li><a href="#5-1-位置">5.1 位置</a></li><li><a href="#5-2-为什么不在每次赋值上计数">5.2 为什么不在每次赋值上计数</a></li><li><a href="#5-3-注册表结构">5.3 注册表结构</a></li><li><a href="#5-4-什么时候-acquire-release">5.4 什么时候 acquire / release</a></li><li><a href="#5-5-池任务必须有-scope">5.5 池任务必须有 scope</a></li><li><a href="#5-6-objstructdef-objfunction-的堆归属-最容易出血的地方">5.6 ObjStructDef / ObjFunction 的堆归属（最容易出血的地方）</a></li></ul><li><a href="#6-与-value_clone_for_channel-唯一闸门的衔接">6. 与 value_clone_for_channel() 唯一闸门的衔接</a></li><ul class="lv3"><li><a href="#6-1-组合规则-一条规则覆盖两种用法">6.1 组合规则（一条规则覆盖两种用法）</a></li><li><a href="#6-2-拒绝面">6.2 拒绝面</a></li></ul><li><a href="#7-gc-要改的地方-5-处-全部是-看到-frozen-就停">7. GC 要改的地方（5 处，全部是"看到 frozen 就停"）</a></li><li><a href="#8-不可变执法-编译期为主-运行期只兜底">8. 不可变执法：编译期为主，运行期只兜底</a></li><ul class="lv3"><li><a href="#8-1-编译期-主">8.1 编译期（主）</a></li><li><a href="#8-2-运行期-兜底-只在类型系统看不见的路径">8.2 运行期（兜底，只在类型系统看不见的路径）</a></li></ul><li><a href="#9-分步实施-每步独立提交-独立可回退">9. 分步实施（每步独立提交、独立可回退）</a></li><li><a href="#10-风险与对策">10. 风险与对策</a></li><li><a href="#11-验收基准-做完要说得出数字">11. 验收基准（做完要说得出数字）</a></li><li><a href="#12-明确不做">12. 明确不做</a></li><li><a href="#13-已按-编译期优先-定的路线-不再需要拍板-除非你否掉">13. 已按"编译期优先"定的路线（不再需要拍板，除非你否掉）</a></li><li><a href="#14-落地记录-2026-11-27-s0-s4-全部完成">14. 落地记录（2026-11-27，S0–S4 全部完成）</a></li><ul class="lv3"><li><a href="#14-1-提交">14.1 提交</a></li><li><a href="#14-2-踩到的两个真坑-都不在算法上-在-谁先死-上">14.2 踩到的两个真坑（都不在算法上，在"谁先死"上）</a></li><li><a href="#14-3-与设计稿的偏差-有意为之-都有注释">14.3 与设计稿的偏差（有意为之，都有注释）</a></li><li><a href="#14-4-实测-build-leno-exe-本机">14.4 实测（build\leno.exe，本机）</a></li><li><a href="#14-5-已知边界-写进代码注释与用户文档">14.5 已知边界（写进代码注释与用户文档）</a></li><li><a href="#附-本文引用的一手材料">附：本文引用的一手材料</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="archive/多线程struct与模块全局变量问题记录.html">← 上一篇</a><a href="archive/字节码优化分析.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
