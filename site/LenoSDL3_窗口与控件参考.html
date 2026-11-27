@@ -611,7 +611,7 @@ tab.on_change(func(int idx) { ... })
 </code></pre>
 <p><strong>参数</strong>：<code>tabs</code>、<code>tab_icons</code>、<code>active</code>、<code>tab_h</code>、<code>tab_radius</code>、<code>tab_icon_size</code>、<code>underline</code>、<code>show_header</code>、<code>accent_color</code>、<code>active_color</code>、<code>active_text_color</code>、<code>bar_color</code>、<code>tab_color</code>、<code>bg_color</code>、<code>border</code>、<code>clip</code>、<code>font_size</code>、<code>w</code>/<code>h</code>。</p>
 <p><strong>下划线滑动（2026-11-27）</strong>：切页时下划线（<code>underline:true</code>）<strong>滑过去</strong>而不是瞬跳（~150ms 缓动，
-由 <code>lib/sdl_animator.leno</code> 的 <code>Anim</code> 驱动）。只读：<code>get_underline_x()</code>、<code>get_underline_w()</code>、<code>is_underline_moving()</code>。</p>
+由 <code>lib/sdl_animator.leno</code> 的 <code>Tween</code> 驱动）。只读：<code>get_underline_x()</code>、<code>get_underline_w()</code>、<code>is_underline_moving()</code>。</p>
 <p>⚠ 同页混用绝对定位和 <code>addToPageLayout</code> 会提示一次（警告，不是错误）。</p>
 <h3 id="5-7-splitter-card">5.7 Splitter / Card</h3>
 <ul>
@@ -627,6 +627,12 @@ tab.on_change(func(int idx) { ... })
 滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。<code>ScrollView</code> / <code>Table</code> / <code>VirtualGrid</code>
 另外支持<strong>手指拖动 + 甩动惯性</strong>（只对触摸生效，桌面鼠标左键语义不变）。
 只读窗口统一为：<code>get_scroll_velocity()</code>（px/秒）、<code>get_overscroll_y()</code>、<code>is_scrolling()</code>。</p>
+</blockquote>
+<blockquote>
+<p><strong>过渡动画（2026-11-27）</strong>：<code>Card</code> 的 hover 抬起与底色、<code>ListBox</code> / <code>Table</code> / <code>TreeView</code> 的悬停行、
+<code>TabControl</code> 的下划线、<code>ComboBox</code> 弹层展开，统一走 <code>lib/sdl_animator.leno</code> 的 <code>Tween</code>
+（约 150ms 缓动，按 dt 推进 ⇒ 60/144Hz 一致）。只读进度：<code>get_hover_anim()</code>（Card/ListBox/Table/TreeView）、
+<code>get_open_anim()</code>（ComboBox）、<code>get_underline_x()</code> + <code>is_underline_moving()</code>（Tab）。</p>
 </blockquote>
 <h3 id="6-1-listbox-列表">6.1 ListBox —— 列表</h3>
 <pre><code class="language-text">var lb = SDL3.createListBox({x: 470, y: 396, w: 160, h: 150,

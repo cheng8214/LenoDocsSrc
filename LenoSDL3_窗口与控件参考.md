@@ -531,7 +531,7 @@ tab.on_change(func(int idx) { ... })
 **参数**：`tabs`、`tab_icons`、`active`、`tab_h`、`tab_radius`、`tab_icon_size`、`underline`、`show_header`、`accent_color`、`active_color`、`active_text_color`、`bar_color`、`tab_color`、`bg_color`、`border`、`clip`、`font_size`、`w`/`h`。
 
 **下划线滑动（2026-11-27）**：切页时下划线（`underline:true`）**滑过去**而不是瞬跳（~150ms 缓动，
-由 `lib/sdl_animator.leno` 的 `Anim` 驱动）。只读：`get_underline_x()`、`get_underline_w()`、`is_underline_moving()`。
+由 `lib/sdl_animator.leno` 的 `Tween` 驱动）。只读：`get_underline_x()`、`get_underline_w()`、`is_underline_moving()`。
 
 ⚠ 同页混用绝对定位和 `addToPageLayout` 会提示一次（警告，不是错误）。
 
@@ -551,6 +551,11 @@ tab.on_change(func(int idx) { ... })
 > 滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。`ScrollView` / `Table` / `VirtualGrid`
 > 另外支持**手指拖动 + 甩动惯性**（只对触摸生效，桌面鼠标左键语义不变）。
 > 只读窗口统一为：`get_scroll_velocity()`（px/秒）、`get_overscroll_y()`、`is_scrolling()`。
+
+> **过渡动画（2026-11-27）**：`Card` 的 hover 抬起与底色、`ListBox` / `Table` / `TreeView` 的悬停行、
+> `TabControl` 的下划线、`ComboBox` 弹层展开，统一走 `lib/sdl_animator.leno` 的 `Tween`
+> （约 150ms 缓动，按 dt 推进 ⇒ 60/144Hz 一致）。只读进度：`get_hover_anim()`（Card/ListBox/Table/TreeView）、
+> `get_open_anim()`（ComboBox）、`get_underline_x()` + `is_underline_moving()`（Tab）。
 
 ### 6.1 ListBox —— 列表
 
