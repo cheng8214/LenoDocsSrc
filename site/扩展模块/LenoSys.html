@@ -183,6 +183,46 @@ for Sys.listVolumes() to v {                    // 每个盘/挂载点：卷标�
 <li>macOS 目前<strong>复用 Linux 分支</strong>（没有 <code>/proc</code>）⇒ <code>sysInfo()</code> 的多数字段会是空/0；
   <code>volumeOf</code> / <code>diskSpace</code> 走 <code>df</code> 仍可用（GNU/BSD 两版的 <code>df</code> 输出解析器都吃）。</li>
 </ul>
+<h2 id="实时资源-v0-2-起">实时资源（v0.2 起）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memoryUsage()</code></td>
+<td><code>MemUsage{totalKb, availKb, usedKb, percent}</code></td>
+<td>当前内存用量</td>
+</tr>
+<tr>
+<td><code>cpuUsage()</code></td>
+<td><code>int</code></td>
+<td>CPU 使用率 0..100；<strong>首次调用返回 -1</strong></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">MemUsage m = Sys.memoryUsage()
+int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有意义
+// GUI 里每 0.5~1 秒调一次，别每帧
+</code></pre>
+<p><strong>契约</strong>：</p>
+<ul>
+<li><code>memoryUsage()</code> 取不到时返回<strong>全 0</strong>，判 <code>totalKb == 0</code> 就是"未知"——<strong>别当成 100% 占满</strong>，
+  否则告警页在没权限的机器上会一直报警。</li>
+<li><code>cpuUsage()</code> <strong>第一次返回 -1</strong>（没有基准算不出差值），之后用"距上次采样的差值"算；
+  <strong>采样间隔不足（同一毫秒内连调）时返回上一次的结果</strong>，不会在数字与 -1 之间反复横跳。
+  建议 0.5~1 秒一次：间隔太短时时间片噪声会被放大（和 <code>top</code> 的刷新频率是同一个取舍）。</li>
+<li>两个平台的累计值<strong>单位不同</strong>（Windows 毫秒 / Linux jiffies）⇒ 只做同平台内的差，
+  不要拿绝对值跨平台比较。</li>
+<li>Windows 侧注意过两个坑（已在实现里处理）：<code>GetSystemTimes</code> 的 <strong>kernel 时间包含 idle</strong>；
+  累计的 FILETIME 是 100 ns 单位，开机 162 天就会超过 int48 ⇒ 内部降到毫秒再存。</li>
+<li>Linux 侧：<code>total</code> 不含 <code>guest/guest_nice</code>（它们已计入 user/nice，重复计会让使用率偏低），
+  <code>idle</code> 含 <code>iowait</code>；该分支未在真机实测。</li>
+</ul>
 <h2 id="桌面集成">桌面集成</h2>
 <table>
 <thead>
@@ -275,7 +315,7 @@ for Sys.listVolumes() to v {                    // 每个盘/挂载点：卷标�
   跨模块使用时按惯例 <code>use Sys.VolumeInfo</code>（或用 <code>var v = ...</code> 让编译器推断）。</li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#平台与环境">平台与环境</a></li><li><a href="#进程">进程</a></li><li><a href="#磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 listVolumes）</a></li><li><a href="#桌面集成">桌面集成</a></li><li><a href="#回收站">回收站</a></li><li><a href="#开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</a></li><li><a href="#口径与边界">口径与边界</a></li></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#平台与环境">平台与环境</a></li><li><a href="#进程">进程</a></li><li><a href="#磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 listVolumes）</a></li><li><a href="#实时资源-v0-2-起">实时资源（v0.2 起）</a></li><li><a href="#桌面集成">桌面集成</a></li><li><a href="#回收站">回收站</a></li><li><a href="#开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</a></li><li><a href="#口径与边界">口径与边界</a></li></ul></aside>
 </div>
 <nav class="pager"><a href="../扩展模块/LenoStats.html">← 上一篇</a><a href="../扩展模块/LenoTUI.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

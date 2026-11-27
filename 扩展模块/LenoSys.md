@@ -83,6 +83,33 @@ struct VolumeInfo {
 - macOS 目前**复用 Linux 分支**（没有 `/proc`）⇒ `sysInfo()` 的多数字段会是空/0；
   `volumeOf` / `diskSpace` 走 `df` 仍可用（GNU/BSD 两版的 `df` 输出解析器都吃）。
 
+## 实时资源（v0.2 起）
+
+| 函数 | 返回 | 说明 |
+|---|---|---|
+| `memoryUsage()` | `MemUsage{totalKb, availKb, usedKb, percent}` | 当前内存用量 |
+| `cpuUsage()` | `int` | CPU 使用率 0..100；**首次调用返回 -1** |
+
+```leno
+MemUsage m = Sys.memoryUsage()
+int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有意义
+// GUI 里每 0.5~1 秒调一次，别每帧
+```
+
+**契约**：
+
+- `memoryUsage()` 取不到时返回**全 0**，判 `totalKb == 0` 就是"未知"——**别当成 100% 占满**，
+  否则告警页在没权限的机器上会一直报警。
+- `cpuUsage()` **第一次返回 -1**（没有基准算不出差值），之后用"距上次采样的差值"算；
+  **采样间隔不足（同一毫秒内连调）时返回上一次的结果**，不会在数字与 -1 之间反复横跳。
+  建议 0.5~1 秒一次：间隔太短时时间片噪声会被放大（和 `top` 的刷新频率是同一个取舍）。
+- 两个平台的累计值**单位不同**（Windows 毫秒 / Linux jiffies）⇒ 只做同平台内的差，
+  不要拿绝对值跨平台比较。
+- Windows 侧注意过两个坑（已在实现里处理）：`GetSystemTimes` 的 **kernel 时间包含 idle**；
+  累计的 FILETIME 是 100 ns 单位，开机 162 天就会超过 int48 ⇒ 内部降到毫秒再存。
+- Linux 侧：`total` 不含 `guest/guest_nice`（它们已计入 user/nice，重复计会让使用率偏低），
+  `idle` 含 `iowait`；该分支未在真机实测。
+
 ## 桌面集成
 
 | 函数 | 说明 |
