@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LenoSys v0.2.0 · Leno Docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="../assets/search-index.js" defer></script>
+<script charset="utf-8" src="../assets/app.js" defer></script>
+</head><body data-doc="扩展模块/LenoSys.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="../index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../index.html">08 扩展模块（独立包）</a><span class="sep">/</span><span class="here">LenoSys v0.2.0</span></span>
+</header>
+<div class="banner">📦 扩展模块（独立包，非语言内置标准库）· ⚠ 包名 ≠ import 名，见 <a href="../扩展模块/_总览.html">总览对照表</a>。本页是从 Leno 仓 README 同步的副本。</div>
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">11</span></summary><div class="nv-group"><a href="../Leno零基础入门.html">Leno零基础入门</a><a href="../安装与第一个项目.html">安装与第一个项目</a><a href="../常见任务cookbook.html">常见任务cookbook</a><a href="../示例程序导览.html">示例程序导览</a><a href="../Leno入门教程.html">Leno入门教程</a><a href="../FAQ.html">常见问题</a><a href="../idioms.html">惯用写法速查</a><a href="../语言陷阱速查.html">语言陷阱速查</a><a href="../Leno_规范草稿.html">Leno_规范草稿</a><a href="../区间口径约定.html">区间口径约定</a><a href="../Leno语法对照_Python_JS_Go.html">Leno 对照 Python / JS / Go</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="../module_arrays.html">arrays 模块 API</a><a href="../module_asyncs.html">asyncs 模块 API</a><a href="../module_cstructs.html">cstructs 模块 API</a><a href="../module_dicts.html">dicts 模块 API</a><a href="../module_dirs.html">dirs 模块 API</a><a href="../module_ffi_api.html">ffi 模块 API</a><a href="../module_files.html">files 模块 API</a><a href="../module_io.html">io 模块 API</a><a href="../module_jsons.html">jsons 模块 API</a><a href="../module_maths.html">maths 模块 API</a><a href="../module_rands.html">rands 模块 API</a><a href="../module_reflect.html">reflect 模块 API</a><a href="../module_regexs.html">regexs 模块 API</a><a href="../module_sockets.html">sockets 模块 API</a><a href="../module_strings.html">strings 模块 API</a><a href="../module_sys.html">sys 模块 API</a><a href="../module_threads_api.html">threads 模块 API</a><a href="../module_times.html">times 模块 API</a><a href="../module_types.html">types 模块 API</a><a href="../module_web.html">web 模块 API</a></div></details><details><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../FFI使用指南.html">FFI使用指南</a><a href="../import使用指南.html">import 使用指南</a><a href="../threads使用指南.html">threads使用指南</a><a href="../包管理与安装使用指南.html">包管理与安装使用指南</a><a href="../单文件打包使用指南.html">单文件打包使用指南</a><a href="../并发选择指引.html">并发选择指引</a><a href="../布局配方.html">布局配方</a><a href="../Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="../加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="../F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="../类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="../解构语法实现文档.html">解构语法实现文档</a><a href="../enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="../注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="../struct 里const可行性.html">struct 中 const 的可行性</a><a href="../struct_extend_设计草案.html">struct 继承设计草案</a><a href="../cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="../错误与空值契约.html">错误与空值契约</a><a href="../单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="../寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="../错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="../LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="../archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="../LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="../扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="../archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="../扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="../LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="../LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="../archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="../LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="../Android正经App路线.html">Android正经App路线</a><a href="../archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="../LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="../扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="../archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 案例 · 真实项目 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="../案例/Aria.html">Aria · 桌面音乐客户端</a><a href="../案例/AriaDeployd.html">AriaDeployd · 部署守护进程</a><a href="../案例/LenoCleaner.html">LenoCleaner · C 盘清理</a><a href="../案例/LenoDumate.html">LenoDumate · 搭子签到</a><a href="../案例/LenoGame.html">LenoGame · 9 个图形小游戏</a><a href="../案例/LenoTrae.html">LenoTrae · Trae 自动签到</a><a href="../案例/LenoWorkBuddy.html">LenoWorkBuddy · 自动签到</a><a href="../案例/LenoMusic.html">Music · 音频</a><a href="../案例/_总览.html">扩展模块总览</a></div></details><details><summary>07 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="../待办与路线图.html">待办与路线图</a><a href="../待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="../待修_编译与语义问题.html">待修_编译与语义问题</a><a href="../类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="../线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="../Leno语言改进建议.html">Leno语言改进建议</a><a href="../语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details open><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">27</span></summary><div class="nv-group"><a href="../扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="../扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="../扩展模块/LenoCompress.html">Compress · 压缩</a><a href="../扩展模块/LenoConfig.html">Config · 配置读取</a><a href="../扩展模块/LenoContainers.html">Containers · 栈/队列/LRU</a><a href="../扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="../扩展模块/LenoFS.html">FS · 文件系统/目录监控</a><a href="../扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="../扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="../扩展模块/LenoImage.html">LenoImage</a><a href="../扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="../扩展模块/LenoTemplate.html">LenoTemplate</a><a href="../扩展模块/LenoValidate.html">LenoValidate</a><a href="../扩展模块/LenoLog.html">Log · 日志</a><a href="../扩展模块/LenoMIME.html">MIME · 文件类型识别</a><a href="../扩展模块/LenoMusic.html">Music · 音频</a><a href="../扩展模块/LenoQR.html">QR · 二维码</a><a href="../扩展模块/LenoResult.html">Result · 错误与空值</a><a href="../扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="../扩展模块/LenoStats.html">Stats · 统计</a><a href="../扩展模块/LenoSys.html" class="active" aria-current="page">Sys · 系统/磁盘/进程</a><a href="../扩展模块/LenoTUI.html">TUI · 终端输出</a><a href="../扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="../扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="../扩展模块/LenoZip.html">Zip · 归档</a><a href="../扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="../扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>09 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">32</span></summary><div class="nv-group"><a href="../archive/FFI优化方案.html">FFI优化方案</a><a href="../archive/GC与分配优化.html">GC与分配优化</a><a href="../archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="../archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="../archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="../archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="../LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="../archive/leno对比.html">Leno vs Python（早期对比 · 已归档）</a><a href="../archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="../archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="../archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="../VM自证与语言债_路线_2026-11.html">VM自证与语言债_路线_2026-11</a><a href="../async_await入门指南.html">async / await 入门指南</a><a href="../archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="../archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="../archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="../archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="../archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="../大对象零拷贝共享设计.html">大对象零拷贝共享设计</a><a href="../archive/字节码优化分析.html">字节码优化分析</a><a href="../archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="../archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="../archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="../archive/性能优化记录.html">性能优化记录</a><a href="../archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="../archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="../archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="../archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="../窥孔优化复盘.html">窥孔优化复盘</a><a href="../编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="../语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="../archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><blockquote>
+<p>📦 <strong>扩展模块</strong>（非语言内置标准库）· 包名 <code>LenoSys</code> · import 名 "Sys"
+源：<code>Leno/build/leno_module/LenoSys/lib/Sys.leno</code>（本页是<strong>手写</strong>文档，不从 README 同步）</p>
+</blockquote>
+<h1 id="lenosys-v0-2-0">LenoSys v0.2.0</h1>
+<p>跨平台的<strong>系统信息与桌面集成</strong>：进程、磁盘卷、回收站、通知、开机自启、已装软件。
+Windows 走 Win32 API，Linux 走 <code>/proc</code> + 标准命令，<strong>同一套 API 两个平台都能跑</strong>。</p>
+<pre><code class="language-leno">import &quot;Sys&quot; as Sys
+use Sys.(VolumeInfo, SysInfo)
+
+SysInfo i = Sys.sysInfo()                       // OS / CPU / 内存 / 运行时长 / 是否管理员
+for Sys.listVolumes() to v {                    // 每个盘/挂载点：卷标、文件系统、类型、容量
+    print(v.root + &quot;  &quot; + v.label + &quot;  &quot; + v.fsType + &quot;  剩余 &quot; + _str(v.freeBytes))
+}
+</code></pre>
+<blockquote>
+<p><strong>与 <code>module_sys.md</code> 的分工</strong>：那一页讲<strong>内置全局函数</strong>（<code>_os()</code> / <code>_env()</code> / <code>_exec()</code> / <code>_args()</code>…，
+不需要 import）；本页讲<strong>扩展模块</strong> <code>import "Sys" as Sys</code> 提供的东西。两者不重叠。</p>
+</blockquote>
+<hr>
+<h2 id="平台与环境">平台与环境</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>os()</code> / <code>isWindows()</code> / <code>isLinux()</code> / <code>isMacos()</code></td>
+<td>平台判定</td>
+</tr>
+<tr>
+<td><code>env(name, def = "")</code></td>
+<td>读环境变量（缺失给默认值；<strong>不抛</strong>）</td>
+</tr>
+<tr>
+<td><code>expandEnv(s)</code></td>
+<td>展开 <code>%VAR%</code> / <code>$VAR</code></td>
+</tr>
+<tr>
+<td><code>homeDir()</code> / <code>tempDir()</code> / <code>configDir()</code> / <code>dataDir()</code> / <code>cacheDir()</code></td>
+<td>常用目录（按平台惯例）</td>
+</tr>
+<tr>
+<td><code>systemRoot()</code> / <code>pathSep()</code> / <code>joinPath(parts)</code></td>
+<td>路径基建</td>
+</tr>
+</tbody>
+</table>
+<h2 id="进程">进程</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>listProcesses()</code></td>
+<td><code>Array[ProcInfo]</code></td>
+<td>全量进程（pid / name / 路径…）</td>
+</tr>
+<tr>
+<td><code>findProcess(name)</code></td>
+<td><code>Array[ProcInfo]</code></td>
+<td>按名字查</td>
+</tr>
+<tr>
+<td><code>processExists(pid)</code> / <code>killProcess(pid, force=false)</code></td>
+<td><code>bool</code></td>
+<td>存在性 / 结束</td>
+</tr>
+<tr>
+<td><code>processMemoryKb(pid)</code> / <code>processPath(pid)</code></td>
+<td><code>int</code> / <code>string</code></td>
+<td>内存与可执行路径</td>
+</tr>
+<tr>
+<td><code>currentPid()</code> / <code>exePath()</code></td>
+<td><code>int</code> / <code>string</code></td>
+<td>自身</td>
+</tr>
+<tr>
+<td><code>exec(cmd, timeoutMs = 30000)</code></td>
+<td><code>Dict</code></td>
+<td>跑一次命令（<strong>默认超时</strong>；返回 code/output/err）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 <code>listVolumes</code>）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>listDrives()</code></td>
+<td><code>Array[string]</code></td>
+<td>只要路径（<code>C:\</code> / <code>/</code>）；<strong>保留兼容</strong></td>
+</tr>
+<tr>
+<td><strong><code>listVolumes()</code></strong></td>
+<td><code>Array[VolumeInfo]</code></td>
+<td>卷标 + 文件系统 + 类型 + 容量，一次取齐</td>
+</tr>
+<tr>
+<td><code>diskSpace(path)</code></td>
+<td><code>Dict{ok,total,free}</code></td>
+<td>该路径所在卷的字节数</td>
+</tr>
+<tr>
+<td><code>diskUsagePercent(path)</code></td>
+<td><code>int</code></td>
+<td>0..100；取不到 ⇒ <code>-1</code></td>
+</tr>
+<tr>
+<td><code>volumeOf(path)</code></td>
+<td><code>string</code></td>
+<td>该路径属于哪个卷/挂载点（判不出 ⇒ <code>""</code>，不猜）</td>
+</tr>
+</tbody>
+</table>
+<p><code>VolumeInfo</code> 字段：</p>
+<pre><code class="language-leno">struct VolumeInfo {
+    string root = &quot;&quot;        // &quot;C:\\&quot; 或 &quot;/&quot; 或 &quot;/media/u/U盘&quot;
+    string label = &quot;&quot;       // 卷标；Linux 给设备名（/dev/sda1 —— 没有统一卷标概念）
+    string fsType = &quot;&quot;      // NTFS / FAT32 / exfat / ext4 …
+    int serial = 0          // Windows 卷序列号；Linux 恒 0
+    int driveType = 0       // Windows GetDriveTypeW 原值；Linux 恒 0
+    string kind = &quot;&quot;        // removable / fixed / network / cdrom / ram / unknown
+    int totalBytes = 0
+    int freeBytes = 0
+    bool ready = false      // 能否取到容量
+}
+</code></pre>
+<p><strong>契约（踩过才知道）</strong>：</p>
+<ul>
+<li><strong><code>ready=false</code> 时 <code>totalBytes/freeBytes</code> 一定是 0</strong>，但它的含义是「<strong>未就绪</strong>」而不是「空盘」：
+  空的光驱、已拔出的 U 盘、无权限的网络盘都会这样。上层应显示"未就绪"，别画成 0/0 的进度条。</li>
+<li><strong>取不到就留空，绝不编</strong>：卷标取不到给 <code>""</code>，不是 <code>"本地磁盘"</code> 之类猜出来的名字。</li>
+<li><strong><code>listVolumes</code> 每次调用都会真查容量</strong>（Windows: <code>GetDiskFreeSpaceExW</code>；Linux: 每个挂载点一次 <code>df -B1</code> 子进程）
+  ⇒ 别每帧调，缓存到自己的状态里按需刷新。</li>
+<li>Linux 侧<strong>过滤虚拟文件系统</strong>（<code>proc</code> / <code>sysfs</code> / <code>tmpfs</code> / <code>cgroup*</code> / <code>squashfs</code> …），
+  否则容器里能列出几十个无意义条目、白跑几十次 <code>df</code>。<code>kind</code> 按挂载点前缀推断
+  （<code>/media/</code>、<code>/mnt/</code>、<code>/run/media/</code> ⇒ <code>removable</code>，其余 <code>fixed</code>）。</li>
+<li>⚠ <strong>Linux 分支未在真实机器上实测</strong>（开发机只有 Windows）：<code>/proc/mounts</code> + <code>df</code> 的格式解析有单测
+  （<code>parse_mounts_detail</code> / <code>parse_df</code>），但整条链路的实际输出请以你在 Linux 上跑 <code>test_sys_volumes</code> 为准。</li>
+<li>macOS 目前<strong>复用 Linux 分支</strong>（没有 <code>/proc</code>）⇒ <code>sysInfo()</code> 的多数字段会是空/0；
+  <code>volumeOf</code> / <code>diskSpace</code> 走 <code>df</code> 仍可用（GNU/BSD 两版的 <code>df</code> 输出解析器都吃）。</li>
+</ul>
+<h2 id="实时资源-v0-2-起">实时资源（v0.2 起）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memoryUsage()</code></td>
+<td><code>MemUsage{totalKb, availKb, usedKb, percent}</code></td>
+<td>当前内存用量</td>
+</tr>
+<tr>
+<td><code>cpuUsage()</code></td>
+<td><code>int</code></td>
+<td>CPU 使用率 0..100；<strong>首次调用返回 -1</strong></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">MemUsage m = Sys.memoryUsage()
+int cpu = Sys.cpuUsage()          // 第一次 -1（无基准），之后才有意义
+// GUI 里每 0.5~1 秒调一次，别每帧
+</code></pre>
+<p><strong>契约</strong>：</p>
+<ul>
+<li><code>memoryUsage()</code> 取不到时返回<strong>全 0</strong>，判 <code>totalKb == 0</code> 就是"未知"——<strong>别当成 100% 占满</strong>，
+  否则告警页在没权限的机器上会一直报警。</li>
+<li><code>cpuUsage()</code> <strong>第一次返回 -1</strong>（没有基准算不出差值），之后用"距上次采样的差值"算；
+  <strong>采样间隔不足（同一毫秒内连调）时返回上一次的结果</strong>，不会在数字与 -1 之间反复横跳。
+  建议 0.5~1 秒一次：间隔太短时时间片噪声会被放大（和 <code>top</code> 的刷新频率是同一个取舍）。</li>
+<li>两个平台的累计值<strong>单位不同</strong>（Windows 毫秒 / Linux jiffies）⇒ 只做同平台内的差，
+  不要拿绝对值跨平台比较。</li>
+<li>Windows 侧注意过两个坑（已在实现里处理）：<code>GetSystemTimes</code> 的 <strong>kernel 时间包含 idle</strong>；
+  累计的 FILETIME 是 100 ns 单位，开机 162 天就会超过 int48 ⇒ 内部降到毫秒再存。</li>
+<li>Linux 侧：<code>total</code> 不含 <code>guest/guest_nice</code>（它们已计入 user/nice，重复计会让使用率偏低），
+  <code>idle</code> 含 <code>iowait</code>；该分支未在真机实测。</li>
+</ul>
+<h2 id="文件图标-v0-2-起">文件图标（v0.2 起）</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fileIcon(path, small = false)</code></td>
+<td><code>{ok, w, h, pixels}</code></td>
+<td>文件/目录在资源管理器里显示的图标；<code>pixels</code> 是 RGBA 数组（行优先）</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-leno">var r = Sys.fileIcon(&quot;C:\\Windows\\notepad.exe&quot;)     // 32×32
+if r[&quot;ok&quot;] as bool {
+    int w = r[&quot;w&quot;] as int
+    int h = r[&quot;h&quot;] as int
+    Array[int] px = r[&quot;pixels&quot;] as Array[int]         // 每像素 R,G,B,A
+}
+Sys.fileIcon(&quot;C:\\Windows&quot;, false)                    // 目录 ⇒ 文件夹图标
+Sys.fileIcon(&quot;C:\\Windows\\notepad.exe&quot;, true)         // 16×16
+</code></pre>
+<p><strong>契约（实测踩出来的）</strong>：</p>
+<ul>
+<li><strong>存在的文件与目录都能取到</strong>（目录给文件夹图标）；<strong>不存在的路径</strong> ⇒ <code>ok=false</code></li>
+<li>⚠ <strong>不要加 <code>SHGFI_USEFILEATTRIBUTES</code></strong>（"按属性给通用图标"）：实测加了之后<strong>目录反而拿不到
+  图标</strong>（<code>hIcon</code> 为空），不加才对</li>
+<li>老图标没有 alpha 通道 ⇒ 该图标的 alpha 全补 255（不做 mask 合成，会略有锯齿）</li>
+<li>位深不是 32 的图标直接 <code>ok=false</code>（Win10 的图标都是 32bpp，极少遇到）</li>
+<li><strong>Linux/macOS 未实现</strong>（freedesktop 那边要走 icon theme 查找，工作量另算）⇒ <code>ok=false</code></li>
+<li>每次调用都要走一遍 Shell + GDI（取图标、建兼容 DC、<code>GetDIBits</code>）⇒ <strong>别每帧调</strong>，缓存结果</li>
+</ul>
+<h2 id="桌面集成">桌面集成</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openWith(path)</code></td>
+<td>用系统默认程序打开文件/目录/<strong>URI</strong>（<code>https://</code>、<code>mailto:</code> 也认）</td>
+</tr>
+<tr>
+<td><code>revealInFolder(path)</code></td>
+<td>在文件管理器里定位并选中</td>
+</tr>
+<tr>
+<td><code>notify(title, body = "")</code></td>
+<td>系统通知（标题必填）</td>
+</tr>
+<tr>
+<td><code>isElevated()</code></td>
+<td>是否 root / 管理员</td>
+</tr>
+</tbody>
+</table>
+<h2 id="回收站">回收站</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deleteToTrash(paths)</code></td>
+<td><code>Dict</code></td>
+<td>移入回收站（Windows: <code>SHFileOperationW</code>；Linux: freedesktop Trash 规范，<strong>按文件所在分区</strong>挑回收站）</td>
+</tr>
+<tr>
+<td><code>emptyTrash()</code></td>
+<td><code>bool</code></td>
+<td>清空（已空也算成功）</td>
+</tr>
+<tr>
+<td><code>listTrash()</code></td>
+<td><code>Array[TrashItem]</code></td>
+<td>列表</td>
+</tr>
+</tbody>
+</table>
+<h2 id="开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>listStartupItems()</code> / <code>getAutostart(id)</code> / <code>setAutostart(id, name, cmd)</code> / <code>removeAutostart(id)</code></td>
+<td>自启项</td>
+</tr>
+<tr>
+<td><code>listInstalledSoftware()</code></td>
+<td>已装软件（Windows 读注册表 Uninstall；Linux 读包管理器）</td>
+</tr>
+<tr>
+<td><code>recentFiles(max = 100)</code></td>
+<td>最近打开的文件</td>
+</tr>
+<tr>
+<td><code>selfTest()</code></td>
+<td>自检：实测磁盘/进程等几项调用，用于排查"模块被顶掉成旧版"（见下）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="口径与边界">口径与边界</h2>
+<ul>
+<li><strong>绝不静默返回假数据</strong>：取不到就是 <code>""</code> / <code>0</code> / <code>false</code>，并在注释里写清为什么取不到。</li>
+<li><strong>不过 shell 做能直连的事</strong>：Windows 侧走 Win32 API（注册表 / Shell），只有必须的场合才起子进程；
+  Linux 侧则大量依赖 <code>/proc</code> 与标准命令（<code>df</code>、<code>id</code>、<code>ps</code>），这是两个平台的现实差异。</li>
+<li>⚠ <strong>模块同名冲突</strong>：<code>import Win32</code> 走全局搜索路径、<strong>先到先得</strong> —— 曾因别的模块下放着陈旧
+  <code>Win32.leno</code> 副本而被顶掉（表现为"行为像旧版"）。遇到怪事跑 <code>Sys.selfTest()</code> 先确认拿到的是新实现。</li>
+<li><code>ProcInfo</code> / <code>StartupItem</code> / <code>SoftwareItem</code> / <code>TrashItem</code> / <code>SysInfo</code> / <code>VolumeInfo</code> 都是脚本结构体，
+  跨模块使用时按惯例 <code>use Sys.VolumeInfo</code>（或用 <code>var v = ...</code> 让编译器推断）。</li>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#平台与环境">平台与环境</a></li><li><a href="#进程">进程</a></li><li><a href="#磁盘与卷-v0-2-起含-listvolumes">磁盘与卷（v0.2 起含 listVolumes）</a></li><li><a href="#实时资源-v0-2-起">实时资源（v0.2 起）</a></li><li><a href="#文件图标-v0-2-起">文件图标（v0.2 起）</a></li><li><a href="#桌面集成">桌面集成</a></li><li><a href="#回收站">回收站</a></li><li><a href="#开机自启-已装软件-最近文件">开机自启 / 已装软件 / 最近文件</a></li><li><a href="#口径与边界">口径与边界</a></li></ul></aside>
+</div>
+<nav class="pager"><a href="../扩展模块/LenoStats.html">← 上一篇</a><a href="../扩展模块/LenoTUI.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
