@@ -3067,6 +3067,15 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 </tbody>
 </table>
 <blockquote>
+<p><strong>只想判断"这块内存是不是这个内容"时，别用 <code>read_bytes + ==</code></strong>（2026-11-28 起）：
+那等于 <code>memcpy</code> 一份临时串再 <code>memcmp</code>，同一块冷内存读两遍（实测 ~2 GB/s）。
+用 <strong><code>ffi.compare_bytes(ptr, off, len, str)</code></strong>：纯 <code>memcmp</code>、零分配零拷贝（实测 ~10 GB/s），
+返回 <code>0</code> 一致 / <code>1</code> 内容不同 / <code>-1</code> 长度不一致。内存校验、资源完整性检查、缓存命中判断
+都属于这类；只有在<strong>不一致</strong>时才 <code>read_bytes</code> 回来数坏字节。
+另：<code>read_bytes</code> 造大串（≥1KB）现在只 <code>memcpy</code>，UTF-8 字符数与哈希改为首次用到时才补算
+⇒ 读回吞吐 0.6 → 2.7~3.0 GB/s（真要字符数也有 1.5 GB/s）。</p>
+</blockquote>
+<blockquote>
 <p><strong>JIT 加速</strong>：在 JIT 编译的热循环里，上表中的 <code>read_byte</code>/<code>read_int8</code>/<code>read_int16</code>/
 <code>read_uint16</code>/<code>read_int</code>/<code>read_uint</code> 及对应 <code>write_*</code>（共 12 个）会被<strong>直接内联成
 机器码 load/store</strong>，免去每次 ~20ns 的 callout 开销（适合像素直写这类每像素多次
@@ -3545,10 +3554,17 @@ token.send(1)                       // 通道里只放一个&quot;令牌&quot;
 </tbody>
 </table>
 <hr>
-<p><em>文档版本: 4.1</em>
-<em>最后更新: 2026-10-01</em></p>
+<p><em>文档版本: 4.2</em>
+<em>最后更新: 2026-11-28</em></p>
 <h3 id="更新记录">更新记录</h3>
 <ul>
+<li>
+<p><strong>(2026-11-28) 新增 <code>ffi.compare_bytes</code></strong>：裸内存 vs 字符串的纯 <code>memcmp</code>，返回
+  <code>0</code>/<code>1</code>/<code>-1</code>（一致 / 内容不同 / 长度不一致），零分配零拷贝。给"只判断内容是否相同"的
+  大块校验用 —— <code>read_bytes + ==</code> 要把同一块冷内存读两遍，实测 2 GB/s vs 10 GB/s。
+  同时<strong>大块字符串的 <code>char_len</code>/<code>hash</code> 改惰性</strong>（<code>len &gt;= 1024</code>）：<code>read_bytes</code> 0.6 → 2.7~3.0 GB/s
+  （连字符数一起要 1.5 GB/s）。回归：<code>assert/test_ffi_compare_bytes.leno</code> ✓</p>
+</li>
 <li>
 <p><strong>(2026-10-12) 修回调实参的 64 位截断</strong>：<code>callback_dispatch_direct</code> 把回调实参转成 Leno 值时
   写的是 <code>val_int((int)ffi_args[i].value.i)</code> —— <code>(int)</code> 是 32 位 ⇒ <strong>回调签名里的 i64/u64

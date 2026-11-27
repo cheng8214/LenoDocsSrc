@@ -1404,6 +1404,52 @@ var empty = ffi.read_bytes(buf, 0, 0)  // ""
 ffi.free(buf)
 ```
 
+### `compare_bytes(ptr, off, len, str)`
+
+把裸内存的 `len` 个字节和字符串 `str` 的字节内容比较，回答"是否相同"。
+**零分配、零拷贝**：底层只有一次 `memcmp`。
+
+和 `read_bytes + ==` 的差别（2026-11-28 实测，4MB 块 / 1GB 冷内存）：
+
+| 写法 | 实际动作 | 吞吐 |
+|------|----------|------|
+| `ffi.read_bytes(p, 0, n) != pat` | 先 `memcpy` 出一份临时串，再 `memcmp`（同一块内存读两遍） | ~2 GB/s |
+| `ffi.compare_bytes(p, 0, n, pat)` | 直接 `memcmp` | ~10 GB/s |
+
+所以**只判断内容是否相同时不要 `read_bytes`**：内存校验、下载/资源完整性检查、缓存命中判断、
+大块数据去重都属于这类。真要数坏字节再回落到 `read_bytes`（那时是错误路径，慢无所谓）。
+
+**参数**:
+- `ptr`: FFI 指针对象
+- `off` (int): 字节偏移量
+- `len` (int): 参与比较的字节数
+- `str` (string): 期望内容
+
+**返回**: `int`
+- `0`：完全一致
+- `1`：长度对得上但内容不同
+- `-1`：长度不一致（`str` 的字节数 ≠ `len`，直接判"不同"，不做逐字节比较）
+
+```leno
+var buf = ffi.malloc(1 << 20)
+ffi.memset(buf, 0x55, 1 << 20)
+var pat = strings.from_bytes([0x55]).rep(1 << 20)   // 期望图案
+
+if ffi.compare_bytes(buf, 0, 1 << 20, pat) == 0 {
+    print("校验通过")
+}
+
+// 只有不一致时才读回来数坏字节
+if ffi.compare_bytes(buf, 0, 1 << 20, pat) != 0 {
+    var s = ffi.read_bytes(buf, 0, 1 << 20)
+    // …逐字节数
+}
+ffi.free(buf)
+```
+
+> 越界 / 空指针的检查口径与 `read_bytes` 完全一致（Ptr 的大小已知就查，裸指针先用
+> `ffi.bind_size` 挂上大小）。
+
 ---
 
 ## 显式字节序读写
@@ -1956,6 +2002,7 @@ main() {
 |------|------|------|------|
 | `write_bytes(ptr, off, str)` | ptr, int, string | null | 批量写入字节（不含 `\0`） |
 | `read_bytes(ptr, off, len)` | ptr, int, int | string | 批量读取字节 |
+| `compare_bytes(ptr, off, len, str)` | ptr, int, int, string | int | 只判断内容是否相同（0/1/-1），不造临时串 |
 
 ### 显式字节序读写
 
@@ -1997,10 +2044,20 @@ main() {
 
 ---
 
-*文档版本: 4.0*
-*最后更新: 2026-10-01*
+*文档版本: 4.2*
+*最后更新: 2026-11-28*
 
 ### 更新记录
+
+- **v4.2** (2026-11-28):
+  - **新增 `ffi.compare_bytes(ptr, off, len, str)`**：裸内存 vs 字符串的纯 `memcmp`，
+    返回 `0`（一致）/ `1`（内容不同）/ `-1`（长度不一致），零分配零拷贝。给"只判断内容
+    是否相同"的大块校验用 —— `read_bytes + ==` 是 `memcpy` 一遍再 `memcmp` 一遍，
+    冷内存被读两遍，实测 2 GB/s vs 10 GB/s。回归：`assert/test_ffi_compare_bytes.leno`。
+  - **大块字符串的 `char_len` / `hash` 改惰性**（`len >= 1024`）：`str_new`/`str_copy` 只
+    `memcpy`，首次真正用到字符数/哈希时才补算。`ffi.read_bytes` 从 0.6 GB/s 提到
+    **2.7~3.0 GB/s**；连字符数一起要也有 **1.5 GB/s**（省掉 hash 那一遍）。
+    `read_bytes` 本身的语义、参数、返回都没有变化。
 
 - **(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"**：混合参数分发在所有平台统一为
   "按 ABI 精确分类 + 汇编调用桩"（`leno_win64_call` / `leno_sysv_call` / `leno_aapcs_call`）。

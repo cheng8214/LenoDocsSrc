@@ -1642,6 +1642,61 @@ var empty = ffi.read_bytes(buf, 0, 0)  // &quot;&quot;
 
 ffi.free(buf)
 </code></pre>
+<h3 id="compare_bytes-ptr-off-len-str"><code>compare_bytes(ptr, off, len, str)</code></h3>
+<p>把裸内存的 <code>len</code> 个字节和字符串 <code>str</code> 的字节内容比较，回答"是否相同"。
+<strong>零分配、零拷贝</strong>：底层只有一次 <code>memcmp</code>。</p>
+<p>和 <code>read_bytes + ==</code> 的差别（2026-11-28 实测，4MB 块 / 1GB 冷内存）：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>实际动作</th>
+<th>吞吐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ffi.read_bytes(p, 0, n) != pat</code></td>
+<td>先 <code>memcpy</code> 出一份临时串，再 <code>memcmp</code>（同一块内存读两遍）</td>
+<td>~2 GB/s</td>
+</tr>
+<tr>
+<td><code>ffi.compare_bytes(p, 0, n, pat)</code></td>
+<td>直接 <code>memcmp</code></td>
+<td>~10 GB/s</td>
+</tr>
+</tbody>
+</table>
+<p>所以<strong>只判断内容是否相同时不要 <code>read_bytes</code></strong>：内存校验、下载/资源完整性检查、缓存命中判断、
+大块数据去重都属于这类。真要数坏字节再回落到 <code>read_bytes</code>（那时是错误路径，慢无所谓）。</p>
+<p><strong>参数</strong>:
+- <code>ptr</code>: FFI 指针对象
+- <code>off</code> (int): 字节偏移量
+- <code>len</code> (int): 参与比较的字节数
+- <code>str</code> (string): 期望内容</p>
+<p><strong>返回</strong>: <code>int</code>
+- <code>0</code>：完全一致
+- <code>1</code>：长度对得上但内容不同
+- <code>-1</code>：长度不一致（<code>str</code> 的字节数 ≠ <code>len</code>，直接判"不同"，不做逐字节比较）</p>
+<pre><code class="language-leno">var buf = ffi.malloc(1 &lt;&lt; 20)
+ffi.memset(buf, 0x55, 1 &lt;&lt; 20)
+var pat = strings.from_bytes([0x55]).rep(1 &lt;&lt; 20)   // 期望图案
+
+if ffi.compare_bytes(buf, 0, 1 &lt;&lt; 20, pat) == 0 {
+    print(&quot;校验通过&quot;)
+}
+
+// 只有不一致时才读回来数坏字节
+if ffi.compare_bytes(buf, 0, 1 &lt;&lt; 20, pat) != 0 {
+    var s = ffi.read_bytes(buf, 0, 1 &lt;&lt; 20)
+    // …逐字节数
+}
+ffi.free(buf)
+</code></pre>
+<blockquote>
+<p>越界 / 空指针的检查口径与 <code>read_bytes</code> 完全一致（Ptr 的大小已知就查，裸指针先用
+<code>ffi.bind_size</code> 挂上大小）。</p>
+</blockquote>
 <hr>
 <h2 id="显式字节序读写">显式字节序读写</h2>
 <p>常规的 <code>ffi.write_int16</code> / <code>ffi.read_int32</code> 等函数使用<strong>主机字节序</strong>（在 x86/ARM 小端机器上为小端）。跨平台二进制协议（如网络协议、文件格式）需要显式控制字节序时，使用以下函数：</p>
@@ -2661,6 +2716,12 @@ main() {
 <td>string</td>
 <td>批量读取字节</td>
 </tr>
+<tr>
+<td><code>compare_bytes(ptr, off, len, str)</code></td>
+<td>ptr, int, int, string</td>
+<td>int</td>
+<td>只判断内容是否相同（0/1/-1），不造临时串</td>
+</tr>
 </tbody>
 </table>
 <h3 id="显式字节序读写">显式字节序读写</h3>
@@ -2841,10 +2902,23 @@ main() {
 </tbody>
 </table>
 <hr>
-<p><em>文档版本: 4.0</em>
-<em>最后更新: 2026-10-01</em></p>
+<p><em>文档版本: 4.2</em>
+<em>最后更新: 2026-11-28</em></p>
 <h3 id="更新记录">更新记录</h3>
 <ul>
+<li>
+<p><strong>v4.2</strong> (2026-11-28):</p>
+<ul>
+<li><strong>新增 <code>ffi.compare_bytes(ptr, off, len, str)</code></strong>：裸内存 vs 字符串的纯 <code>memcmp</code>，
+    返回 <code>0</code>（一致）/ <code>1</code>（内容不同）/ <code>-1</code>（长度不一致），零分配零拷贝。给"只判断内容
+    是否相同"的大块校验用 —— <code>read_bytes + ==</code> 是 <code>memcpy</code> 一遍再 <code>memcmp</code> 一遍，
+    冷内存被读两遍，实测 2 GB/s vs 10 GB/s。回归：<code>assert/test_ffi_compare_bytes.leno</code>。</li>
+<li><strong>大块字符串的 <code>char_len</code> / <code>hash</code> 改惰性</strong>（<code>len &gt;= 1024</code>）：<code>str_new</code>/<code>str_copy</code> 只
+    <code>memcpy</code>，首次真正用到字符数/哈希时才补算。<code>ffi.read_bytes</code> 从 0.6 GB/s 提到
+    <strong>2.7~3.0 GB/s</strong>；连字符数一起要也有 <strong>1.5 GB/s</strong>（省掉 hash 那一遍）。
+    <code>read_bytes</code> 本身的语义、参数、返回都没有变化。</li>
+</ul>
+</li>
 <li>
 <p><strong>(2026-10-01) FFI 调用桩取代"枚举分发 + 位模式回退"</strong>：混合参数分发在所有平台统一为
   "按 ABI 精确分类 + 汇编调用桩"（<code>leno_win64_call</code> / <code>leno_sysv_call</code> / <code>leno_aapcs_call</code>）。
@@ -2979,7 +3053,7 @@ main() {
 </li>
 </ul>
 </main>
-  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#ffi-库对象">FFI 库对象</a></li><li><a href="#ffi-指针对象">FFI 指针对象</a></li><li><a href="#参数类型自动推断">参数类型自动推断</a></li><li><a href="#clib-声明式调用-零摩擦-ffi">clib 声明式调用（零摩擦 FFI）</a></li></ul><li><a href="#动态库操作">动态库操作</a></li><ul class="lv3"><li><a href="#load-path">load(path)</a></li><li><a href="#dlsym-lib-name">dlsym(lib, name)</a></li><li><a href="#free-x">free(x)</a></li></ul><li><a href="#函数调用">函数调用</a></li><ul class="lv3"><li><a href="#设计理念">设计理念</a></li><li><a href="#明确类型调用-推荐">明确类型调用（推荐）</a></li><li><a href="#通用调用-类型守卫">通用调用 + 类型守卫</a></li><li><a href="#错误码缓存">错误码缓存</a></li></ul><li><a href="#回调函数">回调函数</a></li><ul class="lv3"><li><a href="#callback-func-ret_type-arg_types">callback(func, ret_type, arg_types)</a></li><li><a href="#free_callback-cb">free_callback(cb)</a></li></ul><li><a href="#类型守卫">类型守卫</a></li><ul class="lv3"><li><a href="#类型守卫语法">类型守卫语法</a></li><li><a href="#完整示例">完整示例</a></li><li><a href="#类型守卫应用场景">类型守卫应用场景</a></li></ul><li><a href="#内存管理">内存管理</a></li><ul class="lv3"><li><a href="#alloc-type_name-value">alloc(type_name, value)</a></li><li><a href="#malloc-size">malloc(size)</a></li><li><a href="#calloc-count-size">calloc(count, size)</a></li><li><a href="#realloc-ptr-size">realloc(ptr, size)</a></li><li><a href="#free-ptr">free(ptr)</a></li><li><a href="#sizeof-ptr">sizeof(ptr)</a></li><li><a href="#assert_size-ptr-min_bytes">assert_size(ptr, min_bytes)</a></li><li><a href="#nullptr">nullptr()</a></li><li><a href="#memcpy-dest-src-size">memcpy(dest, src, size)</a></li><li><a href="#memset-ptr-value-size">memset(ptr, value, size)</a></li><li><a href="#ptr_from_int-address">ptr_from_int(address)</a></li><li><a href="#ptr_to_int-ptr">ptr_to_int(ptr)</a></li><li><a href="#is_ptr-value">is_ptr(value)</a></li></ul><li><a href="#指针操作">指针操作</a></li><ul class="lv3"><li><a href="#offset-ptr-off">offset(ptr, off)</a></li></ul><li><a href="#内存读取">内存读取</a></li><ul class="lv3"><li><a href="#整数读取">整数读取</a></li><li><a href="#浮点读取">浮点读取</a></li><li><a href="#指针与布尔读取">指针与布尔读取</a></li><li><a href="#字符串读取">字符串读取</a></li></ul><li><a href="#内存写入">内存写入</a></li><ul class="lv3"><li><a href="#整数写入">整数写入</a></li><li><a href="#浮点写入">浮点写入</a></li><li><a href="#指针与字符串写入">指针与字符串写入</a></li></ul><li><a href="#批量读写">批量读写</a></li><ul class="lv3"><li><a href="#write_bytes-ptr-off-str">write_bytes(ptr, off, str)</a></li><li><a href="#read_bytes-ptr-off-len">read_bytes(ptr, off, len)</a></li></ul><li><a href="#显式字节序读写">显式字节序读写</a></li><ul class="lv3"><li><a href="#小端读写">小端读写</a></li><li><a href="#大端读写">大端读写</a></li><li><a href="#字符串工具">字符串工具</a></li><li><a href="#类型信息">类型信息</a></li><li><a href="#alignof-type_name">alignof(type_name)</a></li></ul><li><a href="#类型映射">类型映射</a></li><ul class="lv3"><li><a href="#leno-值到-c-类型的转换">Leno 值到 C 类型的转换</a></li><li><a href="#返回值的转换">返回值的转换</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-调用-c-标准库函数">1. 调用 C 标准库函数</a></li><li><a href="#2-调用-windows-api">2. 调用 Windows API</a></li><li><a href="#3-使用类型守卫处理返回值">3. 使用类型守卫处理返回值</a></li><li><a href="#4-内存操作">4. 内存操作</a></li><li><a href="#5-指针的指针">5. 指针的指针</a></li><li><a href="#6-使用-offset-遍历数组">6. 使用 offset 遍历数组</a></li><li><a href="#7-读取-windows-结构体">7. 读取 Windows 结构体</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#完整-api-速查表">完整 API 速查表</a></li><ul class="lv3"><li><a href="#动态库">动态库</a></li><li><a href="#函数调用_1">函数调用</a></li><li><a href="#内存管理_1">内存管理</a></li><li><a href="#指针操作_1">指针操作</a></li><li><a href="#回调函数_1">回调函数</a></li><li><a href="#内存读取_1">内存读取</a></li><li><a href="#内存写入_1">内存写入</a></li><li><a href="#批量读写_1">批量读写</a></li><li><a href="#显式字节序读写_1">显式字节序读写</a></li><li><a href="#字符串工具_1">字符串工具</a></li><li><a href="#clib-声明类型">clib 声明类型</a></li><li><a href="#更新记录">更新记录</a></li></ul></ul></aside>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#目录">目录</a></li><li><a href="#使用方式">使用方式</a></li><li><a href="#核心概念">核心概念</a></li><ul class="lv3"><li><a href="#ffi-库对象">FFI 库对象</a></li><li><a href="#ffi-指针对象">FFI 指针对象</a></li><li><a href="#参数类型自动推断">参数类型自动推断</a></li><li><a href="#clib-声明式调用-零摩擦-ffi">clib 声明式调用（零摩擦 FFI）</a></li></ul><li><a href="#动态库操作">动态库操作</a></li><ul class="lv3"><li><a href="#load-path">load(path)</a></li><li><a href="#dlsym-lib-name">dlsym(lib, name)</a></li><li><a href="#free-x">free(x)</a></li></ul><li><a href="#函数调用">函数调用</a></li><ul class="lv3"><li><a href="#设计理念">设计理念</a></li><li><a href="#明确类型调用-推荐">明确类型调用（推荐）</a></li><li><a href="#通用调用-类型守卫">通用调用 + 类型守卫</a></li><li><a href="#错误码缓存">错误码缓存</a></li></ul><li><a href="#回调函数">回调函数</a></li><ul class="lv3"><li><a href="#callback-func-ret_type-arg_types">callback(func, ret_type, arg_types)</a></li><li><a href="#free_callback-cb">free_callback(cb)</a></li></ul><li><a href="#类型守卫">类型守卫</a></li><ul class="lv3"><li><a href="#类型守卫语法">类型守卫语法</a></li><li><a href="#完整示例">完整示例</a></li><li><a href="#类型守卫应用场景">类型守卫应用场景</a></li></ul><li><a href="#内存管理">内存管理</a></li><ul class="lv3"><li><a href="#alloc-type_name-value">alloc(type_name, value)</a></li><li><a href="#malloc-size">malloc(size)</a></li><li><a href="#calloc-count-size">calloc(count, size)</a></li><li><a href="#realloc-ptr-size">realloc(ptr, size)</a></li><li><a href="#free-ptr">free(ptr)</a></li><li><a href="#sizeof-ptr">sizeof(ptr)</a></li><li><a href="#assert_size-ptr-min_bytes">assert_size(ptr, min_bytes)</a></li><li><a href="#nullptr">nullptr()</a></li><li><a href="#memcpy-dest-src-size">memcpy(dest, src, size)</a></li><li><a href="#memset-ptr-value-size">memset(ptr, value, size)</a></li><li><a href="#ptr_from_int-address">ptr_from_int(address)</a></li><li><a href="#ptr_to_int-ptr">ptr_to_int(ptr)</a></li><li><a href="#is_ptr-value">is_ptr(value)</a></li></ul><li><a href="#指针操作">指针操作</a></li><ul class="lv3"><li><a href="#offset-ptr-off">offset(ptr, off)</a></li></ul><li><a href="#内存读取">内存读取</a></li><ul class="lv3"><li><a href="#整数读取">整数读取</a></li><li><a href="#浮点读取">浮点读取</a></li><li><a href="#指针与布尔读取">指针与布尔读取</a></li><li><a href="#字符串读取">字符串读取</a></li></ul><li><a href="#内存写入">内存写入</a></li><ul class="lv3"><li><a href="#整数写入">整数写入</a></li><li><a href="#浮点写入">浮点写入</a></li><li><a href="#指针与字符串写入">指针与字符串写入</a></li></ul><li><a href="#批量读写">批量读写</a></li><ul class="lv3"><li><a href="#write_bytes-ptr-off-str">write_bytes(ptr, off, str)</a></li><li><a href="#read_bytes-ptr-off-len">read_bytes(ptr, off, len)</a></li><li><a href="#compare_bytes-ptr-off-len-str">compare_bytes(ptr, off, len, str)</a></li></ul><li><a href="#显式字节序读写">显式字节序读写</a></li><ul class="lv3"><li><a href="#小端读写">小端读写</a></li><li><a href="#大端读写">大端读写</a></li><li><a href="#字符串工具">字符串工具</a></li><li><a href="#类型信息">类型信息</a></li><li><a href="#alignof-type_name">alignof(type_name)</a></li></ul><li><a href="#类型映射">类型映射</a></li><ul class="lv3"><li><a href="#leno-值到-c-类型的转换">Leno 值到 C 类型的转换</a></li><li><a href="#返回值的转换">返回值的转换</a></li></ul><li><a href="#示例代码">示例代码</a></li><ul class="lv3"><li><a href="#1-调用-c-标准库函数">1. 调用 C 标准库函数</a></li><li><a href="#2-调用-windows-api">2. 调用 Windows API</a></li><li><a href="#3-使用类型守卫处理返回值">3. 使用类型守卫处理返回值</a></li><li><a href="#4-内存操作">4. 内存操作</a></li><li><a href="#5-指针的指针">5. 指针的指针</a></li><li><a href="#6-使用-offset-遍历数组">6. 使用 offset 遍历数组</a></li><li><a href="#7-读取-windows-结构体">7. 读取 Windows 结构体</a></li></ul><li><a href="#注意事项">注意事项</a></li><li><a href="#完整-api-速查表">完整 API 速查表</a></li><ul class="lv3"><li><a href="#动态库">动态库</a></li><li><a href="#函数调用_1">函数调用</a></li><li><a href="#内存管理_1">内存管理</a></li><li><a href="#指针操作_1">指针操作</a></li><li><a href="#回调函数_1">回调函数</a></li><li><a href="#内存读取_1">内存读取</a></li><li><a href="#内存写入_1">内存写入</a></li><li><a href="#批量读写_1">批量读写</a></li><li><a href="#显式字节序读写_1">显式字节序读写</a></li><li><a href="#字符串工具_1">字符串工具</a></li><li><a href="#clib-声明类型">clib 声明类型</a></li><li><a href="#更新记录">更新记录</a></li></ul></ul></aside>
 </div>
 <nav class="pager"><a href="module_dirs.html">← 上一篇</a><a href="module_files.html">下一篇 →</a></nav>
 <a class="totop" href="#top" title="返回顶部">↑</a>

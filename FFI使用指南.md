@@ -2345,6 +2345,14 @@ main() {
 | `read_string_n(ptr, off, len)` | - | - |
 | `read_bytes(ptr, off, len)` | `write_bytes(ptr, off, str)` | len 字节 |
 
+> **只想判断"这块内存是不是这个内容"时，别用 `read_bytes + ==`**（2026-11-28 起）：
+> 那等于 `memcpy` 一份临时串再 `memcmp`，同一块冷内存读两遍（实测 ~2 GB/s）。
+> 用 **`ffi.compare_bytes(ptr, off, len, str)`**：纯 `memcmp`、零分配零拷贝（实测 ~10 GB/s），
+> 返回 `0` 一致 / `1` 内容不同 / `-1` 长度不一致。内存校验、资源完整性检查、缓存命中判断
+> 都属于这类；只有在**不一致**时才 `read_bytes` 回来数坏字节。
+> 另：`read_bytes` 造大串（≥1KB）现在只 `memcpy`，UTF-8 字符数与哈希改为首次用到时才补算
+> ⇒ 读回吞吐 0.6 → 2.7~3.0 GB/s（真要字符数也有 1.5 GB/s）。
+
 > **JIT 加速**：在 JIT 编译的热循环里，上表中的 `read_byte`/`read_int8`/`read_int16`/
 > `read_uint16`/`read_int`/`read_uint` 及对应 `write_*`（共 12 个）会被**直接内联成
 > 机器码 load/store**，免去每次 ~20ns 的 callout 开销（适合像素直写这类每像素多次
@@ -2469,10 +2477,16 @@ main() {
 
 ---
 
-*文档版本: 4.1*
-*最后更新: 2026-10-01*
+*文档版本: 4.2*
+*最后更新: 2026-11-28*
 
 ### 更新记录
+
+- **(2026-11-28) 新增 `ffi.compare_bytes`**：裸内存 vs 字符串的纯 `memcmp`，返回
+  `0`/`1`/`-1`（一致 / 内容不同 / 长度不一致），零分配零拷贝。给"只判断内容是否相同"的
+  大块校验用 —— `read_bytes + ==` 要把同一块冷内存读两遍，实测 2 GB/s vs 10 GB/s。
+  同时**大块字符串的 `char_len`/`hash` 改惰性**（`len >= 1024`）：`read_bytes` 0.6 → 2.7~3.0 GB/s
+  （连字符数一起要 1.5 GB/s）。回归：`assert/test_ffi_compare_bytes.leno` ✓
 
 - **(2026-10-12) 修回调实参的 64 位截断**：`callback_dispatch_direct` 把回调实参转成 Leno 值时
   写的是 `val_int((int)ffi_args[i].value.i)` —— `(int)` 是 32 位 ⇒ **回调签名里的 i64/u64
