@@ -543,10 +543,11 @@ tab.on_change(func(int idx) { ... })
 
 ## 六、列表与表格
 
-> **滚动手感（2026-11-27）**：`ScrollView` / `Table` / `VirtualGrid` 已经统一用同一套**物理滚动**
-> （`lib/sdl_scrollphys.leno`）：滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。
-> `ListBox` / `TreeView` / `ComboBox` 还停在"一格跳一行、硬夹边界"，计划随后接入。
-> 自带滚动的控件都提供只读窗口：`get_scroll_velocity()`（px/秒）、`is_scrolling()`。
+> **滚动手感（2026-11-27）**：六个自带滚动的控件（`ScrollView` / `Table` / `VirtualGrid` /
+> `ListBox` / `TreeView` / `ComboBox` 弹层）统一用同一套**物理滚动**（`lib/sdl_scrollphys.leno`）：
+> 滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。`ScrollView` / `Table` / `VirtualGrid`
+> 另外支持**手指拖动 + 甩动惯性**（只对触摸生效，桌面鼠标左键语义不变）。
+> 只读窗口统一为：`get_scroll_velocity()`（px/秒）、`get_overscroll_y()`、`is_scrolling()`。
 
 ### 6.1 ListBox —— 列表
 
@@ -618,7 +619,8 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 ⚠ 表格方法 100+ 个，全部见 `lib/sdl_table.leno`；单选时点已选行不回调、进度条列与自绘回调的细节见速查。
 
 **滚动手感（2026-11-27）**：滚轮不再"一步跳一行"，而是叠加速度后按 dt 滑行（一格 ≈1.4 行），
-撞到上下边界会回弹。程序化定位（键盘选行、`ensure_row_visible`、拖滚动条）仍是**立即到位**。
+撞到上下边界会回弹；**手指按住行往上拖**也能滚（手机上是唯一手势），抬手带惯性。
+程序化定位（键盘选行、`ensure_row_visible`、拖滚动条）仍是**立即到位**。
 只读状态：`scroll_y()`、`get_scroll_velocity()`、`get_overscroll_y()`、`is_scrolling()`。
 
 ### 6.4 TreeView —— 树形列表
@@ -634,7 +636,7 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 **方法**：`set_count()`、`get_count()`、`set_builder(func(int idx): Widget {...})`、`set_scroll_y()`、`get_scroll_y()`、`get_scroll_velocity()`、`get_overscroll_y()`、`is_scrolling()`。
 
 ⚠ 构建器走 **`set_builder()`**，不是 opts 里的 `build:` 键（那个键控件不读，传了只会得到一行"不认识键"的警告）。
-滚动同样是物理的（一格 ≈1.4 项、撞到底回弹）；`set_scroll_y()` 仍立即到位并掐掉惯性。
+滚动同样是物理的（一格 ≈1.4 项、撞到底回弹、手指可拖动 + 甩动惯性）；`set_scroll_y()` 仍立即到位并掐掉惯性。
 
 ---
 

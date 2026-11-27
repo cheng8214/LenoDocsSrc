@@ -620,10 +620,11 @@ tab.on_change(func(int idx) { ... })
 <hr>
 <h2 id="六-列表与表格">六、列表与表格</h2>
 <blockquote>
-<p><strong>滚动手感（2026-11-27）</strong>：<code>ScrollView</code> / <code>Table</code> / <code>VirtualGrid</code> 已经统一用同一套<strong>物理滚动</strong>
-（<code>lib/sdl_scrollphys.leno</code>）：滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。
-<code>ListBox</code> / <code>TreeView</code> / <code>ComboBox</code> 还停在"一格跳一行、硬夹边界"，计划随后接入。
-自带滚动的控件都提供只读窗口：<code>get_scroll_velocity()</code>（px/秒）、<code>is_scrolling()</code>。</p>
+<p><strong>滚动手感（2026-11-27）</strong>：六个自带滚动的控件（<code>ScrollView</code> / <code>Table</code> / <code>VirtualGrid</code> /
+<code>ListBox</code> / <code>TreeView</code> / <code>ComboBox</code> 弹层）统一用同一套<strong>物理滚动</strong>（<code>lib/sdl_scrollphys.leno</code>）：
+滚轮叠加速度、按 dt 解析积分、撞到上下边界回弹。<code>ScrollView</code> / <code>Table</code> / <code>VirtualGrid</code>
+另外支持<strong>手指拖动 + 甩动惯性</strong>（只对触摸生效，桌面鼠标左键语义不变）。
+只读窗口统一为：<code>get_scroll_velocity()</code>（px/秒）、<code>get_overscroll_y()</code>、<code>is_scrolling()</code>。</p>
 </blockquote>
 <h3 id="6-1-listbox-列表">6.1 ListBox —— 列表</h3>
 <pre><code class="language-text">var lb = SDL3.createListBox({x: 470, y: 396, w: 160, h: 150,
@@ -678,7 +679,8 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 <p><strong>参数（节选）</strong>：<code>headers</code>、<code>rows</code>、<code>aligns</code>、<code>header_aligns</code>、<code>col_widths</code>/<code>col_ratios</code>、<code>item_h</code>、<code>header_h</code>、<code>row_numbers</code>、<code>zebra</code>、<code>sortable</code>、<code>multi_select</code>、<code>cell_select</code>、<code>editable</code>、<code>editable_cols</code>、<code>frozen_cols</code>、<code>cell_types</code>、<code>numeric_cols</code>、<code>image_col</code>、<code>check_col</code>、<code>empty_text</code>、<code>sel_color</code>、<code>hover_color</code>、<code>row_radius</code>、<code>sep_color</code>、<code>w</code>/<code>h</code>。</p>
 <p>⚠ 表格方法 100+ 个，全部见 <code>lib/sdl_table.leno</code>；单选时点已选行不回调、进度条列与自绘回调的细节见速查。</p>
 <p><strong>滚动手感（2026-11-27）</strong>：滚轮不再"一步跳一行"，而是叠加速度后按 dt 滑行（一格 ≈1.4 行），
-撞到上下边界会回弹。程序化定位（键盘选行、<code>ensure_row_visible</code>、拖滚动条）仍是<strong>立即到位</strong>。
+撞到上下边界会回弹；<strong>手指按住行往上拖</strong>也能滚（手机上是唯一手势），抬手带惯性。
+程序化定位（键盘选行、<code>ensure_row_visible</code>、拖滚动条）仍是<strong>立即到位</strong>。
 只读状态：<code>scroll_y()</code>、<code>get_scroll_velocity()</code>、<code>get_overscroll_y()</code>、<code>is_scrolling()</code>。</p>
 <h3 id="6-4-treeview-树形列表">6.4 TreeView —— 树形列表</h3>
 <p><strong>参数</strong>：<code>items</code>、<code>text</code>、<code>image</code>、<code>image_expanded</code>、<code>image_mode</code>、<code>image_size</code>、<code>checkable</code>、<code>show_check</code>、<code>show_lines</code>、<code>indent</code>、<code>item_h</code>、<code>line_color</code>、<code>check_color</code>、<code>sel_color</code>、<code>hover_color</code>、<code>w</code>/<code>h</code>。
@@ -688,7 +690,7 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 <p><strong>参数</strong>：<code>count</code>、<code>item_w</code>/<code>item_h</code>、<code>cols</code>、<code>gap_x</code>/<code>gap_y</code>、<code>pad_x</code>/<code>pad_y</code>、<code>scroll_color</code>、<code>bar_w</code>、<code>bar_auto_hide</code>、<code>w</code>/<code>h</code>。
 <strong>方法</strong>：<code>set_count()</code>、<code>get_count()</code>、<code>set_builder(func(int idx): Widget {...})</code>、<code>set_scroll_y()</code>、<code>get_scroll_y()</code>、<code>get_scroll_velocity()</code>、<code>get_overscroll_y()</code>、<code>is_scrolling()</code>。</p>
 <p>⚠ 构建器走 <strong><code>set_builder()</code></strong>，不是 opts 里的 <code>build:</code> 键（那个键控件不读，传了只会得到一行"不认识键"的警告）。
-滚动同样是物理的（一格 ≈1.4 项、撞到底回弹）；<code>set_scroll_y()</code> 仍立即到位并掐掉惯性。</p>
+滚动同样是物理的（一格 ≈1.4 项、撞到底回弹、手指可拖动 + 甩动惯性）；<code>set_scroll_y()</code> 仍立即到位并掐掉惯性。</p>
 <hr>
 <h2 id="七-图片与图形进度">七、图片与图形进度</h2>
 <h3 id="7-1-imageview-图片展示">7.1 ImageView —— 图片展示</h3>
