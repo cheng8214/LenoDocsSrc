@@ -422,12 +422,26 @@ Button b = win.addButton({text: &quot;Primary&quot;, x: 30, y: 55, w: 130, h: 40
 b.on_click(func() { do_it() })
 
 // 纯图标按钮：不传 text（默认 &quot;&quot;），只给 image_path
-Button icon = SDL3.createButton({image_path: ui.ico(&quot;menu_delete_all.png&quot;),
+Button icon = SDL3.createButton({image_path: ui.ico(&quot;d_trash.png&quot;),
                                  image_size: 16, w: 26, h: 26, radius: 6, background: false})
 </code></pre>
 <p><strong>主要参数</strong>：<code>text</code>（默认 <code>""</code>）、<code>type</code>（<code>primary</code>/<code>danger</code>/<code>success</code>/<code>warning</code>/<code>dark</code>/<code>normal</code>）、<code>w</code>/<code>h</code>、<code>radius</code>、<code>bg_color</code>、<code>text_color</code>、<code>hover_color</code>、<code>pressed_color</code>、<code>border</code>、<code>border_color</code>、<code>shadow</code>、<code>background</code>、<code>font_size</code>、<code>font_path</code>、<code>font_style</code>、<code>padding</code>、<code>align</code>、<code>image_path</code>、<code>image_size</code>、<code>image_pos</code>、<code>image_gap</code>、<code>image_mode</code>、<code>image_alpha</code>、<code>image_tint</code>、<code>image_path_hover</code>、<code>image_path_pressed</code>、<code>image_path_disabled</code>、<code>bg_image</code>、<code>cursor</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。</p>
+<p><strong>导航项选中态（0.1.2 新增，反哺 Aria 侧栏）</strong>：给按钮加一条左侧指示条，不必自己再套 Canvas。</p>
+<pre><code class="language-text">Button nav = SDL3.createButton({text: &quot;首页&quot;, w: 150, h: 32, radius: 8,
+                                bg_color: #FFFFFFFF, selected: true,
+                                select_bar_w: 3, select_bar_pad_y: 6,
+                                select_bar_color: #E76F9BFF})
+nav.set_selected(false)                 // is_selected() 可读回
+nav.set_select_bar(3, #E76F9BFF)        // 也可运行时改宽度 / 颜色
+</code></pre>
+<p><code>select_bar_w = 0</code>（默认）时一像素都不画，老行为完全不变。指示条画在背景之上、图标文字之下，两端按按钮圆角收口。</p>
+<p><strong>图标 + 文字的垂直对齐</strong>：中文字体的行盒比可见字形高，按行盒居中时文字会看起来比图标低 1px 左右。侧栏/导航项可用 <code>text_offset_y</code> 微调（负值上移文字），也可运行时调 <code>set_text_offset_y()</code>。<strong>注意方向</strong>：上移文字会让图标相对显得偏低，微调量要小（Aria 侧栏实测 <code>-0.6</code> 最居中，<code>-1.15</code> 就过头了）；图标本身若 bbox 不居中（如带底托的下载图标），应修图标画布位置而不是加大文字偏移。</p>
+<pre><code class="language-text">Button nav = SDL3.createButton({text: &quot;首页&quot;, image_path: ui.ico(&quot;w_home.png&quot;),
+                                image_size: 17, image_gap: 9, image_tint: #77646DFF,
+                                text_offset_y: -0.6, h: 40, radius: 10})
+</code></pre>
 <p><strong>常量</strong>：<code>Button.IMG_LEFT/RIGHT/TOP/BOTTOM</code>、<code>Button.IMG_ASPECT_FIT/STRETCH/ASPECT_FILL</code>、<code>Button.ALIGN_LEFT/CENTER/RIGHT</code>；<code>cursor</code> 用 <code>SDL3.SystemCursor.*</code>。</p>
-<p><strong>动态方法</strong>（全是实测）：<code>set_text()</code>、<code>set_type()</code>、<code>set_bg_color()</code>、<code>set_text_color()</code>、<code>set_hover_color()</code>、<code>set_font_size()</code>、<code>set_font_style()</code>、<code>set_radius()</code>、<code>set_border()</code>、<code>set_shadow()</code>、<code>set_background()</code>、<code>set_cursor()</code>、<code>set_image()</code>、<code>set_image_pos()</code>、<code>set_image_mode()</code>、<code>set_enabled()</code>、<code>set_visible()</code>、<code>set_pos()</code>、<code>set_size()</code>、<code>get_text()</code>、<code>get_x()/get_y()/get_w()/get_h()</code>、<code>focus()</code>、<code>blur()</code>、<code>activate()</code>、<code>on_click()</code>。</p>
+<p><strong>动态方法</strong>（全是实测）：<code>set_text()</code>、<code>set_type()</code>、<code>set_bg_color()</code>、<code>set_text_color()</code>、<code>set_hover_color()</code>、<code>set_font_size()</code>、<code>set_font_style()</code>、<code>set_radius()</code>、<code>set_border()</code>、<code>set_shadow()</code>、<code>set_background()</code>、<code>set_cursor()</code>、<code>set_image()</code>、<code>set_image_pos()</code>、<code>set_image_mode()</code>、<code>set_text_offset_y()</code>、<code>set_enabled()</code>、<code>set_visible()</code>、<code>set_pos()</code>、<code>set_size()</code>、<code>get_text()</code>、<code>get_x()/get_y()/get_w()/get_h()</code>、<code>focus()</code>、<code>blur()</code>、<code>activate()</code>、<code>on_click()</code>。</p>
 <p>⚠ <code>background: false</code> 的纯图标按钮会连 hover 效果一起跳过。</p>
 <h3 id="3-3-linkbutton-链接按钮">3.3 LinkButton —— 链接按钮</h3>
 <p><strong>主要参数</strong>：<code>text</code>、<code>url</code>、<code>color</code>、<code>hover_color</code>、<code>visited</code>、<code>underline</code>、<code>underline_hover</code>、<code>font_size</code>、<code>font_path</code>、<code>tip</code>、<code>visible</code>、<code>enabled</code>。</p>
@@ -762,7 +776,8 @@ pm.poll()                                   // 主循环里调：点菜单外自
 <h3 id="9-1-titlebar-自绘标题栏">9.1 TitleBar —— 自绘标题栏</h3>
 <p>无边框窗口自己画标题栏，支持最小化/最大化/关闭、自绘图标、动作按钮、居中控件。</p>
 <p><strong>参数</strong>：<code>title</code>、<code>h</code>、<code>bg_color</code>、<code>text_color</code>、<code>hover_color</code>、<code>close_hover_color</code>、<code>icon_color</code>、<code>sep_color</code>、<code>show_minimize</code>/<code>show_maximize</code>/<code>show_close</code>、<code>title_align</code>、<code>btn_align</code>、<code>actions</code>、<code>title_icon</code>、<code>icon_minimize</code>/<code>icon_maximize</code>/<code>icon_restore</code>/<code>icon_close</code>。
-<strong>方法</strong>：<code>set_title()</code>、<code>on_close()</code>、<code>on_minimize()</code>、<code>on_maximize()</code>、<code>on_action()</code>、<code>add_action()</code>、<code>set_maximized()</code>、<code>set_center_widget()</code>、<code>bind_window()</code>。</p>
+<strong>方法</strong>：<code>set_title()</code>、<code>on_close()</code>、<code>on_minimize()</code>、<code>on_maximize()</code>、<code>on_action()</code>、<code>add_action()</code>、<code>set_maximized()</code>、<code>set_center_widget()</code>、<code>bind_window()</code>、<code>set_bg_color()</code>、<code>set_text_color()</code>、<code>set_separator_color()</code>、<code>set_icon_color()</code>、<code>set_close_hover_color()</code>。</p>
+<p>自定义对话框可用 <code>SDL3.dialogTitleBarEx(dlg, "标题", style)</code> 覆盖标题栏配色（2026-11-27 门面补导出；<code>style</code> 为 <code>Dict[string, any]</code>）。注意：主题切换会在建窗后再刷一次颜色，必要时建完再调一遍 <code>tb.set_bg_color(...)</code>。</p>
 <h3 id="9-2-dialog-对话框">9.2 Dialog —— 对话框</h3>
 <pre><code class="language-text">// 模态确认：结果走回调，不要读返回值
 SDL3.msgBox(&quot;确认&quot;, [&quot;删除后无法恢复&quot;], &quot;删除&quot;, &quot;取消&quot;, true, func() { do_delete() })

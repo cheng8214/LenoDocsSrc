@@ -267,15 +267,36 @@ Button b = win.addButton({text: "Primary", x: 30, y: 55, w: 130, h: 40,
 b.on_click(func() { do_it() })
 
 // 纯图标按钮：不传 text（默认 ""），只给 image_path
-Button icon = SDL3.createButton({image_path: ui.ico("menu_delete_all.png"),
+Button icon = SDL3.createButton({image_path: ui.ico("d_trash.png"),
                                  image_size: 16, w: 26, h: 26, radius: 6, background: false})
 ```
 
 **主要参数**：`text`（默认 `""`）、`type`（`primary`/`danger`/`success`/`warning`/`dark`/`normal`）、`w`/`h`、`radius`、`bg_color`、`text_color`、`hover_color`、`pressed_color`、`border`、`border_color`、`shadow`、`background`、`font_size`、`font_path`、`font_style`、`padding`、`align`、`image_path`、`image_size`、`image_pos`、`image_gap`、`image_mode`、`image_alpha`、`image_tint`、`image_path_hover`、`image_path_pressed`、`image_path_disabled`、`bg_image`、`cursor`、`tip`、`enabled`、`visible`。
 
+**导航项选中态（0.1.2 新增，反哺 Aria 侧栏）**：给按钮加一条左侧指示条，不必自己再套 Canvas。
+
+```text
+Button nav = SDL3.createButton({text: "首页", w: 150, h: 32, radius: 8,
+                                bg_color: #FFFFFFFF, selected: true,
+                                select_bar_w: 3, select_bar_pad_y: 6,
+                                select_bar_color: #E76F9BFF})
+nav.set_selected(false)                 // is_selected() 可读回
+nav.set_select_bar(3, #E76F9BFF)        // 也可运行时改宽度 / 颜色
+```
+
+`select_bar_w = 0`（默认）时一像素都不画，老行为完全不变。指示条画在背景之上、图标文字之下，两端按按钮圆角收口。
+
+**图标 + 文字的垂直对齐**：中文字体的行盒比可见字形高，按行盒居中时文字会看起来比图标低 1px 左右。侧栏/导航项可用 `text_offset_y` 微调（负值上移文字），也可运行时调 `set_text_offset_y()`。**注意方向**：上移文字会让图标相对显得偏低，微调量要小（Aria 侧栏实测 `-0.6` 最居中，`-1.15` 就过头了）；图标本身若 bbox 不居中（如带底托的下载图标），应修图标画布位置而不是加大文字偏移。
+
+```text
+Button nav = SDL3.createButton({text: "首页", image_path: ui.ico("w_home.png"),
+                                image_size: 17, image_gap: 9, image_tint: #77646DFF,
+                                text_offset_y: -0.6, h: 40, radius: 10})
+```
+
 **常量**：`Button.IMG_LEFT/RIGHT/TOP/BOTTOM`、`Button.IMG_ASPECT_FIT/STRETCH/ASPECT_FILL`、`Button.ALIGN_LEFT/CENTER/RIGHT`；`cursor` 用 `SDL3.SystemCursor.*`。
 
-**动态方法**（全是实测）：`set_text()`、`set_type()`、`set_bg_color()`、`set_text_color()`、`set_hover_color()`、`set_font_size()`、`set_font_style()`、`set_radius()`、`set_border()`、`set_shadow()`、`set_background()`、`set_cursor()`、`set_image()`、`set_image_pos()`、`set_image_mode()`、`set_enabled()`、`set_visible()`、`set_pos()`、`set_size()`、`get_text()`、`get_x()/get_y()/get_w()/get_h()`、`focus()`、`blur()`、`activate()`、`on_click()`。
+**动态方法**（全是实测）：`set_text()`、`set_type()`、`set_bg_color()`、`set_text_color()`、`set_hover_color()`、`set_font_size()`、`set_font_style()`、`set_radius()`、`set_border()`、`set_shadow()`、`set_background()`、`set_cursor()`、`set_image()`、`set_image_pos()`、`set_image_mode()`、`set_text_offset_y()`、`set_enabled()`、`set_visible()`、`set_pos()`、`set_size()`、`get_text()`、`get_x()/get_y()/get_w()/get_h()`、`focus()`、`blur()`、`activate()`、`on_click()`。
 
 ⚠ `background: false` 的纯图标按钮会连 hover 效果一起跳过。
 
@@ -742,7 +763,9 @@ pm.poll()                                   // 主循环里调：点菜单外自
 无边框窗口自己画标题栏，支持最小化/最大化/关闭、自绘图标、动作按钮、居中控件。
 
 **参数**：`title`、`h`、`bg_color`、`text_color`、`hover_color`、`close_hover_color`、`icon_color`、`sep_color`、`show_minimize`/`show_maximize`/`show_close`、`title_align`、`btn_align`、`actions`、`title_icon`、`icon_minimize`/`icon_maximize`/`icon_restore`/`icon_close`。
-**方法**：`set_title()`、`on_close()`、`on_minimize()`、`on_maximize()`、`on_action()`、`add_action()`、`set_maximized()`、`set_center_widget()`、`bind_window()`。
+**方法**：`set_title()`、`on_close()`、`on_minimize()`、`on_maximize()`、`on_action()`、`add_action()`、`set_maximized()`、`set_center_widget()`、`bind_window()`、`set_bg_color()`、`set_text_color()`、`set_separator_color()`、`set_icon_color()`、`set_close_hover_color()`。
+
+自定义对话框可用 `SDL3.dialogTitleBarEx(dlg, "标题", style)` 覆盖标题栏配色（2026-11-27 门面补导出；`style` 为 `Dict[string, any]`）。注意：主题切换会在建窗后再刷一次颜色，必要时建完再调一遍 `tb.set_bg_color(...)`。
 
 ### 9.2 Dialog —— 对话框
 
