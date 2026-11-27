@@ -506,6 +506,12 @@ void frozen_scope_release(VM* vm, int mark);   // 只放本任务新增的条目
 <strong>热路径成本 0</strong>：这些检查已是 <code>unlikely(obj_is_readonly(...))</code>，只多一位与运算（同一个字节）。</p>
 <p>S1 要逐项过的漏洞清单（不走上面这些点）：<code>sort</code> / <code>reverse</code> / <code>insert</code> / <code>remove</code> / <code>clear</code> /
 <code>dict.remove</code> / <code>dict.clear</code> / <code>strings</code> 追加 / <code>jsons.fill</code>（往 frozen struct 填 ⇒ 必须拒）/ FFI 写。</p>
+<blockquote>
+<p><strong>2026-11-27 实测结论：前七项都走 <code>obj_is_readonly</code> 的既有检查点 ✓；后两个是洞，已修</strong>：
+<code>jsons.fill</code> 与 <code>s["f"] = v</code>（通用索引写）此前<strong>完全没有只读检查</strong> ——
+实测把冻结实例的字改掉了、还不报错；<code>native_struct_set()</code> 同病。三处现在都过
+<code>obj_write_error_msg()</code>（<code>leno_value.h</code>，frozen / const 共用一套文案）。</p>
+</blockquote>
 <hr>
 <h2 id="9-分步实施-每步独立提交-独立可回退">9. 分步实施（每步独立提交、独立可回退）</h2>
 <table>
@@ -819,6 +825,17 @@ S2 起加 <code>LENO_GC_STRESS=512</code>（已知 <code>test_async_io_limit</co
    二分定位过程：禁用闸门 ⇒ 仍崩；禁用 slot 读写 ⇒ 不崩。</p>
 </li>
 <li>
+<p><strong>跨模块用例抓出的两个洞（2026-11-27，都是"别人的写入口不认识 frozen"）</strong></p>
+<ul>
+<li><code>jsons.fill(frozenStruct, d)</code> <strong>把冻结实例的字改掉了且不报错</strong>：它走 <code>struct_set_field</code> 直写，
+     绕过了 <code>OP_SET_FIELD</code> 的只读检查；<code>s["f"] = v</code> 的通用索引写（<code>07_collections.inc</code>）同样没查；
+     <code>native_struct_set()</code>（模块侧批量写行的入口）也没有。⇒ 三处都补 <code>obj_write_error_msg()</code> 闸门。</li>
+<li>模块里有 <code>export Frozen[...]</code> 时，子线程 start 克隆 globals 会误报
+     "子线程把本线程堆上的对象写进模块级变量（线程序号 <strong>255</strong>）" —— 255 正是 frozen 的
+     <code>owner_thread</code> 标记。⇒ <code>module_warn_cross_heap_write()</code> 跳过 frozen / Channel / Atomic。</li>
+</ul>
+</li>
+<li>
 <p><strong>S5 第一版：scope 一条都放不掉（症状：200 个池任务后 <code>frozen_objs</code> 涨 200）</strong>
    <code>frozen_reg_mark()</code> 用 <code>vm-&gt;frozen_epoch++</code> 推进，而 <code>acquire</code> <strong>不推进</strong> ——
    于是同一任务里登记的条目全部等于 <code>mark + 1</code>，而快路径判据 <code>epoch &lt;= mark + 1</code> 直接返回。
@@ -877,7 +894,11 @@ S2 起加 <code>LENO_GC_STRESS=512</code>（已知 <code>test_async_io_limit</co
 </tr>
 <tr>
 <td>回归</td>
-<td>断言 <strong>680/680</strong>（新增 <code>test_frozen</code>、<code>test_frozen_thread</code>、<code>test_frozen_scope</code>）</td>
+<td>断言 <strong>682/682</strong>（新增 <code>test_frozen</code>、<code>test_frozen_thread</code>、<code>test_frozen_scope</code>、<code>test_frozen_xmod</code>、<code>test_frozen_edge</code>）</td>
+</tr>
+<tr>
+<td>跨模块 / 别名 / 泛型</td>
+<td><code>Frozen[fx.Row]</code>、<code>use fx.Row</code>、<code>Frozen[Box[int]]</code>、<code>Frozen[Dict[string, Array[Row]]]</code>、模块级 <code>export Frozen[...]</code>、<code>-c</code> 出的 <code>.lenb</code> 往返 —— 全过</td>
 </tr>
 <tr>
 <td>GC 压力 <code>LENO_GC_STRESS=512</code>（全量）</td>

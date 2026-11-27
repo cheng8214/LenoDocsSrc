@@ -246,6 +246,14 @@ func score_of(string w): int {
 <td>同上（运行期 <code>FROZEN</code> 位兜底）</td>
 </tr>
 <tr>
+<td><code>jsons.fill(frozen结构, d)</code></td>
+<td>运行期抛「冻结对象（frozen）不可修改」（<strong>批量写字段的入口也查</strong>）</td>
+</tr>
+<tr>
+<td><code>frozen结构["字段名"] = v</code>（经 <code>any</code> 中转时）</td>
+<td>同上（通用索引写也查）</td>
+</tr>
+<tr>
 <td><code>_freeze(any_val)</code> 里装的是 Ptr/Channel…</td>
 <td>运行期抛「不能冻结 …」</td>
 </tr>
@@ -280,6 +288,22 @@ Channel 是跨线程<strong>可变</strong>通道，不能冻。要共享数据�
 在主线程先把该模块加载起来（<code>import</code> 或 <code>main</code> 里触达一次），再冻结实例；或在<strong>模块级</strong>声明这个 struct。</p>
 <p><strong>⑥ 冻完发现子线程改不动、还报错</strong>
 这不是 bug：frozen 就是只读。子线程要产出结果，请<strong>返回新值</strong>（Channel / <code>map</code> 的返回值），不要原地改共享数据。</p>
+<p><strong>⑦ 「参数 1 期望 'Frozen[Array[int]]'，但传入 'int'」——元素类型被第一次 <code>add</code> 锁死了</strong>
+<code>var arr = []</code> 的元素类型是"未指定"，<strong>第一次 <code>add</code> 会把元素类型定下来</strong>：</p>
+<pre><code class="language-leno">var arr = []
+arr.add(frozenInner)      // 元素类型被锁成 Frozen[Array[int]]
+arr.add(1)                // ✗ 这时才报错（int 不是 Frozen[...]）
+</code></pre>
+<p>混装就显式写 <code>Array[any] arr = []</code>。</p>
+<p><strong>⑧ 跨模块怎么声明</strong>
+<code>Frozen[...]</code> 里的类型可以来自别的模块，两种写法都行：</p>
+<pre><code class="language-leno">import &quot;./data.leno&quot; as data
+Frozen[Array[data.Row]] a = _freeze(data.load())     // 限定名
+
+use data.Row
+Frozen[Row] b = _freeze(data.load())                 // 不带限定名（use 之后）
+</code></pre>
+<p>导出函数的形参也可以直接写 <code>Frozen[Array[Row]]</code>（模块自己 import 该类型即可）。</p>
 <hr>
 <h2 id="9-性能-本机实测-build-leno-exe">9. 性能（本机实测，<code>build\leno.exe</code>）</h2>
 <table>

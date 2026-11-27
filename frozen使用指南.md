@@ -203,6 +203,8 @@ func score_of(string w): int {
 |---|---|
 | `var v = snap[0]` 之后 `v.add(1)` | 元素类型本身不带 frozen 位 ⇒ 运行期抛「冻结对象（frozen）不可修改」 |
 | 把 frozen 塞进 `any` 再收窄去写 | 同上（运行期 `FROZEN` 位兜底） |
+| `jsons.fill(frozen结构, d)` | 运行期抛「冻结对象（frozen）不可修改」（**批量写字段的入口也查**） |
+| `frozen结构["字段名"] = v`（经 `any` 中转时） | 同上（通用索引写也查） |
 | `_freeze(any_val)` 里装的是 Ptr/Channel… | 运行期抛「不能冻结 …」 |
 | 数据里**含环**（`a.add(a)`） | 运行期抛「冻结失败：嵌套超过 64 层（可能含循环引用）」 |
 | struct 的类型定义是**子线程**加载的 | 运行期抛「…def 是在子线程里创建/加载的…」 |
@@ -240,6 +242,30 @@ Channel 是跨线程**可变**通道，不能冻。要共享数据请冻**数据
 
 **⑥ 冻完发现子线程改不动、还报错**
 这不是 bug：frozen 就是只读。子线程要产出结果，请**返回新值**（Channel / `map` 的返回值），不要原地改共享数据。
+
+**⑦ 「参数 1 期望 'Frozen[Array[int]]'，但传入 'int'」——元素类型被第一次 `add` 锁死了**
+`var arr = []` 的元素类型是"未指定"，**第一次 `add` 会把元素类型定下来**：
+
+```leno
+var arr = []
+arr.add(frozenInner)      // 元素类型被锁成 Frozen[Array[int]]
+arr.add(1)                // ✗ 这时才报错（int 不是 Frozen[...]）
+```
+
+混装就显式写 `Array[any] arr = []`。
+
+**⑧ 跨模块怎么声明**
+`Frozen[...]` 里的类型可以来自别的模块，两种写法都行：
+
+```leno
+import "./data.leno" as data
+Frozen[Array[data.Row]] a = _freeze(data.load())     // 限定名
+
+use data.Row
+Frozen[Row] b = _freeze(data.load())                 // 不带限定名（use 之后）
+```
+
+导出函数的形参也可以直接写 `Frozen[Array[Row]]`（模块自己 import 该类型即可）。
 
 ---
 
