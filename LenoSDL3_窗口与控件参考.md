@@ -491,8 +491,26 @@ for 12 to i {
 sv.set_content(svBox)
 ```
 
-**参数**：`content_w`/`content_h`、`fit_w`/`fit_h`、`w`/`h`、`smooth`、`step`、`bar_w`、`bar_color`、`bar_auto_hide`、`bar_hover_color`、`bg_color`、`border`、`border_color`、`border_alpha`、`radius`、`clip`。
-**方法**：`set_content()`、`set_content_size()`、`set_scroll()`、`scroll_to()`、`scroll_by()`、`ensure_visible()`、`near_bottom()`、`get_scroll_x()`、`get_scroll_y()`、`get_max_scroll_y()`、`get_layout_epoch()`。
+**参数**：`content_w`/`content_h`、`fit_w`/`fit_h`、`w`/`h`、`step`、`friction`、`drag_friction`、`smooth`（已废弃）、`bar_w`、`bar_color`、`bar_auto_hide`、`bar_hover_color`、`bg_color`、`border`、`border_color`、`border_alpha`、`radius`、`clip`。
+**方法**：`set_content()`、`set_content_size()`、`set_scroll()`、`scroll_to()`、`scroll_by()`、`fling()`、`ensure_visible()`、`near_bottom()`、`get_scroll_x()`、`get_scroll_y()`、`get_max_scroll_y()`、`get_layout_epoch()`、`get_velocity_x()`/`get_velocity_y()`、`get_overscroll_x()`/`get_overscroll_y()`、`is_animating()`。
+
+**滚动是物理的（2026-11-27 起是唯一行为，没有开关）**：滚轮叠加速度后按 dt 滑行（起步加速、停下滑行），手指甩动按 px/秒积分（60Hz 与 144Hz 走同样远），拖出边界是弹性越界、松手由欠阻尼弹簧拉回。
+
+```text
+var sv = win.addScrollView({x: 20, y: 20, w: 400, h: 300, content_w: 400, content_h: 1200})
+// 可选：friction（滚轮每帧保留率，默认 0.88，越小停得越快；0.96 很"飘"）
+//       drag_friction（甩动惯性，默认 0.94，比滚轮滑得更远）
+sv.fling(0, -1500)          // 程序化甩一下：给初速度（px/s），走同一套物理
+sv.is_animating()           // 还有没有未收敛的运动（做"滚动中"效果时用）
+```
+
+⚠ 三件事：
+
+- `content_h` 必须 **≥ 内容的自然高**，否则底部那一截永远滚不到；内容高不确定就别传，让它自动量。
+- `scroll_by` / `set_scroll` / `ensure_visible` 仍是**精确位移**（程序语义可预期），"飞"只属于滚轮和甩动。
+- `smooth: true` 已废弃（no-op）：滚轮本来就平滑了，老调用方不用改，但新代码别传。
+
+回归见 `test/test_scroll_physics.leno` / `test/test_scroll_touch.leno`。
 
 ⚠ 子孙跟不跟着滚，取决于内容根是哪种控件，有三种情况；命中裁剪另见 `自测/test_scrollview_hitclip.leno`。
 
