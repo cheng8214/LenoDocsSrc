@@ -610,6 +610,8 @@ tab.set_active(0) / tab.get_active()
 tab.on_change(func(int idx) { ... })
 </code></pre>
 <p><strong>参数</strong>：<code>tabs</code>、<code>tab_icons</code>、<code>active</code>、<code>tab_h</code>、<code>tab_radius</code>、<code>tab_icon_size</code>、<code>underline</code>、<code>show_header</code>、<code>accent_color</code>、<code>active_color</code>、<code>active_text_color</code>、<code>bar_color</code>、<code>tab_color</code>、<code>bg_color</code>、<code>border</code>、<code>clip</code>、<code>font_size</code>、<code>w</code>/<code>h</code>。</p>
+<p><strong>下划线滑动（2026-11-27）</strong>：切页时下划线（<code>underline:true</code>）<strong>滑过去</strong>而不是瞬跳（~150ms 缓动，
+由 <code>lib/sdl_animator.leno</code> 的 <code>Anim</code> 驱动）。只读：<code>get_underline_x()</code>、<code>get_underline_w()</code>、<code>is_underline_moving()</code>。</p>
 <p>⚠ 同页混用绝对定位和 <code>addToPageLayout</code> 会提示一次（警告，不是错误）。</p>
 <h3 id="5-7-splitter-card">5.7 Splitter / Card</h3>
 <ul>
@@ -644,6 +646,8 @@ var multi = SDL3.createListBox({items: [&quot;红&quot;, &quot;绿&quot;, &quot;
 cbx.on_change(func(int idx) { status.set_text(&quot;下拉: &quot; + cbx.get_selected_text()) })
 </code></pre>
 <p>⚠ <code>on_change</code> 收 <strong><code>int</code> 下标</strong>——和 ListBox 不同。</p>
+<p><strong>弹层动画（2026-11-27）</strong>：展开时高度从 0 长到目标（~150ms）；收起仍是瞬时（收起后焦点/命中状态已变，
+延迟绘制容易点穿）。<code>get_open_anim()</code> 返回展开进度（0~1），弹层滚动相关接口同 ListBox。</p>
 <p><strong>参数</strong>：<code>items</code>、<code>selected</code>、<code>editable</code>、<code>placeholder</code>、<code>item_h</code>、<code>popup_h</code>、<code>item_images</code>、<code>icon</code>、<code>icon_size</code>、<code>image_size</code>、<code>image_gap</code>、<code>show_arrow</code>、<code>sel_color</code>、<code>hover_color</code>、<code>bg_color</code>、<code>border</code>、<code>radius</code>、<code>w</code>/<code>h</code>。
 <strong>方法</strong>：<code>set_items()</code>、<code>set_items_with_images()</code>、<code>add_item()</code>、<code>clear()</code>、<code>set_selected()</code>、<code>get_selected()</code>、<code>get_selected_text()</code>、<code>set_editable()</code>、<code>set_suggestions()</code>、<code>open_list()</code>、<code>close()</code>、<code>on_change(func(int idx){...})</code>、<code>on_text_change()</code>、<code>on_enter()</code>。</p>
 <h3 id="6-3-table-表格">6.3 Table —— 表格</h3>

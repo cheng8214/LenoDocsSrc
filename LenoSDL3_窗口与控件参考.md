@@ -530,6 +530,9 @@ tab.on_change(func(int idx) { ... })
 
 **参数**：`tabs`、`tab_icons`、`active`、`tab_h`、`tab_radius`、`tab_icon_size`、`underline`、`show_header`、`accent_color`、`active_color`、`active_text_color`、`bar_color`、`tab_color`、`bg_color`、`border`、`clip`、`font_size`、`w`/`h`。
 
+**下划线滑动（2026-11-27）**：切页时下划线（`underline:true`）**滑过去**而不是瞬跳（~150ms 缓动，
+由 `lib/sdl_animator.leno` 的 `Anim` 驱动）。只读：`get_underline_x()`、`get_underline_w()`、`is_underline_moving()`。
+
 ⚠ 同页混用绝对定位和 `addToPageLayout` 会提示一次（警告，不是错误）。
 
 ### 5.7 Splitter / Card
@@ -576,6 +579,9 @@ cbx.on_change(func(int idx) { status.set_text("下拉: " + cbx.get_selected_text
 ```
 
 ⚠ `on_change` 收 **`int` 下标**——和 ListBox 不同。
+
+**弹层动画（2026-11-27）**：展开时高度从 0 长到目标（~150ms）；收起仍是瞬时（收起后焦点/命中状态已变，
+延迟绘制容易点穿）。`get_open_anim()` 返回展开进度（0~1），弹层滚动相关接口同 ListBox。
 
 **参数**：`items`、`selected`、`editable`、`placeholder`、`item_h`、`popup_h`、`item_images`、`icon`、`icon_size`、`image_size`、`image_gap`、`show_arrow`、`sel_color`、`hover_color`、`bg_color`、`border`、`radius`、`w`/`h`。
 **方法**：`set_items()`、`set_items_with_images()`、`add_item()`、`clear()`、`set_selected()`、`get_selected()`、`get_selected_text()`、`set_editable()`、`set_suggestions()`、`open_list()`、`close()`、`on_change(func(int idx){...})`、`on_text_change()`、`on_enter()`。
