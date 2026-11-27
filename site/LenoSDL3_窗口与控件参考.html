@@ -461,12 +461,13 @@ win.addRadioButton({text: &quot;选项 B&quot;, x: 40, y: 140, group: &quot;mode
 </code></pre>
 <p><strong>参数/方法</strong>同 CheckBox，多一个 <code>group</code>；回调 <code>on_change(func(bool v){...})</code>——<strong>只在被选中时处理 <code>if v</code></strong>，取消选中那次也会回调。</p>
 <h3 id="3-6-toggle-开关">3.6 Toggle —— 开关</h3>
-<pre><code class="language-text">var tg = win.addToggle({text: &quot;Wi-Fi&quot;, x: 240, y: 200, on: true, anim: true})
+<pre><code class="language-text">var tg = win.addToggle({text: &quot;Wi-Fi&quot;, x: 240, y: 200, on: true})   // 切换带 ~150ms 滑动
 tg.on_change(func(bool v) { ... })
 bool on = tg.is_on()
 </code></pre>
-<p><strong>主要参数</strong>：<code>on</code>、<code>text</code>、<code>anim</code>、<code>on_color</code>、<code>off_color</code>、<code>w</code>/<code>h</code>、<code>font_size</code>、<code>text_color</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。
-<strong>方法/回调</strong>：<code>set_on()</code>、<code>is_on()</code>、<code>on_change(func(bool v){...})</code>。</p>
+<p><strong>主要参数</strong>：<code>on</code>、<code>text</code>、<code>anim</code>（默认 <strong>true</strong>，<code>anim:false</code> 关掉动画）、<code>anim_speed</code>、<code>on_color</code>、<code>off_color</code>、<code>w</code>/<code>h</code>、<code>font_size</code>、<code>text_color</code>、<code>tip</code>、<code>enabled</code>、<code>visible</code>。
+<strong>方法/回调</strong>：<code>set_on()</code>、<code>is_on()</code>、<code>get_anim_pos()</code>（滑块当前显示位置 0~1）、<code>on_change(func(bool v){...})</code>。</p>
+<p>⚠ 2026-11-27 起动画<strong>默认开启</strong>（以前默认关，点一下"啪"地跳过去，和新的滚动/悬停/弹层渐变放一起很生硬）。想要瞬时切换传 <code>anim: false</code>。</p>
 <hr>
 <h2 id="四-输入与选择">四、输入与选择</h2>
 <h3 id="4-1-edit-单行-多行输入框">4.1 Edit —— 单行 / 多行输入框</h3>
@@ -768,6 +769,8 @@ SDL3.toastFull(&quot;正在解析…&quot;, SDL3.TOAST_INFO, 1200, SDL3.TOAST_TO
 <h3 id="8-2-tooltip-悬停提示">8.2 Tooltip —— 悬停提示</h3>
 <p>控件通用的 <code>tip</code> 参数就够用；<code>SDL3.setTipDelay(400)</code> 设全局延迟。内容随光标变化时用 <code>tipReportEx("owner", text, ax, ay)</code> + <code>tipClearEx("owner")</code>。</p>
 <p>⚠ 手动弹气泡必须用带 owner 的版本；用无条件 <code>tipClear</code> 会把别人的提示一起清掉。</p>
+<p><strong>淡入（2026-11-27）</strong>：延迟到点后气泡约 120ms 淡入（背景/边框/文字一起渐显），移开立刻消失。
+只读：<code>SDL3.tipVisible()</code>、<code>SDL3.tipText()</code>、<code>SDL3.tipFade()</code>（0~1 进度）。</p>
 <h3 id="8-3-menubar-右击菜单">8.3 MenuBar / 右击菜单</h3>
 <p><strong>MenuBar 是构建器写法</strong>，先 <code>addMenu</code> 拿 int id，再往 id 里加项（<code>showcase.leno</code> / <code>settings.leno</code> 一致）：</p>
 <pre><code class="language-text">var bar = win.addMenuBar({x: 0, y: 0, w: 920, h: 30, font_size: 14})
@@ -807,7 +810,8 @@ pm.poll()                                   // 主循环里调：点菜单外自
 <p><strong>方法</strong>：<code>addItem()</code>、<code>addCheck()</code>、<code>addSeparator()</code>、<code>beginSubmenu()</code>、<code>endSubmenu()</code>、<code>setChecked()</code>、<code>setText()</code>、<code>setIcon()</code>、<code>showAt()</code>、<code>hide()</code>、<code>poll()</code>、<code>clickItem(idx)</code>（无头自测）。</p>
 <p>⚠ 子菜单是另一块独立面板，各面板必须紧贴（窗口透明，留缝会透出桌面）。Windows 上原生托盘菜单会冻结画面，所以托盘用这套自绘方案（见速查第六节）。</p>
 <h3 id="8-5-scrim-遮罩层">8.5 Scrim —— 遮罩层</h3>
-<p>半透明遮罩，常用于模态浮层后面。<strong>参数</strong>：<code>color</code>、<code>alpha</code>、<code>w</code>/<code>h</code>；<strong>方法</strong>：<code>show()</code>、<code>hide()</code>、<code>set_alpha()</code>、<code>on_window_resize()</code>。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 <code>自测/test_scrim_resize.leno</code>。</p>
+<p>半透明遮罩，常用于模态浮层后面。<strong>参数</strong>：<code>color</code>、<code>alpha</code>、<code>w</code>/<code>h</code>；<strong>方法</strong>：<code>show()</code>、<code>hide()</code>、<code>set_alpha()</code>、<code>get_fade()</code>、<code>on_window_resize()</code>。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 <code>自测/test_scrim_resize.leno</code>。</p>
+<p><strong>渐显（2026-11-27）</strong>：<code>show()</code> 之后约 150ms 内从透明淡到 <code>alpha</code>（背景不会"啪"地变暗）；<code>hide()</code> 瞬时消失，<code>get_fade()</code> 可读进度。</p>
 <hr>
 <h2 id="九-窗口增强">九、窗口增强</h2>
 <h3 id="9-1-titlebar-自绘标题栏">9.1 TitleBar —— 自绘标题栏</h3>

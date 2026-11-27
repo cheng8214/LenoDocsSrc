@@ -333,13 +333,15 @@ win.addRadioButton({text: "选项 B", x: 40, y: 140, group: "mode"})
 ### 3.6 Toggle —— 开关
 
 ```text
-var tg = win.addToggle({text: "Wi-Fi", x: 240, y: 200, on: true, anim: true})
+var tg = win.addToggle({text: "Wi-Fi", x: 240, y: 200, on: true})   // 切换带 ~150ms 滑动
 tg.on_change(func(bool v) { ... })
 bool on = tg.is_on()
 ```
 
-**主要参数**：`on`、`text`、`anim`、`on_color`、`off_color`、`w`/`h`、`font_size`、`text_color`、`tip`、`enabled`、`visible`。
-**方法/回调**：`set_on()`、`is_on()`、`on_change(func(bool v){...})`。
+**主要参数**：`on`、`text`、`anim`（默认 **true**，`anim:false` 关掉动画）、`anim_speed`、`on_color`、`off_color`、`w`/`h`、`font_size`、`text_color`、`tip`、`enabled`、`visible`。
+**方法/回调**：`set_on()`、`is_on()`、`get_anim_pos()`（滑块当前显示位置 0~1）、`on_change(func(bool v){...})`。
+
+⚠ 2026-11-27 起动画**默认开启**（以前默认关，点一下"啪"地跳过去，和新的滚动/悬停/弹层渐变放一起很生硬）。想要瞬时切换传 `anim: false`。
 
 ---
 
@@ -744,6 +746,9 @@ SDL3.toastFull("正在解析…", SDL3.TOAST_INFO, 1200, SDL3.TOAST_TOP)
 
 ⚠ 手动弹气泡必须用带 owner 的版本；用无条件 `tipClear` 会把别人的提示一起清掉。
 
+**淡入（2026-11-27）**：延迟到点后气泡约 120ms 淡入（背景/边框/文字一起渐显），移开立刻消失。
+只读：`SDL3.tipVisible()`、`SDL3.tipText()`、`SDL3.tipFade()`（0~1 进度）。
+
 ### 8.3 MenuBar / 右击菜单
 
 **MenuBar 是构建器写法**，先 `addMenu` 拿 int id，再往 id 里加项（`showcase.leno` / `settings.leno` 一致）：
@@ -795,7 +800,9 @@ pm.poll()                                   // 主循环里调：点菜单外自
 
 ### 8.5 Scrim —— 遮罩层
 
-半透明遮罩，常用于模态浮层后面。**参数**：`color`、`alpha`、`w`/`h`；**方法**：`show()`、`hide()`、`set_alpha()`、`on_window_resize()`。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 `自测/test_scrim_resize.leno`。
+半透明遮罩，常用于模态浮层后面。**参数**：`color`、`alpha`、`w`/`h`；**方法**：`show()`、`hide()`、`set_alpha()`、`get_fade()`、`on_window_resize()`。窗口缩放时必须跟着铺满，否则右下露一条"没遮住且点得动"，见 `自测/test_scrim_resize.leno`。
+
+**渐显（2026-11-27）**：`show()` 之后约 150ms 内从透明淡到 `alpha`（背景不会"啪"地变暗）；`hide()` 瞬时消失，`get_fade()` 可读进度。
 
 ---
 
