@@ -191,6 +191,7 @@ func score_of(string w): int {
 | frozen struct 上调用 `mut func` | ✗ 同上（判据来自 `mut` 声明） |
 | `Array[int] m = snap` / 传给 `Array[int]` 形参 | ✗ 类型不匹配 |
 | `snap is Frozen[Array[int]]` / `x as Frozen[...]` | ✗ 显式禁止（运行期只有对象标签，会给错答案） |
+| `Named nn = frozenStruct`（赋给 **face** 形参/变量） | ✗「Frozen[...] 是只读视图，不能当可变值用」——face 的方法可能是 mutator，所以只读视图不能当可变 face 用 |
 | `_freeze(ptr)` / `_freeze(ch)` / `_freeze(atomic)` / `_freeze(闭包)` | ✗「不能冻结 'Ptr'：裸内存/原生指针…」 |
 
 > 想吃准文案：把错误代码丢给 `leno.exe --check 文件.leno`，报错里会直接写为什么。
@@ -299,6 +300,11 @@ print("frozen 对象 " + _str(st["frozen_objs"]) + "，字节 " + _str(st["froze
 5. **半冻结**（可变数组里夹一个 frozen 子数组）是支持的：外层可变、内层只读，
    跨线程时外层深拷贝、内层零拷贝。
 6. **别在热循环里 `_thaw`**：它是 O(n) 深拷贝，等于把零拷贝的收益吐回去。
+7. **同一个通道既发又收，会收到自己刚发的值**（缓冲通道的语义，与 frozen 无关）：
+   `c.send(x); c.receive()` 拿到的很可能就是 `x` —— 要一问一答请用**两条**通道。
+8. **打包（`-p`）内嵌的是 `build\leno_vm.exe`，不是 `leno.exe`**：改了语言/模块之后必须重跑
+   `build_vm.bat`，否则打包产物还是旧运行时，运行时报「未找到 native 函数」
+   （`_freeze` / `_thaw` 这类新内建就"不存在"）。
 
 ---
 

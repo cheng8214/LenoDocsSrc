@@ -219,6 +219,10 @@ func score_of(string w): int {
 <td>✗ 显式禁止（运行期只有对象标签，会给错答案）</td>
 </tr>
 <tr>
+<td><code>Named nn = frozenStruct</code>（赋给 <strong>face</strong> 形参/变量）</td>
+<td>✗「Frozen[...] 是只读视图，不能当可变值用」——face 的方法可能是 mutator，所以只读视图不能当可变 face 用</td>
+</tr>
+<tr>
 <td><code>_freeze(ptr)</code> / <code>_freeze(ch)</code> / <code>_freeze(atomic)</code> / <code>_freeze(闭包)</code></td>
 <td>✗「不能冻结 'Ptr'：裸内存/原生指针…」</td>
 </tr>
@@ -352,6 +356,11 @@ print(&quot;frozen 对象 &quot; + _str(st[&quot;frozen_objs&quot;]) + &quot;，
 <li><strong>半冻结</strong>（可变数组里夹一个 frozen 子数组）是支持的：外层可变、内层只读，
    跨线程时外层深拷贝、内层零拷贝。</li>
 <li><strong>别在热循环里 <code>_thaw</code></strong>：它是 O(n) 深拷贝，等于把零拷贝的收益吐回去。</li>
+<li><strong>同一个通道既发又收，会收到自己刚发的值</strong>（缓冲通道的语义，与 frozen 无关）：
+   <code>c.send(x); c.receive()</code> 拿到的很可能就是 <code>x</code> —— 要一问一答请用<strong>两条</strong>通道。</li>
+<li><strong>打包（<code>-p</code>）内嵌的是 <code>build\leno_vm.exe</code>，不是 <code>leno.exe</code></strong>：改了语言/模块之后必须重跑
+   <code>build_vm.bat</code>，否则打包产物还是旧运行时，运行时报「未找到 native 函数」
+   （<code>_freeze</code> / <code>_thaw</code> 这类新内建就"不存在"）。</li>
 </ol>
 <hr>
 <h2 id="11-选择表-frozen-还是普通传值">11. 选择表：frozen 还是普通传值？</h2>

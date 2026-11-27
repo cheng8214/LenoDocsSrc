@@ -836,6 +836,13 @@ S2 起加 <code>LENO_GC_STRESS=512</code>（已知 <code>test_async_io_limit</co
 </ul>
 </li>
 <li>
+<p><strong>打包产物用旧 VM（症状：<code>-p</code> 出来的 exe 运行时「未找到 native 函数」）</strong>
+   <code>-p</code> 内嵌的是 <code>build\leno_vm.exe</code>（由 <code>build_vm.bat</code> 单独构建），<code>build.bat</code> 只重建 <code>leno.exe</code>。
+   加完 frozen 之后打包，第一次运行就卡在 <code>_freeze</code> 上 —— 因为 VM 基底还是 11-24 的。
+   <strong>修/纪律</strong>：改完语言或模块，打包前必须 <code>build_vm.bat</code>（重跑后同一份脚本打包即通过）。
+   这条不是 frozen 的 bug，但它是"新内建上线后打包会踩"的通用坑，写进指南 §10 与 AGENTS §8。</p>
+</li>
+<li>
 <p><strong>S5 第一版：scope 一条都放不掉（症状：200 个池任务后 <code>frozen_objs</code> 涨 200）</strong>
    <code>frozen_reg_mark()</code> 用 <code>vm-&gt;frozen_epoch++</code> 推进，而 <code>acquire</code> <strong>不推进</strong> ——
    于是同一任务里登记的条目全部等于 <code>mark + 1</code>，而快路径判据 <code>epoch &lt;= mark + 1</code> 直接返回。
