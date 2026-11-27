@@ -442,6 +442,19 @@ main() {
 | `Array` | 数组 | 深拷贝（递归复制每个元素） |
 | `Dict` | 字典 | 深拷贝（递归复制每个键值对） |
 | `Channel` | 通道 | 引用计数共享（可传递 channel 本身） |
+| **`Frozen[T]`** | **冻结的只读图**（`_freeze` 的产物） | **引用计数共享（零拷贝）** —— 详见 [`frozen使用指南.html`](frozen使用指南.html) |
+
+> **大对象反复跨线程？先冻一次。** 同一份只读数据每次 send / 每个任务都深拷贝是最亏的做法：
+> `_freeze` 一次性 O(n)，之后每次传递 O(1)。
+>
+> ```leno
+> Frozen[Array[int]] snap = _freeze(big)   // 冻结（之后只读）
+> ch.send(snap)                            // 零拷贝
+> Array[int] copy = _thaw(snap)            // 需要改就解冻出副本
+> ```
+>
+> 写它会**编译报错**（`Frozen[T]` 与 `T` 双向不兼容）；形参想接收冻结数据请声明成
+> `func f(Frozen[Array[int]] xs)`，这样"体内不许写"在编译期就成立。
 
 ### 不支持传递的类型
 

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>_freeze 使用指南：大对象跨线程零拷贝 · Leno Docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<script charset="utf-8" src="assets/search-index.js" defer></script>
+<script charset="utf-8" src="assets/app.js" defer></script>
+</head><body data-doc="frozen使用指南.html">
+<header class="topbar">
+  <button id="btn-menu" class="menu-btn" title="打开全站目录" aria-label="打开全站目录">☰</button>
+  <a class="brand" href="index.html">Leno Docs</a>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="搜索全部文档（/ 聚焦）…" autocomplete="off" spellcheck="false">
+    <div id="results" class="results"></div>
+  </div>
+  <span class="tools">
+  <button id="btn-theme" title="切换深浅主题">◐</button>
+  <button id="btn-wide" title="切换阅读宽度">⇔</button>
+  <button id="btn-fs-down" title="缩小字号">A−</button>
+  <button id="btn-fs-up" title="放大字号">A+</button>
+</span>
+  <span class="crumb"><a href="index.html">首页</a><span class="sep">/</span><a href="index.html">03 使用指南</a><span class="sep">/</span><span class="here">_freeze 使用指南：大对象跨线程零拷贝</span></span>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav" aria-label="全站文档目录"><div class="side-title">全站目录</div><details><summary>01 入门 · 先读这些 <span style="color:var(--muted);font-weight:400">11</span></summary><div class="nv-group"><a href="Leno零基础入门.html">Leno零基础入门</a><a href="安装与第一个项目.html">安装与第一个项目</a><a href="常见任务cookbook.html">常见任务cookbook</a><a href="示例程序导览.html">示例程序导览</a><a href="Leno入门教程.html">Leno入门教程</a><a href="FAQ.html">常见问题</a><a href="idioms.html">惯用写法速查</a><a href="语言陷阱速查.html">语言陷阱速查</a><a href="Leno_规范草稿.html">Leno_规范草稿</a><a href="区间口径约定.html">区间口径约定</a><a href="Leno语法对照_Python_JS_Go.html">Leno 对照 Python / JS / Go</a></div></details><details><summary>02 模块 API 参考 <span style="color:var(--muted);font-weight:400">20</span></summary><div class="nv-group"><a href="module_arrays.html">arrays 模块 API</a><a href="module_asyncs.html">asyncs 模块 API</a><a href="module_cstructs.html">cstructs 模块 API</a><a href="module_dicts.html">dicts 模块 API</a><a href="module_dirs.html">dirs 模块 API</a><a href="module_ffi_api.html">ffi 模块 API</a><a href="module_files.html">files 模块 API</a><a href="module_io.html">io 模块 API</a><a href="module_jsons.html">jsons 模块 API</a><a href="module_maths.html">maths 模块 API</a><a href="module_rands.html">rands 模块 API</a><a href="module_reflect.html">reflect 模块 API</a><a href="module_regexs.html">regexs 模块 API</a><a href="module_sockets.html">sockets 模块 API</a><a href="module_strings.html">strings 模块 API</a><a href="module_sys.html">sys 模块 API</a><a href="module_threads_api.html">threads 模块 API</a><a href="module_times.html">times 模块 API</a><a href="module_types.html">types 模块 API</a><a href="module_web.html">web 模块 API</a></div></details><details open><summary>03 使用指南 <span style="color:var(--muted);font-weight:400">10</span></summary><div class="nv-group"><a href="FFI使用指南.html">FFI使用指南</a><a href="frozen使用指南.html" class="active" aria-current="page">frozen使用指南</a><a href="import使用指南.html">import 使用指南</a><a href="threads使用指南.html">threads使用指南</a><a href="包管理与安装使用指南.html">包管理与安装使用指南</a><a href="单文件打包使用指南.html">单文件打包使用指南</a><a href="并发选择指引.html">并发选择指引</a><a href="布局配方.html">布局配方</a><a href="Leno跨模块clib开发经验.html">Leno跨模块clib开发经验</a><a href="加密算法示例指南.html">加密算法示例指南</a></div></details><details><summary>04 语言设计与实现 <span style="color:var(--muted);font-weight:400">12</span></summary><div class="nv-group"><a href="F2_非可空与可空类型设计.html">非可空与可空类型设计（F2）</a><a href="类型收窄与绑定语法改进.html">类型收窄与绑定语法改进</a><a href="解构语法实现文档.html">解构语法实现文档</a><a href="enum载荷_设计草案.html">enum 载荷（已实现）</a><a href="注解系统与optkeys设计草案.html">注解系统与 @optkeys（已实现）</a><a href="struct 里const可行性.html">struct 中 const 的可行性</a><a href="struct_extend_设计草案.html">struct 继承设计草案</a><a href="cstruct_packed_align_设计文档.html">C 结构体对齐与 packed 设计</a><a href="错误与空值契约.html">错误与空值契约</a><a href="单一事实来源与重复实现收敛.html">单一事实来源与重复实现收敛</a><a href="寄存式与栈式的差异清单.html">寄存式与栈式的差异清单</a><a href="错误堆栈追踪改进方案.html">错误堆栈追踪改进方案</a></div></details><details><summary>05 GUI · 平台 <span style="color:var(--muted);font-weight:400">15</span></summary><div class="nv-group"><a href="LenoSDL3_Card卡片控件设计文档.html">LenoSDL3_Card卡片控件设计文档</a><a href="archive/LenoSDL3_Table方法表断裂编译器bug排查记录.html">LenoSDL3_Table方法表断裂编译器bug排查记录</a><a href="LenoSDL3_三个疑难排查复盘.html">LenoSDL3_三个疑难排查复盘</a><a href="扩展模块/LenoSDL3_常用API与易踩坑速查.html">LenoSDL3_常用API与易踩坑速查</a><a href="archive/LenoSDL3_打包后窗口句柄下发静默失效排查记录.html">LenoSDL3_打包后窗口句柄下发静默失效排查记录</a><a href="扩展模块/LenoSDL3_控件优化清单.html">LenoSDL3_控件优化清单</a><a href="LenoSDL3_控件实战教程.html">LenoSDL3_控件实战教程</a><a href="LenoSDL3_窗口与控件参考.html">LenoSDL3_窗口与控件参考</a><a href="archive/LenoSDL3_裁剪过多导致闪烁排查记录.html">LenoSDL3_裁剪过多导致闪烁排查记录</a><a href="LenoSDL3像素直写渲染优化.html">LenoSDL3像素直写渲染优化</a><a href="Android正经App路线.html">Android正经App路线</a><a href="archive/Android能力实测_2026-11-18.html">Android能力实测_2026-11-18</a><a href="LenoWeb能力缺口与修复路线.html">LenoWeb能力缺口与修复路线</a><a href="扩展模块/LenoWeb.html">Web · HTTP/HTML/爬虫</a><a href="archive/LenoNet_崩溃问题排查记录.html">LenoNet_崩溃问题排查记录</a></div></details><details><summary>06 案例 · 真实项目 <span style="color:var(--muted);font-weight:400">9</span></summary><div class="nv-group"><a href="案例/Aria.html">Aria · 桌面音乐客户端</a><a href="案例/AriaDeployd.html">AriaDeployd · 部署守护进程</a><a href="案例/LenoCleaner.html">LenoCleaner · C 盘清理</a><a href="案例/LenoDumate.html">LenoDumate · 搭子签到</a><a href="案例/LenoGame.html">LenoGame · 9 个图形小游戏</a><a href="案例/LenoTrae.html">LenoTrae · Trae 自动签到</a><a href="案例/LenoWorkBuddy.html">LenoWorkBuddy · 自动签到</a><a href="案例/LenoMusic.html">Music · 音频</a><a href="案例/_总览.html">扩展模块总览</a></div></details><details><summary>07 开发台账 <span style="color:var(--muted);font-weight:400">7</span></summary><div class="nv-group"><a href="待办与路线图.html">待办与路线图</a><a href="待修_2026-11-17_实测发现.html">待修_2026-11-17_实测发现</a><a href="待修_编译与语义问题.html">待修_编译与语义问题</a><a href="类型可见性与use逃生阀修复追踪.html">类型可见性与use逃生阀修复追踪</a><a href="线程并发能力修复追踪.html">线程并发能力修复追踪</a><a href="Leno语言改进建议.html">Leno语言改进建议</a><a href="语言摩擦与隐式契约清单.html">语言摩擦与隐式契约清单</a></div></details><details><summary>08 扩展模块（独立包） <span style="color:var(--muted);font-weight:400">27</span></summary><div class="nv-group"><a href="扩展模块/LenoCLI.html">CLI · 命令行解析</a><a href="扩展模块/LenoCSV.html">CSV · 表格读写</a><a href="扩展模块/LenoCompress.html">Compress · 压缩</a><a href="扩展模块/LenoConfig.html">Config · 配置读取</a><a href="扩展模块/LenoContainers.html">Containers · 栈/队列/LRU</a><a href="扩展模块/LenoCrypto.html">Crypto · 加密</a><a href="扩展模块/LenoFS.html">FS · 文件系统/目录监控</a><a href="扩展模块/LenoGlob.html">Glob · 通配匹配</a><a href="扩展模块/LenoHTTP.html">HTTP · 服务端</a><a href="扩展模块/LenoImage.html">LenoImage</a><a href="扩展模块/LenoMarkdown.html">LenoMarkdown</a><a href="扩展模块/LenoTemplate.html">LenoTemplate</a><a href="扩展模块/LenoValidate.html">LenoValidate</a><a href="扩展模块/LenoLog.html">Log · 日志</a><a href="扩展模块/LenoMIME.html">MIME · 文件类型识别</a><a href="扩展模块/LenoMusic.html">Music · 音频</a><a href="扩展模块/LenoQR.html">QR · 二维码</a><a href="扩展模块/LenoResult.html">Result · 错误与空值</a><a href="扩展模块/LenoSDL3.html">SDL3 · GUI 渲染</a><a href="扩展模块/LenoStats.html">Stats · 统计</a><a href="扩展模块/LenoSys.html">Sys · 系统/磁盘/进程</a><a href="扩展模块/LenoTUI.html">TUI · 终端输出</a><a href="扩展模块/LenoUUID.html">UUID · 唯一 ID</a><a href="扩展模块/LenoXLSX.html">XLSX · Excel</a><a href="扩展模块/LenoZip.html">Zip · 归档</a><a href="扩展模块/LenoSqlite.html">sqlite3 · 数据库</a><a href="扩展模块/_总览.html">扩展模块总览</a></div></details><details><summary>09 性能 · 排查 · 历史 <span style="color:var(--muted);font-weight:400">32</span></summary><div class="nv-group"><a href="archive/FFI优化方案.html">FFI优化方案</a><a href="archive/GC与分配优化.html">GC与分配优化</a><a href="archive/JIT安全点与去优化_参考实现调研.html">JIT安全点与去优化_参考实现调研</a><a href="archive/JIT实现与调试记录.html">JIT实现与调试记录</a><a href="archive/JIT模块调用优化与bailout排查记录.html">JIT模块调用优化与bailout排查记录</a><a href="archive/JIT闭包与upvalue设计_R5.html">JIT闭包与upvalue设计_R5</a><a href="LENB-format-reverse-notes.html">LENB 格式逆向笔记</a><a href="archive/leno对比.html">Leno vs Python（早期对比 · 已归档）</a><a href="archive/Leno报错提示改进计划.html">Leno报错提示改进计划</a><a href="archive/Leno真实项目可用性评估_2026-11-08.html">Leno真实项目可用性评估_2026-11-08</a><a href="archive/VM字节码校验与崩溃防护设计方案.html">VM字节码校验与崩溃防护设计方案</a><a href="VM自证与语言债_路线_2026-11.html">VM自证与语言债_路线_2026-11</a><a href="async_await入门指南.html">async / await 入门指南</a><a href="archive/代码生成性能排查记录.html">代码生成性能排查记录</a><a href="archive/优化方案_内存态序列化运行.html">优化方案_内存态序列化运行</a><a href="archive/内联器崩溃排查记录.html">内联器崩溃排查记录</a><a href="archive/函数调用性能优化_调用帧与多返回值解构.html">函数调用性能优化_调用帧与多返回值解构</a><a href="archive/多线程struct与模块全局变量问题记录.html">多线程struct与模块全局变量问题记录</a><a href="大对象零拷贝共享设计.html">大对象零拷贝共享设计</a><a href="archive/字节码优化分析.html">字节码优化分析</a><a href="archive/字节码融合指令优化_光线追踪对象版.html">字节码融合指令优化_光线追踪对象版</a><a href="archive/密集数据与FFI能力评估_2026-11-11.html">密集数据与FFI能力评估_2026-11-11</a><a href="archive/性能_分支与枚举.html">性能_分支与枚举</a><a href="archive/性能优化记录.html">性能优化记录</a><a href="archive/性能测试总结_Leno_vs_Python.html">性能测试总结_Leno_vs_Python</a><a href="archive/易用性痛点（TraeSign 移植实录）.html">易用性痛点（TraeSign 移植实录）</a><a href="archive/枚举求值与模块符号表问题.html">枚举求值与模块符号表问题</a><a href="archive/移植音乐下载器实录与待办.html">移植音乐下载器实录与待办</a><a href="窥孔优化复盘.html">窥孔优化复盘</a><a href="编译器崩溃排查手册.html">编译器崩溃排查手册</a><a href="语法改进建议_2026-11-02.html">语法改进建议_2026-11-02</a><a href="archive/语言与框架问题_Aria实战_2026-10-31.html">语言与框架问题_Aria实战_2026-10-31</a></div></details></nav>
+  <main class="content" id="top"><h1 id="_freeze-使用指南-大对象跨线程零拷贝"><code>_freeze</code> 使用指南：大对象跨线程零拷贝</h1>
+<blockquote>
+<p>适用版本：0.2.4 之后（2026-11-27 起 <code>_freeze</code> / <code>_thaw</code> / <code>_is_frozen</code> / <code>Frozen[T]</code>）
+设计原理与实现细节在 <a href="大对象零拷贝共享设计.html"><code>大对象零拷贝共享设计.md</code></a>；本文只管<strong>怎么用</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="1-一句话">1. 一句话</h2>
+<p>跨线程传数据默认是<strong>深拷贝</strong>（<code>Array</code> 1 万元素 = 拷 1 万次）。
+<code>_freeze(x)</code> 把数据<strong>一次性</strong>拷到共享区并标成只读，之后每次跨线程传递只做一次引用计数（O(1)），<strong>不再拷贝</strong>。</p>
+<p><strong>该用</strong>：</p>
+<ul>
+<li>同一份大只读数据要被<strong>多次</strong>跨线程传递 / 每个任务都要用（<code>map</code>、<code>parallel_for</code>、Channel 反复 send）；</li>
+<li>数据量可观（经验值：<strong>&gt; 10 KB</strong> 或 <strong>&gt; 1000 个元素</strong>）；</li>
+<li>内容是<strong>只读</strong>的（配置表、字典、图片字节、预计算结果、词表）。</li>
+</ul>
+<p><strong>不该用</strong>：</p>
+<ul>
+<li>只传一次的小对象 —— <code>_freeze</code> 本身是 O(n)，比直接深拷贝还多一次扫描；</li>
+<li>传过去要<strong>改</strong>的数据 —— frozen 是只读的，要改就传可变值（默认路径）或 <code>_thaw</code> 出副本；</li>
+<li>含 <code>Ptr</code> / <code>cstruct</code> / <code>File</code> / <code>Channel</code> / <code>Atomic</code> / 闭包的数据 —— 编译期就会拒（见 §6）。</li>
+</ul>
+<hr>
+<h2 id="2-最小例子">2. 最小例子</h2>
+<pre><code class="language-leno">import threads
+
+main() {
+    // ① 造数据（可变的，随便改）
+    var rows = []
+    for 0 : 99999 to i { rows.add(i) }
+
+    // ② 冻结：一次性 O(n)，之后只读
+    Frozen[Array[int]] snap = _freeze(rows)
+
+    print(_str(snap.len()))     // 100000 —— 读法和普通数组完全一样
+    print(_str(snap[123]))      // 123
+    print(_str(_is_frozen(snap)))   // true
+
+    // ③ 原对象不受影响，照常可写（快照语义）
+    rows.add(-1)
+    print(_str(rows.len()))     // 100001
+    print(_str(snap.len()))     // 100000
+}
+</code></pre>
+<p>一条命令验证：</p>
+<pre><code>build\leno.exe 你的文件.leno
+</code></pre>
+<hr>
+<h2 id="3-三条语义-记住这三条就够">3. 三条语义（记住这三条就够）</h2>
+<table>
+<thead>
+<tr>
+<th>语义</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>快照</strong></td>
+<td><code>_freeze</code> 返回<strong>新图</strong>，原对象一个字都不动。冻结之后改原对象，冻结的那份不变</td>
+</tr>
+<tr>
+<td><strong>深</strong></td>
+<td>整图一起冻：数组元素、字典的<strong>键和值</strong>、struct 的每个字段，嵌套多深都冻</td>
+</tr>
+<tr>
+<td><strong>只读</strong></td>
+<td>对 frozen 的任何原地修改都会报错（编译期能判就编译期，否则运行期）</td>
+</tr>
+</tbody>
+</table>
+<p>想拿回一份<strong>可写</strong>副本：</p>
+<pre><code class="language-leno">Array[int] copy = _thaw(snap)     // 深拷贝回本线程堆
+copy.add(42)                      // 现在可以改了
+</code></pre>
+<p><code>_thaw</code> 是 O(n)，别放在热循环里。</p>
+<hr>
+<h2 id="4-类型怎么写-frozen-t">4. 类型怎么写：<code>Frozen[T]</code></h2>
+<p><code>_freeze(x)</code> 的静态类型是 <code>Frozen[T]</code>（<code>T</code> 是 <code>x</code> 的类型）：</p>
+<pre><code class="language-leno">Frozen[Array[int]]            a = _freeze([1, 2, 3])
+Frozen[Dict[string, int]]     d = _freeze(m)
+Frozen[Array[Array[int]]]     g = _freeze(grid)
+Frozen[Point]                 p = _freeze(new Point(x = 1))
+</code></pre>
+<p><strong>关键点：类型要进函数签名</strong>，这样"能不能写"在编译期就有定论：</p>
+<pre><code class="language-leno">// ✅ 传进来就保证只读；函数体里写它会**编译不过**
+func total(Frozen[Array[int]] xs): int {
+    var s = 0
+    for xs to v { s = s + v }
+    return s
+}
+
+// ❌ 形参写成 Array[int]，函数体里就能写；把 frozen 传进来会**编译不过**（类型不兼容）
+func bad(Array[int] xs) { xs.add(1) }
+</code></pre>
+<p><code>Frozen[...]</code> 与 <code>T</code> <strong>双向不兼容</strong>，必须显式 <code>_freeze</code> / <code>_thaw</code>：</p>
+<pre><code class="language-leno">Array[int] m = snap        // ✗ 类型错误：Frozen[Array[int]] 不能赋给 Array[int]
+Array[int] m = _thaw(snap) // ✓ 要可变副本就明说
+Frozen[Array[int]] f = arr // ✗ 错误：必须 _freeze() 得到（否则&quot;只读保证&quot;是假的）
+</code></pre>
+<blockquote>
+<p>为什么不让可变值直接"当成" frozen 传：那样函数里读着"只读"类型，外面却在改，静态保证立刻变假。</p>
+</blockquote>
+<hr>
+<h2 id="5-三个典型场景">5. 三个典型场景</h2>
+<h3 id="5-1-map-parallel_for-共享只读数据集">5.1 <code>map</code> / <code>parallel_for</code> 共享只读数据集</h3>
+<pre><code class="language-leno">import threads
+
+Frozen[Array[int]] 词表 = _freeze(load_words())     // 只冻一次
+
+main() {
+    var idx = []
+    for 0 : 999 to i { idx.add(i) }
+
+    var hits = threads.map(idx, func(int i, int no) {
+        // 每个任务都读同一份词表 —— 零拷贝，不占额外内存
+        return 词表[i % 词表.len()]
+    })
+    print(_str(hits.len()))
+}
+</code></pre>
+<blockquote>
+<p>⚠ <code>threads.map</code> 的回调是 <strong>(元素, 下标)</strong> 两个参数，写一个参数会报"入口函数期望 1 个参数，实际传了 2 个"。</p>
+</blockquote>
+<h3 id="5-2-channel-传大块数据">5.2 Channel 传大块数据</h3>
+<pre><code class="language-leno">import threads
+
+var req = threads.channel(1)
+var res = threads.channel(1)
+
+func worker(any c) {
+    if c is Channel {
+        var got = c.receive()
+        if got is Array[int] =&gt; a {          // 收到的是同一张冻结图
+            res.send([a.len(), _is_frozen(a)])
+        }
+    }
+}
+
+main() {
+    var big = []
+    for 0 : 99999 to i { big.add(i) }
+    Frozen[Array[int]] snap = _freeze(big)
+
+    var t = threads.start(worker, req)
+    req.send(snap)                            // 5 µs 左右，与元素数无关
+    var r = res.receive() as Array[any]
+    print(_str(r[0]) + &quot; frozen=&quot; + _str(r[1]))
+    t.join()
+}
+</code></pre>
+<p>接收侧读法：<code>receive()</code> 的静态类型是 <code>any</code>（裸 <code>Channel</code>），用 <code>is Array[int]</code> 收窄；要判断它是不是冻结的，用 <code>_is_frozen(a)</code> —— <strong><code>a is Frozen[...]</code> 不支持</strong>（见 §6）。</p>
+<h3 id="5-3-模块级预计算表">5.3 模块级预计算表</h3>
+<pre><code class="language-leno">Frozen[Dict[string, int]] 词频 = _freeze(build_table())   // 模块顶层冻一次
+
+func score_of(string w): int {
+    return 词频.get(w, 0)
+}
+</code></pre>
+<p>子线程 start 时会克隆 globals，但 frozen 只加一次引用 ⇒ N 条线程不会拷 N 份。</p>
+<hr>
+<h2 id="6-编译期就会拦下来的-不用等运行期">6. 编译期就会拦下来的（不用等运行期）</h2>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snap[0] = 9</code> / <code>snap.f = 1</code> / <code>snap += 1</code></td>
+<td>✗「不能修改 Frozen[Array[int]] 的元素 / 字段 —— frozen 是<strong>整体不可变</strong>」</td>
+</tr>
+<tr>
+<td><code>snap.add(1)</code> / <code>snap.sort()</code> …</td>
+<td>✗「不能对 Frozen[Array[int]] 调用修改方法 'add'」</td>
+</tr>
+<tr>
+<td><code>func g(Frozen[Array[int]] p) { p.add(1) }</code></td>
+<td>✗ 同上（形参带 frozen，体内写直接报）</td>
+</tr>
+<tr>
+<td>frozen struct 上调用 <code>mut func</code></td>
+<td>✗ 同上（判据来自 <code>mut</code> 声明）</td>
+</tr>
+<tr>
+<td><code>Array[int] m = snap</code> / 传给 <code>Array[int]</code> 形参</td>
+<td>✗ 类型不匹配</td>
+</tr>
+<tr>
+<td><code>snap is Frozen[Array[int]]</code> / <code>x as Frozen[...]</code></td>
+<td>✗ 显式禁止（运行期只有对象标签，会给错答案）</td>
+</tr>
+<tr>
+<td><code>_freeze(ptr)</code> / <code>_freeze(ch)</code> / <code>_freeze(atomic)</code> / <code>_freeze(闭包)</code></td>
+<td>✗「不能冻结 'Ptr'：裸内存/原生指针…」</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>想吃准文案：把错误代码丢给 <code>leno.exe --check 文件.leno</code>，报错里会直接写为什么。</p>
+</blockquote>
+<hr>
+<h2 id="7-只能运行期拦的-类型系统看不见的路径">7. 只能运行期拦的（类型系统看不见的路径）</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>var v = snap[0]</code> 之后 <code>v.add(1)</code></td>
+<td>元素类型本身不带 frozen 位 ⇒ 运行期抛「冻结对象（frozen）不可修改」</td>
+</tr>
+<tr>
+<td>把 frozen 塞进 <code>any</code> 再收窄去写</td>
+<td>同上（运行期 <code>FROZEN</code> 位兜底）</td>
+</tr>
+<tr>
+<td><code>_freeze(any_val)</code> 里装的是 Ptr/Channel…</td>
+<td>运行期抛「不能冻结 …」</td>
+</tr>
+<tr>
+<td>数据里<strong>含环</strong>（<code>a.add(a)</code>）</td>
+<td>运行期抛「冻结失败：嵌套超过 64 层（可能含循环引用）」</td>
+</tr>
+<tr>
+<td>struct 的类型定义是<strong>子线程</strong>加载的</td>
+<td>运行期抛「…def 是在子线程里创建/加载的…」</td>
+</tr>
+</tbody>
+</table>
+<p>运行期文案统一含 <strong><code>冻结对象（frozen）不可修改</code></strong>，<code>catch</code> 里可以按这个片段判。</p>
+<hr>
+<h2 id="8-常见错误-怎么改">8. 常见错误 → 怎么改</h2>
+<p><strong>① 「不能修改 Frozen[Array[int]] 的元素」</strong>
+你冻了又想改。要么改原对象（<code>_freeze</code> 之前那份），要么 <code>_thaw()</code> 出副本：</p>
+<pre><code class="language-leno">Array[int] work = _thaw(snap)
+work[0] = 9        // ✓ 改副本
+</code></pre>
+<p><strong>② 「类型错误：变量 'm' 声明类型与初始化值类型不匹配 / 期望 Array[int]，实际 Frozen[Array[int]]」</strong>
+明确写出转换：</p>
+<pre><code class="language-leno">Frozen[Array[int]] m = _freeze(a)     // 只读用
+Array[int]          c = _thaw(m)      // 要改就解冻
+</code></pre>
+<p><strong>③ 「<code>is</code> 不支持 Frozen[...]」</strong>
+改判冻结状态用 <code>_is_frozen(x)</code>；判"是不是数组"用 <code>x is Array[int]</code>（frozen 也匹配，因为底层还是数组）。</p>
+<p><strong>④ 「不能冻结 'Channel'」</strong>
+Channel 是跨线程<strong>可变</strong>通道，不能冻。要共享数据请冻<strong>数据本身</strong>，Channel 只用来交班。</p>
+<p><strong>⑤ 「冻结 struct 失败：…def 是在子线程里创建/加载的」</strong>
+在主线程先把该模块加载起来（<code>import</code> 或 <code>main</code> 里触达一次），再冻结实例；或在<strong>模块级</strong>声明这个 struct。</p>
+<p><strong>⑥ 冻完发现子线程改不动、还报错</strong>
+这不是 bug：frozen 就是只读。子线程要产出结果，请<strong>返回新值</strong>（Channel / <code>map</code> 的返回值），不要原地改共享数据。</p>
+<hr>
+<h2 id="9-性能-本机实测-build-leno-exe">9. 性能（本机实测，<code>build\leno.exe</code>）</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>数字</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_freeze</code> 10 万元素 <code>Array[int]</code></td>
+<td><strong>0.6 ms</strong>（一次性）</td>
+</tr>
+<tr>
+<td>同一冻结图 <code>send</code> 一次</td>
+<td><strong>~5 µs</strong>（与元素数无关）</td>
+</tr>
+<tr>
+<td>10 万 × 100 次跨线程传递</td>
+<td>frozen <strong>26.9 ms</strong> vs 可变深拷贝 <strong>138.7 ms</strong> ⇒ <strong>5.2×</strong></td>
+</tr>
+<tr>
+<td>200 个池任务各冻 1000 元素、用完就丢</td>
+<td><code>_gc_stats()["frozen_objs"]</code> 增长 <strong>≤8</strong>（任务结束自动收敛）</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>N 条线程读同一份 100 MB 数据 ⇒ 峰值 ≈ 100 MB（不是 N×100 MB）</td>
+</tr>
+</tbody>
+</table>
+<p>看账：</p>
+<pre><code class="language-leno">var st = _gc_stats()
+print(&quot;frozen 对象 &quot; + _str(st[&quot;frozen_objs&quot;]) + &quot;，字节 &quot; + _str(st[&quot;frozen_bytes&quot;]))
+</code></pre>
+<hr>
+<h2 id="10-边界-都是有意为之">10. 边界（都是有意为之）</h2>
+<ol>
+<li><strong>主线程注册表持有到进程结束</strong>：反复 <code>_freeze</code> 不同数据不会自动回收，<code>frozen_bytes</code> 会累加。
+   用法上"<strong>冻一次、长期复用</strong>"；确实要反复冻，注意这部分内存不随 GC 回落。</li>
+<li><strong>池任务别把 frozen 存进 worker 的长期状态</strong>（模块级 var / TLS）：任务结束会收敛引用，
+   存下来的是个"随时会被放掉"的指针。要缓存就自己持有并确保同一份图被复 freeze。</li>
+<li><strong><code>_freeze</code> 是快照，不会去重</strong>：同一份数据冻两次就是两份。要复用就存变量。</li>
+<li><strong>含环的数据不能冻</strong>（引用计数回收不了环）。</li>
+<li><strong>半冻结</strong>（可变数组里夹一个 frozen 子数组）是支持的：外层可变、内层只读，
+   跨线程时外层深拷贝、内层零拷贝。</li>
+<li><strong>别在热循环里 <code>_thaw</code></strong>：它是 O(n) 深拷贝，等于把零拷贝的收益吐回去。</li>
+</ol>
+<hr>
+<h2 id="11-选择表-frozen-还是普通传值">11. 选择表：frozen 还是普通传值？</h2>
+<table>
+<thead>
+<tr>
+<th>你的数据</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小对象 / 只传一次</td>
+<td>不用 frozen，直接传（深拷贝）</td>
+</tr>
+<tr>
+<td>大 + 只读 + 传多次</td>
+<td><strong>frozen</strong></td>
+</tr>
+<tr>
+<td>大 + 每个线程各改各的</td>
+<td>不用 frozen：深拷贝本来就是对的（副本隔离）</td>
+</tr>
+<tr>
+<td>大 + 需要<strong>共享可变</strong>（计数器 / 队列）</td>
+<td>用 <code>Atomic</code> 或 <code>Channel</code>，<strong>不要</strong> frozen</td>
+</tr>
+<tr>
+<td>大 + 传一次就丢</td>
+<td>深拷贝即可（frozen 多一次 O(n) 冻结）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="相关文档">相关文档</h3>
+<ul>
+<li>线程模型与跨线程规则：<code>threads使用指南.html</code></li>
+<li>原理 / 实现 / 踩坑记录：<code>大对象零拷贝共享设计.html</code></li>
+<li>修复追踪（TH19）：<code>线程并发能力修复追踪.html</code></li>
+</ul>
+</main>
+  <aside class="side"><div class="side-title">本页目录</div><ul><li><a href="#1-一句话">1. 一句话</a></li><li><a href="#2-最小例子">2. 最小例子</a></li><li><a href="#3-三条语义-记住这三条就够">3. 三条语义（记住这三条就够）</a></li><li><a href="#4-类型怎么写-frozen-t">4. 类型怎么写：Frozen[T</a></li><li><a href="#5-三个典型场景">5. 三个典型场景</a></li><ul class="lv3"><li><a href="#5-1-map-parallel_for-共享只读数据集">5.1 map / parallel_for 共享只读数据集</a></li><li><a href="#5-2-channel-传大块数据">5.2 Channel 传大块数据</a></li><li><a href="#5-3-模块级预计算表">5.3 模块级预计算表</a></li></ul><li><a href="#6-编译期就会拦下来的-不用等运行期">6. 编译期就会拦下来的（不用等运行期）</a></li><li><a href="#7-只能运行期拦的-类型系统看不见的路径">7. 只能运行期拦的（类型系统看不见的路径）</a></li><li><a href="#8-常见错误-怎么改">8. 常见错误 → 怎么改</a></li><li><a href="#9-性能-本机实测-build-leno-exe">9. 性能（本机实测，build\leno.exe）</a></li><li><a href="#10-边界-都是有意为之">10. 边界（都是有意为之）</a></li><li><a href="#11-选择表-frozen-还是普通传值">11. 选择表：frozen 还是普通传值？</a></li><ul class="lv3"><li><a href="#相关文档">相关文档</a></li></ul></ul></aside>
+</div>
+<nav class="pager"><a href="FFI使用指南.html">← 上一篇</a><a href="import使用指南.html">下一篇 →</a></nav>
+<a class="totop" href="#top" title="返回顶部">↑</a>
+<div id="toast" class="toast"></div>
+</body></html>
