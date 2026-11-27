@@ -239,6 +239,56 @@ cv.on_draw(func(Renderer r, float ox, float oy, float cw, float ch) { ... })
 
 窗口缩放若要自己重排绝对定位的容器，在 `isWindowResized()` 分支里 `getSize()` 后逐个 `set_size()` / `set_pos()`（`test_layout.leno` 就是这么做的）。
 
+### 2.x 写带动画的控件：实现 `Tickable.tick(dt)`（2026-11-27）
+
+自己写的控件如果有"会持续几帧的过渡"（滑动、渐变、回弹），**不要**在 `render()` 里推进，
+也不要自己 `core.requestRedraw()` 续帧——那样漏一处动画就会卡在中间（框架早期就这么踩过）。
+
+改成实现 `Tickable`，只返回"还在动"，续帧和 dt 都由窗口负责：
+
+```text
+export struct MyThing impl Widget, Tickable {
+    Tween anim              // 内核见 lib/sdl_animator.leno（缓动/弹簧）
+    ...
+    func tick(float dt): bool {
+        bool moving = anim.step(dt)
+        if moving { core.markFrameRedraw() }   // 位置变了才标脏；**不是**请求下一帧
+        return anim.is_moving()                 // 还在动 ⇒ 窗口自动再画一帧 ✓
+    }
+    func render(Renderer r) { float t = anim.value() ... }   // 这里只读进度
+}
+```
+
+规则：
+
+- `tick` 每帧**只调一次**（在绘制前），`dt` 已钳到 33ms，与滚动内核同口径；
+- 目标值（target）最好在 `tick` 里也更新一次——`tick` 早于 `render`，只在 `render` 里设会让动画慢一帧；
+- 跟手交互（手指拖动）期间要在 `tick` 里直接 `return false`，否则惯性和手指抢方向盘；
+- **自己仍然 `core.requestRedraw()`**（即使窗口会汇总续帧）：不把"下一帧"全押在一处。
+
+**写容器的人必须转发 `tick`（这条最容易漏，代价是整页不动）**
+
+窗口只遍历顶层 `_widgets` 和 `setRoot` 的根控件，**容器里的控件不在那个列表里**：
+
+```text
+export struct MyBox impl Widget, Tickable {
+    Array[Widget] kids = []
+    func tick(float dt): bool {
+        bool m = false
+        for kids to c { if c is Tickable => tk { if tk.tick(dt) { m = true } } }
+        return m
+    }
+}
+```
+
+`Panel` / `HBox` / `VBox` / `AnchorBox` / `TabControl` / `Card` / `ScrollView` 都已转发。
+⚠ `TabControl` 有**两条**装载路径，必须都转：`setPageLayout()` ⇒ `_pageLayouts[_active]`、
+`addToPage()` ⇒ `pages[_active]`。只转一条时，用另一条装载的页会"滚轮有速度、画面一步不动"
+（`process` 两条都转发，`tick` 漏一条就是这种症状）。
+
+⚠ 自定义控件的 `export struct` **别用通用名**（`Anim`/`Node`/`State`…）：类型表全局按名字索引，
+跨模块重名会静默读错字段。起 `MyThingPanel` 这种带归属的名字，细节见仓库根的 `AGENTS.md` §13。
+
 ---
 
 ## 三、文字与按钮
