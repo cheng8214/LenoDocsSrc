@@ -639,7 +639,10 @@ tbl.on_edit_commit(func(int row, int col, string v) { ... })
 ### 6.4 TreeView —— 树形列表
 
 **参数**：`items`、`text`、`image`、`image_expanded`、`image_mode`、`image_size`、`checkable`、`show_check`、`show_lines`、`indent`、`item_h`、`line_color`、`check_color`、`sel_color`、`hover_color`、`w`/`h`。
-**方法**：`set_items()`、`add_child()`、`remove_node()`、`expand()`、`expand_all()`、`collapse_all()`、`set_checked()`、`get_checked_ids()`、`get_selected_id()`、`get_selected_node()`、`set_data()`、`get_data()`、`on_change()`、`on_activate()`、`on_toggle()`、`on_check()`、`on_context()`。占位符行为见 `自测/test_treeview_placeholder.leno`。
+**方法**：`set_items()`、`add_child()`、`remove_node()`、`expand()`、`expand_all()`、`collapse_all()`、`set_checked()`、`get_checked_ids()`、`get_selected_id()`、`get_selected_node()`、`set_data()`、`get_data()`、`get_expand_anim()`、`on_change()`、`on_activate()`、`on_toggle()`、`on_check()`、`on_context()`。占位符行为见 `自测/test_treeview_placeholder.leno`。
+
+**展开动画（2026-11-27）**：展开节点时新出现的**直接子行**从上方 12px 滑到位、文字同时淡入（约 150ms）。
+只动绘制不动布局（滚动上限、命中、虚拟化仍按行数算），收起不做动画（行已从拍平表移除）。
 
 ### 6.5 VirtualGrid —— 虚拟网格
 
